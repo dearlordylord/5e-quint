@@ -2512,11 +2512,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE: Replace Web's partial Surface mechanics with a lossless SRD shape for Magic Action level-2 Spell Slot casting, point-origin 20-foot Cube, Concentration up to 1 hour, Difficult Terrain, Lightly Obscured area, anchoring or flat-surface layering, flat-surface 5-foot depth, start-of-next-caster-turn collapse, first-entry-on-a-turn creature-entry Dexterity save trigger, and separate turn-start Dexterity save trigger, failed-save Restrained while in the webs or until escape, action Strength (Athletics) escape against caster spell save DC, and flammable 5-foot Cube burn-away with 2d4 Fire damage to creatures that start turns in the fire. Owner: surface Spell Definition authoring. Required output: Web Dhall and JSON content, plus schema/tracer support where required, make area identity, first-entry-on-a-turn and turn-start save triggers, Restrained lifecycle, escape, terrain/obscurement, anchor collapse, flat-surface depth, and flammable cube cleanup executable source facts instead of comments or prose-only description.; L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME: Promote Web's battle-visible restraint hazard: Magic Action and level-2-or-higher Spell Slot spend, caller-supplied point-origin 20-foot Cube area identity, Concentration-owned active Web area, table-triggered affected-creature facts for first-entry-on-a-turn saves and separate start-turn in-area saves, failed-save spell-owned Restrained condition tied to table-witnessed still-in-webs state, action Strength (Athletics) escape against caster spell save DC, and cleanup when escape succeeds, the target is no longer in the webs, Concentration or duration ends, or table supplies collapse or removal. Owner: battle-runtime spell invocation/effect lifecycle plus table/spatial owner. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for resource spending, active area identity, first-entry-on-a-turn and start-turn save triggers, Restrained application, escape, and cleanup without automatic geometry, pathfinding, or area membership derivation.; L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE: Decide and promote or close Web's area projection and flammable-cube clauses: active Web area as Difficult Terrain movement-cost facts, Lightly Obscured sight or perception projection, anchoring or layering collapse boundary, flat-surface 5-foot depth projection, and fire-exposed 5-foot Cube burn-away after 1 round with 2d4 Fire damage to creatures starting turns in the fire, consuming table-supplied fire exposure and affected-creature witnesses rather than storing independent map squares. Owner: battle-runtime spell area projection plus table/spatial/environment owner. Required output: Focused Surface/runtime owner decision with tests or accepted runtime-detached closure for Difficult Terrain, Lightly Obscured, anchor collapse, flat-surface depth, and burning-cube damage and cleanup, reusing existing light/obscurement, movement, damage, and table/spatial witness owners without duplicating area state.",
       "sourceRecordPath": "packages/surface/content/web.json",
       "sourceRows": [
         {
@@ -2544,8 +2547,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
       "unitId": "web"
     }
   ],
@@ -2665,7 +2668,7 @@
       ]
     },
     {
-      "count": 23,
+      "count": 24,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
@@ -2691,7 +2694,8 @@
         "sorcerer_font_of_magic",
         "sorcerer_metamagic",
         "spike_growth",
-        "spiritual_weapon"
+        "spiritual_weapon",
+        "web"
       ]
     },
     {
@@ -2745,32 +2749,31 @@
       ]
     },
     {
-      "count": 2,
-      "description": "No Unit profile claim records runtime support or an accepted strict closure.",
-      "status": "open-runtime-behavior",
-      "unitIds": [
-        "find_steed",
-        "web"
-      ]
-    },
-    {
       "count": 1,
       "description": "Companion lifecycle and control residuals are closed at the companion control boundary.",
       "status": "closed-companion-control-boundary",
       "unitIds": [
         "druid_wild_companion"
       ]
+    },
+    {
+      "count": 1,
+      "description": "No Unit profile claim records runtime support or an accepted strict closure.",
+      "status": "open-runtime-behavior",
+      "unitIds": [
+        "find_steed"
+      ]
     }
   ],
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 480,
-      "percent": "86.3%",
+      "numerator": 478,
+      "percent": "86%",
       "rowsByStatus": {
         "accepted": 355,
-        "accepted-no-battle-effect": 125,
-        "battle-runtime-required": 66,
+        "accepted-no-battle-effect": 123,
+        "battle-runtime-required": 68,
         "owner-evidence-required": 3,
         "partial-battle-runtime": 7
       }
@@ -2797,18 +2800,17 @@
     },
     "strictTargetClosure": {
       "denominator": 161,
-      "numerator": 159,
-      "percent": "98.8%"
+      "numerator": 160,
+      "percent": "99.4%"
     }
   },
   "openFrontier": [
     {
-      "count": 2,
+      "count": 1,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
-        "find_steed",
-        "web"
+        "find_steed"
       ]
     }
   ],
@@ -7572,18 +7574,18 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
-      "missing": 2,
+      "missing": 1,
       "profile-subset-supported": 14,
       "supported-profile": 106,
-      "unsupported-profile": 39
+      "unsupported-profile": 40
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 23,
+      "blocked-follow-up-split": 24,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 21,
-      "open-runtime-behavior": 2,
+      "open-runtime-behavior": 1,
       "supported-profile": 106
     },
     "nonSupportedFrontier": 55,

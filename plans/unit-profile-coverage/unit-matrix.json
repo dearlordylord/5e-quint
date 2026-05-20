@@ -25067,6 +25067,35 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE",
+            "mechanic": "Replace Web's partial Surface mechanics with a lossless SRD shape for Magic Action level-2 Spell Slot casting, point-origin 20-foot Cube, Concentration up to 1 hour, Difficult Terrain, Lightly Obscured area, anchoring or flat-surface layering, flat-surface 5-foot depth, start-of-next-caster-turn collapse, first-entry-on-a-turn creature-entry Dexterity save trigger, and separate turn-start Dexterity save trigger, failed-save Restrained while in the webs or until escape, action Strength (Athletics) escape against caster spell save DC, and flammable 5-foot Cube burn-away with 2d4 Fire damage to creatures that start turns in the fire.",
+            "owner": "surface Spell Definition authoring",
+            "requiredOutput": "Web Dhall and JSON content, plus schema/tracer support where required, make area identity, first-entry-on-a-turn and turn-start save triggers, Restrained lifecycle, escape, terrain/obscurement, anchor collapse, flat-surface depth, and flammable cube cleanup executable source facts instead of comments or prose-only description.",
+            "title": "Web Surface Area Hazard Shape"
+          },
+          {
+            "id": "L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME",
+            "mechanic": "Promote Web's battle-visible restraint hazard: Magic Action and level-2-or-higher Spell Slot spend, caller-supplied point-origin 20-foot Cube area identity, Concentration-owned active Web area, table-triggered affected-creature facts for first-entry-on-a-turn saves and separate start-turn in-area saves, failed-save spell-owned Restrained condition tied to table-witnessed still-in-webs state, action Strength (Athletics) escape against caster spell save DC, and cleanup when escape succeeds, the target is no longer in the webs, Concentration or duration ends, or table supplies collapse or removal.",
+            "owner": "battle-runtime spell invocation/effect lifecycle plus table/spatial owner",
+            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for resource spending, active area identity, first-entry-on-a-turn and start-turn save triggers, Restrained application, escape, and cleanup without automatic geometry, pathfinding, or area membership derivation.",
+            "title": "Web Restraint Hazard Runtime"
+          },
+          {
+            "id": "L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE",
+            "mechanic": "Decide and promote or close Web's area projection and flammable-cube clauses: active Web area as Difficult Terrain movement-cost facts, Lightly Obscured sight or perception projection, anchoring or layering collapse boundary, flat-surface 5-foot depth projection, and fire-exposed 5-foot Cube burn-away after 1 round with 2d4 Fire damage to creatures starting turns in the fire, consuming table-supplied fire exposure and affected-creature witnesses rather than storing independent map squares.",
+            "owner": "battle-runtime spell area projection plus table/spatial/environment owner",
+            "requiredOutput": "Focused Surface/runtime owner decision with tests or accepted runtime-detached closure for Difficult Terrain, Lightly Obscured, anchor collapse, flat-surface depth, and burning-cube damage and cleanup, reusing existing light/obscurement, movement, damage, and table/spatial witness owners without duplicating area state.",
+            "title": "Web Terrain Obscurement Fire Boundary"
+          }
+        ],
+        "futureProfileOwner": "surface Spell Definition authoring plus battle-runtime spell invocation/effect lifecycle and table/spatial/environment owner",
+        "reason": "Existing Surface record authors Web as a partial SRD Spell Definition: executable mechanics carry the Magic Action Spell Slot shell, Concentration up to 1 hour, point-origin 20-foot Cube attachment, and attached turn-start Dexterity save that applies Restrained on failure; the record prose also carries Difficult Terrain, Lightly Obscured, first-entry or start-turn save text, and Strength (Athletics) escape. The local SRD additionally defines anchoring or layering collapse, flat-surface 5-foot depth, and flammable 5-foot Cube burn-away plus 2d4 Fire damage, which are not yet executable Surface facts. Task 4 claims no promoted battle-runtime profile yet because existing promoted runtime shapes have Grease-specific ground-hazard Difficult Terrain and Fog Cloud heavy-obscurement area effects, but no Web-owned area hazard that combines Concentration area identity, entry saves limited to the first time a creature enters the webs on a turn, a separate start-turn save trigger, spell-owned Restrained tied to table-witnessed area membership, Strength (Athletics) escape, table-supplied anchor/collapse cleanup, Lightly Obscured area projection, flat-surface 5-foot depth, and burning-cube cleanup/damage without duplicating table spatial or environmental state.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
