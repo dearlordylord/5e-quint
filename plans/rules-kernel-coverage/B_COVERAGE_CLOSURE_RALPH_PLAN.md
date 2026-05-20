@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Feature Reaction Bonus Action And Resource Profile Join"
     },
     {
@@ -324,7 +324,7 @@ Reviewers should reject:
 | 5 | RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND - Battle Ability Skill And Command Hole Obligations | done | RKBC-BATTLE-HOLE-INVENTORY | Covered/boundary obligations for ability choice, skill choice, and Command option holes. |
 | 6 | RKBC-BATTLE-HOLE-REACTION-CONCENTRATION - Battle Reaction And Concentration Hole Obligations | done | RKBC-BATTLE-HOLE-INVENTORY | Reaction-decision, continuation-resume, spell-cast reaction-fact, and Concentration Saving Throw holes reuse the covered reaction obligation or table-fact boundary rows; Task 6 has no remaining follow-up. |
 | 7 | RKBC-PROFILE-JOIN-FEATURE-PASSIVE-RESOURCE - Feature Passive Resource And Persistent Profile Join | done | baseline | Passive, persistent-effect, attack-scaling, mastery, and activation feature profiles are joined to covered feature procedure obligations; reaction/bonus and failed-roll resource profiles remain Task 8. |
-| 8 | RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS - Feature Reaction Bonus Action And Resource Profile Join | ready-for-research | baseline | Map feature reaction, bonus-action, and failed-roll resource profiles to covered obligations or create missing obligations. |
+| 8 | RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS - Feature Reaction Bonus Action And Resource Profile Join | done | baseline | Feature reaction, bonus-action, and failed-roll resource profiles are joined to covered feature procedure obligations, with zero-damage redirect also joined to reaction continuation. |
 | 9 | RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION - Spell Damage Condition And Scalar Profile Join | ready-for-research | baseline | Map Spell Definition profiles for damage, condition, scalar, and roll modifiers to covered Spell Effect/Invocation obligations or create missing obligations. |
 | 10 | RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION - Spell After Hit Reaction And Marked Effect Profile Join | ready-for-research | baseline | Map after-hit, reaction-casting-time Spell Invocation, Readied Spell Response, marked-effect, and chained spell profiles to covered obligations or create missing obligations. |
 | 11 | RKBC-PROFILE-JOIN-TABLE-CALLER - Table Caller Profile Join And Boundary Classification | ready-for-research | RKBC-BATTLE-HOLE-INVENTORY, RKBC-BATTLE-HOLE-TARGETS-AREAS, RKBC-BATTLE-HOLE-MOVEMENT-ROUTE | Map table-caller profiles to reducer-semantic obligations or boundary rows without MBT state-space explosion. |
@@ -506,11 +506,18 @@ Acceptance:
 
 ### Task 8 - RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS - Feature Reaction Bonus Action And Resource Profile Join
 
-Status: `ready-for-research`
+Status: `done`
 
 Scope: close unmapped bonus-action, reaction, and failed-roll resource profiles,
 including Bardic Inspiration grants/uses, failed Ability Check boosts,
 damage-redirection reactions, and feature target holes tied to those timings.
+
+Result: Bardic Inspiration grant/failed D20 Test use, Tactical Mind failed
+Ability Check boost, Orc Adrenaline Rush, Monk's Focus battle options, and Monk
+Deflect Attacks zero-damage redirect profiles join the covered
+`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` obligation. Zero-damage redirect
+also joins `BATTLE.REACTION.OFFER_DECLINE_RESUME` because it is reaction-timed
+and resumes the interrupted attack-damage continuation.
 
 Acceptance:
 

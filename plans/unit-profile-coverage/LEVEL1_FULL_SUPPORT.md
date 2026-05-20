@@ -11,9 +11,9 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | Strict runtime/profile support | 78/94 (83%) |
 | Strict target closure | 94/94 (100%) |
 | Product readiness | 367/367 (100%) |
-| Rules-kernel profile join | 21/58 (36.2%) |
-| Rules-kernel covered profile join | 16/58 (27.6%) |
-| Supported Unit rules-kernel chain | 31/78 (39.7%) |
+| Rules-kernel profile join | 23/58 (39.7%) |
+| Rules-kernel covered profile join | 18/58 (31%) |
+| Supported Unit rules-kernel chain | 32/78 (41%) |
 
 ## Scope
 
@@ -49,7 +49,6 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | --- | --- | --- |
 | `animal_friendship` | unmapped | `spell.creature-type-protection-and-charm` (unmapped: no obligation mapping) |
 | `bane` | unmapped | `spell.invocation-roll-modifier` (unmapped: no obligation mapping) |
-| `bard_bardic_inspiration` | unmapped | `unit-feature.bardic-inspiration-grant` (unmapped: no obligation mapping); `unit-feature.bardic-inspiration-failed-d20-test` (unmapped: no obligation mapping) |
 | `bless` | unmapped | `spell.invocation-roll-modifier` (unmapped: no obligation mapping) |
 | `chromatic_orb` | unmapped | `spell.invocation-chained-attack-damage` (unmapped: no obligation mapping) |
 | `cleric_divine_order` | unmapped | `character-creation.class-feature-option-projection` (unmapped: no obligation mapping) |

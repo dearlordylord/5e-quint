@@ -83,18 +83,18 @@
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 102,
-      "numerator": 36,
-      "percent": "35.3%"
+      "numerator": 42,
+      "percent": "41.2%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 102,
-      "numerator": 41,
-      "percent": "40.2%"
+      "numerator": 47,
+      "percent": "46.1%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 131,
-      "numerator": 58,
-      "percent": "44.3%"
+      "numerator": 62,
+      "percent": "47.3%"
     },
     "runtimeMappingCoverage": {
       "denominator": 76,
@@ -2970,13 +2970,13 @@
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 102,
-        "numerator": 36,
-        "percent": "35.3%"
+        "numerator": 42,
+        "percent": "41.2%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 102,
-        "numerator": 41,
-        "percent": "40.2%"
+        "numerator": 47,
+        "percent": "46.1%"
       }
     },
     "profileKinds": [
@@ -3047,14 +3047,34 @@
         "profileKind": "passive"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
         "profileId": "unit-feature.monk-focus-battle-options",
         "profileKind": "bonus-action"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          },
+          {
+            "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+          }
+        ],
         "profileId": "unit-feature.attack-damage-reduction-zero-damage-redirect",
         "profileKind": "reaction"
       },
@@ -3072,20 +3092,41 @@
         "profileKind": "persistent-effect"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
         "profileId": "unit-feature.bardic-inspiration-grant",
         "profileKind": "bonus-action"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
         "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
         "profileKind": "resource"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
         "profileId": "unit-feature.bonus-action-dash-temporary-hit-points",
         "profileKind": "bonus-action"
       },
@@ -3116,8 +3157,15 @@
         "profileKind": "persistent-effect"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
         "profileId": "unit-feature.failed-ability-check-resource-boost",
         "profileKind": "resource"
       },
@@ -3921,8 +3969,8 @@
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
           "denominator": 131,
-          "numerator": 58,
-          "percent": "44.3%"
+          "numerator": 62,
+          "percent": "47.3%"
         }
       },
       "units": [
@@ -4108,17 +4156,31 @@
           "unitId": "barbarian_unarmored_defense"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
               "profileId": "unit-feature.bardic-inspiration-grant",
               "profileKind": "bonus-action"
             },
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
               "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
               "profileKind": "resource"
             }
@@ -4784,11 +4846,18 @@
           "unitId": "fighter_second_wind"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
               "profileId": "unit-feature.failed-ability-check-resource-boost",
               "profileKind": "resource"
             }
@@ -5324,11 +5393,24 @@
           "unitId": "misty_step"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                },
+                {
+                  "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                }
+              ],
               "profileId": "unit-feature.attack-damage-reduction-zero-damage-redirect",
               "profileKind": "reaction"
             }
@@ -5436,11 +5518,18 @@
           "unitId": "mycelium_step"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
               "profileId": "unit-feature.bonus-action-dash-temporary-hit-points",
               "profileKind": "bonus-action"
             }

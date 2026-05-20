@@ -98,6 +98,7 @@
       "profiles": [
         "spell.reaction-shield",
         "spell.readied-action-time-spell",
+        "unit-feature.attack-damage-reduction-zero-damage-redirect",
         "unit-feature.reaction-roll-or-damage-reduction"
       ],
       "qntOwners": [
@@ -120,18 +121,30 @@
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
         "unit-feature.action-surge-resource",
         "unit-feature.alternate-action-cost",
         "unit-feature.attack-action-attack-count-scaling",
+        "unit-feature.attack-damage-reduction-zero-damage-redirect",
         "unit-feature.attack-damage-rider",
         "unit-feature.attack-roll-miss-to-hit-replacement",
+        "unit-feature.bardic-inspiration-failed-d20-test",
+        "unit-feature.bardic-inspiration-grant",
+        "unit-feature.bonus-action-dash-temporary-hit-points",
         "unit-feature.bonus-action-ongoing-rage",
+        "unit-feature.failed-ability-check-resource-boost",
         "unit-feature.first-attack-roll-reckless-advantage",
         "unit-feature.innate-sorcery-activation",
         "unit-feature.martial-arts-attack-projection",
+        "unit-feature.monk-focus-battle-options",
         "unit-feature.passive-armor-class-bonus",
         "unit-feature.passive-ranged-attack-roll-bonus",
         "unit-feature.passive-saving-throw-roll-mode",
@@ -148,7 +161,9 @@
         "unit-feature.zero-hit-point-replacement"
       ],
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+        "packages/battle-runtime/battle-runtime.qnt",
+        "packages/battle-runtime/battle-runtime-monk-focus.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -656,12 +671,11 @@
         "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES"
       ],
       "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS",
         "RKBC-PROFILE-JOIN-TABLE-CALLER"
       ],
       "holeKind": "targetChoice",
       "id": "BattleTargetChoiceHole",
-      "reason": "Target identity is a table decision, but accepted targets change reducer legality and downstream effects. Movement, mastery and attack-projection feature target procedures, spell target procedures, attack target legality/resource branches, and Search target resolution are covered; reaction/bonus feature joins and table target-admission facts remain explicit downstream follow-ups.",
+      "reason": "Target identity is a table decision, but accepted targets change reducer legality and downstream effects. Movement, feature target procedures including mastery, attack-projection, reaction, and bonus-action profiles, spell target procedures, attack target legality/resource branches, and Search target resolution are covered; table target-admission facts remain an explicit downstream follow-up.",
       "subject": "battle-hole-family"
     },
     {
@@ -1100,12 +1114,10 @@
       "coveredByObligationIds": [
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
-      "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS"
-      ],
+      "followUpTaskIds": [],
       "holeKind": "savingThrowOutcome",
       "id": "BattleUnitFeatureSavingThrowOutcomeHole",
-      "reason": "Feature Saving Throw outcomes drive feature-owned conditions or damage replacements. Passive, persistent-effect, and mastery feature joins map to the feature procedure obligation; reaction, bonus-action, and failed-roll resource feature saves remain a reaction/bonus profile follow-up.",
+      "reason": "Feature Saving Throw outcomes drive feature-owned conditions or damage replacements. Supported feature Saving Throw profiles map to the feature procedure obligation; failed Ability Check resource boosts use the separate feature roll/resource path.",
       "subject": "battle-hole-family"
     },
     {
@@ -1113,12 +1125,10 @@
       "coveredByObligationIds": [
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
-      "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS"
-      ],
+      "followUpTaskIds": [],
       "holeKind": "rolledDice",
       "id": "BattleUnitFeatureRollHole",
-      "reason": "Feature roll holes cover self-healing and reaction modifier dice; the established feature procedure subset is covered, with later feature-profile joins still open.",
+      "reason": "Feature roll holes cover self-healing, reaction modifier dice, Bardic Inspiration dice, failed Ability Check boosts, and damage-redirection rolls; supported feature profiles map to the feature procedure obligation.",
       "subject": "battle-hole-family"
     },
     {
@@ -1126,12 +1136,10 @@
       "coveredByObligationIds": [
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
-      "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS"
-      ],
+      "followUpTaskIds": [],
       "holeKind": "unitFeatureDecision",
       "id": "BattleUnitFeatureDecisionHole",
-      "reason": "Feature use-or-decline decisions can spend resources or open continuations such as Cleave. Passive, persistent-effect, attack-scaling, mastery, and activation feature joins map to the feature procedure obligation; reaction, bonus-action, and failed-roll resource profiles remain follow-up work.",
+      "reason": "Feature use-or-decline decisions can spend resources or open continuations such as Cleave and zero-damage redirect. Supported passive, persistent-effect, attack-scaling, mastery, activation, reaction, bonus-action, and failed-roll resource profiles map to the feature procedure obligation.",
       "subject": "battle-hole-family"
     },
     {
@@ -1391,11 +1399,9 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "fillKind": "unitFeatureDecision",
-      "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS"
-      ],
+      "followUpTaskIds": [],
       "id": "unitFeatureDecision",
-      "reason": "Use/decline fills decide whether feature continuations or resources proceed. Passive, persistent-effect, attack-scaling, mastery, and activation feature joins are covered; reaction, bonus-action, and failed-roll resource profiles remain follow-up work.",
+      "reason": "Use/decline fills decide whether feature continuations or resources proceed. Supported passive, persistent-effect, attack-scaling, mastery, activation, reaction, bonus-action, and failed-roll resource profiles map to the feature procedure obligation.",
       "subject": "battle-fill-kind"
     },
     {
@@ -1422,11 +1428,10 @@
       ],
       "fillKind": "targetChoice",
       "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS",
         "RKBC-PROFILE-JOIN-TABLE-CALLER"
       ],
       "id": "targetChoice",
-      "reason": "Target identity is a table decision, but accepted targets change reducer legality and downstream effects. Movement, mastery and attack-projection feature target procedures, spell target procedures, attack target legality/resource branches, and Search target resolution are covered; reaction/bonus feature joins and table target-admission facts remain explicit downstream follow-ups.",
+      "reason": "Target identity is a table decision, but accepted targets change reducer legality and downstream effects. Movement, feature target procedures including mastery, attack-projection, reaction, and bonus-action profiles, spell target procedures, attack target legality/resource branches, and Search target resolution are covered; table target-admission facts remain an explicit downstream follow-up.",
       "subject": "battle-fill-kind"
     },
     {
@@ -1721,6 +1726,13 @@
     },
     {
       "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.REACTION.OFFER_DECLINE_RESUME"
+      ],
+      "profileId": "unit-feature.attack-damage-reduction-zero-damage-redirect"
+    },
+    {
+      "obligationIds": [
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "profileId": "unit-feature.attack-damage-rider"
@@ -1735,7 +1747,31 @@
       "obligationIds": [
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
+      "profileId": "unit-feature.bardic-inspiration-failed-d20-test"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.bardic-inspiration-grant"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.bonus-action-dash-temporary-hit-points"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
       "profileId": "unit-feature.bonus-action-ongoing-rage"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.failed-ability-check-resource-boost"
     },
     {
       "obligationIds": [
@@ -1754,6 +1790,12 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "profileId": "unit-feature.martial-arts-attack-projection"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.monk-focus-battle-options"
     },
     {
       "obligationIds": [

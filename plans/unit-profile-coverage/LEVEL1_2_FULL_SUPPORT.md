@@ -11,9 +11,9 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | Strict runtime/profile support | 108/164 (65.9%) |
 | Strict target closure | 163/164 (99.4%) |
 | Product readiness | 486/556 (87.4%) |
-| Rules-kernel profile join | 27/80 (33.8%) |
-| Rules-kernel covered profile join | 22/80 (27.5%) |
-| Supported Unit rules-kernel chain | 38/108 (35.2%) |
+| Rules-kernel profile join | 30/80 (37.5%) |
+| Rules-kernel covered profile join | 25/80 (31.3%) |
+| Supported Unit rules-kernel chain | 40/108 (37%) |
 
 ## Scope
 
@@ -54,7 +54,6 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `alter_self` | unmapped | `spell.invocation-self-transformation-mode` (unmapped: no obligation mapping) |
 | `animal_friendship` | unmapped | `spell.creature-type-protection-and-charm` (unmapped: no obligation mapping) |
 | `bane` | unmapped | `spell.invocation-roll-modifier` (unmapped: no obligation mapping) |
-| `bard_bardic_inspiration` | unmapped | `unit-feature.bardic-inspiration-grant` (unmapped: no obligation mapping); `unit-feature.bardic-inspiration-failed-d20-test` (unmapped: no obligation mapping) |
 | `bard_jack_of_all_trades` | unmapped | `character-sheet.ability-check-proficiency-bonus` (unmapped: no obligation mapping) |
 | `barkskin` | unmapped | `spell.scalar-buff` (unmapped: no obligation mapping) |
 | `bless` | unmapped | `spell.invocation-roll-modifier` (unmapped: no obligation mapping) |
@@ -77,7 +76,6 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `false_life` | unmapped | `spell.scalar-buff` (unmapped: no obligation mapping) |
 | `feather_fall` | unmapped | `spell.invocation-feather-fall-mitigation` (unmapped: no obligation mapping) |
 | `fighter_fighting_style` | mapped-open | `character-creation.class-feature-feat-choice` (mapped-open: `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner)); `character-creation.class-feature-advancement-replacement` (mapped-open: `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner)) |
-| `fighter_tactical_mind` | unmapped | `unit-feature.failed-ability-check-resource-boost` (unmapped: no obligation mapping) |
 | `flaming_sphere` | unmapped | `spell.invocation-flaming-sphere-hazard-ram` (unmapped: no obligation mapping) |
 | `fog_cloud` | unmapped | `spell.invocation-fog-cloud-obscurement` (unmapped: no obligation mapping) |
 | `grease` | unmapped | `spell.invocation-grease-ground-hazard` (unmapped: no obligation mapping) |

@@ -963,18 +963,18 @@
     },
     "rulesKernelCoveredProfileJoin": {
       "denominator": 58,
-      "numerator": 16,
-      "percent": "27.6%"
+      "numerator": 18,
+      "percent": "31%"
     },
     "rulesKernelProfileJoin": {
       "denominator": 58,
-      "numerator": 21,
-      "percent": "36.2%"
+      "numerator": 23,
+      "percent": "39.7%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 78,
-      "numerator": 31,
-      "percent": "39.7%"
+      "numerator": 32,
+      "percent": "41%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 94,
@@ -3246,8 +3246,8 @@
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
         "denominator": 78,
-        "numerator": 31,
-        "percent": "39.7%"
+        "numerator": 32,
+        "percent": "41%"
       }
     },
     "units": [
@@ -3352,17 +3352,31 @@
         "unitId": "barbarian_unarmored_defense"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
             "profileId": "unit-feature.bardic-inspiration-grant",
             "profileKind": "bonus-action"
           },
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
             "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
             "profileKind": "resource"
           }
