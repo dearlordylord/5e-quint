@@ -34,6 +34,7 @@ import {
 import {
   creationChoiceOptionId,
   eldritchInvocationId,
+  sorcererMetamagicOptionId,
   type CharacterBuild,
   type CharacterBuildEldritchInvocationRepeatableChoice,
   type CharacterBuildFeature,
@@ -42,6 +43,7 @@ import {
   type CharacterBuildSpellcastingSource,
   type ChoiceCreationHole,
   type EldritchInvocationId,
+  type SorcererMetamagicOptionId,
   type UnitCatalog,
 } from "./types.ts";
 import {
@@ -55,6 +57,7 @@ import {
 } from "./eldritch-invocations.ts";
 
 const FIGHTER_CLASS_NAME = "fighter" as const satisfies ClassName;
+const SORCERER_CLASS_NAME = "sorcerer" as const satisfies ClassName;
 const WARLOCK_CLASS_NAME = "warlock" as const satisfies ClassName;
 const FIGHTING_STYLE_FEAT_CATEGORY =
   "fighting_style" as const satisfies FeatRecord["category"];
@@ -70,6 +73,10 @@ const FighterClassUnitId = Brand.nominal<FighterClassUnitId>();
 export type WarlockClassUnitId = ClassUnitId &
   Brand.Brand<"WarlockClassUnitId">;
 const WarlockClassUnitId = Brand.nominal<WarlockClassUnitId>();
+
+export type SorcererClassUnitId = ClassUnitId &
+  Brand.Brand<"SorcererClassUnitId">;
+const SorcererClassUnitId = Brand.nominal<SorcererClassUnitId>();
 
 export type FightingStyleFeatUnitId = UnitRecord["id"] &
   Brand.Brand<"FightingStyleFeatUnitId">;
@@ -103,6 +110,19 @@ export type CharacterBuildWarlockPactMagicLevelGain = {
   };
 };
 
+export type CharacterBuildSorcererMetamagicLevelGain = {
+  readonly tag: "sorcererLevelGain";
+  readonly classUnitId: SorcererClassUnitId;
+  readonly hitPointRule: FixedHigherLevelClassHitPointRule;
+  readonly metamagic: {
+    readonly gainedOptions: readonly SorcererMetamagicOptionId[];
+    readonly replacement?: {
+      readonly replaceOptionId: SorcererMetamagicOptionId;
+      readonly selectedOptionId: SorcererMetamagicOptionId;
+    };
+  };
+};
+
 export type CharacterBuildWarlockLevelGain = {
   readonly tag: "warlockLevelGain";
   readonly classUnitId: WarlockClassUnitId;
@@ -131,6 +151,7 @@ export type CharacterBuildWarlockEldritchInvocationSelectionInput =
 export type CharacterBuildClassLevelGain =
   | CharacterBuildPlainClassLevelGain
   | CharacterBuildFighterFightingStyleReplacementLevelGain
+  | CharacterBuildSorcererMetamagicLevelGain
   | CharacterBuildWarlockLevelGain;
 
 export type CharacterBuildAdvancementIssue =
@@ -158,6 +179,12 @@ export type CharacterBuildAdvancementIssue =
     }
   | {
       readonly code: "nonWarlockClassLevelGain";
+      readonly classUnitId: UnitRecord["id"];
+      readonly className?: ClassName;
+      readonly message: string;
+    }
+  | {
+      readonly code: "nonSorcererClassLevelGain";
       readonly classUnitId: UnitRecord["id"];
       readonly className?: ClassName;
       readonly message: string;
@@ -342,6 +369,56 @@ export type CharacterBuildAdvancementIssue =
       readonly message: string;
     }
   | {
+      readonly code: "missingSorcererMetamagicFeatureChoice";
+      readonly classUnitId: UnitRecord["id"];
+      readonly message: string;
+    }
+  | {
+      readonly code: "ambiguousSorcererMetamagicFeatureChoice";
+      readonly classUnitId: UnitRecord["id"];
+      readonly featureUnitIds: readonly UnitRecord["id"][];
+      readonly message: string;
+    }
+  | {
+      readonly code: "unknownSorcererMetamagicOption";
+      readonly optionId: string;
+      readonly message: string;
+    }
+  | {
+      readonly code: "invalidSorcererMetamagicOption";
+      readonly optionId: SorcererMetamagicOptionId;
+      readonly message: string;
+    }
+  | {
+      readonly code: "invalidSorcererMetamagicSelectionCount";
+      readonly sorcererLevel: number;
+      readonly expectedCount: number;
+      readonly actualCount: number;
+      readonly message: string;
+    }
+  | {
+      readonly code: "invalidSorcererMetamagicGainCount";
+      readonly sorcererLevel: number;
+      readonly expectedGains: number;
+      readonly actualGains: number;
+      readonly message: string;
+    }
+  | {
+      readonly code: "missingSelectedSorcererMetamagicOption";
+      readonly optionId: SorcererMetamagicOptionId;
+      readonly message: string;
+    }
+  | {
+      readonly code: "sameSorcererMetamagicReplacement";
+      readonly optionId: SorcererMetamagicOptionId;
+      readonly message: string;
+    }
+  | {
+      readonly code: "duplicateSorcererMetamagicOption";
+      readonly optionId: SorcererMetamagicOptionId;
+      readonly message: string;
+    }
+  | {
       readonly code: "duplicateWarlockPactMagicCantrip";
       readonly cantripId: UnitRecord["id"];
       readonly message: string;
@@ -374,6 +451,10 @@ type SelectedEldritchInvocationFeature = Extract<
   CharacterBuildFeature,
   { readonly kind: "selectedEldritchInvocation" }
 >;
+type SelectedSorcererMetamagicOptionFeature = Extract<
+  CharacterBuildFeature,
+  { readonly kind: "selectedSorcererMetamagicOption" }
+>;
 type EldritchInvocationFeatureChoice = {
   readonly featureUnitId: UnitRecord["id"];
   readonly mechanics: Extract<
@@ -382,6 +463,13 @@ type EldritchInvocationFeatureChoice = {
       readonly family: "feature_choice";
       readonly choiceKey: typeof ELDRITCH_INVOCATIONS_CHOICE_KEY;
     }
+  >;
+};
+type SorcererMetamagicFeatureChoice = {
+  readonly featureUnitId: UnitRecord["id"];
+  readonly mechanics: Extract<
+    ClassFeatureRecord["mechanics"],
+    { readonly family: "metamagic_options" }
   >;
 };
 type PactMagicProgressionRow =
@@ -443,6 +531,35 @@ export function warlockClassUnitId(input: {
   }
 
   return Either.right(WarlockClassUnitId(input.classUnitId));
+}
+
+export function sorcererClassUnitId(input: {
+  readonly unitLibrary: UnitCatalog;
+  readonly classUnitId: ClassUnitId;
+}): Either.Either<SorcererClassUnitId, CharacterBuildAdvancementIssue> {
+  const classUnit = classUnitRecord(input);
+  if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
+
+  const facts = readClassCreationFacts(classUnit.right);
+  if (facts.tag !== "readable") {
+    return Either.left({
+      code: "unreadableClassUnit",
+      classUnitId: input.classUnitId,
+      message: `Cannot read class creation facts for ${input.classUnitId}.`,
+    });
+  }
+
+  if (facts.value.className !== SORCERER_CLASS_NAME) {
+    return Either.left({
+      code: "nonSorcererClassLevelGain",
+      classUnitId: input.classUnitId,
+      className: facts.value.className,
+      message:
+        "Metamagic lifecycle choices are only legal when gaining a Sorcerer level.",
+    });
+  }
+
+  return Either.right(SorcererClassUnitId(input.classUnitId));
 }
 
 export function fightingStyleFeatUnitId(input: {
@@ -557,6 +674,44 @@ export function warlockLevelGain(input: {
   });
 }
 
+export function sorcererLevelGain(input: {
+  readonly unitLibrary: UnitCatalog;
+  readonly classUnitId: ClassUnitId;
+  readonly hitPointRule: FixedHigherLevelClassHitPointRule;
+  readonly gainedOptions: readonly (string | SorcererMetamagicOptionId)[];
+  readonly replacement?: {
+    readonly replaceOptionId: string | SorcererMetamagicOptionId;
+    readonly selectedOptionId: string | SorcererMetamagicOptionId;
+  };
+}): Either.Either<
+  CharacterBuildSorcererMetamagicLevelGain,
+  CharacterBuildAdvancementIssue
+> {
+  const classUnitId = sorcererClassUnitId(input);
+  if (Either.isLeft(classUnitId)) return Either.left(classUnitId.left);
+
+  const gainedOptions = parseSorcererMetamagicOptionIds(input.gainedOptions);
+  if (Either.isLeft(gainedOptions)) return Either.left(gainedOptions.left);
+
+  const replacement =
+    input.replacement === undefined
+      ? undefined
+      : parseSorcererMetamagicReplacement(input.replacement);
+  if (replacement !== undefined && Either.isLeft(replacement)) {
+    return Either.left(replacement.left);
+  }
+
+  return Either.right({
+    tag: "sorcererLevelGain",
+    classUnitId: classUnitId.right,
+    hitPointRule: input.hitPointRule,
+    metamagic: {
+      gainedOptions: gainedOptions.right,
+      ...(replacement === undefined ? {} : { replacement: replacement.right }),
+    },
+  });
+}
+
 export function advanceCharacterBuildClassLevel(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
@@ -594,6 +749,13 @@ export function advanceCharacterBuildClassLevel(input: {
     ),
     Match.when({ tag: "warlockLevelGain" }, (levelGain) =>
       updateWarlockEldritchInvocations({
+        build: buildForFeatureUpdate,
+        unitLibrary: input.unitLibrary,
+        levelGain,
+      }),
+    ),
+    Match.when({ tag: "sorcererLevelGain" }, (levelGain) =>
+      updateSorcererMetamagicOptions({
         build: buildForFeatureUpdate,
         unitLibrary: input.unitLibrary,
         levelGain,
@@ -862,6 +1024,75 @@ function parseEldritchInvocationReplacement(input: {
   });
 }
 
+function parseSorcererMetamagicOptionIds(
+  optionIds: readonly (string | SorcererMetamagicOptionId)[],
+): Either.Either<
+  readonly SorcererMetamagicOptionId[],
+  CharacterBuildAdvancementIssue
+> {
+  const parsed: SorcererMetamagicOptionId[] = [];
+  for (const optionId of optionIds) {
+    const parsedOptionId = parseKnownSorcererMetamagicOptionId(optionId);
+    if (Either.isLeft(parsedOptionId)) {
+      return Either.left(parsedOptionId.left);
+    }
+    parsed.push(parsedOptionId.right);
+  }
+
+  return Either.right(parsed);
+}
+
+function parseKnownSorcererMetamagicOptionId(
+  optionId: string | SorcererMetamagicOptionId,
+): Either.Either<SorcererMetamagicOptionId, CharacterBuildAdvancementIssue> {
+  const parsed = sorcererMetamagicOptionId(optionId);
+  if (Either.isLeft(parsed)) {
+    return Either.left({
+      code: "unknownSorcererMetamagicOption",
+      optionId,
+      message: `Unknown Sorcerer Metamagic option id ${optionId}.`,
+    });
+  }
+
+  return Either.right(parsed.right);
+}
+
+function parseSorcererMetamagicReplacement(input: {
+  readonly replaceOptionId: string | SorcererMetamagicOptionId;
+  readonly selectedOptionId: string | SorcererMetamagicOptionId;
+}): Either.Either<
+  NonNullable<
+    CharacterBuildSorcererMetamagicLevelGain["metamagic"]["replacement"]
+  >,
+  CharacterBuildAdvancementIssue
+> {
+  const replaceOptionId = parseKnownSorcererMetamagicOptionId(
+    input.replaceOptionId,
+  );
+  if (Either.isLeft(replaceOptionId)) return Either.left(replaceOptionId.left);
+
+  const selectedOptionId = parseKnownSorcererMetamagicOptionId(
+    input.selectedOptionId,
+  );
+  if (Either.isLeft(selectedOptionId)) {
+    return Either.left(selectedOptionId.left);
+  }
+
+  if (replaceOptionId.right === selectedOptionId.right) {
+    return Either.left({
+      code: "sameSorcererMetamagicReplacement",
+      optionId: selectedOptionId.right,
+      message:
+        "Metamagic replacement must choose a different Metamagic option.",
+    });
+  }
+
+  return Either.right({
+    replaceOptionId: replaceOptionId.right,
+    selectedOptionId: selectedOptionId.right,
+  });
+}
+
 function plainClassLevelGainFeatures(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
@@ -883,6 +1114,26 @@ function plainClassLevelGainFeatures(input: {
       classUnitId: input.levelGain.classUnitId,
       message: `Cannot read class creation facts for ${input.levelGain.classUnitId}.`,
     });
+  }
+
+  if (facts.value.className === SORCERER_CLASS_NAME) {
+    const sorcererClassUnitId = SorcererClassUnitId(
+      input.levelGain.classUnitId,
+    );
+    const sorcererLevel = classLevelForUnit(
+      input.build.progression,
+      input.levelGain.classUnitId,
+    );
+    const unchanged = sorcererMetamagicCanRemainUnchanged({
+      build: input.build,
+      unitLibrary: input.unitLibrary,
+      classUnitId: sorcererClassUnitId,
+      sorcererLevel,
+      nextSorcererLevel: sorcererLevel + 1,
+    });
+    if (Either.isLeft(unchanged)) return Either.left(unchanged.left);
+
+    return Either.right(input.build.features);
   }
 
   if (facts.value.className !== WARLOCK_CLASS_NAME) {
@@ -995,6 +1246,251 @@ function replaceFightingStyleSelectedFeature(input: {
       isSelectedFromFeature(feature, featureUnitId)
         ? { ...feature, unitId: selectedFeatUnitId }
         : feature,
+    ),
+  );
+}
+
+function updateSorcererMetamagicOptions(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly levelGain: CharacterBuildSorcererMetamagicLevelGain;
+}): Either.Either<
+  readonly CharacterBuildFeature[],
+  CharacterBuildAdvancementIssue
+> {
+  const featureChoice = sorcererMetamagicFeatureForSorcererClass({
+    unitLibrary: input.unitLibrary,
+    classUnitId: input.levelGain.classUnitId,
+  });
+  if (Either.isLeft(featureChoice)) return Either.left(featureChoice.left);
+
+  const sorcererLevel = classLevelForUnit(
+    input.build.progression,
+    input.levelGain.classUnitId,
+  );
+  const nextSorcererLevel = sorcererLevel + 1;
+  const selectedFeatures = selectedSorcererMetamagicOptionFeaturesForFeature(
+    input.build.features,
+    featureChoice.right.featureUnitId,
+  );
+  const selectedOptionIds = selectedFeatures.map((feature) => feature.optionId);
+  const selectionIssue = sorcererMetamagicSelectionCountIssue({
+    mechanics: featureChoice.right.mechanics,
+    sorcererLevel,
+    selectedOptionIds,
+  });
+  if (selectionIssue !== undefined) {
+    return Either.left(selectionIssue);
+  }
+
+  const nextExpectedCount = sorcererMetamagicCountAtLevel(
+    featureChoice.right.mechanics,
+    nextSorcererLevel,
+  );
+  const expectedGains = nextExpectedCount - selectedOptionIds.length;
+  const gainedOptions = input.levelGain.metamagic.gainedOptions;
+  if (gainedOptions.length !== expectedGains) {
+    return Either.left({
+      code: "invalidSorcererMetamagicGainCount",
+      sorcererLevel: nextSorcererLevel,
+      expectedGains,
+      actualGains: gainedOptions.length,
+      message:
+        "Sorcerer level gain must include exactly the new Metamagic option choices from the Sorcerer Features table.",
+    });
+  }
+
+  const invalidGain = gainedOptions.find(
+    (optionId) =>
+      !sorcererMetamagicOptionBelongsToFeature(
+        featureChoice.right.mechanics,
+        optionId,
+      ),
+  );
+  if (invalidGain !== undefined) {
+    return Either.left({
+      code: "invalidSorcererMetamagicOption",
+      optionId: invalidGain,
+      message:
+        "Metamagic option gains must come from the installed Surface option roster.",
+    });
+  }
+
+  const alreadyKnownGain = gainedOptions.find((optionId) =>
+    selectedOptionIds.includes(optionId),
+  );
+  if (alreadyKnownGain !== undefined) {
+    return Either.left({
+      code: "duplicateSorcererMetamagicOption",
+      optionId: alreadyKnownGain,
+      message:
+        "Metamagic option gains must choose options the build does not already know.",
+    });
+  }
+
+  const replacedOptions = replaceSorcererMetamagicOptionSelection({
+    selectedOptionIds,
+    ...(input.levelGain.metamagic.replacement === undefined
+      ? {}
+      : { replacement: input.levelGain.metamagic.replacement }),
+  });
+  if (Either.isLeft(replacedOptions)) {
+    return Either.left(replacedOptions.left);
+  }
+
+  const finalOptions = [...replacedOptions.right, ...gainedOptions];
+  const duplicateOption = duplicateValue(finalOptions);
+  if (duplicateOption !== undefined) {
+    return Either.left({
+      code: "duplicateSorcererMetamagicOption",
+      optionId: duplicateOption,
+      message: "Metamagic known options must remain distinct.",
+    });
+  }
+
+  return finalOptions.length === nextExpectedCount
+    ? Either.right([
+        ...input.build.features.filter(
+          (feature) =>
+            !isSelectedSorcererMetamagicOptionFromFeature(
+              feature,
+              featureChoice.right.featureUnitId,
+            ),
+        ),
+        ...finalOptions.map((optionId) =>
+          sorcererMetamagicOptionFeature(
+            optionId,
+            featureChoice.right.featureUnitId,
+          ),
+        ),
+      ])
+    : Either.left({
+        code: "invalidSorcererMetamagicSelectionCount",
+        sorcererLevel: nextSorcererLevel,
+        expectedCount: nextExpectedCount,
+        actualCount: finalOptions.length,
+        message:
+          "Metamagic option changes must leave the build with the table count for the new Sorcerer level.",
+      });
+}
+
+function sorcererMetamagicCanRemainUnchanged(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly classUnitId: SorcererClassUnitId;
+  readonly sorcererLevel: number;
+  readonly nextSorcererLevel: number;
+}): Either.Either<void, CharacterBuildAdvancementIssue> {
+  const featureChoice = sorcererMetamagicFeatureForSorcererClass(input);
+  if (Either.isLeft(featureChoice)) return Either.left(featureChoice.left);
+
+  const selectedOptionIds = selectedSorcererMetamagicOptionFeaturesForFeature(
+    input.build.features,
+    featureChoice.right.featureUnitId,
+  ).map((feature) => feature.optionId);
+  const selectionIssue = sorcererMetamagicSelectionCountIssue({
+    mechanics: featureChoice.right.mechanics,
+    sorcererLevel: input.sorcererLevel,
+    selectedOptionIds,
+  });
+  if (selectionIssue !== undefined) {
+    return Either.left(selectionIssue);
+  }
+
+  const nextExpectedCount = sorcererMetamagicCountAtLevel(
+    featureChoice.right.mechanics,
+    input.nextSorcererLevel,
+  );
+  return selectedOptionIds.length === nextExpectedCount
+    ? Either.right(undefined)
+    : Either.left({
+        code: "invalidSorcererMetamagicGainCount",
+        sorcererLevel: input.nextSorcererLevel,
+        expectedGains: nextExpectedCount - selectedOptionIds.length,
+        actualGains: 0,
+        message:
+          "A plain Sorcerer level gain would leave the build with the wrong number of Metamagic options.",
+      });
+}
+
+function sorcererMetamagicSelectionCountIssue(input: {
+  readonly mechanics: SorcererMetamagicFeatureChoice["mechanics"];
+  readonly sorcererLevel: number;
+  readonly selectedOptionIds: readonly SorcererMetamagicOptionId[];
+}): CharacterBuildAdvancementIssue | undefined {
+  const expectedCount = sorcererMetamagicCountAtLevel(
+    input.mechanics,
+    input.sorcererLevel,
+  );
+  if (input.selectedOptionIds.length !== expectedCount) {
+    return {
+      code: "invalidSorcererMetamagicSelectionCount",
+      sorcererLevel: input.sorcererLevel,
+      expectedCount,
+      actualCount: input.selectedOptionIds.length,
+      message:
+        "Cannot apply Sorcerer Metamagic lifecycle choices to a build whose current option count does not match its Sorcerer level.",
+    };
+  }
+
+  const invalidOption = input.selectedOptionIds.find(
+    (optionId) =>
+      !sorcererMetamagicOptionBelongsToFeature(input.mechanics, optionId),
+  );
+  if (invalidOption !== undefined) {
+    return {
+      code: "invalidSorcererMetamagicOption",
+      optionId: invalidOption,
+      message:
+        "Metamagic known options must come from the installed Surface option roster.",
+    };
+  }
+
+  const duplicateOption = duplicateValue(input.selectedOptionIds);
+  return duplicateOption === undefined
+    ? undefined
+    : {
+        code: "duplicateSorcererMetamagicOption",
+        optionId: duplicateOption,
+        message: "Metamagic known options must be distinct.",
+      };
+}
+
+function replaceSorcererMetamagicOptionSelection(input: {
+  readonly selectedOptionIds: readonly SorcererMetamagicOptionId[];
+  readonly replacement?: CharacterBuildSorcererMetamagicLevelGain["metamagic"]["replacement"];
+}): Either.Either<
+  readonly SorcererMetamagicOptionId[],
+  CharacterBuildAdvancementIssue
+> {
+  if (input.replacement === undefined) {
+    return Either.right(input.selectedOptionIds);
+  }
+
+  const replacement = input.replacement;
+  if (!input.selectedOptionIds.includes(replacement.replaceOptionId)) {
+    return Either.left({
+      code: "missingSelectedSorcererMetamagicOption",
+      optionId: replacement.replaceOptionId,
+      message:
+        "Cannot replace a Metamagic option that the build does not know.",
+    });
+  }
+
+  if (input.selectedOptionIds.includes(replacement.selectedOptionId)) {
+    return Either.left({
+      code: "duplicateSorcererMetamagicOption",
+      optionId: replacement.selectedOptionId,
+      message:
+        "Metamagic replacement must choose an option the build does not already know.",
+    });
+  }
+
+  return Either.right(
+    input.selectedOptionIds.map((optionId) =>
+      optionId === replacement.replaceOptionId
+        ? replacement.selectedOptionId
+        : optionId,
     ),
   );
 }
@@ -1725,11 +2221,92 @@ function eldritchInvocationFeatureForWarlockClass(input: {
     : Either.right(featureChoice);
 }
 
+function sorcererMetamagicFeatureForSorcererClass(input: {
+  readonly unitLibrary: UnitCatalog;
+  readonly classUnitId: SorcererClassUnitId;
+}): Either.Either<
+  SorcererMetamagicFeatureChoice,
+  CharacterBuildAdvancementIssue
+> {
+  const classUnit = classUnitRecord(input);
+  if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
+
+  const facts = readClassCreationFacts(classUnit.right);
+  if (facts.tag !== "readable") {
+    return Either.left({
+      code: "unreadableClassUnit",
+      classUnitId: input.classUnitId,
+      message: `Cannot read class creation facts for ${input.classUnitId}.`,
+    });
+  }
+
+  const featureChoices = facts.value.featureGrants.flatMap((grant) => {
+    const feature = input.unitLibrary.getUnit(grant.unitId);
+    if (
+      Option.isNone(feature) ||
+      feature.value.kind !== "class_feature" ||
+      feature.value.mechanics.family !== "metamagic_options"
+    ) {
+      return [];
+    }
+
+    return [
+      {
+        featureUnitId: feature.value.id,
+        mechanics: feature.value.mechanics,
+      },
+    ];
+  });
+
+  if (featureChoices.length === 0) {
+    return Either.left({
+      code: "missingSorcererMetamagicFeatureChoice",
+      classUnitId: input.classUnitId,
+      message:
+        "Cannot find the Sorcerer class-feature Metamagic option choice.",
+    });
+  }
+
+  if (featureChoices.length > 1) {
+    return Either.left({
+      code: "ambiguousSorcererMetamagicFeatureChoice",
+      classUnitId: input.classUnitId,
+      featureUnitIds: featureChoices.map((feature) => feature.featureUnitId),
+      message:
+        "Cannot update Metamagic options because multiple Sorcerer Metamagic choices were found.",
+    });
+  }
+
+  const featureChoice = featureChoices[0];
+  return featureChoice === undefined
+    ? Either.left({
+        code: "missingSorcererMetamagicFeatureChoice",
+        classUnitId: input.classUnitId,
+        message:
+          "Cannot find the Sorcerer class-feature Metamagic option choice.",
+      })
+    : Either.right(featureChoice);
+}
+
 function eldritchInvocationCountAtLevel(
   mechanics: EldritchInvocationFeatureChoice["mechanics"],
   warlockLevel: number,
 ): number {
   return classLevelChoiceCountAtLevel(mechanics.choiceCount, warlockLevel);
+}
+
+function sorcererMetamagicCountAtLevel(
+  mechanics: SorcererMetamagicFeatureChoice["mechanics"],
+  sorcererLevel: number,
+): number {
+  return classLevelChoiceCountAtLevel(mechanics.choiceCount, sorcererLevel);
+}
+
+function sorcererMetamagicOptionBelongsToFeature(
+  mechanics: SorcererMetamagicFeatureChoice["mechanics"],
+  optionId: SorcererMetamagicOptionId,
+): boolean {
+  return mechanics.options.some((option) => option.id === optionId);
 }
 
 function selectedEldritchInvocationFeaturesForFeature(
@@ -1739,6 +2316,26 @@ function selectedEldritchInvocationFeaturesForFeature(
   return features.filter(
     (feature): feature is SelectedEldritchInvocationFeature =>
       isSelectedEldritchInvocationFromFeature(feature, featureUnitId),
+  );
+}
+
+function selectedSorcererMetamagicOptionFeaturesForFeature(
+  features: readonly CharacterBuildFeature[],
+  featureUnitId: UnitRecord["id"],
+): readonly SelectedSorcererMetamagicOptionFeature[] {
+  return features.filter(
+    (feature): feature is SelectedSorcererMetamagicOptionFeature =>
+      isSelectedSorcererMetamagicOptionFromFeature(feature, featureUnitId),
+  );
+}
+
+function isSelectedSorcererMetamagicOptionFromFeature(
+  feature: CharacterBuildFeature,
+  featureUnitId: UnitRecord["id"],
+): feature is SelectedSorcererMetamagicOptionFeature {
+  return (
+    feature.kind === "selectedSorcererMetamagicOption" &&
+    feature.selectedFromUnitId === featureUnitId
   );
 }
 
@@ -1766,6 +2363,17 @@ function eldritchInvocationSelectionFeature(
     kind: "selectedEldritchInvocation",
     selectedFromUnitId,
     selection,
+  };
+}
+
+function sorcererMetamagicOptionFeature(
+  optionId: SorcererMetamagicOptionId,
+  selectedFromUnitId: UnitRecord["id"],
+): CharacterBuildFeature {
+  return {
+    kind: "selectedSorcererMetamagicOption",
+    selectedFromUnitId,
+    optionId,
   };
 }
 
