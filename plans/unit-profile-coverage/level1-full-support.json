@@ -968,8 +968,8 @@
     },
     "rulesKernelProfileJoin": {
       "denominator": 58,
-      "numerator": 32,
-      "percent": "55.2%"
+      "numerator": 42,
+      "percent": "72.4%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 78,
@@ -3511,11 +3511,18 @@
         "unitId": "chill_touch"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
+                "runtime": "battle",
+                "status": "needs-parity-witness",
+                "title": "Battle chained spell attack sequence for damage-type choice, duplicate-die leap admission, target history, per-step attack and damage rolls, and slot-level leap limits"
+              }
+            ],
             "profileId": "spell.invocation-chained-attack-damage",
             "profileKind": "spell-invocation"
           },
@@ -3693,11 +3700,18 @@
         "unitId": "dissonant_whispers"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
+                "runtime": "battle",
+                "status": "needs-parity-witness",
+                "title": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders"
+              }
+            ],
             "profileId": "spell.invocation-weapon-damage-rider",
             "profileKind": "spell-invocation"
           }
@@ -3705,11 +3719,18 @@
         "unitId": "divine_favor"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
+                "runtime": "battle",
+                "status": "needs-parity-witness",
+                "title": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup"
+              }
+            ],
             "profileId": "spell.invocation-after-hit-damage",
             "profileKind": "spell-invocation"
           }
@@ -3729,11 +3750,18 @@
         "unitId": "druid_primal_order"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
+                "runtime": "battle",
+                "status": "needs-parity-witness",
+                "title": "Battle independent spell attack sequences for beam and ray count, per-attack target choice, attack rolls, hit-gated damage rolls, object targets, and action or slot spend"
+              }
+            ],
             "profileId": "spell.invocation-independent-attack-sequence",
             "profileKind": "spell-invocation"
           }
@@ -3741,11 +3769,18 @@
         "unitId": "eldritch_blast"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
+                "runtime": "battle",
+                "status": "needs-parity-witness",
+                "title": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup"
+              }
+            ],
             "profileId": "spell.invocation-after-hit-restraint-turn-start-damage",
             "profileKind": "spell-invocation"
           }
@@ -4016,11 +4051,24 @@
         "unitId": "healing_word"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+              },
+              {
+                "obligationId": "BATTLE.SPELL.REACTION_CASTING_TIME",
+                "runtime": "battle",
+                "status": "needs-parity-witness",
+                "title": "Battle reaction-casting-time spells for spell-cast and after-damage triggers, Reaction spend, Spell Slot ledger, interruption, and continuation resume"
+              }
+            ],
             "profileId": "spell.reaction-hellish-rebuke",
             "profileKind": "reaction"
           },
@@ -4066,11 +4114,18 @@
         "unitId": "heroism"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
+                "runtime": "battle",
+                "status": "needs-parity-witness",
+                "title": "Battle marked-damage spell riders for attack-roll damage, Ability Check roll-mode projection, Concentration duration, and zero-Hit-Point transfer timing"
+              }
+            ],
             "profileId": "spell.invocation-marked-damage-rider",
             "profileKind": "spell-invocation"
           }
@@ -4097,11 +4152,18 @@
         "unitId": "hideous_laughter"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
+                "runtime": "battle",
+                "status": "needs-parity-witness",
+                "title": "Battle marked-damage spell riders for attack-roll damage, Ability Check roll-mode projection, Concentration duration, and zero-Hit-Point transfer timing"
+              }
+            ],
             "profileId": "spell.invocation-marked-damage-rider",
             "profileKind": "spell-invocation"
           }
@@ -4729,11 +4791,18 @@
         "unitId": "sanctuary"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
+                "runtime": "battle",
+                "status": "needs-parity-witness",
+                "title": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup"
+              }
+            ],
             "profileId": "spell.invocation-after-hit-timed-damage-save",
             "profileKind": "spell-invocation"
           }
@@ -4785,11 +4854,18 @@
         "unitId": "shield_of_faith"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
+                "runtime": "battle",
+                "status": "needs-parity-witness",
+                "title": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders"
+              }
+            ],
             "profileId": "spell.invocation-weapon-attack-override",
             "profileKind": "spell-invocation"
           }
@@ -4979,11 +5055,18 @@
         "unitId": "thunderwave"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
+                "runtime": "battle",
+                "status": "needs-parity-witness",
+                "title": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders"
+              }
+            ],
             "profileId": "spell.invocation-spell-hosted-weapon-attack",
             "profileKind": "spell-invocation"
           }
