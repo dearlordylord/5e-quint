@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "RKBC-BATTLE-HOLE-TARGETS-AREAS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Battle Target And Area Hole Obligations"
     },
     {
@@ -316,7 +316,7 @@ Reviewers should reject:
 | # | Task | Status | Depends On | Closure target |
 | ---: | --- | --- | --- | --- |
 | 1 | RKBC-BATTLE-HOLE-INVENTORY - Battle Hole And Fill Inventory | done | baseline | Inventory every current `BattleHole` and fill kind; classify semantic frontier, deterministic projection, unsupported, or dead branch. |
-| 2 | RKBC-BATTLE-HOLE-TARGETS-AREAS - Battle Target And Area Hole Obligations | ready-for-research | RKBC-BATTLE-HOLE-INVENTORY | Covered obligations for target, target-list, and area-choice hole families. |
+| 2 | RKBC-BATTLE-HOLE-TARGETS-AREAS - Battle Target And Area Hole Obligations | done | RKBC-BATTLE-HOLE-INVENTORY | Sanctuary targeting interdiction is covered; spell target-list/allocation rows are joined to spell procedure coverage; object/area choice rows remain table-caller boundary evidence. |
 | 3 | RKBC-BATTLE-HOLE-MOVEMENT-ROUTE - Battle Movement Route And Spatial Fact Obligations | ready-for-research | RKBC-BATTLE-HOLE-INVENTORY | Covered/boundary obligations for movement route and table spatial fact holes. |
 | 4 | RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION - Battle Damage Disposition And Type Choice Obligations | ready-for-research | RKBC-BATTLE-HOLE-INVENTORY | Covered obligations for damage disposition and damage-type choice holes. |
 | 5 | RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND - Battle Ability Skill And Command Hole Obligations | ready-for-research | RKBC-BATTLE-HOLE-INVENTORY | Covered/boundary obligations for ability choice, skill choice, and Command option holes. |
@@ -361,13 +361,21 @@ Acceptance:
 
 ### Task 2 - RKBC-BATTLE-HOLE-TARGETS-AREAS - Battle Target And Area Hole Obligations
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: `RKBC-BATTLE-HOLE-INVENTORY`.
 
 Scope: cover target choice, target list, and area choice hole families. Use
 focused random MBT where target ordering, repeated selection, or area
 interaction changes legal reducer state.
+
+Result: `BATTLE.SANCTUARY.TARGETING_INTERDICTION` covers Sanctuary ward
+creation, direct-targeting interdiction, replacement target selection,
+area-effect exclusion, and target-action early end. Spell target-list and
+target-allocation holes remain covered by `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`;
+object target and spell area choices remain `BATTLE.TABLE.HOLE_FACT_BOUNDARIES`.
+Residual generic `targetChoice` consumers are routed to Tasks 4, 5, 7, 8, and
+11 by reducer family.
 
 Acceptance:
 
@@ -399,8 +407,9 @@ Status: `ready-for-research`
 Depends on: `RKBC-BATTLE-HOLE-INVENTORY`.
 
 Scope: cover damage disposition, damage-type choice, resistance/reduction
-choice, and save/attack damage branch holes not already owned by existing spell,
-feature, or shared HP obligations.
+choice, attack replacement/legality target-choice residuals, and save/attack
+damage branch holes not already owned by existing spell, feature, or shared HP
+obligations.
 
 Acceptance:
 
@@ -415,8 +424,9 @@ Status: `ready-for-research`
 
 Depends on: `RKBC-BATTLE-HOLE-INVENTORY`.
 
-Scope: cover ability choice, skill choice, and Command-style table option holes.
-Preserve table adjudication where RAW leaves route/social outcome to the table.
+Scope: cover ability choice, skill choice, Search target-resolution residuals,
+and Command-style table option holes. Preserve table adjudication where RAW
+leaves route/social outcome to the table.
 
 Acceptance:
 
@@ -450,7 +460,8 @@ Status: `ready-for-research`
 
 Scope: close unmapped Unit feature passive, persistent-effect, and resource
 profiles, including speed, attack-count scaling, martial arts projection,
-weapon mastery effects, innate sorcery activation, and resource boosts.
+weapon mastery effects, innate sorcery activation, resource boosts, and feature
+target holes that mutate reducer-visible feature state.
 
 Acceptance:
 
@@ -465,8 +476,8 @@ Acceptance:
 Status: `ready-for-research`
 
 Scope: close unmapped bonus-action, reaction, and failed-roll resource profiles,
-including Bardic Inspiration grants/uses, failed Ability Check boosts, and
-damage-redirection reactions.
+including Bardic Inspiration grants/uses, failed Ability Check boosts,
+damage-redirection reactions, and feature target holes tied to those timings.
 
 Acceptance:
 
@@ -522,9 +533,9 @@ Depends on: `RKBC-BATTLE-HOLE-INVENTORY`, `RKBC-BATTLE-HOLE-TARGETS-AREAS`, and 
 
 Scope: close table-caller profiles after the target/area and movement/route
 hole classifications are recorded. In-scope examples include target admission,
-fog/obscurement, drop held object, route choice, fleeing/approach route,
-Dancing Lights movement, and Flaming Sphere movement into another creature's
-space.
+object target identity, spell area placement, fog/obscurement, drop held object,
+route choice, fleeing/approach route, Dancing Lights movement, and Flaming
+Sphere movement into another creature's space.
 
 Acceptance:
 

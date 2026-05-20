@@ -2855,18 +2855,18 @@
     },
     "rulesKernelCoveredProfileJoin": {
       "denominator": 75,
-      "numerator": 12,
-      "percent": "16%"
+      "numerator": 13,
+      "percent": "17.3%"
     },
     "rulesKernelProfileJoin": {
       "denominator": 75,
-      "numerator": 17,
-      "percent": "22.7%"
+      "numerator": 18,
+      "percent": "24%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 105,
-      "numerator": 31,
-      "percent": "29.5%"
+      "numerator": 32,
+      "percent": "30.5%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 161,
@@ -5703,8 +5703,8 @@
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
         "denominator": 105,
-        "numerator": 31,
-        "percent": "29.5%"
+        "numerator": 32,
+        "percent": "30.5%"
       }
     },
     "units": [
@@ -7199,11 +7199,18 @@
         "unitId": "sacred_flame"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SANCTUARY.TARGETING_INTERDICTION",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Sanctuary ward creation, direct-targeting interdiction, replacement target selection, area-effect exclusion, and target-action early end"
+              }
+            ],
             "profileId": "spell.invocation-sanctuary-targeting-interdiction",
             "profileKind": "spell-invocation"
           }

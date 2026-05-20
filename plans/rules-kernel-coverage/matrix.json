@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 16,
-    "covered": 8,
+    "total": 17,
+    "covered": 9,
     "open": 4,
     "nonSemantic": 4,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 10,
+      "battle": 11,
       "character-creation": 2,
       "character-sheet": 2,
       "character-battle": 1
     },
     "byStatus": {
-      "covered": 8,
+      "covered": 9,
       "needs-qnt-owner": 3,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 1,
@@ -152,6 +152,31 @@
       "status": "covered",
       "surfaceEvidence": [],
       "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+    },
+    {
+      "id": "BATTLE.SANCTUARY.TARGETING_INTERDICTION",
+      "kind": "profile-procedure",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/sanctuary-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-sanctuary-targeting-interdiction"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-sanctuary.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/sanctuary-targeting-interdiction.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [],
+      "title": "Battle Sanctuary ward creation, direct-targeting interdiction, replacement target selection, area-effect exclusion, and target-action early end"
     },
     {
       "id": "BATTLE.STAT_BLOCK.ATTACK_CONTROL",
@@ -377,11 +402,15 @@
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "followUpTaskIds": [
-        "RKBC-BATTLE-HOLE-TARGETS-AREAS"
+        "RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION",
+        "RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND",
+        "RKBC-PROFILE-JOIN-FEATURE-PASSIVE-RESOURCE",
+        "RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS",
+        "RKBC-PROFILE-JOIN-TABLE-CALLER"
       ],
       "holeKind": "targetChoice",
       "id": "BattleTargetChoiceHole",
-      "reason": "Target identity is a table decision, but accepted targets change reducer legality and downstream attack, spell, Grapple, Shove, Help, Search, and companion procedures.",
+      "reason": "Target identity is a table decision, but accepted targets change reducer legality and downstream effects. Movement and spell target procedures are covered; attack replacement/legality, Search target resolution, feature target holes, and table target-admission facts remain explicit downstream follow-ups.",
       "subject": "battle-hole-family"
     },
     {
@@ -417,7 +446,6 @@
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
       ],
       "followUpTaskIds": [
-        "RKBC-BATTLE-HOLE-TARGETS-AREAS",
         "RKBC-PROFILE-JOIN-TABLE-CALLER"
       ],
       "holeKind": "objectTargetChoice",
@@ -431,7 +459,6 @@
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
       ],
       "followUpTaskIds": [
-        "RKBC-BATTLE-HOLE-TARGETS-AREAS",
         "RKBC-PROFILE-JOIN-TABLE-CALLER"
       ],
       "holeKind": "spellAreaChoice",
@@ -485,9 +512,7 @@
       "coveredByObligationIds": [
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
       ],
-      "followUpTaskIds": [
-        "RKBC-BATTLE-HOLE-TARGETS-AREAS"
-      ],
+      "followUpTaskIds": [],
       "holeKind": "spellTargetAllocation",
       "id": "BattleSpellTargetAllocationHole",
       "reason": "Allocation count and selected target ids determine legal damage distribution; table spatial facts remain separate witnesses.",
@@ -498,9 +523,7 @@
       "coveredByObligationIds": [
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
       ],
-      "followUpTaskIds": [
-        "RKBC-BATTLE-HOLE-TARGETS-AREAS"
-      ],
+      "followUpTaskIds": [],
       "holeKind": "spellTargetList",
       "id": "BattleSpellTargetListHole",
       "reason": "Target-list cardinality and selected ids change reducer effects for multi-target spells; per-target geometry and willingness facts remain table-owned.",
@@ -960,14 +983,13 @@
     },
     {
       "classification": "semantic-frontier",
-      "coveredByObligationIds": [],
-      "followUpTaskIds": [
-        "RKBC-BATTLE-HOLE-TARGETS-AREAS",
-        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+      "coveredByObligationIds": [
+        "BATTLE.SANCTUARY.TARGETING_INTERDICTION"
       ],
+      "followUpTaskIds": [],
       "holeKind": "sanctuaryInterdictionOutcome",
       "id": "BattleSanctuaryInterdictionOutcomeHole",
-      "reason": "Sanctuary interdiction combines a Wisdom Saving Throw outcome with loss of targeting or replacement target choice, and needs its own target/save split.",
+      "reason": "Sanctuary interdiction combines a Wisdom Saving Throw outcome with loss of targeting or replacement target choice; the Sanctuary obligation owns those reducer outcomes while original and replacement target legality facts remain caller/table inputs.",
       "subject": "battle-hole-family"
     },
     {
@@ -1149,10 +1171,14 @@
       ],
       "fillKind": "targetChoice",
       "followUpTaskIds": [
-        "RKBC-BATTLE-HOLE-TARGETS-AREAS"
+        "RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION",
+        "RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND",
+        "RKBC-PROFILE-JOIN-FEATURE-PASSIVE-RESOURCE",
+        "RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS",
+        "RKBC-PROFILE-JOIN-TABLE-CALLER"
       ],
       "id": "targetChoice",
-      "reason": "Target selection is a table decision whose accepted identity changes reducer legality and effects.",
+      "reason": "Target selection is a table decision whose accepted identity changes reducer legality and effects. Movement and spell target fills are covered; attack replacement/legality, Search target resolution, feature target fills, and table target-admission facts remain explicit downstream follow-ups.",
       "subject": "battle-fill-kind"
     },
     {
@@ -1176,7 +1202,6 @@
       ],
       "fillKind": "objectTargetChoice",
       "followUpTaskIds": [
-        "RKBC-BATTLE-HOLE-TARGETS-AREAS",
         "RKBC-PROFILE-JOIN-TABLE-CALLER"
       ],
       "id": "objectTargetChoice",
@@ -1190,7 +1215,6 @@
       ],
       "fillKind": "spellAreaChoice",
       "followUpTaskIds": [
-        "RKBC-BATTLE-HOLE-TARGETS-AREAS",
         "RKBC-PROFILE-JOIN-TABLE-CALLER"
       ],
       "id": "spellAreaChoice",
@@ -1245,9 +1269,7 @@
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "fillKind": "spellTargetAllocation",
-      "followUpTaskIds": [
-        "RKBC-BATTLE-HOLE-TARGETS-AREAS"
-      ],
+      "followUpTaskIds": [],
       "id": "spellTargetAllocation",
       "reason": "Target allocation determines legal distribution of repeated spell effects.",
       "subject": "battle-fill-kind"
@@ -1258,9 +1280,7 @@
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "fillKind": "spellTargetList",
-      "followUpTaskIds": [
-        "RKBC-BATTLE-HOLE-TARGETS-AREAS"
-      ],
+      "followUpTaskIds": [],
       "id": "spellTargetList",
       "reason": "Target-list fills carry cardinality and selected target semantics for multi-target spells.",
       "subject": "battle-fill-kind"
@@ -1315,12 +1335,11 @@
     },
     {
       "classification": "semantic-frontier",
-      "coveredByObligationIds": [],
-      "fillKind": "sanctuaryInterdictionOutcome",
-      "followUpTaskIds": [
-        "RKBC-BATTLE-HOLE-TARGETS-AREAS",
-        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+      "coveredByObligationIds": [
+        "BATTLE.SANCTUARY.TARGETING_INTERDICTION"
       ],
+      "fillKind": "sanctuaryInterdictionOutcome",
+      "followUpTaskIds": [],
       "id": "sanctuaryInterdictionOutcome",
       "reason": "Sanctuary fills select save success, lost targeting, or replacement target outcome.",
       "subject": "battle-fill-kind"
@@ -1500,6 +1519,12 @@
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "profileId": "spell.invocation-direct-condition"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SANCTUARY.TARGETING_INTERDICTION"
+      ],
+      "profileId": "spell.invocation-sanctuary-targeting-interdiction"
     },
     {
       "obligationIds": [

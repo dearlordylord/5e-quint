@@ -11,9 +11,9 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | Strict runtime/profile support | 78/94 (83%) |
 | Strict target closure | 94/94 (100%) |
 | Product readiness | 367/367 (100%) |
-| Rules-kernel profile join | 13/58 (22.4%) |
-| Rules-kernel covered profile join | 8/58 (13.8%) |
-| Supported Unit rules-kernel chain | 26/78 (33.3%) |
+| Rules-kernel profile join | 14/58 (24.1%) |
+| Rules-kernel covered profile join | 9/58 (15.5%) |
+| Supported Unit rules-kernel chain | 27/78 (34.6%) |
 
 ## Scope
 
@@ -88,7 +88,6 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | `resistance` | unmapped | `spell.invocation-damage-reduction` (unmapped: no obligation mapping) |
 | `rogue_expertise` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
 | `rogue_weapon_mastery` | unmapped | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner)); `character-sheet.weapon-mastery-reselection` (unmapped: no obligation mapping) |
-| `sanctuary` | unmapped | `spell.invocation-sanctuary-targeting-interdiction` (unmapped: no obligation mapping) |
 | `searing_smite` | unmapped | `spell.invocation-after-hit-timed-damage-save` (unmapped: no obligation mapping) |
 | `shield_of_faith` | unmapped | `spell.scalar-buff` (unmapped: no obligation mapping) |
 | `shillelagh` | unmapped | `spell.invocation-weapon-attack-override` (unmapped: no obligation mapping) |

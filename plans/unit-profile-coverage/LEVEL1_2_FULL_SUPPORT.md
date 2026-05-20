@@ -11,9 +11,9 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | Strict runtime/profile support | 105/161 (65.2%) |
 | Strict target closure | 156/161 (96.9%) |
 | Product readiness | 484/556 (87.1%) |
-| Rules-kernel profile join | 17/75 (22.7%) |
-| Rules-kernel covered profile join | 12/75 (16%) |
-| Supported Unit rules-kernel chain | 31/105 (29.5%) |
+| Rules-kernel profile join | 18/75 (24%) |
+| Rules-kernel covered profile join | 13/75 (17.3%) |
+| Supported Unit rules-kernel chain | 32/105 (30.5%) |
 
 ## Scope
 
@@ -107,7 +107,6 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `resistance` | unmapped | `spell.invocation-damage-reduction` (unmapped: no obligation mapping) |
 | `rogue_expertise` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
 | `rogue_weapon_mastery` | unmapped | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner)); `character-sheet.weapon-mastery-reselection` (unmapped: no obligation mapping) |
-| `sanctuary` | unmapped | `spell.invocation-sanctuary-targeting-interdiction` (unmapped: no obligation mapping) |
 | `scorching_ray` | unmapped | `spell.invocation-independent-attack-sequence` (unmapped: no obligation mapping) |
 | `searing_smite` | unmapped | `spell.invocation-after-hit-timed-damage-save` (unmapped: no obligation mapping) |
 | `shield_of_faith` | unmapped | `spell.scalar-buff` (unmapped: no obligation mapping) |

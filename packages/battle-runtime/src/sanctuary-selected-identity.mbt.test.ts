@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: parity-witness BATTLE.SANCTUARY.TARGETING_INTERDICTION
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1H-SANCTUARY sanctuary
 // UNIT-IDENTITY-MBT-REPLAY: L1H-SANCTUARY sanctuary doCastSanctuaryWardCreation doInterdictDirectAttackFailedSaveLoss doInterdictDirectSpellSuccessfulSavePassThrough doRetargetDirectAttackToLegalReplacement doRejectIllegalReplacementTarget doExcludeAreaEffectFromInterdiction doEndWardOnWardedAttackRoll doEndWardOnWardedSpellCast doEndWardOnWardedDamageDealt
 import * as path from "node:path";
