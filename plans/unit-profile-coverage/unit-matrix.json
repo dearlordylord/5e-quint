@@ -2504,10 +2504,11 @@
       "runtimeOwners": [
         "packages/character-creation-runtime/src/index.ts"
       ],
-      "sourceBoundary": "Surface class-feature resource container and known-form roster records projected from class progression into CharacterBuild resource and character facts; selected option execution and shape-shifted form execution remain owned by selected option or shape-shifting runtime profiles.",
+      "sourceBoundary": "Surface class-feature resource container records, option metadata, save DC source facts, and known-form roster records projected from class progression into CharacterBuild resource and character facts; selected option execution and shape-shifted form execution remain owned by selected option or shape-shifting runtime profiles.",
       "taskRefs": [
         "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY",
-        "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS"
+        "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS",
+        "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS"
       ],
       "title": "Character Creation projects class-feature resources into CharacterBuild resource facts",
       "verificationOwners": [
@@ -2591,9 +2592,10 @@
         "packages/mcp/src/character-tools.ts",
         "packages/character-battle-runtime/src/index.ts"
       ],
-      "sourceBoundary": "CharacterBuild class-feature resources plus installed Surface reset cadence and known-form roster facts; Character Sheet requires explicit selected known-form identities for Wild Shape builds, stores expended use-count state and current known-form identities, then derives capacity, Short Rest or Long Rest recovery, and Druid Wild Shape known-form replacement eligibility from the feature, class progression, and SRD Stat Block catalog. App, MCP, and Character Sheet battle handoff boundaries must pass through or preserve that selected known-form state rather than defaulting from recommendations.",
+      "sourceBoundary": "CharacterBuild class-feature resources plus installed Surface reset cadence, option metadata, save DC source facts, and known-form roster facts; Character Sheet stores expended use-count state, derives capacity and Short Rest or Long Rest recovery from the feature and class progression, and exposes per-feature projections such as Druid Wild Shape known forms and Monk's Focus save DC without storing duplicate derived state. Wild Shape builds must provide explicit selected known-form identities, and App, MCP, and Character Sheet battle handoff boundaries must pass through or preserve that selected known-form state rather than defaulting from recommendations.",
       "taskRefs": [
-        "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS"
+        "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS",
+        "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS"
       ],
       "title": "Character Sheet tracks rest-reset class-feature use-count resources",
       "verificationOwners": [
@@ -7561,6 +7563,15 @@
     },
     {
       "claimKind": "completed-runtime-parity",
+      "note": "Focused Character Creation and Character Sheet tests cover Monk level 2 Monk's Focus resource and character-fact projection from the installed Surface feature, Monk-class linear Focus Point cap, Short or Long Rest full reset facts, retained sibling level-2 feature refs, initial Focus option labels, Character Sheet expended-use tracking, and Wisdom-based Focus save DC derivation. Flurry of Blows, Patient Defense, and Step of the Wind battle option execution remains split to follow-up runtime work.",
+      "profileIds": [
+        "character-creation.class-feature-resource-projection",
+        "character-sheet.class-feature-use-count-resource"
+      ],
+      "taskId": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
       "note": "Focused Surface, Character Creation, and Character Sheet runtime tests cover Warlock level 2 Magical Cunning unit admission, class feature grant ownership, existing Pact Magic slot-pool reuse, half-maximum-rounded-up Pact Slot recovery, once-per-Long-Rest use tracking, and Long Rest reset.",
       "profileIds": [
         "character-sheet.pact-slot-recovery"
@@ -9247,10 +9258,11 @@
           "runtimeOwners": [
             "packages/character-creation-runtime/src/index.ts"
           ],
-          "sourceBoundary": "Surface class-feature resource container and known-form roster records projected from class progression into CharacterBuild resource and character facts; selected option execution and shape-shifted form execution remain owned by selected option or shape-shifting runtime profiles.",
+          "sourceBoundary": "Surface class-feature resource container records, option metadata, save DC source facts, and known-form roster records projected from class progression into CharacterBuild resource and character facts; selected option execution and shape-shifted form execution remain owned by selected option or shape-shifting runtime profiles.",
           "taskRefs": [
             "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY",
-            "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS"
+            "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS",
+            "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS"
           ],
           "title": "Character Creation projects class-feature resources into CharacterBuild resource facts",
           "verificationOwners": [
@@ -9469,10 +9481,11 @@
           "runtimeOwners": [
             "packages/character-creation-runtime/src/index.ts"
           ],
-          "sourceBoundary": "Surface class-feature resource container and known-form roster records projected from class progression into CharacterBuild resource and character facts; selected option execution and shape-shifted form execution remain owned by selected option or shape-shifting runtime profiles.",
+          "sourceBoundary": "Surface class-feature resource container records, option metadata, save DC source facts, and known-form roster records projected from class progression into CharacterBuild resource and character facts; selected option execution and shape-shifted form execution remain owned by selected option or shape-shifting runtime profiles.",
           "taskRefs": [
             "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY",
-            "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS"
+            "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS",
+            "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS"
           ],
           "title": "Character Creation projects class-feature resources into CharacterBuild resource facts",
           "verificationOwners": [
@@ -9493,9 +9506,10 @@
             "packages/mcp/src/character-tools.ts",
             "packages/character-battle-runtime/src/index.ts"
           ],
-          "sourceBoundary": "CharacterBuild class-feature resources plus installed Surface reset cadence and known-form roster facts; Character Sheet requires explicit selected known-form identities for Wild Shape builds, stores expended use-count state and current known-form identities, then derives capacity, Short Rest or Long Rest recovery, and Druid Wild Shape known-form replacement eligibility from the feature, class progression, and SRD Stat Block catalog. App, MCP, and Character Sheet battle handoff boundaries must pass through or preserve that selected known-form state rather than defaulting from recommendations.",
+          "sourceBoundary": "CharacterBuild class-feature resources plus installed Surface reset cadence, option metadata, save DC source facts, and known-form roster facts; Character Sheet stores expended use-count state, derives capacity and Short Rest or Long Rest recovery from the feature and class progression, and exposes per-feature projections such as Druid Wild Shape known forms and Monk's Focus save DC without storing duplicate derived state. Wild Shape builds must provide explicit selected known-form identities, and App, MCP, and Character Sheet battle handoff boundaries must pass through or preserve that selected known-form state rather than defaulting from recommendations.",
           "taskRefs": [
-            "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS"
+            "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS",
+            "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS"
           ],
           "title": "Character Sheet tracks rest-reset class-feature use-count resources",
           "verificationOwners": [
@@ -9668,14 +9682,13 @@
         "status": "installed"
       },
       "claim": {
-        "followUpTasks": [
+        "deferredMechanics": [
           {
-            "id": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS",
-            "mechanic": "Admit Monk level-2 progression after sibling Monk level-2 grants can be retained, then project Focus Point count, Short or Long Rest reset, initial Focus feature option names, and the authored Focus save DC fact without duplicating class progression or option execution state.",
-            "owner": "character-creation-runtime plus character-sheet-runtime",
-            "requiredOutput": "Owner evidence for CharacterBuild or Character Sheet Focus Point resource, Focus save DC, and retained Monk level-2 feature refs.",
-            "title": "Monk's Focus Character Facts And Resource Projection"
-          },
+            "followUpTaskId": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS",
+            "mechanic": "Flurry of Blows, Patient Defense, and Step of the Wind battle option execution remains split: Bonus Action economy, Focus Point spending, Dodge, Dash, Disengage, jump-distance effects, and shared Focus Point consumption by later Focus spenders are not implemented in this character-facts task."
+          }
+        ],
+        "followUpTasks": [
           {
             "id": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS",
             "mechanic": "Execute Flurry of Blows, Patient Defense, and Step of the Wind option modes, including Bonus Action economy, Focus Point spending where RAW requires it, Dodge and jump-distance effects, and shared Focus Point spending for later Focus spenders instead of synthetic per-feature pools.",
@@ -9684,15 +9697,92 @@
             "title": "Monk's Focus Battle Option Execution"
           }
         ],
-        "futureProfileOwner": "character-creation-runtime plus battle-runtime Focus Point option execution",
-        "reason": "Monk's Focus is authored and installed as an SRD Surface class-feature record with catalog-level Focus Point resource, Focus save DC source, and initial option-set metadata. It remains blocked by the concrete follow-up split listed on this claim; no resource-projection or battle-runtime Unit profile is claimed in Task 13.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "character-creation.class-feature-resource-projection",
+          "character-sheet.class-feature-use-count-resource"
+        ],
+        "supportedMechanics": [
+          "The Monk class Surface record grants Monk's Focus, Unarmored Movement, and Uncanny Metabolism at Monk level 2, so Character Creation can retain the complete SRD level-2 Monk feature ref set from one class progression source",
+          "Surface Monk's Focus represents the shared Focus Point use-count resource with Monk-level linear cap, Short or Long Rest full reset, initial Flurry of Blows, Patient Defense, and Step of the Wind option metadata, and Wisdom-based class-feature save DC source facts",
+          "Character Creation admits same-class Monk level-2 progression and projects the Focus Point resource plus Focus option names and save DC source facts without duplicating class progression or option execution state",
+          "Character Sheet tracks expended Focus Point uses, derives the Focus Point cap and Short or Long Rest recovery from CharacterBuild resources and the installed Surface feature, and derives the Monk's Focus save DC from the authored ability source, ability scores, and Proficiency Bonus"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS"
+        },
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-creation.class-feature-resource-projection",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface class-feature resource container records, option metadata, save DC source facts, and known-form roster records projected from class progression into CharacterBuild resource and character facts; selected option execution and shape-shifted form execution remain owned by selected option or shape-shifting runtime profiles.",
+          "taskRefs": [
+            "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY",
+            "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS",
+            "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS"
+          ],
+          "title": "Character Creation projects class-feature resources into CharacterBuild resource facts",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-sheet.class-feature-use-count-resource",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/index.ts",
+            "packages/app/src/components/character-creation/characterCreationRuntime.ts",
+            "packages/mcp/src/session-store.ts",
+            "packages/mcp/src/character-tools.ts",
+            "packages/character-battle-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "CharacterBuild class-feature resources plus installed Surface reset cadence, option metadata, save DC source facts, and known-form roster facts; Character Sheet stores expended use-count state, derives capacity and Short Rest or Long Rest recovery from the feature and class progression, and exposes per-feature projections such as Druid Wild Shape known forms and Monk's Focus save DC without storing duplicate derived state. Wild Shape builds must provide explicit selected known-form identities, and App, MCP, and Character Sheet battle handoff boundaries must pass through or preserve that selected known-form state rather than defaulting from recommendations.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS",
+            "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS"
+          ],
+          "title": "Character Sheet tracks rest-reset class-feature use-count resources",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/app/src/components/character-creation/characterCreationRuntime.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/mcp/src/session-store.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/monk_monks_focus.json",
       "unitId": "monk_monks_focus"
     },

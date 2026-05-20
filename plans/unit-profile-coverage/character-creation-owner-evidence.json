@@ -2521,6 +2521,29 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
+    "srd521:classes/monk:level-2:class-feature-grant:monk_monks_focus": {
+      "taskId": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS",
+      "profile": "character-creation.class-feature-resource-projection support profile",
+      "summary": "Monk's Focus is retained from the level-2 Monk class feature grant and projected into CharacterBuild Focus Point resource and character facts from the authored Surface resource container. The projection derives Focus Point maximum, Short or Long Rest full reset, initial Focus option names, and the Wisdom-based Focus save DC source from the retained feature, Monk class level, ability-score source, and Proficiency Bonus formula without duplicating class progression or option execution state.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverInitialDraftHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.characterBuildResourceUnitIds"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds",
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildResources",
+        "packages/character-creation-runtime/src/monk-focus.ts:characterBuildMonksFocusFacts"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:accepts Monk 2 Monk's Focus as shared Focus Point character facts"
+      ]
+    },
     "srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy": {
       "taskId": "SRDINV18",
       "profile": "level-1 Ranger class-feature support profile",

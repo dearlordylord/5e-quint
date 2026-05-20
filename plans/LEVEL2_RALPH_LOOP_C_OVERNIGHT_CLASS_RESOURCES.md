@@ -7,19 +7,19 @@
     {
       "number": 1,
       "id": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Monk's Focus Character Facts And Resource Projection"
     },
     {
       "number": 2,
       "id": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Monk's Focus Battle Option Execution"
     },
     {
       "number": 3,
       "id": "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Monk Uncanny Metabolism Character Facts And Rest-Scoped Use-State Projection"
     },
     {
@@ -142,9 +142,9 @@ The final task is intentionally blocked on every real task in this plan and plac
 
 | # | Task | Status | Depends On | Notes |
 | ---: | --- | --- | --- | --- |
-| 1 | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS - Monk's Focus Character Facts And Resource Projection | ready-for-research | completed baseline | C lane; Unit `monk_monks_focus`. |
-| 2 | L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS - Monk's Focus Battle Option Execution | blocked | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS | C lane; Unit `monk_monks_focus`. |
-| 3 | L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS - Monk Uncanny Metabolism Character Facts And Rest-Scoped Use-State Projection | blocked | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS | C lane; Unit `monk_uncanny_metabolism`. |
+| 1 | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS - Monk's Focus Character Facts And Resource Projection | done | completed baseline | C lane; Unit `monk_monks_focus`. |
+| 2 | L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS - Monk's Focus Battle Option Execution | ready-for-research | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS | C lane; Unit `monk_monks_focus`. |
+| 3 | L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS - Monk Uncanny Metabolism Character Facts And Rest-Scoped Use-State Projection | ready-for-research | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS | C lane; Unit `monk_uncanny_metabolism`. |
 | 4 | L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME - Monk Uncanny Metabolism Initiative Recovery Runtime | blocked | L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS | C lane; Unit `monk_uncanny_metabolism`. |
 | 5 | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS - Sorcerer Font Of Magic Sorcery Point Resource Facts | ready-for-research | completed baseline | C lane; Unit `sorcerer_font_of_magic`. |
 | 6 | L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS - Sorcerer Font Of Magic Spell Slot To Sorcery Points | blocked | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS | C lane; Unit `sorcerer_font_of_magic`. |
@@ -157,7 +157,7 @@ The final task is intentionally blocked on every real task in this plan and plac
 
 ### Task 1 - L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS - Monk's Focus Character Facts And Resource Projection
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `monk_monks_focus`.
 Origin: Original backlog task 79.
@@ -198,7 +198,7 @@ Acceptance:
 
 ### Task 2 - L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS - Monk's Focus Battle Option Execution
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Unit: `monk_monks_focus`.
 Origin: Original backlog task 80.
@@ -239,7 +239,7 @@ Acceptance:
 
 ### Task 3 - L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS - Monk Uncanny Metabolism Character Facts And Rest-Scoped Use-State Projection
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Unit: `monk_uncanny_metabolism`.
 Origin: Original backlog task 81.

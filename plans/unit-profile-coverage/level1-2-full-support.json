@@ -1872,14 +1872,14 @@
     },
     {
       "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
+      "claimTag": "profile-subset-supported",
       "closureKinds": [
         "follow-up-split"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS: Admit Monk level-2 progression after sibling Monk level-2 grants can be retained, then project Focus Point count, Short or Long Rest reset, initial Focus feature option names, and the authored Focus save DC fact without duplicating class progression or option execution state. Owner: character-creation-runtime plus character-sheet-runtime. Required output: Owner evidence for CharacterBuild or Character Sheet Focus Point resource, Focus save DC, and retained Monk level-2 feature refs.; L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS: Execute Flurry of Blows, Patient Defense, and Step of the Wind option modes, including Bonus Action economy, Focus Point spending where RAW requires it, Dodge and jump-distance effects, and shared Focus Point spending for later Focus spenders instead of synthetic per-feature pools. Owner: battle-runtime plus character-battle-runtime resource handoff. Required output: Supported runtime profile and owner evidence for Monk's Focus option execution and a single shared Focus Point resource consumed by Focus-spending Monk features.",
+      "reason": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS: Execute Flurry of Blows, Patient Defense, and Step of the Wind option modes, including Bonus Action economy, Focus Point spending where RAW requires it, Dodge and jump-distance effects, and shared Focus Point spending for later Focus spenders instead of synthetic per-feature pools. Owner: battle-runtime plus character-battle-runtime resource handoff. Required output: Supported runtime profile and owner evidence for Monk's Focus option execution and a single shared Focus Point resource consumed by Focus-spending Monk features.",
       "sourceRecordPath": "packages/surface/content/monk_monks_focus.json",
       "sourceRows": [
         {
@@ -2848,9 +2848,9 @@
       "rowsByStatus": {
         "accepted": 348,
         "accepted-no-battle-effect": 136,
-        "battle-runtime-required": 62,
+        "battle-runtime-required": 61,
         "owner-evidence-required": 3,
-        "partial-battle-runtime": 7
+        "partial-battle-runtime": 8
       }
     },
     "rulesKernelCoveredProfileJoin": {
@@ -7642,9 +7642,9 @@
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
       "missing": 5,
-      "profile-subset-supported": 13,
+      "profile-subset-supported": 14,
       "supported-profile": 105,
-      "unsupported-profile": 38
+      "unsupported-profile": 37
     },
     "groupsByStatus": {
       "blocked-follow-up-split": 22,

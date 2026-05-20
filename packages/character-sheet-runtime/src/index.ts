@@ -10,12 +10,15 @@ import {
   characterBuildResources,
   characterBuildSpellcastingSlotCapacity,
   classLevelForUnit,
+  classLevelLinearValueAtClassLevel,
   classUnitId,
   classUnitIdToClassName,
   CHARACTER_CLASS_LEVELS,
   computeTotalLevel,
   DRUID_WILD_SHAPE_UNIT_ID,
+  MONK_MONKS_FOCUS_UNIT_ID,
   characterBuildDruidWildShapeFacts,
+  characterBuildMonksFocusFacts,
   characterEquipmentItemSourceFromId,
   eldritchInvocationOptionForInvocationId,
   eldritchInvocationRepeatableChoiceSatisfiesRule,
@@ -24,6 +27,7 @@ import {
   parseCharacterEquipmentItemId,
   progressionClassUnitIds,
   STANDARD_LANGUAGES,
+  isClassLevelLinearPerLevel,
   isClassLevelThresholdTiers,
   replaceDruidWildShapeKnownForm,
   thresholdTierValueAtClassLevel,
@@ -56,9 +60,11 @@ import {
 import {
   DieRollResult,
   Hp,
+  difficultyClass,
   resourceCount,
   spellSlotLevel,
   type Condition,
+  type DifficultyClass,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import {
@@ -148,6 +154,7 @@ const ARMOR_TRAINING_CATEGORY_VALUES = [
 ] as const;
 const CHARACTER_SHEET_USE_COUNT_RESOURCE_UNIT_IDS = [
   DRUID_WILD_SHAPE_UNIT_ID,
+  MONK_MONKS_FOCUS_UNIT_ID,
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 type CharacterSheetUseCountResourceUnitId =
   (typeof CHARACTER_SHEET_USE_COUNT_RESOURCE_UNIT_IDS)[number];
@@ -337,6 +344,11 @@ export type CharacterSheetResourceState =
       readonly count: ResourceCount;
       readonly expended: ResourceCount;
     });
+
+export type CharacterSheetMonksFocusSaveDc = {
+  readonly unitId: typeof MONK_MONKS_FOCUS_UNIT_ID;
+  readonly dc: DifficultyClass;
+};
 
 export type CharacterSheetArcaneRecoverySlotRefund = {
   readonly spellLevel: SpellSlotLevel;
@@ -1159,6 +1171,34 @@ export function characterSheetResources(
   }
 
   return Either.right(resources);
+}
+
+export function characterSheetMonksFocusSaveDc(
+  sheet: CharacterSheet,
+  unitLibrary: UnitCatalog,
+): Either.Either<
+  CharacterSheetMonksFocusSaveDc | undefined,
+  CharacterSheetIssue
+> {
+  const facts = characterBuildMonksFocusFacts({
+    build: sheet.build,
+    unitLibrary,
+  });
+  if (Either.isLeft(facts)) return characterSheetIssue(facts.left.message);
+  if (facts.right === undefined) return Either.right(undefined);
+
+  return Either.right({
+    unitId: facts.right.unitId,
+    dc: difficultyClass(
+      facts.right.saveDc.base +
+        abilityScoreToMod(
+          sheet.build.abilityScores[facts.right.saveDc.ability],
+        ) +
+        proficiencyBonusForCharacterLevel(
+          computeTotalLevel(sheet.build.progression),
+        ),
+    ),
+  });
 }
 
 export function characterSheetSpellInvocation(
@@ -2747,7 +2787,7 @@ function characterSheetResourceCapacity(
   const cap = input.resource.resource.cap;
   if (cap.kind === "fixed") return Either.right(resourceCount(cap.uses));
   if (cap.kind === "linear_per_level") {
-    if (cap.axis !== "class") {
+    if (!isClassLevelLinearPerLevel(cap)) {
       return characterSheetIssue(
         "Character Sheet resource level scaling must use class level.",
       );
@@ -2760,10 +2800,7 @@ function characterSheetResourceCapacity(
     const level = classFeatureOwnerLevel(input, unit.right);
     if (Either.isLeft(level)) return Either.left(level.left);
     return Either.right(
-      resourceCount(
-        cap.base +
-          Math.max(0, level.right - cap.startingAtLevel) * cap.perLevel,
-      ),
+      resourceCount(classLevelLinearValueAtClassLevel(cap, level.right)),
     );
   }
   if (cap.kind === "threshold_tiers") {

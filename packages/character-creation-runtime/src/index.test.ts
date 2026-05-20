@@ -31,10 +31,12 @@ import {
   characterBuildArmorTraining,
   characterBuildFeatureUnitIds,
   characterBuildDruidWildShapeFacts,
+  characterBuildMonksFocusFacts,
   characterBuildHitPoints,
   characterBuildProficiencies,
   characterBuildResources,
   DRUID_WILD_SHAPE_UNIT_ID,
+  MONK_MONKS_FOCUS_UNIT_ID,
   exactChoiceCardinality,
   boundedChoiceCardinality,
   choiceCardinalityBounds,
@@ -147,6 +149,7 @@ import {
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-07 rogue_expertise
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY cleric_channel_divinity
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS druid_wild_shape
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS monk_monks_focus
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -751,6 +754,7 @@ describe("character creation hole discovery", () => {
           "13:class_fighter|13:class_warlock:level_2:fixed_hp_gain",
           "13:class_fighter|12:class_wizard:level_2:fixed_hp_gain",
           "10:class_monk:level_1:maximum_hit_die",
+          "10:class_monk|10:class_monk:level_2:fixed_hp_gain",
           "13:class_paladin:level_1:maximum_hit_die",
           "13:class_paladin|13:class_paladin:level_2:fixed_hp_gain",
           "12:class_ranger:level_1:maximum_hit_die",
@@ -3961,6 +3965,83 @@ describe("character creation finalization", () => {
         }),
       ),
     ).toBe(true);
+  });
+
+  test("accepts Monk 2 Monk's Focus as shared Focus Point character facts", () => {
+    const monkTwo = completeSupportedProgressionDraft({
+      draftId: "draft:monk-monks-focus",
+      progression: testProgression("class_monk", 2),
+    });
+    const result = finalizeCharacterDraft({ draft: monkTwo, unitLibrary });
+
+    expect(result.tag).toBe("ready");
+    if (result.tag !== "ready") return;
+
+    expect(characterBuildFeatureUnitIds(result.build, unitLibrary)).toEqual(
+      expect.arrayContaining([
+        "monk_martial_arts",
+        "monk_unarmored_defense",
+        MONK_MONKS_FOCUS_UNIT_ID,
+        "monk_unarmored_movement",
+        "monk_uncanny_metabolism",
+      ]),
+    );
+    expect(
+      characterBuildResources(result.build, unitLibrary).find(
+        (resource) => resource.unitId === MONK_MONKS_FOCUS_UNIT_ID,
+      ),
+    ).toEqual({
+      unitId: MONK_MONKS_FOCUS_UNIT_ID,
+      resource: {
+        kind: "use_count",
+        cap: {
+          axis: "class",
+          base: 2,
+          kind: "linear_per_level",
+          perLevel: 1,
+          startingAtLevel: 2,
+        },
+      },
+    });
+
+    const focusFacts = expectRight(
+      characterBuildMonksFocusFacts({
+        build: result.build,
+        unitLibrary,
+      }),
+    );
+    if (focusFacts === undefined) {
+      throw new Error("Expected Monk 2 build to project Monk's Focus facts.");
+    }
+    expect(focusFacts).toEqual({
+      unitId: MONK_MONKS_FOCUS_UNIT_ID,
+      focusPointUseCount: {
+        maximum: 2,
+        shortRestRefillsAll: true,
+        longRestRefillsAll: true,
+      },
+      initialOptions: [
+        { id: "monk_flurry_of_blows", displayName: "Flurry of Blows" },
+        { id: "monk_patient_defense", displayName: "Patient Defense" },
+        { id: "monk_step_of_the_wind", displayName: "Step of the Wind" },
+      ],
+      saveDc: {
+        base: 8,
+        ability: "wis",
+        includesProficiencyBonus: true,
+      },
+    });
+
+    const levelFourFocusFacts = expectRight(
+      characterBuildMonksFocusFacts({
+        build: {
+          features: result.build.features,
+          progression: testProgression("class_monk", 4),
+        },
+        unitLibrary,
+      }),
+    );
+    expect(levelFourFocusFacts?.focusPointUseCount.maximum).toBe(4);
   });
 
   test("projects Druid 4 Wild Shape roster thresholds without known-form defaults", () => {

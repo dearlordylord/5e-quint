@@ -1,11 +1,32 @@
 import type {
   ClassLevelChoiceCount,
+  LinearPerLevel,
   ThresholdTiers,
 } from "@dnd/surface/surface/types";
+
+export type ClassLevelLinearPerLevel = LinearPerLevel<number> & {
+  readonly axis: "class";
+};
 
 export type ClassLevelThresholdTiers = ThresholdTiers<number> & {
   readonly axis: "class";
 };
+
+export function isClassLevelLinearPerLevel(
+  linear: LinearPerLevel<number>,
+): linear is ClassLevelLinearPerLevel {
+  return linear.axis === "class";
+}
+
+export function classLevelLinearValueAtClassLevel(
+  linear: ClassLevelLinearPerLevel,
+  classLevel: number,
+): number {
+  return (
+    linear.base +
+    Math.max(0, classLevel - linear.startingAtLevel) * linear.perLevel
+  );
+}
 
 export function isClassLevelThresholdTiers(
   threshold: ThresholdTiers<number>,

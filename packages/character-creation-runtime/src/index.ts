@@ -200,9 +200,18 @@ export {
   type CharacterBuildDruidWildShapeKnownFormReplacement,
 } from "./druid-wild-shape.ts";
 export {
+  MONK_MONKS_FOCUS_UNIT_ID,
+  characterBuildMonksFocusFacts,
+  type CharacterBuildMonksFocusFacts,
+  type CharacterBuildMonksFocusFactsIssue,
+} from "./monk-focus.ts";
+export {
+  classLevelLinearValueAtClassLevel,
   classLevelChoiceCountAtLevel,
+  isClassLevelLinearPerLevel,
   isClassLevelThresholdTiers,
   thresholdTierValueAtClassLevel,
+  type ClassLevelLinearPerLevel,
   type ClassLevelThresholdTiers,
 } from "./class-level-scaling.ts";
 export {

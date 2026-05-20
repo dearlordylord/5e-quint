@@ -807,8 +807,14 @@ describe("SRD Unit catalog boundary", () => {
     const shapeShiftOnFail = {
       kind: "composite",
       effects: expect.arrayContaining([
-        { kind: "revert_shape_shift_to_true_form", onlyIfTargetIsShapeShifted: true },
-        { kind: "suppress_shape_shifting_while_in_area", onlyIfTargetIsShapeShifted: true },
+        {
+          kind: "revert_shape_shift_to_true_form",
+          onlyIfTargetIsShapeShifted: true,
+        },
+        {
+          kind: "suppress_shape_shifting_while_in_area",
+          onlyIfTargetIsShapeShifted: true,
+        },
       ]),
     };
 
@@ -820,7 +826,10 @@ describe("SRD Unit catalog boundary", () => {
     expect(moonbeam.mechanics.initialPhase).toMatchObject({
       kind: "save_gate",
       onFail: shapeShiftOnFail,
-      usageLimit: { kind: "once_per_turn", limitGroup: "moonbeam_save_per_turn" },
+      usageLimit: {
+        kind: "once_per_turn",
+        limitGroup: "moonbeam_save_per_turn",
+      },
     });
 
     // All three recurring save triggers (creature-ends-turn-in-area, creature-entry,
@@ -2853,6 +2862,14 @@ describe("SRD Unit catalog boundary", () => {
     expect(result.tag).toBe("ok");
     if (result.tag !== "ok") return;
 
+    expect(result.catalog.requireUnit("class_monk")).toMatchObject({
+      featureGrants: expect.arrayContaining([
+        { level: 2, unitId: "monk_monks_focus" },
+        { level: 2, unitId: "monk_unarmored_movement" },
+        { level: 2, unitId: "monk_uncanny_metabolism" },
+      ]),
+      kind: "class",
+    });
     expect(result.catalog.requireUnit("monk_monks_focus")).toMatchObject({
       acquiredAtLevel: 2,
       className: "monk",
