@@ -1,3 +1,4 @@
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // Spell discovery (Cluster K). Mechanical extraction from battle-reducer.ts.
 // Discovers per-actor SupportedSpellInvocation acts, computes cast-summary
 // strings, classifies invocations, and synthesises the optional readied-spell
@@ -62,6 +63,7 @@ import {
   spellDancingLightsPlacementHole,
   targetListTargetingHasFixedMaximum,
 } from "./spells-targeting.ts";
+import { spellCreatedHeldObjectHasFreeHand } from "./spell-created-held-object.ts";
 import {
   dancingLightsFromEffect,
   selfTransformationModeLabel,
@@ -417,6 +419,60 @@ export function discoverSupportedSpellInvocations(
             initialHoles: [],
           },
         ];
+      }
+      if (invocation.procedure === "spellCreatedHeldObject") {
+        if (!spellCreatedHeldObjectHasFreeHand(state, actorId)) {
+          return [];
+        }
+        return [
+          {
+            subject: {
+              tag: "bonusActionSpell" as const,
+              actorId,
+              invocation: supportedSpellInvocationRef(invocation),
+              mode: { tag: "cast" as const },
+            },
+            label: invocation.spell.name,
+            summary: spellInvocationCastSummary(invocation),
+            initialHoles: [],
+          },
+        ];
+      }
+      if (invocation.procedure === "spellCreatedHeldObjectReEvoke") {
+        if (!spellCreatedHeldObjectHasFreeHand(state, actorId)) {
+          return [];
+        }
+        return [
+          {
+            subject: {
+              tag: "bonusActionSpell" as const,
+              actorId,
+              invocation: supportedSpellInvocationRef(invocation),
+              mode: { tag: "cast" as const },
+            },
+            label: `${invocation.spell.name} re-evoke`,
+            summary: spellInvocationCastSummary(invocation),
+            initialHoles: [],
+          },
+        ];
+      }
+      if (invocation.procedure === "spellCreatedHeldObjectAttack") {
+        const targetHole = spellTargetHole(state, actorId, invocation);
+        return targetHole.choices.length === 0
+          ? []
+          : [
+              {
+                subject: {
+                  tag: "actionSpell" as const,
+                  actorId,
+                  invocation: supportedSpellInvocationRef(invocation),
+                  mode: { tag: "cast" as const },
+                },
+                label: `${invocation.spell.name} attack`,
+                summary: spellInvocationCastSummary(invocation),
+                initialHoles: [targetHole],
+              },
+            ];
       }
       if (
         invocation.procedure === "dancingLightsSeparateCast" ||
@@ -895,6 +951,15 @@ export function spellInvocationCastSummary(
   if (invocation.procedure === "heldLightHurl") {
     return `Take a Magic action to hurl ${invocation.spell.name}.`;
   }
+  if (invocation.procedure === "spellCreatedHeldObject") {
+    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+  }
+  if (invocation.procedure === "spellCreatedHeldObjectAttack") {
+    return `Take a Magic action to attack with ${invocation.spell.name}.`;
+  }
+  if (invocation.procedure === "spellCreatedHeldObjectReEvoke") {
+    return `Re-evoke ${invocation.spell.name} with a Bonus Action.`;
+  }
   if (invocation.procedure === "repeatedDamageAllocation") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot, allocating ${invocation.targeting.repeatedEffectCount} repeated effects among targets.`;
   }
@@ -1064,6 +1129,12 @@ export function spellSubjectTagForInvocation(
   if (invocation.procedure === "heldLight") {
     return "bonusActionSpell";
   }
+  if (
+    invocation.procedure === "spellCreatedHeldObject" ||
+    invocation.procedure === "spellCreatedHeldObjectReEvoke"
+  ) {
+    return "bonusActionSpell";
+  }
   if (invocation.procedure === "dancingLightsReposition") {
     return "bonusActionSpell";
   }
@@ -1114,6 +1185,8 @@ export function spellInvocationIsSpellcasting(
   invocation: SupportedSpellInvocation,
 ): boolean {
   return !(
+    invocation.procedure === "spellCreatedHeldObjectAttack" ||
+    invocation.procedure === "spellCreatedHeldObjectReEvoke" ||
     invocation.procedure === "dancingLightsReposition" ||
     (invocation.procedure === "markedDamageRider" &&
       invocation.action === "transfer")
@@ -1131,6 +1204,22 @@ export function spellInvocationCasterPrerequisiteIsMet(
           effect.kind === "heldLight" &&
           effect.sourceSpellId === invocation.spell.id &&
           effect.sourceCombatantId === actor.combatantId,
+      )) &&
+    (invocation.procedure !== "spellCreatedHeldObjectAttack" ||
+      actor.activeEffects.some(
+        (effect) =>
+          effect.kind === "spellCreatedHeldObject" &&
+          effect.sourceSpellId === invocation.spell.id &&
+          effect.sourceCombatantId === actor.combatantId &&
+          effect.objectState.kind === "held",
+      )) &&
+    (invocation.procedure !== "spellCreatedHeldObjectReEvoke" ||
+      actor.activeEffects.some(
+        (effect) =>
+          effect.kind === "spellCreatedHeldObject" &&
+          effect.sourceSpellId === invocation.spell.id &&
+          effect.sourceCombatantId === actor.combatantId &&
+          effect.objectState.kind === "notHeld",
       )) &&
     (invocation.procedure !== "dancingLightsReposition" ||
       actor.activeEffects.some(
@@ -1152,6 +1241,9 @@ export function isReadiedSpellInvocation(
   return (
     invocation.procedure !== "directHitPointRestoration" &&
     invocation.procedure !== "heldLight" &&
+    invocation.procedure !== "spellCreatedHeldObject" &&
+    invocation.procedure !== "spellCreatedHeldObjectAttack" &&
+    invocation.procedure !== "spellCreatedHeldObjectReEvoke" &&
     invocation.procedure !== "dancingLightsSeparateCast" &&
     invocation.procedure !== "dancingLightsCombinedCast" &&
     invocation.procedure !== "dancingLightsReposition" &&
@@ -1203,6 +1295,9 @@ export function readiedSpellAct(
   if (
     invocation.procedure === "persistentArmorEffect" ||
     invocation.procedure === "directHitPointRestoration" ||
+    invocation.procedure === "spellCreatedHeldObject" ||
+    invocation.procedure === "spellCreatedHeldObjectAttack" ||
+    invocation.procedure === "spellCreatedHeldObjectReEvoke" ||
     invocation.procedure === "damageReduction" ||
     invocation.procedure === "makeStable" ||
     invocation.procedure === "spellHostedWeaponAttack" ||

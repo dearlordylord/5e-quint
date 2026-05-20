@@ -4,6 +4,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-moonbeam-movable-zone
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.monk-focus-battle-options
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.creature-type-protection-and-charm spell.hit-point-restoration spell.invocation-after-hit-damage spell.invocation-after-hit-damage-illumination spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-blur-attack-roll-defense spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-removal-protection spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-dancing-lights-movable-dim-light spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-independent-attack-sequence spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-self-ability-check-advantage spell.invocation-self-teleport spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-failed-d20-test unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.zero-hit-point-replacement
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
@@ -613,6 +614,29 @@ export type SelfTransformationModeEffectPayload = {
       readonly naturalWeaponDamageType: DamageType;
     }
 );
+export type SpellCreatedHeldObjectState =
+  | { readonly kind: "held" }
+  | { readonly kind: "notHeld" };
+export type SpellCreatedHeldObjectActiveEffect = BattleSpellEffectBase & {
+  readonly kind: "spellCreatedHeldObject";
+  readonly objectState: SpellCreatedHeldObjectState;
+  readonly light: {
+    readonly brightRadiusFeet: MovementFeet;
+    readonly dimAdditionalFeet: MovementFeet;
+  };
+  readonly attack: {
+    readonly damage: {
+      readonly expr: DiceExpr;
+      readonly damageType: DamageType;
+    };
+    readonly attackKind: Extract<SpellAttackKind, "melee_spell_attack">;
+    readonly attackBonus: AttackBonus;
+  };
+  readonly expiresAt: Extract<
+    BattleActiveEffectExpiration,
+    { readonly kind: "concentration" }
+  > & { readonly durationTicks: ElapsedTimeTicks };
+};
 export type BattleActiveEffect =
   | (BattleUnitFeatureEffectBase & {
       readonly kind: "bardicInspirationDie";
@@ -1023,6 +1047,7 @@ export type BattleActiveEffect =
       readonly dimAdditionalFeet: MovementFeet;
       readonly expiresAt: BattleActiveEffectExpiration;
     })
+  | SpellCreatedHeldObjectActiveEffect
   | (BattleSpellEffectBase & {
       readonly kind: "dancingLights";
       readonly expiresAt: Extract<
@@ -1971,6 +1996,10 @@ export type HealingSpellActionCost = "magicAction" | "bonusAction";
 export type PreparedSpellAccess = { readonly tag: "prepared" };
 type ClassCantripSpellAccess = { readonly tag: "classCantrip" };
 type ArmorOfShadowsSpellAccess = { readonly tag: "armorOfShadows" };
+type SpellEffectSpellAccess = {
+  readonly tag: "spellEffect";
+  readonly sourceCombatantId: CombatantId;
+};
 export type SpellSlotInvocationResource = {
   readonly tag: "spellSlot";
   readonly slotLevel: SpellSlotLevel;
@@ -2779,6 +2808,41 @@ export type DancingLightsSpellInvocation =
       readonly rangeFeet: MovementFeet;
       readonly spacingFeet: MovementFeet;
     };
+export type SpellCreatedHeldObjectSpellInvocation =
+  | {
+      readonly access: PreparedSpellAccess;
+      readonly resource: SpellSlotInvocationResource;
+      readonly procedure: "spellCreatedHeldObject";
+      readonly spell: SpellRecord;
+      readonly actionCost: "bonusAction";
+      readonly activeEffect: SpellCreatedHeldObjectActiveEffect & {
+        readonly objectState: { readonly kind: "held" };
+      };
+    }
+  | {
+      readonly access: SpellEffectSpellAccess;
+      readonly resource: NoSpellInvocationResource;
+      readonly procedure: "spellCreatedHeldObjectAttack";
+      readonly spell: SpellRecord;
+      readonly targeting: Extract<SpellTargeting, { readonly kind: "singleCombatant" }>;
+      readonly damage: SpellCreatedHeldObjectActiveEffect["attack"]["damage"];
+      readonly rangeFeet: MovementFeet;
+      readonly attackKind: SpellCreatedHeldObjectActiveEffect["attack"]["attackKind"];
+      readonly attackBonus: SpellCreatedHeldObjectActiveEffect["attack"]["attackBonus"];
+      readonly activeEffect: SpellCreatedHeldObjectActiveEffect & {
+        readonly objectState: { readonly kind: "held" };
+      };
+    }
+  | {
+      readonly access: SpellEffectSpellAccess;
+      readonly resource: NoSpellInvocationResource;
+      readonly procedure: "spellCreatedHeldObjectReEvoke";
+      readonly spell: SpellRecord;
+      readonly actionCost: "bonusAction";
+      readonly activeEffect: SpellCreatedHeldObjectActiveEffect & {
+        readonly objectState: { readonly kind: "notHeld" };
+      };
+    };
 export type SpellAttackDamageTargeting = Extract<
   SpellTargeting,
   { readonly kind: "singleCombatant" | "singleCreatureOrObject" }
@@ -2894,6 +2958,7 @@ export type SupportedSpellInvocation =
   | ObjectLightSpellInvocation
   | HeldLightHurlSpellInvocation
   | DancingLightsSpellInvocation
+  | SpellCreatedHeldObjectSpellInvocation
   | SpellHostedWeaponAttackInvocation
   | WeaponAttackOverrideSpellInvocation
   | DamageReductionSpellInvocation
@@ -3286,6 +3351,8 @@ type AnySupportedDamageSpellInvocation = Exclude<
       | "featherFallMitigation"
       | "heldLight"
       | "objectLight"
+      | "spellCreatedHeldObject"
+      | "spellCreatedHeldObjectReEvoke"
       | "dancingLightsSeparateCast"
       | "dancingLightsCombinedCast"
       | "dancingLightsReposition"
@@ -3317,7 +3384,7 @@ export type SupportedDamageSpellInvocation =
 export type ReadiedSpellInvocation =
   | Exclude<
       SupportedDamageSpellInvocation,
-      { readonly procedure: "heldLightHurl" }
+      { readonly procedure: "heldLightHurl" | "spellCreatedHeldObjectAttack" }
     >
   | Extract<
       SupportedSpellInvocation,
@@ -4034,6 +4101,7 @@ export type BattleSpellDamageRollHole = Extract<
         | "heldLightHurl"
         | "repeatedDamageAllocation"
         | "saveGatedDamage"
+        | "spellCreatedHeldObjectAttack"
         | "spellAttackSequence"
         | "spellAttackDamage";
     }

@@ -44,6 +44,7 @@ module battleRuntimeConcentration {
         | HideousLaughterEffect(_) => false
         | HoldPersonParalyzed(_) => false
         | DancingLightsEffect(_) => false
+        | FlameBladeEffect(_) => false
         | InvisibilityCondition(_) => false
         | MindSpikeConcentrationDuration(_) => false
         | SelfTransformationModeEffect(_) => false
@@ -171,11 +172,11 @@ module battleRuntimeConcentration {
 
   pure def breakConcentration(target: Combatant): Combatant = {
     val withoutSpellEffectConcentration = combatantWithoutSpellEffectConcentrationEffects(target)
-    {
+    combatantWithSpellCreatedHeldObjectHandStateFromActiveEffects({
       ...withoutSpellEffectConcentration,
       concentrating: false,
       activeEffects: activeEffectsWithoutMarkedDamageRider(withoutSpellEffectConcentration.activeEffects),
-    }
+    })
   }
 
   pure def sleepEffectFromOtherSource(effect: ActiveEffect, targetActor: Actor): bool =

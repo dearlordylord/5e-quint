@@ -1,6 +1,7 @@
 // Spell hole construction, fill validation, and damage application extracted from spells-holes-fills.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.passive-saving-throw-roll-mode
 
 import { Match } from "effect";
@@ -124,6 +125,7 @@ export function spellAttackRollHole(
       readonly procedure:
         | "attackBurstSaveDamage"
         | "heldLightHurl"
+        | "spellCreatedHeldObjectAttack"
         | "spellAttackDamage";
     }
   >,
@@ -198,6 +200,7 @@ function spellAttackRollHoleBase(
       readonly procedure:
         | "attackBurstSaveDamage"
         | "heldLightHurl"
+        | "spellCreatedHeldObjectAttack"
         | "spellAttackDamage";
     }
   >,
@@ -508,6 +511,7 @@ export function spellDamageTypes(
     {
       readonly procedure:
         | "heldLightHurl"
+        | "spellCreatedHeldObjectAttack"
         | "spellAttackSequence"
         | "spellAttackDamage";
     }
@@ -1189,6 +1193,7 @@ export function validateSpellDamageFill(
           ((invocation.procedure === "heldLightHurl" ||
             invocation.procedure === "spellAttackSequence" ||
             invocation.procedure === "spellAttackDamage" ||
+            invocation.procedure === "spellCreatedHeldObjectAttack" ||
             invocation.procedure === "attackBurstSaveDamage") &&
           critical
             ? 2

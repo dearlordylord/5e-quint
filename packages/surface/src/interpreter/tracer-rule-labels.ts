@@ -231,6 +231,7 @@ export function describeObjectFilter(f: ObjectFilter | undefined): string {
   if (f === undefined) return "";
   const parts: string[] = [];
   if (f.material !== undefined) parts.push(f.material);
+  if (f.visibility === "caster_can_see") parts.push("caster_can_see");
   if (f.manufactured === true) parts.push("manufactured");
   if (f.maxWeightPounds !== undefined) {
     parts.push(`max_${f.maxWeightPounds}_lb`);
@@ -775,6 +776,8 @@ export function describeOngoingPredicate(
       return `has condition: ${p.condition}`;
     case "spell_created_held_object_active":
       return "spell-created held object active";
+    case "table_witnessed_attachment_within_spell_range":
+      return "table-witnessed attachment within spell range";
     default: {
       const _exhaustive: never = p;
       throw new Error(`unhandled ongoing predicate: ${String(_exhaustive)}`);

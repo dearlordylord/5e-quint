@@ -67,6 +67,14 @@ module battleRuntimeLight {
 
   pure def produceFlameDurationTicks: int = 100
 
+  pure def flameBladeBrightLightRadiusFeet: int = 10
+
+  pure def flameBladeDimLightAdditionalFeet: int = 10
+
+  pure def flameBladeDurationTicks: int = 100
+
+  pure def flameBladeBaseSlotLevel: int = 2
+
   pure def faerieFireDimLightRadiusFeet: int = 10
 
   pure def shiningSmiteLightEmitterBrightRadiusFeet: int =
@@ -386,6 +394,88 @@ module battleRuntimeLight {
       })
       .fold(Set(), (emitters, emitterSet) => emitters.union(emitterSet))
 
+  pure def activeEffectsWithoutFlameBlade(effects: Set[ActiveEffect]): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | FlameBladeEffect(_) => false
+      | _ => true
+    })
+
+  pure def activeEffectsContainHeldFlameBlade(effects: Set[ActiveEffect]): bool =
+    effects.exists(effect => match effect {
+      | FlameBladeEffect(data) => data.objectState == FlameBladeHeldObject
+      | _ => false
+    })
+
+  pure def activeEffectsContainReleasedFlameBlade(effects: Set[ActiveEffect]): bool =
+    effects.exists(effect => match effect {
+      | FlameBladeEffect(data) => data.objectState == FlameBladeReleasedObject
+      | _ => false
+    })
+
+  pure def activeEffectsWithFlameBladeObjectState(
+    effects: Set[ActiveEffect],
+    objectState: FlameBladeObjectState,
+  ): Set[ActiveEffect] =
+    effects.map(effect => match effect {
+      | FlameBladeEffect(data) => FlameBladeEffect({ ...data, objectState: objectState })
+      | _ => effect
+    })
+
+  pure def flameBladeDamageDice(slotLevel: int): int =
+    if (slotLevel > flameBladeBaseSlotLevel) 3 + (slotLevel - flameBladeBaseSlotLevel) else 3
+
+  pure def flameBladeDamage(diceRoll: int, spellcastingAbilityModifier: int): int =
+    diceRoll + spellcastingAbilityModifier
+
+  pure def flameBladeHeldDamage(effects: Set[ActiveEffect], diceRoll: int): int =
+    effects
+      .map(effect => match effect {
+        | FlameBladeEffect(data) =>
+            if (data.objectState == FlameBladeHeldObject)
+              flameBladeDamage(diceRoll, data.spellcastingAbilityModifier)
+            else
+              0
+        | _ => 0
+      })
+      .fold(0, (highest, damage) => if (highest > damage) highest else damage)
+
+  pure def flameBladeActiveEffect(
+    slotLevel: int,
+    spellcastingAbilityModifier: int,
+    objectState: FlameBladeObjectState,
+  ): ActiveEffect =
+    FlameBladeEffect({
+      durationTicks: flameBladeDurationTicks,
+      slotLevel: slotLevel,
+      spellcastingAbilityModifier: spellcastingAbilityModifier,
+      objectState: objectState,
+    })
+
+  pure def flameBladeHeldLightEmitter: LightEmitter =
+    SpellLightEmitter({
+      source: Fighter,
+      sourceSpell: FlameBlade,
+      attachment: CombatantLightEmitter({ actor: Fighter }),
+      emission: BrightAndDimLightEmission({
+        brightRadiusFeet: flameBladeBrightLightRadiusFeet,
+        dimAdditionalFeet: flameBladeDimLightAdditionalFeet,
+      }),
+      opaqueCoverInteraction: LightEmitterDoesNotBlockOpaqueCover,
+      expiresAt: ConcentrationLightEmitterExpiration({ actor: Fighter }),
+    })
+
+  pure def flameBladeHeldLightEmitters(effects: Set[ActiveEffect]): Set[LightEmitter] =
+    effects
+      .map(effect => match effect {
+        | FlameBladeEffect(data) =>
+            if (data.objectState == FlameBladeHeldObject)
+              Set(flameBladeHeldLightEmitter)
+            else
+              Set()
+        | _ => Set()
+      })
+      .fold(Set(), (emitters, emitterSet) => emitters.union(emitterSet))
+
   pure def faerieFireCombatantDimLightEmitters(actor: Actor, effects: Set[ActiveEffect]): Set[LightEmitter] =
     effects
       .map(effect => match effect {
@@ -437,6 +527,7 @@ module battleRuntimeLight {
   pure def battleRuntimeLightEmitters(state: BattleState): Set[LightEmitter] =
     state.lightEmitters
       .union(produceFlameHeldLightEmitters(state.fighter.activeEffects))
+      .union(flameBladeHeldLightEmitters(state.fighter.activeEffects))
       .union(dancingLightsActiveEffectEmitters(state.fighter.activeEffects))
       .union(faerieFireCombatantDimLightEmitters(Fighter, state.fighter.activeEffects))
       .union(faerieFireCombatantDimLightEmitters(Goblin, state.goblin.activeEffects))
@@ -605,6 +696,75 @@ module battleRuntimeLight {
     } else {
       state
     }
+
+  pure def resolveFlameBlade(
+    state: BattleState,
+    slotLevel: int,
+    spellcastingAbilityModifier: int,
+  ): BattleState =
+    if (
+      currentActor(state) == Fighter and
+      state.bonusActionAvailable and
+      canExpendSpellSlotThisTurn(state) and
+      combatantHasFreeHand(state.fighter) and
+      slotLevel >= flameBladeBaseSlotLevel and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(fighterHasRage(state))
+    ) {
+      val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
+      commitActorSpellSlotUse({
+        ...withoutPrior,
+        fighter: {
+          ...combatantWithSpellCreatedHeldObjectHand(withoutPrior.fighter),
+          concentrating: true,
+          activeEffects: activeEffectsWithoutFlameBlade(withoutPrior.fighter.activeEffects)
+            .union(Set(flameBladeActiveEffect(slotLevel, spellcastingAbilityModifier, FlameBladeHeldObject))),
+        },
+        bonusActionAvailable: false,
+      }, Fighter)
+    } else {
+      state
+    }
+
+  pure def releaseFlameBlade(state: BattleState): BattleState =
+    if (currentActor(state) == Fighter and activeEffectsContainHeldFlameBlade(state.fighter.activeEffects))
+      {
+        ...state,
+        fighter: {
+          ...combatantWithoutSpellCreatedHeldObjectHand(state.fighter),
+          activeEffects: activeEffectsWithFlameBladeObjectState(
+            state.fighter.activeEffects,
+            FlameBladeReleasedObject,
+          ),
+        },
+      }
+    else
+      state
+
+  pure def reEvokeFlameBlade(state: BattleState): BattleState =
+    if (
+      currentActor(state) == Fighter and
+      state.bonusActionAvailable and
+      combatantHasFreeHand(state.fighter) and
+      activeEffectsContainReleasedFlameBlade(state.fighter.activeEffects) and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(fighterHasRage(state))
+    )
+      {
+        ...state,
+        fighter: {
+          ...combatantWithSpellCreatedHeldObjectHand(state.fighter),
+          activeEffects: activeEffectsWithFlameBladeObjectState(
+            state.fighter.activeEffects,
+            FlameBladeHeldObject,
+          ),
+        },
+        bonusActionAvailable: false,
+      }
+    else
+      state
 
   pure def shillelaghDurationTicks: int = 10
 
@@ -777,5 +937,47 @@ module battleRuntimeLight {
       val adjustedDamage = damageAfterAdjustments(damageRoll, Fire, Set(), Set(), Set())
       val damaged = applyDamageFromSource(state.goblin, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter)
       { ...rolled, fighter: fighterWithoutProduceFlameHeldLight(rolled), goblin: damaged, actionAvailable: false }
+    }
+
+  pure def resolveFlameBladeAttack(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    damageDiceRoll: int,
+    concentrationSaveSucceeded: bool,
+  ): BattleState =
+    if (
+      not(state.actionAvailable) or
+      currentActor(state) != Fighter or
+      state.fighter.unconscious or
+      state.fighter.incapacitated or
+      fighterHasRage(state) or
+      not(activeEffectsContainHeldFlameBlade(state.fighter.activeEffects))
+    )
+      state
+    else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), 20))) {
+      val rolled = recordFighterAttackRoll(revealFighterHidden(state))
+      { ...rolled, actionAvailable: false }
+    }
+    else if (state.goblin.reactionAvailable and not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
+      openReactionWindow(recordFighterAttackRoll(revealFighterHidden(state)), {
+        trigger: AttackHit,
+        procedure: ShieldReactionProcedure,
+        eligibleReactors: Set(Goblin),
+        offeredReactors: Set(),
+        continuation: ResumeFlameBladeAttack,
+      })
+    }
+    else {
+      val rolled = recordFighterAttackRoll(revealFighterHidden(state))
+      val adjustedDamage = damageAfterAdjustments(
+        flameBladeHeldDamage(rolled.fighter.activeEffects, damageDiceRoll),
+        Fire,
+        Set(),
+        Set(),
+        Set()
+      )
+      val damaged = applyDamageFromSource(state.goblin, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter)
+      { ...rolled, goblin: damaged, actionAvailable: false }
     }
 }

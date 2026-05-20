@@ -401,6 +401,7 @@ export function subjectName(
   | "releaseGrapple"
   | "releaseReadiedSpell"
   | "releaseReadiedMovement"
+  | "releaseSpellCreatedHeldObject"
   | "castTriggeredReactionSpell"
   | "castAttackHitBonusActionSpell"
   | "opportunityAttack"

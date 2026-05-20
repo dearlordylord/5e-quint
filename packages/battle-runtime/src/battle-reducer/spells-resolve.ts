@@ -1,3 +1,4 @@
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // Spell resolution dispatch (Cluster L). Mechanical extraction from
 // battle-reducer.ts. The largest cluster in the file: master spell-act
 // resolvers (`resolveSpellAct`, `resolveAttackBurstSaveDamageSpellAct`,
@@ -17,7 +18,10 @@
 // `../battle-reducer.ts` until Pass 19 merges the dispatcher.
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION
 
-import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
+import {
+  spendAction,
+  spendActivationResource,
+} from "@dnd/shared-algebras/action-economy-algebra";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import {
   attackRollHits,
@@ -265,11 +269,14 @@ import {
   resolveHeldLightSpellAct,
   resolveMarkedDamageRiderSpellAct,
   resolveObjectLightSpellAct,
+  resolveSpellCreatedHeldObjectReEvokeSpellAct,
+  resolveSpellCreatedHeldObjectSpellAct,
   resolveReadySpellAct,
   resolveWeaponAttackOverrideSpellAct,
   resolveWeaponDamageRiderSpellAct,
 } from "./spells-resolve-release.ts";
 import { resolveSpellHostedWeaponAttackSpellAct } from "./spells-resolve-weapon-attack.ts";
+import { clearPendingAttackRollMissToHitReplacementSelection } from "./statblock-attacks.ts";
 export * from "./spells-resolve-release.ts";
 
 type SpellAttackDamageInvocation = Extract<
@@ -282,6 +289,7 @@ function isSupportedDamageSpellInvocation(
 ): invocation is SupportedDamageSpellInvocation {
   return (
     invocation.procedure === "heldLightHurl" ||
+    invocation.procedure === "spellCreatedHeldObjectAttack" ||
     invocation.procedure === "repeatedDamageAllocation" ||
     (invocation.procedure === "spellAttackDamage" &&
       invocation.damage.kind !== "sorcerousBurstDamageTypeChoice") ||
@@ -390,7 +398,10 @@ export function resolveSpellAct(
       "Action-time spell act requires its active caster spell effect.",
     );
   }
-  if (activeOngoingFeaturesPreventSpellcasting(actor)) {
+  if (
+    spellInvocationIsSpellcasting(invocation) &&
+    activeOngoingFeaturesPreventSpellcasting(actor)
+  ) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -425,6 +436,9 @@ export function resolveSpellAct(
       invocation.procedure === "fogCloudObscurement" ||
       invocation.procedure === "flamingSphere" ||
       invocation.procedure === "moonbeam" ||
+      invocation.procedure === "spellCreatedHeldObject" ||
+      invocation.procedure === "spellCreatedHeldObjectAttack" ||
+      invocation.procedure === "spellCreatedHeldObjectReEvoke" ||
       invocation.procedure === "sanctuaryTargetingInterdiction" ||
       invocation.procedure === "directConditionRemoval" ||
       invocation.procedure === "directCondition" ||
@@ -478,9 +492,11 @@ export function resolveSpellAct(
     );
   }
 
-  const castingState = spellRequiresVerbal(invocation.spell)
-    ? revealHidden(input.state, subject.actorId)
-    : input.state;
+  const castingState =
+    spellInvocationIsSpellcasting(invocation) &&
+    spellRequiresVerbal(invocation.spell)
+      ? revealHidden(input.state, subject.actorId)
+      : input.state;
   if (subject.mode.tag === "ready") {
     if (!isReadiedSpellInvocation(invocation)) {
       return invalidResult(
@@ -503,6 +519,16 @@ export function resolveSpellAct(
   const fillSet = spellFillSet(input.fills, invocation);
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
+  }
+  if (
+    invocation.procedure === "spellCreatedHeldObjectAttack" &&
+    fillSet.reactionSpellTargetFacts.length > 0
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Spell-created held object attacks are not spell casts and do not accept spell-cast Reaction facts.",
+    );
   }
   if (invocation.procedure === "spellAttackSequence") {
     return resolveSpellAttackSequenceAct({
@@ -856,7 +882,7 @@ export function resolveSpellAct(
       return invalidResult(input.state, "invalidFill", sanctuaryCheck.message);
     }
     if (sanctuaryCheck.tag === "lost") {
-      return spendSpellCastResources({
+      return spendSpellActResolutionResources({
         state: stateAfterResolvedHeldLightHurl(
           castingState,
           subject.actorId,
@@ -946,22 +972,26 @@ export function resolveSpellAct(
     });
   }
 
-  const spellCastReactionWindow = maybeOpenReactionWindow(
-    castingState,
-    spellCastReactionFrame({
-      casterId: subject.actorId,
-      invocation: invocationForResolution,
-      targetIds: [target.combatantId],
-      reactionSpellTargetFacts: fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "magicAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.subject,
-        fills: input.fills,
-      },
-    }),
-    input.suppressedReactionTrigger,
-  );
+  const spellCastReactionWindow = spellInvocationIsSpellcasting(
+    invocationForResolution,
+  )
+    ? maybeOpenReactionWindow(
+        castingState,
+        spellCastReactionFrame({
+          casterId: subject.actorId,
+          invocation: invocationForResolution,
+          targetIds: [target.combatantId],
+          reactionSpellTargetFacts: fillSet.reactionSpellTargetFacts,
+          castingResource: { kind: "magicAction" },
+          continuation: {
+            kind: "replay",
+            subject: input.subject,
+            fills: input.fills,
+          },
+        }),
+        input.suppressedReactionTrigger,
+      )
+    : null;
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;
   }
@@ -969,7 +999,8 @@ export function resolveSpellAct(
   let spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [];
   if (
     invocationForResolution.procedure === "spellAttackDamage" ||
-    invocationForResolution.procedure === "heldLightHurl"
+    invocationForResolution.procedure === "heldLightHurl" ||
+    invocationForResolution.procedure === "spellCreatedHeldObjectAttack"
   ) {
     const requiredRollMode = requiredSpellAttackRollMode(
       castingState,
@@ -1028,10 +1059,15 @@ export function resolveSpellAct(
     }
     const hit = ordinaryHit || missToHitReplacement !== null;
     const critical = attackRollIsCriticalHit(fillSet.attackRoll);
+    const attackRollState = stateAfterSpellAttackRollMadeForInvocation(
+      castingState,
+      subject.actorId,
+      invocationForResolution,
+    );
     const attackRolledState = recordAttackRollMissToHitReplacementUsed(
       consumeHelpAttackForAttackRoll(
         recordAttackRollOngoingFeatures(
-          castingState,
+          attackRollState,
           subject.actorId,
           target.combatantId,
           null,
@@ -1100,7 +1136,7 @@ export function resolveSpellAct(
             "Spell attack damage and after-hit fills are not valid when Mirror Image redirects the hit to a duplicate.",
           );
         }
-        return spendSpellCastResources({
+        return spendSpellActResolutionResources({
           state: mirrorImageCheck.state,
           actorId: subject.actorId,
           invocation: invocationForResolution,
@@ -1173,7 +1209,7 @@ export function resolveSpellAct(
       );
     }
     if (!hit) {
-      return spendSpellCastResources({
+      return spendSpellActResolutionResources({
         state: attackRolledStateAfterHurl,
         actorId: subject.actorId,
         invocation: invocationForResolution,
@@ -1203,7 +1239,8 @@ export function resolveSpellAct(
   }
   const spellAttackMissToHitReplacement =
     (invocationForResolution.procedure === "spellAttackDamage" ||
-      invocationForResolution.procedure === "heldLightHurl") &&
+      invocationForResolution.procedure === "heldLightHurl" ||
+      invocationForResolution.procedure === "spellCreatedHeldObjectAttack") &&
     fillSet.attackRoll != null
       ? selectedAttackRollMissToHitReplacement({
           state: castingState,
@@ -1219,12 +1256,17 @@ export function resolveSpellAct(
       : null;
   const spellResolutionState =
     (invocationForResolution.procedure === "spellAttackDamage" ||
-      invocationForResolution.procedure === "heldLightHurl") &&
+      invocationForResolution.procedure === "heldLightHurl" ||
+      invocationForResolution.procedure === "spellCreatedHeldObjectAttack") &&
     fillSet.attackRoll != null
       ? recordAttackRollMissToHitReplacementUsed(
           consumeHelpAttackForAttackRoll(
             recordAttackRollOngoingFeatures(
-              castingState,
+              stateAfterSpellAttackRollMadeForInvocation(
+                castingState,
+                subject.actorId,
+                invocationForResolution,
+              ),
               subject.actorId,
               target.combatantId,
               null,
@@ -1243,7 +1285,8 @@ export function resolveSpellAct(
       : castingState;
   const critical =
     (invocationForResolution.procedure === "spellAttackDamage" ||
-      invocationForResolution.procedure === "heldLightHurl") &&
+      invocationForResolution.procedure === "heldLightHurl" ||
+      invocationForResolution.procedure === "spellCreatedHeldObjectAttack") &&
     fillSet.attackRoll != null &&
     attackRollIsCriticalHit(fillSet.attackRoll);
   const damageValidation = validateSpellDamageFill(
@@ -1401,7 +1444,7 @@ export function resolveSpellAct(
           invocationForResolution,
         )
       : effected;
-  const spentResources = spendSpellCastResources({
+  const spentResources = spendSpellActResolutionResources({
     state: stateAfterResolvedHeldLightHurl(
       lit,
       subject.actorId,
@@ -1453,6 +1496,51 @@ function stateAfterResolvedHeldLightHurl(
   return invocation.procedure === "heldLightHurl"
     ? endHeldLightSpellEffect(state, actorId, invocation)
     : state;
+}
+
+function stateAfterSpellAttackRollMadeForInvocation(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: SupportedSpellInvocation,
+): BattleState {
+  return invocation.procedure === "spellCreatedHeldObjectAttack"
+    ? revealHidden(state, actorId)
+    : state;
+}
+
+function spendSpellActResolutionResources(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly invocation: SupportedSpellInvocation;
+  readonly errorState: BattleState;
+}): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
+  if (input.invocation.procedure !== "spellCreatedHeldObjectAttack") {
+    return spendSpellCastResources(input);
+  }
+  const spellAttackState = battleStateAfterTargetActionEarlyEndForActor(
+    input.state,
+    input.actorId,
+  );
+  const spent = spendAction(spellAttackState.currentTurnResources, "magic");
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.errorState,
+      "staleSubject",
+      "Magic action is no longer available for the current actor.",
+    );
+  }
+  const nextState = {
+    ...spellAttackState,
+    currentTurnResources: clearPendingAttackRollMissToHitReplacementSelection(
+      spent.right,
+      input.actorId,
+    ),
+  };
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
 }
 
 function resolveSpellAttackDamageObjectTarget(input: {
@@ -1748,6 +1836,17 @@ export function resolveBonusActionSpellAct(
         "Bonus Action spell subject requires a supported Bonus Action spell act.",
       );
     }
+  } else if (
+    invocation.procedure === "spellCreatedHeldObject" ||
+    invocation.procedure === "spellCreatedHeldObjectReEvoke"
+  ) {
+    if (invocation.actionCost !== "bonusAction") {
+      return invalidResult(
+        input.state,
+        "unsupportedSubject",
+        "Bonus Action spell subject requires a supported Bonus Action spell act.",
+      );
+    }
   } else if (invocation.procedure === "scalarBuff") {
     if (invocation.actionCost !== "bonusAction") {
       return invalidResult(
@@ -1859,6 +1958,22 @@ export function resolveBonusActionSpellAct(
   }
   if (invocation.procedure === "heldLight") {
     return resolveHeldLightSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "spellCreatedHeldObject") {
+    return resolveSpellCreatedHeldObjectSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "spellCreatedHeldObjectReEvoke") {
+    return resolveSpellCreatedHeldObjectReEvokeSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

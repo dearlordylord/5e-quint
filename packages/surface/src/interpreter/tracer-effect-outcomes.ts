@@ -16,6 +16,7 @@ export type OutcomeEffectAtom = Extract<
   AreaDirectEffectAtom,
   {
     readonly kind:
+      | "object_contact_damage"
       | "none"
       | "damage"
       | "conditional_bonus_damage"
@@ -57,6 +58,59 @@ export function traceOutcomeEffectAtom(
   traceEffectAtom: TraceEffectAtomFn,
 ): string | null {
   switch (e.kind) {
+    case "object_contact_damage": {
+      const id = ids("dmg");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "object_contact_damage",
+        label: [
+          "object_contact_damage",
+          `contact: ${e.contact.kind}`,
+          `${describeDiceAmount(e.amount)} ${describeDamageTypeRef(e.damageType)}`,
+        ].join("\n"),
+      });
+      if (edges !== undefined) {
+        const save = e.holdingOrWearingSave;
+        const saveId = ids("sg");
+        nodes.push({
+          id: saveId,
+          category: "resolution",
+          atomKind: "holding_or_wearing_save",
+          label: `holding_or_wearing_save\n${save.ability.toUpperCase()} vs ${describeDc(save.dc)}\napplies: ${save.appliesIf.kind}`,
+        });
+        edges.push({ from: id, to: saveId, relation: "branches_on_contact" });
+
+        const dropId = ids("drop");
+        nodes.push({
+          id: dropId,
+          category: "resolution",
+          atomKind: "drop_if_possible",
+          label: [
+            "drop_if_possible",
+            save.onFailure.dropCapabilityWitness.kind,
+            save.onFailure.dropResultWitness.kind,
+            `fallback: ${save.onFailure.fallbackWhen}`,
+          ].join("\n"),
+        });
+        edges.push({ from: saveId, to: dropId, relation: "branches_on_save" });
+
+        const fallbackId = traceEffectAtom(
+          save.onFailure.fallback,
+          nodes,
+          ids,
+          edges,
+        );
+        if (fallbackId !== null) {
+          edges.push({
+            from: dropId,
+            to: fallbackId,
+            relation: "branches_on_drop_result",
+          });
+        }
+      }
+      return id;
+    }
     case "none":
       return null;
     case "damage": {

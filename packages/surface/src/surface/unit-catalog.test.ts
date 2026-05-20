@@ -1299,6 +1299,96 @@ describe("SRD Unit catalog boundary", () => {
     }
   });
 
+  test("decodes Heat Metal as object-contact damage with a drop-or-fallback save", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const heatMetal = result.catalog.requireUnit("heat_metal");
+      expect(heatMetal.kind).toBe("spell");
+      if (heatMetal.kind !== "spell") return;
+      expect(heatMetal.mechanics.family).toBe("ongoing_effect");
+      if (heatMetal.mechanics.family !== "ongoing_effect") return;
+
+      const metalObjectAttachment = {
+        kind: "hole",
+        holeId: "heat_metal_object",
+        label: "target object",
+        value: {
+          kind: "object",
+          count: 1,
+          filter: {
+            material: "metal",
+            visibility: "caster_can_see",
+            manufactured: true,
+          },
+        },
+      };
+      const contactDamage = {
+        kind: "object_contact_damage",
+        contact: {
+          kind: "table_witnessed_physical_contact_with_spell_object",
+        },
+        damageType: "fire",
+        amount: {
+          kind: "linear_per_level",
+          axis: "slot",
+          base: { dice: 2, dieSize: 8 },
+          perLevel: { dice: 1 },
+          startingAtLevel: 3,
+        },
+        holdingOrWearingSave: {
+          appliesIf: {
+            kind: "table_witnessed_holding_or_wearing_spell_object",
+          },
+          ability: "con",
+          dc: { kind: "caster_spell_save_dc" },
+          onSuccess: { kind: "none" },
+          onFailure: {
+            kind: "drop_if_possible_else_disadvantage",
+            dropCapabilityWitness: {
+              kind: "table_witnessed_drop_capability",
+              subject: "damaged_creature",
+              object: "spell_object",
+            },
+            dropResultWitness: {
+              kind: "table_witnessed_drop_result",
+              subject: "damaged_creature",
+              object: "spell_object",
+            },
+            fallbackWhen: "object_not_dropped",
+            fallback: {
+              kind: "modify_roll_advantage",
+              mode: "disadvantage",
+              on: ["attack_roll", "ability_check"],
+              expiresOn: { kind: "caster_turn_start" },
+            },
+          },
+        },
+      };
+
+      expect(heatMetal.mechanics.attachment).toEqual(metalObjectAttachment);
+      expect(heatMetal.mechanics.initialPhase).toEqual({
+        kind: "direct",
+        attachment: metalObjectAttachment,
+        effects: [contactDamage],
+      });
+      expect(heatMetal.mechanics.operations).toEqual([
+        {
+          trigger: {
+            kind: "on_caster_spends_action",
+            cost: { kind: "bonus_action" },
+            laterTurnsOnly: true,
+          },
+          predicate: {
+            kind: "table_witnessed_attachment_within_spell_range",
+          },
+          effect: contactDamage,
+        },
+      ]);
+    }
+  });
+
   test("decodes Shillelagh as a held-weapon attack override", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 

@@ -12,7 +12,7 @@ module battleRuntimeModel {
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
   type Ability = StrAbility | DexAbility | ConAbility | IntAbility | WisAbility | ChaAbility
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | FireBolt | EldritchBlast | ScorchingRay | SacredFlame | InflictWounds | BurningHands | Fireball | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | ShiningSmite | FaerieFire | AnimalFriendship | CharmPerson | BlindnessDeafness | ProtectionFromEvilAndGood | ProtectionFromPoison | LesserRestoration | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | Counterspell | FalseLife | Longstrider | ShieldOfFaith | SpiderClimb | Barkskin | Heroism | Aid | Bane | Bless | Guidance | PassWithoutTrace | EnhanceAbility | Thaumaturgy | DivineFavor | DivineSmite | HuntersMark | Hex | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | DancingLightsSpell | Light | ContinualFlame | TrueStrike | Grease | FogCloud | Command | DissonantWhispers | FeatherFall | HellishRebuke | SorcerousBurst | SpareTheDying | HideousLaughter | MistyStep | Blur | MirrorImage | HoldPerson | MindSpike | AlterSelf
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | FireBolt | EldritchBlast | ScorchingRay | SacredFlame | InflictWounds | BurningHands | Fireball | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | ShiningSmite | FaerieFire | AnimalFriendship | CharmPerson | BlindnessDeafness | ProtectionFromEvilAndGood | ProtectionFromPoison | LesserRestoration | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | Counterspell | FalseLife | Longstrider | ShieldOfFaith | SpiderClimb | Barkskin | Heroism | Aid | Bane | Bless | Guidance | PassWithoutTrace | EnhanceAbility | Thaumaturgy | DivineFavor | DivineSmite | HuntersMark | Hex | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | DancingLightsSpell | Light | ContinualFlame | FlameBlade | TrueStrike | Grease | FogCloud | Command | DissonantWhispers | FeatherFall | HellishRebuke | SorcerousBurst | SpareTheDying | HideousLaughter | MistyStep | Blur | MirrorImage | HoldPerson | MindSpike | AlterSelf
   type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | StarryWispSpellAttack | FireBoltSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack | ProduceFlameHurlSpellAttack | SorcerousBurstSpellAttack({ damageTypeChoice: BattleRuntimeSorcerousBurstDamageTypeChoice, spellcastingAbilityModifier: int, characterLevel: int })
   type FixedSpellAttackDamageInvocation = RayOfFrostFixedSpellAttack | PoisonSprayFixedSpellAttack | ChillTouchFixedSpellAttack | StarryWispFixedSpellAttack | FireBoltFixedSpellAttack | ShockingGraspFixedSpellAttack | GuidingBoltFixedSpellAttack | RayOfSicknessFixedSpellAttack | ProduceFlameHurlFixedSpellAttack
   type SpellAttackSequenceInvocation =
@@ -128,7 +128,8 @@ module battleRuntimeModel {
     itemDropBoundaryEvents: Set[FindFamiliarItemDropBoundaryEvent],
     magicActionSpent: bool,
   }
-  type ActiveEffect = BardicInspirationDie({ source: Actor, dieSize: int, durationTicks: int }) | MageArmor({ durationTicks: int }) | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | SpiderClimbClimbSpeedGrant({ durationTicks: int }) | BarkskinArmorClassFloor({ durationTicks: int }) | AidHitPointMaximumIncrease({ amount: int, durationTicks: int }) | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus({ skill: AbilityCheckSkill }) | PassWithoutTraceStealthBonus | EnhanceAbilityCheckAdvantage({ ability: Ability }) | ThaumaturgyBoomingVoice({ source: Actor, durationTicks: int }) | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | ProtectionFromPoisonSavingThrowAdvantage({ durationTicks: int }) | ProtectionFromPoisonPoisonResistance({ durationTicks: int }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | HexDamageRider({ target: Actor, ability: Ability, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | RayOfSicknessPoisoned | ChillTouchHitPointRegainPrevented({ source: Actor, expiresAtRound: int }) | StarryWispInvisibleBenefitDenied({ source: Actor, expiresAtRound: int }) | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | WeaponMasterySapNextAttackDisadvantage({ source: Actor }) | Blurred | MirrorImageDuplicates({ durationTicks: int, remainingDuplicates: int }) | ColorSprayBlinded({ source: Actor, expiresAtRound: int }) | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | ShiningSmiteIllumination({ durationTicks: int }) | FaerieFireOutline | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | BlindnessDeafnessBlinded({ source: Actor, durationTicks: int }) | BlindnessDeafnessDeafened({ source: Actor, durationTicks: int }) | ProtectionRelevantCharmed({ source: Actor, durationTicks: int }) | ProtectionRelevantFrightened({ source: Actor, durationTicks: int }) | ProtectionRelevantPossession({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodCreatureTypeProtection | DancingLightsEffect({ combined: bool, lightCount: int, light1Position: int, light2Position: int, light3Position: int, light4Position: int, durationTicks: int }) | ProduceFlameHeldLight({ durationTicks: int }) | ShillelaghWeaponAttackOverride({ weapon: ShillelaghWeapon, damageDice: int, damageDieSize: int, spellcastingAbilityModifier: int, durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | FeatherFallMitigation({ durationTicks: int }) | SanctuaryWard({ source: Actor, durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | HideousLaughterEffect({ source: Actor, target: Actor, hadProne: bool, hadIncapacitated: bool, durationTicks: int }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | FogCloudObscurement({ areaId: int, radiusFeet: int, durationTicks: int }) | FlamingSphere({ areaId: int, damageDice: int, durationTicks: int, ramMaxMoveFeet: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int }) | HoldPersonParalyzed({ source: Actor, hadIncapacitated: bool, durationTicks: int }) | InvisibilityCondition({ source: Actor, durationTicks: int }) | MindSpikeConcentrationDuration({ durationTicks: int }) | SelfTransformationModeEffect({ source: Actor, mode: SelfTransformationMode, durationTicks: int })
+  type FlameBladeObjectState = FlameBladeHeldObject | FlameBladeReleasedObject
+  type ActiveEffect = BardicInspirationDie({ source: Actor, dieSize: int, durationTicks: int }) | MageArmor({ durationTicks: int }) | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | SpiderClimbClimbSpeedGrant({ durationTicks: int }) | BarkskinArmorClassFloor({ durationTicks: int }) | AidHitPointMaximumIncrease({ amount: int, durationTicks: int }) | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus({ skill: AbilityCheckSkill }) | PassWithoutTraceStealthBonus | EnhanceAbilityCheckAdvantage({ ability: Ability }) | ThaumaturgyBoomingVoice({ source: Actor, durationTicks: int }) | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | ProtectionFromPoisonSavingThrowAdvantage({ durationTicks: int }) | ProtectionFromPoisonPoisonResistance({ durationTicks: int }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | HexDamageRider({ target: Actor, ability: Ability, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | RayOfSicknessPoisoned | ChillTouchHitPointRegainPrevented({ source: Actor, expiresAtRound: int }) | StarryWispInvisibleBenefitDenied({ source: Actor, expiresAtRound: int }) | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | WeaponMasterySapNextAttackDisadvantage({ source: Actor }) | Blurred | MirrorImageDuplicates({ durationTicks: int, remainingDuplicates: int }) | ColorSprayBlinded({ source: Actor, expiresAtRound: int }) | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | ShiningSmiteIllumination({ durationTicks: int }) | FaerieFireOutline | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | BlindnessDeafnessBlinded({ source: Actor, durationTicks: int }) | BlindnessDeafnessDeafened({ source: Actor, durationTicks: int }) | ProtectionRelevantCharmed({ source: Actor, durationTicks: int }) | ProtectionRelevantFrightened({ source: Actor, durationTicks: int }) | ProtectionRelevantPossession({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodCreatureTypeProtection | DancingLightsEffect({ combined: bool, lightCount: int, light1Position: int, light2Position: int, light3Position: int, light4Position: int, durationTicks: int }) | ProduceFlameHeldLight({ durationTicks: int }) | FlameBladeEffect({ durationTicks: int, slotLevel: int, spellcastingAbilityModifier: int, objectState: FlameBladeObjectState }) | ShillelaghWeaponAttackOverride({ weapon: ShillelaghWeapon, damageDice: int, damageDieSize: int, spellcastingAbilityModifier: int, durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | FeatherFallMitigation({ durationTicks: int }) | SanctuaryWard({ source: Actor, durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | HideousLaughterEffect({ source: Actor, target: Actor, hadProne: bool, hadIncapacitated: bool, durationTicks: int }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | FogCloudObscurement({ areaId: int, radiusFeet: int, durationTicks: int }) | FlamingSphere({ areaId: int, damageDice: int, durationTicks: int, ramMaxMoveFeet: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int }) | HoldPersonParalyzed({ source: Actor, hadIncapacitated: bool, durationTicks: int }) | InvisibilityCondition({ source: Actor, durationTicks: int }) | MindSpikeConcentrationDuration({ durationTicks: int }) | SelfTransformationModeEffect({ source: Actor, mode: SelfTransformationMode, durationTicks: int })
 
   pure def aidHitPointMaximumIncreaseAppliedAmount(effects: Set[ActiveEffect]): int =
     effects
@@ -284,7 +285,7 @@ module battleRuntimeModel {
 
   type CreatureSize = Tiny | Small | Medium | Large | Huge | Gargantuan
 
-  type HandUse = HFree | HMainWeapon | HOffWeapon | HShield | HGrapple
+  type HandUse = HFree | HMainWeapon | HOffWeapon | HShield | HGrapple | HSpellCreatedHeldObject
 
   pure def creatureSizeRank(creatureSize: CreatureSize): int =
     match creatureSize {
@@ -400,6 +401,7 @@ module battleRuntimeModel {
     | ResumeChillTouch
     | ResumeTrueStrikeWeaponAttack
     | ResumeProduceFlameHurl
+    | ResumeFlameBladeAttack
     | ResumeIceKnife
     | ResumeSaveGateDamage
     | ResumeAfterDamage
@@ -456,6 +458,7 @@ module battleRuntimeModel {
       | ResumeChillTouch => BattleRuntimeSpellAttackContinuation
       | ResumeTrueStrikeWeaponAttack => BattleRuntimeSpellAttackContinuation
       | ResumeProduceFlameHurl => BattleRuntimeSpellAttackContinuation
+      | ResumeFlameBladeAttack => BattleRuntimeSpellAttackContinuation
       | ResumeIceKnife => BattleRuntimeSpellAttackContinuation
       | ResumeSaveGateDamage => BattleRuntimeSaveGateContinuation
       | ResumeAfterDamage => BattleRuntimeAfterDamageContinuation
@@ -594,6 +597,37 @@ module battleRuntimeModel {
     fighterGreataxeCleaveMastery: bool,
     fighterCleaveExtraAttackUsedThisTurn: bool,
   }
+
+  pure def combatantHasFreeHand(combatant: Combatant): bool =
+    combatant.leftHandUse == HFree or combatant.rightHandUse == HFree
+
+  pure def combatantWithoutSpellCreatedHeldObjectHand(combatant: Combatant): Combatant = {
+    ...combatant,
+    leftHandUse: if (combatant.leftHandUse == HSpellCreatedHeldObject) HFree else combatant.leftHandUse,
+    rightHandUse: if (combatant.rightHandUse == HSpellCreatedHeldObject) HFree else combatant.rightHandUse,
+  }
+
+  pure def combatantWithSpellCreatedHeldObjectHand(combatant: Combatant): Combatant = {
+    val withoutPrior = combatantWithoutSpellCreatedHeldObjectHand(combatant)
+    if (withoutPrior.leftHandUse == HFree)
+      { ...withoutPrior, leftHandUse: HSpellCreatedHeldObject }
+    else if (withoutPrior.rightHandUse == HFree)
+      { ...withoutPrior, rightHandUse: HSpellCreatedHeldObject }
+    else
+      withoutPrior
+  }
+
+  pure def activeEffectsContainHeldSpellCreatedHeldObject(effects: Set[ActiveEffect]): bool =
+    effects.exists(effect => match effect {
+      | FlameBladeEffect(data) => data.objectState == FlameBladeHeldObject
+      | _ => false
+    })
+
+  pure def combatantWithSpellCreatedHeldObjectHandStateFromActiveEffects(combatant: Combatant): Combatant =
+    if (activeEffectsContainHeldSpellCreatedHeldObject(combatant.activeEffects))
+      combatant
+    else
+      combatantWithoutSpellCreatedHeldObjectHand(combatant)
 
   type ActionSurgeResult = {
     state: BattleState,

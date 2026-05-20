@@ -1,5 +1,5 @@
 // Support, defensive, and rider spell profile projections extracted from spells-profiles.ts.
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode spell.invocation-spell-created-held-object
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
@@ -59,6 +59,7 @@ import {
   type ScalarBuffSpellTargeting,
   type SelfTransformationModeKind,
   type SelfTransformationModeSpellInvocation,
+  type SpellCreatedHeldObjectActiveEffect,
   type SelfTeleportSpellInvocation,
   type SupportedSpellInvocation,
   type ThaumaturgyBoomingVoiceSpellInvocation,
@@ -98,6 +99,8 @@ import {
 import { SHINING_SMITE_BRIGHT_LIGHT_RADIUS_FEET } from "./spells-active-effects.ts";
 export * from "./spells-profiles-healing.ts";
 export * from "./spells-profiles-repeated-damage.ts";
+
+const SPELL_CREATED_HELD_OBJECT_MELEE_REACH_FEET = movementFeet(5);
 
 type D20RollModifierSpellProjection = {
   readonly effect: D20RollModifierSpellEffect;
@@ -1561,6 +1564,270 @@ export function isSpellcastingModifierTemporaryHitPointsAmount(
     (amount.expr.flat ?? 0) === 0 &&
     amount.expr.spellcastingMod === true
   );
+}
+
+type OngoingEffectSpellMechanics = Extract<
+  SpellRecord["mechanics"],
+  { readonly family: "ongoing_effect" }
+>;
+type OngoingEffectInitialEffect = NonNullable<
+  Extract<
+    NonNullable<OngoingEffectSpellMechanics["initialPhase"]>,
+    { readonly kind: "direct" }
+  >["effects"]
+>[number];
+type SpellCreatedHeldObjectEffect = Extract<
+  OngoingEffectInitialEffect,
+  { readonly kind: "spell_created_held_object" }
+>;
+type SpellCreatedHeldObjectAttackOperation =
+  OngoingEffectSpellMechanics["operations"][number] & {
+    readonly effect: Extract<
+      OngoingEffectSpellMechanics["operations"][number]["effect"],
+      { readonly kind: "attack_roll" }
+    >;
+  };
+type SpellCreatedHeldObjectLightOperation =
+  OngoingEffectSpellMechanics["operations"][number] & {
+    readonly effect: Extract<
+      OngoingEffectSpellMechanics["operations"][number]["effect"],
+      { readonly kind: "emit_light" }
+    >;
+  };
+
+export function supportedPreparedSpellCreatedHeldObjectProfile(
+  actorId: CombatantId,
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+  spellcastingAbilityModifier: AbilityModifier,
+  proficiencyBonus: ProficiencyBonusType,
+): readonly SupportedSpellInvocation[] {
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+    if (Number(slot.spellLevel) < spell.mechanics.level) {
+      return [];
+    }
+    const activeEffect = spellCreatedHeldObjectActiveEffectProjection({
+      actorId,
+      spell,
+      slotLevel: slot.spellLevel,
+      spellcastingAbilityModifier,
+      proficiencyBonus,
+    });
+    return activeEffect === null
+      ? []
+      : [
+          {
+            access: { tag: "prepared" },
+            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+            procedure: "spellCreatedHeldObject",
+            spell,
+            actionCost: "bonusAction",
+            activeEffect,
+          },
+        ];
+  });
+}
+
+export function supportedSpellCreatedHeldObjectActiveEffectProfile(
+  actor: BattleCreatureState,
+  spell: SpellRecord,
+): readonly SupportedSpellInvocation[] {
+  const effects = actor.activeEffects.filter(
+    (
+      effect,
+    ): effect is SpellCreatedHeldObjectActiveEffect =>
+      effect.kind === "spellCreatedHeldObject" &&
+      effect.sourceCombatantId === actor.combatantId &&
+      effect.sourceSpellId === spell.id,
+  );
+  return effects.flatMap((effect): readonly SupportedSpellInvocation[] => {
+    if (effect.objectState.kind === "held") {
+      return [
+        {
+          access: {
+            tag: "spellEffect",
+            sourceCombatantId: effect.sourceCombatantId,
+          },
+          resource: { tag: "none" },
+          procedure: "spellCreatedHeldObjectAttack",
+          spell,
+          targeting: { kind: "singleCombatant" },
+          damage: effect.attack.damage,
+          rangeFeet: SPELL_CREATED_HELD_OBJECT_MELEE_REACH_FEET,
+          attackKind: effect.attack.attackKind,
+          attackBonus: effect.attack.attackBonus,
+          activeEffect: { ...effect, objectState: { kind: "held" } },
+        },
+      ];
+    }
+    return [
+      {
+        access: {
+          tag: "spellEffect",
+          sourceCombatantId: effect.sourceCombatantId,
+        },
+        resource: { tag: "none" },
+        procedure: "spellCreatedHeldObjectReEvoke",
+        spell,
+        actionCost: "bonusAction",
+        activeEffect: { ...effect, objectState: { kind: "notHeld" } },
+      },
+    ];
+  });
+}
+
+function spellCreatedHeldObjectActiveEffectProjection(input: {
+  readonly actorId: CombatantId;
+  readonly spell: SpellRecord;
+  readonly slotLevel: SpellSlotLevel;
+  readonly spellcastingAbilityModifier: AbilityModifier;
+  readonly proficiencyBonus: ProficiencyBonusType;
+}): (SpellCreatedHeldObjectActiveEffect & {
+  readonly objectState: { readonly kind: "held" };
+}) | null {
+  const spell = input.spell;
+  if (spell.mechanics.family !== "ongoing_effect") {
+    return null;
+  }
+  const mechanics = spell.mechanics;
+  const initialPhase = mechanics.initialPhase;
+  if (
+    mechanics.castingTime.kind !== "bonus_action" ||
+    mechanics.range.kind !== "self" ||
+    mechanics.attachment.kind !== "self" ||
+    mechanics.duration.kind !== "concentration" ||
+    initialPhase?.kind !== "direct" ||
+    initialPhase.attachment.kind !== "self" ||
+    initialPhase.effects === undefined
+  ) {
+    return null;
+  }
+  const heldObjectEffects = initialPhase.effects.filter(
+    (effect) => effect.kind === "spell_created_held_object",
+  );
+  const lightOperations = mechanics.operations.filter(
+    (operation): operation is SpellCreatedHeldObjectLightOperation =>
+      operation.trigger.kind === "passive" &&
+      operation.predicate?.kind === "spell_created_held_object_active" &&
+      operation.effect.kind === "emit_light",
+  );
+  const attackOperations = mechanics.operations.filter(
+    (operation): operation is SpellCreatedHeldObjectAttackOperation =>
+      operation.trigger.kind === "on_caster_spends_action" &&
+      operation.trigger.cost?.kind === "standard_action" &&
+      operation.trigger.cost.action === "magic" &&
+      operation.predicate?.kind === "spell_created_held_object_active" &&
+      operation.effect.kind === "attack_roll",
+  );
+  const heldObject = heldObjectEffects[0];
+  const lightOperation = lightOperations[0];
+  const attackOperation = attackOperations[0];
+  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
+    mechanics.duration.upTo,
+  );
+  if (
+    initialPhase.effects.length !== 1 ||
+    heldObjectEffects.length !== 1 ||
+    mechanics.operations.length !== 2 ||
+    lightOperations.length !== 1 ||
+    attackOperations.length !== 1 ||
+    heldObject?.kind !== "spell_created_held_object" ||
+    !spellCreatedHeldObjectLifecycleIsSupported(heldObject) ||
+    lightOperation?.effect.kind !== "emit_light" ||
+    lightOperation.effect.brightRadiusFeet === undefined ||
+    lightOperation.effect.dimAdditionalFeet === undefined ||
+    attackOperation === undefined ||
+    Either.isLeft(durationTicks)
+  ) {
+    return null;
+  }
+  const damageEffect = attackOperation.effect.onHit[0];
+  const missEffect = attackOperation.effect.onMiss[0];
+  if (
+    attackOperation.effect.attackKind !== "melee_spell_attack" ||
+    attackOperation.effect.onHit.length !== 1 ||
+    damageEffect?.kind !== "damage" ||
+    damageEffect.amount === undefined ||
+    !Schema.is(DamageTypeSchema)(damageEffect.damageType) ||
+    attackOperation.effect.onMiss.length !== 1 ||
+    missEffect?.kind !== "none"
+  ) {
+    return null;
+  }
+  const damageExpr = spellCreatedHeldObjectDamageExpr(
+    damageEffect.amount,
+    mechanics.level,
+    input.slotLevel,
+    input.spellcastingAbilityModifier,
+  );
+  if (damageExpr === null) {
+    return null;
+  }
+  return {
+    kind: "spellCreatedHeldObject",
+    sourceSpellId: spell.id,
+    sourceCombatantId: input.actorId,
+    objectState: { kind: "held" },
+    light: {
+      brightRadiusFeet: movementFeet(lightOperation.effect.brightRadiusFeet),
+      dimAdditionalFeet: movementFeet(lightOperation.effect.dimAdditionalFeet),
+    },
+    attack: {
+      damage: {
+        expr: damageExpr,
+        damageType: damageEffect.damageType,
+      },
+      attackKind: attackOperation.effect.attackKind,
+      attackBonus: attackBonus(
+        Number(input.spellcastingAbilityModifier) + Number(input.proficiencyBonus),
+      ),
+    },
+    expiresAt: {
+      kind: "concentration",
+      combatantId: input.actorId,
+      durationTicks: durationTicks.right,
+    },
+  };
+}
+
+function spellCreatedHeldObjectLifecycleIsSupported(
+  effect: SpellCreatedHeldObjectEffect,
+): boolean {
+  return (
+    effect.heldBy === "caster" &&
+    sameStringSet(effect.requirements, ["free_hand"]) &&
+    sameStringSet(effect.disappearsWhen, ["caster_lets_go"]) &&
+    effect.reEvoke.cost.kind === "bonus_action" &&
+    sameStringSet(effect.reEvoke.requirements, ["free_hand"])
+  );
+}
+
+function spellCreatedHeldObjectDamageExpr(
+  amount: SurfaceDiceAmount,
+  spellLevel: number,
+  slotLevel: SpellSlotLevel,
+  spellcastingAbilityModifier: AbilityModifier,
+): DiceExpr | null {
+  if (
+    amount.kind !== "linear_per_level" ||
+    amount.axis !== "slot" ||
+    amount.startingAtLevel !== spellLevel ||
+    amount.base.dieSize === undefined ||
+    amount.base.spellcastingMod !== true ||
+    amount.base.abilityModifier !== undefined ||
+    amount.perLevel?.dieSize !== amount.base.dieSize
+  ) {
+    return null;
+  }
+  const slotDelta = Math.max(0, Number(slotLevel) - amount.startingAtLevel);
+  return {
+    dice: amount.base.dice + (amount.perLevel?.dice ?? 0) * slotDelta,
+    dieSize: amount.base.dieSize,
+    flat:
+      (amount.base.flat ?? 0) +
+      (amount.perLevel?.flat ?? 0) * slotDelta +
+      Number(spellcastingAbilityModifier),
+  };
 }
 
 export function supportedPreparedWeaponDamageRiderSpellProfile(

@@ -143,6 +143,7 @@
 {"unitId":"paladin_paladins_smite","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-CLASS-PALADINS-SMITE","ownerPath":"packages/battle-runtime/src/battle-runtime-favored-enemy.test.ts"}}
 {"unitId":"produce_flame","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV87A","ownerPath":"packages/battle-runtime/src/unit-profile-admission-produce-flame.test.ts"}}
 {"unitId":"produce_flame","evidence":{"tag":"selected-identity-mbt","taskId":"level1-spatial-witness","ownerPath":"packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts"}}
+{"unitId":"flame_blade","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV95","ownerPath":"packages/battle-runtime/src/unit-profile-admission-flame-blade.test.ts"}}
 {"unitId":"dancing_lights","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV88A","ownerPath":"packages/battle-runtime/src/unit-profile-admission-dancing-lights.test.ts"}}
 {"unitId":"dancing_lights","evidence":{"tag":"selected-identity-mbt","taskId":"level1-spatial-witness","ownerPath":"packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts"}}
 {"unitId":"fire_bolt","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84A","ownerPath":"packages/battle-runtime/src/unit-profile-admission-candidate-narrowing-spells.test.ts"}}

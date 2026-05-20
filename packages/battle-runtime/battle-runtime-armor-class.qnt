@@ -83,6 +83,7 @@ module battleRuntimeArmorClass {
         | ProtectionFromEvilAndGoodCreatureTypeProtection => false
         | DancingLightsEffect(_) => false
         | ProduceFlameHeldLight(_) => false
+        | FlameBladeEffect(_) => false
         | ShillelaghWeaponAttackOverride(_) => false
         | ExpeditiousRetreatDashBonusAction => false
         | JumpMovementReplacement(_) => false

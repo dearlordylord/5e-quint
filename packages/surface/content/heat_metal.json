@@ -11,7 +11,8 @@
         "count": 1,
         "filter": {
           "manufactured": true,
-          "material": "metal"
+          "material": "metal",
+          "visibility": "caster_can_see"
         },
         "kind": "object"
       }
@@ -41,7 +42,8 @@
           "count": 1,
           "filter": {
             "manufactured": true,
-            "material": "metal"
+            "material": "metal",
+            "visibility": "caster_can_see"
           },
           "kind": "object"
         }
@@ -60,8 +62,48 @@
             },
             "startingAtLevel": 3
           },
+          "contact": {
+            "kind": "table_witnessed_physical_contact_with_spell_object"
+          },
           "damageType": "fire",
-          "kind": "damage"
+          "holdingOrWearingSave": {
+            "ability": "con",
+            "appliesIf": {
+              "kind": "table_witnessed_holding_or_wearing_spell_object"
+            },
+            "dc": {
+              "kind": "caster_spell_save_dc"
+            },
+            "onFailure": {
+              "dropCapabilityWitness": {
+                "kind": "table_witnessed_drop_capability",
+                "object": "spell_object",
+                "subject": "damaged_creature"
+              },
+              "dropResultWitness": {
+                "kind": "table_witnessed_drop_result",
+                "object": "spell_object",
+                "subject": "damaged_creature"
+              },
+              "fallback": {
+                "expiresOn": {
+                  "kind": "caster_turn_start"
+                },
+                "kind": "modify_roll_advantage",
+                "mode": "disadvantage",
+                "on": [
+                  "attack_roll",
+                  "ability_check"
+                ]
+              },
+              "fallbackWhen": "object_not_dropped",
+              "kind": "drop_if_possible_else_disadvantage"
+            },
+            "onSuccess": {
+              "kind": "none"
+            }
+          },
+          "kind": "object_contact_damage"
         }
       ],
       "kind": "direct"
@@ -82,29 +124,30 @@
             },
             "startingAtLevel": 3
           },
+          "contact": {
+            "kind": "table_witnessed_physical_contact_with_spell_object"
+          },
           "damageType": "fire",
-          "kind": "damage"
-        },
-        "trigger": {
-          "cost": {
-            "kind": "bonus_action"
-          },
-          "kind": "on_caster_spends_action"
-        }
-      },
-      {
-        "effect": {
-          "ability": "con",
-          "dc": {
-            "kind": "caster_spell_save_dc"
-          },
-          "kind": "save_gate",
-          "onFail": {
-            "effects": [
-              {
-                "kind": "force_drop_item"
+          "holdingOrWearingSave": {
+            "ability": "con",
+            "appliesIf": {
+              "kind": "table_witnessed_holding_or_wearing_spell_object"
+            },
+            "dc": {
+              "kind": "caster_spell_save_dc"
+            },
+            "onFailure": {
+              "dropCapabilityWitness": {
+                "kind": "table_witnessed_drop_capability",
+                "object": "spell_object",
+                "subject": "damaged_creature"
               },
-              {
+              "dropResultWitness": {
+                "kind": "table_witnessed_drop_result",
+                "object": "spell_object",
+                "subject": "damaged_creature"
+              },
+              "fallback": {
                 "expiresOn": {
                   "kind": "caster_turn_start"
                 },
@@ -114,19 +157,25 @@
                   "attack_roll",
                   "ability_check"
                 ]
-              }
-            ],
-            "kind": "composite"
+              },
+              "fallbackWhen": "object_not_dropped",
+              "kind": "drop_if_possible_else_disadvantage"
+            },
+            "onSuccess": {
+              "kind": "none"
+            }
           },
-          "onSuccess": {
-            "kind": "none"
-          }
+          "kind": "object_contact_damage"
+        },
+        "predicate": {
+          "kind": "table_witnessed_attachment_within_spell_range"
         },
         "trigger": {
           "cost": {
             "kind": "bonus_action"
           },
-          "kind": "on_caster_spends_action"
+          "kind": "on_caster_spends_action",
+          "laterTurnsOnly": true
         }
       }
     ],

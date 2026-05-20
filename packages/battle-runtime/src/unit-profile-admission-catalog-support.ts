@@ -194,6 +194,8 @@ export const falseLifeUnitId = "false_life";
 
 export const faerieFireUnitId = "faerie_fire";
 
+export const flameBladeUnitId = "flame_blade";
+
 export const flamingSphereUnitId = "flaming_sphere";
 
 export const moonbeamUnitId = "moonbeam";

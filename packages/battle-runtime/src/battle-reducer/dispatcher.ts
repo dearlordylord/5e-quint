@@ -2,6 +2,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form spell.invocation-warding-bond-linked-effect
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // Owns subject resolution, reaction windows, interrupted-procedure replay,
 // turn snapshots, and reaction-choice orchestration.
 
@@ -185,6 +186,7 @@ import {
   resolveBonusActionSpellAct,
   resolveSpellAct,
 } from "./spells-resolve.ts";
+import { resolveReleaseSpellCreatedHeldObjectCommand } from "./spells-resolve-release.ts";
 import {
   spellFillSet,
   spellFillSetContainsOnlySpellCastReactionFacts,
@@ -959,6 +961,12 @@ export function resolveBattleSubjectInternal(
       subject.command === "releaseReadiedMovement"
     ) {
       return resolveReleaseReadiedMovementCommand({ ...input, subject });
+    }
+    if (
+      subject.tag === "runtimeCommand" &&
+      subject.command === "releaseSpellCreatedHeldObject"
+    ) {
+      return resolveReleaseSpellCreatedHeldObjectCommand({ ...input, subject });
     }
     if (
       subject.tag === "runtimeCommand" &&

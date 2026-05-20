@@ -1,3 +1,4 @@
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // Spell invocation reference projections extracted from spells-holes-fills.ts.
 
 import { Match } from "effect";
@@ -124,6 +125,28 @@ export function supportedSpellInvocationRef(
       slotLevel: invocation.resource.slotLevel,
       procedure: "moonbeam",
     };
+  }
+  if (invocation.procedure === "spellCreatedHeldObject") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "spellCreatedHeldObject",
+    };
+  }
+  if (invocation.procedure === "spellCreatedHeldObjectAttack") {
+    return spellEffectInvocationRef(
+      invocation.spell.id,
+      invocation.activeEffect.sourceCombatantId,
+      "spellCreatedHeldObjectAttack",
+    );
+  }
+  if (invocation.procedure === "spellCreatedHeldObjectReEvoke") {
+    return spellEffectInvocationRef(
+      invocation.spell.id,
+      invocation.activeEffect.sourceCombatantId,
+      "spellCreatedHeldObjectReEvoke",
+    );
   }
   if (invocation.procedure === "command") {
     return {

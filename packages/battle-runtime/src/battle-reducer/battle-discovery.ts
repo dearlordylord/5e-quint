@@ -1,6 +1,6 @@
 // Battle act discovery extracted from ../battle-reducer.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode spell.invocation-spell-created-held-object
 // Owns top-level act discovery and subject/action-resource discovery helpers.
 // Mechanical move; no behavior change intended.
 
@@ -94,6 +94,7 @@ import { discoverSupportedSpellInvocations } from "./spells-discovery.ts";
 import {
   activeSelfTransformationModeEffect,
   selfTransformationModeLabel,
+  spellCreatedHeldObjectEffectsForActor,
 } from "./spells-active-effects.ts";
 
 import { attackActionOptionName } from "./statblock-attacks.ts";
@@ -534,6 +535,7 @@ export function discoverBattleActs(
   if (combatantCanTakeActions(state.combatants.get(actorId))) {
     acts.push(...discoverSupportedSpellInvocations(state, actorId));
   }
+  acts.push(...spellCreatedHeldObjectReleaseActs(state, actorId));
   acts.push(...flamingSphereRepositionActs(state, actorId));
   acts.push(...flamingSphereRamActs(state, actorId));
   acts.push(...moonbeamRepositionActs(state, actorId));
@@ -558,6 +560,27 @@ export function discoverBattleActs(
   acts.push(...discoverLegendaryActionActs(state));
 
   return acts;
+}
+
+function spellCreatedHeldObjectReleaseActs(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly AvailableBattleAct[] {
+  const actor = state.combatants.get(actorId);
+  return spellCreatedHeldObjectEffectsForActor(actor)
+    .filter((effect) => effect.objectState.kind === "held")
+    .map((effect) => ({
+      subject: {
+        tag: "runtimeCommand" as const,
+        actorId,
+        command: "releaseSpellCreatedHeldObject" as const,
+        sourceCombatantId: effect.sourceCombatantId,
+        sourceSpellId: spellId(effect.sourceSpellId),
+      },
+      label: "Release spell-created held object",
+      summary: "Let go of the active spell-created held object.",
+      initialHoles: [],
+    }));
 }
 
 function selfTransformationModeReplacementActs(

@@ -1,4 +1,5 @@
 // Pure spell-effect expression helpers extracted from battle-reducer.ts.
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // Cluster Q (spell_effects). Mechanical extraction — no behavior change.
 // Consumed by clusters L (spells_resolve) and P (spells_holes_fills).
 
@@ -73,6 +74,7 @@ export function spellDamageComponents(
         ((invocation.procedure === "heldLightHurl" ||
           invocation.procedure === "spellAttackSequence" ||
           invocation.procedure === "spellAttackDamage" ||
+          invocation.procedure === "spellCreatedHeldObjectAttack" ||
           invocation.procedure === "attackBurstSaveDamage") &&
         critical
           ? 2

@@ -43,6 +43,7 @@ module battleRuntimeMarkedRiders {
       | HexDamageRider(_) => true
       | FogCloudObscurement(_) => true
       | DancingLightsEffect(_) => true
+      | FlameBladeEffect(_) => true
       | InvisibilityCondition(_) => true
       | MindSpikeConcentrationDuration(_) => true
       | SelfTransformationModeEffect(_) => true

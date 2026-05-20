@@ -186,12 +186,12 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 486,
-      "percent": "87.4%",
+      "numerator": 488,
+      "percent": "87.8%",
       "rowsByStatus": {
-        "accepted": 356,
+        "accepted": 358,
         "accepted-no-battle-effect": 130,
-        "battle-runtime-required": 57,
+        "battle-runtime-required": 55,
         "partial-battle-runtime": 11,
         "owner-evidence-required": 2
       }
@@ -207,19 +207,19 @@
       "catalog-installed-owner-evidence-required": 2
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 372,
+      "catalog-installed-owner-evidence-present": 374,
       "non-runtime": 24,
       "catalog-only/dead-for-now": 101,
       "missing-authored-record": 22,
       "catalog-installed-owner-evidence-required": 21,
-      "catalog-authored-executable-follow-up": 16
+      "catalog-authored-executable-follow-up": 14
     },
     "spellPressureRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 209,
+      "catalog-installed-owner-evidence-present": 211,
       "catalog-only/dead-for-now": 101,
       "missing-authored-record": 22,
       "catalog-installed-owner-evidence-required": 19,
-      "catalog-authored-executable-follow-up": 16
+      "catalog-authored-executable-follow-up": 14
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -6436,13 +6436,24 @@
         "sourceRecordPath": "packages/surface/content/heat_metal.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "heat_metal"
       },
       "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE, L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME, L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY: L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE owns Replace Heat Metal's lossy ongoing-effect encoding with a lossless SRD Surface shape for manufactured metal object targeting, object-contact creature recipients, immediate cast damage plus the same holding/wearing Constitution Saving Throw, later-turn Bonus Action repeat damage gated by object range, and conditional drop-if-possible or Disadvantage fallback until the caster's next turn. The shape must not encode drop and Disadvantage as an unconditional composite or omit the cast-time save. Required output: Heat Metal Dhall/JSON content, with schema and tracer support where required, represents object-contact propagation and drop-or-fallback semantics as executable source facts rather than comments or prose-only description.; L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME owns Promote the Heat Metal damage lifecycle after the Surface shape exists: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration up to 1 minute, caller-supplied manufactured-metal object identity and contact-creature witnesses, immediate 2d8 Fire damage with slot scaling, later-turn Bonus Action repeat damage on caster turns when caller supplies object-within-range and contact witnesses, damage disposition and Concentration-save integration, and cleanup when Concentration or duration ends. Required output: Profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the object-contact damage lifecycle without the holding/wearing penalty if that remains in the separate follow-up.; L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY owns Promote the holding/wearing penalty for creatures that take Heat Metal damage from the object: caller-supplied held-or-worn object facts, Constitution Saving Throw against caster Spell Save DC, drop-if-possible through the existing dropped-object outcome boundary without introducing inventory simulation, fallback Disadvantage on Attack Rolls and Ability Checks until the start of the caster's next turn when the object is not dropped, and cleanup/replacement behavior tied to the same Heat Metal spell occurrence. Required output: Supported-profile or profile-subset-supported Unit claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the save, drop outcome, fallback roll-mode projection, caster-turn-start expiry, and Concentration cleanup.",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit heat_metal is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/effect lifecycle plus table object-contact witness boundary; battle-runtime object holding/wearing drop boundary plus D20 roll-mode projection",
+          "evidence": "Promote follow-up split L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME, L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY: L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME owns Promote the Heat Metal damage lifecycle after the Surface shape exists: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration up to 1 minute, caller-supplied manufactured-metal object identity and contact-creature witnesses, immediate 2d8 Fire damage with slot scaling, later-turn Bonus Action repeat damage on caster turns when caller supplies object-within-range and contact witnesses, damage disposition and Concentration-save integration, and cleanup when Concentration or duration ends. Required output: Profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the object-contact damage lifecycle without the holding/wearing penalty if that remains in the separate follow-up.; L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY owns Promote the holding/wearing penalty for creatures that take Heat Metal damage from the object: caller-supplied held-or-worn object facts, Constitution Saving Throw against caster Spell Save DC, drop-if-possible through the existing dropped-object outcome boundary without introducing inventory simulation, fallback Disadvantage on Attack Rolls and Ability Checks until the start of the caster's next turn when the object is not dropped, and cleanup/replacement behavior tied to the same Heat Metal spell occurrence. Required output: Supported-profile or profile-subset-supported Unit claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the save, drop outcome, fallback roll-mode projection, caster-turn-start expiry, and Concentration cleanup.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME, L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY: L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME owns Promote the Heat Metal damage lifecycle after the Surface shape exists: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration up to 1 minute, caller-supplied manufactured-metal object identity and contact-creature witnesses, immediate 2d8 Fire damage with slot scaling, later-turn Bonus Action repeat damage on caster turns when caller supplies object-within-range and contact witnesses, damage disposition and Concentration-save integration, and cleanup when Concentration or duration ends. Required output: Profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the object-contact damage lifecycle without the holding/wearing penalty if that remains in the separate follow-up.; L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY owns Promote the holding/wearing penalty for creatures that take Heat Metal damage from the object: caller-supplied held-or-worn object facts, Constitution Saving Throw against caster Spell Save DC, drop-if-possible through the existing dropped-object outcome boundary without introducing inventory simulation, fallback Disadvantage on Attack Rolls and Ability Checks until the start of the caster's next turn when the object is not dropped, and cleanup/replacement behavior tied to the same Heat Metal spell occurrence. Required output: Supported-profile or profile-subset-supported Unit claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the save, drop outcome, fallback roll-mode projection, caster-turn-start expiry, and Concentration cleanup.",
       "battleReadinessStatus": "battle-runtime-required"
     },
     {
@@ -11647,8 +11658,14 @@
         "state": "installed",
         "unitId": "flame_blade"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial and presentation owner",
+        "reason": "Map reach adjudication, flame presentation, and Material component availability or consumption remain outside this runtime profile."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -11656,13 +11673,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell-created held object lifecycle plus promoted Quint parity",
-          "evidence": "Promote follow-up split L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT: L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT owns Promote Flame Blade as a level-2-or-higher prepared spell: Bonus Action Spell Slot spend, caster-owned Concentration, caller-supplied free-hand and holding witnesses, active spell-created blade state, source-owned held light emitter, Magic Action melee spell attack while the blade is active, Fire damage slot scaling with spellcasting ability modifier, Concentration and duration cleanup, let-go cleanup, and Bonus Action re-evocation from the same active spell occurrence without a second Spell Slot spend while the spell lasts. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial creation, active attack, light projection, cleanup, and re-evocation.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV95 at packages/battle-runtime/src/unit-profile-admission-flame-blade.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT: L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT owns Promote Flame Blade as a level-2-or-higher prepared spell: Bonus Action Spell Slot spend, caster-owned Concentration, caller-supplied free-hand and holding witnesses, active spell-created blade state, source-owned held light emitter, Magic Action melee spell attack while the blade is active, Fire damage slot scaling with spellcasting ability modifier, Concentration and duration cleanup, let-go cleanup, and Bonus Action re-evocation from the same active spell occurrence without a second Spell Slot spend while the spell lasts. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial creation, active attack, light projection, cleanup, and re-evocation.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_flaming_sphere",
@@ -11779,13 +11796,24 @@
         "sourceRecordPath": "packages/surface/content/heat_metal.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "heat_metal"
       },
       "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE, L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME, L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY: L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE owns Replace Heat Metal's lossy ongoing-effect encoding with a lossless SRD Surface shape for manufactured metal object targeting, object-contact creature recipients, immediate cast damage plus the same holding/wearing Constitution Saving Throw, later-turn Bonus Action repeat damage gated by object range, and conditional drop-if-possible or Disadvantage fallback until the caster's next turn. The shape must not encode drop and Disadvantage as an unconditional composite or omit the cast-time save. Required output: Heat Metal Dhall/JSON content, with schema and tracer support where required, represents object-contact propagation and drop-or-fallback semantics as executable source facts rather than comments or prose-only description.; L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME owns Promote the Heat Metal damage lifecycle after the Surface shape exists: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration up to 1 minute, caller-supplied manufactured-metal object identity and contact-creature witnesses, immediate 2d8 Fire damage with slot scaling, later-turn Bonus Action repeat damage on caster turns when caller supplies object-within-range and contact witnesses, damage disposition and Concentration-save integration, and cleanup when Concentration or duration ends. Required output: Profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the object-contact damage lifecycle without the holding/wearing penalty if that remains in the separate follow-up.; L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY owns Promote the holding/wearing penalty for creatures that take Heat Metal damage from the object: caller-supplied held-or-worn object facts, Constitution Saving Throw against caster Spell Save DC, drop-if-possible through the existing dropped-object outcome boundary without introducing inventory simulation, fallback Disadvantage on Attack Rolls and Ability Checks until the start of the caster's next turn when the object is not dropped, and cleanup/replacement behavior tied to the same Heat Metal spell occurrence. Required output: Supported-profile or profile-subset-supported Unit claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the save, drop outcome, fallback roll-mode projection, caster-turn-start expiry, and Concentration cleanup.",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit heat_metal is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/effect lifecycle plus table object-contact witness boundary; battle-runtime object holding/wearing drop boundary plus D20 roll-mode projection",
+          "evidence": "Promote follow-up split L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME, L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY: L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME owns Promote the Heat Metal damage lifecycle after the Surface shape exists: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration up to 1 minute, caller-supplied manufactured-metal object identity and contact-creature witnesses, immediate 2d8 Fire damage with slot scaling, later-turn Bonus Action repeat damage on caster turns when caller supplies object-within-range and contact witnesses, damage disposition and Concentration-save integration, and cleanup when Concentration or duration ends. Required output: Profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the object-contact damage lifecycle without the holding/wearing penalty if that remains in the separate follow-up.; L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY owns Promote the holding/wearing penalty for creatures that take Heat Metal damage from the object: caller-supplied held-or-worn object facts, Constitution Saving Throw against caster Spell Save DC, drop-if-possible through the existing dropped-object outcome boundary without introducing inventory simulation, fallback Disadvantage on Attack Rolls and Ability Checks until the start of the caster's next turn when the object is not dropped, and cleanup/replacement behavior tied to the same Heat Metal spell occurrence. Required output: Supported-profile or profile-subset-supported Unit claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the save, drop outcome, fallback roll-mode projection, caster-turn-start expiry, and Concentration cleanup.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME, L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY: L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME owns Promote the Heat Metal damage lifecycle after the Surface shape exists: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration up to 1 minute, caller-supplied manufactured-metal object identity and contact-creature witnesses, immediate 2d8 Fire damage with slot scaling, later-turn Bonus Action repeat damage on caster turns when caller supplies object-within-range and contact witnesses, damage disposition and Concentration-save integration, and cleanup when Concentration or duration ends. Required output: Profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the object-contact damage lifecycle without the holding/wearing penalty if that remains in the separate follow-up.; L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY owns Promote the holding/wearing penalty for creatures that take Heat Metal damage from the object: caller-supplied held-or-worn object facts, Constitution Saving Throw against caster Spell Save DC, drop-if-possible through the existing dropped-object outcome boundary without introducing inventory simulation, fallback Disadvantage on Attack Rolls and Ability Checks until the start of the caster's next turn when the object is not dropped, and cleanup/replacement behavior tied to the same Heat Metal spell occurrence. Required output: Supported-profile or profile-subset-supported Unit claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the save, drop outcome, fallback roll-mode projection, caster-turn-start expiry, and Concentration cleanup.",
       "battleReadinessStatus": "battle-runtime-required"
     },
     {
@@ -20696,8 +20724,14 @@
         "state": "installed",
         "unitId": "flame_blade"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial and presentation owner",
+        "reason": "Map reach adjudication, flame presentation, and Material component availability or consumption remain outside this runtime profile."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -20705,13 +20739,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell-created held object lifecycle plus promoted Quint parity",
-          "evidence": "Promote follow-up split L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT: L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT owns Promote Flame Blade as a level-2-or-higher prepared spell: Bonus Action Spell Slot spend, caster-owned Concentration, caller-supplied free-hand and holding witnesses, active spell-created blade state, source-owned held light emitter, Magic Action melee spell attack while the blade is active, Fire damage slot scaling with spellcasting ability modifier, Concentration and duration cleanup, let-go cleanup, and Bonus Action re-evocation from the same active spell occurrence without a second Spell Slot spend while the spell lasts. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial creation, active attack, light projection, cleanup, and re-evocation.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV95 at packages/battle-runtime/src/unit-profile-admission-flame-blade.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT: L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT owns Promote Flame Blade as a level-2-or-higher prepared spell: Bonus Action Spell Slot spend, caster-owned Concentration, caller-supplied free-hand and holding witnesses, active spell-created blade state, source-owned held light emitter, Magic Action melee spell attack while the blade is active, Fire damage slot scaling with spellcasting ability modifier, Concentration and duration cleanup, let-go cleanup, and Bonus Action re-evocation from the same active spell occurrence without a second Spell Slot spend while the spell lasts. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial creation, active attack, light projection, cleanup, and re-evocation.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_flaming_sphere",

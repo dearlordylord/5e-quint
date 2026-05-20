@@ -216,6 +216,12 @@ module battleRuntimeTimedEffects {
         | ProduceFlameHeldLight(data) => ProduceFlameHeldLight({
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
+        | FlameBladeEffect(data) => FlameBladeEffect({
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+            slotLevel: data.slotLevel,
+            spellcastingAbilityModifier: data.spellcastingAbilityModifier,
+            objectState: data.objectState,
+          })
         | ShillelaghWeaponAttackOverride(data) => ShillelaghWeaponAttackOverride({
             weapon: data.weapon,
             damageDice: data.damageDice,
@@ -299,6 +305,7 @@ module battleRuntimeTimedEffects {
         | BarkskinArmorClassFloor(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | DancingLightsEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | ProduceFlameHeldLight(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | FlameBladeEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | ShillelaghWeaponAttackOverride(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | JumpMovementReplacement(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | FeatherFallMitigation(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
@@ -431,12 +438,16 @@ module battleRuntimeTimedEffects {
       ...state,
       lightEmitters: tickDurationLightEmitters(state.lightEmitters),
       fighter: {
-        ...combatantAfterConditionDurationTick(state.fighter, fighterEffects),
+        ...combatantWithSpellCreatedHeldObjectHandStateFromActiveEffects(
+          combatantAfterConditionDurationTick(state.fighter, fighterEffects),
+        ),
         concentrating: state.fighter.concentrating
           and (not(fighterTimedConcentrationBefore) or fighterTimedConcentrationAfter),
       },
       goblin: {
-        ...combatantAfterConditionDurationTick(state.goblin, goblinEffects),
+        ...combatantWithSpellCreatedHeldObjectHandStateFromActiveEffects(
+          combatantAfterConditionDurationTick(state.goblin, goblinEffects),
+        ),
         concentrating: state.goblin.concentrating
           and (not(goblinTimedConcentrationBefore) or goblinTimedConcentrationAfter),
       },
