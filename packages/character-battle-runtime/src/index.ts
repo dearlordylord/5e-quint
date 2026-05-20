@@ -16,21 +16,29 @@ import {
   characterSheetCurrentHp,
   characterSheetDruidWildShapeKnownForms,
   characterSheetPactSlots,
+  characterSheetSpellSlotSourceState,
   characterSheetSpellSlots,
   characterSheetTempHp,
   createFreshCharacterSheet,
   isCharacterSheetUseCountResourceUnitId,
+  replaceCharacterSheetSpellSlotSourceState,
   type CharacterSheet,
   type CharacterSheetBookOfShadowsPresence,
   type CharacterSheetIssue,
   type CharacterSheetPositiveHpUnconscious,
   type CharacterSheetResourceExpenditure,
+  type CharacterSheetSpellSlotSourceState,
   type CharacterSheetStableRecovery,
   type CharacterSheetUseCountResourceUnitId,
   type CharacterSheetZeroHpLifecycleInput,
 } from "@dnd/character-sheet-runtime";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
-import { CONDITIONS, resourceCount, type Condition } from "@dnd/shared/types";
+import {
+  CONDITIONS,
+  resourceCount,
+  type Condition,
+  type ResourceCount,
+} from "@dnd/shared/types";
 import {
   EMPTY_CONDITION_STATE,
   hasCondition,
@@ -52,6 +60,7 @@ import {
 
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.monk-uncanny-metabolism-initiative-recovery
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.font-of-magic-sorcery-points-to-spell-slot
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.monk-focus-battle-options
 export {
   battleCreatureInitFromCharacterBuild,
@@ -180,8 +189,12 @@ export function applyBattleHandoffToCharacterSheet(input: {
   const druidWildShapeKnownForms = characterSheetDruidWildShapeKnownForms(
     input.sheet,
   );
+  const spellSlotState = characterSheetSpellSlotSourceStateFromBattle(input);
+  if (Either.isLeft(spellSlotState)) {
+    return Either.left(spellSlotState.left);
+  }
 
-  return createFreshCharacterSheet({
+  const sheet = createFreshCharacterSheet({
     characterId: input.sheet.characterId,
     build: input.sheet.build,
     maximumHp: input.sheet.maximumHp,
@@ -198,9 +211,6 @@ export function applyBattleHandoffToCharacterSheet(input: {
     ...(input.combatant.hp === 0 && zeroHpLifecycle !== undefined
       ? { zeroHpLifecycle: zeroHpLifecycle.right }
       : {}),
-    ...(input.combatant.origin.spellcasting === undefined
-      ? {}
-      : { spellSlots: input.combatant.origin.spellcasting.spellSlots }),
     ...(pactSlots === undefined ? {} : { pactSlots }),
     ...(bookOfShadowsPresence === undefined ? {} : { bookOfShadowsPresence }),
     ...(druidWildShapeKnownForms === undefined
@@ -215,6 +225,171 @@ export function applyBattleHandoffToCharacterSheet(input: {
     ...(input.statBlockCatalog === undefined
       ? {}
       : { statBlockCatalog: input.statBlockCatalog }),
+  });
+  if (Either.isLeft(sheet)) return Either.left(sheet.left);
+  return spellSlotState.right === undefined
+    ? Either.right(sheet.right)
+    : replaceCharacterSheetSpellSlotSourceState({
+        sheet: sheet.right,
+        unitLibrary: input.unitLibrary,
+        spellSlotState: spellSlotState.right,
+      });
+}
+
+function characterSheetSpellSlotSourceStateFromBattle(input: {
+  readonly sheet: CharacterSheet;
+  readonly combatant: BattleCreatureState;
+}): Either.Either<
+  CharacterSheetSpellSlotSourceState | undefined,
+  CharacterSheetBattleHandoffIssue
+> {
+  if (input.combatant.origin.kind !== "character") {
+    return Either.right(undefined);
+  }
+  const battleSpellcasting = input.combatant.origin.spellcasting;
+  if (battleSpellcasting === undefined) {
+    return Either.right(undefined);
+  }
+  const sheetSpellSlots = characterSheetSpellSlots(input.sheet);
+  const sheetSlotState = characterSheetSpellSlotSourceState(input.sheet);
+  if (sheetSpellSlots === undefined || sheetSlotState === undefined) {
+    return characterSheetBattleHandoffIssue(
+      "Battle handoff Spell Slot state requires Character Sheet Spell Slot state.",
+    );
+  }
+
+  const battleLevels = new Set<number>();
+  for (const battleSlot of battleSpellcasting.spellSlots) {
+    if (battleLevels.has(battleSlot.spellLevel)) {
+      return characterSheetBattleHandoffIssue(
+        "Battle handoff Spell Slot state must not duplicate spell levels.",
+      );
+    }
+    battleLevels.add(battleSlot.spellLevel);
+    if (
+      !Number.isInteger(battleSlot.expended) ||
+      !Number.isInteger(battleSlot.count) ||
+      battleSlot.expended < 0 ||
+      battleSlot.count < 0 ||
+      battleSlot.expended > battleSlot.count
+    ) {
+      return characterSheetBattleHandoffIssue(
+        "Battle handoff Spell Slot state must have nonnegative count and expenditure.",
+      );
+    }
+  }
+
+  let ordinarySpellSlotExpenditures =
+    sheetSlotState.ordinarySpellSlotExpenditures;
+  let createdSpellSlots = sheetSlotState.createdSpellSlots;
+  for (const sheetSlot of sheetSpellSlots) {
+    const battleSlot = battleSpellcasting.spellSlots.find(
+      (candidate) => candidate.spellLevel === sheetSlot.spellLevel,
+    );
+    if (battleSlot === undefined || battleSlot.count !== sheetSlot.count) {
+      return characterSheetBattleHandoffIssue(
+        "Battle handoff Spell Slot capacity must match Character Sheet Spell Slot capacity.",
+      );
+    }
+    if (battleSlot.expended < sheetSlot.expended) {
+      return characterSheetBattleHandoffIssue(
+        "Battle handoff Spell Slot expenditure cannot be lower than the pre-battle Character Sheet expenditure.",
+      );
+    }
+    const delta = resourceCount(battleSlot.expended - sheetSlot.expended);
+    if (delta === 0) continue;
+
+    const sourceSpend = spellSlotSourceSpendForBattleDelta({
+      spellLevel: sheetSlot.spellLevel,
+      delta,
+      totalCount: sheetSlot.count,
+      ordinarySpellSlotExpenditures,
+      createdSpellSlots,
+    });
+    if (Either.isLeft(sourceSpend)) return Either.left(sourceSpend.left);
+    ordinarySpellSlotExpenditures =
+      sourceSpend.right.ordinarySpellSlotExpenditures;
+    createdSpellSlots = sourceSpend.right.createdSpellSlots;
+  }
+
+  for (const battleSlot of battleSpellcasting.spellSlots) {
+    if (
+      !sheetSpellSlots.some(
+        (sheetSlot) => sheetSlot.spellLevel === battleSlot.spellLevel,
+      )
+    ) {
+      return characterSheetBattleHandoffIssue(
+        "Battle handoff Spell Slot state must match Character Sheet Spell Slot levels.",
+      );
+    }
+  }
+
+  return Either.right({
+    ordinarySpellSlotExpenditures,
+    createdSpellSlots,
+  });
+}
+
+function spellSlotSourceSpendForBattleDelta(input: {
+  readonly spellLevel: number;
+  readonly delta: ResourceCount;
+  readonly totalCount: ResourceCount;
+  readonly ordinarySpellSlotExpenditures: CharacterSheetSpellSlotSourceState["ordinarySpellSlotExpenditures"];
+  readonly createdSpellSlots: CharacterSheetSpellSlotSourceState["createdSpellSlots"];
+}): Either.Either<
+  CharacterSheetSpellSlotSourceState,
+  CharacterSheetBattleHandoffIssue
+> {
+  const ordinaryExpenditure = input.ordinarySpellSlotExpenditures.find(
+    (slot) => slot.spellLevel === input.spellLevel,
+  );
+  const createdSlot = input.createdSpellSlots.find(
+    (slot) => slot.spellLevel === input.spellLevel,
+  );
+  const createdCount = createdSlot?.count ?? resourceCount(0);
+  const ordinaryCount = resourceCount(input.totalCount - createdCount);
+  const ordinaryExpended = ordinaryExpenditure?.expended ?? resourceCount(0);
+  const createdExpended = createdSlot?.expended ?? resourceCount(0);
+  const ordinaryAvailable = ordinaryCount - ordinaryExpended;
+  const createdAvailable = createdCount - createdExpended;
+  if (input.delta > ordinaryAvailable + createdAvailable) {
+    return characterSheetBattleHandoffIssue(
+      "Battle handoff Spell Slot expenditure exceeds available Character Sheet Spell Slots.",
+    );
+  }
+
+  const minimumCreatedSpend = Math.max(0, input.delta - ordinaryAvailable);
+  const maximumCreatedSpend = Math.min(input.delta, createdAvailable);
+  if (minimumCreatedSpend !== maximumCreatedSpend) {
+    return characterSheetBattleHandoffIssue(
+      `Battle handoff Spell Slot expenditure is source-ambiguous for level ${input.spellLevel}.`,
+    );
+  }
+  const createdSpend = resourceCount(minimumCreatedSpend);
+  const ordinarySpend = resourceCount(input.delta - createdSpend);
+  return Either.right({
+    ordinarySpellSlotExpenditures:
+      ordinarySpend === 0
+        ? input.ordinarySpellSlotExpenditures
+        : input.ordinarySpellSlotExpenditures.map((slot) =>
+            slot.spellLevel === input.spellLevel
+              ? {
+                  ...slot,
+                  expended: resourceCount(slot.expended + ordinarySpend),
+                }
+              : slot,
+          ),
+    createdSpellSlots:
+      createdSpend === 0
+        ? input.createdSpellSlots
+        : input.createdSpellSlots.map((slot) =>
+            slot.spellLevel === input.spellLevel
+              ? {
+                  ...slot,
+                  expended: resourceCount(slot.expended + createdSpend),
+                }
+              : slot,
+          ),
   });
 }
 

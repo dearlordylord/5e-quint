@@ -217,6 +217,7 @@ export {
 export {
   SORCERER_FONT_OF_MAGIC_UNIT_ID,
   characterBuildSorcererFontOfMagicFacts,
+  fontOfMagicSpellSlotCreationOption,
   type CharacterBuildSorcererFontOfMagicFacts,
   type CharacterBuildSorcererFontOfMagicFactsIssue,
 } from "./sorcerer-font-of-magic.ts";

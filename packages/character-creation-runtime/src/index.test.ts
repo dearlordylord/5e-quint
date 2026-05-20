@@ -4186,6 +4186,21 @@ describe("character creation finalization", () => {
         maximum: 2,
         longRestRefillsAll: true,
       },
+      spellSlotCreation: {
+        ownerClassLevel: 2,
+        operation: {
+          activationCost: { kind: "bonus_action" },
+          createdSlotExpiry: { kind: "long_rest" },
+          kind: "point_pool_to_spell_slot",
+          options: [
+            { minimumClassLevel: 2, pointCost: 2, spellSlotLevel: 1 },
+            { minimumClassLevel: 3, pointCost: 3, spellSlotLevel: 2 },
+            { minimumClassLevel: 5, pointCost: 5, spellSlotLevel: 3 },
+            { minimumClassLevel: 7, pointCost: 6, spellSlotLevel: 4 },
+            { minimumClassLevel: 9, pointCost: 7, spellSlotLevel: 5 },
+          ],
+        },
+      },
     });
 
     const levelFourFontFacts = expectRight(

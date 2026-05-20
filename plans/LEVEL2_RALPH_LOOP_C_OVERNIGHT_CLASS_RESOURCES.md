@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Sorcerer Font Of Magic Sorcery Points To Spell Slot"
     },
     {
@@ -66,6 +66,12 @@
     },
     {
       "number": 11,
+      "id": "L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE",
+      "status": "ready-for-research",
+      "title": "Sorcerer Font Of Magic Bonus Action And Battle Slot Source"
+    },
+    {
+      "number": 12,
       "id": "L12G-RECURSIVE-TAIL-LOOP-C",
       "status": "blocked",
       "title": "LOOP-C Recursive Next-Batch Planning Tail"
@@ -76,7 +82,7 @@
 
 This is a runnable overnight Ralph plan split out of the stale monolithic A plan and the current level-1/2 strict frontier. It owns Monk level-2 Focus and Uncanny Metabolism resource/runtime tasks plus Sorcerer Font of Magic and Metamagic resource/runtime tasks.
 
-Preplanned load: 10 real atomic implementation/planning tasks plus one recursive planning tail. The recursive tail is a fallback only; ordinary `blocked` tasks already auto-unblock when their same-plan dependencies are marked `done`.
+Preplanned load: 11 real atomic implementation/planning tasks plus one recursive planning tail. The recursive tail is a fallback only; ordinary `blocked` tasks already auto-unblock when their same-plan dependencies are marked `done`.
 
 ## Worktree Safety Prefix
 
@@ -155,11 +161,12 @@ The final task is intentionally blocked on every real task in this plan and plac
 | 4 | L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME - Monk Uncanny Metabolism Initiative Recovery Runtime | done | L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS | C lane; Unit `monk_uncanny_metabolism`. |
 | 5 | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS - Sorcerer Font Of Magic Sorcery Point Resource Facts | done | completed baseline | C lane; Unit `sorcerer_font_of_magic`. |
 | 6 | L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS - Sorcerer Font Of Magic Spell Slot To Sorcery Points | done | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS | C lane; Unit `sorcerer_font_of_magic`. |
-| 7 | L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS - Sorcerer Font Of Magic Sorcery Points To Spell Slot | ready-for-research | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS | C lane; Unit `sorcerer_font_of_magic`. |
+| 7 | L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS - Sorcerer Font Of Magic Sorcery Points To Spell Slot | done | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS | C lane; Unit `sorcerer_font_of_magic`. |
 | 8 | L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS - Sorcerer Metamagic Character Facts And Option Projection | ready-for-research | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS | C lane; Unit `sorcerer_metamagic`. |
 | 9 | L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION - Sorcerer Metamagic Cast-Time Option Execution | blocked | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS | C lane; Unit `sorcerer_metamagic`. |
 | 10 | L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME - Monk Step of the Wind Jump Distance Runtime | ready-for-research | L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS | C lane; Unit `monk_monks_focus`. |
-| 11 | L12G-RECURSIVE-TAIL-LOOP-C - LOOP-C Recursive Next-Batch Planning Tail | blocked | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME, L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS, L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS, L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION, L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME | Last-resort next-batch planning safety net; auto-unblocks only after every real task in this plan is `done`. |
+| 11 | L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE - Sorcerer Font Of Magic Bonus Action And Battle Slot Source | ready-for-research | L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS | C lane; Unit `sorcerer_font_of_magic`. |
+| 12 | L12G-RECURSIVE-TAIL-LOOP-C - LOOP-C Recursive Next-Batch Planning Tail | blocked | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME, L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS, L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS, L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION, L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME, L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE | Last-resort next-batch planning safety net; auto-unblocks only after every real task in this plan is `done`. |
 
 ## Task Details
 
@@ -411,7 +418,7 @@ Acceptance:
 
 ### Task 7 - L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS - Sorcerer Font Of Magic Sorcery Points To Spell Slot
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `sorcerer_font_of_magic`.
 Origin: Original backlog task 85.
@@ -574,13 +581,57 @@ Acceptance:
 - reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
 - battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
 
-### Task 11 - L12G-RECURSIVE-TAIL-LOOP-C - LOOP-C Recursive Next-Batch Planning Tail
+### Task 11 - L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE - Sorcerer Font Of Magic Bonus Action And Battle Slot Source
+
+Status: `ready-for-research`
+
+Unit: `sorcerer_font_of_magic`.
+Origin: Split from L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS after Task 7 promoted Character Sheet created-slot state but left battle action-economy and slot-source preservation unresolved.
+Dependencies: L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS.
+
+Pre-researched scope:
+
+- Execute Font of Magic Creating Spell Slots at a boundary that spends the Bonus Action.
+- Preserve ordinary-versus-created Spell Slot source through battle spell casting and Character Sheet handoff when ordinary and created slots of the same level coexist.
+- Keep created Spell Slot state owned by the Character Sheet delta state introduced by L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS; do not add a parallel battle-only created-slot pool.
+
+Inputs:
+
+- `plans/LEVEL2_RALPH_WRAPUP_BACKLOG.md` when this task has an archived backlog section;
+- `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md` when this task appears in the gate;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/UNIT_REPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `sorcerer_font_of_magic`.
+
+Outputs:
+
+- satisfy the remaining Font of Magic Creating Spell Slots Bonus Action and battle slot-source output contract;
+- leave `sorcerer_font_of_magic` supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- update only the owner files required by the task;
+- regenerate coverage artifacts.
+
+Acceptance:
+
+- RAW and ubiquitous-language checks are performed before modeling;
+- the implementation consumes the Task 7 Character Sheet created-slot delta state instead of duplicating temporary Spell Slot ownership;
+- focused Character Sheet, Character Battle, and battle-runtime tests cover Bonus Action spending and source-aware battle spell-slot spending/handoff;
+- package typecheck is run for touched packages when dependencies are available;
+- `pnpm unit-profile-coverage:check --write` and `pnpm unit-profile-coverage:check` are run;
+- `git diff --check` passes;
+- reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
+- if promoted battle-runtime spell invocation state changes, update package-local Quint parity and run battle-runtime MBT under the repository scarcity protocol.
+
+### Task 12 - L12G-RECURSIVE-TAIL-LOOP-C - LOOP-C Recursive Next-Batch Planning Tail
 
 Status: `blocked`
 
 Unit: `level1_2_frontier`.
 Origin: Safety-net planning task for when this plan has no earlier runnable implementation tasks.
-Dependencies: L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME, L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS, L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS, L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION, L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME.
+Dependencies: L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME, L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS, L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS, L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION, L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME, L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE.
 
 Pre-researched scope:
 

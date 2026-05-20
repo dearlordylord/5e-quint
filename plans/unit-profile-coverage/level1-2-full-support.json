@@ -2375,7 +2375,7 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS: Execute the Bonus Action conversion that spends Sorcery Points by the Creating Spell Slots table, enforces the minimum Sorcerer level for the target slot, creates one Spell Slot no higher than level 5, and expires created slots on Long Rest. Owner: character-battle-runtime plus spellcasting resource owner. Required output: Supported runtime profile and owner evidence for Sorcery Point to temporary Spell Slot creation, Bonus Action spending, minimum-level gating, and Long Rest expiry.",
+      "reason": "L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE: Execute Font of Magic Creating Spell Slots at an action-economy boundary that spends a Bonus Action, and carry ordinary-versus-created Spell Slot source through battle spell casting and handoff when both sources of the same level are available. Owner: character-sheet-runtime plus character-battle-runtime and battle-runtime spell invocation lifecycle. Required output: Supported-profile Unit claim update with focused Character Sheet, Character Battle, and promoted battle-runtime tests; if battle-runtime spell invocation state changes, update package-local Quint parity and run the appropriate MBT tier under the repository protocol.",
       "sourceRecordPath": "packages/surface/content/sorcerer_font_of_magic.json",
       "sourceRows": [
         {

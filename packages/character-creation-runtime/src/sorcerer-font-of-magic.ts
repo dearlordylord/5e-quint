@@ -1,5 +1,10 @@
 import { Either, Option } from "effect";
-import { resourceCount, type ResourceCount } from "@dnd/shared/types";
+import {
+  resourceCount,
+  spellSlotLevel,
+  type ResourceCount,
+  type SpellSlotLevel,
+} from "@dnd/shared/types";
 import type {
   ClassFeatureRecord,
   PointPoolResource,
@@ -17,6 +22,11 @@ import { characterBuildClassFeatureOwnerLevel } from "./class-feature-facts.ts";
 
 export const SORCERER_FONT_OF_MAGIC_UNIT_ID =
   "sorcerer_font_of_magic" as const satisfies UnitRecord["id"];
+
+type SorcererFontOfMagicSpellSlotCreationOperation = Extract<
+  ResourcePoolOperation,
+  { readonly kind: "point_pool_to_spell_slot" }
+>;
 
 type SorcererFontOfMagicFeature = ClassFeatureRecord & {
   readonly className: "sorcerer";
@@ -37,6 +47,10 @@ export type CharacterBuildSorcererFontOfMagicFacts = {
     readonly poolId: PointPoolResource["poolId"];
     readonly maximum: ResourceCount;
     readonly longRestRefillsAll: true;
+  };
+  readonly spellSlotCreation: {
+    readonly ownerClassLevel: number;
+    readonly operation: SorcererFontOfMagicSpellSlotCreationOperation;
   };
 };
 
@@ -86,6 +100,12 @@ export function characterBuildSorcererFontOfMagicFacts(input: {
     ownerClassLevel: ownerClassLevel.right,
   });
   if (Either.isLeft(maximum)) return Either.left(maximum.left);
+  const spellSlotCreation = fontOfMagicSpellSlotCreationOperation(
+    featureUnit.value,
+  );
+  if (Either.isLeft(spellSlotCreation)) {
+    return Either.left(spellSlotCreation.left);
+  }
 
   return Either.right({
     unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
@@ -93,6 +113,10 @@ export function characterBuildSorcererFontOfMagicFacts(input: {
       poolId: featureUnit.value.mechanics.resource.poolId,
       maximum: maximum.right,
       longRestRefillsAll: true,
+    },
+    spellSlotCreation: {
+      ownerClassLevel: ownerClassLevel.right,
+      operation: spellSlotCreation.right,
     },
   });
 }
@@ -123,7 +147,7 @@ function isSpellSlotToPointPoolOperation(
 
 function isPointPoolToSpellSlotOperation(
   operation: ResourcePoolOperation,
-): boolean {
+): operation is SorcererFontOfMagicSpellSlotCreationOperation {
   return (
     operation.kind === "point_pool_to_spell_slot" &&
     operation.activationCost.kind === "bonus_action" &&
@@ -131,13 +155,38 @@ function isPointPoolToSpellSlotOperation(
   );
 }
 
+function fontOfMagicSpellSlotCreationOperation(
+  feature: SorcererFontOfMagicFeature,
+): Either.Either<
+  SorcererFontOfMagicSpellSlotCreationOperation,
+  CharacterBuildSorcererFontOfMagicFactsIssue
+> {
+  const operation = feature.mechanics.operations.find(
+    isPointPoolToSpellSlotOperation,
+  );
+  if (operation === undefined) {
+    return sorcererFontOfMagicFactsIssue(
+      "Font of Magic requires Spell Slot creation source facts.",
+    );
+  }
+  return Either.right(operation);
+}
+
+export function fontOfMagicSpellSlotCreationOption(input: {
+  readonly facts: CharacterBuildSorcererFontOfMagicFacts;
+  readonly spellLevel: SpellSlotLevel;
+}):
+  | SorcererFontOfMagicSpellSlotCreationOperation["options"][number]
+  | undefined {
+  return input.facts.spellSlotCreation.operation.options.find(
+    (option) => option.spellSlotLevel === spellSlotLevel(input.spellLevel),
+  );
+}
+
 function sorceryPointMaximum(input: {
   readonly feature: SorcererFontOfMagicFeature;
   readonly ownerClassLevel: number;
-}): Either.Either<
-  ResourceCount,
-  CharacterBuildSorcererFontOfMagicFactsIssue
-> {
+}): Either.Either<ResourceCount, CharacterBuildSorcererFontOfMagicFactsIssue> {
   const cap = input.feature.mechanics.resource.cap;
   if (cap.kind !== "linear_per_level" || !isClassLevelLinearPerLevel(cap)) {
     return sorcererFontOfMagicFactsIssue(
@@ -146,7 +195,9 @@ function sorceryPointMaximum(input: {
   }
 
   return Either.right(
-    resourceCount(classLevelLinearValueAtClassLevel(cap, input.ownerClassLevel)),
+    resourceCount(
+      classLevelLinearValueAtClassLevel(cap, input.ownerClassLevel),
+    ),
   );
 }
 
