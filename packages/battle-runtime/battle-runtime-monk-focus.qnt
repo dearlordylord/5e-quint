@@ -2,6 +2,7 @@
 
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.monk-focus-battle-options
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.monk-focus-battle-options
+// KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 module battleRuntimeMonkFocus {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeMovement.* from "./battle-runtime-movement"

@@ -3,6 +3,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // Covers healing, scalar buffs, roll modifiers, protection, damage reduction,
 // and condition-immunity/temporary-hit-point procedures.
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HIT_POINT_RESTORATION
 
 import { resetDeathSaveRuntimeState } from "@dnd/shared-algebras/death-saves-algebra";
 import {

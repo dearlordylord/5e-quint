@@ -2787,18 +2787,18 @@
     },
     "rulesKernelCoveredProfileJoin": {
       "denominator": 81,
-      "numerator": 18,
-      "percent": "22.2%"
+      "numerator": 25,
+      "percent": "30.9%"
     },
     "rulesKernelProfileJoin": {
       "denominator": 81,
-      "numerator": 23,
-      "percent": "28.4%"
+      "numerator": 42,
+      "percent": "51.9%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 109,
-      "numerator": 34,
-      "percent": "31.2%"
+      "numerator": 39,
+      "percent": "35.8%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 164,
@@ -5529,8 +5529,8 @@
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
         "denominator": 109,
-        "numerator": 34,
-        "percent": "31.2%"
+        "numerator": 39,
+        "percent": "35.8%"
       }
     },
     "units": [
@@ -5541,10 +5541,16 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+              },
+              {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
@@ -5563,7 +5569,7 @@
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.readied-action-time-spell",
@@ -5573,11 +5579,18 @@
         "unitId": "acid_splash"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
+                "runtime": "battle",
+                "status": "needs-parity-witness",
+                "title": "Battle spell scalar buffs for Armor Class, Speed, special speeds, Hit Point maximum, and Temporary Hit Point effects"
+              }
+            ],
             "profileId": "spell.scalar-buff",
             "profileKind": "spell-invocation"
           }
@@ -5585,11 +5598,18 @@
         "unitId": "aid"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.SELF_TRANSFORMATION_MODE",
+                "runtime": "battle",
+                "status": "needs-parity-witness",
+                "title": "Battle self-transformation mode choice, Magic Action mode replacement, natural-weapon override, and Aquatic projections"
+              }
+            ],
             "profileId": "spell.invocation-self-transformation-mode",
             "profileKind": "spell-invocation"
           }
@@ -5597,11 +5617,18 @@
         "unitId": "alter_self"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION",
+                "runtime": "battle",
+                "status": "needs-parity-witness",
+                "title": "Battle creature-type protection, Charmed/Frightened/possession prevention, and relevant-effect Saving Throw Advantage"
+              }
+            ],
             "profileId": "spell.creature-type-protection-and-charm",
             "profileKind": "spell-invocation"
           }
@@ -5609,11 +5636,18 @@
         "unitId": "animal_friendship"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
+                "runtime": "battle",
+                "status": "needs-parity-witness",
+                "title": "Battle spell d20 roll modifiers for attack rolls, Saving Throws, Ability Checks, skill checks, and selected witness projections"
+              }
+            ],
             "profileId": "spell.invocation-roll-modifier",
             "profileKind": "spell-invocation"
           }
@@ -5621,11 +5655,18 @@
         "unitId": "bane"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
             "profileId": "unit-feature.passive-saving-throw-roll-mode",
             "profileKind": "passive"
           }
@@ -5690,17 +5731,31 @@
         "unitId": "barbarian_unarmored_defense"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
             "profileId": "unit-feature.bardic-inspiration-grant",
             "profileKind": "bonus-action"
           },
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
             "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
             "profileKind": "resource"
           }
@@ -5720,11 +5775,18 @@
         "unitId": "bard_jack_of_all_trades"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
+                "runtime": "battle",
+                "status": "needs-parity-witness",
+                "title": "Battle spell scalar buffs for Armor Class, Speed, special speeds, Hit Point maximum, and Temporary Hit Point effects"
+              }
+            ],
             "profileId": "spell.scalar-buff",
             "profileKind": "spell-invocation"
           }
@@ -5732,11 +5794,18 @@
         "unitId": "barkskin"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
+                "runtime": "battle",
+                "status": "needs-parity-witness",
+                "title": "Battle spell d20 roll modifiers for attack rolls, Saving Throws, Ability Checks, skill checks, and selected witness projections"
+              }
+            ],
             "profileId": "spell.invocation-roll-modifier",
             "profileKind": "spell-invocation"
           }
@@ -5744,11 +5813,18 @@
         "unitId": "bless"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
+                "runtime": "battle",
+                "status": "needs-parity-witness",
+                "title": "Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup"
+              }
+            ],
             "profileId": "spell.invocation-condition-save",
             "profileKind": "spell-invocation"
           }
@@ -5774,10 +5850,16 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+              },
+              {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
@@ -5796,7 +5878,7 @@
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.readied-action-time-spell",
@@ -5812,10 +5894,16 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+              },
+              {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
@@ -5834,7 +5922,7 @@
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.readied-action-time-spell",
@@ -5865,7 +5953,7 @@
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.readied-action-time-spell",
@@ -5899,11 +5987,18 @@
         "unitId": "cleric_divine_order"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
+                "runtime": "battle",
+                "status": "needs-parity-witness",
+                "title": "Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup"
+              }
+            ],
             "profileId": "spell.invocation-condition-save",
             "profileKind": "spell-invocation"
           }
@@ -5975,10 +6070,10 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.HIT_POINT_RESTORATION",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell Hit Point restoration target selection, healing-roll holes, zero-Hit-Point recovery, and multi-target healing projection"
               }
             ],
             "profileId": "spell.hit-point-restoration",
@@ -6006,10 +6101,16 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+              },
+              {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
@@ -6085,11 +6186,18 @@
         "unitId": "ensnaring_strike"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
+                "runtime": "battle",
+                "status": "needs-parity-witness",
+                "title": "Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup"
+              }
+            ],
             "profileId": "spell.invocation-condition-save",
             "profileKind": "spell-invocation"
           }
@@ -6109,11 +6217,18 @@
         "unitId": "expeditious_retreat"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
+                "runtime": "battle",
+                "status": "needs-parity-witness",
+                "title": "Battle failed-save spell attack-roll Advantage effects from saving throw holes through active-effect application"
+              }
+            ],
             "profileId": "spell.invocation-attack-roll-advantage-save",
             "profileKind": "spell-invocation"
           }
@@ -6121,11 +6236,18 @@
         "unitId": "faerie_fire"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
+                "runtime": "battle",
+                "status": "needs-parity-witness",
+                "title": "Battle spell scalar buffs for Armor Class, Speed, special speeds, Hit Point maximum, and Temporary Hit Point effects"
+              }
+            ],
             "profileId": "spell.scalar-buff",
             "profileKind": "spell-invocation"
           }
@@ -6215,11 +6337,18 @@
         "unitId": "fighter_second_wind"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
             "profileId": "unit-feature.failed-ability-check-resource-boost",
             "profileKind": "resource"
           }
@@ -6233,10 +6362,16 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+              },
+              {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
@@ -6294,11 +6429,18 @@
         "unitId": "grease"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
+                "runtime": "battle",
+                "status": "needs-parity-witness",
+                "title": "Battle spell d20 roll modifiers for attack rolls, Saving Throws, Ability Checks, skill checks, and selected witness projections"
+              }
+            ],
             "profileId": "spell.invocation-roll-modifier",
             "profileKind": "spell-invocation"
           }
@@ -6312,10 +6454,16 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+              },
+              {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
@@ -6334,7 +6482,7 @@
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.readied-action-time-spell",
@@ -6350,10 +6498,10 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.HIT_POINT_RESTORATION",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell Hit Point restoration target selection, healing-roll holes, zero-Hit-Point recovery, and multi-target healing projection"
               }
             ],
             "profileId": "spell.hit-point-restoration",
@@ -6375,10 +6523,16 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+              },
+              {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
@@ -6388,11 +6542,18 @@
         "unitId": "hellish_rebuke"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
+                "runtime": "battle",
+                "status": "needs-parity-witness",
+                "title": "Battle spell condition immunity with start-turn Temporary Hit Point refresh and concentration cleanup"
+              }
+            ],
             "profileId": "spell.invocation-condition-immunity-turn-start-temporary-hit-points",
             "profileKind": "spell-invocation"
           }
@@ -6412,11 +6573,18 @@
         "unitId": "hex"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
+                "runtime": "battle",
+                "status": "needs-parity-witness",
+                "title": "Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup"
+              }
+            ],
             "profileId": "spell.invocation-hideous-laughter-repeat-save-lifecycle",
             "profileKind": "spell-invocation"
           }
@@ -6424,11 +6592,18 @@
         "unitId": "hideous_laughter"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
+                "runtime": "battle",
+                "status": "needs-parity-witness",
+                "title": "Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup"
+              }
+            ],
             "profileId": "spell.invocation-condition-save",
             "profileKind": "spell-invocation"
           }
@@ -6454,10 +6629,16 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+              },
+              {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
@@ -6473,10 +6654,16 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+              },
+              {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
@@ -6495,7 +6682,7 @@
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.readied-action-time-spell",
@@ -6505,16 +6692,16 @@
         "unitId": "inflict_wounds"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
                 "runtime": "battle",
-                "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "status": "needs-parity-witness",
+                "title": "Battle direct spell-owned condition application, concentration cleanup, duration cleanup, and target-action early end"
               }
             ],
             "profileId": "spell.invocation-direct-condition",
@@ -6536,11 +6723,18 @@
         "unitId": "jump"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
+                "runtime": "battle",
+                "status": "needs-parity-witness",
+                "title": "Battle direct condition removal, poison protection condition removal, poison resistance, and poison Saving Throw Advantage"
+              }
+            ],
             "profileId": "spell.invocation-direct-condition-removal",
             "profileKind": "spell-invocation"
           }
@@ -6560,11 +6754,18 @@
         "unitId": "light"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
+                "runtime": "battle",
+                "status": "needs-parity-witness",
+                "title": "Battle spell scalar buffs for Armor Class, Speed, special speeds, Hit Point maximum, and Temporary Hit Point effects"
+              }
+            ],
             "profileId": "spell.scalar-buff",
             "profileKind": "spell-invocation"
           }
@@ -6578,10 +6779,16 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+              },
+              {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
@@ -6600,7 +6807,7 @@
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.readied-action-time-spell",
@@ -6616,10 +6823,16 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+              },
+              {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
@@ -6638,7 +6851,7 @@
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.readied-action-time-spell",
@@ -6672,11 +6885,18 @@
         "unitId": "misty_step"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
             "profileId": "unit-feature.martial-arts-attack-projection",
             "profileKind": "passive"
           }
@@ -6703,11 +6923,18 @@
         "unitId": "monk_unarmored_defense"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
             "profileId": "unit-feature.passive-speed-bonus",
             "profileKind": "passive"
           }
@@ -6794,10 +7021,16 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+              },
+              {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
@@ -6816,7 +7049,7 @@
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.readied-action-time-spell",
@@ -6832,10 +7065,16 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+              },
+              {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
@@ -6851,11 +7090,18 @@
         "unitId": "produce_flame"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION",
+                "runtime": "battle",
+                "status": "needs-parity-witness",
+                "title": "Battle creature-type protection, Charmed/Frightened/possession prevention, and relevant-effect Saving Throw Advantage"
+              }
+            ],
             "profileId": "spell.creature-type-protection-and-charm",
             "profileKind": "spell-invocation"
           }
@@ -6863,11 +7109,18 @@
         "unitId": "protection_from_evil_and_good"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
+                "runtime": "battle",
+                "status": "needs-parity-witness",
+                "title": "Battle direct condition removal, poison protection condition removal, poison resistance, and poison Saving Throw Advantage"
+              }
+            ],
             "profileId": "spell.invocation-condition-removal-protection",
             "profileKind": "spell-invocation"
           }
@@ -6918,10 +7171,16 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+              },
+              {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
@@ -6940,7 +7199,7 @@
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.readied-action-time-spell",
@@ -6956,10 +7215,16 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+              },
+              {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
@@ -6978,7 +7243,7 @@
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.readied-action-time-spell",
@@ -7088,10 +7353,16 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+              },
+              {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
@@ -7110,7 +7381,7 @@
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.readied-action-time-spell",
@@ -7169,10 +7440,16 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+              },
+              {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
@@ -7197,7 +7474,7 @@
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.reaction-shield",
@@ -7207,11 +7484,18 @@
         "unitId": "shield"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
+                "runtime": "battle",
+                "status": "needs-parity-witness",
+                "title": "Battle spell scalar buffs for Armor Class, Speed, special speeds, Hit Point maximum, and Temporary Hit Point effects"
+              }
+            ],
             "profileId": "spell.scalar-buff",
             "profileKind": "spell-invocation"
           }
@@ -7249,10 +7533,16 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+              },
+              {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
@@ -7271,7 +7561,7 @@
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.readied-action-time-spell",
@@ -7290,8 +7580,15 @@
             "profileKind": "table-caller"
           },
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Sleep initial save, pending repeat-save, failed-repeat Unconscious transition, successful-repeat cleanup, and concentration-break cleanup"
+              }
+            ],
             "profileId": "spell.invocation-sleep-repeat-save-lifecycle",
             "profileKind": "spell-invocation"
           }
@@ -7299,11 +7596,18 @@
         "unitId": "sleep"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
             "profileId": "unit-feature.innate-sorcery-activation",
             "profileKind": "persistent-effect"
           }
@@ -7317,10 +7621,16 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+              },
+              {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
@@ -7330,11 +7640,18 @@
         "unitId": "sorcerous_burst"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.MAKE_STABLE_LIFECYCLE",
+                "runtime": "battle",
+                "status": "needs-parity-witness",
+                "title": "Battle Spare the Dying target admission and zero-Hit-Point non-dead Stable lifecycle mutation"
+              }
+            ],
             "profileId": "spell.invocation-make-stable",
             "profileKind": "spell-invocation"
           }
@@ -7342,11 +7659,18 @@
         "unitId": "spare_the_dying"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
+                "runtime": "battle",
+                "status": "needs-parity-witness",
+                "title": "Battle spell scalar buffs for Armor Class, Speed, special speeds, Hit Point maximum, and Temporary Hit Point effects"
+              }
+            ],
             "profileId": "spell.scalar-buff",
             "profileKind": "spell-invocation"
           }
@@ -7360,10 +7684,16 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+              },
+              {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
@@ -7379,10 +7709,16 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+              },
+              {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
@@ -7410,10 +7746,16 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+              },
+              {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
@@ -7432,7 +7774,7 @@
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.readied-action-time-spell",

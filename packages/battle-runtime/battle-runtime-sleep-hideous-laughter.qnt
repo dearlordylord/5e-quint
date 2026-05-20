@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE
 
 module battleRuntimeSleepHideousLaughter {
   import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"
