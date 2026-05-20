@@ -72,24 +72,24 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 80,
-      "numerator": 80,
+      "denominator": 81,
+      "numerator": 81,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 80,
-      "numerator": 79,
+      "denominator": 81,
+      "numerator": 80,
       "percent": "98.8%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 109,
+      "denominator": 110,
       "numerator": 56,
-      "percent": "51.4%"
+      "percent": "50.9%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 109,
+      "denominator": 110,
       "numerator": 89,
-      "percent": "81.7%"
+      "percent": "80.9%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 132,
@@ -97,13 +97,13 @@
       "percent": "56.8%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 80,
-      "numerator": 80,
+      "denominator": 81,
+      "numerator": 81,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 80,
-      "numerator": 80,
+      "denominator": 81,
+      "numerator": 81,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -3161,20 +3161,48 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-heat-metal.test.ts"
         }
       ]
+    },
+    {
+      "id": "spell.invocation-gust-of-wind-line",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-gust-of-wind.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts"
+      ],
+      "sourceBoundary": "The runtime consumes the authored Gust of Wind spell, caller-supplied self-origin Line area identity, Line direction, affected creatures, failed-save push dispositions, and closer-to-caster movement facts. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration, active directional Line effect state, initial and end-turn Strength Saving Throw commands, failed-save 15-foot push fact validation, 2-for-1 Movement cost validation for movement closer to the caster through the Line, Bonus Action direction replacement, and cleanup on Concentration or duration end. Automatic geometry, pathfinding, area membership derivation, gas or vapor dispersal, and flame presentation remain outside this profile subset.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME"
+      ],
+      "title": "Spell invocation creates a directional Gust of Wind Line with table-supplied area witnesses",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-gust-of-wind.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gust-of-wind.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 109,
+        "denominator": 110,
         "numerator": 56,
-        "percent": "51.4%"
+        "percent": "50.9%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 109,
+        "denominator": 110,
         "numerator": 89,
-        "percent": "81.7%"
+        "percent": "80.9%"
       }
     },
     "profileKinds": [
@@ -4599,6 +4627,12 @@
         "joinStatus": "unmapped",
         "obligations": [],
         "profileId": "spell.invocation-object-contact-damage",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-gust-of-wind-line",
         "profileKind": "spell-invocation"
       }
     ],
@@ -9711,6 +9745,22 @@
         "spell.invocation-object-contact-damage"
       ],
       "taskId": "L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Package-local promoted Quint facts cover Gust of Wind's Magic Action and level-2-or-higher Spell Slot spend, caster-owned Concentration, caller-supplied self-origin Line identity and direction, table-supplied initial and end-turn save facts, failed-save 15-foot non-Opportunity-Attack push validation, closer-to-caster 2-for-1 Movement cost, Bonus Action Line direction replacement, and end-turn advancement.",
+      "profileIds": [
+        "spell.invocation-gust-of-wind-line"
+      ],
+      "taskId": "L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Gust of Wind Surface admission, self-origin Line targeting projection, cast-time Line area and direction fill validation, Magic Action and Spell Slot spending, active Concentration Line effect recording, failed initial-save push fact validation, end-turn save command discovery and resolution, 2-for-1 Movement cost validation for movement closer to the caster through the Line, Bonus Action direction replacement, and Concentration cleanup.",
+      "profileIds": [
+        "spell.invocation-gust-of-wind-line"
+      ],
+      "taskId": "L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME"
     }
   ],
   "units": [
@@ -18087,14 +18137,18 @@
         "status": "installed"
       },
       "claim": {
-        "followUpTasks": [
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "table/spatial owner",
+          "reason": "Automatic Line geometry, area membership derivation, pathfinding, route selection, and push destinations remain runtime-detached table/spatial derivations outside this profile."
+        },
+        "deferredMechanics": [
           {
-            "id": "L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME",
-            "mechanic": "Promote Gust of Wind's battle-visible Line profile: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caller-supplied self-origin Line area identity and direction, initial and end-turn Strength Saving Throws for caller-supplied creatures in the Line, failed-save 15-foot push facts away from the caster along the Line, active 2-for-1 Movement cost when a creature in the Line moves closer to the caster using table-supplied movement facts, Bonus Action Line direction replacement, and cleanup when Concentration or duration ends.",
-            "owner": "battle-runtime spell invocation/effect lifecycle plus table/spatial area and movement-cost witness boundary",
-            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the Line save, push, movement-cost, direction-change, and cleanup subset without automatic geometry or pathfinding.",
-            "title": "Gust of Wind Line Runtime Support"
-          },
+            "followUpTaskId": "L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE",
+            "mechanic": "strong-wind gas or vapor dispersal and candle, unprotected-flame, and protected-flame presentation clauses"
+          }
+        ],
+        "followUpTasks": [
           {
             "id": "L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE",
             "mechanic": "Decide whether Gust of Wind's strong-wind gas or vapor dispersal should execute against promoted Fog Cloud, Stinking Cloud, Cloudkill, or other active gas/vapor areas, and close or support the candle, unprotected-flame, protected-flame dancing, and 50 percent protected-flame extinguishing clauses without adding a duplicate environmental state model.",
@@ -18103,15 +18157,64 @@
             "title": "Gust of Wind Gas And Flame Presentation Closure"
           }
         ],
-        "futureProfileOwner": "battle-runtime spell invocation/effect lifecycle plus table/spatial area and movement-cost witness boundary",
-        "reason": "Gust of Wind is authored and installed as an SRD Surface Spell Definition with a self-origin 60-foot by 10-foot Line, Magic Action Spell Slot casting, caster-owned Concentration up to 1 minute, initial and end-turn Strength Saving Throws, failed-save 15-foot push away from the caster along the Line, directional 2-for-1 Movement cost when a creature in the Line moves closer to the caster, strong-wind gas or vapor dispersal, flame presentation clauses, and a later-turn Bonus Action direction change. Task 65 claims no promoted battle-runtime profile yet because runtime has no persistent self-origin Line direction state, no repeated area-save force-move profile without damage, no directional Movement cost witness keyed to moving closer to the source, no Bonus Action Line reorientation owner, and no gas/vapor plus flame-presentation owner.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "spell.invocation-gust-of-wind-line"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action level-2-or-higher Spell Slot casting",
+          "caller-supplied self-origin Line (60 feet by 10 feet) area identity and direction via gustOfWindLineArea saving throw facts",
+          "caster-owned Concentration with active Gust of Wind Line effect state and duration cleanup",
+          "initial Strength Saving Throws for caller-supplied creatures in the Line",
+          "end-turn Gust of Wind Line save command for table-triggered creatures ending a turn in the Line",
+          "failed-save 15-foot push fact validation away from the caster along the Line without Opportunity Attacks",
+          "caller-supplied Gust of Wind Line movement facts that validate active Line identity and spend total Movement distance plus one extra foot per foot moved closer to the caster through the Line",
+          "Bonus Action direction replacement using a typed table-supplied Line direction"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gust-of-wind.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-gust-of-wind-line",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-gust-of-wind.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-discovery.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the authored Gust of Wind spell, caller-supplied self-origin Line area identity, Line direction, affected creatures, failed-save push dispositions, and closer-to-caster movement facts. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration, active directional Line effect state, initial and end-turn Strength Saving Throw commands, failed-save 15-foot push fact validation, 2-for-1 Movement cost validation for movement closer to the caster through the Line, Bonus Action direction replacement, and cleanup on Concentration or duration end. Automatic geometry, pathfinding, area membership derivation, gas or vapor dispersal, and flame presentation remain outside this profile subset.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME"
+          ],
+          "title": "Spell invocation creates a directional Gust of Wind Line with table-supplied area witnesses",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-gust-of-wind.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gust-of-wind.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/gust_of_wind.json",
       "unitId": "gust_of_wind"
     },

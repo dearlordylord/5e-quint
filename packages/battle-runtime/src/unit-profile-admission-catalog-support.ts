@@ -13,6 +13,7 @@ import {
   ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
   battleAreaId,
   battleCombatantSide,
+  battleLineDirectionId,
   battleObjectId,
   combatantId,
   PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
@@ -208,6 +209,8 @@ export const guidanceUnitId = "guidance";
 
 export const greaseUnitId = "grease";
 
+export const gustOfWindUnitId = "gust_of_wind";
+
 export const heatMetalUnitId = "heat_metal";
 
 export const heroismUnitId = "heroism";
@@ -320,6 +323,18 @@ export const greaseAreaId = battleAreaId("unit-profile-grease-ground-area");
 export const flamingSphereAreaId = battleAreaId("unit-profile-flaming-sphere-area");
 
 export const moonbeamAreaId = battleAreaId("unit-profile-moonbeam-area");
+
+export const gustOfWindAreaId = battleAreaId(
+  "unit-profile-gust-of-wind-line-area",
+);
+
+export const gustOfWindNorthDirectionId = battleLineDirectionId(
+  "unit-profile-gust-of-wind-direction-north",
+);
+
+export const gustOfWindEastDirectionId = battleLineDirectionId(
+  "unit-profile-gust-of-wind-direction-east",
+);
 
 export const thunderwaveObjectId = battleObjectId(
   "unit-profile-thunderwave-object",

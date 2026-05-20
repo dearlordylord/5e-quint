@@ -65,6 +65,7 @@ import {
   BattleCombatantSide,
   BattleDancingLightId,
   BattleId,
+  BattleLineDirectionId,
   BattleObjectId,
   BattleTablePositionId,
   CombatantId,
@@ -300,6 +301,8 @@ const BattleThunderwavePushDispositionSchema = Schema.Union(
     provokesOpportunityAttacks: Schema.Literal(false),
   }),
 );
+const BattleGustOfWindLinePushDispositionSchema =
+  BattleThunderwavePushDispositionSchema;
 
 const BattleThunderwaveAudibleBoomSchema = Schema.Struct({
   sound: Schema.Literal("thunderous boom"),
@@ -436,6 +439,19 @@ const BattleSpellAreaChoiceSchema = Schema.Union(
     ...BattleSpellAreaChoiceBaseSchema,
     kind: Schema.Literal("greaseGroundArea"),
     areaId: BattleAreaId,
+    sleepNonSleeperFacts: Schema.optionalWith(Schema.Never, { exact: true }),
+  }),
+  Schema.Struct({
+    ...BattleSpellAreaChoiceBaseSchema,
+    kind: Schema.Literal("gustOfWindLineArea"),
+    areaId: BattleAreaId,
+    directionId: BattleLineDirectionId,
+    creaturePushes: Schema.Array(
+      Schema.Struct({
+        targetId: CombatantId,
+        disposition: BattleGustOfWindLinePushDispositionSchema,
+      }),
+    ),
     sleepNonSleeperFacts: Schema.optionalWith(Schema.Never, { exact: true }),
   }),
   Schema.Struct({
@@ -1594,6 +1610,26 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("gustOfWindLine"),
+      spell: BattleRuntimeObjectSchema,
+      ability: Schema.Literal("str"),
+      dc: DcSourceSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("selfOriginLine"),
+        lengthFeet: MovementFeet,
+        widthFeet: MovementFeet,
+      }),
+      durationTicks: Schema.Number,
+      rangeFeet: MovementFeet,
+      pushDistanceFeet: MovementFeet,
+      movementCost: Schema.Struct({
+        multiplier: Schema.Literal(2),
+        appliesTo: Schema.Literal("towardSource"),
+      }),
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("fogCloudObscurement"),
       spell: BattleRuntimeObjectSchema,
       targeting: Schema.Struct({
@@ -2462,6 +2498,27 @@ export const BattleHoleSchema = Schema.Union(
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("savingThrowOutcome"),
     label: Schema.String,
+    gustOfWindLine: BattleRuntimeObjectSchema,
+    ability: Schema.Literal("str"),
+    dc: DcSourceSchema,
+    areaChoices: Schema.Array(BattleRuntimeObjectSchema),
+    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("gustOfWindLineDirectionChoice"),
+    label: Schema.String,
+    sourceCombatantId: CombatantId,
+    sourceSpellId: Schema.String,
+    areaId: BattleAreaId,
+    directionId: BattleLineDirectionId,
+    requiresTableSpatialFact: Schema.Literal(true),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("savingThrowOutcome"),
+    label: Schema.String,
     spellConditionEndTurnSave: BattleRuntimeObjectSchema,
     ability: AbilitySchema,
     dc: DcSourceSchema,
@@ -2732,6 +2789,28 @@ type BattleSpellAreaChoiceEncoded = {
       readonly sleepNonSleeperFacts?: never;
     }
   | {
+      readonly kind: "gustOfWindLineArea";
+      readonly areaId: string;
+      readonly directionId: string;
+      readonly creaturePushes: readonly {
+        readonly targetId: string;
+        readonly disposition:
+          | {
+              readonly kind: "pushed";
+              readonly distanceFeet: number;
+              readonly destinationId: string;
+              readonly provokesOpportunityAttacks: false;
+            }
+          | {
+              readonly kind: "blocked";
+              readonly distanceFeet: number;
+              readonly reason: "blocked" | "noLegalDestination";
+              readonly provokesOpportunityAttacks: false;
+            };
+      }[];
+      readonly sleepNonSleeperFacts?: never;
+    }
+  | {
       readonly kind: "fireballArea";
       readonly objectIgnitionFacts: readonly {
         readonly objectId: string;
@@ -2936,7 +3015,19 @@ type BattleFillEncoded =
         | {
             readonly kind: "moonbeamCylinderArea";
             readonly areaId: string;
+          }
+        | {
+            readonly kind: "gustOfWindLineArea";
+            readonly areaId: string;
+            readonly directionId: string;
           };
+    }
+  | {
+      readonly kind: "gustOfWindLineDirectionChoice";
+      readonly holeId: string;
+      readonly value: {
+        readonly directionId: string;
+      };
     }
   | {
       readonly kind: "movableZoneRamMovement";
@@ -3268,6 +3359,15 @@ type BattleFillEncoded =
           readonly totalDistanceFeet: number;
           readonly greaseDistanceFeet: number;
         };
+        readonly gustOfWindLineMovement?: {
+          readonly kind: "gustOfWindLineMovement";
+          readonly sourceCombatantId: string;
+          readonly sourceSpellId: string;
+          readonly areaId: string;
+          readonly directionId: string;
+          readonly totalDistanceFeet: number;
+          readonly closerDistanceFeet: number;
+        };
         readonly commandApproach?: {
           readonly kind: "commandApproachShortestDirectRouteTowardCaster";
           readonly movedWithinFiveFeetOfCaster: boolean;
@@ -3551,7 +3651,19 @@ export const BattleFillSchema: Schema.Schema<
           kind: Schema.Literal("moonbeamCylinderArea"),
           areaId: BattleAreaId,
         }),
+        Schema.Struct({
+          kind: Schema.Literal("gustOfWindLineArea"),
+          areaId: BattleAreaId,
+          directionId: BattleLineDirectionId,
+        }),
       ),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("gustOfWindLineDirectionChoice"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Struct({
+        directionId: BattleLineDirectionId,
+      }),
     }),
     Schema.Struct({
       kind: Schema.Literal("movableZoneRamMovement"),
@@ -3783,6 +3895,18 @@ export const BattleFillSchema: Schema.Schema<
             areaId: BattleAreaId,
             totalDistanceFeet: MovementFeet,
             greaseDistanceFeet: MovementFeet,
+          }),
+          { exact: true },
+        ),
+        gustOfWindLineMovement: Schema.optionalWith(
+          Schema.Struct({
+            kind: Schema.Literal("gustOfWindLineMovement"),
+            sourceCombatantId: CombatantId,
+            sourceSpellId: Schema.String,
+            areaId: BattleAreaId,
+            directionId: BattleLineDirectionId,
+            totalDistanceFeet: MovementFeet,
+            closerDistanceFeet: MovementFeet,
           }),
           { exact: true },
         ),

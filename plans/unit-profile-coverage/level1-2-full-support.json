@@ -1439,14 +1439,14 @@
     },
     {
       "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
+      "claimTag": "profile-subset-supported",
       "closureKinds": [
         "follow-up-split"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME: Promote Gust of Wind's battle-visible Line profile: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caller-supplied self-origin Line area identity and direction, initial and end-turn Strength Saving Throws for caller-supplied creatures in the Line, failed-save 15-foot push facts away from the caster along the Line, active 2-for-1 Movement cost when a creature in the Line moves closer to the caster using table-supplied movement facts, Bonus Action Line direction replacement, and cleanup when Concentration or duration ends. Owner: battle-runtime spell invocation/effect lifecycle plus table/spatial area and movement-cost witness boundary. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the Line save, push, movement-cost, direction-change, and cleanup subset without automatic geometry or pathfinding.; L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE: Decide whether Gust of Wind's strong-wind gas or vapor dispersal should execute against promoted Fog Cloud, Stinking Cloud, Cloudkill, or other active gas/vapor areas, and close or support the candle, unprotected-flame, protected-flame dancing, and 50 percent protected-flame extinguishing clauses without adding a duplicate environmental state model. Owner: table/spatial presentation and environmental-effect interaction owner. Required output: Focused Surface/runtime owner decision with tests or accepted runtime-detached closure for gas/vapor dispersal and flame presentation, reusing the authored area_has_strong_wind fact rather than duplicating wind state.",
+      "reason": "L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE: Decide whether Gust of Wind's strong-wind gas or vapor dispersal should execute against promoted Fog Cloud, Stinking Cloud, Cloudkill, or other active gas/vapor areas, and close or support the candle, unprotected-flame, protected-flame dancing, and 50 percent protected-flame extinguishing clauses without adding a duplicate environmental state model. Owner: table/spatial presentation and environmental-effect interaction owner. Required output: Focused Surface/runtime owner decision with tests or accepted runtime-detached closure for gas/vapor dispersal and flame presentation, reusing the authored area_has_strong_wind fact rather than duplicating wind state.",
       "sourceRecordPath": "packages/surface/content/gust_of_wind.json",
       "sourceRows": [
         {
@@ -2996,8 +2996,8 @@
       "rowsByStatus": {
         "accepted": 362,
         "accepted-no-battle-effect": 137,
-        "battle-runtime-required": 44,
-        "partial-battle-runtime": 13
+        "battle-runtime-required": 40,
+        "partial-battle-runtime": 17
       }
     },
     "rulesKernelCoveredProfileJoin": {
@@ -8247,9 +8247,9 @@
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
       "missing": 1,
-      "profile-subset-supported": 20,
+      "profile-subset-supported": 21,
       "supported-profile": 109,
-      "unsupported-profile": 38
+      "unsupported-profile": 37
     },
     "groupsByStatus": {
       "blocked-follow-up-split": 22,

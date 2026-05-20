@@ -804,7 +804,8 @@ export function spellSavingThrowOutcomeHole(
         | "sleepTargetAdmission"
         | "hideousLaughter"
         | "command"
-        | "greaseGroundHazard";
+        | "greaseGroundHazard"
+        | "gustOfWindLine";
     }
   >,
 ): BattleSpellSavingThrowOutcomeHole {
@@ -877,7 +878,8 @@ export function spellSavingThrowAbility(
         | "sleepTargetAdmission"
         | "hideousLaughter"
         | "command"
-        | "greaseGroundHazard";
+        | "greaseGroundHazard"
+        | "gustOfWindLine";
     }
   >,
 ): Ability {
@@ -905,7 +907,8 @@ export function spellSavingThrowTargeting(
         | "sleepTargetAdmission"
         | "hideousLaughter"
         | "command"
-        | "greaseGroundHazard";
+        | "greaseGroundHazard"
+        | "gustOfWindLine";
     }
   >,
 ): SpellTargeting {
@@ -935,6 +938,7 @@ export function spellAreaTargetingLabel(
     Match.when({ kind: "pointOriginCube" }, () => "point-origin Cube"),
     Match.when({ kind: "selfOriginCube" }, () => "self-origin Cube"),
     Match.when({ kind: "selfOriginCone" }, () => "self-origin Cone"),
+    Match.when({ kind: "selfOriginLine" }, () => "self-origin Line"),
     Match.when(
       { kind: "primaryTargetOriginEmanation" },
       () => "primary-target-origin Emanation",

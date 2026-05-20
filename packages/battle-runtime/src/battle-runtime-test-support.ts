@@ -406,6 +406,8 @@ export function subjectName(
   | "castAttackHitBonusActionSpell"
   | "opportunityAttack"
   | "greaseGroundHazardSave"
+  | "gustOfWindLineSave"
+  | "gustOfWindLineDirectionChange"
   | "movableZoneSave"
   | "movableZoneReposition"
   | "movableZoneRam"

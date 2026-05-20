@@ -568,6 +568,14 @@ export function movementFill(
       BattleFill,
       { readonly kind: "movement" }
     >["value"]["jumpMovementReplacement"];
+    readonly greaseGroundDifficultTerrain?: Extract<
+      BattleFill,
+      { readonly kind: "movement" }
+    >["value"]["greaseGroundDifficultTerrain"];
+    readonly gustOfWindLineMovement?: Extract<
+      BattleFill,
+      { readonly kind: "movement" }
+    >["value"]["gustOfWindLineMovement"];
   },
 ): Extract<BattleFill, { readonly kind: "movement" }> {
   return {
@@ -580,6 +588,12 @@ export function movementFill(
       ...(value.jumpMovementReplacement === undefined
         ? {}
         : { jumpMovementReplacement: value.jumpMovementReplacement }),
+      ...(value.greaseGroundDifficultTerrain === undefined
+        ? {}
+        : { greaseGroundDifficultTerrain: value.greaseGroundDifficultTerrain }),
+      ...(value.gustOfWindLineMovement === undefined
+        ? {}
+        : { gustOfWindLineMovement: value.gustOfWindLineMovement }),
     },
   };
 }
