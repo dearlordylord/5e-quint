@@ -19850,22 +19850,29 @@
       "claim": {
         "followUpTasks": [
           {
+            "id": "L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION",
+            "mechanic": "Resolve the local SRD Acid Arrow damage contradiction by either correcting the local corpus or adding an owner-approved ASSUMPTIONS.md entry that explicitly identifies whether initial hit damage exists, how miss-only half damage is derived, which damage occurs at the end of the target's next turn, and how slot scaling applies.",
+            "owner": "RAW corpus and ASSUMPTIONS owner",
+            "requiredOutput": "Owner-approved RAW corpus correction or ASSUMPTIONS.md entry that makes the initial/later/miss damage relationship modelable without inference from contradictory prose.",
+            "title": "Acid Arrow RAW Corpus Reconciliation"
+          },
+          {
             "id": "L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE",
-            "mechanic": "Replace the current lossy Acid Arrow mechanics with a lossless SRD Surface shape for the spell's initial hit damage, later damage at the end of the target's next turn, immediate half-of-initial miss damage only, and slot scaling for both initial and later damage without storing the miss branch as an independently fixed 2d4 approximation.",
+            "mechanic": "After RAW reconciliation, replace Acid Arrow's lossy mechanics with a lossless SRD Surface shape for the approved damage timing, miss branch, end-of-target-next-turn damage, and slot scaling without storing miss damage as an independently fixed approximation.",
             "owner": "surface Spell Definition authoring",
-            "requiredOutput": "Acid Arrow Dhall/JSON content, and schema/tracer support if needed, represent the RAW initial/later/miss damage relationships as executable facts that can be projected by battle-runtime without duplicating or reinterpreting spell damage state.",
+            "requiredOutput": "Acid Arrow Dhall/JSON content, and schema/tracer support if needed, represent the approved initial/later/miss damage relationships as executable facts that can be projected by battle-runtime without duplicating or reinterpreting spell damage state.",
             "title": "Acid Arrow Surface Damage Shape"
           },
           {
             "id": "L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT",
-            "mechanic": "Promote Acid Arrow as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot, resolves a ranged Spell Attack, applies immediate Acid damage on hit, stores the Acid damage Spell Effect that applies at the end of the target's next turn on hit, applies immediate half-of-initial Acid damage on miss only, and scales all RAW damage amounts by slot level.",
+            "mechanic": "After RAW reconciliation and Surface repair, promote Acid Arrow as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot, resolves a ranged Spell Attack, applies only approved immediate hit or miss damage, stores approved delayed Acid damage for the end of the target's next turn where sourced, scales approved damage amounts by slot level, and cleans up the Spell Effect occurrence.",
             "owner": "battle-runtime spell invocation/effect lifecycle",
-            "requiredOutput": "Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Acid Arrow hit, miss, delayed target-turn damage, slot scaling, and resource spending.",
+            "requiredOutput": "Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the approved Acid Arrow hit, miss, delayed target-turn damage, slot scaling, resource spending, and cleanup behavior.",
             "title": "Acid Arrow Delayed Runtime Support"
           }
         ],
-        "futureProfileOwner": "surface Spell Definition authoring plus battle-runtime spell invocation/effect lifecycle",
-        "reason": "Acid Arrow is authored as an SRD Surface Spell Definition, but its current executable shape is not a safe runtime source for the level 1-2 gate: the authored record stores only delayed hit damage plus a fixed unscaled miss damage approximation, while the local SRD passage and gate row require distinct initial damage, later end of the target's next turn damage, and half immediate miss damage with slot scaling. Task 21 therefore claims no battle-runtime support and leaves the row blocked by the concrete follow-up tasks listed on this claim.",
+        "futureProfileOwner": "RAW corpus reconciliation plus surface Spell Definition authoring plus battle-runtime spell invocation/effect lifecycle",
+        "reason": "Acid Arrow remains unsupported because the local SRD 5.2.1 passage is internally contradictory at the damage-timing boundary: the hit branch states only 4d4 Acid damage at the end of the target's next turn, while the miss branch refers to half of the initial damage and the higher-level clause says both initial and later damage increase. No ASSUMPTIONS.md entry or owner-approved corpus correction defines the missing initial hit damage, so the installed Unit catalog must not admit Acid Arrow as a runtime source, and the follow-up Surface repair must not model immediate initial damage or derive the miss branch from implication alone.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",

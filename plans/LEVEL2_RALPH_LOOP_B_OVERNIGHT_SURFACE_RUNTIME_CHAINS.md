@@ -6,72 +6,78 @@
   "tasks": [
     {
       "number": 1,
-      "id": "L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE",
-      "status": "ready-for-research",
-      "title": "Acid Arrow Surface Damage Shape"
+      "id": "L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION",
+      "status": "blocked",
+      "title": "Acid Arrow RAW Corpus Reconciliation"
     },
     {
       "number": 2,
+      "id": "L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE",
+      "status": "blocked",
+      "title": "Acid Arrow Surface Damage Shape"
+    },
+    {
+      "number": 3,
       "id": "L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT",
       "status": "blocked",
       "title": "Acid Arrow Delayed Runtime Support"
     },
     {
-      "number": 3,
+      "number": 4,
       "id": "L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE",
       "status": "ready-for-research",
       "title": "Alter Self Surface Option Shape"
     },
     {
-      "number": 4,
+      "number": 5,
       "id": "L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME",
       "status": "blocked",
       "title": "Alter Self Mode Lifecycle And Aquatic Runtime"
     },
     {
-      "number": 5,
+      "number": 6,
       "id": "L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME",
       "status": "blocked",
       "title": "Alter Self Natural Weapons Runtime"
     },
     {
-      "number": 6,
+      "number": 7,
       "id": "L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL",
       "status": "ready-for-research",
       "title": "Continual Flame Dispel And Suppression Removal"
     },
     {
-      "number": 7,
+      "number": 8,
       "id": "L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE",
       "status": "ready-for-research",
       "title": "Flame Blade Surface Lifecycle Shape"
     },
     {
-      "number": 8,
+      "number": 9,
       "id": "L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT",
       "status": "blocked",
       "title": "Flame Blade Runtime Support"
     },
     {
-      "number": 9,
+      "number": 10,
       "id": "L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE",
       "status": "ready-for-research",
       "title": "Heat Metal Surface Contact Escape Shape"
     },
     {
-      "number": 10,
+      "number": 11,
       "id": "L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME",
       "status": "blocked",
       "title": "Heat Metal Contact Damage Runtime"
     },
     {
-      "number": 11,
+      "number": 12,
       "id": "L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY",
       "status": "blocked",
       "title": "Heat Metal Holding Wearing Penalty Runtime"
     },
     {
-      "number": 12,
+      "number": 13,
       "id": "L12G-RECURSIVE-TAIL-LOOP-B",
       "status": "blocked",
       "title": "LOOP-B Recursive Next-Batch Planning Tail"
@@ -82,7 +88,7 @@
 
 This is a runnable overnight Ralph plan split out of the stale monolithic A plan and the current level-1/2 strict frontier. It owns Surface-to-runtime chains for Acid Arrow, Alter Self, Continual Flame, Flame Blade, and Heat Metal.
 
-Preplanned load: 11 real atomic implementation/planning tasks plus one recursive planning tail. The recursive tail is a fallback only; ordinary `blocked` tasks already auto-unblock when their same-plan dependencies are marked `done`.
+Preplanned load: 12 real atomic implementation/planning tasks plus one recursive planning tail. The recursive tail is a fallback only; ordinary `blocked` tasks already auto-unblock when their same-plan dependencies are marked `done`.
 
 ## Worktree Safety Prefix
 
@@ -154,32 +160,65 @@ The final task is intentionally blocked on every real task in this plan and plac
 
 | # | Task | Status | Depends On | Notes |
 | ---: | --- | --- | --- | --- |
-| 1 | L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE - Acid Arrow Surface Damage Shape | ready-for-research | completed baseline | B lane; Unit `acid_arrow`. |
-| 2 | L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT - Acid Arrow Delayed Runtime Support | blocked | L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE | B lane; Unit `acid_arrow`. |
-| 3 | L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE - Alter Self Surface Option Shape | ready-for-research | completed baseline | B lane; Unit `alter_self`. |
-| 4 | L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME - Alter Self Mode Lifecycle And Aquatic Runtime | blocked | L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE | B lane; Unit `alter_self`. |
-| 5 | L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME - Alter Self Natural Weapons Runtime | blocked | L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE, L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME | B lane; Unit `alter_self`. |
-| 6 | L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL - Continual Flame Dispel And Suppression Removal | ready-for-research | completed baseline | B lane; Unit `continual_flame`. |
-| 7 | L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE - Flame Blade Surface Lifecycle Shape | ready-for-research | completed baseline | B lane; Unit `flame_blade`. |
-| 8 | L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT - Flame Blade Runtime Support | blocked | L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE | B lane; Unit `flame_blade`. |
-| 9 | L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE - Heat Metal Surface Contact Escape Shape | ready-for-research | completed baseline | B lane; Unit `heat_metal`. |
-| 10 | L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME - Heat Metal Contact Damage Runtime | blocked | L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE | B lane; Unit `heat_metal`. |
-| 11 | L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY - Heat Metal Holding Wearing Penalty Runtime | blocked | L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE, L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME | B lane; Unit `heat_metal`. |
-| 12 | L12G-RECURSIVE-TAIL-LOOP-B - LOOP-B Recursive Next-Batch Planning Tail | blocked | L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE, L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT, L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE, L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME, L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME, L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL, L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE, L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT, L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE, L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME, L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY | Last-resort next-batch planning safety net; auto-unblocks only after every real task in this plan is `done`. |
+| 1 | L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION - Acid Arrow RAW Corpus Reconciliation | blocked | owner RAW-corpus decision | B lane; Unit `acid_arrow`; local SRD 5.2.1 line 14 omits initial hit damage while line 16 refers to both initial and later damage. |
+| 2 | L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE - Acid Arrow Surface Damage Shape | blocked | L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION | B lane; Unit `acid_arrow`. |
+| 3 | L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT - Acid Arrow Delayed Runtime Support | blocked | L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE | B lane; Unit `acid_arrow`. |
+| 4 | L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE - Alter Self Surface Option Shape | ready-for-research | completed baseline | B lane; Unit `alter_self`. |
+| 5 | L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME - Alter Self Mode Lifecycle And Aquatic Runtime | blocked | L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE | B lane; Unit `alter_self`. |
+| 6 | L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME - Alter Self Natural Weapons Runtime | blocked | L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE, L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME | B lane; Unit `alter_self`. |
+| 7 | L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL - Continual Flame Dispel And Suppression Removal | ready-for-research | completed baseline | B lane; Unit `continual_flame`. |
+| 8 | L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE - Flame Blade Surface Lifecycle Shape | ready-for-research | completed baseline | B lane; Unit `flame_blade`. |
+| 9 | L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT - Flame Blade Runtime Support | blocked | L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE | B lane; Unit `flame_blade`. |
+| 10 | L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE - Heat Metal Surface Contact Escape Shape | ready-for-research | completed baseline | B lane; Unit `heat_metal`. |
+| 11 | L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME - Heat Metal Contact Damage Runtime | blocked | L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE | B lane; Unit `heat_metal`. |
+| 12 | L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY - Heat Metal Holding Wearing Penalty Runtime | blocked | L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE, L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME | B lane; Unit `heat_metal`. |
+| 13 | L12G-RECURSIVE-TAIL-LOOP-B - LOOP-B Recursive Next-Batch Planning Tail | blocked | L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION, L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE, L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT, L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE, L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME, L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME, L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL, L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE, L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT, L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE, L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME, L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY | Last-resort next-batch planning safety net; auto-unblocks only after every real task in this plan is `done`. |
 
 ## Task Details
 
-### Task 1 - L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE - Acid Arrow Surface Damage Shape
+### Task 1 - L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION - Acid Arrow RAW Corpus Reconciliation
 
-Status: `ready-for-research`
+Status: `blocked`
 
 Unit: `acid_arrow`.
-Origin: Original backlog task 88.
-Dependencies: none.
+Origin: Split from Task 1 attempt of `L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE`.
+Dependencies: owner RAW-corpus decision.
 
 Pre-researched scope:
 
-- First reconcile Acid Arrow's local RAW text against `ASSUMPTIONS.md` or an owner-approved corpus correction. Do not model immediate initial hit damage from implication alone; if the local RAW remains contradictory, block or close the initial-hit portion with a precise RAW-corpus issue. After that, replace Acid Arrow lossy mechanics with lossless Surface facts for the approved damage timing, miss branch, end-of-next-turn damage, and slot scaling.
+- Resolve the local SRD 5.2.1 Acid Arrow contradiction before any Surface or runtime modeling: `.references/srd-5.2.1/Spells/Descriptions-A-D.md` line 14 states only later Acid damage at the end of the target's next turn, while line 14's miss branch refers to "initial damage" and line 16 says both initial and later damage increase. `ASSUMPTIONS.md` currently has no Acid Arrow entry. The owner must either correct the local corpus or add an approved assumption that explicitly identifies whether initial hit damage exists, how miss-only half damage is derived, which damage occurs at the end of the target's next turn, and how slot scaling applies.
+
+Inputs:
+
+- `.references/srd-5.2.1/Spells/Descriptions-A-D.md`;
+- `ASSUMPTIONS.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `acid_arrow`.
+
+Outputs:
+
+- owner-approved RAW corpus correction or `ASSUMPTIONS.md` entry that makes the initial/later/miss damage relationship modelable without inference from contradictory prose;
+- keep `acid_arrow` out of runtime support until this correction or assumption lands;
+- update affected Unit claims and coverage artifacts only when the owner-approved decision changes the executable task surface.
+
+Acceptance:
+
+- RAW and ubiquitous-language checks are performed before changing content;
+- no immediate hit damage, miss-only half damage, delayed damage, or slot scaling is modeled from implication alone;
+- `git diff --check` passes;
+- reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes.
+
+### Task 2 - L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE - Acid Arrow Surface Damage Shape
+
+Status: `blocked`
+
+Unit: `acid_arrow`.
+Origin: Original backlog task 88.
+Dependencies: L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION.
+
+Pre-researched scope:
+
+- After the RAW corpus or `ASSUMPTIONS.md` resolves Acid Arrow's initial/later damage relationship, replace Acid Arrow lossy mechanics with lossless Surface facts for the approved damage timing, miss branch, end-of-next-turn damage, and slot scaling. Do not model immediate initial hit damage, half-on-miss damage, or "both initial and later" scaling until the owner-approved RAW reconciliation exists.
 
 Inputs:
 
@@ -210,7 +249,7 @@ Acceptance:
 - reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
 - battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
 
-### Task 2 - L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT - Acid Arrow Delayed Runtime Support
+### Task 3 - L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT - Acid Arrow Delayed Runtime Support
 
 Status: `blocked`
 
@@ -251,7 +290,7 @@ Acceptance:
 - reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
 - battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
 
-### Task 3 - L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE - Alter Self Surface Option Shape
+### Task 4 - L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE - Alter Self Surface Option Shape
 
 Status: `ready-for-research`
 
@@ -292,7 +331,7 @@ Acceptance:
 - reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
 - battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
 
-### Task 4 - L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME - Alter Self Mode Lifecycle And Aquatic Runtime
+### Task 5 - L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME - Alter Self Mode Lifecycle And Aquatic Runtime
 
 Status: `blocked`
 
@@ -333,7 +372,7 @@ Acceptance:
 - reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
 - battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
 
-### Task 5 - L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME - Alter Self Natural Weapons Runtime
+### Task 6 - L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME - Alter Self Natural Weapons Runtime
 
 Status: `blocked`
 
@@ -374,7 +413,7 @@ Acceptance:
 - reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
 - battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
 
-### Task 6 - L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL - Continual Flame Dispel And Suppression Removal
+### Task 7 - L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL - Continual Flame Dispel And Suppression Removal
 
 Status: `ready-for-research`
 
@@ -415,7 +454,7 @@ Acceptance:
 - reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
 - battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
 
-### Task 7 - L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE - Flame Blade Surface Lifecycle Shape
+### Task 8 - L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE - Flame Blade Surface Lifecycle Shape
 
 Status: `ready-for-research`
 
@@ -456,7 +495,7 @@ Acceptance:
 - reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
 - battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
 
-### Task 8 - L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT - Flame Blade Runtime Support
+### Task 9 - L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT - Flame Blade Runtime Support
 
 Status: `blocked`
 
@@ -497,7 +536,7 @@ Acceptance:
 - reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
 - battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
 
-### Task 9 - L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE - Heat Metal Surface Contact Escape Shape
+### Task 10 - L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE - Heat Metal Surface Contact Escape Shape
 
 Status: `ready-for-research`
 
@@ -538,7 +577,7 @@ Acceptance:
 - reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
 - battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
 
-### Task 10 - L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME - Heat Metal Contact Damage Runtime
+### Task 11 - L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME - Heat Metal Contact Damage Runtime
 
 Status: `blocked`
 
@@ -579,7 +618,7 @@ Acceptance:
 - reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
 - battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
 
-### Task 11 - L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY - Heat Metal Holding Wearing Penalty Runtime
+### Task 12 - L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY - Heat Metal Holding Wearing Penalty Runtime
 
 Status: `blocked`
 
@@ -620,13 +659,13 @@ Acceptance:
 - reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
 - battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
 
-### Task 12 - L12G-RECURSIVE-TAIL-LOOP-B - LOOP-B Recursive Next-Batch Planning Tail
+### Task 13 - L12G-RECURSIVE-TAIL-LOOP-B - LOOP-B Recursive Next-Batch Planning Tail
 
 Status: `blocked`
 
 Unit: `level1_2_frontier`.
 Origin: Safety-net planning task for when this plan has no earlier runnable implementation tasks.
-Dependencies: L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE, L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT, L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE, L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME, L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME, L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL, L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE, L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT, L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE, L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME, L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY.
+Dependencies: L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION, L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE, L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT, L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE, L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME, L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME, L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL, L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE, L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT, L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE, L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME, L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY.
 
 Pre-researched scope:
 

@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 
-import { Either, Schema } from "effect";
+import { Either, Option, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import findFamiliarInput from "../../content/find_familiar.json";
@@ -233,6 +233,15 @@ describe("SRD Unit catalog boundary", () => {
           ],
         },
       ]);
+    }
+  });
+
+  test("keeps Acid Arrow out of the installed SRD catalog until RAW damage timing is reconciled", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      expect(Option.isNone(result.catalog.getUnit("acid_arrow"))).toBe(true);
     }
   });
 

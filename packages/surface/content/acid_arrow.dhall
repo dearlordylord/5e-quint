@@ -12,14 +12,13 @@
 -- Consolidated validation reference for:
 --   • DamageEffectAtom.timing = "end_of_next_turn" (deferred damage)
 --
--- The miss-branch phrase "half as much of the initial damage only" is
--- interpreted as "half of the base on-hit damage, dealt immediately
--- with no deferred follow-up". The "only" caps the miss branch — no
--- deferred second tick. Upcast scales both the hit-deferred and the
--- miss-immediate amounts; the miss branch here encodes the base 2d4
--- without per-slot scaling — refining the half-of-scaled amount is
--- deferred until a second spell with the same half-on-miss shape
--- surfaces (no second feature of that shape exists yet).
+-- L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE reviewed this local
+-- RAW and found an unresolved corpus contradiction: the miss and
+-- higher-slot clauses refer to initial damage, but the hit branch in
+-- this corpus states only later damage at the end of the target's next
+-- turn. Until the RAW corpus or ASSUMPTIONS.md resolves that initial
+-- damage relationship, this record must not be admitted as a runtime
+-- source for immediate hit damage or scaled half-on-miss damage.
 
 let acidArrow =
       { kind = "spell"
