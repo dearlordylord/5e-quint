@@ -73,7 +73,7 @@
     {
       "number": 12,
       "id": "L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Gust of Wind Line Runtime Support"
     },
     {
