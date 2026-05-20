@@ -1,5 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-MISTY-STEP misty_step
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-self-teleport
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE
 import { describe, expect, test } from "vitest";
 import { spellTeleportDestinationHole } from "./battle-reducer/spells-holes-fills.ts";
 import {

@@ -4,16 +4,16 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Summary
 
-- Total obligations: 45
-- Covered obligations: 19
-- Open transitional obligations: 22
+- Total obligations: 60
+- Covered obligations: 33
+- Open transitional obligations: 23
 - Boundary or unsupported obligations: 4
 
 | Status | Count |
 | --- | ---: |
-| covered | 19 |
+| covered | 33 |
 | needs-qnt-owner | 3 |
-| needs-parity-witness | 18 |
+| needs-parity-witness | 19 |
 | needs-surface-evidence | 1 |
 | boundary-only | 3 |
 | unsupported-by-admission | 1 |
@@ -21,8 +21,8 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | Runtime | Count |
 | --- | ---: |
 | shared-algebras | 1 |
-| battle | 39 |
-| character-creation | 2 |
+| battle | 53 |
+| character-creation | 3 |
 | character-sheet | 2 |
 | character-battle | 1 |
 
@@ -30,16 +30,30 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 | Obligation | Runtime | Status | Profiles |
 | --- | --- | --- | --- |
-| `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` | battle | covered | _direct reducer entrypoint_ |
+| `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` | battle | covered | `spell.invocation-expeditious-retreat-dash`, `spell.invocation-forced-reaction-movement`, `spell.invocation-grease-ground-hazard`, `spell.invocation-jump-movement-replacement` |
 | `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY` | battle | covered | _direct reducer entrypoint_ |
-| `BATTLE.REACTION.OFFER_DECLINE_RESUME` | battle | covered | `spell.reaction-counterspell`, `spell.reaction-hellish-rebuke`, `spell.reaction-shield`, `spell.readied-action-time-spell`, `unit-feature.attack-damage-reduction-zero-damage-redirect`, `unit-feature.reaction-roll-or-damage-reduction` |
+| `BATTLE.REACTION.OFFER_DECLINE_RESUME` | battle | covered | `spell.invocation-feather-fall-mitigation`, `spell.invocation-forced-reaction-movement`, `spell.reaction-counterspell`, `spell.reaction-hellish-rebuke`, `spell.reaction-shield`, `spell.readied-action-time-spell`, `unit-feature.attack-damage-reduction-zero-damage-redirect`, `unit-feature.reaction-roll-or-damage-reduction` |
 | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` | battle | covered | `unit-feature.action-surge-resource`, `unit-feature.alternate-action-cost`, `unit-feature.attack-action-attack-count-scaling`, `unit-feature.attack-damage-reduction-zero-damage-redirect`, `unit-feature.attack-damage-rider`, `unit-feature.attack-roll-miss-to-hit-replacement`, `unit-feature.bardic-inspiration-failed-d20-test`, `unit-feature.bardic-inspiration-grant`, `unit-feature.bonus-action-dash-temporary-hit-points`, `unit-feature.bonus-action-ongoing-rage`, `unit-feature.failed-ability-check-resource-boost`, `unit-feature.first-attack-roll-reckless-advantage`, `unit-feature.innate-sorcery-activation`, `unit-feature.martial-arts-attack-projection`, `unit-feature.monk-focus-battle-options`, `unit-feature.passive-armor-class-bonus`, `unit-feature.passive-ranged-attack-roll-bonus`, `unit-feature.passive-saving-throw-roll-mode`, `unit-feature.passive-speed-bonus`, `unit-feature.passive-speed-kind-grants`, `unit-feature.reaction-roll-or-damage-reduction`, `unit-feature.save-damage-replacement`, `unit-feature.self-bonus-action-healing`, `unit-feature.weapon-critical-range-19`, `unit-feature.weapon-damage-dice-roll-choice`, `unit-feature.weapon-mastery-cleave`, `unit-feature.weapon-mastery-sap`, `unit-feature.weapon-mastery-topple`, `unit-feature.zero-hit-point-replacement` |
 | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | battle | covered | `spell.invocation-damage-save-or-attack`, `spell.reaction-shield`, `spell.readied-action-time-spell` |
 | `BATTLE.SPELL.HIT_POINT_RESTORATION` | battle | covered | `spell.hit-point-restoration` |
 | `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE` | battle | needs-parity-witness | `spell.invocation-direct-condition` |
 | `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` | battle | needs-parity-witness | `spell.invocation-condition-save`, `spell.invocation-hideous-laughter-repeat-save-lifecycle` |
 | `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE` | battle | needs-parity-witness | `spell.invocation-attack-roll-advantage-save` |
-| `BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE` | battle | covered | `spell.invocation-sleep-repeat-save-lifecycle` |
+| `BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE` | battle | covered | `spell.invocation-sleep-repeat-save-lifecycle`, `spell.invocation-sleep-target-admission` |
+| `BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE` | battle | covered | `spell.invocation-grease-ground-hazard` |
+| `BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE` | battle | covered | `spell.invocation-fog-cloud-obscurement` |
+| `BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE` | battle | covered | `spell.invocation-object-light` |
+| `BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE` | battle | covered | `spell.invocation-flaming-sphere-hazard-ram` |
+| `BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE` | battle | covered | `spell.invocation-held-light-emitter` |
+| `BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE` | battle | covered | `spell.invocation-spell-created-held-object` |
+| `BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE` | battle | covered | `spell.invocation-dancing-lights-movable-dim-light` |
+| `BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE` | battle | covered | `spell.invocation-expeditious-retreat-dash` |
+| `BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE` | battle | covered | `spell.invocation-feather-fall-mitigation` |
+| `BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE` | battle | covered | `spell.invocation-jump-movement-replacement` |
+| `BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE` | battle | covered | `spell.invocation-forced-reaction-movement` |
+| `BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE` | battle | covered | `spell.invocation-self-teleport` |
+| `BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE` | battle | covered | `spell.invocation-blur-attack-roll-defense` |
+| `BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE` | battle | needs-parity-witness | `spell.invocation-moonbeam-movable-zone` |
 | `BATTLE.SPELL.MAKE_STABLE_LIFECYCLE` | battle | needs-parity-witness | `spell.invocation-make-stable` |
 | `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS` | battle | needs-parity-witness | `spell.invocation-roll-modifier`, `spell.invocation-self-ability-check-advantage` |
 | `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` | battle | needs-parity-witness | `spell.scalar-buff` |
@@ -60,11 +74,12 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` | battle | covered | _direct reducer entrypoint_ |
 | `BATTLE.COMMAND.OPTION_AND_NEXT_TURN` | battle | covered | `spell.invocation-command-approach-route`, `spell.invocation-command-drop-held-object`, `spell.invocation-command-flee-route`, `spell.invocation-command-halt-grovel` |
 | `BATTLE.DAMAGE.ATTACK_BRANCHES` | battle | covered | _direct reducer entrypoint_ |
-| `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES` | battle | covered | `spell.invocation-damage-save-or-attack` |
+| `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES` | battle | covered | `spell.invocation-damage-save-or-attack`, `spell.invocation-flaming-sphere-hazard-ram`, `spell.invocation-moonbeam-movable-zone`, `spell.invocation-spell-created-held-object` |
 | `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` | battle | covered | `spell.invocation-damage-reduction` |
-| `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | battle | covered | _direct reducer entrypoint_ |
+| `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | battle | covered | `spell.invocation-flaming-sphere-hazard-ram`, `spell.invocation-moonbeam-movable-zone`, `spell.invocation-spell-created-held-object` |
 | `BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE` | battle | covered | _direct reducer entrypoint_ |
 | `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY` | character-creation | covered | _direct reducer entrypoint_ |
+| `CREATION.CHOICE_DISCOVERY_CARDINALITY` | character-creation | covered | _direct reducer entrypoint_ |
 | `SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE` | character-sheet | covered | `character-sheet.armor-class-base-formula` |
 | `BATTLE.HOLE.SEMANTIC_FRONTIER_CLASSIFICATION` | battle | boundary-only | _outside reducer semantics_ |
 | `BATTLE.SURFACE.EXECUTABLE_PROFILE_JOIN` | battle | needs-surface-evidence | _surface join pending_ |
@@ -74,7 +89,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.PROTOCOL.MALFORMED_PAYLOAD_REJECTION` | battle | boundary-only | _outside reducer semantics_ |
 | `BATTLE.SURFACE.CATALOG_ONLY_RECORDS` | battle | unsupported-by-admission | _outside reducer semantics_ |
 | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | battle | boundary-only | _outside reducer semantics_ |
-| `SHARED.HIT_POINTS.POSITIVE_DAMAGE` | shared-algebras | covered | _direct reducer entrypoint_ |
+| `SHARED.HIT_POINTS.POSITIVE_DAMAGE` | shared-algebras | covered | `spell.invocation-flaming-sphere-hazard-ram`, `spell.invocation-moonbeam-movable-zone`, `spell.invocation-spell-created-held-object` |
 
 ## Battle Hole Frontier
 
@@ -94,13 +109,13 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 | Subject | Id | Kind | Classification | Coverage | Follow-up |
 | --- | --- | --- | --- | --- | --- |
-| battle-hole-family | `BattleTargetChoiceHole` | `targetChoice` | semantic-frontier | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND`, `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.DAMAGE.ATTACK_BRANCHES`, `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
+| battle-hole-family | `BattleTargetChoiceHole` | `targetChoice` | semantic-frontier | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND`, `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.DAMAGE.ATTACK_BRANCHES`, `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` | _none_ |
 | battle-hole-family | `BattleSpellCastReactionFactsHole` | `targetSpatialFacts` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES`, `BATTLE.REACTION.OFFER_DECLINE_RESUME` | _none_ |
 | battle-hole-family | `BattleWardingBondSeparationFactsHole` | `targetSpatialFacts` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-SPELL-LINKED-EFFECT-PARITY` |
-| battle-hole-family | `BattleObjectTargetChoiceHole` | `objectTargetChoice` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
-| battle-hole-family | `BattleSpellAreaChoiceHole` | `spellAreaChoice` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
-| battle-hole-family | `BattleTeleportDestinationHole` | `teleportDestination` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
-| battle-hole-family | `BattleHeldObjectFactsHole` | `heldObjectFacts` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
+| battle-hole-family | `BattleObjectTargetChoiceHole` | `objectTargetChoice` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-hole-family | `BattleSpellAreaChoiceHole` | `spellAreaChoice` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-hole-family | `BattleTeleportDestinationHole` | `teleportDestination` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-hole-family | `BattleHeldObjectFactsHole` | `heldObjectFacts` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
 | battle-hole-family | `BattleSpellDamageTypeChoiceHole` | `damageTypeChoice` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` | _none_ |
 | battle-hole-family | `BattleSpellTargetAllocationHole` | `spellTargetAllocation` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | _none_ |
 | battle-hole-family | `BattleSpellTargetListHole` | `spellTargetList` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | _none_ |
@@ -111,23 +126,23 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | battle-hole-family | `BattleSpellDamageReductionRollHole` | `rolledDice` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` | _none_ |
 | battle-hole-family | `BattleMirrorImageDuplicateRollHole` | `rolledDice` | semantic-frontier | _none_ | `RKBC-SPELL-MIRROR-IMAGE-PARITY` |
 | battle-hole-family | `BattleSpellTurnStartDamageRollHole` | `rolledDice` | semantic-frontier | `SHARED.HIT_POINTS.POSITIVE_DAMAGE`, `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | `RKBC-SPELL-AFTER-HIT-RIDERS-PARITY` |
-| battle-hole-family | `BattleFlamingSphereDamageRollHole` | `rolledDice` | semantic-frontier | `SHARED.HIT_POINTS.POSITIVE_DAMAGE`, `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
+| battle-hole-family | `BattleFlamingSphereDamageRollHole` | `rolledDice` | semantic-frontier | `BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE`, `SHARED.HIT_POINTS.POSITIVE_DAMAGE`, `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | _none_ |
 | battle-hole-family | `BattleSpellHealingRollHole` | `rolledDice` | semantic-frontier | `BATTLE.SPELL.HIT_POINT_RESTORATION` | _none_ |
 | battle-hole-family | `BattleSpellSkillChoiceHole` | `skillChoice` | semantic-frontier | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` | `RKBC-SPELL-ROLL-SCALAR-PARITY` |
 | battle-hole-family | `BattleSpellAbilityChoiceHole` | `abilityChoice` | semantic-frontier | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` | `RKBC-SPELL-ROLL-SCALAR-PARITY`, `RKBC-SPELL-MARKED-RIDER-PARITY` |
 | battle-hole-family | `BattleSpellConditionChoiceHole` | `conditionChoice` | semantic-frontier | _none_ | `RKBC-SPELL-SAVE-GATED-CONDITION-PARITY` |
-| battle-hole-family | `BattleThaumaturgyActiveOneMinuteEffectCountHole` | `thaumaturgyActiveOneMinuteEffectCount` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
+| battle-hole-family | `BattleThaumaturgyActiveOneMinuteEffectCountHole` | `thaumaturgyActiveOneMinuteEffectCount` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
 | battle-hole-family | `BattleCommandOptionChoiceHole` | `commandOptionChoice` | semantic-frontier | `BATTLE.COMMAND.OPTION_AND_NEXT_TURN` | _none_ |
-| battle-hole-family | `BattleDancingLightsPlacementHole` | `dancingLightsPlacement` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
-| battle-hole-family | `BattleSpellSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES`, `BATTLE.COMMAND.OPTION_AND_NEXT_TURN` | `RKBC-SPELL-SAVE-GATED-CONDITION-PARITY`, `RKBC-SPELL-REACTION-CASTING-PARITY`, `RKBC-SPELL-AFTER-HIT-RIDERS-PARITY`, `RKBC-PROFILE-JOIN-TABLE-CALLER` |
+| battle-hole-family | `BattleDancingLightsPlacementHole` | `dancingLightsPlacement` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-hole-family | `BattleSpellSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES`, `BATTLE.COMMAND.OPTION_AND_NEXT_TURN` | `RKBC-SPELL-SAVE-GATED-CONDITION-PARITY`, `RKBC-SPELL-REACTION-CASTING-PARITY`, `RKBC-SPELL-AFTER-HIT-RIDERS-PARITY` |
 | battle-hole-family | `BattleSpellTurnStartSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | _none_ | `RKBC-SPELL-SAVE-GATED-CONDITION-PARITY`, `RKBC-SPELL-AFTER-HIT-RIDERS-PARITY` |
 | battle-hole-family | `BattleSleepRepeatSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | `BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE` | _none_ |
 | battle-hole-family | `BattleHideousLaughterRepeatSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | _none_ | `RKBC-SPELL-SAVE-GATED-CONDITION-PARITY` |
-| battle-hole-family | `BattleGreaseGroundHazardSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | _none_ | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
+| battle-hole-family | `BattleGreaseGroundHazardSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | `BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE` | _none_ |
 | battle-hole-family | `BattleSpellConditionEndTurnSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | _none_ | `RKBC-SPELL-SAVE-GATED-CONDITION-PARITY` |
-| battle-hole-family | `BattleFlamingSphereRamMovementHole` | `movableZoneRamMovement` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
-| battle-hole-family | `BattleMovableZoneRepositionMovementHole` | `movableZoneRepositionMovement` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
-| battle-hole-family | `BattleFlamingSphereSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
+| battle-hole-family | `BattleFlamingSphereRamMovementHole` | `movableZoneRamMovement` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-hole-family | `BattleMovableZoneRepositionMovementHole` | `movableZoneRepositionMovement` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-hole-family | `BattleFlamingSphereSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | `BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE`, `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES` | _none_ |
 | battle-hole-family | `BattleProtectionRelevantEffectSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | _none_ | `RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY` |
 | battle-hole-family | `BattleUnitFeatureSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` | _none_ |
 | battle-hole-family | `BattleUnitFeatureRollHole` | `rolledDice` | semantic-frontier | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` | _none_ |
@@ -136,7 +151,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | battle-hole-family | `BattleStatBlockRechargeRollHole` | `statBlockRechargeRoll` | semantic-frontier | `BATTLE.STAT_BLOCK.ATTACK_CONTROL` | _none_ |
 | battle-hole-family | `BattleConcentrationSavingThrowHole` | `concentrationSavingThrow` | semantic-frontier | `BATTLE.REACTION.OFFER_DECLINE_RESUME` | _none_ |
 | battle-hole-family | `BattleReactionDecisionHole` | `reactionDecision` | semantic-frontier | `BATTLE.REACTION.OFFER_DECLINE_RESUME` | _none_ |
-| battle-hole-family | `BattleMovementHole` | `movement` | semantic-frontier | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
+| battle-hole-family | `BattleMovementHole` | `movement` | semantic-frontier | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
 | battle-hole-family | `BattleAbilityCheckHole` | `abilityCheck` | semantic-frontier | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND`, `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` | _none_ |
 | battle-hole-family | `BattleGrappleOutcomeHole` | `grappleOutcome` | semantic-frontier | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` | _none_ |
 | battle-hole-family | `BattleShoveOutcomeHole` | `shoveOutcome` | semantic-frontier | `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
@@ -145,22 +160,22 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | battle-fill-kind | `attackRoll` | `attackRoll` | semantic-frontier | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.STAT_BLOCK.ATTACK_CONTROL`, `BATTLE.DAMAGE.ATTACK_BRANCHES`, `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES` | _none_ |
 | battle-fill-kind | `rolledDice` | `rolledDice` | semantic-frontier | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.HIT_POINT_RESTORATION`, `SHARED.HIT_POINTS.POSITIVE_DAMAGE`, `BATTLE.DAMAGE.ATTACK_BRANCHES`, `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES`, `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION`, `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | `RKBC-SPELL-AFTER-HIT-RIDERS-PARITY`, `RKBC-SPELL-WEAPON-HOSTED-PARITY`, `RKBC-SPELL-MARKED-RIDER-PARITY`, `RKBC-SPELL-ATTACK-SEQUENCES-PARITY`, `RKBC-SPELL-MIRROR-IMAGE-PARITY`, `RKBC-SPELL-LINKED-EFFECT-PARITY` |
 | battle-fill-kind | `damageTypeChoice` | `damageTypeChoice` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` | _none_ |
-| battle-fill-kind | `savingThrowOutcome` | `savingThrowOutcome` | semantic-frontier | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES`, `BATTLE.COMMAND.OPTION_AND_NEXT_TURN` | `RKBC-SPELL-SAVE-GATED-CONDITION-PARITY`, `RKBC-SPELL-REACTION-CASTING-PARITY`, `RKBC-SPELL-AFTER-HIT-RIDERS-PARITY`, `RKBC-PROFILE-JOIN-TABLE-CALLER` |
+| battle-fill-kind | `savingThrowOutcome` | `savingThrowOutcome` | semantic-frontier | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES`, `BATTLE.COMMAND.OPTION_AND_NEXT_TURN` | `RKBC-SPELL-SAVE-GATED-CONDITION-PARITY`, `RKBC-SPELL-REACTION-CASTING-PARITY`, `RKBC-SPELL-AFTER-HIT-RIDERS-PARITY` |
 | battle-fill-kind | `conditionChoice` | `conditionChoice` | semantic-frontier | _none_ | `RKBC-SPELL-SAVE-GATED-CONDITION-PARITY` |
 | battle-fill-kind | `skillChoice` | `skillChoice` | semantic-frontier | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` | _none_ |
 | battle-fill-kind | `abilityChoice` | `abilityChoice` | semantic-frontier | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` | `RKBC-SPELL-ROLL-SCALAR-PARITY`, `RKBC-SPELL-MARKED-RIDER-PARITY` |
-| battle-fill-kind | `thaumaturgyActiveOneMinuteEffectCount` | `thaumaturgyActiveOneMinuteEffectCount` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
+| battle-fill-kind | `thaumaturgyActiveOneMinuteEffectCount` | `thaumaturgyActiveOneMinuteEffectCount` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
 | battle-fill-kind | `commandOptionChoice` | `commandOptionChoice` | semantic-frontier | `BATTLE.COMMAND.OPTION_AND_NEXT_TURN` | _none_ |
-| battle-fill-kind | `dancingLightsPlacement` | `dancingLightsPlacement` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
+| battle-fill-kind | `dancingLightsPlacement` | `dancingLightsPlacement` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
 | battle-fill-kind | `unitFeatureDecision` | `unitFeatureDecision` | semantic-frontier | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` | _none_ |
-| battle-fill-kind | `heldObjectFacts` | `heldObjectFacts` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
-| battle-fill-kind | `targetChoice` | `targetChoice` | semantic-frontier | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND`, `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.DAMAGE.ATTACK_BRANCHES`, `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
-| battle-fill-kind | `targetSpatialFacts` | `targetSpatialFacts` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
-| battle-fill-kind | `objectTargetChoice` | `objectTargetChoice` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
-| battle-fill-kind | `spellAreaChoice` | `spellAreaChoice` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
-| battle-fill-kind | `movableZoneRamMovement` | `movableZoneRamMovement` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
-| battle-fill-kind | `movableZoneRepositionMovement` | `movableZoneRepositionMovement` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
-| battle-fill-kind | `teleportDestination` | `teleportDestination` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
+| battle-fill-kind | `heldObjectFacts` | `heldObjectFacts` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-fill-kind | `targetChoice` | `targetChoice` | semantic-frontier | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND`, `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.DAMAGE.ATTACK_BRANCHES`, `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` | _none_ |
+| battle-fill-kind | `targetSpatialFacts` | `targetSpatialFacts` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-fill-kind | `objectTargetChoice` | `objectTargetChoice` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-fill-kind | `spellAreaChoice` | `spellAreaChoice` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-fill-kind | `movableZoneRamMovement` | `movableZoneRamMovement` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-fill-kind | `movableZoneRepositionMovement` | `movableZoneRepositionMovement` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-fill-kind | `teleportDestination` | `teleportDestination` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
 | battle-fill-kind | `spellTargetAllocation` | `spellTargetAllocation` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | _none_ |
 | battle-fill-kind | `spellTargetList` | `spellTargetList` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | _none_ |
 | battle-fill-kind | `deathSavingThrow` | `deathSavingThrow` | semantic-frontier | `BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE` | _none_ |
@@ -169,13 +184,13 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | battle-fill-kind | `attackDamageDisposition` | `attackDamageDisposition` | semantic-frontier | `SHARED.HIT_POINTS.POSITIVE_DAMAGE`, `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | _none_ |
 | battle-fill-kind | `sanctuaryInterdictionOutcome` | `sanctuaryInterdictionOutcome` | semantic-frontier | `BATTLE.SANCTUARY.TARGETING_INTERDICTION` | _none_ |
 | battle-fill-kind | `reactionDecision` | `reactionDecision` | semantic-frontier | `BATTLE.REACTION.OFFER_DECLINE_RESUME` | _none_ |
-| battle-fill-kind | `movement` | `movement` | semantic-frontier | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
+| battle-fill-kind | `movement` | `movement` | semantic-frontier | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
 | battle-fill-kind | `abilityCheck` | `abilityCheck` | semantic-frontier | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND`, `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` | _none_ |
 | battle-fill-kind | `grappleOutcome` | `grappleOutcome` | semantic-frontier | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` | _none_ |
 | battle-fill-kind | `shoveOutcome` | `shoveOutcome` | semantic-frontier | `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
 | battle-hole-family | `BattleSelfTransformationModeChoiceHole` | `selfTransformationModeChoice` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | `RKBC-SPELL-SELF-TRANSFORMATION-PARITY` |
-| battle-hole-family | `BattleMoonbeamSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
-| battle-hole-family | `BattleMoonbeamDamageRollHole` | `rolledDice` | semantic-frontier | `SHARED.HIT_POINTS.POSITIVE_DAMAGE`, `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
+| battle-hole-family | `BattleMoonbeamSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES` | _none_ |
+| battle-hole-family | `BattleMoonbeamDamageRollHole` | `rolledDice` | semantic-frontier | `SHARED.HIT_POINTS.POSITIVE_DAMAGE`, `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | _none_ |
 | battle-fill-kind | `selfTransformationModeChoice` | `selfTransformationModeChoice` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | `RKBC-SPELL-SELF-TRANSFORMATION-PARITY` |
 | battle-hole-family | `BattleObjectContactTargetsHole` | `objectContactTargets` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
 | battle-fill-kind | `objectContactTargets` | `objectContactTargets` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
@@ -188,28 +203,29 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Open Work
 
-- `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE` (needs-parity-witness): Battle direct spell-owned condition application, concentration cleanup, duration cleanup, and target-action early end
-- `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` (needs-parity-witness): Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup
-- `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE` (needs-parity-witness): Battle failed-save spell attack-roll Advantage effects from saving throw holes through active-effect application
-- `BATTLE.SPELL.MAKE_STABLE_LIFECYCLE` (needs-parity-witness): Battle Spare the Dying target admission and zero-Hit-Point non-dead Stable lifecycle mutation
-- `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS` (needs-parity-witness): Battle spell d20 roll modifiers for attack rolls, Saving Throws, Ability Checks, skill checks, and selected witness projections
-- `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` (needs-parity-witness): Battle spell scalar buffs for Armor Class, Speed, special speeds, Hit Point maximum, and Temporary Hit Point effects
-- `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION` (needs-parity-witness): Battle creature-type protection, Charmed/Frightened/possession prevention, and relevant-effect Saving Throw Advantage
-- `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS` (needs-parity-witness): Battle spell condition immunity with start-turn Temporary Hit Point refresh and concentration cleanup
-- `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` (needs-parity-witness): Battle direct condition removal, poison protection condition removal, poison resistance, and poison Saving Throw Advantage
-- `BATTLE.SPELL.SELF_TRANSFORMATION_MODE` (needs-parity-witness): Battle self-transformation mode choice, Magic Action mode replacement, natural-weapon override, and Aquatic projections
-- `BATTLE.SPELL.REACTION_CASTING_TIME` (needs-parity-witness): Battle reaction-casting-time spells for spell-cast and after-damage triggers, Reaction spend, Spell Slot ledger, interruption, and continuation resume
-- `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` (needs-parity-witness): Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup
-- `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` (needs-parity-witness): Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders
-- `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` (needs-parity-witness): Battle marked-damage spell riders for attack-roll damage, Ability Check roll-mode projection, Concentration duration, and zero-Hit-Point transfer timing
-- `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE` (needs-parity-witness): Battle chained spell attack sequence for damage-type choice, duplicate-die leap admission, target history, per-step attack and damage rolls, and slot-level leap limits
-- `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE` (needs-parity-witness): Battle independent spell attack sequences for beam and ray count, per-attack target choice, attack rolls, hit-gated damage rolls, object targets, and action or slot spend
-- `BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION` (needs-parity-witness): Battle Mirror Image duplicate pool, attack-hit interception roll, duplicate destruction, bypass witnesses, and normal damage continuation
-- `BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING` (needs-parity-witness): Battle linked spell effects for Warding Bond defenses, all-damage Resistance, same-amount damage sharing, and source-zero, separation, recast, or duration cleanup
-- `BATTLE.SURFACE.EXECUTABLE_PROFILE_JOIN` (needs-surface-evidence): Prove each currently admitted executable battle Surface profile points to a covered semantic obligation
-- `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner): Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses
-- `SHEET.REST_AND_RESOURCE.TRANSITIONS` (needs-qnt-owner): Audit current Character Sheet HP, rest, spell-slot, pact-slot, Hit Dice, and feature-resource transitions into QNT-connected obligations
-- `CHARACTER.BATTLE.HANDOFF.SETTLEMENT` (needs-qnt-owner): Audit Character Sheet to battle init and battle handoff settlement for HP, zero-HP lifecycle, conditions, spell slots, and identity checks
+- `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE` (needs-parity-witness; follow-up: `RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY`): Battle direct spell-owned condition application, concentration cleanup, duration cleanup, and target-action early end
+- `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` (needs-parity-witness; follow-up: `RKBC-SPELL-SAVE-GATED-CONDITION-PARITY`): Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup
+- `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE` (needs-parity-witness; follow-up: `RKBC-SPELL-SAVE-GATED-CONDITION-PARITY`): Battle failed-save spell attack-roll Advantage effects from saving throw holes through active-effect application
+- `BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE` (needs-parity-witness; follow-up: `RKBC-SPELL-MOONBEAM-MOVABLE-ZONE-PARITY`): Battle Moonbeam movable Cylinder lifecycle, once-per-turn save limiting, reposition, damage, and cleanup
+- `BATTLE.SPELL.MAKE_STABLE_LIFECYCLE` (needs-parity-witness; follow-up: `RKBC-SPELL-MAKE-STABLE-PARITY`): Battle Spare the Dying target admission and zero-Hit-Point non-dead Stable lifecycle mutation
+- `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS` (needs-parity-witness; follow-up: `RKBC-SPELL-ROLL-SCALAR-PARITY`): Battle spell d20 roll modifiers for attack rolls, Saving Throws, Ability Checks, skill checks, and selected witness projections
+- `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` (needs-parity-witness; follow-up: `RKBC-SPELL-ROLL-SCALAR-PARITY`): Battle spell scalar buffs for Armor Class, Speed, special speeds, Hit Point maximum, and Temporary Hit Point effects
+- `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION` (needs-parity-witness; follow-up: `RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY`): Battle creature-type protection, Charmed/Frightened/possession prevention, and relevant-effect Saving Throw Advantage
+- `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS` (needs-parity-witness; follow-up: `RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY`): Battle spell condition immunity with start-turn Temporary Hit Point refresh and concentration cleanup
+- `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` (needs-parity-witness; follow-up: `RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY`): Battle direct condition removal, poison protection condition removal, poison resistance, and poison Saving Throw Advantage
+- `BATTLE.SPELL.SELF_TRANSFORMATION_MODE` (needs-parity-witness; follow-up: `RKBC-SPELL-SELF-TRANSFORMATION-PARITY`): Battle self-transformation mode choice, Magic Action mode replacement, natural-weapon override, and Aquatic projections
+- `BATTLE.SPELL.REACTION_CASTING_TIME` (needs-parity-witness; follow-up: `RKBC-SPELL-REACTION-CASTING-PARITY`): Battle reaction-casting-time spells for spell-cast and after-damage triggers, Reaction spend, Spell Slot ledger, interruption, and continuation resume
+- `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` (needs-parity-witness; follow-up: `RKBC-SPELL-AFTER-HIT-RIDERS-PARITY`): Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup
+- `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` (needs-parity-witness; follow-up: `RKBC-SPELL-WEAPON-HOSTED-PARITY`): Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders
+- `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` (needs-parity-witness; follow-up: `RKBC-SPELL-MARKED-RIDER-PARITY`): Battle marked-damage spell riders for attack-roll damage, Ability Check roll-mode projection, Concentration duration, and zero-Hit-Point transfer timing
+- `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE` (needs-parity-witness; follow-up: `RKBC-SPELL-ATTACK-SEQUENCES-PARITY`): Battle chained spell attack sequence for damage-type choice, duplicate-die leap admission, target history, per-step attack and damage rolls, and slot-level leap limits
+- `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE` (needs-parity-witness; follow-up: `RKBC-SPELL-ATTACK-SEQUENCES-PARITY`): Battle independent spell attack sequences for beam and ray count, per-attack target choice, attack rolls, hit-gated damage rolls, object targets, and action or slot spend
+- `BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION` (needs-parity-witness; follow-up: `RKBC-SPELL-MIRROR-IMAGE-PARITY`): Battle Mirror Image duplicate pool, attack-hit interception roll, duplicate destruction, bypass witnesses, and normal damage continuation
+- `BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING` (needs-parity-witness; follow-up: `RKBC-SPELL-LINKED-EFFECT-PARITY`): Battle linked spell effects for Warding Bond defenses, all-damage Resistance, same-amount damage sharing, and source-zero, separation, recast, or duration cleanup
+- `BATTLE.SURFACE.EXECUTABLE_PROFILE_JOIN` (needs-surface-evidence; follow-up: `RKBC-FINAL-B-CLOSURE-GATE`): Prove each currently admitted executable battle Surface profile points to a covered semantic obligation
+- `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner; follow-up: `RKBC-CREATION-FILL-VALIDATION-BATCH`, `RKBC-CREATION-ADVANCEMENT-REPLACEMENT`, `RKBC-CREATION-SPELLCASTING-PROGRESSION`, `RKBC-CREATION-WEAPON-MASTERY-FEAT`): Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses
+- `SHEET.REST_AND_RESOURCE.TRANSITIONS` (needs-qnt-owner; follow-up: `RKBC-SHEET-HP-REST-HIT-DICE`, `RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS`, `RKBC-SHEET-FEATURE-RESOURCES`): Audit current Character Sheet HP, rest, spell-slot, pact-slot, Hit Dice, and feature-resource transitions into QNT-connected obligations
+- `CHARACTER.BATTLE.HANDOFF.SETTLEMENT` (needs-qnt-owner; follow-up: `RKBC-HANDOFF-BATTLE-SETTLEMENT`): Audit Character Sheet to battle init and battle handoff settlement for HP, zero-HP lifecycle, conditions, spell slots, and identity checks
 
 ## Checker Issues
 

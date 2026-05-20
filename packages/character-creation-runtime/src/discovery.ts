@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: runtime-owner CREATION.CHOICE_DISCOVERY_CARDINALITY
 import { Either, Match, Option } from "effect";
 import {
   ALIGNMENT_CHOICES,

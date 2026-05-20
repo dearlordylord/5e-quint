@@ -83,18 +83,18 @@
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 109,
-      "numerator": 42,
-      "percent": "38.5%"
+      "numerator": 56,
+      "percent": "51.4%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 109,
-      "numerator": 74,
-      "percent": "67.9%"
+      "numerator": 89,
+      "percent": "81.7%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 132,
-      "numerator": 61,
-      "percent": "46.2%"
+      "numerator": 75,
+      "percent": "56.8%"
     },
     "runtimeMappingCoverage": {
       "denominator": 80,
@@ -3168,13 +3168,13 @@
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 109,
-        "numerator": 42,
-        "percent": "38.5%"
+        "numerator": 56,
+        "percent": "51.4%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 109,
-        "numerator": 74,
-        "percent": "67.9%"
+        "numerator": 89,
+        "percent": "81.7%"
       }
     },
     "profileKinds": [
@@ -3664,8 +3664,15 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Sleep initial save, pending repeat-save, failed-repeat Unconscious transition, successful-repeat cleanup, and concentration-break cleanup"
+          }
+        ],
         "profileId": "spell.invocation-sleep-target-admission",
         "profileKind": "table-caller"
       },
@@ -3683,44 +3690,135 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts"
+          },
+          {
+            "obligationId": "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Grease ground hazard lifecycle, Difficult Terrain movement evidence, recurring Dexterity saves, Prone application, and cleanup"
+          }
+        ],
         "profileId": "spell.invocation-grease-ground-hazard",
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Fog Cloud area identity, slot-scaled Heavily Obscured projection, Concentration ownership, strong-wind cleanup, and table-spatial boundary"
+          }
+        ],
         "profileId": "spell.invocation-fog-cloud-obscurement",
         "profileKind": "table-caller"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle object-attached light emitter target admission, Bright and Dim Light projection, duration or until-dispelled persistence, recast replacement, and opaque-cover boundary"
+          }
+        ],
         "profileId": "spell.invocation-object-light",
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle attack damage disposition offers ordinary damage, Knock Out, or zero-Hit-Point replacement before shared HP damage lifecycle application"
+          },
+          {
+            "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+          },
+          {
+            "obligationId": "BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Flaming Sphere area effect, Concentration lifecycle, Dexterity save damage, Bonus Action reposition or ram, slot scaling, and table-spatial boundary"
+          },
+          {
+            "obligationId": "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
+            "runtime": "shared-algebras",
+            "status": "covered",
+            "title": "Shared resolved positive-Hit-Point damage procedure and its TS parity route through consuming reducers"
+          }
+        ],
         "profileId": "spell.invocation-flaming-sphere-hazard-ram",
         "profileKind": "table-caller"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle held light emitter lifecycle, Bright and Dim Light projection, recast replacement, hurl cleanup, duration cleanup, and table-presentation boundary"
+          }
+        ],
         "profileId": "spell.invocation-held-light-emitter",
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle attack damage disposition offers ordinary damage, Knock Out, or zero-Hit-Point replacement before shared HP damage lifecycle application"
+          },
+          {
+            "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+          },
+          {
+            "obligationId": "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle spell-created held object lifecycle, hand occupancy, release and re-evocation, active-object spell attack, light projection, Concentration, and cleanup"
+          },
+          {
+            "obligationId": "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
+            "runtime": "shared-algebras",
+            "status": "covered",
+            "title": "Shared resolved positive-Hit-Point damage procedure and its TS parity route through consuming reducers"
+          }
+        ],
         "profileId": "spell.invocation-spell-created-held-object",
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Dancing Lights source-owned emitter identities, Dim Light projection, Bonus Action reposition, spacing and range expiry, Concentration, and cleanup"
+          }
+        ],
         "profileId": "spell.invocation-dancing-lights-movable-dim-light",
         "profileKind": "table-caller"
       },
@@ -3777,14 +3875,40 @@
         "profileKind": "table-caller"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts"
+          },
+          {
+            "obligationId": "BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Expeditious Retreat immediate Dash, Bonus Action and Spell Slot spend, Concentration-owned later Bonus Action Dash permission, and cleanup"
+          }
+        ],
         "profileId": "spell.invocation-expeditious-retreat-dash",
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+          },
+          {
+            "obligationId": "BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Feather Fall falling Reaction, target admission, per-target mitigation effect, descent-rate projection, landing cleanup, and table-elevation boundary"
+          }
+        ],
         "profileId": "spell.invocation-feather-fall-mitigation",
         "profileKind": "spell-invocation"
       },
@@ -3827,14 +3951,46 @@
         "profileKind": "reaction"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts"
+          },
+          {
+            "obligationId": "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Jump target admission, one-minute active effect, once-per-target-turn jump movement replacement, landing witnesses, Prone result, and cleanup"
+          }
+        ],
         "profileId": "spell.invocation-jump-movement-replacement",
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts"
+          },
+          {
+            "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+          },
+          {
+            "obligationId": "BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle failed-save forced Reaction movement, no-movement fallback, movement fill admission, Opportunity Attack interruption, and continuation ordering"
+          }
+        ],
         "profileId": "spell.invocation-forced-reaction-movement",
         "profileKind": "spell-invocation"
       },
@@ -4155,7 +4311,7 @@
             "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
             "runtime": "character-creation",
             "status": "needs-qnt-owner",
-            "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+            "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
           }
         ],
         "profileId": "character-creation.class-feature-feat-choice",
@@ -4168,7 +4324,7 @@
             "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
             "runtime": "character-creation",
             "status": "needs-qnt-owner",
-            "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+            "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
           }
         ],
         "profileId": "character-creation.class-feature-advancement-replacement",
@@ -4181,7 +4337,7 @@
             "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
             "runtime": "character-creation",
             "status": "needs-qnt-owner",
-            "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+            "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
           }
         ],
         "profileId": "character-creation.warlock-pact-magic-advancement",
@@ -4194,7 +4350,7 @@
             "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
             "runtime": "character-creation",
             "status": "needs-qnt-owner",
-            "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+            "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
           }
         ],
         "profileId": "character-creation.weapon-mastery-choice",
@@ -4207,7 +4363,7 @@
             "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
             "runtime": "character-creation",
             "status": "needs-qnt-owner",
-            "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+            "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
           }
         ],
         "profileId": "character-creation.eldritch-invocation-choice",
@@ -4299,14 +4455,28 @@
         "profileKind": "character-sheet"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle self-teleport spell destination witness, Bonus Action and Spell Slot spend, no-Movement and no-Opportunity-Attack projection, equipment transport, and table-spatial boundary"
+          }
+        ],
         "profileId": "spell.invocation-self-teleport",
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Blur self Spell Effect, Attack Roll Disadvantage projection, Blindsight and Truesight bypass witnesses, roll-mode cancellation, Concentration, and cleanup"
+          }
+        ],
         "profileId": "spell.invocation-blur-attack-roll-defense",
         "profileKind": "spell-invocation"
       },
@@ -4395,8 +4565,33 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle attack damage disposition offers ordinary damage, Knock Out, or zero-Hit-Point replacement before shared HP damage lifecycle application"
+          },
+          {
+            "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+          },
+          {
+            "obligationId": "BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE",
+            "runtime": "battle",
+            "status": "needs-parity-witness",
+            "title": "Battle Moonbeam movable Cylinder lifecycle, once-per-turn save limiting, reposition, damage, and cleanup"
+          },
+          {
+            "obligationId": "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
+            "runtime": "shared-algebras",
+            "status": "covered",
+            "title": "Shared resolved positive-Hit-Point damage procedure and its TS parity route through consuming reducers"
+          }
+        ],
         "profileId": "spell.invocation-moonbeam-movable-zone",
         "profileKind": "spell-invocation"
       },
@@ -4416,8 +4611,8 @@
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
           "denominator": 132,
-          "numerator": 61,
-          "percent": "46.2%"
+          "numerator": 75,
+          "percent": "56.8%"
         }
       },
       "units": [
@@ -4763,11 +4958,18 @@
           "unitId": "blindness_deafness"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Blur self Spell Effect, Attack Roll Disadvantage projection, Blindsight and Truesight bypass witnesses, roll-mode cancellation, Concentration, and cleanup"
+                }
+              ],
               "profileId": "spell.invocation-blur-attack-roll-defense",
               "profileKind": "spell-invocation"
             }
@@ -5046,11 +5248,18 @@
           "unitId": "cure_wounds"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Dancing Lights source-owned emitter identities, Dim Light projection, Bonus Action reposition, spacing and range expiry, Concentration, and cleanup"
+                }
+              ],
               "profileId": "spell.invocation-dancing-lights-movable-dim-light",
               "profileKind": "table-caller"
             }
@@ -5077,7 +5286,7 @@
           "unitId": "defense"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
               "joinStatus": "covered",
@@ -5099,8 +5308,27 @@
               "profileKind": "spell-invocation"
             },
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts"
+                },
+                {
+                  "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle failed-save forced Reaction movement, no-movement fallback, movement fill admission, Opportunity Attack interruption, and continuation ordering"
+                }
+              ],
               "profileId": "spell.invocation-forced-reaction-movement",
               "profileKind": "spell-invocation"
             }
@@ -5215,11 +5443,24 @@
           "unitId": "entangle"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Expeditious Retreat immediate Dash, Bonus Action and Spell Slot spend, Concentration-owned later Bonus Action Dash permission, and cleanup"
+                }
+              ],
               "profileId": "spell.invocation-expeditious-retreat-dash",
               "profileKind": "spell-invocation"
             }
@@ -5322,11 +5563,24 @@
           "unitId": "feat_savage_attacker"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Feather Fall falling Reaction, target admission, per-target mitigation effect, descent-rate projection, landing cleanup, and table-elevation boundary"
+                }
+              ],
               "profileId": "spell.invocation-feather-fall-mitigation",
               "profileKind": "spell-invocation"
             }
@@ -5381,7 +5635,7 @@
                   "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
                   "runtime": "character-creation",
                   "status": "needs-qnt-owner",
-                  "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+                  "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
                 }
               ],
               "profileId": "character-creation.class-feature-feat-choice",
@@ -5394,7 +5648,7 @@
                   "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
                   "runtime": "character-creation",
                   "status": "needs-qnt-owner",
-                  "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+                  "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
                 }
               ],
               "profileId": "character-creation.class-feature-advancement-replacement",
@@ -5486,11 +5740,36 @@
           "unitId": "fire_bolt"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle attack damage disposition offers ordinary damage, Knock Out, or zero-Hit-Point replacement before shared HP damage lifecycle application"
+                },
+                {
+                  "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell-created held object lifecycle, hand occupancy, release and re-evocation, active-object spell attack, light projection, Concentration, and cleanup"
+                },
+                {
+                  "obligationId": "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
+                  "runtime": "shared-algebras",
+                  "status": "covered",
+                  "title": "Shared resolved positive-Hit-Point damage procedure and its TS parity route through consuming reducers"
+                }
+              ],
               "profileId": "spell.invocation-spell-created-held-object",
               "profileKind": "spell-invocation"
             }
@@ -5498,11 +5777,36 @@
           "unitId": "flame_blade"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle attack damage disposition offers ordinary damage, Knock Out, or zero-Hit-Point replacement before shared HP damage lifecycle application"
+                },
+                {
+                  "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Flaming Sphere area effect, Concentration lifecycle, Dexterity save damage, Bonus Action reposition or ram, slot scaling, and table-spatial boundary"
+                },
+                {
+                  "obligationId": "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
+                  "runtime": "shared-algebras",
+                  "status": "covered",
+                  "title": "Shared resolved positive-Hit-Point damage procedure and its TS parity route through consuming reducers"
+                }
+              ],
               "profileId": "spell.invocation-flaming-sphere-hazard-ram",
               "profileKind": "table-caller"
             }
@@ -5510,11 +5814,18 @@
           "unitId": "flaming_sphere"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Fog Cloud area identity, slot-scaled Heavily Obscured projection, Concentration ownership, strong-wind cleanup, and table-spatial boundary"
+                }
+              ],
               "profileId": "spell.invocation-fog-cloud-obscurement",
               "profileKind": "table-caller"
             }
@@ -5522,11 +5833,24 @@
           "unitId": "fog_cloud"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Grease ground hazard lifecycle, Difficult Terrain movement evidence, recurring Dexterity saves, Prone application, and cleanup"
+                }
+              ],
               "profileId": "spell.invocation-grease-ground-hazard",
               "profileKind": "spell-invocation"
             }
@@ -5843,11 +6167,24 @@
           "unitId": "invisibility"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Jump target admission, one-minute active effect, once-per-target-turn jump movement replacement, landing witnesses, Prone result, and cleanup"
+                }
+              ],
               "profileId": "spell.invocation-jump-movement-replacement",
               "profileKind": "spell-invocation"
             }
@@ -5874,11 +6211,18 @@
           "unitId": "lesser_restoration"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle object-attached light emitter target admission, Bright and Dim Light projection, duration or until-dispelled persistence, recast replacement, and opaque-cover boundary"
+                }
+              ],
               "profileId": "spell.invocation-object-light",
               "profileKind": "spell-invocation"
             }
@@ -6107,11 +6451,18 @@
           "unitId": "mirror_image"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle self-teleport spell destination witness, Bonus Action and Spell Slot spend, no-Movement and no-Opportunity-Attack projection, equipment transport, and table-spatial boundary"
+                }
+              ],
               "profileId": "spell.invocation-self-teleport",
               "profileKind": "spell-invocation"
             }
@@ -6341,7 +6692,7 @@
                   "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
                   "runtime": "character-creation",
                   "status": "needs-qnt-owner",
-                  "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+                  "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
                 }
               ],
               "profileId": "character-creation.weapon-mastery-choice",
@@ -6401,7 +6752,7 @@
           "unitId": "poison_spray"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
               "joinStatus": "covered",
@@ -6423,8 +6774,15 @@
               "profileKind": "spell-invocation"
             },
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle held light emitter lifecycle, Bright and Dim Light projection, recast replacement, hurl cleanup, duration cleanup, and table-presentation boundary"
+                }
+              ],
               "profileId": "spell.invocation-held-light-emitter",
               "profileKind": "spell-invocation"
             }
@@ -6529,7 +6887,7 @@
                   "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
                   "runtime": "character-creation",
                   "status": "needs-qnt-owner",
-                  "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+                  "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
                 }
               ],
               "profileId": "character-creation.weapon-mastery-choice",
@@ -6755,7 +7113,7 @@
                   "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
                   "runtime": "character-creation",
                   "status": "needs-qnt-owner",
-                  "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+                  "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
                 }
               ],
               "profileId": "character-creation.weapon-mastery-choice",
@@ -7023,11 +7381,18 @@
           "unitId": "shocking_grasp"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Sleep initial save, pending repeat-save, failed-repeat Unconscious transition, successful-repeat cleanup, and concentration-break cleanup"
+                }
+              ],
               "profileId": "spell.invocation-sleep-target-admission",
               "profileKind": "table-caller"
             },
@@ -7271,7 +7636,7 @@
                   "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
                   "runtime": "character-creation",
                   "status": "needs-qnt-owner",
-                  "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+                  "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
                 }
               ],
               "profileId": "character-creation.eldritch-invocation-choice",
@@ -7284,7 +7649,7 @@
                   "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
                   "runtime": "character-creation",
                   "status": "needs-qnt-owner",
-                  "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+                  "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
                 }
               ],
               "profileId": "character-creation.class-feature-advancement-replacement",
@@ -7297,7 +7662,7 @@
                   "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
                   "runtime": "character-creation",
                   "status": "needs-qnt-owner",
-                  "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+                  "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
                 }
               ],
               "profileId": "character-creation.warlock-pact-magic-advancement",

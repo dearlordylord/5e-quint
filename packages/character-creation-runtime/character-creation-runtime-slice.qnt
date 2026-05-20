@@ -1,5 +1,5 @@
 // -*- mode: Bluespec; -*-
-// KERNEL-COVERAGE: qnt-owner CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY
+// KERNEL-COVERAGE: qnt-owner CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY CREATION.CHOICE_DISCOVERY_CARDINALITY
 
 module characterCreationRuntimeSlice {
   // SRD traceability for this character-creation parity model:
@@ -14,11 +14,10 @@ module characterCreationRuntimeSlice {
   // - Equipment.md lines 82-85, 135, 143, 149, and 334-337:
   //   selected weapon mastery metadata and Dice Set tool option.
   //
-  // This model intentionally covers the Orc Soldier Fighter support profile
-  // plus the first supported class-choice width: Wizard is now a supported class
-  // option in TypeScript. The randomized model still drives the established
-  // Fighter manifest path while deterministic TypeScript tests cover supported
-  // Wizard/Fighter build projection.
+  // This model intentionally covers the Orc Soldier Fighter manifest path
+  // exercised by character-creation-runtime.mbt.qnt. Broader class entries in
+  // TypeScript remain deterministic runtime evidence until class-scoped QNT
+  // paths are added.
   //
   // TODO(CAM follow-up): this parity model currently checks hole/status protocol
   // more deeply than finalized build values. Before widening character creation

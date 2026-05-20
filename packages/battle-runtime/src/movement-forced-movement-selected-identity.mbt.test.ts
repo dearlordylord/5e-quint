@@ -4,6 +4,7 @@
 // UNIT-IDENTITY-MBT-REPLAY: movement-forced-movement expeditious_retreat doExpeditiousRetreatImmediateDash
 // UNIT-IDENTITY-MBT-REPLAY: movement-forced-movement ranger_roving doRangerRovingClimbSwimMovement
 // UNIT-IDENTITY-MBT-REPLAY: movement-forced-movement barbarian_fast_movement doBarbarianFastMovementDash
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";

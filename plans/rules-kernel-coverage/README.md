@@ -42,9 +42,9 @@ reducer entry point
 ```
 
 QNT owns reducer semantics. Deterministic Surface coverage owns concrete catalog
-enumeration and display payload width. Focused random MBT or deterministic QNT
-replay connects the QNT oracle to current TS behavior according to the
-witness-mode rules below.
+enumeration and display payload width. Focused random MBT, deterministic QNT
+replay, or a profile-scoped runtime test connects the modeled obligation to
+current TS behavior according to the witness-mode rules below.
 
 `profile-obligations.jsonl` is the single source of truth for the join from a
 Unit support profile to rules-kernel semantic obligations. Obligation rows do
@@ -76,7 +76,9 @@ states.
 - **Support profile:** the typed runtime procedure shape admitted from Surface.
   Multiple Surface records can map to one profile.
 - **Parity witness:** an executable TS test that runs production runtime code and
-  compares a QNT-owned projection.
+  either compares a QNT-owned projection or, for a profile-specific lifecycle
+  already carrying profile-level QNT proof, exercises the deterministic runtime
+  reducer path named by that profile.
 - **Boundary-only:** parser/client/session/protocol behavior that does not
   change legal table-observable game state.
 - **Battle hole frontier:** the current set of battle reducer holes and fills
@@ -127,7 +129,9 @@ New reducer semantics are QNT-first:
 3. Add QNT owner/procedure before the runtime change; add a profile mapping
    when the obligation is Surface-backed.
 4. Add focused random MBT or deterministic QNT replay witness against production
-   TS while TS remains the implementation.
+   TS while TS remains the implementation. Use a profile-scoped `runtime-test`
+   witness only when the profile ledger already records QNT proof ownership and
+   the remaining evidence gap is the deterministic TS reducer path.
 5. Implement the reducer against the modeled shape.
 6. Add deterministic Surface admission/projection evidence when Surface records
    reach the profile.
@@ -165,6 +169,12 @@ Selected Unit identity replay in `plans/unit-profile-coverage/` is a separate
 content-evidence pattern: it proves concrete Unit ids bind to production
 entrypoints and that the named actions are reachable from QNT. It does not
 replace rules-kernel MBT for reusable reducer semantics.
+
+Profile-scoped runtime-test witnesses are narrower than MBT. They may close a
+single Surface-backed lifecycle obligation when the corresponding profile row
+already records QNT proof ownership and deterministic runtime parity. They must
+not be used for reusable sequencing, interleaving, or shared reducer semantics
+where branch interaction is the risk.
 
 ## Anti-Explosion Rule
 

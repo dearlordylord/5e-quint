@@ -1,20 +1,20 @@
 {
   "summary": {
-    "total": 45,
-    "covered": 19,
-    "open": 22,
+    "total": 60,
+    "covered": 33,
+    "open": 23,
     "nonSemantic": 4,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 39,
-      "character-creation": 2,
+      "battle": 53,
+      "character-creation": 3,
       "character-sheet": 2,
       "character-battle": 1
     },
     "byStatus": {
-      "covered": 19,
+      "covered": 33,
       "needs-qnt-owner": 3,
-      "needs-parity-witness": 18,
+      "needs-parity-witness": 19,
       "needs-surface-evidence": 1,
       "boundary-only": 3,
       "unsupported-by-admission": 1
@@ -48,7 +48,12 @@
           "stepAction": "step"
         }
       ],
-      "profiles": [],
+      "profiles": [
+        "spell.invocation-expeditious-retreat-dash",
+        "spell.invocation-forced-reaction-movement",
+        "spell.invocation-grease-ground-hazard",
+        "spell.invocation-jump-movement-replacement"
+      ],
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt"
       ],
@@ -96,6 +101,8 @@
         }
       ],
       "profiles": [
+        "spell.invocation-feather-fall-mitigation",
+        "spell.invocation-forced-reaction-movement",
         "spell.reaction-counterspell",
         "spell.reaction-hellish-rebuke",
         "spell.reaction-shield",
@@ -228,6 +235,9 @@
       "title": "Battle spell Hit Point restoration target selection, healing-roll holes, zero-Hit-Point recovery, and multi-target healing projection"
     },
     {
+      "followUpTaskIds": [
+        "RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY"
+      ],
       "id": "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
       "kind": "active-effect-lifecycle",
       "parityWitnesses": [],
@@ -248,6 +258,9 @@
       "title": "Battle direct spell-owned condition application, concentration cleanup, duration cleanup, and target-action early end"
     },
     {
+      "followUpTaskIds": [
+        "RKBC-SPELL-SAVE-GATED-CONDITION-PARITY"
+      ],
       "id": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
       "kind": "active-effect-lifecycle",
       "parityWitnesses": [],
@@ -270,6 +283,9 @@
       "title": "Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup"
     },
     {
+      "followUpTaskIds": [
+        "RKBC-SPELL-SAVE-GATED-CONDITION-PARITY"
+      ],
       "id": "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
       "kind": "active-effect-lifecycle",
       "parityWitnesses": [],
@@ -300,7 +316,8 @@
         }
       ],
       "profiles": [
-        "spell.invocation-sleep-repeat-save-lifecycle"
+        "spell.invocation-sleep-repeat-save-lifecycle",
+        "spell.invocation-sleep-target-admission"
       ],
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
@@ -315,6 +332,393 @@
       "title": "Battle Sleep initial save, pending repeat-save, failed-repeat Unconscious transition, successful-repeat cleanup, and concentration-break cleanup"
     },
     {
+      "id": "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-grease-ground-hazard"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Grease"
+      ],
+      "title": "Battle Grease ground hazard lifecycle, Difficult Terrain movement evidence, recurring Dexterity saves, Prone application, and cleanup"
+    },
+    {
+      "id": "BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-fog-cloud-obscurement"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Fog Cloud"
+      ],
+      "title": "Battle Fog Cloud area identity, slot-scaled Heavily Obscured projection, Concentration ownership, strong-wind cleanup, and table-spatial boundary"
+    },
+    {
+      "id": "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-object-light"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Light",
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Continual Flame"
+      ],
+      "title": "Battle object-attached light emitter target admission, Bright and Dim Light projection, duration or until-dispelled persistence, recast replacement, and opaque-cover boundary"
+    },
+    {
+      "id": "BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-flaming-sphere.test.ts"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-flaming-sphere-hazard-ram"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-subjects.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Flaming Sphere"
+      ],
+      "title": "Battle Flaming Sphere area effect, Concentration lifecycle, Dexterity save damage, Bonus Action reposition or ram, slot scaling, and table-spatial boundary"
+    },
+    {
+      "id": "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-held-light-emitter"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-M-P.md#Produce Flame"
+      ],
+      "title": "Battle held light emitter lifecycle, Bright and Dim Light projection, recast replacement, hurl cleanup, duration cleanup, and table-presentation boundary"
+    },
+    {
+      "id": "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-flame-blade.test.ts"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-spell-created-held-object"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-created-held-object.ts",
+        "packages/battle-runtime/src/battle-subjects.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Flame Blade"
+      ],
+      "title": "Battle spell-created held object lifecycle, hand occupancy, release and re-evocation, active-object spell attack, light projection, Concentration, and cleanup"
+    },
+    {
+      "id": "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-dancing-lights-movable-dim-light"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Dancing Lights"
+      ],
+      "title": "Battle Dancing Lights source-owned emitter identities, Dim Light projection, Bonus Action reposition, spacing and range expiry, Concentration, and cleanup"
+    },
+    {
+      "id": "BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-expeditious-retreat-dash"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Expeditious Retreat"
+      ],
+      "title": "Battle Expeditious Retreat immediate Dash, Bonus Action and Spell Slot spend, Concentration-owned later Bonus Action Dash permission, and cleanup"
+    },
+    {
+      "id": "BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE",
+      "kind": "reaction-continuation",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-feather-fall-mitigation"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/reaction-triggered-spells.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Feather Fall"
+      ],
+      "title": "Battle Feather Fall falling Reaction, target admission, per-target mitigation effect, descent-rate projection, landing cleanup, and table-elevation boundary"
+    },
+    {
+      "id": "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-jump-movement-replacement"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Jump"
+      ],
+      "title": "Battle Jump target admission, one-minute active effect, once-per-target-turn jump movement replacement, landing witnesses, Prone result, and cleanup"
+    },
+    {
+      "id": "BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE",
+      "kind": "reaction-continuation",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-forced-reaction-movement"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Dissonant Whispers"
+      ],
+      "title": "Battle failed-save forced Reaction movement, no-movement fallback, movement fill admission, Opportunity Attack interruption, and continuation ordering"
+    },
+    {
+      "id": "BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-misty-step.test.ts"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-self-teleport"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-M-P.md#Misty Step"
+      ],
+      "title": "Battle self-teleport spell destination witness, Bonus Action and Spell Slot spend, no-Movement and no-Opportunity-Attack projection, equipment transport, and table-spatial boundary"
+    },
+    {
+      "id": "BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-blur.test.ts"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-blur-attack-roll-defense"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Blur"
+      ],
+      "title": "Battle Blur self Spell Effect, Attack Roll Disadvantage projection, Blindsight and Truesight bypass witnesses, roll-mode cancellation, Concentration, and cleanup"
+    },
+    {
+      "followUpTaskIds": [
+        "RKBC-SPELL-MOONBEAM-MOVABLE-ZONE-PARITY"
+      ],
+      "id": "BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [],
+      "profiles": [
+        "spell.invocation-moonbeam-movable-zone"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+      ],
+      "status": "needs-parity-witness",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-M-P.md#Moonbeam"
+      ],
+      "title": "Battle Moonbeam movable Cylinder lifecycle, once-per-turn save limiting, reposition, damage, and cleanup"
+    },
+    {
+      "followUpTaskIds": [
+        "RKBC-SPELL-MAKE-STABLE-PARITY"
+      ],
       "id": "BATTLE.SPELL.MAKE_STABLE_LIFECYCLE",
       "kind": "state-transition",
       "parityWitnesses": [],
@@ -333,6 +737,9 @@
       "title": "Battle Spare the Dying target admission and zero-Hit-Point non-dead Stable lifecycle mutation"
     },
     {
+      "followUpTaskIds": [
+        "RKBC-SPELL-ROLL-SCALAR-PARITY"
+      ],
       "id": "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
       "kind": "active-effect-lifecycle",
       "parityWitnesses": [],
@@ -355,6 +762,9 @@
       "title": "Battle spell d20 roll modifiers for attack rolls, Saving Throws, Ability Checks, skill checks, and selected witness projections"
     },
     {
+      "followUpTaskIds": [
+        "RKBC-SPELL-ROLL-SCALAR-PARITY"
+      ],
       "id": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
       "kind": "active-effect-lifecycle",
       "parityWitnesses": [],
@@ -375,6 +785,9 @@
       "title": "Battle spell scalar buffs for Armor Class, Speed, special speeds, Hit Point maximum, and Temporary Hit Point effects"
     },
     {
+      "followUpTaskIds": [
+        "RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY"
+      ],
       "id": "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION",
       "kind": "active-effect-lifecycle",
       "parityWitnesses": [],
@@ -395,6 +808,9 @@
       "title": "Battle creature-type protection, Charmed/Frightened/possession prevention, and relevant-effect Saving Throw Advantage"
     },
     {
+      "followUpTaskIds": [
+        "RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY"
+      ],
       "id": "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
       "kind": "active-effect-lifecycle",
       "parityWitnesses": [],
@@ -414,6 +830,9 @@
       "title": "Battle spell condition immunity with start-turn Temporary Hit Point refresh and concentration cleanup"
     },
     {
+      "followUpTaskIds": [
+        "RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY"
+      ],
       "id": "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
       "kind": "active-effect-lifecycle",
       "parityWitnesses": [],
@@ -435,6 +854,9 @@
       "title": "Battle direct condition removal, poison protection condition removal, poison resistance, and poison Saving Throw Advantage"
     },
     {
+      "followUpTaskIds": [
+        "RKBC-SPELL-SELF-TRANSFORMATION-PARITY"
+      ],
       "id": "BATTLE.SPELL.SELF_TRANSFORMATION_MODE",
       "kind": "active-effect-lifecycle",
       "parityWitnesses": [],
@@ -456,6 +878,9 @@
       "title": "Battle self-transformation mode choice, Magic Action mode replacement, natural-weapon override, and Aquatic projections"
     },
     {
+      "followUpTaskIds": [
+        "RKBC-SPELL-REACTION-CASTING-PARITY"
+      ],
       "id": "BATTLE.SPELL.REACTION_CASTING_TIME",
       "kind": "reaction-continuation",
       "parityWitnesses": [],
@@ -479,6 +904,9 @@
       "title": "Battle reaction-casting-time spells for spell-cast and after-damage triggers, Reaction spend, Spell Slot ledger, interruption, and continuation resume"
     },
     {
+      "followUpTaskIds": [
+        "RKBC-SPELL-AFTER-HIT-RIDERS-PARITY"
+      ],
       "id": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
       "kind": "active-effect-lifecycle",
       "parityWitnesses": [],
@@ -506,6 +934,9 @@
       "title": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup"
     },
     {
+      "followUpTaskIds": [
+        "RKBC-SPELL-WEAPON-HOSTED-PARITY"
+      ],
       "id": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
       "kind": "active-effect-lifecycle",
       "parityWitnesses": [],
@@ -533,6 +964,9 @@
       "title": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders"
     },
     {
+      "followUpTaskIds": [
+        "RKBC-SPELL-MARKED-RIDER-PARITY"
+      ],
       "id": "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
       "kind": "active-effect-lifecycle",
       "parityWitnesses": [],
@@ -557,6 +991,9 @@
       "title": "Battle marked-damage spell riders for attack-roll damage, Ability Check roll-mode projection, Concentration duration, and zero-Hit-Point transfer timing"
     },
     {
+      "followUpTaskIds": [
+        "RKBC-SPELL-ATTACK-SEQUENCES-PARITY"
+      ],
       "id": "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
       "kind": "profile-procedure",
       "parityWitnesses": [],
@@ -579,6 +1016,9 @@
       "title": "Battle chained spell attack sequence for damage-type choice, duplicate-die leap admission, target history, per-step attack and damage rolls, and slot-level leap limits"
     },
     {
+      "followUpTaskIds": [
+        "RKBC-SPELL-ATTACK-SEQUENCES-PARITY"
+      ],
       "id": "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
       "kind": "profile-procedure",
       "parityWitnesses": [],
@@ -600,6 +1040,9 @@
       "title": "Battle independent spell attack sequences for beam and ray count, per-attack target choice, attack rolls, hit-gated damage rolls, object targets, and action or slot spend"
     },
     {
+      "followUpTaskIds": [
+        "RKBC-SPELL-MIRROR-IMAGE-PARITY"
+      ],
       "id": "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION",
       "kind": "active-effect-lifecycle",
       "parityWitnesses": [],
@@ -622,6 +1065,9 @@
       "title": "Battle Mirror Image duplicate pool, attack-hit interception roll, duplicate destruction, bypass witnesses, and normal damage continuation"
     },
     {
+      "followUpTaskIds": [
+        "RKBC-SPELL-LINKED-EFFECT-PARITY"
+      ],
       "id": "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING",
       "kind": "active-effect-lifecycle",
       "parityWitnesses": [],
@@ -808,7 +1254,10 @@
         }
       ],
       "profiles": [
-        "spell.invocation-damage-save-or-attack"
+        "spell.invocation-damage-save-or-attack",
+        "spell.invocation-flaming-sphere-hazard-ram",
+        "spell.invocation-moonbeam-movable-zone",
+        "spell.invocation-spell-created-held-object"
       ],
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
@@ -868,7 +1317,11 @@
           "stepAction": "step"
         }
       ],
-      "profiles": [],
+      "profiles": [
+        "spell.invocation-flaming-sphere-hazard-ram",
+        "spell.invocation-moonbeam-movable-zone",
+        "spell.invocation-spell-created-held-object"
+      ],
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
@@ -938,6 +1391,37 @@
       "title": "Character Creation draft hole discovery, atomic fill batch, rediscovery, and finalization status for the established supported slice"
     },
     {
+      "id": "CREATION.CHOICE_DISCOVERY_CARDINALITY",
+      "kind": "hole-frontier",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/character-creation-runtime.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/character-creation-runtime/character-creation-runtime-slice.qnt"
+      ],
+      "runtime": "character-creation",
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/discovery.ts",
+        "packages/character-creation-runtime/src/fill-reducer.ts",
+        "packages/character-creation-runtime/src/hole-factories.ts",
+        "packages/character-creation-runtime/src/support-gates.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Character-Creation.md",
+        ".references/srd-5.2.1/Classes/Fighter.md",
+        ".references/srd-5.2.1/Character-Origins.md",
+        ".references/srd-5.2.1/Equipment.md"
+      ],
+      "title": "Character Creation choice-hole availability, cardinality, and option legality for the existing Fighter manifest path"
+    },
+    {
       "id": "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
       "kind": "projection-scalar",
       "parityWitnesses": [
@@ -979,6 +1463,9 @@
       "title": "Executable BattleHole and BattleFill frontier inventory classifies current reducer hole families, fill kinds, and follow-up task splits"
     },
     {
+      "followUpTaskIds": [
+        "RKBC-FINAL-B-CLOSURE-GATE"
+      ],
       "id": "BATTLE.SURFACE.EXECUTABLE_PROFILE_JOIN",
       "kind": "composition",
       "parityWitnesses": [],
@@ -994,6 +1481,12 @@
       "title": "Prove each currently admitted executable battle Surface profile points to a covered semantic obligation"
     },
     {
+      "followUpTaskIds": [
+        "RKBC-CREATION-FILL-VALIDATION-BATCH",
+        "RKBC-CREATION-ADVANCEMENT-REPLACEMENT",
+        "RKBC-CREATION-SPELLCASTING-PROGRESSION",
+        "RKBC-CREATION-WEAPON-MASTERY-FEAT"
+      ],
       "id": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
       "kind": "composition",
       "parityWitnesses": [],
@@ -1011,9 +1504,14 @@
       ],
       "status": "needs-qnt-owner",
       "surfaceEvidence": [],
-      "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+      "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
     },
     {
+      "followUpTaskIds": [
+        "RKBC-SHEET-HP-REST-HIT-DICE",
+        "RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS",
+        "RKBC-SHEET-FEATURE-RESOURCES"
+      ],
       "id": "SHEET.REST_AND_RESOURCE.TRANSITIONS",
       "kind": "state-transition",
       "parityWitnesses": [],
@@ -1028,6 +1526,9 @@
       "title": "Audit current Character Sheet HP, rest, spell-slot, pact-slot, Hit Dice, and feature-resource transitions into QNT-connected obligations"
     },
     {
+      "followUpTaskIds": [
+        "RKBC-HANDOFF-BATTLE-SETTLEMENT"
+      ],
       "id": "CHARACTER.BATTLE.HANDOFF.SETTLEMENT",
       "kind": "composition",
       "parityWitnesses": [],
@@ -1092,7 +1593,11 @@
           "stepAction": "step"
         }
       ],
-      "profiles": [],
+      "profiles": [
+        "spell.invocation-flaming-sphere-hazard-ram",
+        "spell.invocation-moonbeam-movable-zone",
+        "spell.invocation-spell-created-held-object"
+      ],
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/hit-point-damage.qnt"
       ],
@@ -1115,12 +1620,10 @@
         "BATTLE.DAMAGE.ATTACK_BRANCHES",
         "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES"
       ],
-      "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-TABLE-CALLER"
-      ],
+      "followUpTaskIds": [],
       "holeKind": "targetChoice",
       "id": "BattleTargetChoiceHole",
-      "reason": "Target identity is a table decision, but accepted targets change reducer legality and downstream effects. Movement, feature target procedures including mastery, attack-projection, reaction, and bonus-action profiles, spell target procedures, attack target legality/resource branches, and Search target resolution are covered; table target-admission facts remain an explicit downstream follow-up.",
+      "reason": "Target identity is a table decision, but accepted targets change reducer legality and downstream effects. Movement, feature target procedures including mastery, attack-projection, reaction, and bonus-action profiles, spell target procedures, attack target legality/resource branches, and Search target resolution are covered; table target-admission facts remain boundary evidence.",
       "subject": "battle-hole-family"
     },
     {
@@ -1153,9 +1656,7 @@
       "coveredByObligationIds": [
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
       ],
-      "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-TABLE-CALLER"
-      ],
+      "followUpTaskIds": [],
       "holeKind": "objectTargetChoice",
       "id": "BattleObjectTargetChoiceHole",
       "reason": "Object target identity, Armor Class, ignition, and object-damage disposition are caller/table object facts, not durable rules-kernel object-world state.",
@@ -1166,9 +1667,7 @@
       "coveredByObligationIds": [
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
       ],
-      "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-TABLE-CALLER"
-      ],
+      "followUpTaskIds": [],
       "holeKind": "spellAreaChoice",
       "id": "BattleSpellAreaChoiceHole",
       "reason": "Area identity and placement are table spatial facts; spell effect lifecycle can consume an area id without deriving map geometry.",
@@ -1179,9 +1678,7 @@
       "coveredByObligationIds": [
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
       ],
-      "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-TABLE-CALLER"
-      ],
+      "followUpTaskIds": [],
       "holeKind": "teleportDestination",
       "id": "BattleTeleportDestinationHole",
       "reason": "The destination being visible, unoccupied, and within range is caller/table spatial evidence. Teleport placement proof stays at the boundary rather than adding map search or position state.",
@@ -1192,9 +1689,7 @@
       "coveredByObligationIds": [
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
       ],
-      "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-TABLE-CALLER"
-      ],
+      "followUpTaskIds": [],
       "holeKind": "heldObjectFacts",
       "id": "BattleHeldObjectFactsHole",
       "reason": "Held-object inventory for Command Drop is supplied by the table/caller; the reducer-owned Drop consequence is covered by Command while object identity derivation remains boundary state.",
@@ -1339,15 +1834,14 @@
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
+        "BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE",
         "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
         "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP"
       ],
-      "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-TABLE-CALLER"
-      ],
+      "followUpTaskIds": [],
       "holeKind": "rolledDice",
       "id": "BattleFlamingSphereDamageRollHole",
-      "reason": "Flaming Sphere damage rolls depend on table-owned hazard positioning but reuse shared HP damage and the generic damage-disposition split; table-caller placement/save integration remains follow-up work.",
+      "reason": "Flaming Sphere damage rolls depend on table-owned hazard positioning but the lifecycle obligation owns the table-triggered reducer flow, and damage application reuses shared HP damage plus the generic damage-disposition split.",
       "subject": "battle-hole-family"
     },
     {
@@ -1404,9 +1898,7 @@
       "coveredByObligationIds": [
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
       ],
-      "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-TABLE-CALLER"
-      ],
+      "followUpTaskIds": [],
       "holeKind": "thaumaturgyActiveOneMinuteEffectCount",
       "id": "BattleThaumaturgyActiveOneMinuteEffectCountHole",
       "reason": "The count of separate active Thaumaturgy presentation effects is caller/table presentation state, not reducer-owned battle state.",
@@ -1428,9 +1920,7 @@
       "coveredByObligationIds": [
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
       ],
-      "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-TABLE-CALLER"
-      ],
+      "followUpTaskIds": [],
       "holeKind": "dancingLightsPlacement",
       "id": "BattleDancingLightsPlacementHole",
       "reason": "Light placement and repositioning are table spatial facts; the reducer can record caller-supplied light identities without pathfinding or geometry ownership.",
@@ -1446,12 +1936,11 @@
       "followUpTaskIds": [
         "RKBC-SPELL-SAVE-GATED-CONDITION-PARITY",
         "RKBC-SPELL-REACTION-CASTING-PARITY",
-        "RKBC-SPELL-AFTER-HIT-RIDERS-PARITY",
-        "RKBC-PROFILE-JOIN-TABLE-CALLER"
+        "RKBC-SPELL-AFTER-HIT-RIDERS-PARITY"
       ],
       "holeKind": "savingThrowOutcome",
       "id": "BattleSpellSavingThrowOutcomeHole",
-      "reason": "Spell Saving Throw outcomes determine damage, conditions, Command consequences, Counterspell, timed after-hit continuations, and area results. Generic spell save damage branches and Command consequences are covered; condition, reaction-casting, after-hit, and table-caller area joins remain split parity or boundary follow-up work.",
+      "reason": "Spell Saving Throw outcomes determine damage, conditions, Command consequences, Counterspell, timed after-hit continuations, and area results. Generic spell save damage branches and Command consequences are covered; condition, reaction-casting, and after-hit joins remain split parity work, while table-caller area facts remain boundary evidence.",
       "subject": "battle-hole-family"
     },
     {
@@ -1490,13 +1979,13 @@
     },
     {
       "classification": "semantic-frontier",
-      "coveredByObligationIds": [],
-      "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-TABLE-CALLER"
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE"
       ],
+      "followUpTaskIds": [],
       "holeKind": "savingThrowOutcome",
       "id": "BattleGreaseGroundHazardSavingThrowOutcomeHole",
-      "reason": "Grease area entry/end-turn subjects and area occupancy are table facts; reducer-owned save and Prone consequences remain a spell/table-caller profile semantic follow-up, not a movement-route obligation.",
+      "reason": "Grease area entry/end-turn subjects and area occupancy are table facts; the reducer-owned Saving Throw outcome and Prone consequences are covered by the Grease ground hazard lifecycle obligation while map geometry remains boundary evidence.",
       "subject": "battle-hole-family"
     },
     {
@@ -1515,9 +2004,7 @@
       "coveredByObligationIds": [
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
       ],
-      "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-TABLE-CALLER"
-      ],
+      "followUpTaskIds": [],
       "holeKind": "movableZoneRamMovement",
       "id": "BattleFlamingSphereRamMovementHole",
       "reason": "Movable-zone ram distance and contact are caller/table spatial facts. Route, obstacle, unoccupied-space, and contact derivation stay outside reducer state; damage/save consequences are separate semantic rows.",
@@ -1528,9 +2015,7 @@
       "coveredByObligationIds": [
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
       ],
-      "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-TABLE-CALLER"
-      ],
+      "followUpTaskIds": [],
       "holeKind": "movableZoneRepositionMovement",
       "id": "BattleMovableZoneRepositionMovementHole",
       "reason": "Repositioning a spell-owned movable zone is table spatial placement. Pathfinding, obstacles, unoccupied-space checks, and zone coordinates stay out of rules-kernel state.",
@@ -1539,14 +2024,13 @@
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
+        "BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE",
         "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES"
       ],
-      "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-TABLE-CALLER"
-      ],
+      "followUpTaskIds": [],
       "holeKind": "savingThrowOutcome",
       "id": "BattleFlamingSphereSavingThrowOutcomeHole",
-      "reason": "Flaming Sphere Saving Throw outcomes determine full or half damage after a table-owned area/ram trigger; generic save damage branching is covered and table-caller hazard integration remains follow-up work.",
+      "reason": "Flaming Sphere Saving Throw outcomes determine full or half damage after a table-owned area/ram trigger; the lifecycle obligation owns the hazard-specific trigger and Bonus Action flow, generic save damage branching remains covered, and hazard placement facts remain boundary evidence.",
       "subject": "battle-hole-family"
     },
     {
@@ -1643,12 +2127,10 @@
         "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
       ],
-      "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-TABLE-CALLER"
-      ],
+      "followUpTaskIds": [],
       "holeKind": "movement",
       "id": "BattleMovementHole",
-      "reason": "Reducer-owned movement budget spend, Stand/Drop Prone, Grapple movement constraints, and Opportunity Attack frontier facts are covered by the movement obligation. Grease terrain distance, Command approach/flee route witnesses, forced-movement geometry, and Jump route/landing witnesses are table facts covered by the boundary obligation rather than stored path or map state. Jump failed-landing Prone stays coupled to the route/landing witness, and route/profile joins remain table-caller follow-up work.",
+      "reason": "Reducer-owned movement budget spend, Stand/Drop Prone, Grapple movement constraints, and Opportunity Attack frontier facts are covered by the movement obligation. Grease terrain distance, Command approach/flee route witnesses, forced-movement geometry, and Jump route/landing witnesses are table facts covered by the boundary obligation rather than stored path or map state. Jump failed-landing Prone stays coupled to the route/landing witness, and profile joins are recorded in profile-obligations.jsonl.",
       "subject": "battle-hole-family"
     },
     {
@@ -1773,11 +2255,10 @@
       "followUpTaskIds": [
         "RKBC-SPELL-SAVE-GATED-CONDITION-PARITY",
         "RKBC-SPELL-REACTION-CASTING-PARITY",
-        "RKBC-SPELL-AFTER-HIT-RIDERS-PARITY",
-        "RKBC-PROFILE-JOIN-TABLE-CALLER"
+        "RKBC-SPELL-AFTER-HIT-RIDERS-PARITY"
       ],
       "id": "savingThrowOutcome",
-      "reason": "Saving Throw outcomes drive damage, condition, Command, protection, feature, reaction-casting, and active-effect lifecycle branches. Generic spell/feature damage save branching and Command are covered while condition, reaction-casting, after-hit, and table-caller joins remain split follow-up work.",
+      "reason": "Saving Throw outcomes drive damage, condition, Command, protection, feature, reaction-casting, and active-effect lifecycle branches. Generic spell/feature damage save branching and Command are covered while condition, reaction-casting, and after-hit joins remain split parity work; table-caller joins are recorded in profile-obligations.jsonl.",
       "subject": "battle-fill-kind"
     },
     {
@@ -1822,9 +2303,7 @@
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
       ],
       "fillKind": "thaumaturgyActiveOneMinuteEffectCount",
-      "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-TABLE-CALLER"
-      ],
+      "followUpTaskIds": [],
       "id": "thaumaturgyActiveOneMinuteEffectCount",
       "reason": "This fill supplies a table-owned presentation-effect count; the reducer does not model every Thaumaturgy minor wonder.",
       "subject": "battle-fill-kind"
@@ -1846,9 +2325,7 @@
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
       ],
       "fillKind": "dancingLightsPlacement",
-      "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-TABLE-CALLER"
-      ],
+      "followUpTaskIds": [],
       "id": "dancingLightsPlacement",
       "reason": "Light positions, spacing, and movement are table spatial facts.",
       "subject": "battle-fill-kind"
@@ -1870,9 +2347,7 @@
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
       ],
       "fillKind": "heldObjectFacts",
-      "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-TABLE-CALLER"
-      ],
+      "followUpTaskIds": [],
       "id": "heldObjectFacts",
       "reason": "Held-object identities are table inventory facts consumed by the Command Drop branch; reducer consequences are covered separately by Command.",
       "subject": "battle-fill-kind"
@@ -1887,11 +2362,9 @@
         "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES"
       ],
       "fillKind": "targetChoice",
-      "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-TABLE-CALLER"
-      ],
+      "followUpTaskIds": [],
       "id": "targetChoice",
-      "reason": "Target identity is a table decision, but accepted targets change reducer legality and downstream effects. Movement, feature target procedures including mastery, attack-projection, reaction, and bonus-action profiles, spell target procedures, attack target legality/resource branches, and Search target resolution are covered; table target-admission facts remain an explicit downstream follow-up.",
+      "reason": "Target identity is a table decision, but accepted targets change reducer legality and downstream effects. Movement, feature target procedures including mastery, attack-projection, reaction, and bonus-action profiles, spell target procedures, attack target legality/resource branches, and Search target resolution are covered; table target-admission facts remain boundary evidence.",
       "subject": "battle-fill-kind"
     },
     {
@@ -1900,9 +2373,7 @@
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
       ],
       "fillKind": "targetSpatialFacts",
-      "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-TABLE-CALLER"
-      ],
+      "followUpTaskIds": [],
       "id": "targetSpatialFacts",
       "reason": "Spatial, visibility, range, and separation witnesses are table facts. Spell-cast Reaction admission facts use this same fill kind, but their offer/decision/resume semantics are covered by the reactionDecision hole and BATTLE.REACTION.OFFER_DECLINE_RESUME rather than by the generic spatial-fact fill.",
       "subject": "battle-fill-kind"
@@ -1913,9 +2384,7 @@
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
       ],
       "fillKind": "objectTargetChoice",
-      "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-TABLE-CALLER"
-      ],
+      "followUpTaskIds": [],
       "id": "objectTargetChoice",
       "reason": "Object target identity and object-state witnesses are table facts at the current reducer boundary.",
       "subject": "battle-fill-kind"
@@ -1926,9 +2395,7 @@
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
       ],
       "fillKind": "spellAreaChoice",
-      "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-TABLE-CALLER"
-      ],
+      "followUpTaskIds": [],
       "id": "spellAreaChoice",
       "reason": "Area identity is supplied by the table/caller; the reducer consumes it without deriving geometry.",
       "subject": "battle-fill-kind"
@@ -1939,9 +2406,7 @@
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
       ],
       "fillKind": "movableZoneRamMovement",
-      "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-TABLE-CALLER"
-      ],
+      "followUpTaskIds": [],
       "id": "movableZoneRamMovement",
       "reason": "Movable-zone ram distance/contact is table spatial evidence that precedes separate damage/save semantics; route and placement derivation stay outside reducer state.",
       "subject": "battle-fill-kind"
@@ -1952,9 +2417,7 @@
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
       ],
       "fillKind": "movableZoneRepositionMovement",
-      "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-TABLE-CALLER"
-      ],
+      "followUpTaskIds": [],
       "id": "movableZoneRepositionMovement",
       "reason": "Movable-zone repositioning is table placement, not pathfinding, obstacle, or coordinate state.",
       "subject": "battle-fill-kind"
@@ -1965,9 +2428,7 @@
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
       ],
       "fillKind": "teleportDestination",
-      "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-TABLE-CALLER"
-      ],
+      "followUpTaskIds": [],
       "id": "teleportDestination",
       "reason": "Teleport destination legality is supplied by table spatial evidence; the reducer does not derive visibility, range, occupancy, or coordinates.",
       "subject": "battle-fill-kind"
@@ -2068,11 +2529,9 @@
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
       ],
       "fillKind": "movement",
-      "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-TABLE-CALLER"
-      ],
+      "followUpTaskIds": [],
       "id": "movement",
-      "reason": "Movement fills spend movement budget and carry Opportunity Attack frontier facts covered by the movement obligation. The greaseGroundDifficultTerrain, jumpMovementReplacement route/landing witness, commandApproach, commandFlee, forced-movement route, terrain, and placement facts are caller/table evidence covered by the boundary obligation; route selection and geometry stay out of rules-kernel state. Jump failed-landing Prone stays coupled to the route/landing witness, and route/profile joins remain table-caller follow-up work.",
+      "reason": "Movement fills spend movement budget and carry Opportunity Attack frontier facts covered by the movement obligation. The greaseGroundDifficultTerrain, jumpMovementReplacement route/landing witness, commandApproach, commandFlee, forced-movement route, terrain, and placement facts are caller/table evidence covered by the boundary obligation; route selection and geometry stay out of rules-kernel state. Jump failed-landing Prone stays coupled to the route/landing witness, and profile joins are recorded in profile-obligations.jsonl.",
       "subject": "battle-fill-kind"
     },
     {
@@ -2128,12 +2587,10 @@
       "coveredByObligationIds": [
         "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES"
       ],
-      "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-TABLE-CALLER"
-      ],
+      "followUpTaskIds": [],
       "holeKind": "savingThrowOutcome",
       "id": "BattleMoonbeamSavingThrowOutcomeHole",
-      "reason": "Moonbeam Saving Throw outcomes determine full or half Radiant damage after table-owned area trigger evidence; generic save damage branching is covered and table-caller movable-zone trigger integration remains follow-up work.",
+      "reason": "Moonbeam Saving Throw outcomes determine full or half Radiant damage after table-owned area trigger evidence; generic save damage branching is covered and movable-zone trigger facts remain boundary evidence.",
       "subject": "battle-hole-family"
     },
     {
@@ -2142,12 +2599,10 @@
         "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
         "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP"
       ],
-      "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-TABLE-CALLER"
-      ],
+      "followUpTaskIds": [],
       "holeKind": "rolledDice",
       "id": "BattleMoonbeamDamageRollHole",
-      "reason": "Moonbeam damage rolls depend on table-owned movable-zone trigger evidence but reuse shared HP damage and the generic damage-disposition split; table-caller area trigger integration remains follow-up work.",
+      "reason": "Moonbeam damage rolls depend on table-owned movable-zone trigger evidence but reuse shared HP damage and the generic damage-disposition split; area trigger facts remain boundary evidence.",
       "subject": "battle-hole-family"
     },
     {
@@ -2399,6 +2854,111 @@
         "BATTLE.REACTION.OFFER_DECLINE_RESUME"
       ],
       "profileId": "spell.readied-action-time-spell"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE"
+      ],
+      "profileId": "spell.invocation-sleep-target-admission"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
+        "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND"
+      ],
+      "profileId": "spell.invocation-grease-ground-hazard"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE"
+      ],
+      "profileId": "spell.invocation-fog-cloud-obscurement"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE"
+      ],
+      "profileId": "spell.invocation-object-light"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE",
+        "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+        "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
+        "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP"
+      ],
+      "profileId": "spell.invocation-flaming-sphere-hazard-ram"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE"
+      ],
+      "profileId": "spell.invocation-held-light-emitter"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
+        "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+        "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
+        "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP"
+      ],
+      "profileId": "spell.invocation-spell-created-held-object"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE"
+      ],
+      "profileId": "spell.invocation-dancing-lights-movable-dim-light"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE",
+        "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND"
+      ],
+      "profileId": "spell.invocation-expeditious-retreat-dash"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE",
+        "BATTLE.REACTION.OFFER_DECLINE_RESUME"
+      ],
+      "profileId": "spell.invocation-feather-fall-mitigation"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
+        "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND"
+      ],
+      "profileId": "spell.invocation-jump-movement-replacement"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE",
+        "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
+        "BATTLE.REACTION.OFFER_DECLINE_RESUME"
+      ],
+      "profileId": "spell.invocation-forced-reaction-movement"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE"
+      ],
+      "profileId": "spell.invocation-self-teleport"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE"
+      ],
+      "profileId": "spell.invocation-blur-attack-roll-defense"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE",
+        "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+        "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
+        "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP"
+      ],
+      "profileId": "spell.invocation-moonbeam-movable-zone"
     },
     {
       "obligationIds": [

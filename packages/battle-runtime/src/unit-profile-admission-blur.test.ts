@@ -1,5 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-BLUR blur
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-blur-attack-roll-defense
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE
 import { describe, expect, test } from "vitest";
 import {
   blurUnitId,
