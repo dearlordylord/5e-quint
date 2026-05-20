@@ -1,6 +1,7 @@
 // Save-gated spell resolution extracted from spells-resolve.ts.
 // Owns save-gated damage, condition, and attack-roll-advantage procedures.
 
+// KERNEL-COVERAGE: runtime-owner BATTLE.COMMAND.OPTION_AND_NEXT_TURN
 import {
   damageAmount as toDamageAmount,
   type MovementFeet,

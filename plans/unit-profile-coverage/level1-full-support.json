@@ -963,18 +963,18 @@
     },
     "rulesKernelCoveredProfileJoin": {
       "denominator": 58,
-      "numerator": 10,
-      "percent": "17.2%"
+      "numerator": 14,
+      "percent": "24.1%"
     },
     "rulesKernelProfileJoin": {
       "denominator": 58,
-      "numerator": 15,
-      "percent": "25.9%"
+      "numerator": 19,
+      "percent": "32.8%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 78,
-      "numerator": 28,
-      "percent": "35.9%"
+      "numerator": 29,
+      "percent": "37.2%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 94,
@@ -3246,8 +3246,8 @@
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
         "denominator": 78,
-        "numerator": 28,
-        "percent": "35.9%"
+        "numerator": 29,
+        "percent": "37.2%"
       }
     },
     "units": [
@@ -3513,29 +3513,57 @@
         "unitId": "color_spray"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Command option choice applies failed-save pending effects and RAW-fixed next-turn reducer consequences while route and object facts stay table-owned"
+              }
+            ],
             "profileId": "spell.invocation-command-halt-grovel",
             "profileKind": "spell-invocation"
           },
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Command option choice applies failed-save pending effects and RAW-fixed next-turn reducer consequences while route and object facts stay table-owned"
+              }
+            ],
             "profileId": "spell.invocation-command-drop-held-object",
             "profileKind": "table-caller"
           },
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Command option choice applies failed-save pending effects and RAW-fixed next-turn reducer consequences while route and object facts stay table-owned"
+              }
+            ],
             "profileId": "spell.invocation-command-approach-route",
             "profileKind": "table-caller"
           },
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Command option choice applies failed-save pending effects and RAW-fixed next-turn reducer consequences while route and object facts stay table-owned"
+              }
+            ],
             "profileId": "spell.invocation-command-flee-route",
             "profileKind": "table-caller"
           }

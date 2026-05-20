@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Battle Ability Skill And Command Hole Obligations"
     },
     {
@@ -319,7 +319,7 @@ Reviewers should reject:
 | 2 | RKBC-BATTLE-HOLE-TARGETS-AREAS - Battle Target And Area Hole Obligations | done | RKBC-BATTLE-HOLE-INVENTORY | Sanctuary targeting interdiction is covered; spell target-list/allocation rows are joined to spell procedure coverage; object/area choice rows remain table-caller boundary evidence. |
 | 3 | RKBC-BATTLE-HOLE-MOVEMENT-ROUTE - Battle Movement Route And Spatial Fact Obligations | done | RKBC-BATTLE-HOLE-INVENTORY | Shove outcome/push disposition is covered; movement-route and spatial derivation holes are classified as reducer semantics or boundary/table-caller evidence. |
 | 4 | RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION - Battle Damage Disposition And Type Choice Obligations | done | RKBC-BATTLE-HOLE-INVENTORY | Covered obligations for damage disposition and damage-type choice holes. |
-| 5 | RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND - Battle Ability Skill And Command Hole Obligations | ready-for-research | RKBC-BATTLE-HOLE-INVENTORY | Covered/boundary obligations for ability choice, skill choice, and Command option holes. |
+| 5 | RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND - Battle Ability Skill And Command Hole Obligations | done | RKBC-BATTLE-HOLE-INVENTORY | Covered/boundary obligations for ability choice, skill choice, and Command option holes. |
 | 6 | RKBC-BATTLE-HOLE-REACTION-CONCENTRATION - Battle Reaction And Concentration Hole Obligations | ready-for-research | RKBC-BATTLE-HOLE-INVENTORY | Covered obligations for reaction decisions, continuation resumption, and Concentration Saving Throw holes not already owned. |
 | 7 | RKBC-PROFILE-JOIN-FEATURE-PASSIVE-RESOURCE - Feature Passive Resource And Persistent Profile Join | ready-for-research | baseline | Map feature passive/resource/persistent profiles to covered obligations or create missing obligations. |
 | 8 | RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS - Feature Reaction Bonus Action And Resource Profile Join | ready-for-research | baseline | Map feature reaction, bonus-action, and failed-roll resource profiles to covered obligations or create missing obligations. |
@@ -438,13 +438,19 @@ Acceptance:
 
 ### Task 5 - RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND - Battle Ability Skill And Command Hole Obligations
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: `RKBC-BATTLE-HOLE-INVENTORY`.
 
 Scope: cover ability choice, skill choice, Search target-resolution residuals,
 and Command-style table option holes. Preserve table adjudication where RAW
 leaves route/social outcome to the table.
+
+Result: ability/skill/Search holes are covered by
+`BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES`; Command option, save, and
+next-turn consequences are covered by `BATTLE.COMMAND.OPTION_AND_NEXT_TURN`.
+Command route choice and held-object inventory derivation remain table-owned
+facts, with table-caller follow-up coverage still visible outside this task.
 
 Acceptance:
 

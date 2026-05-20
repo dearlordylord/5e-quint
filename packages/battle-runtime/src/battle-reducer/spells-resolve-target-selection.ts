@@ -1,6 +1,7 @@
 // Spell target-selection projections extracted from spells-resolve.ts.
 // Owns target, target-list, and roll-modifier choice interpretation for resolved spell fills.
 
+// KERNEL-COVERAGE: runtime-owner BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES
 import {
   isScalarBuffTargetListInvocation,
   type SelectedRollModifierSpellEffect,

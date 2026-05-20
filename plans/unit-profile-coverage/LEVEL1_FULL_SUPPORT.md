@@ -11,9 +11,9 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | Strict runtime/profile support | 78/94 (83%) |
 | Strict target closure | 94/94 (100%) |
 | Product readiness | 367/367 (100%) |
-| Rules-kernel profile join | 15/58 (25.9%) |
-| Rules-kernel covered profile join | 10/58 (17.2%) |
-| Supported Unit rules-kernel chain | 28/78 (35.9%) |
+| Rules-kernel profile join | 19/58 (32.8%) |
+| Rules-kernel covered profile join | 14/58 (24.1%) |
+| Supported Unit rules-kernel chain | 29/78 (37.2%) |
 
 ## Scope
 
@@ -54,7 +54,6 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | `chromatic_orb` | unmapped | `spell.invocation-chained-attack-damage` (unmapped: no obligation mapping) |
 | `cleric_divine_order` | unmapped | `character-creation.class-feature-option-projection` (unmapped: no obligation mapping) |
 | `color_spray` | unmapped | `spell.invocation-condition-save` (unmapped: no obligation mapping) |
-| `command` | unmapped | `spell.invocation-command-halt-grovel` (unmapped: no obligation mapping); `spell.invocation-command-drop-held-object` (unmapped: no obligation mapping); `spell.invocation-command-approach-route` (unmapped: no obligation mapping); `spell.invocation-command-flee-route` (unmapped: no obligation mapping) |
 | `dancing_lights` | unmapped | `spell.invocation-dancing-lights-movable-dim-light` (unmapped: no obligation mapping) |
 | `dissonant_whispers` | unmapped | `spell.invocation-forced-reaction-movement` (unmapped: no obligation mapping) |
 | `divine_favor` | unmapped | `spell.invocation-weapon-damage-rider` (unmapped: no obligation mapping) |

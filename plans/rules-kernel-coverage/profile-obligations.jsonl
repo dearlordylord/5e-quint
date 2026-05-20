@@ -18,6 +18,10 @@
 {"profileId":"spell.readied-action-time-spell","obligationIds":["BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS","BATTLE.REACTION.OFFER_DECLINE_RESUME"]}
 {"profileId":"spell.invocation-direct-condition","obligationIds":["BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"spell.invocation-sanctuary-targeting-interdiction","obligationIds":["BATTLE.SANCTUARY.TARGETING_INTERDICTION"]}
+{"profileId":"spell.invocation-command-halt-grovel","obligationIds":["BATTLE.COMMAND.OPTION_AND_NEXT_TURN"]}
+{"profileId":"spell.invocation-command-drop-held-object","obligationIds":["BATTLE.COMMAND.OPTION_AND_NEXT_TURN"]}
+{"profileId":"spell.invocation-command-approach-route","obligationIds":["BATTLE.COMMAND.OPTION_AND_NEXT_TURN"]}
+{"profileId":"spell.invocation-command-flee-route","obligationIds":["BATTLE.COMMAND.OPTION_AND_NEXT_TURN"]}
 {"profileId":"stat-block.attack-control","obligationIds":["BATTLE.STAT_BLOCK.ATTACK_CONTROL"]}
 {"profileId":"character-sheet.armor-class-base-formula","obligationIds":["SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE"]}
 {"profileId":"character-creation.class-feature-feat-choice","obligationIds":["CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT"]}

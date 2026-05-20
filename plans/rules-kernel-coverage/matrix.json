@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 23,
-    "covered": 15,
+    "total": 25,
+    "covered": 17,
     "open": 4,
     "nonSemantic": 4,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 17,
+      "battle": 19,
       "character-creation": 2,
       "character-sheet": 2,
       "character-battle": 1
     },
     "byStatus": {
-      "covered": 15,
+      "covered": 17,
       "needs-qnt-owner": 3,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 1,
@@ -226,6 +226,69 @@
       "status": "covered",
       "surfaceEvidence": [],
       "title": "Battle Stat Block action, Multiattack, limited-use, recharge, reaction, and legendary action controls"
+    },
+    {
+      "id": "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES",
+      "kind": "hole-frontier",
+      "parityWitnesses": [
+        {
+          "deterministicReplayRationale": "Ability, skill, and Search replay is a closed fixture: Search fails and succeeds against a hidden target, Guidance stores the selected skill through the QNT roll-modifier owner, and Enhance Ability stores a selected ability for Ability Check Advantage. The same witness also includes Command so the Task 5 hole families are checked together without random branch exploration.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt",
+        "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
+        "packages/battle-runtime/src/battle-reducer/hole-helpers.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-target-selection.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [],
+      "title": "Battle Search target and Ability Check holes plus spell skill and ability choices feed reducer legality and Ability Check state"
+    },
+    {
+      "id": "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
+      "kind": "profile-procedure",
+      "parityWitnesses": [
+        {
+          "deterministicReplayRationale": "Command replay is a closed fixture tied to the QNT Command branch helper used by battleRuntimeGroundCommand: failed-save Grovel records a pending option, Grovel applies Prone and ends the turn, Drop emits one held-object drop without owning object inventory, Halt suppresses Action/Bonus Action/Movement until end turn, Approach covers continued movement, within-5-foot turn end, and no-movement cleanup, and Flee covers full-budget movement, partial-budget rejection, no-movement cleanup, and opportunity-attack continuation.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-command-approach-route",
+        "spell.invocation-command-drop-held-object",
+        "spell.invocation-command-flee-route",
+        "spell.invocation-command-halt-grovel"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-ground-command.qnt",
+        "packages/battle-runtime/battle-runtime-command-choice.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [],
+      "title": "Battle Command option choice applies failed-save pending effects and RAW-fixed next-turn reducer consequences while route and object facts stay table-owned"
     },
     {
       "id": "BATTLE.DAMAGE.ATTACK_BRANCHES",
@@ -578,17 +641,17 @@
       "coveredByObligationIds": [
         "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
-        "BATTLE.DAMAGE.ATTACK_BRANCHES"
+        "BATTLE.DAMAGE.ATTACK_BRANCHES",
+        "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES"
       ],
       "followUpTaskIds": [
-        "RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND",
         "RKBC-PROFILE-JOIN-FEATURE-PASSIVE-RESOURCE",
         "RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS",
         "RKBC-PROFILE-JOIN-TABLE-CALLER"
       ],
       "holeKind": "targetChoice",
       "id": "BattleTargetChoiceHole",
-      "reason": "Target identity is a table decision, but accepted targets change reducer legality and downstream effects. Movement, spell target procedures, and attack target legality/resource branches are covered; Search target resolution, feature target holes, and table target-admission facts remain explicit downstream follow-ups.",
+      "reason": "Target identity is a table decision, but accepted targets change reducer legality and downstream effects. Movement, spell target procedures, attack target legality/resource branches, and Search target resolution are covered; feature target holes and table target-admission facts remain explicit downstream follow-ups.",
       "subject": "battle-hole-family"
     },
     {
@@ -662,12 +725,11 @@
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
       ],
       "followUpTaskIds": [
-        "RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND",
         "RKBC-PROFILE-JOIN-TABLE-CALLER"
       ],
       "holeKind": "heldObjectFacts",
       "id": "BattleHeldObjectFactsHole",
-      "reason": "Held-object inventory for Command drop is supplied by the table/caller; the reducer only consumes the resulting object ids to emit drop outcomes.",
+      "reason": "Held-object inventory for Command Drop is supplied by the table/caller; the reducer-owned Drop consequence is covered by Command while object identity derivation remains boundary state.",
       "subject": "battle-hole-family"
     },
     {
@@ -832,26 +894,28 @@
     },
     {
       "classification": "semantic-frontier",
-      "coveredByObligationIds": [],
+      "coveredByObligationIds": [
+        "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES"
+      ],
       "followUpTaskIds": [
-        "RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND",
         "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
       ],
       "holeKind": "skillChoice",
       "id": "BattleSpellSkillChoiceHole",
-      "reason": "Skill choice changes which Ability Check specialization an effect modifies or grants, so it is not display-only catalog data.",
+      "reason": "Skill choice changes which Ability Check specialization an effect modifies or grants, so it is reducer-visible state; profile joins for the remaining spell damage/condition tranche stay in their follow-up task.",
       "subject": "battle-hole-family"
     },
     {
       "classification": "semantic-frontier",
-      "coveredByObligationIds": [],
+      "coveredByObligationIds": [
+        "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES"
+      ],
       "followUpTaskIds": [
-        "RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND",
         "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
       ],
       "holeKind": "abilityChoice",
       "id": "BattleSpellAbilityChoiceHole",
-      "reason": "Ability choice changes roll modifiers, marked-damage riders, or later checks and must be owned by a semantic obligation.",
+      "reason": "Ability choice changes roll modifiers, marked-damage riders, or later checks and must be owned by a semantic obligation; marked-damage spell profile joins remain in the spell damage/condition follow-up.",
       "subject": "battle-hole-family"
     },
     {
@@ -880,13 +944,13 @@
     },
     {
       "classification": "semantic-frontier",
-      "coveredByObligationIds": [],
-      "followUpTaskIds": [
-        "RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND"
+      "coveredByObligationIds": [
+        "BATTLE.COMMAND.OPTION_AND_NEXT_TURN"
       ],
+      "followUpTaskIds": [],
       "holeKind": "commandOptionChoice",
       "id": "BattleCommandOptionChoiceHole",
-      "reason": "Command option choice selects RAW-fixed reducer consequences for halt, grovel, drop, approach, or flee while route and object facts remain table-owned.",
+      "reason": "Command option choice selects RAW-fixed reducer consequences for Halt, Grovel, Drop, Approach, or Flee; route and object facts remain table-owned boundary facts.",
       "subject": "battle-hole-family"
     },
     {
@@ -906,15 +970,15 @@
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
-        "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES"
+        "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+        "BATTLE.COMMAND.OPTION_AND_NEXT_TURN"
       ],
       "followUpTaskIds": [
-        "RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND",
         "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
       ],
       "holeKind": "savingThrowOutcome",
       "id": "BattleSpellSavingThrowOutcomeHole",
-      "reason": "Spell Saving Throw outcomes determine damage, conditions, Command consequences, Counterspell, and area results. Generic spell save damage branches are covered; Command and spell-condition profile joins remain follow-up work.",
+      "reason": "Spell Saving Throw outcomes determine damage, conditions, Command consequences, Counterspell, and area results. Generic spell save damage branches and Command consequences are covered; spell-condition profile joins remain follow-up work.",
       "subject": "battle-hole-family"
     },
     {
@@ -1128,11 +1192,10 @@
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
-        "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND"
+        "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
+        "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES"
       ],
-      "followUpTaskIds": [
-        "RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND"
-      ],
+      "followUpTaskIds": [],
       "holeKind": "abilityCheck",
       "id": "BattleAbilityCheckHole",
       "reason": "Ability Check fills resolve Hide, Search, spell-restraint escape, and similar reducer-visible checks; table prerequisites and spatial witnesses remain boundary facts.",
@@ -1235,15 +1298,15 @@
       "coveredByObligationIds": [
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
-        "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES"
+        "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+        "BATTLE.COMMAND.OPTION_AND_NEXT_TURN"
       ],
       "fillKind": "savingThrowOutcome",
       "followUpTaskIds": [
-        "RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND",
         "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
       ],
       "id": "savingThrowOutcome",
-      "reason": "Saving Throw outcomes drive damage, condition, Command, protection, feature, and active-effect lifecycle branches. Generic spell/feature damage save branching is covered while Command and spell-condition joins remain follow-up work.",
+      "reason": "Saving Throw outcomes drive damage, condition, Command, protection, feature, and active-effect lifecycle branches. Generic spell/feature damage save branching and Command are covered while spell-condition joins remain follow-up work.",
       "subject": "battle-fill-kind"
     },
     {
@@ -1259,24 +1322,26 @@
     },
     {
       "classification": "semantic-frontier",
-      "coveredByObligationIds": [],
-      "fillKind": "skillChoice",
-      "followUpTaskIds": [
-        "RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND"
+      "coveredByObligationIds": [
+        "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES"
       ],
+      "fillKind": "skillChoice",
+      "followUpTaskIds": [],
       "id": "skillChoice",
       "reason": "Skill choices determine which Ability Check specialization receives a modifier or advantage.",
       "subject": "battle-fill-kind"
     },
     {
       "classification": "semantic-frontier",
-      "coveredByObligationIds": [],
+      "coveredByObligationIds": [
+        "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES"
+      ],
       "fillKind": "abilityChoice",
       "followUpTaskIds": [
-        "RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND"
+        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
       ],
       "id": "abilityChoice",
-      "reason": "Ability choices determine later roll modifiers, checks, or marked-damage semantics.",
+      "reason": "Ability choices determine later roll modifiers, checks, or marked-damage semantics; marked-damage spell profile joins remain in the spell damage/condition follow-up.",
       "subject": "battle-fill-kind"
     },
     {
@@ -1294,13 +1359,13 @@
     },
     {
       "classification": "semantic-frontier",
-      "coveredByObligationIds": [],
-      "fillKind": "commandOptionChoice",
-      "followUpTaskIds": [
-        "RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND"
+      "coveredByObligationIds": [
+        "BATTLE.COMMAND.OPTION_AND_NEXT_TURN"
       ],
+      "fillKind": "commandOptionChoice",
+      "followUpTaskIds": [],
       "id": "commandOptionChoice",
-      "reason": "Command option fills select the RAW branch whose reducer-visible consequences must be modeled or classified.",
+      "reason": "Command option fills select the RAW branch whose reducer-visible consequences are modeled; route and held-object details remain table facts.",
       "subject": "battle-fill-kind"
     },
     {
@@ -1337,11 +1402,10 @@
       ],
       "fillKind": "heldObjectFacts",
       "followUpTaskIds": [
-        "RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND",
         "RKBC-PROFILE-JOIN-TABLE-CALLER"
       ],
       "id": "heldObjectFacts",
-      "reason": "Held-object identities are table inventory facts consumed by the Command drop branch.",
+      "reason": "Held-object identities are table inventory facts consumed by the Command Drop branch; reducer consequences are covered separately by Command.",
       "subject": "battle-fill-kind"
     },
     {
@@ -1349,17 +1413,17 @@
       "coveredByObligationIds": [
         "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
-        "BATTLE.DAMAGE.ATTACK_BRANCHES"
+        "BATTLE.DAMAGE.ATTACK_BRANCHES",
+        "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES"
       ],
       "fillKind": "targetChoice",
       "followUpTaskIds": [
-        "RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND",
         "RKBC-PROFILE-JOIN-FEATURE-PASSIVE-RESOURCE",
         "RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS",
         "RKBC-PROFILE-JOIN-TABLE-CALLER"
       ],
       "id": "targetChoice",
-      "reason": "Target identity is a table decision, but accepted targets change reducer legality and downstream effects. Movement, spell target procedures, and attack target legality/resource branches are covered; Search target resolution, feature target holes, and table target-admission facts remain explicit downstream follow-ups.",
+      "reason": "Target identity is a table decision, but accepted targets change reducer legality and downstream effects. Movement, spell target procedures, attack target legality/resource branches, and Search target resolution are covered; feature target holes and table target-admission facts remain explicit downstream follow-ups.",
       "subject": "battle-fill-kind"
     },
     {
@@ -1552,12 +1616,11 @@
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
-        "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND"
+        "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
+        "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES"
       ],
       "fillKind": "abilityCheck",
-      "followUpTaskIds": [
-        "RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND"
-      ],
+      "followUpTaskIds": [],
       "id": "abilityCheck",
       "reason": "Ability Check fills resolve reducer-visible checks such as Hide, Search, and escape attempts.",
       "subject": "battle-fill-kind"
@@ -1709,6 +1772,30 @@
         "BATTLE.SANCTUARY.TARGETING_INTERDICTION"
       ],
       "profileId": "spell.invocation-sanctuary-targeting-interdiction"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.COMMAND.OPTION_AND_NEXT_TURN"
+      ],
+      "profileId": "spell.invocation-command-halt-grovel"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.COMMAND.OPTION_AND_NEXT_TURN"
+      ],
+      "profileId": "spell.invocation-command-drop-held-object"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.COMMAND.OPTION_AND_NEXT_TURN"
+      ],
+      "profileId": "spell.invocation-command-approach-route"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.COMMAND.OPTION_AND_NEXT_TURN"
+      ],
+      "profileId": "spell.invocation-command-flee-route"
     },
     {
       "obligationIds": [

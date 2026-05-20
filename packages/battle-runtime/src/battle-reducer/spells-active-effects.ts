@@ -1,5 +1,6 @@
 // Spell active-effect application extracted from spells-holes-fills.ts.
 
+// KERNEL-COVERAGE: runtime-owner BATTLE.COMMAND.OPTION_AND_NEXT_TURN
 import { Match } from "effect";
 import {
   applyCondition,
