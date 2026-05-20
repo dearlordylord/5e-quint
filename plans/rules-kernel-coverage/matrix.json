@@ -502,7 +502,6 @@
       "blockedBy": [
         "packages/shared-algebras/proofs/rule-core/hit-point-damage.qnt mixes semantic definitions with run tests; split tests or teach the generator to ignore run blocks before treating the whole file as generation-subset-clean"
       ],
-      "dryRun": "plans/rules-kernel-coverage/GENERATOR_READINESS_HIT_POINTS_DRY_RUN.md",
       "generatorSubset": [
         "variant",
         "record",
@@ -538,6 +537,7 @@
     "character-creation.weapon-mastery-choice",
     "character-sheet.ability-check-proficiency-bonus",
     "character-sheet.armor-class-base-formula",
+    "character-sheet.class-feature-use-count-resource",
     "character-sheet.healing-resource-action",
     "character-sheet.pact-slot-recovery",
     "character-sheet.short-rest-spell-slot-recovery",
@@ -576,6 +576,7 @@
     "spell.invocation-jump-movement-replacement",
     "spell.invocation-make-stable",
     "spell.invocation-marked-damage-rider",
+    "spell.invocation-mirror-image-hit-interception",
     "spell.invocation-object-light",
     "spell.invocation-roll-modifier",
     "spell.invocation-sanctuary-targeting-interdiction",
@@ -584,6 +585,7 @@
     "spell.invocation-sleep-repeat-save-lifecycle",
     "spell.invocation-sleep-target-admission",
     "spell.invocation-spell-hosted-weapon-attack",
+    "spell.invocation-warding-bond-linked-effect",
     "spell.invocation-weapon-attack-override",
     "spell.invocation-weapon-damage-rider",
     "spell.reaction-counterspell",
