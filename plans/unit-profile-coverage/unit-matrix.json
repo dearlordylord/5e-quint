@@ -62,8 +62,8 @@
       "value": 215
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 130,
-      "numerator": 130,
+      "denominator": 131,
+      "numerator": 131,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -72,49 +72,49 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 75,
-      "numerator": 75,
+      "denominator": 76,
+      "numerator": 76,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 75,
-      "numerator": 74,
+      "denominator": 76,
+      "numerator": 75,
       "percent": "98.7%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 98,
+      "denominator": 102,
       "numerator": 20,
-      "percent": "20.4%"
+      "percent": "19.6%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 98,
+      "denominator": 102,
       "numerator": 25,
-      "percent": "25.5%"
+      "percent": "24.5%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 130,
+      "denominator": 131,
       "numerator": 42,
-      "percent": "32.3%"
+      "percent": "32.1%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 75,
-      "numerator": 75,
+      "denominator": 76,
+      "numerator": 76,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 75,
-      "numerator": 75,
+      "denominator": 76,
+      "numerator": 76,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 130,
+      "denominator": 131,
       "numerator": 105,
-      "percent": "80.8%"
+      "percent": "80.2%"
     },
     "supportedProfileCoverage": {
       "denominator": 183,
-      "numerator": 130,
-      "percent": "71%"
+      "numerator": 131,
+      "percent": "71.6%"
     }
   },
   "metricSemantics": [
@@ -353,6 +353,50 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.monk-focus-battle-options",
+      "profileKind": "bonus-action",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt",
+        "packages/battle-runtime/battle-runtime-monk-focus.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/monk-focus.ts",
+        "packages/character-battle-runtime/src/index.ts",
+        "packages/character-battle-runtime/src/battle-creature-init.ts"
+      ],
+      "sourceBoundary": "Surface Monk's Focus resource-container option facts and Character battle resource state project into Bonus Action Flurry of Blows, Patient Defense, and the executable Step of the Wind action-economy subset. The runtime spends the shared Focus Point resource, grants two Flurry Unarmed Strike action resources, and applies Disengage/Dodge/Dash through the existing turn procedures without duplicating Monk level, Martial Arts, movement state, or a synthetic option-local resource pool. Step of the Wind's doubled jump distance remains split to the shared jump movement witness boundary.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS"
+      ],
+      "title": "Unit feature executes Monk's Focus battle options against the shared Focus Point resource",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-monk-focus.test.ts"
         },
         {
           "kind": "runtime-test",
@@ -2504,12 +2548,32 @@
       "runtimeOwners": [
         "packages/character-creation-runtime/src/index.ts"
       ],
-      "sourceBoundary": "Surface class-feature resource container and known-form roster records projected from class progression into CharacterBuild resource and character facts; selected option execution and shape-shifted form execution remain owned by selected option or shape-shifting runtime profiles.",
+      "sourceBoundary": "Surface class-feature resource container records, option metadata, save DC source facts, and known-form roster records projected from class progression into CharacterBuild resource and character facts; selected option execution and shape-shifted form execution remain owned by selected option or shape-shifting runtime profiles.",
       "taskRefs": [
         "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY",
-        "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS"
+        "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS",
+        "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS"
       ],
       "title": "Character Creation projects class-feature resources into CharacterBuild resource facts",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-creation.class-feature-source-fact-projection",
+      "profileKind": "character-creation",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "Surface class-feature records retained by class progression can project source links to other owned facts, such as Uncanny Metabolism linking to the shared Monk's Focus resource and existing Martial Arts die source, without storing duplicate resource caps, die tiers, or class progression state.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS"
+      ],
+      "title": "Character Creation projects retained class-feature source links into CharacterBuild facts",
       "verificationOwners": [
         {
           "kind": "runtime-test",
@@ -2591,9 +2655,10 @@
         "packages/mcp/src/character-tools.ts",
         "packages/character-battle-runtime/src/index.ts"
       ],
-      "sourceBoundary": "CharacterBuild class-feature resources plus installed Surface reset cadence and known-form roster facts; Character Sheet requires explicit selected known-form identities for Wild Shape builds, stores expended use-count state and current known-form identities, then derives capacity, Short Rest or Long Rest recovery, and Druid Wild Shape known-form replacement eligibility from the feature, class progression, and SRD Stat Block catalog. App, MCP, and Character Sheet battle handoff boundaries must pass through or preserve that selected known-form state rather than defaulting from recommendations.",
+      "sourceBoundary": "CharacterBuild class-feature resources plus installed Surface reset cadence, option metadata, save DC source facts, and known-form roster facts; Character Sheet stores expended use-count state, derives capacity and Short Rest or Long Rest recovery from the feature and class progression, and exposes per-feature projections such as Druid Wild Shape known forms and Monk's Focus save DC without storing duplicate derived state. Wild Shape builds must provide explicit selected known-form identities, and App, MCP, and Character Sheet battle handoff boundaries must pass through or preserve that selected known-form state rather than defaulting from recommendations.",
       "taskRefs": [
-        "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS"
+        "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS",
+        "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS"
       ],
       "title": "Character Sheet tracks rest-reset class-feature use-count resources",
       "verificationOwners": [
@@ -2608,6 +2673,49 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/mcp/src/session-store.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-sheet.class-feature-long-rest-use-state",
+      "profileKind": "character-sheet",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "Character Sheet stores feature-scoped used-since-Long-Rest state only for retained class features with authored Long Rest reset facts, preserves that state across Short Rests, clears it on Long Rest, and derives related source links from CharacterBuild and Surface facts rather than storing duplicate resource or die projections.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS"
+      ],
+      "title": "Character Sheet tracks once-per-Long-Rest class-feature use state",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-sheet.monk-uncanny-metabolism-initiative-recovery",
+      "profileKind": "character-sheet",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/index.ts",
+        "packages/character-battle-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "Character Sheet consumes retained Uncanny Metabolism source facts, the shared Monk's Focus use-count expenditure owner, current Martial Arts die source projection, and once-per-Long-Rest use state at the Initiative roll boundary; it recovers all expended Focus Points, applies capped self Hit Point healing, records the Long Rest use marker, and Character Battle init carries the updated sheet resource and HP state into battle without a duplicate battle resource pool.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME"
+      ],
+      "title": "Character Sheet applies Monk Uncanny Metabolism when rolling Initiative",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
         },
         {
           "kind": "runtime-test",
@@ -2861,14 +2969,14 @@
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 98,
+        "denominator": 102,
         "numerator": 20,
-        "percent": "20.4%"
+        "percent": "19.6%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 98,
+        "denominator": 102,
         "numerator": 25,
-        "percent": "25.5%"
+        "percent": "24.5%"
       }
     },
     "profileKinds": [
@@ -2923,6 +3031,12 @@
         "obligations": [],
         "profileId": "unit-feature.martial-arts-attack-projection",
         "profileKind": "passive"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "unit-feature.monk-focus-battle-options",
+        "profileKind": "bonus-action"
       },
       {
         "joinStatus": "unmapped",
@@ -3585,6 +3699,12 @@
       {
         "joinStatus": "unmapped",
         "obligations": [],
+        "profileId": "character-creation.class-feature-source-fact-projection",
+        "profileKind": "character-creation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
         "profileId": "spell.invocation-self-ability-check-advantage",
         "profileKind": "spell-invocation"
       },
@@ -3604,6 +3724,18 @@
         "joinStatus": "unmapped",
         "obligations": [],
         "profileId": "character-sheet.class-feature-use-count-resource",
+        "profileKind": "character-sheet"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "character-sheet.class-feature-long-rest-use-state",
+        "profileKind": "character-sheet"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "character-sheet.monk-uncanny-metabolism-initiative-recovery",
         "profileKind": "character-sheet"
       },
       {
@@ -3676,9 +3808,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 130,
+          "denominator": 131,
           "numerator": 42,
-          "percent": "32.3%"
+          "percent": "32.1%"
         }
       },
       "units": [
@@ -5056,6 +5188,30 @@
             }
           ],
           "unitId": "monk_unarmored_movement"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "character-creation.class-feature-source-fact-projection",
+              "profileKind": "character-creation"
+            },
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "character-sheet.class-feature-long-rest-use-state",
+              "profileKind": "character-sheet"
+            },
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "character-sheet.monk-uncanny-metabolism-initiative-recovery",
+              "profileKind": "character-sheet"
+            }
+          ],
+          "unitId": "monk_uncanny_metabolism"
         },
         {
           "joinStatus": "covered",
@@ -7684,6 +7840,48 @@
     },
     {
       "claimKind": "completed-runtime-parity",
+      "note": "Focused Character Creation and Character Sheet tests cover Monk level 2 Monk's Focus resource and character-fact projection from the installed Surface feature, Monk-class linear Focus Point cap, Short or Long Rest full reset facts, retained sibling level-2 feature refs, initial Focus option labels, Character Sheet expended-use tracking, and Wisdom-based Focus save DC derivation. Battle option execution is covered by the L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS profile claims.",
+      "profileIds": [
+        "character-creation.class-feature-resource-projection",
+        "character-sheet.class-feature-use-count-resource"
+      ],
+      "taskId": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Character Creation and Character Sheet tests cover Monk level 2 Uncanny Metabolism retained feature ownership, optional Initiative trigger source facts, Long Rest reset source facts, shared Monk's Focus resource link, Martial Arts die source link, Monk-level healing bonus projection, typed rejection of unowned use state, Short Rest preservation, and Long Rest clearing. Initiative-window execution, healing, and Focus Point recovery remain split to L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME.",
+      "profileIds": [
+        "character-creation.class-feature-source-fact-projection",
+        "character-sheet.class-feature-long-rest-use-state"
+      ],
+      "taskId": "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Character Sheet and Character Battle runtime tests cover optional Initiative-window Uncanny Metabolism execution, shared Focus Point recovery, Martial Arts die roll validation from the existing Martial Arts source, Monk-level HP restoration capped by max HP, once-per-Long-Rest use spending, and battle init/handoff propagation without a duplicate Focus resource or Martial Arts table.",
+      "profileIds": [
+        "character-sheet.monk-uncanny-metabolism-initiative-recovery"
+      ],
+      "taskId": "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover Monk's Focus Points equaling Monk level, Flurry of Blows spending one shared Focus Point and Bonus Action to grant two Unarmed Strike slots, Patient Defense Bonus Action Disengage with optional Focus Point Dodge, Step of the Wind Bonus Action Dash with optional Focus Point Disengage, and the shared Focus Point resource boundary. The Step of the Wind doubled jump-distance clause remains split to L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME.",
+      "profileIds": [
+        "unit-feature.monk-focus-battle-options"
+      ],
+      "taskId": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Surface, battle-runtime, and character-battle-runtime tests cover Monk's Focus Surface admission, shared Focus Point battle resource projection, Flurry of Blows activation and granted Unarmed Strike resources, Patient Defense Focus Disengage plus Dodge, Step of the Wind Focus Disengage plus Dash, Deflect Attacks spending the same Focus resource, and Character Sheet battle handoff of use-count expenditures. The doubled jump-distance clause remains split to L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME.",
+      "profileIds": [
+        "unit-feature.monk-focus-battle-options"
+      ],
+      "taskId": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
       "note": "Focused Surface, Character Creation, and Character Sheet runtime tests cover Warlock level 2 Magical Cunning unit admission, class feature grant ownership, existing Pact Magic slot-pool reuse, half-maximum-rounded-up Pact Slot recovery, once-per-Long-Rest use tracking, and Long Rest reset.",
       "profileIds": [
         "character-sheet.pact-slot-recovery"
@@ -9410,10 +9608,11 @@
           "runtimeOwners": [
             "packages/character-creation-runtime/src/index.ts"
           ],
-          "sourceBoundary": "Surface class-feature resource container and known-form roster records projected from class progression into CharacterBuild resource and character facts; selected option execution and shape-shifted form execution remain owned by selected option or shape-shifting runtime profiles.",
+          "sourceBoundary": "Surface class-feature resource container records, option metadata, save DC source facts, and known-form roster records projected from class progression into CharacterBuild resource and character facts; selected option execution and shape-shifted form execution remain owned by selected option or shape-shifting runtime profiles.",
           "taskRefs": [
             "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY",
-            "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS"
+            "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS",
+            "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS"
           ],
           "title": "Character Creation projects class-feature resources into CharacterBuild resource facts",
           "verificationOwners": [
@@ -9632,10 +9831,11 @@
           "runtimeOwners": [
             "packages/character-creation-runtime/src/index.ts"
           ],
-          "sourceBoundary": "Surface class-feature resource container and known-form roster records projected from class progression into CharacterBuild resource and character facts; selected option execution and shape-shifted form execution remain owned by selected option or shape-shifting runtime profiles.",
+          "sourceBoundary": "Surface class-feature resource container records, option metadata, save DC source facts, and known-form roster records projected from class progression into CharacterBuild resource and character facts; selected option execution and shape-shifted form execution remain owned by selected option or shape-shifting runtime profiles.",
           "taskRefs": [
             "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY",
-            "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS"
+            "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS",
+            "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS"
           ],
           "title": "Character Creation projects class-feature resources into CharacterBuild resource facts",
           "verificationOwners": [
@@ -9656,9 +9856,10 @@
             "packages/mcp/src/character-tools.ts",
             "packages/character-battle-runtime/src/index.ts"
           ],
-          "sourceBoundary": "CharacterBuild class-feature resources plus installed Surface reset cadence and known-form roster facts; Character Sheet requires explicit selected known-form identities for Wild Shape builds, stores expended use-count state and current known-form identities, then derives capacity, Short Rest or Long Rest recovery, and Druid Wild Shape known-form replacement eligibility from the feature, class progression, and SRD Stat Block catalog. App, MCP, and Character Sheet battle handoff boundaries must pass through or preserve that selected known-form state rather than defaulting from recommendations.",
+          "sourceBoundary": "CharacterBuild class-feature resources plus installed Surface reset cadence, option metadata, save DC source facts, and known-form roster facts; Character Sheet stores expended use-count state, derives capacity and Short Rest or Long Rest recovery from the feature and class progression, and exposes per-feature projections such as Druid Wild Shape known forms and Monk's Focus save DC without storing duplicate derived state. Wild Shape builds must provide explicit selected known-form identities, and App, MCP, and Character Sheet battle handoff boundaries must pass through or preserve that selected known-form state rather than defaulting from recommendations.",
           "taskRefs": [
-            "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS"
+            "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS",
+            "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS"
           ],
           "title": "Character Sheet tracks rest-reset class-feature use-count resources",
           "verificationOwners": [
@@ -9831,31 +10032,171 @@
         "status": "installed"
       },
       "claim": {
-        "followUpTasks": [
+        "deferredMechanics": [
           {
-            "id": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS",
-            "mechanic": "Admit Monk level-2 progression after sibling Monk level-2 grants can be retained, then project Focus Point count, Short or Long Rest reset, initial Focus feature option names, and the authored Focus save DC fact without duplicating class progression or option execution state.",
-            "owner": "character-creation-runtime plus character-sheet-runtime",
-            "requiredOutput": "Owner evidence for CharacterBuild or Character Sheet Focus Point resource, Focus save DC, and retained Monk level-2 feature refs.",
-            "title": "Monk's Focus Character Facts And Resource Projection"
-          },
-          {
-            "id": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS",
-            "mechanic": "Execute Flurry of Blows, Patient Defense, and Step of the Wind option modes, including Bonus Action economy, Focus Point spending where RAW requires it, Dodge and jump-distance effects, and shared Focus Point spending for later Focus spenders instead of synthetic per-feature pools.",
-            "owner": "battle-runtime plus character-battle-runtime resource handoff",
-            "requiredOutput": "Supported runtime profile and owner evidence for Monk's Focus option execution and a single shared Focus Point resource consumed by Focus-spending Monk features.",
-            "title": "Monk's Focus Battle Option Execution"
+            "battleReadinessClosure": {
+              "kind": "table-spatial-derivation",
+              "owner": "battle-runtime shared jump movement witness boundary plus promoted Quint parity",
+              "reason": "Doubled jump distance depends on a shared ordinary jump movement witness boundary for Long Jump and High Jump distance, movement spend, and legal landing/table-spatial facts; Task 2 promotes only the action-economy and resource-spend subset."
+            },
+            "followUpTaskId": "L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME",
+            "mechanic": "Step of the Wind's Focus-point jump-distance doubling is authored and parsed but not promoted as executable runtime state until ordinary Long Jump and High Jump movement witnesses consume it."
           }
         ],
-        "futureProfileOwner": "character-creation-runtime plus battle-runtime Focus Point option execution",
-        "reason": "Monk's Focus is authored and installed as an SRD Surface class-feature record with catalog-level Focus Point resource, Focus save DC source, and initial option-set metadata. It remains blocked by the concrete follow-up split listed on this claim; no resource-projection or battle-runtime Unit profile is claimed in Task 13.",
-        "tag": "unsupported-profile"
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME",
+            "mechanic": "Execute Step of the Wind's doubled jump distance through an ordinary Long Jump and High Jump movement witness boundary, using the existing movement budget and caller-supplied legal landing/table-spatial facts rather than storing an inert Monk-only active effect.",
+            "owner": "battle-runtime shared jump movement witness boundary plus promoted Quint parity",
+            "requiredOutput": "Supported runtime owner evidence, focused tests, and promoted Quint/runtime parity for doubled Long Jump and High Jump distance under Step of the Wind without duplicating Strength, Speed, or table-spatial landing state.",
+            "title": "Monk Step of the Wind Jump Distance Runtime"
+          }
+        ],
+        "profileIds": [
+          "character-creation.class-feature-resource-projection",
+          "character-sheet.class-feature-use-count-resource",
+          "unit-feature.monk-focus-battle-options"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "The Monk class Surface record grants Monk's Focus, Unarmored Movement, and Uncanny Metabolism at Monk level 2, so Character Creation can retain the complete SRD level-2 Monk feature ref set from one class progression source",
+          "Surface Monk's Focus represents the shared Focus Point use-count resource with Monk-level linear cap, Short or Long Rest full reset, initial Flurry of Blows, Patient Defense, and Step of the Wind option metadata, the authored Step of the Wind jump-distance multiplier fact, and Wisdom-based class-feature save DC source facts",
+          "Character Creation admits same-class Monk level-2 progression and projects the Focus Point resource plus Focus option names and save DC source facts without duplicating class progression or option execution state",
+          "Character Sheet tracks expended Focus Point uses, derives the Focus Point cap and Short or Long Rest recovery from CharacterBuild resources and the installed Surface feature, and derives the Monk's Focus save DC from the authored ability source, ability scores, and Proficiency Bonus",
+          "Battle runtime admits the Monk's Focus option facts, spends the shared Focus Point resource, executes Flurry of Blows as two granted Unarmed Strike resources, executes Patient Defense free Disengage and Focus-point Disengage plus Dodge modes, executes Step of the Wind free Dash and Focus-point Disengage plus Dash modes, and Character Sheet battle handoff persists shared Focus Point use-count expenditures without adding a synthetic option-local resource pool"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS"
+        },
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-monk-focus.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-creation.class-feature-resource-projection",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface class-feature resource container records, option metadata, save DC source facts, and known-form roster records projected from class progression into CharacterBuild resource and character facts; selected option execution and shape-shifted form execution remain owned by selected option or shape-shifting runtime profiles.",
+          "taskRefs": [
+            "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY",
+            "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS",
+            "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS"
+          ],
+          "title": "Character Creation projects class-feature resources into CharacterBuild resource facts",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-sheet.class-feature-use-count-resource",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/index.ts",
+            "packages/app/src/components/character-creation/characterCreationRuntime.ts",
+            "packages/mcp/src/session-store.ts",
+            "packages/mcp/src/character-tools.ts",
+            "packages/character-battle-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "CharacterBuild class-feature resources plus installed Surface reset cadence, option metadata, save DC source facts, and known-form roster facts; Character Sheet stores expended use-count state, derives capacity and Short Rest or Long Rest recovery from the feature and class progression, and exposes per-feature projections such as Druid Wild Shape known forms and Monk's Focus save DC without storing duplicate derived state. Wild Shape builds must provide explicit selected known-form identities, and App, MCP, and Character Sheet battle handoff boundaries must pass through or preserve that selected known-form state rather than defaulting from recommendations.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS",
+            "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS"
+          ],
+          "title": "Character Sheet tracks rest-reset class-feature use-count resources",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/app/src/components/character-creation/characterCreationRuntime.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/mcp/src/session-store.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "unit-feature.monk-focus-battle-options",
+          "profileKind": "bonus-action",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt",
+            "packages/battle-runtime/battle-runtime-monk-focus.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+            "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+            "packages/battle-runtime/src/battle-reducer/monk-focus.ts",
+            "packages/character-battle-runtime/src/index.ts",
+            "packages/character-battle-runtime/src/battle-creature-init.ts"
+          ],
+          "sourceBoundary": "Surface Monk's Focus resource-container option facts and Character battle resource state project into Bonus Action Flurry of Blows, Patient Defense, and the executable Step of the Wind action-economy subset. The runtime spends the shared Focus Point resource, grants two Flurry Unarmed Strike action resources, and applies Disengage/Dodge/Dash through the existing turn procedures without duplicating Monk level, Martial Arts, movement state, or a synthetic option-local resource pool. Step of the Wind's doubled jump distance remains split to the shared jump movement witness boundary.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS"
+          ],
+          "title": "Unit feature executes Monk's Focus battle options against the shared Focus Point resource",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-monk-focus.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/monk_monks_focus.json",
       "unitId": "monk_monks_focus"
     },
@@ -9979,31 +10320,103 @@
         "status": "installed"
       },
       "claim": {
-        "followUpTasks": [
-          {
-            "id": "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS",
-            "mechanic": "Retain the Uncanny Metabolism feature ref with Monk level-2 progression after the sibling Monk's Focus character-facts task owns the shared Focus Point resource, then project only Uncanny Metabolism's once-per-Long-Rest use state and source links to Focus Points and the existing Martial Arts die without duplicating either table.",
-            "owner": "character-creation-runtime plus character-sheet-runtime",
-            "requiredOutput": "Owner evidence for CharacterBuild or Character Sheet retained Uncanny Metabolism feature ref, once-per-Long-Rest use state, and links to the shared Focus Point resource and existing Martial Arts die source.",
-            "title": "Monk Uncanny Metabolism Character Facts And Use State"
-          },
-          {
-            "id": "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME",
-            "mechanic": "Offer the optional Uncanny Metabolism choice when the Monk rolls Initiative, recover all expended shared Focus Points, roll the Martial Arts die from the existing Monk Martial Arts source, restore Hit Points equal to Monk level plus that die roll, and spend the once-per-Long-Rest feature use.",
-            "owner": "battle-runtime plus character-battle-runtime resource handoff",
-            "requiredOutput": "Supported runtime profile and owner evidence for Initiative-window Focus Point recovery, self-healing, and Long Rest recharge using the shared Focus Point resource and existing Martial Arts die source.",
-            "title": "Monk Uncanny Metabolism Initiative Recovery Runtime"
-          }
+        "profileIds": [
+          "character-creation.class-feature-source-fact-projection",
+          "character-sheet.class-feature-long-rest-use-state",
+          "character-sheet.monk-uncanny-metabolism-initiative-recovery"
         ],
-        "futureProfileOwner": "character-creation-runtime plus character-sheet-runtime plus battle-runtime initiative/healing execution",
-        "reason": "Monk Uncanny Metabolism is authored and installed as an SRD Surface class-feature record with catalog-level Initiative-triggered Focus Point recovery and Martial Arts die plus Monk level healing metadata. It remains blocked by the concrete follow-up split listed on this claim; no Initiative-window execution, healing runtime, or Long Rest recharge profile is claimed in Task 15.",
-        "tag": "unsupported-profile"
+        "supportedMechanics": [
+          "Character Creation admits same-class Monk level-2 progression, retains the Uncanny Metabolism feature ref from the Surface class record, and projects its optional Initiative trigger, Long Rest reset cadence, shared Monk's Focus resource link, current Martial Arts die from the installed Martial Arts source, self-healing target, and Monk-level healing bonus without adding a second Focus Point or Martial Arts table",
+          "Character Sheet validates and stores Uncanny Metabolism once-per-Long-Rest use state only for builds that retain the Monk Uncanny Metabolism feature, projects whether the feature has been used since the last Long Rest, preserves that use state across Short Rests, and clears it on Long Rest",
+          "Character Sheet applies optional Initiative-window use by validating the caller-supplied Martial Arts die roll against the derived die size, clearing all expended shared Monk's Focus Points, restoring self HP by Monk level plus the roll capped by maximum HP, and recording the once-per-Long-Rest use marker",
+          "Character Battle init and handoff carry the recovered Focus Point expenditure state, restored HP state, and Long Rest use marker through the existing Character Sheet resource handoff without creating a duplicate battle resource pool or Martial Arts progression table"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS"
+        },
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS"
+        },
+        {
+          "ownerPath": "packages/character-battle-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-creation.class-feature-source-fact-projection",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface class-feature records retained by class progression can project source links to other owned facts, such as Uncanny Metabolism linking to the shared Monk's Focus resource and existing Martial Arts die source, without storing duplicate resource caps, die tiers, or class progression state.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS"
+          ],
+          "title": "Character Creation projects retained class-feature source links into CharacterBuild facts",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-sheet.class-feature-long-rest-use-state",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Character Sheet stores feature-scoped used-since-Long-Rest state only for retained class features with authored Long Rest reset facts, preserves that state across Short Rests, clears it on Long Rest, and derives related source links from CharacterBuild and Surface facts rather than storing duplicate resource or die projections.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS"
+          ],
+          "title": "Character Sheet tracks once-per-Long-Rest class-feature use state",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-sheet.monk-uncanny-metabolism-initiative-recovery",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/index.ts",
+            "packages/character-battle-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Character Sheet consumes retained Uncanny Metabolism source facts, the shared Monk's Focus use-count expenditure owner, current Martial Arts die source projection, and once-per-Long-Rest use state at the Initiative roll boundary; it recovers all expended Focus Points, applies capped self Hit Point healing, records the Long Rest use marker, and Character Battle init carries the updated sheet resource and HP state into battle without a duplicate battle resource pool.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME"
+          ],
+          "title": "Character Sheet applies Monk Uncanny Metabolism when rolling Initiative",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/monk_uncanny_metabolism.json",
       "unitId": "monk_uncanny_metabolism"
     },

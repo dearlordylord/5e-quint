@@ -3,6 +3,7 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-mirror-image-hit-interception
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-self-transformation-mode
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.creature-type-protection-and-charm spell.find-familiar-lifecycle spell.invocation-after-hit-damage spell.invocation-after-hit-damage-illumination spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-blur-attack-roll-defense spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-removal-protection spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-dancing-lights-movable-dim-light spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-flaming-sphere-hazard-ram spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-independent-attack-sequence spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-self-ability-check-advantage spell.invocation-self-teleport spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.scalar-buff unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-failed-d20-test unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.passive-saving-throw-roll-mode unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.monk-focus-battle-options
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-mirror-image-hit-interception
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-direct-condition
@@ -44,6 +45,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.find-familiar-lifecycle
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.reaction-hellish-rebuke spell.invocation-damage-save-or-attack
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.monk-focus-battle-options
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-direct-condition-removal
@@ -99,6 +101,7 @@ module battleRuntime {
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
   import battleRuntimeGroundCommand.* from "./battle-runtime-ground-command"
   import battleRuntimeWeaponAttacks.* from "./battle-runtime-weapon-attacks"
+  import battleRuntimeMonkFocus.* from "./battle-runtime-monk-focus"
 
   // SRD traceability for this canonical battle runtime spec:
   // - Playing-the-Game.md lines 479-495: combat proceeds in rounds and turns
@@ -177,6 +180,15 @@ module battleRuntime {
   //   the die lasts for the next hour, and the Bard's use pool is Charisma
   //   modifier with a minimum of one. The Bardic Inspiration die scales by
   //   Bard level.
+  // - Classes/Monk.md lines 76-90, Playing-the-Game.md lines 295-305 and
+  //   326-332, and UBIQUITOUS_LANGUAGE.md: Monk's Focus Points equal Monk
+  //   level and fuel Flurry of Blows, Patient Defense, and Step of the Wind.
+  //   Flurry spends a Focus Point and a Bonus Action to grant two Unarmed
+  //   Strike slots; Patient Defense spends a Bonus Action for Disengage and
+  //   can spend a Focus Point to add Dodge; Step of the Wind spends a Bonus
+  //   Action for Dash and can spend a Focus Point to add Disengage. Step of
+  //   the Wind's doubled jump distance is deferred until ordinary Long Jump
+  //   and High Jump movement witnesses are promoted.
   // - Classes/Monk.md lines 56-74 and Rules-Glossary.md lines 1066-1076:
   //   Martial Arts applies while unarmored, unshielded, and unarmed or wielding
   //   only Monk weapons. This battle projection covers the Bonus Action

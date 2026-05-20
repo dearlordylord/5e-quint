@@ -1,6 +1,9 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.invocation-marked-damage-rider
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-use-count-resource
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.monk-uncanny-metabolism-initiative-recovery
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.monk-focus-battle-options
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B mastery_sap mastery_topple mastery_cleave
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME monk_uncanny_metabolism
 import type {
   BattleFill,
   BattleCreatureState,
@@ -24,15 +27,18 @@ import {
   characterEquipmentItemUnitId,
   classUnitId,
   eldritchInvocationId,
+  MONK_MONKS_FOCUS_UNIT_ID,
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
 import {
+  characterSheetCurrentHp,
   characterSheetPactSlots,
   characterSheetDruidWildShapeKnownForms,
   characterSheetSpellSlots,
   characterSheetId,
   characterSheetTempHp,
   createFreshCharacterSheet as createFreshCharacterSheetCore,
+  useMonkUncannyMetabolismWhenRollingInitiative,
   type CharacterSheetInput,
 } from "@dnd/character-sheet-runtime";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
@@ -40,6 +46,7 @@ import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import {
   Hp,
   abilityModifier,
+  classLevel,
   DieRollResult,
   difficultyClass,
   proficiencyBonus,
@@ -62,6 +69,7 @@ import {
   battleCreatureInitFromCharacterBuild,
   characterArmorClassState,
   characterBattleResourceInitsFromBuild,
+  characterSheetBattleInit,
   characterSpellcasting,
   startBattleFromCharacterBuildAndStatBlock,
 } from "./index.ts";
@@ -421,6 +429,173 @@ describe("Character Sheet battle handoff", () => {
         usesRemaining: 1,
       }),
     );
+  });
+
+  test("hands shared Monk Focus use-count expenditures into and out of battle", () => {
+    const sheet = createFreshCharacterSheet({
+      characterId: characterSheetId("character:monk-focus-handoff"),
+      build: monkBuild({ level: 2, str: 12, dex: 16 }),
+      maximumHp: Hp(16),
+      currentHp: Hp(16),
+      tempHp: Hp(0),
+      unitLibrary,
+      resourceExpenditures: [
+        {
+          tag: "useCountResource",
+          unitId: "monk_monks_focus",
+          expended: resourceCount(1),
+        },
+      ],
+    });
+    expect(Either.isRight(sheet)).toBe(true);
+    if (Either.isLeft(sheet)) return;
+
+    const focusUnit = unitLibrary.requireUnit("monk_monks_focus");
+    const focusResource = characterBattleResourceForUnit(focusUnit);
+    if (!hasLimitedCharacterBattleResourceCap(focusResource)) {
+      throw new Error("Expected finite Monk Focus resource.");
+    }
+    const nextBattleResources = expectRight(
+      characterBattleResourceInitsFromBuild(
+        sheet.right.build,
+        unitLibrary,
+        sheet.right.resourceExpenditures,
+      ),
+    );
+    expect(nextBattleResources).toContainEqual(
+      expect.objectContaining({
+        unit: focusUnit,
+        usesRemaining: 1,
+      }),
+    );
+
+    const handoff = applyBattleHandoffToCharacterSheet({
+      sheet: sheet.right,
+      unitLibrary,
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:monk-focus-handoff"),
+          classLevels: [{ className: "monk", level: classLevel(2) }],
+          resources: [
+            {
+              unit: focusUnit,
+              resource: focusResource,
+              usedThisTurn: false,
+              usesRemaining: resourceCount(0),
+            },
+          ],
+        },
+        hp: Hp(16),
+        maxHp: Hp(16),
+        tempHp: Hp(0),
+        positiveHpUnconscious: null,
+      }),
+    });
+
+    expect(expectRight(handoff).resourceExpenditures).toEqual([
+      {
+        tag: "useCountResource",
+        unitId: "monk_monks_focus",
+        expended: 2,
+      },
+    ]);
+  });
+
+  test("hands Uncanny Metabolism Focus recovery and HP restoration into battle", () => {
+    const sheet = createFreshCharacterSheet({
+      characterId: characterSheetId("character:monk-uncanny-handoff"),
+      build: monkBuild({ level: 2, str: 12, dex: 16 }),
+      maximumHp: Hp(16),
+      currentHp: Hp(8),
+      tempHp: Hp(0),
+      unitLibrary,
+      resourceExpenditures: [
+        {
+          tag: "useCountResource",
+          unitId: MONK_MONKS_FOCUS_UNIT_ID,
+          expended: resourceCount(2),
+        },
+      ],
+    });
+    expect(Either.isRight(sheet)).toBe(true);
+    if (Either.isLeft(sheet)) return;
+
+    const recovered = expectRight(
+      useMonkUncannyMetabolismWhenRollingInitiative({
+        sheet: sheet.right,
+        unitLibrary,
+        martialArtsRoll: DieRollResult(4),
+      }),
+    );
+    expect(characterSheetCurrentHp(recovered)).toBe(14);
+    expect(recovered.resourceExpenditures).toEqual([]);
+    expect(recovered.restFeatureUses).toEqual([
+      { tag: "uncannyMetabolism", usedSinceLongRest: true },
+    ]);
+
+    const focusUnit = unitLibrary.requireUnit(MONK_MONKS_FOCUS_UNIT_ID);
+    const focusResource = characterBattleResourceForUnit(focusUnit);
+    if (!hasLimitedCharacterBattleResourceCap(focusResource)) {
+      throw new Error("Expected finite Monk Focus resource.");
+    }
+    const init = expectRight(
+      characterSheetBattleInit({
+        sheet: recovered,
+        unitLibrary,
+        combatantId: combatantId("combatant:monk-uncanny-handoff"),
+        displayName: "Monk",
+        initiative: initiativeScore(16),
+        side: battleCombatantSide("party"),
+      }),
+    );
+    if (init.creatureInit.kind !== "character") {
+      throw new Error("Expected character battle creature init.");
+    }
+    const initFocusResource = init.creatureInit.resources?.find(
+      (resource) => resource.unit.id === MONK_MONKS_FOCUS_UNIT_ID,
+    );
+    expect(init.creatureInit.currentHp).toBe(14);
+    expect(initFocusResource).toEqual(
+      expect.objectContaining({ unit: focusUnit }),
+    );
+    expect(initFocusResource).not.toHaveProperty("usesRemaining");
+
+    const handoff = applyBattleHandoffToCharacterSheet({
+      sheet: recovered,
+      unitLibrary,
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:monk-uncanny-handoff"),
+          classLevels: [{ className: "monk", level: classLevel(2) }],
+          resources: [
+            {
+              unit: focusUnit,
+              resource: focusResource,
+              usedThisTurn: false,
+              usesRemaining: resourceCount(1),
+            },
+          ],
+        },
+        hp: Hp(14),
+        maxHp: Hp(16),
+        tempHp: Hp(0),
+        positiveHpUnconscious: null,
+      }),
+    });
+    const afterBattle = expectRight(handoff);
+
+    expect(afterBattle.restFeatureUses).toEqual([
+      { tag: "uncannyMetabolism", usedSinceLongRest: true },
+    ]);
+    expect(afterBattle.resourceExpenditures).toEqual([
+      {
+        tag: "useCountResource",
+        unitId: MONK_MONKS_FOCUS_UNIT_ID,
+        expended: 1,
+      },
+    ]);
   });
 
   test("persists Paladin's Smite free-cast spends for the next battle before Long Rest", () => {
@@ -2522,6 +2697,17 @@ function hasFixedCharacterBattleResourceCap(
   readonly cap: { readonly kind: "fixed" };
 } {
   return resource.cap.kind === "fixed";
+}
+
+function hasLimitedCharacterBattleResourceCap(
+  resource: CharacterBattleResourceState["resource"],
+): resource is CharacterBattleResourceState["resource"] & {
+  readonly cap: Exclude<
+    CharacterBattleResourceState["resource"]["cap"],
+    { readonly kind: "unlimited" }
+  >;
+} {
+  return resource.cap.kind !== "unlimited";
 }
 
 function armorOfShadowsWarlockBuild(

@@ -1,7 +1,9 @@
 import {
   battleCreatureInitFromStatBlock,
   characterBattleResourceForUnit,
+  characterBattleResourceMaxUses,
   characterBattleResourceSupportedForUnit,
+  parseCharacterBattleClassLevels,
   scoreModifier,
   startBattle,
   unitIsSupportedClassFeatureSpellFreeCastResource,
@@ -9,6 +11,7 @@ import {
   type CharacterBattleResourceInit,
   type CharacterBattleSpellSlotState,
   type CharacterBattleBookOfShadowsPresence,
+  type CharacterBattleClassLevel,
   type CharacterBattleCreatureInit,
   type CharacterZeroHpLifecycleInit,
   type BattleId,
@@ -59,6 +62,8 @@ import {
   characterBattleWeaponMasterySelections,
   characterUnitRefsWithBattleSupportProfiles,
 } from "./battle-support-profiles.ts";
+
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.monk-focus-battle-options
 
 // MCP owns cross-runtime wiring. Character creation finalizes a CharacterBuild;
 // battle accepts battle-owned creature-init inputs. This mapper is where
@@ -214,6 +219,7 @@ export function battleCreatureInitFromCharacterBuild(
     input.build,
     input.unitLibrary,
     input.resourceExpenditures ?? [],
+    parseCharacterBattleClassLevels(classLevels.right),
   );
   if (Either.isLeft(resources)) {
     return battleCreatureInitIssue(resources.left.message);
@@ -358,10 +364,18 @@ export function characterBattleResourceInitsFromBuild(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
   resourceExpenditures: readonly CharacterSheetResourceExpenditure[],
+  parsedClassLevels?: readonly CharacterBattleClassLevel[],
 ): Either.Either<
   readonly CharacterBattleResourceInit[],
   BattleCreatureInitIssue
 > {
+  const classLevels =
+    parsedClassLevels === undefined
+      ? characterBattleClassLevels(build, unitLibrary)
+      : Either.right(parsedClassLevels);
+  if (Either.isLeft(classLevels)) return Either.left(classLevels.left);
+  const parsedLevels =
+    parsedClassLevels ?? parseCharacterBattleClassLevels(classLevels.right);
   const resources: CharacterBattleResourceInit[] = [];
   for (const featureUnitId of characterBuildFeatureUnitIds(
     build,
@@ -385,6 +399,7 @@ export function characterBattleResourceInitsFromBuild(
       build,
       unit.value,
       resourceExpenditures,
+      parsedLevels,
     );
     if (Either.isLeft(init)) return Either.left(init.left);
     resources.push(init.right);
@@ -399,10 +414,13 @@ function characterBattleResourceInit(
     { readonly kind: "class_feature" | "species_trait" }
   >,
   resourceExpenditures: readonly CharacterSheetResourceExpenditure[],
+  classLevels: readonly CharacterBattleClassLevel[],
 ): Either.Either<CharacterBattleResourceInit, BattleCreatureInitIssue> {
   const persistedUsesRemaining = characterBattlePersistedUsesRemaining(
+    build,
     unit,
     resourceExpenditures,
+    classLevels,
   );
   if (Either.isLeft(persistedUsesRemaining)) {
     return Either.left(persistedUsesRemaining.left);
@@ -427,33 +445,71 @@ function characterBattleResourceInit(
 }
 
 function characterBattlePersistedUsesRemaining(
+  build: CharacterBuild,
   unit: UnitRecord,
   resourceExpenditures: readonly CharacterSheetResourceExpenditure[],
+  classLevels: readonly CharacterBattleClassLevel[],
 ): Either.Either<number | undefined, BattleCreatureInitIssue> {
-  if (!unitIsSupportedClassFeatureSpellFreeCastResource(unit)) {
+  if (unitIsSupportedClassFeatureSpellFreeCastResource(unit)) {
+    const profile =
+      supportedClassFeatureSpellFreeCastGrantsForUnit(unit)?.profile;
+    if (profile === undefined) {
+      return Either.right(undefined);
+    }
+    const resource = characterBattleResourceForUnit(unit);
+    if (resource.cap.kind !== "fixed") {
+      return battleCreatureInitIssue(
+        "Class feature spell free casts must use a fixed battle resource cap.",
+      );
+    }
+    const expended =
+      resourceExpenditures.find(
+        (expenditure) => expenditure.tag === profile.resourceTag,
+      )?.expended ?? 0;
+    if (expended > resource.cap.uses) {
+      return battleCreatureInitIssue(
+        "Class feature spell free-cast expenditure exceeds its battle resource cap.",
+      );
+    }
+    return Either.right(resource.cap.uses - expended);
+  }
+  const useCountExpenditure = resourceExpenditures.find(
+    (expenditure) =>
+      expenditure.tag === "useCountResource" && expenditure.unitId === unit.id,
+  );
+  if (useCountExpenditure === undefined) {
     return Either.right(undefined);
   }
-  const profile =
-    supportedClassFeatureSpellFreeCastGrantsForUnit(unit)?.profile;
-  if (profile === undefined) {
+  if (unit.kind !== "class_feature" && unit.kind !== "species_trait") {
     return Either.right(undefined);
   }
-  const resource = characterBattleResourceForUnit(unit);
-  if (resource.cap.kind !== "fixed") {
+  const resource =
+    "resource" in unit.mechanics ? unit.mechanics.resource : undefined;
+  if (resource?.kind !== "use_count") {
+    return Either.right(undefined);
+  }
+  const capAbilityModifier =
+    resource.cap.kind === "ability_modifier"
+      ? abilityModifier(
+          scoreModifier(build.abilityScores[resource.cap.ability]),
+        )
+      : undefined;
+  const maxUses = characterBattleResourceMaxUses({
+    unit,
+    classLevels,
+    ...(capAbilityModifier === undefined ? {} : { capAbilityModifier }),
+  });
+  if (maxUses === undefined) {
     return battleCreatureInitIssue(
-      "Class feature spell free casts must use a fixed battle resource cap.",
+      "Class feature use-count expenditure requires a finite battle resource cap.",
     );
   }
-  const expended =
-    resourceExpenditures.find(
-      (expenditure) => expenditure.tag === profile.resourceTag,
-    )?.expended ?? 0;
-  if (expended > resource.cap.uses) {
+  if (useCountExpenditure.expended > maxUses) {
     return battleCreatureInitIssue(
-      "Class feature spell free-cast expenditure exceeds its battle resource cap.",
+      "Class feature use-count expenditure exceeds its battle resource cap.",
     );
   }
-  return Either.right(resource.cap.uses - expended);
+  return Either.right(Number(maxUses) - Number(useCountExpenditure.expended));
 }
 
 function characterBattleFeatures(

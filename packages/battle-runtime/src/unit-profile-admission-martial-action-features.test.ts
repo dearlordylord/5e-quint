@@ -1,7 +1,8 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT8 fighter_action_surge fighter_improved_critical barbarian_rage rogue_cunning_action rogue_uncanny_dodge rogue_sneak_attack
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT59 monk_deflect_attacks
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS monk_monks_focus
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV73A monk_martial_arts
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.martial-arts-attack-projection unit-feature.reaction-roll-or-damage-reduction
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.reaction-roll-or-damage-reduction
 import { describe, expect, test } from "vitest";
 import {
   barbarianRageUnitId,
@@ -9,6 +10,7 @@ import {
   fighterImprovedCriticalUnitId,
   monkDeflectAttacksUnitId,
   monkMartialArtsUnitId,
+  monkMonksFocusUnitId,
   rogueCunningActionUnitId,
   rogueSneakAttackUnitId,
   rogueUncannyDodgeUnitId,
@@ -20,11 +22,13 @@ import {
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   battleMartialArtsAttackProjectionSupportForUnit,
+  battleMonkFocusBattleOptionsSupportForUnit,
   battleReactionRollOrDamageReductionSupportForUnit,
   battleUnitRefWithSupportProfiles,
   classLevel,
   Either,
   MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE,
+  MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE,
   parseSupportedUnitFeatureProfile,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
@@ -218,6 +222,77 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
     }
   });
 
+  test("monk_monks_focus admits executable battle options against the shared Focus Point resource", () => {
+    const unit = unitLibrary.requireUnit(monkMonksFocusUnitId);
+    const supportProfile = {
+      kind: MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE,
+      flurryOfBlows: {
+        displayName: "Flurry of Blows",
+        focusPointCost: 1,
+        strikeCount: 2,
+      },
+      patientDefense: {
+        displayName: "Patient Defense",
+        freeAction: "disengage",
+        focusPointCost: 1,
+        focusActions: ["disengage", "dodge"],
+      },
+      stepOfTheWind: {
+        displayName: "Step of the Wind",
+        freeAction: "dash",
+        focusPointCost: 1,
+        focusActions: ["disengage", "dash"],
+      },
+    } as const;
+
+    expect(battleMonkFocusBattleOptionsSupportForUnit(unit)).toEqual(
+      supportProfile,
+    );
+    expect(
+      battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
+    ).toEqual(
+      Either.right({
+        unitId: monkMonksFocusUnitId,
+        supportProfiles: [supportProfile],
+      }),
+    );
+  });
+
+  test("monk_monks_focus admission requires exact battle execution coverage for initial options", () => {
+    const unit = unitLibrary.requireUnit(monkMonksFocusUnitId);
+    if (
+      unit.kind !== "class_feature" ||
+      unit.mechanics.family !== "resource_container"
+    ) {
+      throw new Error("Expected Monk's Focus resource container mechanics.");
+    }
+    const malformedUnit = unitMechanicsVariant(unit, {
+      id: "monk_monks_focus_extra_initial_option",
+      mechanics: {
+        ...unit.mechanics,
+        optionSet: {
+          ...unit.mechanics.optionSet,
+          initialOptions: [
+            ...unit.mechanics.optionSet.initialOptions,
+            {
+              id: "synthetic_focus_option",
+              displayName: "Synthetic Focus Option",
+            },
+          ],
+        },
+      },
+    });
+
+    expect(battleMonkFocusBattleOptionsSupportForUnit(malformedUnit)).toBe(
+      "unsupported",
+    );
+    expect(
+      parseSupportedUnitFeatureProfile(malformedUnit, [
+        { className: "monk", level: classLevel(2) },
+      ]),
+    ).toBeNull();
+  });
+
   test("monk_deflect_attacks projects zero-damage redirect executable facts", () => {
     const unit = unitLibrary.requireUnit(monkDeflectAttacksUnitId);
     const supportProfile =
@@ -253,7 +328,7 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
               ability: "dex",
             },
             zeroDamageRedirect: {
-              spends: { resourceUnitId: monkDeflectAttacksUnitId, amount: 1 },
+              spends: { resourceUnitId: "monk_monks_focus", amount: 1 },
               save: {
                 ability: "dex",
                 dc: {

@@ -386,6 +386,8 @@ export function subjectName(
   | "bonusActionSpell"
   | "bonusActionDashSpell"
   | "pactOfTheChainFamiliarAttack"
+  | "monkFocusOption"
+  | "monkFocusFlurryOfBlowsStrike"
   | "unitFeature"
   | "endTurn"
   | "move"
@@ -421,6 +423,12 @@ export function subjectName(
   }
   if (subject.tag === "bonusActionStandardAction") {
     return subject.action;
+  }
+  if (
+    subject.tag === "monkFocusOption" ||
+    subject.tag === "monkFocusFlurryOfBlowsStrike"
+  ) {
+    return subject.tag;
   }
   if (subject.tag === "actionSpell") {
     return "actionSpell";
@@ -2662,8 +2670,19 @@ export function monkDeflectAttacksFocusResource(input?: {
     { readonly kind: "character" }
   >["resources"]
 >[number] {
+  return monksFocusResource(input);
+}
+
+export function monksFocusResource(input?: {
+  readonly usesRemaining?: number;
+}): NonNullable<
+  Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["resources"]
+>[number] {
   return {
-    unit: unitLibrary.requireUnit("monk_deflect_attacks"),
+    unit: unitLibrary.requireUnit("monk_monks_focus"),
     ...(input?.usesRemaining === undefined
       ? {}
       : { usesRemaining: input.usesRemaining }),

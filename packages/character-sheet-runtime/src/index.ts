@@ -10,12 +10,16 @@ import {
   characterBuildResources,
   characterBuildSpellcastingSlotCapacity,
   classLevelForUnit,
+  classLevelLinearValueAtClassLevel,
   classUnitId,
   classUnitIdToClassName,
   CHARACTER_CLASS_LEVELS,
   computeTotalLevel,
   DRUID_WILD_SHAPE_UNIT_ID,
+  MONK_MONKS_FOCUS_UNIT_ID,
   characterBuildDruidWildShapeFacts,
+  characterBuildMonkUncannyMetabolismFacts,
+  characterBuildMonksFocusFacts,
   characterEquipmentItemSourceFromId,
   eldritchInvocationOptionForInvocationId,
   eldritchInvocationRepeatableChoiceSatisfiesRule,
@@ -24,6 +28,7 @@ import {
   parseCharacterEquipmentItemId,
   progressionClassUnitIds,
   STANDARD_LANGUAGES,
+  isClassLevelLinearPerLevel,
   isClassLevelThresholdTiers,
   replaceDruidWildShapeKnownForm,
   thresholdTierValueAtClassLevel,
@@ -39,6 +44,7 @@ import {
   type CharacterBuildPactMagicSlotPool,
   type CharacterBuildProficiencyChoiceSubject,
   type CharacterBuildResource,
+  type CharacterBuildMonkUncannyMetabolismFacts,
   type CharacterBuildSpellcasting,
   type CharacterBuildSpellcastingFocus,
   type CharacterBuildSpellcastingSource,
@@ -56,9 +62,11 @@ import {
 import {
   DieRollResult,
   Hp,
+  difficultyClass,
   resourceCount,
   spellSlotLevel,
   type Condition,
+  type DifficultyClass,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import {
@@ -138,6 +146,8 @@ import { Brand, Either, Match, Option } from "effect";
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.ability-check-proficiency-bonus
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.pact-slot-recovery
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-long-rest-use-state
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.monk-uncanny-metabolism-initiative-recovery
 
 const WEAPON_PROFICIENCY_CATEGORY_VALUES = ["simple", "martial"] as const;
 const ARMOR_TRAINING_CATEGORY_VALUES = [
@@ -148,9 +158,11 @@ const ARMOR_TRAINING_CATEGORY_VALUES = [
 ] as const;
 const CHARACTER_SHEET_USE_COUNT_RESOURCE_UNIT_IDS = [
   DRUID_WILD_SHAPE_UNIT_ID,
+  MONK_MONKS_FOCUS_UNIT_ID,
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 type CharacterSheetUseCountResourceUnitId =
   (typeof CHARACTER_SHEET_USE_COUNT_RESOURCE_UNIT_IDS)[number];
+export type { CharacterSheetUseCountResourceUnitId };
 const DEFAULT_SRD_STAT_BLOCK_CATALOG_RESULT = buildStatBlockCatalog({
   collections: [srdStatBlockCollection],
 });
@@ -159,6 +171,7 @@ export const BARD_JACK_OF_ALL_TRADES_UNIT_ID =
   "bard_jack_of_all_trades" as const satisfies UnitRecord["id"];
 const ARCANE_RECOVERY_REST_FEATURE_TAG = "arcaneRecovery" as const;
 const MAGICAL_CUNNING_REST_FEATURE_TAG = "magicalCunning" as const;
+const UNCANNY_METABOLISM_REST_FEATURE_TAG = "uncannyMetabolism" as const;
 const JACK_OF_ALL_TRADES_PROFICIENCY_BONUS_DIVISOR = 2;
 const LAY_ON_HANDS_POISONED_REMOVAL_COST = resourceCount(5);
 const RITUAL_ADDITIONAL_CASTING_TIME_MINUTES = 10;
@@ -287,6 +300,10 @@ export type CharacterSheetRestFeatureUse =
   | {
       readonly tag: typeof MAGICAL_CUNNING_REST_FEATURE_TAG;
       readonly usedSinceLongRest: true;
+    }
+  | {
+      readonly tag: typeof UNCANNY_METABOLISM_REST_FEATURE_TAG;
+      readonly usedSinceLongRest: true;
     };
 
 type CharacterSheetTaggedResourceExpenditure = {
@@ -337,6 +354,25 @@ export type CharacterSheetResourceState =
       readonly count: ResourceCount;
       readonly expended: ResourceCount;
     });
+
+export type CharacterSheetMonksFocusSaveDc = {
+  readonly unitId: typeof MONK_MONKS_FOCUS_UNIT_ID;
+  readonly dc: DifficultyClass;
+};
+
+export type CharacterSheetMonkUncannyMetabolismUseState =
+  CharacterBuildMonkUncannyMetabolismFacts & {
+    readonly usedSinceLongRest: boolean;
+    readonly focusRecovery: CharacterBuildMonkUncannyMetabolismFacts["focusRecovery"] & {
+      readonly resourceUnitId: typeof MONK_MONKS_FOCUS_UNIT_ID;
+    };
+  };
+
+export type CharacterSheetMonkUncannyMetabolismInitiativeInput = {
+  readonly sheet: CharacterSheet;
+  readonly unitLibrary: UnitCatalog;
+  readonly martialArtsRoll: DieRollResult;
+};
 
 export type CharacterSheetArcaneRecoverySlotRefund = {
   readonly spellLevel: SpellSlotLevel;
@@ -1159,6 +1195,117 @@ export function characterSheetResources(
   }
 
   return Either.right(resources);
+}
+
+export function characterSheetMonksFocusSaveDc(
+  sheet: CharacterSheet,
+  unitLibrary: UnitCatalog,
+): Either.Either<
+  CharacterSheetMonksFocusSaveDc | undefined,
+  CharacterSheetIssue
+> {
+  const facts = characterBuildMonksFocusFacts({
+    build: sheet.build,
+    unitLibrary,
+  });
+  if (Either.isLeft(facts)) return characterSheetIssue(facts.left.message);
+  if (facts.right === undefined) return Either.right(undefined);
+
+  return Either.right({
+    unitId: facts.right.unitId,
+    dc: difficultyClass(
+      facts.right.saveDc.base +
+        abilityScoreToMod(
+          sheet.build.abilityScores[facts.right.saveDc.ability],
+        ) +
+        proficiencyBonusForCharacterLevel(
+          computeTotalLevel(sheet.build.progression),
+        ),
+    ),
+  });
+}
+
+export function characterSheetMonkUncannyMetabolismUseState(
+  sheet: CharacterSheet,
+  unitLibrary: UnitCatalog,
+): Either.Either<
+  CharacterSheetMonkUncannyMetabolismUseState | undefined,
+  CharacterSheetIssue
+> {
+  const facts = characterBuildMonkUncannyMetabolismFacts({
+    build: sheet.build,
+    unitLibrary,
+  });
+  if (Either.isLeft(facts)) return characterSheetIssue(facts.left.message);
+  if (facts.right === undefined) return Either.right(undefined);
+
+  return Either.right({
+    ...facts.right,
+    usedSinceLongRest: sheet.restFeatureUses.some(
+      (use) => use.tag === UNCANNY_METABOLISM_REST_FEATURE_TAG,
+    ),
+  });
+}
+
+export function useMonkUncannyMetabolismWhenRollingInitiative(
+  input: CharacterSheetMonkUncannyMetabolismInitiativeInput,
+): Either.Either<CharacterSheet, CharacterSheetIssue> {
+  const useState = characterSheetMonkUncannyMetabolismUseState(
+    input.sheet,
+    input.unitLibrary,
+  );
+  if (Either.isLeft(useState)) return Either.left(useState.left);
+  if (useState.right === undefined) {
+    return characterSheetIssue(
+      "Uncanny Metabolism requires the Monk Uncanny Metabolism feature.",
+    );
+  }
+  if (useState.right.usedSinceLongRest) {
+    return characterSheetIssue(
+      "Uncanny Metabolism cannot be used again until a Long Rest.",
+    );
+  }
+
+  const roll = Number(input.martialArtsRoll);
+  const dieSize = useState.right.healing.martialArtsDie.dieSize;
+  if (roll < 1 || roll > dieSize) {
+    return characterSheetIssue(
+      `Uncanny Metabolism Martial Arts die roll must be within d${dieSize}.`,
+    );
+  }
+  if (
+    input.sheet.hitPoints.tag === "zero" &&
+    input.sheet.hitPoints.lifecycle.tag === "dead"
+  ) {
+    return characterSheetIssue(
+      "Uncanny Metabolism cannot restore HP to a dead character.",
+    );
+  }
+
+  const currentHp = characterSheetCurrentHp(input.sheet);
+  const healing = useState.right.healing.monkLevelBonus + roll;
+  const hitPoints = characterSheetHitPoints({
+    currentHp: Hp(Math.min(Number(input.sheet.maximumHp), currentHp + healing)),
+    tempHp: characterSheetTempHp(input.sheet),
+  });
+  if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
+
+  return Either.right({
+    ...input.sheet,
+    hitPoints: hitPoints.right,
+    restFeatureUses: [
+      ...input.sheet.restFeatureUses,
+      {
+        tag: UNCANNY_METABOLISM_REST_FEATURE_TAG,
+        usedSinceLongRest: true,
+      },
+    ],
+    resourceExpenditures: replaceUseCountResourceExpenditure({
+      expenditures: input.sheet.resourceExpenditures,
+      unitId: useState.right.focusRecovery.resourceUnitId,
+      expended: resourceCount(0),
+    }),
+  });
 }
 
 export function characterSheetSpellInvocation(
@@ -2420,6 +2567,16 @@ function restFeatureUseStateMatchesBuild(
     }
     return Either.right(undefined);
   }
+  if (use.tag === UNCANNY_METABOLISM_REST_FEATURE_TAG) {
+    const facts = characterBuildMonkUncannyMetabolismFacts(input);
+    if (Either.isLeft(facts)) return characterSheetIssue(facts.left.message);
+    if (facts.right === undefined) {
+      return characterSheetIssue(
+        "Uncanny Metabolism rest feature use requires the Monk Uncanny Metabolism feature.",
+      );
+    }
+    return Either.right(undefined);
+  }
   return characterSheetIssue("Expected supported rest feature use state.");
 }
 
@@ -2725,7 +2882,7 @@ function isRestResetCadence(
   );
 }
 
-function isCharacterSheetUseCountResourceUnitId(
+export function isCharacterSheetUseCountResourceUnitId(
   unitId: UnitRecord["id"],
 ): unitId is CharacterSheetUseCountResourceUnitId {
   return CHARACTER_SHEET_USE_COUNT_RESOURCE_UNIT_IDS.some(
@@ -2747,7 +2904,7 @@ function characterSheetResourceCapacity(
   const cap = input.resource.resource.cap;
   if (cap.kind === "fixed") return Either.right(resourceCount(cap.uses));
   if (cap.kind === "linear_per_level") {
-    if (cap.axis !== "class") {
+    if (!isClassLevelLinearPerLevel(cap)) {
       return characterSheetIssue(
         "Character Sheet resource level scaling must use class level.",
       );
@@ -2760,10 +2917,7 @@ function characterSheetResourceCapacity(
     const level = classFeatureOwnerLevel(input, unit.right);
     if (Either.isLeft(level)) return Either.left(level.left);
     return Either.right(
-      resourceCount(
-        cap.base +
-          Math.max(0, level.right - cap.startingAtLevel) * cap.perLevel,
-      ),
+      resourceCount(classLevelLinearValueAtClassLevel(cap, level.right)),
     );
   }
   if (cap.kind === "threshold_tiers") {
@@ -3718,7 +3872,8 @@ function parseStoredRestFeatureUses(
     }
     if (
       (use.tag !== ARCANE_RECOVERY_REST_FEATURE_TAG &&
-        use.tag !== MAGICAL_CUNNING_REST_FEATURE_TAG) ||
+        use.tag !== MAGICAL_CUNNING_REST_FEATURE_TAG &&
+        use.tag !== UNCANNY_METABOLISM_REST_FEATURE_TAG) ||
       use.usedSinceLongRest !== true
     ) {
       return characterSheetIssue("Expected supported rest feature use state.");

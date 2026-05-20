@@ -5,11 +5,13 @@
 // turn snapshots, and reaction-choice orchestration.
 
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.monk-focus-battle-options
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-damage-illumination spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-feather-fall-mitigation spell.invocation-mirror-image-hit-interception spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
 import {
   canSpendAction,
+  canSpendUnarmedStrikeActionResource,
   spendAction,
   spendActivationResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
@@ -272,6 +274,8 @@ import {
   resolveMoveCommand,
   resolveMultiattack,
   resolveMartialArtsBonusUnarmedStrike,
+  resolveMonkFocusFlurryOfBlowsStrike,
+  resolveMonkFocusOption,
   resolveOffHandAttack,
   resolveOpportunityAttackCommand,
   resolveReady,
@@ -518,7 +522,11 @@ export function resolveBattleSubjectInternal(
   }
   if (
     standardActionKind !== null &&
-    !canSpendAction(input.state.currentTurnResources, standardActionKind)
+    !subjectCanSpendStandardActionResource(
+      input.state.currentTurnResources,
+      input.subject,
+      standardActionKind,
+    )
   ) {
     return invalidResult(
       input.state,
@@ -737,6 +745,36 @@ export function resolveBattleSubjectInternal(
     }
     if (subject.tag === "bonusActionStandardAction") {
       return resolveBonusActionStandardAction({ ...input, subject });
+    }
+    if (subject.tag === "monkFocusOption") {
+      return resolveMonkFocusOption({ ...input, subject });
+    }
+    if (subject.tag === "monkFocusFlurryOfBlowsStrike") {
+      return resolveMonkFocusFlurryOfBlowsStrike({
+        ...input,
+        subject,
+        ...(options.replayingInterruptedProcedure === undefined
+          ? {}
+          : {
+              replayingInterruptedProcedure:
+                options.replayingInterruptedProcedure,
+            }),
+        ...(options.suppressedReactionTrigger === undefined
+          ? {}
+          : { suppressedReactionTrigger: options.suppressedReactionTrigger }),
+        ...(options.pendingAttackDamageReductions === undefined
+          ? {}
+          : {
+              pendingAttackDamageReductions:
+                options.pendingAttackDamageReductions,
+            }),
+        ...(options.pendingAttackDamageAdditions === undefined
+          ? {}
+          : {
+              pendingAttackDamageAdditions:
+                options.pendingAttackDamageAdditions,
+            }),
+      });
     }
     if (
       subject.tag === "bonusAction" &&
@@ -1081,6 +1119,8 @@ function subjectSuppressedByCommandHalt(subject: BattleSubject): boolean {
     subject.tag === "bonusActionStandardAction" ||
     subject.tag === "bonusActionSpell" ||
     subject.tag === "bonusActionDashSpell" ||
+    subject.tag === "monkFocusOption" ||
+    subject.tag === "monkFocusFlurryOfBlowsStrike" ||
     subject.tag === "unitFeature"
   ) {
     return true;
@@ -1254,6 +1294,8 @@ function resolveProtectionRelevantEffectSaveCommand(
 
 function subjectRequiresActionEligibility(subject: BattleSubject): boolean {
   return (
+    subject.tag === "monkFocusOption" ||
+    subject.tag === "monkFocusFlurryOfBlowsStrike" ||
     subject.tag === "pactOfTheChainFamiliarAttack" ||
     (subject.tag === "action" &&
       (subject.action === "attack" ||
@@ -1266,6 +1308,7 @@ function subjectRequiresActionEligibility(subject: BattleSubject): boolean {
         subject.action === "ready" ||
         subject.action === "search" ||
         subject.action === "grapple" ||
+        subject.action === "shove" ||
         subject.action === "escapeGrapple" ||
         subject.action === "escapeSpellRestraint" ||
         subject.action === "shakeAwakeFromSleep"))
@@ -1315,6 +1358,20 @@ function subjectIsOrdinaryAttack(subject: BattleSubject): boolean {
       subject.action === "grapple" ||
       subject.action === "shove")
   );
+}
+
+function subjectCanSpendStandardActionResource(
+  resources: BattleState["currentTurnResources"],
+  subject: BattleSubject,
+  action: StandardActionKind,
+): boolean {
+  if (
+    subject.tag === "action" &&
+    (subject.action === "grapple" || subject.action === "shove")
+  ) {
+    return canSpendUnarmedStrikeActionResource(resources);
+  }
+  return canSpendAction(resources, action);
 }
 
 export function standardActionKindForSubject(
@@ -2507,14 +2564,13 @@ function resolveHellishRebukeReactionSpellCommand(
       : concentrationLifecycleFills.find(
           (fill) => fill.holeId === concentrationSave.holeId,
         );
-  const concentrationSaveCheck = damageLifecycleConcentrationSavingThrowFillCheck(
-    {
+  const concentrationSaveCheck =
+    damageLifecycleConcentrationSavingThrowFillCheck({
       state: input.state,
       target,
       damageAmount,
       fills: fillSet.concentrationSavingThrows,
-    },
-  );
+    });
   if (concentrationSaveCheck.tag === "needsHoles") {
     return needsHolesResult(input.state, input.subject, [
       ...concentrationSaveCheck.holes,
@@ -2600,8 +2656,7 @@ function resolveHellishRebukeReactionSpellCommand(
         fillSet.damageDispositions,
         input.frame.damageSourceId,
       ),
-      hideousLaughterDamageRepeatSaves:
-        hideousLaughterLifecycleFills,
+      hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
       damageSourceId: input.subject.reactorId,
     },
   );
@@ -3964,9 +4019,7 @@ export function resolveAttackDamageContinuationConcentration(input: {
     {
       ...input.frame.continuation,
       concentrationSavingThrows: [
-        ...attackDamageContinuationConcentrationFills(
-          input.frame.continuation,
-        ),
+        ...attackDamageContinuationConcentrationFills(input.frame.continuation),
         concentrationFill.value,
       ],
     },
@@ -4009,10 +4062,7 @@ export function attackDamageContinuationConcentrationFill(
   return { tag: "ok", value: remaining[0] };
 }
 
-export function battleFillEquals(
-  a: BattleFill,
-  b: BattleFill,
-): boolean {
+export function battleFillEquals(a: BattleFill, b: BattleFill): boolean {
   if (a.kind !== b.kind || a.holeId !== b.holeId) {
     return false;
   }

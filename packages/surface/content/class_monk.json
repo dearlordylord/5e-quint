@@ -12,6 +12,18 @@
     {
       "level": 1,
       "unitId": "monk_unarmored_defense"
+    },
+    {
+      "level": 2,
+      "unitId": "monk_monks_focus"
+    },
+    {
+      "level": 2,
+      "unitId": "monk_unarmored_movement"
+    },
+    {
+      "level": 2,
+      "unitId": "monk_uncanny_metabolism"
     }
   ],
   "hitPointDie": 8,
@@ -22,20 +34,14 @@
   },
   "name": "Monk",
   "primaryAbilities": {
-    "abilities": [
-      "dex",
-      "wis"
-    ],
+    "abilities": ["dex", "wis"],
     "kind": "all_of"
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Monk.md:3-25,28-32"
+    "section": "Classes/Monk.md:3-25,28-33"
   },
-  "savingThrowProficiencies": [
-    "str",
-    "dex"
-  ],
+  "savingThrowProficiencies": ["str", "dex"],
   "skillProficiencyChoice": {
     "choose": 2,
     "options": [
@@ -99,9 +105,7 @@
       "kind": "weapon_category"
     },
     {
-      "anyOfProperties": [
-        "light"
-      ],
+      "anyOfProperties": ["light"],
       "category": "martial",
       "kind": "weapon_category_with_properties"
     }

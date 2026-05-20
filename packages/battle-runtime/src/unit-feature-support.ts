@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement
 import { Match } from "effect";
 import * as Either from "effect/Either";
 import {
@@ -72,11 +72,15 @@ export const FAILED_ABILITY_CHECK_RESOURCE_BOOST_SUPPORT_PROFILE =
   "failedAbilityCheckResourceBoost";
 export const BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE =
   "bardicInspirationGrant";
+export const MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE =
+  "monkFocusBattleOptions";
 export const WEAPON_MASTERY_SAP_SUPPORT_PROFILE = "weaponMasterySap";
 export const WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE = "weaponMasteryTopple";
 export const WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE = "weaponMasteryCleave";
 const BARDIC_INSPIRATION_RANGE_FEET = 60;
 const BARDIC_INSPIRATION_BASE_DIE_SIZE = 6;
+const MONK_FOCUS_RESOURCE_UNIT_ID =
+  "monk_monks_focus" as const satisfies UnitRecord["id"];
 const BARDIC_INSPIRATION_DIE_TIERS = [
   { atLevel: 5, dieSize: 8 },
   { atLevel: 10, dieSize: 10 },
@@ -126,6 +130,7 @@ export const BATTLE_UNIT_SUPPORT_PROFILES = [
   BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE,
   BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
   FAILED_ABILITY_CHECK_RESOURCE_BOOST_SUPPORT_PROFILE,
+  MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE,
   WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
   WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
   WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
@@ -241,8 +246,29 @@ export type BattleAlternateActionCostSupportProfile = {
   };
   readonly to: { readonly kind: "bonusAction" };
 };
+export type BattleMonkFocusBattleOptionsSupportProfile = {
+  readonly kind: typeof MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE;
+  readonly flurryOfBlows: {
+    readonly displayName: string;
+    readonly focusPointCost: 1;
+    readonly strikeCount: 2;
+  };
+  readonly patientDefense: {
+    readonly displayName: string;
+    readonly freeAction: "disengage";
+    readonly focusPointCost: 1;
+    readonly focusActions: readonly ["disengage", "dodge"];
+  };
+  readonly stepOfTheWind: {
+    readonly displayName: string;
+    readonly freeAction: "dash";
+    readonly focusPointCost: 1;
+    readonly focusActions: readonly ["disengage", "dash"];
+  };
+};
 export type BattleUnitSupportProfile =
   | BattleAlternateActionCostSupportProfile
+  | BattleMonkFocusBattleOptionsSupportProfile
   | BattlePassiveRangedAttackRollBonusSupportProfile
   | BattleAttackRollMissToHitReplacementSupportProfile
   | BattlePassiveSavingThrowRollModeSupportProfile
@@ -254,6 +280,7 @@ export type BattleUnitSupportProfile =
   | Exclude<
       (typeof BATTLE_UNIT_SUPPORT_PROFILES)[number],
       | "alternateActionCost"
+      | "monkFocusBattleOptions"
       | "passiveRangedAttackRollBonus"
       | "attackRollMissToHitReplacement"
       | "passiveSavingThrowRollMode"
@@ -457,6 +484,17 @@ export function battleUnitSupportProfilesForUnit(input: {
   }
   if (martialArtsAttackProjectionSupport === "martialArtsAttackProjection") {
     supportProfiles.push(MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE);
+  }
+
+  const monkFocusBattleOptionsSupport =
+    battleMonkFocusBattleOptionsSupportForUnit(input.unit);
+  if (monkFocusBattleOptionsSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle Monk Focus options Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (monkFocusBattleOptionsSupport !== null) {
+    supportProfiles.push(monkFocusBattleOptionsSupport);
   }
 
   const attackActionAttackCountScalingSupport =
@@ -769,9 +807,13 @@ function parseAuthoredAttackDamageReductionZeroDamageRedirect(
   // nested field read below is checked before returning a freshly built value.
   const candidate =
     redirect as Partial<AuthoredAttackDamageReductionZeroDamageRedirect>;
+  const resourceUnitId = candidate.spends?.resourceUnitId;
+  const resourceAmount = candidate.spends?.amount;
   if (
-    candidate.spends?.resourceUnitId !== expectedResourceUnitId ||
-    candidate.spends.amount !== 1 ||
+    typeof resourceUnitId !== "string" ||
+    resourceUnitId.length === 0 ||
+    resourceUnitId !== expectedResourceUnitId ||
+    resourceAmount !== 1 ||
     candidate.save?.ability !== "dex" ||
     candidate.save.dc?.kind !== "ability_plus_proficiency" ||
     candidate.save.dc.base !== 8 ||
@@ -1041,6 +1083,37 @@ export type BattleBonusActionStandardActionSupport =
   | BattleAlternateActionCostSupportProfile
   | "unsupported"
   | null;
+export type BattleMonkFocusBattleOptionsSupport =
+  | BattleMonkFocusBattleOptionsSupportProfile
+  | "unsupported"
+  | null;
+type MonkFocusBattleExecution =
+  | {
+      readonly kind: "bonus_action_unarmed_strike_sequence";
+      readonly focusPointCost: 1;
+      readonly strikeCount: 2;
+    }
+  | {
+      readonly kind: "bonus_action_defensive_modes";
+      readonly freeAction: "disengage";
+      readonly focusPointCost: 1;
+      readonly focusActions: readonly ["disengage", "dodge"];
+    }
+  | {
+      readonly kind: "bonus_action_mobility_modes";
+      readonly freeAction: "dash";
+      readonly focusPointCost: 1;
+      readonly focusActions: readonly ["disengage", "dash"];
+      readonly jumpDistanceMultiplier: {
+        readonly multiplier: 2;
+        readonly expires: "end_of_turn";
+      };
+    };
+type MonkFocusBattleOption = {
+  readonly id: string;
+  readonly displayName: string;
+  readonly battleExecution: MonkFocusBattleExecution;
+};
 
 export function battleBonusActionStandardActionSupportForUnit(
   unit: BattleUnitSupportSource,
@@ -1082,6 +1155,165 @@ function alternateActionCostActions(
     return null;
   }
   return [first, ...rest];
+}
+
+export function battleMonkFocusBattleOptionsSupportForUnit(
+  unit: UnitRecord,
+): BattleMonkFocusBattleOptionsSupport {
+  if (
+    unit.kind !== "class_feature" ||
+    unit.className !== "monk" ||
+    unit.mechanics.family !== "resource_container"
+  ) {
+    return null;
+  }
+
+  const optionSet = unit.mechanics.optionSet;
+  const initialBattleOptions = optionSet.initialOptions.map((option) => {
+    const battleExecution = monkFocusBattleExecution(option);
+    return {
+      option,
+      battleExecution,
+      hasAuthoredBattleExecution: option.battleExecution !== undefined,
+    };
+  });
+  const battleOptions = initialBattleOptions.flatMap((entry) => {
+    const { option, battleExecution } = entry;
+    return battleExecution === null
+      ? []
+      : [{ ...option, battleExecution } satisfies MonkFocusBattleOption];
+  });
+  if (battleOptions.length === 0) {
+    return initialBattleOptions.some(
+      (option) => option.hasAuthoredBattleExecution,
+    )
+      ? "unsupported"
+      : null;
+  }
+  if (
+    unit.mechanics.resource.kind !== "use_count" ||
+    unit.mechanics.resource.cap.kind !== "linear_per_level" ||
+    unit.mechanics.resource.cap.axis !== "class" ||
+    unit.mechanics.resource.cap.base !== 2 ||
+    unit.mechanics.resource.cap.perLevel !== 1 ||
+    unit.mechanics.resource.cap.startingAtLevel !== 2 ||
+    unit.mechanics.resetCadence.kind !== "short_or_long_rest" ||
+    unit.mechanics.effectSaveDc?.kind !== "class_feature_ability_save_dc" ||
+    unit.mechanics.effectSaveDc.base !== 8 ||
+    unit.mechanics.effectSaveDc.ability !== "wis" ||
+    optionSet.timing !== "resource_use" ||
+    initialBattleOptions.some((option) => option.battleExecution === null) ||
+    battleOptions.length !== initialBattleOptions.length ||
+    battleOptions.length !== 3
+  ) {
+    return "unsupported";
+  }
+
+  const flurryOfBlows = battleOptions.find(
+    (option) =>
+      option.battleExecution?.kind === "bonus_action_unarmed_strike_sequence",
+  );
+  const patientDefense = battleOptions.find(
+    (option) => option.battleExecution?.kind === "bonus_action_defensive_modes",
+  );
+  const stepOfTheWind = battleOptions.find(
+    (option) => option.battleExecution?.kind === "bonus_action_mobility_modes",
+  );
+  if (
+    flurryOfBlows?.battleExecution?.kind !==
+      "bonus_action_unarmed_strike_sequence" ||
+    patientDefense?.battleExecution?.kind !== "bonus_action_defensive_modes" ||
+    stepOfTheWind?.battleExecution?.kind !== "bonus_action_mobility_modes"
+  ) {
+    return "unsupported";
+  }
+
+  return {
+    kind: MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE,
+    flurryOfBlows: {
+      displayName: flurryOfBlows.displayName,
+      focusPointCost: flurryOfBlows.battleExecution.focusPointCost,
+      strikeCount: flurryOfBlows.battleExecution.strikeCount,
+    },
+    patientDefense: {
+      displayName: patientDefense.displayName,
+      freeAction: patientDefense.battleExecution.freeAction,
+      focusPointCost: patientDefense.battleExecution.focusPointCost,
+      focusActions: patientDefense.battleExecution.focusActions,
+    },
+    stepOfTheWind: {
+      displayName: stepOfTheWind.displayName,
+      freeAction: stepOfTheWind.battleExecution.freeAction,
+      focusPointCost: stepOfTheWind.battleExecution.focusPointCost,
+      focusActions: stepOfTheWind.battleExecution.focusActions,
+    },
+  };
+}
+
+function monkFocusBattleExecution(option: {
+  readonly battleExecution?: unknown;
+}): MonkFocusBattleExecution | null {
+  const battleExecution = option.battleExecution;
+  if (!isRecord(battleExecution)) return null;
+  if (
+    battleExecution["kind"] === "bonus_action_unarmed_strike_sequence" &&
+    battleExecution["focusPointCost"] === 1 &&
+    battleExecution["strikeCount"] === 2
+  ) {
+    return {
+      kind: "bonus_action_unarmed_strike_sequence",
+      focusPointCost: 1,
+      strikeCount: 2,
+    };
+  }
+  if (
+    battleExecution["kind"] === "bonus_action_defensive_modes" &&
+    battleExecution["freeAction"] === "disengage" &&
+    battleExecution["focusPointCost"] === 1 &&
+    tupleMatches(battleExecution["focusActions"], ["disengage", "dodge"])
+  ) {
+    return {
+      kind: "bonus_action_defensive_modes",
+      freeAction: "disengage",
+      focusPointCost: 1,
+      focusActions: ["disengage", "dodge"],
+    };
+  }
+  const jumpDistanceMultiplier = battleExecution["jumpDistanceMultiplier"];
+  if (
+    battleExecution["kind"] === "bonus_action_mobility_modes" &&
+    battleExecution["freeAction"] === "dash" &&
+    battleExecution["focusPointCost"] === 1 &&
+    tupleMatches(battleExecution["focusActions"], ["disengage", "dash"]) &&
+    isRecord(jumpDistanceMultiplier) &&
+    jumpDistanceMultiplier["multiplier"] === 2 &&
+    jumpDistanceMultiplier["expires"] === "end_of_turn"
+  ) {
+    return {
+      kind: "bonus_action_mobility_modes",
+      freeAction: "dash",
+      focusPointCost: 1,
+      focusActions: ["disengage", "dash"],
+      jumpDistanceMultiplier: { multiplier: 2, expires: "end_of_turn" },
+    };
+  }
+  return null;
+}
+
+function tupleMatches<T extends readonly [string, string]>(
+  actual: unknown,
+  expected: T,
+): actual is T {
+  return (
+    Array.isArray(actual) &&
+    actual.length === 2 &&
+    actual[0] === expected[0] &&
+    actual[1] === expected[1]
+  );
+}
+
+function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
+  return typeof value === "object" && value !== null;
 }
 
 function isAlternateActionCostAction(
@@ -2258,7 +2490,7 @@ function reactionRollOrDamageReductionMechanicsProjection(
         const zeroDamageRedirect =
           attackDamageReductionZeroDamageRedirectProjection(
             modifier.zeroDamageRedirect,
-            unit.id,
+            MONK_FOCUS_RESOURCE_UNIT_ID,
             classLevel,
           );
         if (zeroDamageRedirect === null) return [];

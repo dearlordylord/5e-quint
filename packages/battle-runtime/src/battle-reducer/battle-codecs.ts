@@ -3763,6 +3763,12 @@ const RuntimeActionResourceSchema = Schema.Union(
     sourceUnitId: Schema.String,
     restriction: BattleActionRestrictionSchema,
   }),
+  Schema.Struct({
+    kind: Schema.Literal("action"),
+    source: Schema.Literal("monkFocusFlurryOfBlows"),
+    sourceOwnerId: Schema.String,
+    sourceUnitId: Schema.String,
+  }),
 );
 
 const BattleTurnSnapshotSchema = Schema.Struct({

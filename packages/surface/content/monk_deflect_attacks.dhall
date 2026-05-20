@@ -36,7 +36,7 @@ let deflectAttacks =
                     }
                 , zeroDamageRedirect =
                     { spends =
-                        { resourceUnitId = "monk_deflect_attacks", amount = 1 }
+                        { resourceUnitId = "monk_monks_focus", amount = 1 }
                     , save =
                         { ability = "dex"
                         , dc =

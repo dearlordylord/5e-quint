@@ -3507,6 +3507,14 @@ describe("SRD Unit catalog boundary", () => {
     expect(result.tag).toBe("ok");
     if (result.tag !== "ok") return;
 
+    expect(result.catalog.requireUnit("class_monk")).toMatchObject({
+      featureGrants: expect.arrayContaining([
+        { level: 2, unitId: "monk_monks_focus" },
+        { level: 2, unitId: "monk_unarmored_movement" },
+        { level: 2, unitId: "monk_uncanny_metabolism" },
+      ]),
+      kind: "class",
+    });
     expect(result.catalog.requireUnit("monk_monks_focus")).toMatchObject({
       acquiredAtLevel: 2,
       className: "monk",
@@ -3521,9 +3529,39 @@ describe("SRD Unit catalog boundary", () => {
         optionSet: {
           choiceKey: "monk_focus_point_feature",
           initialOptions: [
-            { id: "monk_flurry_of_blows", displayName: "Flurry of Blows" },
-            { id: "monk_patient_defense", displayName: "Patient Defense" },
-            { id: "monk_step_of_the_wind", displayName: "Step of the Wind" },
+            {
+              battleExecution: {
+                focusPointCost: 1,
+                kind: "bonus_action_unarmed_strike_sequence",
+                strikeCount: 2,
+              },
+              id: "monk_flurry_of_blows",
+              displayName: "Flurry of Blows",
+            },
+            {
+              battleExecution: {
+                focusActions: ["disengage", "dodge"],
+                focusPointCost: 1,
+                freeAction: "disengage",
+                kind: "bonus_action_defensive_modes",
+              },
+              id: "monk_patient_defense",
+              displayName: "Patient Defense",
+            },
+            {
+              battleExecution: {
+                focusActions: ["disengage", "dash"],
+                focusPointCost: 1,
+                freeAction: "dash",
+                jumpDistanceMultiplier: {
+                  expires: "end_of_turn",
+                  multiplier: 2,
+                },
+                kind: "bonus_action_mobility_modes",
+              },
+              id: "monk_step_of_the_wind",
+              displayName: "Step of the Wind",
+            },
           ],
           timing: "resource_use",
         },

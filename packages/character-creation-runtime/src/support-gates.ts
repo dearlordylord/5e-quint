@@ -36,6 +36,7 @@ import {
   SRD_BARD_CLASS_UNIT_ID,
   SRD_CLERIC_CLASS_UNIT_ID,
   SRD_DRUID_CLASS_UNIT_ID,
+  SRD_MONK_CLASS_UNIT_ID,
   CLASS_TOOL_PROFICIENCY_CHOICE_KEY,
   PHASE1_LOADOUT_ARMOR_OPTION_ID,
   PHASE1_LOADOUT_SHIELD_OPTION_ID,
@@ -178,6 +179,7 @@ const SUPPORTED_PROGRESSIONS = [
   supportedSameClassSecondLevelProgression(SRD_BARD_CLASS_UNIT_ID),
   supportedSameClassSecondLevelProgression(SRD_CLERIC_CLASS_UNIT_ID),
   supportedSameClassSecondLevelProgression(SRD_DRUID_CLASS_UNIT_ID),
+  supportedSameClassSecondLevelProgression(SRD_MONK_CLASS_UNIT_ID),
   supportedSameClassSecondLevelProgression(SRD_PALADIN_CLASS_UNIT_ID),
   supportedSameClassSecondLevelProgression(SRD_RANGER_CLASS_UNIT_ID),
   supportedSameClassSecondLevelProgression(WIDTH_CLASS_WIZARD_UNIT_ID),
@@ -298,6 +300,7 @@ const CHARACTER_BUILD_RESOURCE_UNIT_IDS = [
   "druid_wild_shape",
   "fighter_action_surge",
   "fighter_second_wind",
+  "monk_monks_focus",
   "paladin_lay_on_hands",
   "sorcerer_innate_sorcery",
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;

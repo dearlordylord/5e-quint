@@ -31,6 +31,41 @@
         "packages/character-sheet-runtime/src/index.test.ts:expectRight"
       ]
     },
+    "srd521:classes/monk:level-2:class-feature-grant:monk_monks_focus": {
+      "taskId": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS",
+      "profile": "Character Sheet class-feature use-count resource runtime",
+      "summary": "Monk's Focus is read from CharacterBuild resources and the installed Surface feature record, then projected as Character Sheet Focus Point use-count state. The runtime derives capacity from Monk class level, stores only expended Focus Point uses, restores all expended uses on Short or Long Rest, and derives the Focus save DC from the authored Wisdom source, current ability scores, and Proficiency Bonus without storing duplicate DC state.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/index.ts:characterSheetResources",
+        "packages/character-sheet-runtime/src/index.ts:classFeatureUseCountResourcesForBuild",
+        "packages/character-sheet-runtime/src/index.ts:recoverShortRestUseCountResources",
+        "packages/character-sheet-runtime/src/index.ts:completeShortRest",
+        "packages/character-sheet-runtime/src/index.ts:completeLongRest",
+        "packages/character-sheet-runtime/src/index.ts:characterSheetMonksFocusSaveDc"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/index.test.ts:monksFocusShortRestRecoveryTestName"
+      ]
+    },
+    "srd521:classes/monk:level-2:class-feature-grant:monk_uncanny_metabolism": {
+      "taskId": "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME",
+      "profile": "Character Sheet Uncanny Metabolism Initiative recovery and Long Rest use state runtime",
+      "summary": "Uncanny Metabolism is read from CharacterBuild source facts and the installed Surface feature record, then projected as a once-per-Long-Rest feature use state and optional Initiative-window recovery. The runtime validates that stored use state belongs only to sheets whose build retains Uncanny Metabolism, stores only the used-since-Long-Rest marker, preserves that marker across Short Rests, clears it on Long Rest, derives the current Martial Arts die from CharacterBuild facts, validates the caller-supplied die roll, clears all shared Monk's Focus expenditures, and applies capped self-healing without storing duplicate resource or die projections.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/index.ts:characterSheetMonkUncannyMetabolismUseState",
+        "packages/character-sheet-runtime/src/index.ts:useMonkUncannyMetabolismWhenRollingInitiative",
+        "packages/character-sheet-runtime/src/index.ts:restFeatureUseStateMatchesBuild",
+        "packages/character-sheet-runtime/src/index.ts:parseStoredRestFeatureUses",
+        "packages/character-sheet-runtime/src/index.ts:completeShortRest",
+        "packages/character-sheet-runtime/src/index.ts:completeLongRest"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/index.test.ts:uncannyMetabolismLongRestUseStateTestName",
+        "packages/character-sheet-runtime/src/index.test.ts:uncannyMetabolismInitiativeRecoveryTestName",
+        "packages/character-sheet-runtime/src/index.test.ts:uncannyMetabolismInitiativeGatesTestName",
+        "packages/character-sheet-runtime/src/index.test.ts:uncannyMetabolismRejectsUnownedUseStateTestName"
+      ]
+    },
     "srd521:classes/paladin:level-1:class-feature-grant:paladin_lay_on_hands": {
       "taskId": "SRDINV25",
       "profile": "Character Sheet healing resource action runtime",

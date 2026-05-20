@@ -28,7 +28,7 @@
         },
         "zeroDamageRedirect": {
           "spends": {
-            "resourceUnitId": "monk_deflect_attacks",
+            "resourceUnitId": "monk_monks_focus",
             "amount": 1
           },
           "save": {

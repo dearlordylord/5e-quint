@@ -15,14 +15,35 @@
       "choiceKey": "monk_focus_point_feature",
       "initialOptions": [
         {
+          "battleExecution": {
+            "focusPointCost": 1,
+            "kind": "bonus_action_unarmed_strike_sequence",
+            "strikeCount": 2
+          },
           "displayName": "Flurry of Blows",
           "id": "monk_flurry_of_blows"
         },
         {
+          "battleExecution": {
+            "focusActions": ["disengage", "dodge"],
+            "focusPointCost": 1,
+            "freeAction": "disengage",
+            "kind": "bonus_action_defensive_modes"
+          },
           "displayName": "Patient Defense",
           "id": "monk_patient_defense"
         },
         {
+          "battleExecution": {
+            "focusActions": ["disengage", "dash"],
+            "focusPointCost": 1,
+            "freeAction": "dash",
+            "jumpDistanceMultiplier": {
+              "expires": "end_of_turn",
+              "multiplier": 2
+            },
+            "kind": "bonus_action_mobility_modes"
+          },
           "displayName": "Step of the Wind",
           "id": "monk_step_of_the_wind"
         }

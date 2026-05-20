@@ -1878,14 +1878,14 @@
     },
     {
       "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
+      "claimTag": "profile-subset-supported",
       "closureKinds": [
         "follow-up-split"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS: Admit Monk level-2 progression after sibling Monk level-2 grants can be retained, then project Focus Point count, Short or Long Rest reset, initial Focus feature option names, and the authored Focus save DC fact without duplicating class progression or option execution state. Owner: character-creation-runtime plus character-sheet-runtime. Required output: Owner evidence for CharacterBuild or Character Sheet Focus Point resource, Focus save DC, and retained Monk level-2 feature refs.; L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS: Execute Flurry of Blows, Patient Defense, and Step of the Wind option modes, including Bonus Action economy, Focus Point spending where RAW requires it, Dodge and jump-distance effects, and shared Focus Point spending for later Focus spenders instead of synthetic per-feature pools. Owner: battle-runtime plus character-battle-runtime resource handoff. Required output: Supported runtime profile and owner evidence for Monk's Focus option execution and a single shared Focus Point resource consumed by Focus-spending Monk features.",
+      "reason": "L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME: Execute Step of the Wind's doubled jump distance through an ordinary Long Jump and High Jump movement witness boundary, using the existing movement budget and caller-supplied legal landing/table-spatial facts rather than storing an inert Monk-only active effect. Owner: battle-runtime shared jump movement witness boundary plus promoted Quint parity. Required output: Supported runtime owner evidence, focused tests, and promoted Quint/runtime parity for doubled Long Jump and High Jump distance under Step of the Wind without duplicating Strength, Speed, or table-spatial landing state.",
       "sourceRecordPath": "packages/surface/content/monk_monks_focus.json",
       "sourceRows": [
         {
@@ -1904,35 +1904,6 @@
       "status": "blocked-follow-up-split",
       "strictTargetClosed": true,
       "unitId": "monk_monks_focus"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "follow-up-split"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS: Retain the Uncanny Metabolism feature ref with Monk level-2 progression after the sibling Monk's Focus character-facts task owns the shared Focus Point resource, then project only Uncanny Metabolism's once-per-Long-Rest use state and source links to Focus Points and the existing Martial Arts die without duplicating either table. Owner: character-creation-runtime plus character-sheet-runtime. Required output: Owner evidence for CharacterBuild or Character Sheet retained Uncanny Metabolism feature ref, once-per-Long-Rest use state, and links to the shared Focus Point resource and existing Martial Arts die source.; L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME: Offer the optional Uncanny Metabolism choice when the Monk rolls Initiative, recover all expended shared Focus Points, roll the Martial Arts die from the existing Monk Martial Arts source, restore Hit Points equal to Monk level plus that die roll, and spend the once-per-Long-Rest feature use. Owner: battle-runtime plus character-battle-runtime resource handoff. Required output: Supported runtime profile and owner evidence for Initiative-window Focus Point recovery, self-healing, and Long Rest recharge using the shared Focus Point resource and existing Martial Arts die source.",
-      "sourceRecordPath": "packages/surface/content/monk_uncanny_metabolism.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Monk Uncanny Metabolism",
-          "id": "srd521:classes/monk:level-2:class-feature-grant:monk_uncanny_metabolism",
-          "levelBand": "level-2",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 101,
-            "lineStart": 96,
-            "path": ".references/srd-5.2.1/Classes/Monk.md"
-          }
-        }
-      ],
-      "status": "blocked-follow-up-split",
-      "strictTargetClosed": true,
-      "unitId": "monk_uncanny_metabolism"
     },
     {
       "catalogStatus": "installed",
@@ -2634,7 +2605,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 107,
+      "count": 108,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -2704,6 +2675,7 @@
         "monk_martial_arts",
         "monk_unarmored_defense",
         "monk_unarmored_movement",
+        "monk_uncanny_metabolism",
         "paladin_lay_on_hands",
         "paladin_paladins_smite",
         "paladin_weapon_mastery",
@@ -2779,7 +2751,7 @@
       ]
     },
     {
-      "count": 23,
+      "count": 22,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
@@ -2796,7 +2768,6 @@
         "levitate",
         "magic_weapon",
         "monk_monks_focus",
-        "monk_uncanny_metabolism",
         "moonbeam",
         "prayer_of_healing",
         "ray_of_enfeeblement",
@@ -2850,35 +2821,35 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 484,
-      "percent": "87.1%",
+      "numerator": 486,
+      "percent": "87.4%",
       "rowsByStatus": {
-        "accepted": 354,
+        "accepted": 356,
         "accepted-no-battle-effect": 130,
-        "battle-runtime-required": 58,
-        "owner-evidence-required": 3,
+        "battle-runtime-required": 57,
+        "owner-evidence-required": 2,
         "partial-battle-runtime": 11
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 77,
+      "denominator": 80,
       "numerator": 12,
-      "percent": "15.6%"
+      "percent": "15%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 77,
+      "denominator": 80,
       "numerator": 17,
-      "percent": "22.1%"
+      "percent": "21.3%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 107,
+      "denominator": 108,
       "numerator": 31,
-      "percent": "29%"
+      "percent": "28.7%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 164,
-      "numerator": 107,
-      "percent": "65.2%"
+      "numerator": 108,
+      "percent": "65.9%"
     },
     "strictTargetClosure": {
       "denominator": 164,
@@ -5603,9 +5574,9 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 107,
+        "denominator": 108,
         "numerator": 31,
-        "percent": "29%"
+        "percent": "28.7%"
       }
     },
     "units": [
@@ -6755,6 +6726,30 @@
           {
             "joinStatus": "unmapped",
             "obligations": [],
+            "profileId": "character-creation.class-feature-source-fact-projection",
+            "profileKind": "character-creation"
+          },
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "character-sheet.class-feature-long-rest-use-state",
+            "profileKind": "character-sheet"
+          },
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "character-sheet.monk-uncanny-metabolism-initiative-recovery",
+            "profileKind": "character-sheet"
+          }
+        ],
+        "unitId": "monk_uncanny_metabolism"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
             "profileId": "character-sheet.healing-resource-action",
             "profileKind": "character-sheet"
           }
@@ -7567,20 +7562,20 @@
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
       "missing": 1,
-      "profile-subset-supported": 15,
-      "supported-profile": 107,
-      "unsupported-profile": 41
+      "profile-subset-supported": 16,
+      "supported-profile": 108,
+      "unsupported-profile": 39
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 23,
+      "blocked-follow-up-split": 22,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 24,
       "open-runtime-behavior": 1,
-      "supported-profile": 107
+      "supported-profile": 108
     },
-    "nonSupportedFrontier": 57,
+    "nonSupportedFrontier": 56,
     "strictDenominator": 164
   }
 }

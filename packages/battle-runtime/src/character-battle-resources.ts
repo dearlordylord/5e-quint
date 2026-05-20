@@ -26,6 +26,7 @@ import {
 } from "./character-class-level.ts";
 import {
   battleBardicInspirationGrantSupportForUnit,
+  battleMonkFocusBattleOptionsSupportForUnit,
   battleReactionRollOrDamageReductionSupportForUnit,
   bonusActionDashTemporaryHitPointsProfileForUnit,
   requireCharacterClassLevel,
@@ -382,14 +383,6 @@ export function characterResourceState(
   input: CharacterBattleResourceInit,
   classLevels: readonly CharacterBattleClassLevel[],
 ): CharacterBattleResourceState {
-  const unitClassLevel =
-    input.unit.kind === "class_feature"
-      ? requireCharacterClassLevel(classLevels, input.unit.className)
-      : undefined;
-  const characterLevel = classLevels.reduce(
-    (total, classLevel) => total + Number(classLevel.level),
-    0,
-  );
   const resource = characterBattleResourceForUnit(input.unit);
   const base = {
     unit: input.unit,
@@ -401,18 +394,51 @@ export function characterResourceState(
   if (!activationResourceIsLimited(resource)) {
     throw new Error("Character battle resource has an unsupported cap shape.");
   }
+  const defaultUsesRemaining = characterBattleResourceMaxUses({
+    unit: input.unit,
+    classLevels,
+    ...(input.capAbilityModifier === undefined
+      ? {}
+      : { capAbilityModifier: input.capAbilityModifier }),
+  });
+  if (defaultUsesRemaining === undefined) {
+    throw new Error("Limited character battle resource requires a finite cap.");
+  }
   return {
     ...base,
     resource,
     usesRemaining:
       input.usesRemaining === undefined
-        ? supportedUseCountCapForLevel(
-            resource,
-            unitClassLevel ?? characterLevel,
-            input.capAbilityModifier,
-          )
+        ? defaultUsesRemaining
         : resourceCount(input.usesRemaining),
   };
+}
+
+export function characterBattleResourceMaxUses(input: {
+  readonly unit: UnitRecord;
+  readonly classLevels: readonly CharacterBattleClassLevel[];
+  readonly capAbilityModifier?: AbilityModifier;
+}): ResourceCount | undefined {
+  const unitClassLevel =
+    input.unit.kind === "class_feature"
+      ? requireCharacterClassLevel(input.classLevels, input.unit.className)
+      : undefined;
+  const characterLevel = input.classLevels.reduce(
+    (total, classLevel) => total + Number(classLevel.level),
+    0,
+  );
+  const resource = characterBattleResourceForUnit(input.unit);
+  if (activationResourceIsUnlimited(resource)) {
+    return undefined;
+  }
+  if (!activationResourceIsLimited(resource)) {
+    throw new Error("Character battle resource has an unsupported cap shape.");
+  }
+  return supportedUseCountCapForLevel(
+    resource,
+    unitClassLevel ?? characterLevel,
+    input.capAbilityModifier,
+  );
 }
 
 export function characterBattleResourceInitIssue(
@@ -493,19 +519,17 @@ function characterBattleActivationResourceForUnit(
   }
   if (
     unit.kind === "class_feature" &&
-    battleReactionRollOrDamageReductionSupportForUnit(unit) ===
-      "attackDamageReductionZeroDamageRedirect"
+    unit.mechanics.family === "resource_container"
   ) {
-    return {
-      kind: "use_count",
-      cap: {
-        kind: "linear_per_level",
-        axis: "class",
-        base: 0,
-        perLevel: 1,
-        startingAtLevel: 1,
-      },
-    };
+    const support = battleMonkFocusBattleOptionsSupportForUnit(unit);
+    return support !== null &&
+      support !== "unsupported" &&
+      activationResourceIsSupportedByBattleForUnit(
+        unit,
+        unit.mechanics.resource,
+      )
+      ? unit.mechanics.resource
+      : null;
   }
   if (
     unit.kind !== "class_feature" ||
@@ -873,7 +897,7 @@ function supportedUseCountCapForLevel(
   if (resource.cap.kind === "linear_per_level") {
     return resourceCount(
       resource.cap.base +
-        Math.max(0, level - resource.cap.startingAtLevel + 1) *
+        Math.max(0, level - resource.cap.startingAtLevel) *
           resource.cap.perLevel,
     );
   }

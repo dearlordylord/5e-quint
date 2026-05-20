@@ -51,6 +51,7 @@ const deterministicAdmissionProjectionEvidenceTag =
   "deterministic-admission-projection";
 const characterCreationProfileIdPrefix = "character-creation.";
 const characterSheetProfileIdPrefix = "character-sheet.";
+const unitFeatureProfileIdPrefix = "unit-feature.";
 const characterCreationOwnerEvidenceSchema =
   "dnd.srd-character-creation-owner-evidence.v1";
 const characterSheetOwnerEvidenceSchema =
@@ -186,6 +187,7 @@ const levelTwoBattleRuntimeOwnerEvidenceUnitIds = new Set([
   "barbarian_reckless_attack",
   "fighter_action_surge",
   "fighter_tactical_mind",
+  "monk_monks_focus",
   "monk_unarmored_movement",
   "paladin_paladins_smite",
   "rogue_cunning_action",
@@ -779,10 +781,7 @@ function installedLevelTwoClassFeatureOwnerClassification(
   row,
   ownerEvidenceSources,
 ) {
-  if (
-    row.levelBand !== "level-2" ||
-    row.rowKind !== "class-feature-grant"
-  ) {
+  if (row.levelBand !== "level-2" || row.rowKind !== "class-feature-grant") {
     return undefined;
   }
   const claim = row.candidateUnitId
@@ -794,11 +793,11 @@ function installedLevelTwoClassFeatureOwnerClassification(
   const characterCreationEvidence = ownerEvidenceSources.characterCreation.get(
     row.id,
   );
+  const battleRuntimeEvidence = ownerEvidenceSources.battleRuntime.get(
+    row.candidateUnitId,
+  );
   const followUpTasks = claimFollowUpTasks(claim);
-  if (
-    claim?.tag === "unsupported-profile" &&
-    followUpTasks.length > 0
-  ) {
+  if (claim?.tag === "unsupported-profile" && followUpTasks.length > 0) {
     return {
       kind: "evidence-required",
       owner: followUpTaskOwners(followUpTasks),
@@ -806,34 +805,39 @@ function installedLevelTwoClassFeatureOwnerClassification(
     };
   }
   const profileOwnerClassification =
-    claimedLevelTwoClassFeatureProfileOwnerClassification(
-      claim,
-      [
-        {
-          profileIdPrefix: characterCreationProfileIdPrefix,
-          owner: "character-creation-runtime",
-          evidence: characterCreationEvidence,
-          requirement:
-            "Add checker-readable character-creation owner evidence before treating this level-2 class feature as operationally supported.",
-        },
-        {
-          profileIdPrefix: characterSheetProfileIdPrefix,
-          owner: "character-sheet-runtime",
-          evidence: characterSheetEvidence,
-          requirement:
-            "Add checker-readable character-sheet owner evidence before treating this level-2 class feature as operationally supported.",
-        },
-      ],
-    );
+    claimedLevelTwoClassFeatureProfileOwnerClassification(claim, [
+      {
+        profileIdPrefix: characterCreationProfileIdPrefix,
+        owner: "character-creation-runtime",
+        evidence: characterCreationEvidence,
+        requirement:
+          "Add checker-readable character-creation owner evidence before treating this level-2 class feature as operationally supported.",
+      },
+      {
+        profileIdPrefix: characterSheetProfileIdPrefix,
+        owner: "character-sheet-runtime",
+        evidence: characterSheetEvidence,
+        requirement:
+          "Add checker-readable character-sheet owner evidence before treating this level-2 class feature as operationally supported.",
+      },
+      ...(levelTwoBattleRuntimeOwnerEvidenceUnitIds.has(row.candidateUnitId)
+        ? [
+            {
+              profileIdPrefix: unitFeatureProfileIdPrefix,
+              owner: "battle-runtime",
+              evidence: battleRuntimeEvidence,
+              requirement:
+                "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this level-2 class feature as operationally supported.",
+            },
+          ]
+        : []),
+    ]);
   if (profileOwnerClassification !== undefined) {
     return profileOwnerClassification;
   }
   if (!levelTwoBattleRuntimeOwnerEvidenceUnitIds.has(row.candidateUnitId)) {
     return undefined;
   }
-  const battleRuntimeEvidence = ownerEvidenceSources.battleRuntime.get(
-    row.candidateUnitId,
-  );
   if (battleRuntimeEvidence) {
     return {
       kind: "evidence-present",
@@ -928,10 +932,7 @@ function installedSpellUnitOwnerClassification(
     };
   }
   const followUpTasks = claimFollowUpTasks(claim);
-  if (
-    claim?.tag === "unsupported-profile" &&
-    followUpTasks.length > 0
-  ) {
+  if (claim?.tag === "unsupported-profile" && followUpTasks.length > 0) {
     return {
       kind: "evidence-required",
       owner: followUpTaskOwners(followUpTasks),
@@ -2227,8 +2228,8 @@ function hasRequiredOwnerEvidence(row, owner) {
 
 function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
   const levelOne = rows.filter((row) => row.levelBand === "level-1");
-  const spellPressure = rows.filter(
-    (row) => levelOneSpellPressureLevelBands.has(row.levelBand),
+  const spellPressure = rows.filter((row) =>
+    levelOneSpellPressureLevelBands.has(row.levelBand),
   );
   const missingClassContainers = levelOne.filter(
     (row) =>
@@ -3424,8 +3425,8 @@ function buildSrdUnitInventory({
   ).sort((a, b) => a.id.localeCompare(b.id));
   const levelOneRows = rows.filter((row) => row.levelBand === "level-1");
   const levelTwoRows = rows.filter((row) => row.levelBand === "level-2");
-  const spellPressureRows = rows.filter(
-    (row) => spellPressureLevelBands.has(row.levelBand),
+  const spellPressureRows = rows.filter((row) =>
+    spellPressureLevelBands.has(row.levelBand),
   );
   return {
     generatedBy: "scripts/unit-profile-coverage-check.cjs",

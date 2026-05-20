@@ -14,6 +14,9 @@ let monk =
       , featureGrants =
         [ { level = 1, unitId = "monk_martial_arts" }
         , { level = 1, unitId = "monk_unarmored_defense" }
+        , { level = 2, unitId = "monk_monks_focus" }
+        , { level = 2, unitId = "monk_unarmored_movement" }
+        , { level = 2, unitId = "monk_uncanny_metabolism" }
         ]
       , hitPointDie = 8
       , id = "class_monk"
@@ -21,7 +24,7 @@ let monk =
       , multiclassProficiencies = { kind = "none" }
       , name = "Monk"
       , primaryAbilities = { abilities = [ "dex", "wis" ], kind = "all_of" }
-      , provenance = { kind = "srd-5.2.1", section = "Classes/Monk.md:3-25,28-32" }
+      , provenance = { kind = "srd-5.2.1", section = "Classes/Monk.md:3-25,28-33" }
       , savingThrowProficiencies = [ "str", "dex" ]
       , skillProficiencyChoice =
         { choose = 2, options = [ "acrobatics", "athletics", "history", "insight", "religion", "stealth" ] }
