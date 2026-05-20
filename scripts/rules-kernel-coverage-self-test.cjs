@@ -48,6 +48,42 @@ function runSelfTest() {
     ].join("\n") + "\n",
   );
   writeFile(
+    path.join(root, "packages", "battle-runtime", "src", "battle-reducer.ts"),
+    [
+      "export type BattleTargetChoiceHole = { readonly kind: 'targetChoice'; };",
+      "export type BattleHole = BattleTargetChoiceHole;",
+      "export type BattleFill = { readonly kind: 'targetChoice'; readonly holeId: string; readonly value: string; };",
+    ].join("\n") + "\n",
+  );
+  writeFile(
+    path.join(
+      root,
+      "plans",
+      "rules-kernel-coverage",
+      "battle-hole-frontier.jsonl",
+    ),
+    [
+      JSON.stringify({
+        subject: "battle-hole-family",
+        id: "BattleTargetChoiceHole",
+        holeKind: "targetChoice",
+        classification: "semantic-frontier",
+        coveredByObligationIds: ["BATTLE.SAMPLE"],
+        followUpTaskIds: [],
+        reason: "sample semantic hole family",
+      }),
+      JSON.stringify({
+        subject: "battle-fill-kind",
+        id: "targetChoice",
+        fillKind: "targetChoice",
+        classification: "semantic-frontier",
+        coveredByObligationIds: ["BATTLE.SAMPLE"],
+        followUpTaskIds: [],
+        reason: "sample semantic fill kind",
+      }),
+    ].join("\n") + "\n",
+  );
+  writeFile(
     path.join(
       root,
       "plans",
@@ -108,6 +144,64 @@ function runSelfTest() {
   assert.equal(result.matrix.summary.byStatus.covered, 1);
   assert.equal(result.matrix.summary.byStatus["boundary-only"], 1);
   assert.equal(result.matrix.generatorReadiness.length, 1);
+
+  const sampleObligationsPath = path.join(
+    root,
+    "plans",
+    "rules-kernel-coverage",
+    "obligations.jsonl",
+  );
+  fs.appendFileSync(
+    sampleObligationsPath,
+    JSON.stringify({
+      id: "BATTLE.PENDING",
+      title: "sample pending obligation",
+      runtime: "battle",
+      kind: "state-transition",
+      status: "needs-qnt-owner",
+    }) + "\n",
+  );
+  const sampleBattleHoleFrontierPath = path.join(
+    root,
+    "plans",
+    "rules-kernel-coverage",
+    "battle-hole-frontier.jsonl",
+  );
+  const sampleBattleHoleFrontierText = fs.readFileSync(
+    sampleBattleHoleFrontierPath,
+    "utf8",
+  );
+  writeFile(
+    sampleBattleHoleFrontierPath,
+    [
+      JSON.stringify({
+        subject: "battle-hole-family",
+        id: "BattleTargetChoiceHole",
+        holeKind: "targetChoice",
+        classification: "semantic-frontier",
+        coveredByObligationIds: ["BATTLE.PENDING"],
+        followUpTaskIds: [],
+        reason: "sample semantic hole family",
+      }),
+      JSON.stringify({
+        subject: "battle-fill-kind",
+        id: "targetChoice",
+        fillKind: "targetChoice",
+        classification: "semantic-frontier",
+        coveredByObligationIds: ["BATTLE.SAMPLE"],
+        followUpTaskIds: [],
+        reason: "sample semantic fill kind",
+      }),
+    ].join("\n") + "\n",
+  );
+  const nonCoveredSemanticResult = buildKernelCoverage({ root });
+  assert.ok(
+    nonCoveredSemanticResult.issues.includes(
+      "battle-hole-frontier row 1 semantic-frontier row cannot claim non-covered obligation BATTLE.PENDING with status needs-qnt-owner; use followUpTaskIds for uncovered semantic work.",
+    ),
+    `Expected non-covered semantic frontier issue, got ${JSON.stringify(nonCoveredSemanticResult.issues)}`,
+  );
+  writeFile(sampleBattleHoleFrontierPath, sampleBattleHoleFrontierText);
 
   writeFile(
     path.join(root, "sample.mbt.test.ts"),

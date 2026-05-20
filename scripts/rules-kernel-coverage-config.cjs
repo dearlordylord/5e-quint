@@ -37,9 +37,18 @@ const obligationKinds = new Set([
   "boundary-protocol",
 ]);
 
-const parityWitnessKinds = new Set([
-  "focused-mbt",
-  "deterministic-qnt-replay",
+const parityWitnessKinds = new Set(["focused-mbt", "deterministic-qnt-replay"]);
+
+const battleFrontierSubjects = new Set([
+  "battle-hole-family",
+  "battle-fill-kind",
+]);
+
+const battleFrontierClassifications = new Set([
+  "semantic-frontier",
+  "deterministic-boundary-projection",
+  "table-owned-fact",
+  "unsupported-dead-branch",
 ]);
 
 const generatorReadinessStatuses = new Set([
@@ -74,6 +83,7 @@ function coveragePaths(root) {
     coverageDir,
     readme: path.join(coverageDir, "README.md"),
     obligations: path.join(coverageDir, "obligations.jsonl"),
+    battleHoleFrontier: path.join(coverageDir, "battle-hole-frontier.jsonl"),
     profileObligations: path.join(coverageDir, "profile-obligations.jsonl"),
     generatorReadiness: path.join(coverageDir, "generator-readiness.jsonl"),
     matrix: path.join(coverageDir, "matrix.json"),
@@ -89,6 +99,8 @@ function coveragePaths(root) {
 }
 
 module.exports = {
+  battleFrontierClassifications,
+  battleFrontierSubjects,
   coveragePaths,
   coveredStatuses,
   generatorReadinessStatuses,

@@ -1,27 +1,40 @@
 {
   "summary": {
-    "total": 15,
+    "total": 16,
     "covered": 8,
-    "open": 5,
-    "nonSemantic": 2,
+    "open": 4,
+    "nonSemantic": 4,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 9,
+      "battle": 10,
       "character-creation": 2,
       "character-sheet": 2,
       "character-battle": 1
     },
     "byStatus": {
       "covered": 8,
-      "needs-qnt-owner": 4,
+      "needs-qnt-owner": 3,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 1,
-      "boundary-only": 1,
+      "boundary-only": 3,
       "unsupported-by-admission": 1
     }
   },
   "derivedFields": {
     "obligations[].profiles": "Derived from profileObligations by obligation id; authored obligations.jsonl rows must not contain profiles."
+  },
+  "battleHoleFrontierSummary": {
+    "total": 79,
+    "bySubject": {
+      "battle-hole-family": 48,
+      "battle-fill-kind": 31
+    },
+    "byClassification": {
+      "semantic-frontier": 60,
+      "deterministic-boundary-projection": 0,
+      "table-owned-fact": 19,
+      "unsupported-dead-branch": 0
+    }
   },
   "obligations": [
     {
@@ -220,13 +233,14 @@
       "parityWitnesses": [],
       "profiles": [],
       "qntOwners": [],
+      "reason": "The checker validates plans/rules-kernel-coverage/battle-hole-frontier.jsonl against the current BattleHole and BattleFill unions. Semantic rows either point to an existing covered obligation or name the Ralph follow-up task that must add QNT/parity ownership.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
-      "status": "needs-qnt-owner",
+      "status": "boundary-only",
       "surfaceEvidence": [],
-      "title": "Classify every current BattleHole kind as QNT-owned semantic frontier, deterministic boundary projection, or unsupported/dead branch"
+      "title": "Executable BattleHole and BattleFill frontier inventory classifies current reducer hole families, fill kinds, and follow-up task splits"
     },
     {
       "id": "BATTLE.SURFACE.EXECUTABLE_PROFILE_JOIN",
@@ -318,6 +332,19 @@
       "title": "Surface records that parse or ship but do not admit into an executable runtime profile are outside the rules-kernel QNT denominator"
     },
     {
+      "id": "BATTLE.TABLE.HOLE_FACT_BOUNDARIES",
+      "kind": "boundary-protocol",
+      "parityWitnesses": [],
+      "profiles": [],
+      "qntOwners": [],
+      "reason": "The battle reducer may validate and consume caller/table facts, but it does not derive map geometry, route selection, object inventory, line of sight, target willingness, area identity, or presentation-only effect counts as rules-kernel state.",
+      "runtime": "battle",
+      "runtimeOwners": [],
+      "status": "boundary-only",
+      "surfaceEvidence": [],
+      "title": "Battle holes and fills that carry table-owned target, route, placement, object, or other spatial facts remain boundary facts rather than reducer-owned world modeling"
+    },
+    {
       "id": "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
       "kind": "state-transition",
       "parityWitnesses": [
@@ -340,6 +367,1026 @@
       "status": "covered",
       "surfaceEvidence": [],
       "title": "Shared resolved positive-Hit-Point damage procedure and its TS parity route through consuming reducers"
+    }
+  ],
+  "battleHoleFrontier": [
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-TARGETS-AREAS"
+      ],
+      "holeKind": "targetChoice",
+      "id": "BattleTargetChoiceHole",
+      "reason": "Target identity is a table decision, but accepted targets change reducer legality and downstream attack, spell, Grapple, Shove, Help, Search, and companion procedures.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-REACTION-CONCENTRATION"
+      ],
+      "holeKind": "targetSpatialFacts",
+      "id": "BattleSpellCastReactionFactsHole",
+      "reason": "Counterspell-style cast visibility, range, and component facts are caller/table facts; reaction offer and resume semantics remain reducer-owned elsewhere.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-MOVEMENT-ROUTE",
+        "RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION"
+      ],
+      "holeKind": "targetSpatialFacts",
+      "id": "BattleWardingBondSeparationFactsHole",
+      "reason": "Connected-creature separation is a table spatial fact; the reducer consumes it for Warding Bond cleanup without owning generic position state.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-TARGETS-AREAS",
+        "RKBC-PROFILE-JOIN-TABLE-CALLER"
+      ],
+      "holeKind": "objectTargetChoice",
+      "id": "BattleObjectTargetChoiceHole",
+      "reason": "Object target identity, Armor Class, ignition, and object-damage disposition are caller/table object facts, not durable rules-kernel object-world state.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-TARGETS-AREAS",
+        "RKBC-PROFILE-JOIN-TABLE-CALLER"
+      ],
+      "holeKind": "spellAreaChoice",
+      "id": "BattleSpellAreaChoiceHole",
+      "reason": "Area identity and placement are table spatial facts; spell effect lifecycle can consume an area id without deriving map geometry.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-MOVEMENT-ROUTE",
+        "RKBC-PROFILE-JOIN-TABLE-CALLER"
+      ],
+      "holeKind": "teleportDestination",
+      "id": "BattleTeleportDestinationHole",
+      "reason": "The destination being visible, unoccupied, and within range is caller/table spatial evidence; the reducer owns resource spend and teleport outcome, not map search.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND",
+        "RKBC-PROFILE-JOIN-TABLE-CALLER"
+      ],
+      "holeKind": "heldObjectFacts",
+      "id": "BattleHeldObjectFactsHole",
+      "reason": "Held-object inventory for Command drop is supplied by the table/caller; the reducer only consumes the resulting object ids to emit drop outcomes.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION"
+      ],
+      "holeKind": "damageTypeChoice",
+      "id": "BattleSpellDamageTypeChoiceHole",
+      "reason": "Damage type choice is a player/table choice that changes later damage semantics, and current coverage only owns the established spell procedure subset.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-TARGETS-AREAS"
+      ],
+      "holeKind": "spellTargetAllocation",
+      "id": "BattleSpellTargetAllocationHole",
+      "reason": "Allocation count and selected target ids determine legal damage distribution; table spatial facts remain separate witnesses.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-TARGETS-AREAS"
+      ],
+      "holeKind": "spellTargetList",
+      "id": "BattleSpellTargetListHole",
+      "reason": "Target-list cardinality and selected ids change reducer effects for multi-target spells; per-target geometry and willingness facts remain table-owned.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.STAT_BLOCK.ATTACK_CONTROL"
+      ],
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION"
+      ],
+      "holeKind": "attackRoll",
+      "id": "BattleAttackRollHole",
+      "reason": "Attack Roll results drive hit, miss, Critical Hit, replacement, and post-hit continuation semantics across attacks and feature riders.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION",
+        "RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION"
+      ],
+      "holeKind": "attackRoll",
+      "id": "BattleSpellAttackRollHole",
+      "reason": "Spell Attack Roll results drive spell hit, miss, Critical Hit, and after-hit spell continuations; current rule-core spell coverage owns only the established subset.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+        "SHARED.HIT_POINTS.POSITIVE_DAMAGE"
+      ],
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION"
+      ],
+      "holeKind": "rolledDice",
+      "id": "BattleDamageRollHole",
+      "reason": "Weapon damage rolls feed damage riders, Critical Hit dice, damage-dice choices, damage application, and zero-Hit-Point disposition.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "SHARED.HIT_POINTS.POSITIVE_DAMAGE"
+      ],
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION",
+        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION",
+        "RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION"
+      ],
+      "holeKind": "rolledDice",
+      "id": "BattleSpellDamageRollHole",
+      "reason": "Spell damage rolls feed attack, save, repeated, chained, and marked damage procedures; some established profiles are covered while many spell families still need split parity.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION",
+        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+      ],
+      "holeKind": "rolledDice",
+      "id": "BattleSpellDamageReductionRollHole",
+      "reason": "A damage-reduction roll changes effective damage and possible downstream concentration or zero-Hit-Point behavior.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION"
+      ],
+      "holeKind": "rolledDice",
+      "id": "BattleMirrorImageDuplicateRollHole",
+      "reason": "Mirror Image duplicate interception roll changes hit redirection, duplicate lifecycle, and continuation after an attack hit.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION",
+        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+      ],
+      "holeKind": "rolledDice",
+      "id": "BattleSpellTurnStartDamageRollHole",
+      "reason": "Turn-start spell damage rolls apply active-effect damage and may trigger concentration or zero-Hit-Point lifecycle consequences.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION",
+        "RKBC-PROFILE-JOIN-TABLE-CALLER"
+      ],
+      "holeKind": "rolledDice",
+      "id": "BattleFlamingSphereDamageRollHole",
+      "reason": "Flaming Sphere damage rolls depend on table-owned hazard positioning but reducer-owned damage and save interactions still need QNT/parity ownership.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "followUpTaskIds": [
+        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+      ],
+      "holeKind": "rolledDice",
+      "id": "BattleSpellHealingRollHole",
+      "reason": "Healing rolls restore Hit Points and may clear zero-Hit-Point lifecycle state; the existing spell profile coverage owns the established healing subset.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND",
+        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+      ],
+      "holeKind": "skillChoice",
+      "id": "BattleSpellSkillChoiceHole",
+      "reason": "Skill choice changes which Ability Check specialization an effect modifies or grants, so it is not display-only catalog data.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND",
+        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+      ],
+      "holeKind": "abilityChoice",
+      "id": "BattleSpellAbilityChoiceHole",
+      "reason": "Ability choice changes roll modifiers, marked-damage riders, or later checks and must be owned by a semantic obligation.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+      ],
+      "holeKind": "conditionChoice",
+      "id": "BattleSpellConditionChoiceHole",
+      "reason": "Condition choice selects which condition a save-gated spell can apply, making it a spell-condition semantic frontier that the current battle-hole task split does not yet name directly.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [
+        "RKBC-PROFILE-JOIN-TABLE-CALLER"
+      ],
+      "holeKind": "thaumaturgyActiveOneMinuteEffectCount",
+      "id": "BattleThaumaturgyActiveOneMinuteEffectCountHole",
+      "reason": "The count of separate active Thaumaturgy presentation effects is caller/table presentation state, not reducer-owned battle state.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND"
+      ],
+      "holeKind": "commandOptionChoice",
+      "id": "BattleCommandOptionChoiceHole",
+      "reason": "Command option choice selects RAW-fixed reducer consequences for halt, grovel, drop, approach, or flee while route and object facts remain table-owned.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [
+        "RKBC-PROFILE-JOIN-TABLE-CALLER"
+      ],
+      "holeKind": "dancingLightsPlacement",
+      "id": "BattleDancingLightsPlacementHole",
+      "reason": "Light placement and repositioning are table spatial facts; the reducer can record caller-supplied light identities without pathfinding or geometry ownership.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION",
+        "RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND",
+        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+      ],
+      "holeKind": "savingThrowOutcome",
+      "id": "BattleSpellSavingThrowOutcomeHole",
+      "reason": "Spell Saving Throw outcomes determine damage, conditions, Command consequences, Counterspell, and area results; current coverage owns only the established spell subset.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+      ],
+      "holeKind": "savingThrowOutcome",
+      "id": "BattleSpellTurnStartSavingThrowOutcomeHole",
+      "reason": "Turn-start active-effect Saving Throw outcomes can end or continue damage/effect state and still need dedicated QNT/parity ownership.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+      ],
+      "holeKind": "savingThrowOutcome",
+      "id": "BattleSleepRepeatSavingThrowOutcomeHole",
+      "reason": "Sleep repeat Saving Throw outcomes control condition cleanup for an active spell effect and are not covered by the current rule-core spell subset.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+      ],
+      "holeKind": "savingThrowOutcome",
+      "id": "BattleHideousLaughterRepeatSavingThrowOutcomeHole",
+      "reason": "Hideous Laughter repeat Saving Throw outcomes depend on end-turn or damage triggers and control effect lifecycle cleanup.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-MOVEMENT-ROUTE",
+        "RKBC-PROFILE-JOIN-TABLE-CALLER"
+      ],
+      "holeKind": "savingThrowOutcome",
+      "id": "BattleGreaseGroundHazardSavingThrowOutcomeHole",
+      "reason": "Grease ground hazard saves combine table-owned area occupancy with reducer-owned Prone application and movement-cost effects.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+      ],
+      "holeKind": "savingThrowOutcome",
+      "id": "BattleSpellConditionEndTurnSavingThrowOutcomeHole",
+      "reason": "End-turn condition Saving Throw outcomes decide whether a spell-owned condition persists or is removed.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-MOVEMENT-ROUTE",
+        "RKBC-PROFILE-JOIN-TABLE-CALLER"
+      ],
+      "holeKind": "flamingSphereRamMovement",
+      "id": "BattleFlamingSphereRamMovementHole",
+      "reason": "Sphere movement distance and contact are caller/table spatial facts; damage/save consequences are separate semantic rows.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-MOVEMENT-ROUTE",
+        "RKBC-PROFILE-JOIN-TABLE-CALLER"
+      ],
+      "holeKind": "flamingSphereRepositionMovement",
+      "id": "BattleFlamingSphereRepositionMovementHole",
+      "reason": "Repositioning the sphere is table spatial placement, not reducer-owned pathfinding.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION",
+        "RKBC-PROFILE-JOIN-TABLE-CALLER"
+      ],
+      "holeKind": "savingThrowOutcome",
+      "id": "BattleFlamingSphereSavingThrowOutcomeHole",
+      "reason": "Flaming Sphere Saving Throw outcomes determine full or half damage after a table-owned area/ram trigger.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+      ],
+      "holeKind": "savingThrowOutcome",
+      "id": "BattleProtectionRelevantEffectSavingThrowOutcomeHole",
+      "reason": "Protection-related repeat saves decide whether relevant charmed, frightened, or possession effects persist.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "followUpTaskIds": [
+        "RKBC-PROFILE-JOIN-FEATURE-PASSIVE-RESOURCE"
+      ],
+      "holeKind": "savingThrowOutcome",
+      "id": "BattleUnitFeatureSavingThrowOutcomeHole",
+      "reason": "Feature Saving Throw outcomes drive feature-owned conditions or damage replacements; covered profile semantics do not yet cover every supported feature family.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "followUpTaskIds": [
+        "RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS"
+      ],
+      "holeKind": "rolledDice",
+      "id": "BattleUnitFeatureRollHole",
+      "reason": "Feature roll holes cover self-healing and reaction modifier dice; the established feature procedure subset is covered, with later feature-profile joins still open.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "followUpTaskIds": [
+        "RKBC-PROFILE-JOIN-FEATURE-PASSIVE-RESOURCE",
+        "RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS"
+      ],
+      "holeKind": "unitFeatureDecision",
+      "id": "BattleUnitFeatureDecisionHole",
+      "reason": "Feature use-or-decline decisions can spend resources or open continuations such as Cleave; some supported feature profiles still need rules-kernel joins.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION"
+      ],
+      "holeKind": "deathSavingThrow",
+      "id": "BattleDeathSavingThrowHole",
+      "reason": "Death Saving Throw fills mutate zero-Hit-Point lifecycle state and should be covered with the battle damage/zero-Hit-Point obligation split.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.STAT_BLOCK.ATTACK_CONTROL"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "statBlockRechargeRoll",
+      "id": "BattleStatBlockRechargeRollHole",
+      "reason": "Recharge rolls affect stat block limited-use/recharge availability and are already covered by the stat-block attack-control obligation.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.REACTION.OFFER_DECLINE_RESUME"
+      ],
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-REACTION-CONCENTRATION"
+      ],
+      "holeKind": "concentrationSavingThrow",
+      "id": "BattleConcentrationSavingThrowHole",
+      "reason": "Concentration Saving Throw outcomes can end active effects after damage; existing reaction coverage owns the core protocol, while attack/damage lifecycle sites need explicit reuse or split.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.REACTION.OFFER_DECLINE_RESUME"
+      ],
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-REACTION-CONCENTRATION"
+      ],
+      "holeKind": "reactionDecision",
+      "id": "BattleReactionDecisionHole",
+      "reason": "Reaction decline, resolution, nested fills, resource spend, and interrupted-procedure resume are reducer-owned sequencing semantics.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND"
+      ],
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-MOVEMENT-ROUTE"
+      ],
+      "holeKind": "movement",
+      "id": "BattleMovementHole",
+      "reason": "Movement spend, prone standing, Grapple movement, and Opportunity Attack frontiers are covered; route, terrain-distance, and Command movement witnesses still need boundary split review.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND"
+      ],
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND"
+      ],
+      "holeKind": "abilityCheck",
+      "id": "BattleAbilityCheckHole",
+      "reason": "Ability Check fills resolve Hide, Search, spell-restraint escape, and similar reducer-visible checks; table prerequisites and spatial witnesses remain boundary facts.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "grappleOutcome",
+      "id": "BattleGrappleOutcomeHole",
+      "reason": "Grapple and escape outcomes mutate Grappled state and action use, covered by the movement/spatial/grapple rule-core obligation.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND"
+      ],
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-MOVEMENT-ROUTE"
+      ],
+      "holeKind": "shoveOutcome",
+      "id": "BattleShoveOutcomeHole",
+      "reason": "Shove outcomes apply Prone or a caller-supplied push disposition; Prone is reducer-owned while push route facts need the movement-route split.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-TARGETS-AREAS",
+        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+      ],
+      "holeKind": "sanctuaryInterdictionOutcome",
+      "id": "BattleSanctuaryInterdictionOutcomeHole",
+      "reason": "Sanctuary interdiction combines a Wisdom Saving Throw outcome with loss of targeting or replacement target choice, and needs its own target/save split.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "SHARED.HIT_POINTS.POSITIVE_DAMAGE"
+      ],
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION"
+      ],
+      "holeKind": "attackDamageDisposition",
+      "id": "BattleAttackDamageDispositionHole",
+      "reason": "Damage disposition chooses ordinary damage, Knock Out, or zero-Hit-Point replacement before HP lifecycle application.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.STAT_BLOCK.ATTACK_CONTROL"
+      ],
+      "fillKind": "attackRoll",
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION"
+      ],
+      "id": "attackRoll",
+      "reason": "Attack Roll fills drive hit, miss, Critical Hit, replacement, and downstream damage/continuation semantics.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "SHARED.HIT_POINTS.POSITIVE_DAMAGE"
+      ],
+      "fillKind": "rolledDice",
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION",
+        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+      ],
+      "id": "rolledDice",
+      "reason": "Rolled Dice fills are shared by damage, healing, mitigation, duplicate interception, and feature-roll procedures.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "fillKind": "damageTypeChoice",
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION"
+      ],
+      "id": "damageTypeChoice",
+      "reason": "Damage Type choice changes later damage application and rider behavior.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "fillKind": "savingThrowOutcome",
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION",
+        "RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND",
+        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+      ],
+      "id": "savingThrowOutcome",
+      "reason": "Saving Throw outcomes drive damage, condition, Command, protection, feature, and active-effect lifecycle branches.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "fillKind": "conditionChoice",
+      "followUpTaskIds": [
+        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+      ],
+      "id": "conditionChoice",
+      "reason": "Condition choices select reducer-visible condition application, not display metadata.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "fillKind": "skillChoice",
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND"
+      ],
+      "id": "skillChoice",
+      "reason": "Skill choices determine which Ability Check specialization receives a modifier or advantage.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "fillKind": "abilityChoice",
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND"
+      ],
+      "id": "abilityChoice",
+      "reason": "Ability choices determine later roll modifiers, checks, or marked-damage semantics.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "fillKind": "thaumaturgyActiveOneMinuteEffectCount",
+      "followUpTaskIds": [
+        "RKBC-PROFILE-JOIN-TABLE-CALLER"
+      ],
+      "id": "thaumaturgyActiveOneMinuteEffectCount",
+      "reason": "This fill supplies a table-owned presentation-effect count; the reducer does not model every Thaumaturgy minor wonder.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "fillKind": "commandOptionChoice",
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND"
+      ],
+      "id": "commandOptionChoice",
+      "reason": "Command option fills select the RAW branch whose reducer-visible consequences must be modeled or classified.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "fillKind": "dancingLightsPlacement",
+      "followUpTaskIds": [
+        "RKBC-PROFILE-JOIN-TABLE-CALLER"
+      ],
+      "id": "dancingLightsPlacement",
+      "reason": "Light positions, spacing, and movement are table spatial facts.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "fillKind": "unitFeatureDecision",
+      "followUpTaskIds": [
+        "RKBC-PROFILE-JOIN-FEATURE-PASSIVE-RESOURCE",
+        "RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS"
+      ],
+      "id": "unitFeatureDecision",
+      "reason": "Use/decline fills decide whether feature continuations or resources proceed.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "fillKind": "heldObjectFacts",
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND",
+        "RKBC-PROFILE-JOIN-TABLE-CALLER"
+      ],
+      "id": "heldObjectFacts",
+      "reason": "Held-object identities are table inventory facts consumed by the Command drop branch.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "fillKind": "targetChoice",
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-TARGETS-AREAS"
+      ],
+      "id": "targetChoice",
+      "reason": "Target selection is a table decision whose accepted identity changes reducer legality and effects.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "fillKind": "targetSpatialFacts",
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-REACTION-CONCENTRATION",
+        "RKBC-PROFILE-JOIN-TABLE-CALLER"
+      ],
+      "id": "targetSpatialFacts",
+      "reason": "Spatial, visibility, range, and separation witnesses are table facts.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "fillKind": "objectTargetChoice",
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-TARGETS-AREAS",
+        "RKBC-PROFILE-JOIN-TABLE-CALLER"
+      ],
+      "id": "objectTargetChoice",
+      "reason": "Object target identity and object-state witnesses are table facts at the current reducer boundary.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "fillKind": "spellAreaChoice",
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-TARGETS-AREAS",
+        "RKBC-PROFILE-JOIN-TABLE-CALLER"
+      ],
+      "id": "spellAreaChoice",
+      "reason": "Area identity is supplied by the table/caller; the reducer consumes it without deriving geometry.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "fillKind": "flamingSphereRamMovement",
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-MOVEMENT-ROUTE",
+        "RKBC-PROFILE-JOIN-TABLE-CALLER"
+      ],
+      "id": "flamingSphereRamMovement",
+      "reason": "Flaming Sphere ram movement distance is a table spatial fact that precedes separate damage/save semantics.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "fillKind": "flamingSphereRepositionMovement",
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-MOVEMENT-ROUTE",
+        "RKBC-PROFILE-JOIN-TABLE-CALLER"
+      ],
+      "id": "flamingSphereRepositionMovement",
+      "reason": "Flaming Sphere repositioning is table placement, not pathfinding state.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "fillKind": "teleportDestination",
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-MOVEMENT-ROUTE",
+        "RKBC-PROFILE-JOIN-TABLE-CALLER"
+      ],
+      "id": "teleportDestination",
+      "reason": "Teleport destination legality is supplied by table spatial evidence.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "fillKind": "spellTargetAllocation",
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-TARGETS-AREAS"
+      ],
+      "id": "spellTargetAllocation",
+      "reason": "Target allocation determines legal distribution of repeated spell effects.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "fillKind": "spellTargetList",
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-TARGETS-AREAS"
+      ],
+      "id": "spellTargetList",
+      "reason": "Target-list fills carry cardinality and selected target semantics for multi-target spells.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "fillKind": "deathSavingThrow",
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION"
+      ],
+      "id": "deathSavingThrow",
+      "reason": "Death Saving Throw fills mutate success/failure counters, Stable, death, or 1-HP recovery outcomes.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.STAT_BLOCK.ATTACK_CONTROL"
+      ],
+      "fillKind": "statBlockRechargeRoll",
+      "followUpTaskIds": [],
+      "id": "statBlockRechargeRoll",
+      "reason": "Recharge roll fills mutate stat block recharge availability and are already covered by the stat-block obligation.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.REACTION.OFFER_DECLINE_RESUME"
+      ],
+      "fillKind": "concentrationSavingThrow",
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-REACTION-CONCENTRATION"
+      ],
+      "id": "concentrationSavingThrow",
+      "reason": "Concentration Saving Throw fills decide whether concentration survives damage.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "SHARED.HIT_POINTS.POSITIVE_DAMAGE"
+      ],
+      "fillKind": "attackDamageDisposition",
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION"
+      ],
+      "id": "attackDamageDisposition",
+      "reason": "Damage disposition fills select ordinary damage, Knock Out, or zero-Hit-Point replacement before applying damage.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [],
+      "fillKind": "sanctuaryInterdictionOutcome",
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-TARGETS-AREAS",
+        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+      ],
+      "id": "sanctuaryInterdictionOutcome",
+      "reason": "Sanctuary fills select save success, lost targeting, or replacement target outcome.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.REACTION.OFFER_DECLINE_RESUME"
+      ],
+      "fillKind": "reactionDecision",
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-REACTION-CONCENTRATION"
+      ],
+      "id": "reactionDecision",
+      "reason": "Reaction fills decide decline or resolve and may carry nested fills for interrupted procedure continuation.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND"
+      ],
+      "fillKind": "movement",
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-MOVEMENT-ROUTE"
+      ],
+      "id": "movement",
+      "reason": "Movement fills spend movement budget and may carry table-owned route, terrain, Command, Jump, or Opportunity Attack facts.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND"
+      ],
+      "fillKind": "abilityCheck",
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND"
+      ],
+      "id": "abilityCheck",
+      "reason": "Ability Check fills resolve reducer-visible checks such as Hide, Search, and escape attempts.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND"
+      ],
+      "fillKind": "grappleOutcome",
+      "followUpTaskIds": [],
+      "id": "grappleOutcome",
+      "reason": "Grapple outcome fills apply or clear Grappled state and spend the relevant action.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND"
+      ],
+      "fillKind": "shoveOutcome",
+      "followUpTaskIds": [
+        "RKBC-BATTLE-HOLE-MOVEMENT-ROUTE"
+      ],
+      "id": "shoveOutcome",
+      "reason": "Shove outcome fills apply Prone or a push disposition, with route disposition still needing movement-boundary follow-up.",
+      "subject": "battle-fill-kind"
     }
   ],
   "profileObligations": [

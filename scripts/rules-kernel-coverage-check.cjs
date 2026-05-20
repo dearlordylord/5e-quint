@@ -2,7 +2,10 @@
 
 const fs = require("node:fs");
 const path = require("node:path");
+const ts = require("typescript");
 const {
+  battleFrontierClassifications,
+  battleFrontierSubjects,
   coveragePaths,
   coveredStatuses,
   generatorReadinessStatuses,
@@ -112,6 +115,128 @@ function validateStringArray(value, context) {
   );
 }
 
+function validateRequiredStringArray(value, context) {
+  if (value === undefined) return [`${context} must be an array.`];
+  return validateStringArray(value, context);
+}
+
+function lastTypeName(typeName) {
+  return ts.isIdentifier(typeName) ? typeName.text : typeName.right.text;
+}
+
+function typeAliasMap(sourceFile) {
+  const aliases = new Map();
+  function visit(node) {
+    if (ts.isTypeAliasDeclaration(node)) {
+      aliases.set(node.name.text, node.type);
+    }
+    ts.forEachChild(node, visit);
+  }
+  visit(sourceFile);
+  return aliases;
+}
+
+function unionTypeMembers(aliases, typeName) {
+  const alias = aliases.get(typeName);
+  if (alias === undefined) {
+    throw new Error(`Missing type alias ${typeName}.`);
+  }
+  return ts.isUnionTypeNode(alias) ? alias.types : [alias];
+}
+
+function topLevelKindLiterals(typeNode, aliases) {
+  const kinds = [];
+  function collectLiteralKind(kindType) {
+    if (
+      ts.isLiteralTypeNode(kindType) &&
+      ts.isStringLiteral(kindType.literal)
+    ) {
+      kinds.push(kindType.literal.text);
+      return;
+    }
+    if (ts.isUnionTypeNode(kindType)) {
+      for (const member of kindType.types) collectLiteralKind(member);
+    }
+  }
+  function walk(node) {
+    if (ts.isTypeLiteralNode(node)) {
+      for (const member of node.members) {
+        if (
+          ts.isPropertySignature(member) &&
+          ts.isIdentifier(member.name) &&
+          member.name.text === "kind" &&
+          member.type !== undefined
+        ) {
+          collectLiteralKind(member.type);
+        }
+      }
+      return;
+    }
+    if (ts.isIntersectionTypeNode(node) || ts.isUnionTypeNode(node)) {
+      for (const member of node.types) walk(member);
+      return;
+    }
+    if (ts.isTypeReferenceNode(node)) {
+      const referenceName = lastTypeName(node.typeName);
+      if (referenceName === "Extract") {
+        for (const argument of node.typeArguments ?? []) walk(argument);
+        return;
+      }
+      const alias = aliases.get(referenceName);
+      if (alias !== undefined) walk(alias);
+    }
+  }
+  walk(typeNode);
+  return Array.from(new Set(kinds));
+}
+
+function extractBattleFrontierSource(rootPath) {
+  const battleReducerPath = path.join(
+    rootPath,
+    "packages",
+    "battle-runtime",
+    "src",
+    "battle-reducer.ts",
+  );
+  const text = fs.readFileSync(battleReducerPath, "utf8");
+  const sourceFile = ts.createSourceFile(
+    battleReducerPath,
+    text,
+    ts.ScriptTarget.Latest,
+    true,
+  );
+  const aliases = typeAliasMap(sourceFile);
+  const holeFamilies = new Map();
+  for (const member of unionTypeMembers(aliases, "BattleHole")) {
+    if (!ts.isTypeReferenceNode(member) || !ts.isIdentifier(member.typeName)) {
+      throw new Error(
+        `BattleHole member ${member.getText(sourceFile)} is not a named hole family.`,
+      );
+    }
+    const family = member.typeName.text;
+    const kinds = topLevelKindLiterals(member, aliases);
+    if (kinds.length !== 1) {
+      throw new Error(
+        `BattleHole family ${family} must expose exactly one top-level kind; found ${kinds.join(", ") || "none"}.`,
+      );
+    }
+    holeFamilies.set(family, kinds[0]);
+  }
+
+  const fillKinds = new Set();
+  for (const member of unionTypeMembers(aliases, "BattleFill")) {
+    const kinds = topLevelKindLiterals(member, aliases);
+    if (kinds.length !== 1) {
+      throw new Error(
+        `BattleFill member ${member.getText(sourceFile)} must expose exactly one top-level kind; found ${kinds.join(", ") || "none"}.`,
+      );
+    }
+    fillKinds.add(kinds[0]);
+  }
+
+  return { fillKinds, holeFamilies };
+}
+
 function findObjectEnd(text, openBraceIndex) {
   let depth = 0;
   let quote = null;
@@ -212,11 +337,6 @@ function extractRunTargets(rootPath, ownerPath, witnessText) {
     .filter((target) => target !== undefined);
 }
 
-function validateRequiredStringArray(value, context) {
-  if (value === undefined) return [`${context} must be an array.`];
-  return validateStringArray(value, context);
-}
-
 function validateWitness(witness, context) {
   const issues = [];
   if (!isRecord(witness)) return [`${context} must be an object.`];
@@ -247,12 +367,18 @@ function validateWitness(witness, context) {
     witness.kind === "focused-mbt" ||
     witness.kind === "deterministic-qnt-replay"
   ) {
-    if (typeof witness.qntSpecPath !== "string" || witness.qntSpecPath.length === 0) {
+    if (
+      typeof witness.qntSpecPath !== "string" ||
+      witness.qntSpecPath.length === 0
+    ) {
       issues.push(
         `${context}.qntSpecPath must be a non-empty string for ${witness.kind} witnesses.`,
       );
     }
-    if (typeof witness.stepAction !== "string" || witness.stepAction.length === 0) {
+    if (
+      typeof witness.stepAction !== "string" ||
+      witness.stepAction.length === 0
+    ) {
       issues.push(
         `${context}.stepAction must be a non-empty string for ${witness.kind} witnesses.`,
       );
@@ -340,7 +466,9 @@ function validateProfileMapping(mapping, index, obligationIds, profilesById) {
   } else {
     const profile = profilesById.get(mapping.profileId);
     if (profile === undefined) {
-      issues.push(`${context} references unknown profile ${mapping.profileId}.`);
+      issues.push(
+        `${context} references unknown profile ${mapping.profileId}.`,
+      );
     } else if (!rulesKernelProfileKinds.has(profile.profileKind)) {
       issues.push(
         `${context} maps non-rules-kernel profile ${mapping.profileId} with profileKind ${profile.profileKind}.`,
@@ -368,6 +496,138 @@ function validateProfileMapping(mapping, index, obligationIds, profilesById) {
       }
     }
   }
+  return issues;
+}
+
+function validateBattleFrontierRow(
+  row,
+  index,
+  obligationIds,
+  obligationsById,
+  expectedBattleFrontier,
+) {
+  const issues = [];
+  const context = `battle-hole-frontier row ${index + 1}`;
+  if (!isRecord(row)) return [`${context} must be an object.`];
+  if (!battleFrontierSubjects.has(row.subject)) {
+    issues.push(`${context}.subject has unknown value ${row.subject}.`);
+  }
+  if (typeof row.id !== "string" || row.id.length === 0) {
+    issues.push(`${context}.id must be a non-empty string.`);
+  }
+  if (!battleFrontierClassifications.has(row.classification)) {
+    issues.push(
+      `${context}.classification has unknown value ${row.classification}.`,
+    );
+  }
+  if (typeof row.reason !== "string" || row.reason.length === 0) {
+    issues.push(`${context}.reason must be a non-empty string.`);
+  }
+  issues.push(
+    ...validateRequiredStringArray(
+      row.coveredByObligationIds,
+      `${context}.coveredByObligationIds`,
+    ),
+    ...validateRequiredStringArray(
+      row.followUpTaskIds,
+      `${context}.followUpTaskIds`,
+    ),
+  );
+
+  if (row.subject === "battle-hole-family") {
+    const expectedHoleKind = expectedBattleFrontier.holeFamilies.get(row.id);
+    if (expectedHoleKind === undefined) {
+      issues.push(`${context} references unknown BattleHole family ${row.id}.`);
+    }
+    if (typeof row.holeKind !== "string" || row.holeKind.length === 0) {
+      issues.push(`${context}.holeKind must be a non-empty string.`);
+    } else if (
+      expectedHoleKind !== undefined &&
+      row.holeKind !== expectedHoleKind
+    ) {
+      issues.push(
+        `${context}.holeKind is ${row.holeKind}, expected ${expectedHoleKind} for ${row.id}.`,
+      );
+    }
+    if (Object.prototype.hasOwnProperty.call(row, "fillKind")) {
+      issues.push(
+        `${context}.fillKind is only valid for battle-fill-kind rows.`,
+      );
+    }
+  }
+
+  if (row.subject === "battle-fill-kind") {
+    if (typeof row.fillKind !== "string" || row.fillKind.length === 0) {
+      issues.push(`${context}.fillKind must be a non-empty string.`);
+    } else if (!expectedBattleFrontier.fillKinds.has(row.fillKind)) {
+      issues.push(
+        `${context} references unknown BattleFill kind ${row.fillKind}.`,
+      );
+    }
+    if (
+      typeof row.id === "string" &&
+      typeof row.fillKind === "string" &&
+      row.id !== row.fillKind
+    ) {
+      issues.push(
+        `${context}.id must match fillKind for battle-fill-kind rows.`,
+      );
+    }
+    if (Object.prototype.hasOwnProperty.call(row, "holeKind")) {
+      issues.push(
+        `${context}.holeKind is only valid for battle-hole-family rows.`,
+      );
+    }
+  }
+
+  for (const obligationId of row.coveredByObligationIds ?? []) {
+    if (!obligationIds.has(obligationId)) {
+      issues.push(
+        `${context}.coveredByObligationIds references unknown obligation ${obligationId}.`,
+      );
+    }
+  }
+  for (const taskId of row.followUpTaskIds ?? []) {
+    if (!/^RKBC-[A-Z0-9-]+$/.test(taskId)) {
+      issues.push(`${context}.followUpTaskIds has invalid task id ${taskId}.`);
+    }
+  }
+
+  const coveredByObligations = (row.coveredByObligationIds ?? [])
+    .map((obligationId) => obligationsById.get(obligationId))
+    .filter((obligation) => obligation !== undefined);
+  if (row.classification === "semantic-frontier") {
+    if (
+      (row.coveredByObligationIds ?? []).length === 0 &&
+      (row.followUpTaskIds ?? []).length === 0
+    ) {
+      issues.push(
+        `${context} semantic-frontier rows must name a covering obligation or follow-up task.`,
+      );
+    }
+    for (const obligation of coveredByObligations) {
+      if (!coveredStatuses.has(obligation.status)) {
+        issues.push(
+          `${context} semantic-frontier row cannot claim non-covered obligation ${obligation.id} with status ${obligation.status}; use followUpTaskIds for uncovered semantic work.`,
+        );
+      }
+    }
+  } else if (row.classification !== undefined) {
+    if ((row.coveredByObligationIds ?? []).length === 0) {
+      issues.push(
+        `${context} ${row.classification} rows must name a non-semantic covering obligation.`,
+      );
+    }
+    const hasNonSemanticCoverage = coveredByObligations.some((obligation) =>
+      nonSemanticStatuses.has(obligation.status),
+    );
+    if (coveredByObligations.length > 0 && !hasNonSemanticCoverage) {
+      issues.push(
+        `${context} ${row.classification} row must be covered by at least one boundary-only or unsupported-by-admission obligation.`,
+      );
+    }
+  }
+
   return issues;
 }
 
@@ -625,6 +885,28 @@ function buildSummary(obligations) {
   };
 }
 
+function buildBattleFrontierSummary(battleFrontierRows) {
+  const bySubject = Object.fromEntries(
+    [...battleFrontierSubjects].map((subject) => [subject, 0]),
+  );
+  const byClassification = Object.fromEntries(
+    [...battleFrontierClassifications].map((classification) => [
+      classification,
+      0,
+    ]),
+  );
+  for (const row of battleFrontierRows) {
+    bySubject[row.subject] = (bySubject[row.subject] ?? 0) + 1;
+    byClassification[row.classification] =
+      (byClassification[row.classification] ?? 0) + 1;
+  }
+  return {
+    total: battleFrontierRows.length,
+    bySubject,
+    byClassification,
+  };
+}
+
 function profilesByObligation(profileObligations) {
   const groups = new Map();
   for (const mapping of profileObligations) {
@@ -645,6 +927,7 @@ function profilesByObligation(profileObligations) {
 function buildMatrix(rootPath) {
   const paths = coveragePaths(rootPath);
   const obligations = readJsonl(rootPath, paths.obligations);
+  const battleHoleFrontier = readJsonl(rootPath, paths.battleHoleFrontier);
   const profileObligations = readJsonl(rootPath, paths.profileObligations);
   const generatorReadiness = readJsonl(rootPath, paths.generatorReadiness);
   const profiles = readJsonl(rootPath, paths.unitProfiles);
@@ -655,12 +938,14 @@ function buildMatrix(rootPath) {
       "obligations[].profiles":
         "Derived from profileObligations by obligation id; authored obligations.jsonl rows must not contain profiles.",
     },
+    battleHoleFrontierSummary: buildBattleFrontierSummary(battleHoleFrontier),
     obligations: obligations.map((obligation) =>
       stable({
         ...obligation,
         profiles: profileIdsByObligation.get(obligation.id) ?? [],
       }),
     ),
+    battleHoleFrontier: battleHoleFrontier.map((row) => stable(row)),
     profileObligations: profileObligations.map((mapping) => stable(mapping)),
     generatorReadiness: generatorReadiness.map((readiness) =>
       stable(readiness),
@@ -676,7 +961,7 @@ function renderReport(matrix, issues) {
   lines.push("# Rules Kernel Coverage Report");
   lines.push("");
   lines.push(
-    "Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `profile-obligations.jsonl`, `generator-readiness.jsonl`, and `KERNEL-COVERAGE` source markers.",
+    "Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-frontier.jsonl`, `profile-obligations.jsonl`, `generator-readiness.jsonl`, and `KERNEL-COVERAGE` source markers.",
   );
   lines.push("");
   lines.push("## Summary");
@@ -709,6 +994,51 @@ function renderReport(matrix, issues) {
     lines.push(
       `| \`${obligation.id}\` | ${obligation.runtime} | ${obligation.status} | ${profiles} |`,
     );
+  }
+  lines.push("");
+  lines.push("## Battle Hole Frontier");
+  lines.push("");
+  lines.push(
+    `- Total classified rows: ${matrix.battleHoleFrontierSummary.total}`,
+  );
+  lines.push("");
+  lines.push("| Subject | Count |");
+  lines.push("| --- | ---: |");
+  for (const [subject, count] of Object.entries(
+    matrix.battleHoleFrontierSummary.bySubject,
+  )) {
+    lines.push(`| ${subject} | ${count} |`);
+  }
+  lines.push("");
+  lines.push("| Classification | Count |");
+  lines.push("| --- | ---: |");
+  for (const [classification, count] of Object.entries(
+    matrix.battleHoleFrontierSummary.byClassification,
+  )) {
+    lines.push(`| ${classification} | ${count} |`);
+  }
+  lines.push("");
+  if (matrix.battleHoleFrontier.length === 0) {
+    lines.push("No BattleHole or BattleFill frontier rows recorded yet.");
+  } else {
+    lines.push(
+      "| Subject | Id | Kind | Classification | Coverage | Follow-up |",
+    );
+    lines.push("| --- | --- | --- | --- | --- | --- |");
+    for (const row of matrix.battleHoleFrontier) {
+      const kind = row.holeKind ?? row.fillKind ?? "";
+      const coverage =
+        (row.coveredByObligationIds ?? [])
+          .map((obligationId) => `\`${obligationId}\``)
+          .join(", ") || "_none_";
+      const followUp =
+        (row.followUpTaskIds ?? [])
+          .map((taskId) => `\`${taskId}\``)
+          .join(", ") || "_none_";
+      lines.push(
+        `| ${row.subject} | \`${row.id}\` | \`${kind}\` | ${row.classification} | ${coverage} | ${followUp} |`,
+      );
+    }
   }
   lines.push("");
   lines.push("## Generator Readiness");
@@ -756,7 +1086,8 @@ function renderObligationProfiles(obligation) {
   if ((obligation.profiles ?? []).length > 0) {
     return obligation.profiles.map((profile) => `\`${profile}\``).join(", ");
   }
-  if (coveredStatuses.has(obligation.status)) return "_direct reducer entrypoint_";
+  if (coveredStatuses.has(obligation.status))
+    return "_direct reducer entrypoint_";
   if (obligation.status === "needs-surface-evidence") {
     return "_surface join pending_";
   }
@@ -769,16 +1100,20 @@ function renderObligationProfiles(obligation) {
 function buildKernelCoverage({ root: rootPath }) {
   const paths = coveragePaths(rootPath);
   const obligations = readJsonl(rootPath, paths.obligations);
+  const battleHoleFrontier = readJsonl(rootPath, paths.battleHoleFrontier);
   const profileObligations = readJsonl(rootPath, paths.profileObligations);
   const generatorReadiness = readJsonl(rootPath, paths.generatorReadiness);
   const profiles = readJsonl(rootPath, paths.unitProfiles);
+  const expectedBattleFrontier = extractBattleFrontierSource(rootPath);
   const scanned = scanClaimFiles(rootPath);
   const markerIndex = buildMarkerIndex(scanned.markers);
   const issues = [];
   issues.push(...rulesKernelProfileKindClassificationIssues());
   const obligationIds = new Set();
   const obligationsById = new Map();
-  const profilesById = new Map(profiles.map((profile) => [profile.id, profile]));
+  const profilesById = new Map(
+    profiles.map((profile) => [profile.id, profile]),
+  );
 
   for (const [index, obligation] of obligations.entries()) {
     issues.push(
@@ -822,6 +1157,52 @@ function buildKernelCoverage({ root: rootPath }) {
         );
       }
       mappedProfileIds.add(mapping.profileId);
+    }
+  }
+
+  const seenBattleHoleFamilies = new Set();
+  const seenBattleFillKinds = new Set();
+  for (const [index, row] of battleHoleFrontier.entries()) {
+    issues.push(
+      ...validateBattleFrontierRow(
+        row,
+        index,
+        obligationIds,
+        obligationsById,
+        expectedBattleFrontier,
+      ),
+    );
+    if (isRecord(row) && typeof row.id === "string") {
+      if (row.subject === "battle-hole-family") {
+        if (seenBattleHoleFamilies.has(row.id)) {
+          issues.push(
+            `battle-hole-frontier row ${index + 1}: duplicate BattleHole family ${row.id}.`,
+          );
+        }
+        seenBattleHoleFamilies.add(row.id);
+      }
+      if (row.subject === "battle-fill-kind") {
+        if (seenBattleFillKinds.has(row.id)) {
+          issues.push(
+            `battle-hole-frontier row ${index + 1}: duplicate BattleFill kind ${row.id}.`,
+          );
+        }
+        seenBattleFillKinds.add(row.id);
+      }
+    }
+  }
+  for (const expectedFamily of expectedBattleFrontier.holeFamilies.keys()) {
+    if (!seenBattleHoleFamilies.has(expectedFamily)) {
+      issues.push(
+        `battle-hole-frontier is missing BattleHole family ${expectedFamily}.`,
+      );
+    }
+  }
+  for (const expectedFillKind of expectedBattleFrontier.fillKinds) {
+    if (!seenBattleFillKinds.has(expectedFillKind)) {
+      issues.push(
+        `battle-hole-frontier is missing BattleFill kind ${expectedFillKind}.`,
+      );
     }
   }
 
