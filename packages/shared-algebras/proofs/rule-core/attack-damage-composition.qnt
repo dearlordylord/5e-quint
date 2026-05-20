@@ -1,5 +1,7 @@
 // -*- mode: Bluespec; -*-
 
+// KERNEL-COVERAGE: qnt-owner BATTLE.DAMAGE.ATTACK_BRANCHES BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP
+
 module attackDamageComposition {
   import hitPointDamage.* from "./hit-point-damage"
   import zeroHitPointLifecycle.* from "./zero-hit-point-lifecycle"

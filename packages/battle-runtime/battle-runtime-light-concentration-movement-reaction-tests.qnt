@@ -363,7 +363,7 @@ module battleRuntimeLightConcentrationMovementReactionTests {
   }
 
   run test_concentration_breaks_on_failed_damage_save = {
-    val concentrating = { ...initialState.fighter, concentrating: true, activeEffects: Set(GuidanceAbilityCheckBonus) }
+    val concentrating = { ...initialState.fighter, concentrating: true, activeEffects: Set(GuidanceAbilityCheckBonus({ skill: StealthSkill })) }
     val result = applyDamage(concentrating, 5, 1, false)
     all {
       assert(not(result.concentrating)),
@@ -372,7 +372,7 @@ module battleRuntimeLightConcentrationMovementReactionTests {
   }
 
   run test_attack_action_can_break_target_concentration = {
-    val concentratingGoblin = { ...initialState, goblin: { ...initialState.goblin, concentrating: true, activeEffects: Set(GuidanceAbilityCheckBonus) } }
+    val concentratingGoblin = { ...initialState, goblin: { ...initialState.goblin, concentrating: true, activeEffects: Set(GuidanceAbilityCheckBonus({ skill: StealthSkill })) } }
     val result = resolveAttack(concentratingGoblin, 15, 10, fighterWeaponAttackDamageRoll(4), false)
     all {
       assert(result.goblin.hp == 3),
@@ -382,7 +382,7 @@ module battleRuntimeLightConcentrationMovementReactionTests {
   }
 
   run test_goblin_attack_action_can_break_target_concentration = {
-    val concentratingFighter = { ...endTurn(initialState), fighter: { ...initialState.fighter, concentrating: true, activeEffects: Set(GuidanceAbilityCheckBonus) } }
+    val concentratingFighter = { ...endTurn(initialState), fighter: { ...initialState.fighter, concentrating: true, activeEffects: Set(GuidanceAbilityCheckBonus({ skill: StealthSkill })) } }
     val result = resolveGoblinAttack(concentratingFighter, 20, 18, 5, false)
     all {
       assert(result.fighter.hp == 5),
@@ -392,7 +392,7 @@ module battleRuntimeLightConcentrationMovementReactionTests {
   }
 
   run test_acid_splash_damage_can_break_target_concentration = {
-    val concentratingGoblin = { ...initialState, goblin: { ...initialState.goblin, concentrating: true, activeEffects: Set(GuidanceAbilityCheckBonus) } }
+    val concentratingGoblin = { ...initialState, goblin: { ...initialState.goblin, concentrating: true, activeEffects: Set(GuidanceAbilityCheckBonus({ skill: StealthSkill })) } }
     val result = resolveAcidSplash(concentratingGoblin, false, true, 4, true, false)
     all {
       assert(result.goblin.hp == 6),

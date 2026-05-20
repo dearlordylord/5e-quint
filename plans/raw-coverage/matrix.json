@@ -25515,13 +25515,13 @@
     "fluffSpans": 1236,
     "nonFluffSpans": 22730,
     "closedNonFluffSpans": 22730,
-    "requirements": 48,
-    "executableRequirements": 8,
-    "qntModeled": 8,
-    "qntProved": 8,
-    "runtimeMapped": 7,
-    "runtimeParityCovered": 7,
-    "outOfScopeSpans": 1734,
+    "requirements": 49,
+    "executableRequirements": 9,
+    "qntModeled": 9,
+    "qntProved": 9,
+    "runtimeMapped": 8,
+    "runtimeParityCovered": 8,
+    "outOfScopeSpans": 1731,
     "ambiguousSpans": 0,
     "rawReviewedSections": 2920
   },
@@ -51822,7 +51822,8 @@
         "RAW-PTG-REACTIONS-002",
         "RAW-PTG-REACTIONS-004",
         "RAW-PTG-REACTIONS-005",
-        "RAW-PTG-REACTIONS-006"
+        "RAW-PTG-REACTIONS-006",
+        "RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001"
       ]
     },
     {
@@ -51855,6 +51856,7 @@
         "RAW-PTG-REACTIONS-004",
         "RAW-PTG-REACTIONS-005",
         "RAW-PTG-REACTIONS-006",
+        "RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001",
         "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
       ]
     },
@@ -51872,7 +51874,8 @@
         "RAW-PTG-REACTIONS-002",
         "RAW-PTG-REACTIONS-004",
         "RAW-PTG-REACTIONS-005",
-        "RAW-PTG-REACTIONS-006"
+        "RAW-PTG-REACTIONS-006",
+        "RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001"
       ]
     },
     {
@@ -51982,6 +51985,25 @@
       "coverageKind": "executable",
       "sourceSpanIds": [
         "SRD521-PTG-ACTIONS-REACTIONS-007"
+      ],
+      "qntModeled": true,
+      "qntProved": true,
+      "runtimeMapped": true,
+      "runtimeParityCovered": true,
+      "activePlanTasks": [
+        "QCORE8",
+        "QMBT1",
+        "QMBT3"
+      ]
+    },
+    {
+      "id": "RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001",
+      "title": "Damage requires a Constitution Saving Throw to maintain Concentration with DC max(10, half damage) capped at 30, and failed save ends the effect",
+      "coverageKind": "executable",
+      "sourceSpanIds": [
+        "SRD521-RULES-GLOSSARY-0239-003",
+        "SRD521-RULES-GLOSSARY-0239-008",
+        "SRD521-RULES-GLOSSARY-0239-009"
       ],
       "qntModeled": true,
       "qntProved": true,
@@ -109598,23 +109620,6 @@
       "text": "Some spells and other effects require Concentration to remain active, as specified in their descriptions."
     },
     {
-      "spanId": "SRD521-RULES-GLOSSARY-0239-003",
-      "source": {
-        "corpus": "srd-5.2.1",
-        "path": ".references/srd-5.2.1/Rules-Glossary.md",
-        "headingPath": [
-          "Concentration"
-        ],
-        "ordinal": 3,
-        "lineStart": 241,
-        "lineEnd": 241,
-        "textHash": "d0a185afce70526f"
-      },
-      "classification": "rule-procedure",
-      "reason": "Full-corpus matrix closure: this SRD span is not yet claimed by a promoted proof/runtime owner. Future implementation must split and reclassify it before claiming behavior.",
-      "text": "If the effect's creator loses Concentration, the effect ends."
-    },
-    {
       "spanId": "SRD521-RULES-GLOSSARY-0239-004",
       "source": {
         "corpus": "srd-5.2.1",
@@ -109681,40 +109686,6 @@
       "classification": "rule-procedure",
       "reason": "Full-corpus matrix closure: this SRD span is not yet claimed by a promoted proof/runtime owner. Future implementation must split and reclassify it before claiming behavior.",
       "text": "_** You lose Concentration on an effect the moment you start casting a spell that requires Concentration or activate another effect that requires Concentration."
-    },
-    {
-      "spanId": "SRD521-RULES-GLOSSARY-0239-008",
-      "source": {
-        "corpus": "srd-5.2.1",
-        "path": ".references/srd-5.2.1/Rules-Glossary.md",
-        "headingPath": [
-          "Concentration"
-        ],
-        "ordinal": 8,
-        "lineStart": 245,
-        "lineEnd": 245,
-        "textHash": "8c1187b5d7245c46"
-      },
-      "classification": "rule-procedure",
-      "reason": "Full-corpus matrix closure: this SRD span is not yet claimed by a promoted proof/runtime owner. Future implementation must split and reclassify it before claiming behavior.",
-      "text": "_** If you take damage, you must succeed on a Constitution saving throw to maintain Concentration."
-    },
-    {
-      "spanId": "SRD521-RULES-GLOSSARY-0239-009",
-      "source": {
-        "corpus": "srd-5.2.1",
-        "path": ".references/srd-5.2.1/Rules-Glossary.md",
-        "headingPath": [
-          "Concentration"
-        ],
-        "ordinal": 9,
-        "lineStart": 245,
-        "lineEnd": 245,
-        "textHash": "a410bfe47d6df3e3"
-      },
-      "classification": "rule-procedure",
-      "reason": "Full-corpus matrix closure: this SRD span is not yet claimed by a promoted proof/runtime owner. Future implementation must split and reclassify it before claiming behavior.",
-      "text": "The DC equals 10 or half the damage taken (round down), whichever number is higher, up to a maximum DC of 30."
     },
     {
       "spanId": "SRD521-RULES-GLOSSARY-0239-010",

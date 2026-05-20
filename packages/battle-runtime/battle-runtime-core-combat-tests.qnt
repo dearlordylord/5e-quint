@@ -646,7 +646,7 @@ module battleRuntimeCoreCombatTests {
   }
 
   run test_attack_damage_concentration_interrupt_resolves_before_damage = {
-    val concentratingGoblin = { ...initialState, goblin: { ...initialState.goblin, concentrating: true, activeEffects: Set(GuidanceAbilityCheckBonus) } }
+    val concentratingGoblin = { ...initialState, goblin: { ...initialState.goblin, concentrating: true, activeEffects: Set(GuidanceAbilityCheckBonus({ skill: StealthSkill })) } }
     val pending = resumeReactionContinuation(concentratingGoblin, ResumeAttack({ damage: 4 }))
     val resolved = resolveAttackDamageConcentration(pending, false)
     all {
@@ -660,7 +660,7 @@ module battleRuntimeCoreCombatTests {
   }
 
   run test_zero_damage_reaction_attack_continuation_does_not_open_concentration_interrupt = {
-    val concentratingGoblin = { ...initialState, goblin: { ...initialState.goblin, concentrating: true, activeEffects: Set(GuidanceAbilityCheckBonus) } }
+    val concentratingGoblin = { ...initialState, goblin: { ...initialState.goblin, concentrating: true, activeEffects: Set(GuidanceAbilityCheckBonus({ skill: StealthSkill })) } }
     val resolved = resumeReactionContinuation(concentratingGoblin, ResumeAttack({ damage: 0 }))
     all {
       assert(resolved.interruptStack == []),
@@ -797,7 +797,7 @@ module battleRuntimeCoreCombatTests {
   }
 
   run test_rage_breaks_concentration_and_blocks_spells = {
-    val concentrating = { ...initialState, fighter: { ...initialState.fighter, concentrating: true, activeEffects: Set(GuidanceAbilityCheckBonus) } }
+    val concentrating = { ...initialState, fighter: { ...initialState.fighter, concentrating: true, activeEffects: Set(GuidanceAbilityCheckBonus({ skill: StealthSkill })) } }
     val raging = startRage(concentrating, 2).state
     all {
       assert(not(raging.fighter.concentrating)),

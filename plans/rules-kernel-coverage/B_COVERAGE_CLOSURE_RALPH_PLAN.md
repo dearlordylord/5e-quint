@@ -7,37 +7,37 @@
     {
       "number": 1,
       "id": "RKBC-BATTLE-HOLE-INVENTORY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Battle Hole And Fill Inventory"
     },
     {
       "number": 2,
       "id": "RKBC-BATTLE-HOLE-TARGETS-AREAS",
-      "status": "blocked",
+      "status": "done",
       "title": "Battle Target And Area Hole Obligations"
     },
     {
       "number": 3,
       "id": "RKBC-BATTLE-HOLE-MOVEMENT-ROUTE",
-      "status": "blocked",
+      "status": "done",
       "title": "Battle Movement Route And Spatial Fact Obligations"
     },
     {
       "number": 4,
       "id": "RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION",
-      "status": "blocked",
+      "status": "done",
       "title": "Battle Damage Disposition And Type Choice Obligations"
     },
     {
       "number": 5,
       "id": "RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND",
-      "status": "blocked",
+      "status": "done",
       "title": "Battle Ability Skill And Command Hole Obligations"
     },
     {
       "number": 6,
       "id": "RKBC-BATTLE-HOLE-REACTION-CONCENTRATION",
-      "status": "blocked",
+      "status": "done",
       "title": "Battle Reaction And Concentration Hole Obligations"
     },
     {
@@ -67,7 +67,7 @@
     {
       "number": 11,
       "id": "RKBC-PROFILE-JOIN-TABLE-CALLER",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Table Caller Profile Join And Boundary Classification"
     },
     {
@@ -317,17 +317,17 @@ Reviewers should reject:
 
 | # | Task | Status | Depends On | Closure target |
 | ---: | --- | --- | --- | --- |
-| 1 | RKBC-BATTLE-HOLE-INVENTORY - Battle Hole And Fill Inventory | ready-for-research | baseline | Inventory every current `BattleHole` and fill kind; classify semantic frontier, deterministic projection, unsupported, or dead branch. |
-| 2 | RKBC-BATTLE-HOLE-TARGETS-AREAS - Battle Target And Area Hole Obligations | blocked | RKBC-BATTLE-HOLE-INVENTORY | Covered obligations for target, target-list, and area-choice hole families. |
-| 3 | RKBC-BATTLE-HOLE-MOVEMENT-ROUTE - Battle Movement Route And Spatial Fact Obligations | blocked | RKBC-BATTLE-HOLE-INVENTORY | Covered/boundary obligations for movement route and table spatial fact holes. |
-| 4 | RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION - Battle Damage Disposition And Type Choice Obligations | blocked | RKBC-BATTLE-HOLE-INVENTORY | Covered obligations for damage disposition and damage-type choice holes. |
-| 5 | RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND - Battle Ability Skill And Command Hole Obligations | blocked | RKBC-BATTLE-HOLE-INVENTORY | Covered/boundary obligations for ability choice, skill choice, and Command option holes. |
-| 6 | RKBC-BATTLE-HOLE-REACTION-CONCENTRATION - Battle Reaction And Concentration Hole Obligations | blocked | RKBC-BATTLE-HOLE-INVENTORY | Covered obligations for reaction decisions, continuation resumption, and Concentration Saving Throw holes not already owned. |
+| 1 | RKBC-BATTLE-HOLE-INVENTORY - Battle Hole And Fill Inventory | done | baseline | Inventory every current `BattleHole` and fill kind; classify semantic frontier, deterministic projection, unsupported, or dead branch. |
+| 2 | RKBC-BATTLE-HOLE-TARGETS-AREAS - Battle Target And Area Hole Obligations | done | RKBC-BATTLE-HOLE-INVENTORY | Sanctuary targeting interdiction is covered; spell target-list/allocation rows are joined to spell procedure coverage; object/area choice rows remain table-caller boundary evidence. |
+| 3 | RKBC-BATTLE-HOLE-MOVEMENT-ROUTE - Battle Movement Route And Spatial Fact Obligations | done | RKBC-BATTLE-HOLE-INVENTORY | Shove outcome/push disposition is covered; movement-route and spatial derivation holes are classified as reducer semantics or boundary/table-caller evidence. |
+| 4 | RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION - Battle Damage Disposition And Type Choice Obligations | done | RKBC-BATTLE-HOLE-INVENTORY | Covered obligations for damage disposition and damage-type choice holes. |
+| 5 | RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND - Battle Ability Skill And Command Hole Obligations | done | RKBC-BATTLE-HOLE-INVENTORY | Covered/boundary obligations for ability choice, skill choice, and Command option holes. |
+| 6 | RKBC-BATTLE-HOLE-REACTION-CONCENTRATION - Battle Reaction And Concentration Hole Obligations | done | RKBC-BATTLE-HOLE-INVENTORY | Reaction-decision, continuation-resume, spell-cast reaction-fact, and Concentration Saving Throw holes reuse the covered reaction obligation or table-fact boundary rows; Task 6 has no remaining follow-up. |
 | 7 | RKBC-PROFILE-JOIN-FEATURE-PASSIVE-RESOURCE - Feature Passive Resource And Persistent Profile Join | ready-for-research | baseline | Map feature passive/resource/persistent profiles to covered obligations or create missing obligations. |
 | 8 | RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS - Feature Reaction Bonus Action And Resource Profile Join | ready-for-research | baseline | Map feature reaction, bonus-action, and failed-roll resource profiles to covered obligations or create missing obligations. |
 | 9 | RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION - Spell Damage Condition And Scalar Profile Join | ready-for-research | baseline | Map Spell Definition profiles for damage, condition, scalar, and roll modifiers to covered Spell Effect/Invocation obligations or create missing obligations. |
 | 10 | RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION - Spell After Hit Reaction And Marked Effect Profile Join | ready-for-research | baseline | Map after-hit, reaction-casting-time Spell Invocation, Readied Spell Response, marked-effect, and chained spell profiles to covered obligations or create missing obligations. |
-| 11 | RKBC-PROFILE-JOIN-TABLE-CALLER - Table Caller Profile Join And Boundary Classification | blocked | RKBC-BATTLE-HOLE-INVENTORY, RKBC-BATTLE-HOLE-TARGETS-AREAS, RKBC-BATTLE-HOLE-MOVEMENT-ROUTE | Map table-caller profiles to reducer-semantic obligations or boundary rows without MBT state-space explosion. |
+| 11 | RKBC-PROFILE-JOIN-TABLE-CALLER - Table Caller Profile Join And Boundary Classification | ready-for-research | RKBC-BATTLE-HOLE-INVENTORY, RKBC-BATTLE-HOLE-TARGETS-AREAS, RKBC-BATTLE-HOLE-MOVEMENT-ROUTE | Map table-caller profiles to reducer-semantic obligations or boundary rows without MBT state-space explosion. |
 | 12 | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY - Character Creation Choice Discovery And Cardinality | ready-for-research | baseline | Split current creation choice discovery/cardinality semantics out of the broad creation audit. |
 | 13 | RKBC-CREATION-FILL-VALIDATION-BATCH - Character Creation Fill Validation And Atomic Batch | ready-for-research | baseline | Cover fill validation, batch atomicity, rediscovery, and finalization deltas beyond the existing slice. |
 | 14 | RKBC-CREATION-ADVANCEMENT-REPLACEMENT - Character Creation Advancement And Replacement | blocked | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH | Cover advancement replacement semantics and class-feature replacement profiles. |
@@ -346,7 +346,7 @@ Reviewers should reject:
 
 ### Task 1 - RKBC-BATTLE-HOLE-INVENTORY - Battle Hole And Fill Inventory
 
-Status: `ready-for-research`
+Status: `done`
 
 Scope: inventory every current `BattleHole` kind and fill kind admitted by the
 battle reducer. Classify each as reducer-semantic frontier, deterministic
@@ -363,13 +363,21 @@ Acceptance:
 
 ### Task 2 - RKBC-BATTLE-HOLE-TARGETS-AREAS - Battle Target And Area Hole Obligations
 
-Status: `blocked`
+Status: `done`
 
 Depends on: `RKBC-BATTLE-HOLE-INVENTORY`.
 
 Scope: cover target choice, target list, and area choice hole families. Use
 focused random MBT where target ordering, repeated selection, or area
 interaction changes legal reducer state.
+
+Result: `BATTLE.SANCTUARY.TARGETING_INTERDICTION` covers Sanctuary ward
+creation, direct-targeting interdiction, replacement target selection,
+area-effect exclusion, and target-action early end. Spell target-list and
+target-allocation holes remain covered by `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`;
+object target and spell area choices remain `BATTLE.TABLE.HOLE_FACT_BOUNDARIES`.
+Residual generic `targetChoice` consumers are routed to Tasks 4, 5, 7, 8, and
+11 by reducer family.
 
 Acceptance:
 
@@ -380,13 +388,21 @@ Acceptance:
 
 ### Task 3 - RKBC-BATTLE-HOLE-MOVEMENT-ROUTE - Battle Movement Route And Spatial Fact Obligations
 
-Status: `blocked`
+Status: `done`
 
 Depends on: `RKBC-BATTLE-HOLE-INVENTORY`.
 
 Scope: cover movement route facts, table-supplied geometry, forced movement
 route choices, and distance/position facts currently represented as reducer
 holes.
+
+Result: `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY` covers Shove save success,
+failed Prone, invalid push distance rejection, and non-OA 5-foot pushed/blocked
+dispositions. Movement route, forced-movement geometry, teleport destination,
+Flaming Sphere route/contact, Warding Bond separation, and similar
+distance/position derivation remain table facts covered by
+`BATTLE.TABLE.HOLE_FACT_BOUNDARIES` and routed to table-caller/profile follow-up
+tasks where reducer consequences still need joins.
 
 Acceptance:
 
@@ -396,13 +412,24 @@ Acceptance:
 
 ### Task 4 - RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION - Battle Damage Disposition And Type Choice Obligations
 
-Status: `blocked`
+Status: `done`
 
 Depends on: `RKBC-BATTLE-HOLE-INVENTORY`.
 
 Scope: cover damage disposition, damage-type choice, resistance/reduction
-choice, and save/attack damage branch holes not already owned by existing spell,
-feature, or shared HP obligations.
+choice, attack replacement/legality target-choice residuals, and save/attack
+damage branch holes not already owned by existing spell, feature, or shared HP
+obligations.
+
+Result: damage/disposition holes are split across
+`BATTLE.DAMAGE.ATTACK_BRANCHES`,
+`BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES`,
+`BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION`,
+`BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP`, and
+`BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE`. Shared positive-HP damage remains
+owned by `SHARED.HIT_POINTS.POSITIVE_DAMAGE`; spell-condition lifecycle,
+after-hit spell reactions, ability/Command choices, and table-caller hazard
+facts remain visible in Tasks 5, 9, 10, and 11.
 
 Acceptance:
 
@@ -413,12 +440,19 @@ Acceptance:
 
 ### Task 5 - RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND - Battle Ability Skill And Command Hole Obligations
 
-Status: `blocked`
+Status: `done`
 
 Depends on: `RKBC-BATTLE-HOLE-INVENTORY`.
 
-Scope: cover ability choice, skill choice, and Command-style table option holes.
-Preserve table adjudication where RAW leaves route/social outcome to the table.
+Scope: cover ability choice, skill choice, Search target-resolution residuals,
+and Command-style table option holes. Preserve table adjudication where RAW
+leaves route/social outcome to the table.
+
+Result: ability/skill/Search holes are covered by
+`BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES`; Command option, save, and
+next-turn consequences are covered by `BATTLE.COMMAND.OPTION_AND_NEXT_TURN`.
+Command route choice and held-object inventory derivation remain table-owned
+facts, with table-caller follow-up coverage still visible outside this task.
 
 Acceptance:
 
@@ -431,7 +465,7 @@ Acceptance:
 
 ### Task 6 - RKBC-BATTLE-HOLE-REACTION-CONCENTRATION - Battle Reaction And Concentration Hole Obligations
 
-Status: `blocked`
+Status: `done`
 
 Depends on: `RKBC-BATTLE-HOLE-INVENTORY`.
 
@@ -452,7 +486,8 @@ Status: `ready-for-research`
 
 Scope: close unmapped Unit feature passive, persistent-effect, and resource
 profiles, including speed, attack-count scaling, martial arts projection,
-weapon mastery effects, innate sorcery activation, and resource boosts.
+weapon mastery effects, innate sorcery activation, resource boosts, and feature
+target holes that mutate reducer-visible feature state.
 
 Acceptance:
 
@@ -467,8 +502,8 @@ Acceptance:
 Status: `ready-for-research`
 
 Scope: close unmapped bonus-action, reaction, and failed-roll resource profiles,
-including Bardic Inspiration grants/uses, failed Ability Check boosts, and
-damage-redirection reactions.
+including Bardic Inspiration grants/uses, failed Ability Check boosts,
+damage-redirection reactions, and feature target holes tied to those timings.
 
 Acceptance:
 
@@ -518,15 +553,15 @@ Acceptance:
 
 ### Task 11 - RKBC-PROFILE-JOIN-TABLE-CALLER - Table Caller Profile Join And Boundary Classification
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `RKBC-BATTLE-HOLE-INVENTORY`, `RKBC-BATTLE-HOLE-TARGETS-AREAS`, and `RKBC-BATTLE-HOLE-MOVEMENT-ROUTE`.
 
 Scope: close table-caller profiles after the target/area and movement/route
 hole classifications are recorded. In-scope examples include target admission,
-fog/obscurement, drop held object, route choice, fleeing/approach route,
-Dancing Lights movement, and Flaming Sphere movement into another creature's
-space.
+object target identity, spell area placement, fog/obscurement, drop held object,
+route choice, fleeing/approach route, Dancing Lights movement, and Flaming
+Sphere movement into another creature's space.
 
 Acceptance:
 

@@ -15,6 +15,7 @@
 // (creature-state). Calls into dispatcher-layer functions (`endTurn`,
 // `snapshotBattle`, `discoverBattleActs`, etc.) round-trip through
 // `../battle-reducer.ts` until Pass 19 merges the dispatcher.
+// KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION
 
 import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";

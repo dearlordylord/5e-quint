@@ -1,6 +1,7 @@
 // Spell replay fill parser extracted from spells-resolve.ts.
 // Owns classification and validation of supplied fills against spell replay holes.
 
+// KERNEL-COVERAGE: runtime-owner BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES BATTLE.COMMAND.OPTION_AND_NEXT_TURN
 import { type AttackRollResult } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type { Condition } from "@dnd/shared/types";
 import type { Ability, Skill } from "@dnd/surface/surface/types";

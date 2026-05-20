@@ -1,5 +1,7 @@
 // -*- mode: Bluespec; -*-
 
+// KERNEL-COVERAGE: qnt-owner BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION
+
 module battleRuntimeDamageAdjustments {
   import damageComponentAdjustments.* from "../shared-algebras/proofs/rule-core/damage-component-adjustments"
   import battleRuntimeModel.* from "./battle-runtime-model"

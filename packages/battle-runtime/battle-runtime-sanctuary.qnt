@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner BATTLE.SANCTUARY.TARGETING_INTERDICTION
 
 module battleRuntimeSanctuary {
   import battleRuntimeModel.* from "./battle-runtime-model"
@@ -25,6 +26,12 @@ module battleRuntimeSanctuary {
   pure def activeEffectsContainSanctuaryWard(effects: Set[ActiveEffect]): bool =
     effects.exists(effect => match effect {
       | SanctuaryWard(_) => true
+      | _ => false
+    })
+
+  pure def activeEffectsContainSanctuaryWardFrom(effects: Set[ActiveEffect], source: Actor): bool =
+    effects.exists(effect => match effect {
+      | SanctuaryWard(data) => data.source == source
       | _ => false
     })
 
@@ -137,6 +144,9 @@ module battleRuntimeSanctuary {
       | SanctuaryLoseAttackOrSpell => warded
       | SanctuaryChooseNewTarget(data) => data.target
     }
+
+  pure def sanctuaryReplacementTargetAdmitted(warded: Actor, replacement: Actor, callerTargetLegal: bool): bool =
+    replacement != warded and callerTargetLegal
 
   pure def sanctuaryTargetingInterdictionOutcomeApplies(
     state: BattleState,

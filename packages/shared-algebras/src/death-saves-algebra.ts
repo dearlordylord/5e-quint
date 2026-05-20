@@ -1,3 +1,5 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE
+
 export type DeathSaveCount = 0 | 1 | 2 | 3;
 
 export type DeathSaves = {

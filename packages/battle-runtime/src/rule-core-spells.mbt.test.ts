@@ -1,6 +1,6 @@
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell
-// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt spell-procedure-core magic_missile ray_of_frost acid_splash
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt healing-stabilization healing_word cure_wounds
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1H-MASS-CURE-WOUNDS mass_cure_wounds

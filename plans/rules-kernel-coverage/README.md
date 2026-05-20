@@ -51,6 +51,17 @@ Unit support profile to rules-kernel semantic obligations. Obligation rows do
 not duplicate their profile lists; generated reports derive those lists from
 `profile-obligations.jsonl`.
 
+`battle-hole-frontier.jsonl` is the single source of truth for the current
+BattleHole/BattleFill frontier inventory. The checker parses
+`packages/battle-runtime/src/battle-reducer.ts` and requires one
+`battle-hole-family` row for every `BattleHole` union member and one
+`battle-fill-kind` row for every `BattleFill` discriminant. Boundary/table-owned
+rows must point at a non-semantic rules-kernel obligation; semantic rows must
+point at a covered obligation or at the Ralph follow-up task that will add the
+missing QNT/parity ownership. A semantic row may also point at a non-semantic
+boundary obligation when the same hole or fill carries caller/table facts, but
+that boundary coverage never substitutes for reducer-semantic ownership.
+
 `generator-readiness.jsonl` records the separate C-axis question: whether a
 covered obligation's QNT owner is shaped like generator-ready semantic core.
 Rows must point to real obligation ids and any referenced dry-run artifact.
@@ -68,6 +79,10 @@ states.
   compares a QNT-owned projection.
 - **Boundary-only:** parser/client/session/protocol behavior that does not
   change legal table-observable game state.
+- **Battle hole frontier:** the current set of battle reducer holes and fills
+  where caller/table decisions, random results, or table facts enter reducer
+  replay. Frontier classification is executable coverage metadata; it is not a
+  replacement for QNT ownership of reducer semantics.
 - **Generator readiness:** a per-obligation assessment of which QNT files are
   semantic core, which are proof-only, and what language subset a future
   QNT-to-Rust generator would need.

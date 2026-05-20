@@ -11,9 +11,9 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | Strict runtime/profile support | 108/164 (65.9%) |
 | Strict target closure | 163/164 (99.4%) |
 | Product readiness | 486/556 (87.4%) |
-| Rules-kernel profile join | 17/80 (21.3%) |
-| Rules-kernel covered profile join | 12/80 (15%) |
-| Supported Unit rules-kernel chain | 31/108 (28.7%) |
+| Rules-kernel profile join | 23/80 (28.8%) |
+| Rules-kernel covered profile join | 18/80 (22.5%) |
+| Supported Unit rules-kernel chain | 34/108 (31.5%) |
 
 ## Scope
 
@@ -65,7 +65,6 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `cleric_channel_divinity` | unmapped | `character-creation.class-feature-resource-projection` (unmapped: no obligation mapping) |
 | `cleric_divine_order` | unmapped | `character-creation.class-feature-option-projection` (unmapped: no obligation mapping) |
 | `color_spray` | unmapped | `spell.invocation-condition-save` (unmapped: no obligation mapping) |
-| `command` | unmapped | `spell.invocation-command-halt-grovel` (unmapped: no obligation mapping); `spell.invocation-command-drop-held-object` (unmapped: no obligation mapping); `spell.invocation-command-approach-route` (unmapped: no obligation mapping); `spell.invocation-command-flee-route` (unmapped: no obligation mapping) |
 | `dancing_lights` | unmapped | `spell.invocation-dancing-lights-movable-dim-light` (unmapped: no obligation mapping) |
 | `dissonant_whispers` | unmapped | `spell.invocation-forced-reaction-movement` (unmapped: no obligation mapping) |
 | `divine_favor` | unmapped | `spell.invocation-weapon-damage-rider` (unmapped: no obligation mapping) |
@@ -107,10 +106,8 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `protection_from_poison` | unmapped | `spell.invocation-condition-removal-protection` (unmapped: no obligation mapping) |
 | `ranger_deft_explorer` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
 | `ranger_weapon_mastery` | unmapped | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner)); `character-sheet.weapon-mastery-reselection` (unmapped: no obligation mapping) |
-| `resistance` | unmapped | `spell.invocation-damage-reduction` (unmapped: no obligation mapping) |
 | `rogue_expertise` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
 | `rogue_weapon_mastery` | unmapped | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner)); `character-sheet.weapon-mastery-reselection` (unmapped: no obligation mapping) |
-| `sanctuary` | unmapped | `spell.invocation-sanctuary-targeting-interdiction` (unmapped: no obligation mapping) |
 | `scorching_ray` | unmapped | `spell.invocation-independent-attack-sequence` (unmapped: no obligation mapping) |
 | `searing_smite` | unmapped | `spell.invocation-after-hit-timed-damage-save` (unmapped: no obligation mapping) |
 | `shield_of_faith` | unmapped | `spell.scalar-buff` (unmapped: no obligation mapping) |

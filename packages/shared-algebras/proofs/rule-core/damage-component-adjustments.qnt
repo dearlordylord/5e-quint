@@ -1,5 +1,7 @@
 // -*- mode: Bluespec; -*-
 
+// KERNEL-COVERAGE: qnt-owner BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION
+
 module damageComponentAdjustments {
   import hitPointDamage.* from "./hit-point-damage"
 

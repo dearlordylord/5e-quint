@@ -1,7 +1,9 @@
 // -*- mode: Bluespec; -*-
 
+// KERNEL-COVERAGE: qnt-owner BATTLE.COMMAND.OPTION_AND_NEXT_TURN
 module battleRuntimeGroundCommand {
   import battleRuntimeMovementBridge.* from "./battle-runtime-movement-bridge"
+  import battleRuntimeCommandChoice.* from "./battle-runtime-command-choice"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
   import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
@@ -356,60 +358,56 @@ module battleRuntimeGroundCommand {
       })
 
   pure def followCommandGrovel(state: BattleState): BattleState =
-    if (commandPendingEffectsForActor(state, currentActor(state), CommandGrovelOption).size() > 0)
-      match currentActor(state) {
-        | Fighter => endTurn({
-            ...state,
-            fighter: {
-              ...state.fighter,
-              prone: true,
-              activeEffects: state.fighter.activeEffects.exclude(commandPendingEffectsForActor(state, Fighter, CommandGrovelOption)),
-            },
-          })
-        | Goblin => endTurn({
-            ...state,
-            goblin: {
-              ...state.goblin,
-              prone: true,
-              activeEffects: state.goblin.activeEffects.exclude(commandPendingEffectsForActor(state, Goblin, CommandGrovelOption)),
-            },
-          })
-      }
-    else
-      state
+    match commandGrovelFollowOutcome(commandPendingEffectsForActor(state, currentActor(state), CommandGrovelOption).size() > 0) {
+      | CommandGrovelAppliesProneEndsTurn =>
+          match currentActor(state) {
+            | Fighter => endTurn({
+                ...state,
+                fighter: {
+                  ...state.fighter,
+                  prone: true,
+                  activeEffects: state.fighter.activeEffects.exclude(commandPendingEffectsForActor(state, Fighter, CommandGrovelOption)),
+                },
+              })
+            | Goblin => endTurn({
+                ...state,
+                goblin: {
+                  ...state.goblin,
+                  prone: true,
+                  activeEffects: state.goblin.activeEffects.exclude(commandPendingEffectsForActor(state, Goblin, CommandGrovelOption)),
+                },
+              })
+          }
+      | CommandGrovelIgnored => state
+    }
 
   pure def commandDropOutcomeCount(state: BattleState, heldObjectCount: int): int =
-    if (
-      heldObjectCount >= 0 and
-      commandPendingEffectsForActor(state, currentActor(state), CommandDropOption).size() > 0
-    )
-      heldObjectCount
-    else
-      0
+    match commandDropFollowOutcome(commandPendingEffectsForActor(state, currentActor(state), CommandDropOption).size() > 0, heldObjectCount) {
+      | CommandDropObjectsAndEndsTurn(outcome) => outcome.droppedObjectCount
+      | CommandDropIgnored => 0
+    }
 
   pure def followCommandDrop(state: BattleState, heldObjectCount: int): BattleState =
-    if (
-      heldObjectCount >= 0 and
-      commandPendingEffectsForActor(state, currentActor(state), CommandDropOption).size() > 0
-    )
-      match currentActor(state) {
-        | Fighter => endTurn({
-            ...state,
-            fighter: {
-              ...state.fighter,
-              activeEffects: state.fighter.activeEffects.exclude(commandPendingEffectsForActor(state, Fighter, CommandDropOption)),
-            },
-          })
-        | Goblin => endTurn({
-            ...state,
-            goblin: {
-              ...state.goblin,
-              activeEffects: state.goblin.activeEffects.exclude(commandPendingEffectsForActor(state, Goblin, CommandDropOption)),
-            },
-          })
-      }
-    else
-      state
+    match commandDropFollowOutcome(commandPendingEffectsForActor(state, currentActor(state), CommandDropOption).size() > 0, heldObjectCount) {
+      | CommandDropObjectsAndEndsTurn(_) =>
+          match currentActor(state) {
+            | Fighter => endTurn({
+                ...state,
+                fighter: {
+                  ...state.fighter,
+                  activeEffects: state.fighter.activeEffects.exclude(commandPendingEffectsForActor(state, Fighter, CommandDropOption)),
+                },
+              })
+            | Goblin => endTurn({
+                ...state,
+                goblin: {
+                  ...state.goblin,
+                  activeEffects: state.goblin.activeEffects.exclude(commandPendingEffectsForActor(state, Goblin, CommandDropOption)),
+                },
+              })
+          }
+      | CommandDropIgnored => state
+    }
 
   pure def commandApproachFighterHasMovementAvailable(state: BattleState): bool =
     battleRuntimeCanSpendMovement(movementProjectionForFighter(state, WalkSpeedKind), 1)
@@ -437,16 +435,23 @@ module battleRuntimeGroundCommand {
                 activeEffects: state.fighter.activeEffects.exclude(commandPendingEffectsForActor(state, Fighter, CommandApproachOption)),
               },
             }
-            if (not(commandApproachFighterHasMovementAvailable(state)))
-              withoutPending
-            else if (not(battleRuntimeCanSpendMovement(movementProjectionForFighter(state, speedKind), movementCost)))
-              state
-            else {
-              val moved = stateWithFighterMovementStep(
-                withoutPending,
-                battleRuntimeSpendMovement(movementProjectionForFighter(state, speedKind), movementCost),
-              )
-              if (movedWithinFiveFeetOfCaster) endTurn(moved) else moved
+            match commandApproachFollowOutcome(
+              commandApproachFighterHasMovementAvailable(state),
+              battleRuntimeCanSpendMovement(movementProjectionForFighter(state, speedKind), movementCost),
+              movedWithinFiveFeetOfCaster,
+            ) {
+              | CommandApproachNoMovement => withoutPending
+              | CommandApproachMovementRejected => state
+              | CommandApproachMovementContinues =>
+                  stateWithFighterMovementStep(
+                    withoutPending,
+                    battleRuntimeSpendMovement(movementProjectionForFighter(state, speedKind), movementCost),
+                  )
+              | CommandApproachMovementEndsTurn =>
+                  endTurn(stateWithFighterMovementStep(
+                    withoutPending,
+                    battleRuntimeSpendMovement(movementProjectionForFighter(state, speedKind), movementCost),
+                  ))
             }
           }
         | Goblin => {
@@ -457,16 +462,23 @@ module battleRuntimeGroundCommand {
                 activeEffects: state.goblin.activeEffects.exclude(commandPendingEffectsForActor(state, Goblin, CommandApproachOption)),
               },
             }
-            if (not(commandApproachGoblinHasMovementAvailable(state)))
-              withoutPending
-            else if (not(battleRuntimeCanSpendMovement(movementProjectionForGoblin(state, speedKind), movementCost)))
-              state
-            else {
-              val moved = stateWithGoblinMovementStep(
-                withoutPending,
-                battleRuntimeSpendMovement(movementProjectionForGoblin(state, speedKind), movementCost),
-              )
-              if (movedWithinFiveFeetOfCaster) endTurn(moved) else moved
+            match commandApproachFollowOutcome(
+              commandApproachGoblinHasMovementAvailable(state),
+              battleRuntimeCanSpendMovement(movementProjectionForGoblin(state, speedKind), movementCost),
+              movedWithinFiveFeetOfCaster,
+            ) {
+              | CommandApproachNoMovement => withoutPending
+              | CommandApproachMovementRejected => state
+              | CommandApproachMovementContinues =>
+                  stateWithGoblinMovementStep(
+                    withoutPending,
+                    battleRuntimeSpendMovement(movementProjectionForGoblin(state, speedKind), movementCost),
+                  )
+              | CommandApproachMovementEndsTurn =>
+                  endTurn(stateWithGoblinMovementStep(
+                    withoutPending,
+                    battleRuntimeSpendMovement(movementProjectionForGoblin(state, speedKind), movementCost),
+                  ))
             }
           }
       }
@@ -536,48 +548,52 @@ module battleRuntimeGroundCommand {
     if (commandPendingEffectsForActor(state, currentActor(state), CommandFleeOption).size() > 0) {
       val actor = currentActor(state)
       val withoutPending = stateWithoutCommandFleePending(state, actor)
-      if (not(commandFleeActorHasMovementAvailable(state, actor)))
-        endTurn(withoutPending)
-      else if (
-        movementCost != commandFleeMovementRemaining(state, actor, speedKind)
-          or not(commandFleeCanSpendMovement(state, actor, speedKind, movementCost))
-      )
-        state
-      else if (provokesOpportunityAttack)
-        openReactionWindow(state, {
-          trigger: OpportunityAttack,
-          procedure: OpportunityAttackReactionProcedure,
-          eligibleReactors: if (actor == Fighter) Set(Goblin) else Set(Fighter),
-          offeredReactors: Set(),
-          continuation: ResumeCommandFleeMovement({
-            speedKind: speedKind,
-            movementCost: movementCost,
-          }),
-        })
-      else
-        endTurn(stateWithCommandFleeMovement(withoutPending, actor, speedKind, movementCost))
+      match commandFleeFollowOutcome(
+        commandFleeActorHasMovementAvailable(state, actor),
+        movementCost,
+        commandFleeMovementRemaining(state, actor, speedKind),
+        commandFleeCanSpendMovement(state, actor, speedKind, movementCost),
+        provokesOpportunityAttack,
+      ) {
+        | CommandFleeNoMovementEndsTurn => endTurn(withoutPending)
+        | CommandFleeMovementRejected => state
+        | CommandFleeOpportunityAttackContinuation =>
+            openReactionWindow(state, {
+              trigger: OpportunityAttack,
+              procedure: OpportunityAttackReactionProcedure,
+              eligibleReactors: if (actor == Fighter) Set(Goblin) else Set(Fighter),
+              offeredReactors: Set(),
+              continuation: ResumeCommandFleeMovement({
+                speedKind: speedKind,
+                movementCost: movementCost,
+              }),
+            })
+        | CommandFleeMovementEndsTurn =>
+            endTurn(stateWithCommandFleeMovement(withoutPending, actor, speedKind, movementCost))
+      }
     } else {
       state
     }
 
   pure def followCommandHalt(state: BattleState): BattleState =
-    if (commandPendingEffectsForActor(state, currentActor(state), CommandHaltOption).size() > 0)
-      match currentActor(state) {
-        | Fighter => {
-            ...state,
-            actionAvailable: false,
-            bonusActionAvailable: false,
-            fighter: { ...state.fighter, movementSpent: state.fighter.speed },
+    match commandHaltFollowOutcome(commandPendingEffectsForActor(state, currentActor(state), CommandHaltOption).size() > 0) {
+      | CommandHaltSuppressesActionBonusAndMovement =>
+          match currentActor(state) {
+            | Fighter => {
+                ...state,
+                actionAvailable: false,
+                bonusActionAvailable: false,
+                fighter: { ...state.fighter, movementSpent: state.fighter.speed },
+              }
+            | Goblin => {
+                ...state,
+                actionAvailable: false,
+                bonusActionAvailable: false,
+                goblin: { ...state.goblin, movementSpent: state.goblin.speed },
+              }
           }
-        | Goblin => {
-            ...state,
-            actionAvailable: false,
-            bonusActionAvailable: false,
-            goblin: { ...state.goblin, movementSpent: state.goblin.speed },
-          }
-      }
-    else
-      state
+      | CommandHaltIgnored => state
+    }
 
   pure def endCommandHaltTurn(state: BattleState): BattleState =
     match currentActor(state) {

@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 
+// KERNEL-COVERAGE: qnt-owner BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-mirror-image-hit-interception
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-self-transformation-mode
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.creature-type-protection-and-charm spell.find-familiar-lifecycle spell.invocation-after-hit-damage spell.invocation-after-hit-damage-illumination spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-blur-attack-roll-defense spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-removal-protection spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-dancing-lights-movable-dim-light spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-flaming-sphere-hazard-ram spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-independent-attack-sequence spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-self-ability-check-advantage spell.invocation-self-teleport spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.scalar-buff unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-failed-d20-test unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.passive-saving-throw-roll-mode unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple
@@ -100,6 +101,7 @@ module battleRuntime {
   import battleRuntimeWardingBond.* from "./battle-runtime-warding-bond"
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
   import battleRuntimeGroundCommand.* from "./battle-runtime-ground-command"
+  import battleRuntimeRollModifierChoice.* from "./battle-runtime-roll-modifier-choice"
   import battleRuntimeWeaponAttacks.* from "./battle-runtime-weapon-attacks"
   import battleRuntimeMonkFocus.* from "./battle-runtime-monk-focus"
 
@@ -973,14 +975,12 @@ module battleRuntime {
       | EnhanceAbilityRollModifier => 1
     }
 
-  pure def rollModifierActiveEffect(invocation: RollModifierSpell, chosenAbility: Ability): ActiveEffect =
-    match invocation {
-      | BaneRollModifier => BaneD20RollPenalty
-      | BlessRollModifier => BlessD20RollBonus
-      | GuidanceRollModifier => GuidanceAbilityCheckBonus
-      | PassWithoutTraceRollModifier => PassWithoutTraceStealthBonus
-      | EnhanceAbilityRollModifier => EnhanceAbilityCheckAdvantage({ ability: chosenAbility })
-    }
+  pure def rollModifierActiveEffect(
+    invocation: RollModifierSpell,
+    chosenAbility: Ability,
+    chosenSkill: AbilityCheckSkill,
+  ): ActiveEffect =
+    rollModifierChoiceActiveEffect(invocation, chosenAbility, chosenSkill)
 
   pure def rollModifierRequiresFailedSave(invocation: RollModifierSpell): bool =
     invocation == BaneRollModifier
@@ -1000,11 +1000,12 @@ module battleRuntime {
     invocation: RollModifierSpell,
     targets: Set[Actor],
     chosenAbility: Ability,
+    chosenSkill: AbilityCheckSkill,
   ): BattleState =
     {
       ...state,
-      fighter: if (targets.contains(Fighter)) { ...state.fighter, activeEffects: state.fighter.activeEffects.union(Set(rollModifierActiveEffect(invocation, chosenAbility))) } else state.fighter,
-      goblin: if (targets.contains(Goblin)) { ...state.goblin, activeEffects: state.goblin.activeEffects.union(Set(rollModifierActiveEffect(invocation, chosenAbility))) } else state.goblin,
+      fighter: if (targets.contains(Fighter)) { ...state.fighter, activeEffects: state.fighter.activeEffects.union(Set(rollModifierActiveEffect(invocation, chosenAbility, chosenSkill))) } else state.fighter,
+      goblin: if (targets.contains(Goblin)) { ...state.goblin, activeEffects: state.goblin.activeEffects.union(Set(rollModifierActiveEffect(invocation, chosenAbility, chosenSkill))) } else state.goblin,
     }
 
   pure def resolveRollModifierSpell(
@@ -1014,6 +1015,7 @@ module battleRuntime {
     failedSaveTargets: Set[Actor],
     slotLevel: int,
     chosenAbility: Ability,
+    chosenSkill: AbilityCheckSkill,
   ): BattleState = {
     val affectedTargets =
       if (rollModifierRequiresFailedSave(invocation)) failedSaveTargets else selectedTargets
@@ -1032,7 +1034,7 @@ module battleRuntime {
         fighter: breakConcentration(state.fighter),
         goblin: { ...state.goblin, activeEffects: activeEffectsWithoutSpellEffectConcentration(state.goblin.activeEffects) },
       }
-      val effected = rollModifierTargetedState(concentrationBase, invocation, affectedTargets, chosenAbility)
+      val effected = rollModifierTargetedState(concentrationBase, invocation, affectedTargets, chosenAbility, chosenSkill)
       val resolved = {
         ...effected,
         fighter: { ...effected.fighter, concentrating: true },

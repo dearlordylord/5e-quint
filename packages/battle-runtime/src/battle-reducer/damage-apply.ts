@@ -1,4 +1,5 @@
 // Damage application + HP lifecycle + concentration helpers extracted from
+// RAW-COVERAGE: runtime-owner RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // battle-reducer.ts. Cluster M (damage_apply). Mechanical extraction — no
 // behavior change. Pass 9 also absorbs:
@@ -7,7 +8,7 @@
 //   - applyTemporaryHitPoints (from H, cycle #13)
 // Spell-condition expiration helpers live in spell-condition-effects-helpers.ts
 // (cycle #19) so both M and P can import them without a cycle.
-// KERNEL-COVERAGE: runtime-owner SHARED.HIT_POINTS.POSITIVE_DAMAGE
+// KERNEL-COVERAGE: runtime-owner SHARED.HIT_POINTS.POSITIVE_DAMAGE BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE
 
 import {
   applyCondition,

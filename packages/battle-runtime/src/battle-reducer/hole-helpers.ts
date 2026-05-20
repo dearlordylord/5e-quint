@@ -3,6 +3,7 @@
 // Includes prerequisite moves: bonusActionDashSubjectForSpeedKind (from C),
 // hideAbilityCheckHole, searchAbilityCheckHole, escapeSpellRestraintAbilityCheckHole (from H).
 
+// KERNEL-COVERAGE: runtime-owner BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES
 import { Match } from "effect";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { difficultyClass, type DifficultyClass } from "@dnd/shared/types";

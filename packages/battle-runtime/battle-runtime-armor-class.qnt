@@ -47,7 +47,7 @@ module battleRuntimeArmorClass {
         | HeroismTurnStartTemporaryHitPoints(_) => false
         | BaneD20RollPenalty => false
         | BlessD20RollBonus => false
-        | GuidanceAbilityCheckBonus => false
+        | GuidanceAbilityCheckBonus(_) => false
         | PassWithoutTraceStealthBonus => false
         | EnhanceAbilityCheckAdvantage(_) => false
         | ThaumaturgyBoomingVoice(_) => false

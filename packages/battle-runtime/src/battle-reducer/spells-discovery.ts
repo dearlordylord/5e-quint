@@ -9,6 +9,7 @@
 // `activeOngoingFeaturesPreventSpellcasting` stay in `../battle-reducer.ts`
 // pending the dispatcher merge (Pass 19, cycle #25).
 
+// KERNEL-COVERAGE: runtime-owner BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES BATTLE.COMMAND.OPTION_AND_NEXT_TURN
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import type { CombatantId } from "../identity.ts";
 import { BATTLE_READIED_SPELL_TRIGGERS } from "../battle-reaction-triggers.ts";

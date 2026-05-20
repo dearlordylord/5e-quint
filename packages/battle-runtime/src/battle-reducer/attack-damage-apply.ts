@@ -1,6 +1,7 @@
 // Attack damage hole/disposition helpers extracted from battle-reducer.ts.
 // Cluster U (attack_damage_apply). Mechanical extraction — no behavior change.
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.martial-arts-attack-projection spell.invocation-weapon-attack-override spell.invocation-self-transformation-mode
+// KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.ATTACK_BRANCHES BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP
 
 import {
   abilityModifier,

@@ -51,11 +51,11 @@ module battleRuntimeSaveSpellTests {
       fighter: {
         ...initialState.fighter,
         concentrating: true,
-        activeEffects: Set(BaneD20RollPenalty, BlessD20RollBonus, GuidanceAbilityCheckBonus, PassWithoutTraceStealthBonus),
+        activeEffects: Set(BaneD20RollPenalty, BlessD20RollBonus, GuidanceAbilityCheckBonus({ skill: StealthSkill }), PassWithoutTraceStealthBonus),
       },
       goblin: {
         ...initialState.goblin,
-        activeEffects: Set(BaneD20RollPenalty, BlessD20RollBonus, GuidanceAbilityCheckBonus, PassWithoutTraceStealthBonus),
+        activeEffects: Set(BaneD20RollPenalty, BlessD20RollBonus, GuidanceAbilityCheckBonus({ skill: StealthSkill }), PassWithoutTraceStealthBonus),
       },
     }
     val result = resolveGoblinAttack(concentrating, 20, 18, 5, false)
@@ -63,11 +63,11 @@ module battleRuntimeSaveSpellTests {
       assert(not(result.fighter.concentrating)),
       assert(not(result.fighter.activeEffects.contains(BaneD20RollPenalty))),
       assert(not(result.fighter.activeEffects.contains(BlessD20RollBonus))),
-      assert(not(result.fighter.activeEffects.contains(GuidanceAbilityCheckBonus))),
+      assert(not(result.fighter.activeEffects.contains(GuidanceAbilityCheckBonus({ skill: StealthSkill })))),
       assert(not(result.fighter.activeEffects.contains(PassWithoutTraceStealthBonus))),
       assert(not(result.goblin.activeEffects.contains(BaneD20RollPenalty))),
       assert(not(result.goblin.activeEffects.contains(BlessD20RollBonus))),
-      assert(not(result.goblin.activeEffects.contains(GuidanceAbilityCheckBonus))),
+      assert(not(result.goblin.activeEffects.contains(GuidanceAbilityCheckBonus({ skill: StealthSkill })))),
       assert(not(result.goblin.activeEffects.contains(PassWithoutTraceStealthBonus))),
     }
   }
@@ -78,29 +78,29 @@ module battleRuntimeSaveSpellTests {
       fighter: {
         ...initialState.fighter,
         concentrating: true,
-        activeEffects: Set(BaneD20RollPenalty, GuidanceAbilityCheckBonus, PassWithoutTraceStealthBonus),
+        activeEffects: Set(BaneD20RollPenalty, GuidanceAbilityCheckBonus({ skill: StealthSkill }), PassWithoutTraceStealthBonus),
       },
       goblin: {
         ...initialState.goblin,
-        activeEffects: Set(BaneD20RollPenalty, GuidanceAbilityCheckBonus, PassWithoutTraceStealthBonus),
+        activeEffects: Set(BaneD20RollPenalty, GuidanceAbilityCheckBonus({ skill: StealthSkill }), PassWithoutTraceStealthBonus),
       },
     }
-    val result = resolveRollModifierSpell(prior, BlessRollModifier, Set(Goblin), Set(), 1, StrAbility)
+    val result = resolveRollModifierSpell(prior, BlessRollModifier, Set(Goblin), Set(), 1, StrAbility, StealthSkill)
     all {
       assert(result.fighter.concentrating),
       assert(not(result.fighter.activeEffects.contains(BaneD20RollPenalty))),
-      assert(not(result.fighter.activeEffects.contains(GuidanceAbilityCheckBonus))),
+      assert(not(result.fighter.activeEffects.contains(GuidanceAbilityCheckBonus({ skill: StealthSkill })))),
       assert(not(result.fighter.activeEffects.contains(PassWithoutTraceStealthBonus))),
       assert(not(result.fighter.activeEffects.contains(BlessD20RollBonus))),
       assert(not(result.goblin.activeEffects.contains(BaneD20RollPenalty))),
-      assert(not(result.goblin.activeEffects.contains(GuidanceAbilityCheckBonus))),
+      assert(not(result.goblin.activeEffects.contains(GuidanceAbilityCheckBonus({ skill: StealthSkill })))),
       assert(not(result.goblin.activeEffects.contains(PassWithoutTraceStealthBonus))),
       assert(result.goblin.activeEffects.contains(BlessD20RollBonus)),
     }
   }
 
   run test_pass_without_trace_applies_stealth_bonus_to_chosen_aura_targets = {
-    val result = resolveRollModifierSpell(initialState, PassWithoutTraceRollModifier, Set(Fighter, Goblin), Set(), 2, StrAbility)
+    val result = resolveRollModifierSpell(initialState, PassWithoutTraceRollModifier, Set(Fighter, Goblin), Set(), 2, StrAbility, StealthSkill)
     all {
       assert(result.fighter.concentrating),
       assert(result.fighter.activeEffects.contains(PassWithoutTraceStealthBonus)),
@@ -110,7 +110,7 @@ module battleRuntimeSaveSpellTests {
   }
 
   run test_pass_without_trace_requires_caster_in_selected_targets = {
-    val result = resolveRollModifierSpell(initialState, PassWithoutTraceRollModifier, Set(Goblin), Set(), 2, StrAbility)
+    val result = resolveRollModifierSpell(initialState, PassWithoutTraceRollModifier, Set(Goblin), Set(), 2, StrAbility, StealthSkill)
     all {
       assert(result == initialState),
       assert(not(result.fighter.activeEffects.contains(PassWithoutTraceStealthBonus))),
@@ -120,10 +120,10 @@ module battleRuntimeSaveSpellTests {
 
   run test_guidance_preserves_existing_turn_spell_slot_guard = {
     val alreadySpent = commitActorSpellSlotUse(initialState, Fighter)
-    val result = resolveRollModifierSpell(alreadySpent, GuidanceRollModifier, Set(Fighter), Set(), 0, StrAbility)
+    val result = resolveRollModifierSpell(alreadySpent, GuidanceRollModifier, Set(Fighter), Set(), 0, StrAbility, StealthSkill)
     all {
       assert(result.fighter.concentrating),
-      assert(result.fighter.activeEffects.contains(GuidanceAbilityCheckBonus)),
+      assert(result.fighter.activeEffects.contains(GuidanceAbilityCheckBonus({ skill: StealthSkill }))),
       assert(battleActorHasCommittedSpellSlotUse(result, Fighter)),
     }
   }
@@ -542,12 +542,12 @@ module battleRuntimeSaveSpellTests {
   }
 
   run test_ice_knife_combines_attack_and_burst_damage_for_concentration = {
-    val concentratingGoblin = { ...initialState, goblin: { ...initialState.goblin, concentrating: true, reactionAvailable: false, activeEffects: Set(GuidanceAbilityCheckBonus) } }
+    val concentratingGoblin = { ...initialState, goblin: { ...initialState.goblin, concentrating: true, reactionAvailable: false, activeEffects: Set(GuidanceAbilityCheckBonus({ skill: StealthSkill })) } }
     val result = resolveIceKnife(concentratingGoblin, 15, 10, 4, false, false, false, 6, false, true)
     all {
       assert(result.goblin.hp == 0),
       assert(not(result.goblin.concentrating)),
-      assert(not(result.goblin.activeEffects.contains(GuidanceAbilityCheckBonus))),
+      assert(not(result.goblin.activeEffects.contains(GuidanceAbilityCheckBonus({ skill: StealthSkill })))),
     }
   }
 
@@ -991,12 +991,12 @@ module battleRuntimeSaveSpellTests {
   run test_sleep_failed_initial_save_breaks_target_concentration = {
     val concentratingGoblin = {
       ...initialState,
-      goblin: { ...initialState.goblin, concentrating: true, activeEffects: Set(GuidanceAbilityCheckBonus) },
+      goblin: { ...initialState.goblin, concentrating: true, activeEffects: Set(GuidanceAbilityCheckBonus({ skill: StealthSkill })) },
     }
     val slept = resolveSleepTargetAdmission(concentratingGoblin, false, false, false)
     all {
       assert(not(slept.goblin.concentrating)),
-      assert(not(slept.goblin.activeEffects.contains(GuidanceAbilityCheckBonus))),
+      assert(not(slept.goblin.activeEffects.contains(GuidanceAbilityCheckBonus({ skill: StealthSkill })))),
       assert(slept.goblin.activeEffects.contains(SleepPendingRepeatSave({
         source: Fighter,
         repeatAtActor: Goblin,
@@ -1035,12 +1035,12 @@ module battleRuntimeSaveSpellTests {
     val goblinTurn = endTurn(slept)
     val concentratingGoblinTurn = {
       ...goblinTurn,
-      goblin: { ...goblinTurn.goblin, concentrating: true, activeEffects: goblinTurn.goblin.activeEffects.union(Set(GuidanceAbilityCheckBonus)) },
+      goblin: { ...goblinTurn.goblin, concentrating: true, activeEffects: goblinTurn.goblin.activeEffects.union(Set(GuidanceAbilityCheckBonus({ skill: StealthSkill }))) },
     }
     val repeated = endTurnWithSleepRepeatSave(concentratingGoblinTurn, false)
     all {
       assert(not(repeated.goblin.concentrating)),
-      assert(not(repeated.goblin.activeEffects.contains(GuidanceAbilityCheckBonus))),
+      assert(not(repeated.goblin.activeEffects.contains(GuidanceAbilityCheckBonus({ skill: StealthSkill })))),
       assert(repeated.goblin.activeEffects.contains(SleepUnconscious({
         source: Fighter,
         hadUnconscious: false,

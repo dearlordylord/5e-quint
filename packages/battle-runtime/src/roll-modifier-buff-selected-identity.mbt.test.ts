@@ -4,6 +4,7 @@
 // UNIT-IDENTITY-MBT-REPLAY: roll-modifier-buff guidance doGuidanceSkillAbilityCheckModifier
 // UNIT-IDENTITY-MBT-REPLAY: roll-modifier-buff resistance doResistanceReducesMatchingDamage
 // UNIT-IDENTITY-MBT-REPLAY: roll-modifier-buff shield_of_faith doShieldOfFaithArmorClassBonus
+// KERNEL-COVERAGE: parity-witness BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
