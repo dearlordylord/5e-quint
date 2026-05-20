@@ -30,7 +30,6 @@ import { Either } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
-  BARD_JACK_OF_ALL_TRADES_UNIT_ID,
   CHARACTER_SHEET_NO_OTHER_PROFICIENCY_BONUS,
   CHARACTER_SHEET_OTHER_PROFICIENCY_BONUS_APPLIES,
   applyLayOnHands,
@@ -1178,7 +1177,7 @@ describe("Character Sheet runtime", () => {
 
     expect(result).toEqual({
       tag: "jackOfAllTrades",
-      sourceUnitId: BARD_JACK_OF_ALL_TRADES_UNIT_ID,
+      sourceUnitId: "bard_jack_of_all_trades",
       skill: "performance",
       bonus: 1,
     });

@@ -165,12 +165,12 @@ const ARMOR_TRAINING_CATEGORY_VALUES = [
   "heavy",
   "shield",
 ] as const;
-// AUTHORED-IDENTITY DEBT — support gate, not redundant coupling. Enumerates the
-// authored Unit ids whose use-count resource the sheet tracks here. Admission
-// can't key on the bare shape (class_feature + use_count + resetCadence): ~10
-// SRD features share it (Rage, Action Surge, Bardic Inspiration, …), so shape
-// alone would over-admit. The durable form is a typed support-profile
-// discriminant in the authored data, not an id list. Don't extend until it exists.
+// AUTHORED-IDENTITY DEBT — support gate; a tolerated exception, NOT a pattern to
+// copy. Enumerates the authored Unit ids whose use-count resource the sheet tracks
+// here. Admission can't key on the bare shape (class_feature + use_count +
+// resetCadence): ~10 SRD features share it (Rage, Action Surge, Bardic Inspiration,
+// …), so shape alone would over-admit. The durable form is a typed support-profile
+// discriminant in the authored data, not an id list. Don't extend.
 const CHARACTER_SHEET_USE_COUNT_RESOURCE_UNIT_IDS = [
   DRUID_WILD_SHAPE_UNIT_ID,
   MONK_MONKS_FOCUS_UNIT_ID,
@@ -178,6 +178,10 @@ const CHARACTER_SHEET_USE_COUNT_RESOURCE_UNIT_IDS = [
 type CharacterSheetUseCountResourceUnitId =
   (typeof CHARACTER_SHEET_USE_COUNT_RESOURCE_UNIT_IDS)[number];
 export type { CharacterSheetUseCountResourceUnitId };
+// AUTHORED-IDENTITY DEBT — support gate; a tolerated exception, NOT a pattern to
+// copy. Enumerates the authored Unit ids whose point-pool resource the sheet tracks
+// here. The durable form is a typed support-profile discriminant in the authored
+// data, not an id list. Don't extend.
 const CHARACTER_SHEET_POINT_POOL_RESOURCE_UNIT_IDS = [
   SORCERER_FONT_OF_MAGIC_UNIT_ID,
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
@@ -188,12 +192,6 @@ const DEFAULT_SRD_STAT_BLOCK_CATALOG_RESULT = buildStatBlockCatalog({
   collections: [srdStatBlockCollection],
 });
 const byKind = Match.discriminator("kind");
-// AUTHORED-IDENTITY DEBT — do not repeat. A concrete authored Unit id hard-coded
-// in runtime, used to look up and tag the feature's record and choose its rule.
-// The durable pattern carries this as a typed support-profile fact, not a literal
-// id. Slated for removal.
-export const BARD_JACK_OF_ALL_TRADES_UNIT_ID =
-  "bard_jack_of_all_trades" as const satisfies UnitRecord["id"];
 const ARCANE_RECOVERY_REST_FEATURE_TAG = "arcaneRecovery" as const;
 const MAGICAL_CUNNING_REST_FEATURE_TAG = "magicalCunning" as const;
 const UNCANNY_METABOLISM_REST_FEATURE_TAG = "uncannyMetabolism" as const;
@@ -669,7 +667,7 @@ export type CharacterSheetAbilityCheckProficiencyBonus =
     }
   | {
       readonly tag: "jackOfAllTrades";
-      readonly sourceUnitId: typeof BARD_JACK_OF_ALL_TRADES_UNIT_ID;
+      readonly sourceUnitId: UnitRecord["id"];
       readonly skill: SurfaceSkill;
       readonly bonus: number;
     };
@@ -766,12 +764,12 @@ export function characterSheetAbilityCheckProficiencyBonus(
       bonus: proficiencyBonus,
     });
   }
-  const ownsJackOfAllTrades = characterBuildOwnsJackOfAllTradesFeature(
+  const jackOfAllTradesUnitId = characterBuildJackOfAllTradesFeatureUnitId(
     input.build,
     input.unitLibrary,
   );
-  if (Either.isLeft(ownsJackOfAllTrades)) {
-    return Either.left(ownsJackOfAllTrades.left);
+  if (Either.isLeft(jackOfAllTradesUnitId)) {
+    return Either.left(jackOfAllTradesUnitId.left);
   }
   return Match.value(input.otherProficiencyBonus).pipe(
     Match.when({ tag: "otherProficiencyBonusApplies" }, () =>
@@ -781,10 +779,10 @@ export function characterSheetAbilityCheckProficiencyBonus(
       }),
     ),
     Match.when({ tag: "noOtherProficiencyBonus" }, () =>
-      ownsJackOfAllTrades.right
+      jackOfAllTradesUnitId.right !== undefined
         ? Either.right({
             tag: "jackOfAllTrades" as const,
-            sourceUnitId: BARD_JACK_OF_ALL_TRADES_UNIT_ID,
+            sourceUnitId: jackOfAllTradesUnitId.right,
             skill: input.skill,
             bonus: Math.floor(
               proficiencyBonus / JACK_OF_ALL_TRADES_PROFICIENCY_BONUS_DIVISOR,
@@ -799,41 +797,24 @@ export function characterSheetAbilityCheckProficiencyBonus(
   );
 }
 
-function characterBuildOwnsJackOfAllTradesFeature(
+function characterBuildJackOfAllTradesFeatureUnitId(
   build: Pick<CharacterBuild, "progression" | "features">,
   unitLibrary: UnitCatalog,
-): Either.Either<boolean, CharacterSheetIssue> {
-  if (
-    !characterBuildOwnsFeatureUnit(
-      build,
-      unitLibrary,
-      BARD_JACK_OF_ALL_TRADES_UNIT_ID,
-    )
-  ) {
-    return Either.right(false);
+): Either.Either<UnitRecord["id"] | undefined, CharacterSheetIssue> {
+  for (const unitId of characterBuildFeatureUnitIds(build, unitLibrary)) {
+    const unit = getRequiredUnit(unitLibrary, unitId);
+    if (Either.isLeft(unit)) return Either.left(unit.left);
+    if (
+      unit.right.kind === "class_feature" &&
+      unit.right.mechanics.family === "passive" &&
+      unit.right.mechanics.grants.some(
+        (grant) => grant.kind === "jack_of_all_trades_ability_check_bonus",
+      )
+    ) {
+      return Either.right(unitId);
+    }
   }
-  const unit = getRequiredUnit(unitLibrary, BARD_JACK_OF_ALL_TRADES_UNIT_ID);
-  if (Either.isLeft(unit)) return Either.left(unit.left);
-  if (
-    unit.right.kind === "class_feature" &&
-    unit.right.mechanics.family === "passive" &&
-    unit.right.mechanics.grants.some(
-      (grant) => grant.kind === "jack_of_all_trades_ability_check_bonus",
-    )
-  ) {
-    return Either.right(true);
-  }
-  return characterSheetIssue(
-    "Jack of All Trades requires the installed Surface feature record.",
-  );
-}
-
-function characterBuildOwnsFeatureUnit(
-  build: Pick<CharacterBuild, "progression" | "features">,
-  unitLibrary: UnitCatalog,
-  unitId: UnitRecord["id"],
-): boolean {
-  return characterBuildFeatureUnitIds(build, unitLibrary).includes(unitId);
+  return Either.right(undefined);
 }
 
 export function createFreshCharacterSheet(
@@ -3503,9 +3484,9 @@ function isRestResetCadence(
   );
 }
 
-// AUTHORED-IDENTITY DEBT — do not repeat. This matches against the hard-coded
-// use-count Unit-id set instead of a typed support-profile fact. Replace with
-// shape-based admission once the use-count mechanic reads a profile.
+// AUTHORED-IDENTITY DEBT — not the norm. Matches the hard-coded use-count Unit-id
+// support set; the durable form admits via a typed support-profile discriminant
+// (the bare resource shape over-admits), not an id list.
 export function isCharacterSheetUseCountResourceUnitId(
   unitId: UnitRecord["id"],
 ): unitId is CharacterSheetUseCountResourceUnitId {
@@ -3514,6 +3495,9 @@ export function isCharacterSheetUseCountResourceUnitId(
   );
 }
 
+// AUTHORED-IDENTITY DEBT — not the norm. Matches the hard-coded point-pool Unit-id
+// support set; the durable form admits via a typed support-profile discriminant,
+// not an id list.
 export function isCharacterSheetPointPoolResourceUnitId(
   unitId: UnitRecord["id"],
 ): unitId is CharacterSheetPointPoolResourceUnitId {
