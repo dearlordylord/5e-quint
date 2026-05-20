@@ -1,4 +1,4 @@
-// KERNEL-COVERAGE: parity-witness CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY
+// KERNEL-COVERAGE: parity-witness CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY CREATION.CHOICE_DISCOVERY_CARDINALITY
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";

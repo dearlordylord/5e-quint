@@ -3930,7 +3930,7 @@
                 "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
                 "runtime": "character-creation",
                 "status": "needs-qnt-owner",
-                "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+                "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
               }
             ],
             "profileId": "character-creation.class-feature-feat-choice",
@@ -3943,7 +3943,7 @@
                 "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
                 "runtime": "character-creation",
                 "status": "needs-qnt-owner",
-                "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+                "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
               }
             ],
             "profileId": "character-creation.class-feature-advancement-replacement",
@@ -4522,7 +4522,7 @@
                 "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
                 "runtime": "character-creation",
                 "status": "needs-qnt-owner",
-                "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+                "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
               }
             ],
             "profileId": "character-creation.weapon-mastery-choice",
@@ -4648,7 +4648,7 @@
                 "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
                 "runtime": "character-creation",
                 "status": "needs-qnt-owner",
-                "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+                "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
               }
             ],
             "profileId": "character-creation.weapon-mastery-choice",
@@ -4811,7 +4811,7 @@
                 "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
                 "runtime": "character-creation",
                 "status": "needs-qnt-owner",
-                "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+                "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
               }
             ],
             "profileId": "character-creation.weapon-mastery-choice",
@@ -5233,7 +5233,7 @@
                 "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
                 "runtime": "character-creation",
                 "status": "needs-qnt-owner",
-                "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+                "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
               }
             ],
             "profileId": "character-creation.eldritch-invocation-choice",
@@ -5246,7 +5246,7 @@
                 "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
                 "runtime": "character-creation",
                 "status": "needs-qnt-owner",
-                "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+                "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
               }
             ],
             "profileId": "character-creation.class-feature-advancement-replacement",
@@ -5259,7 +5259,7 @@
                 "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
                 "runtime": "character-creation",
                 "status": "needs-qnt-owner",
-                "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+                "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
               }
             ],
             "profileId": "character-creation.warlock-pact-magic-advancement",

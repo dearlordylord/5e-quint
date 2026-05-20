@@ -73,7 +73,7 @@
     {
       "number": 12,
       "id": "RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Character Creation Choice Discovery And Cardinality"
     },
     {
@@ -406,7 +406,7 @@ Reviewers should reject:
 | 9 | RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION - Spell Damage Condition And Scalar Profile Join | done | baseline | Spell damage, restoration, condition, scalar, roll-modifier, protection, removal, and self-transformation profiles are joined to covered obligations or precise mapped-open spell parity obligations. |
 | 10 | RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION - Spell After Hit Reaction And Marked Effect Profile Join | done | baseline | After-hit, reaction-casting-time, weapon-hosted, marked, attack-sequence, Mirror Image, and linked-effect spell profiles are mapped to precise covered or mapped-open obligations. |
 | 11 | RKBC-PROFILE-JOIN-TABLE-CALLER - Table Caller Profile Join And Boundary Classification | done | RKBC-BATTLE-HOLE-INVENTORY, RKBC-BATTLE-HOLE-TARGETS-AREAS, RKBC-BATTLE-HOLE-MOVEMENT-ROUTE | Table-caller and spatial spell profiles are mapped to covered reducer obligations, boundary-only table facts, or precise mapped-open parity obligations without expanding MBT state space. |
-| 12 | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY - Character Creation Choice Discovery And Cardinality | ready-for-research | baseline | Split current creation choice discovery/cardinality semantics out of the broad creation audit. |
+| 12 | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY - Character Creation Choice Discovery And Cardinality | done | baseline | Choice-hole availability, cardinality, and option legality are split into covered `CREATION.CHOICE_DISCOVERY_CARDINALITY`; remaining creation profile families stay visible in Tasks 13-16. |
 | 13 | RKBC-CREATION-FILL-VALIDATION-BATCH - Character Creation Fill Validation And Atomic Batch | ready-for-research | baseline | Cover fill validation, batch atomicity, rediscovery, and finalization deltas beyond the existing slice. |
 | 14 | RKBC-CREATION-ADVANCEMENT-REPLACEMENT - Character Creation Advancement And Replacement | blocked | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH | Cover advancement replacement semantics and class-feature replacement profiles. |
 | 15 | RKBC-CREATION-SPELLCASTING-PROGRESSION - Character Creation Spell Access Progression And Eldritch Invocation Choices | blocked | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH | Cover Pact Magic progression, Spell Access/progression facts, and Eldritch Invocation choices. |
@@ -700,7 +700,7 @@ Acceptance:
 
 ### Task 12 - RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY - Character Creation Choice Discovery And Cardinality
 
-Status: `ready-for-research`
+Status: `done`
 
 Scope: split current character-creation choice discovery and cardinality
 semantics out of `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT`.
