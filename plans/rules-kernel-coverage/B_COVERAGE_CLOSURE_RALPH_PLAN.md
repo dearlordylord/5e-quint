@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "RKBC-BATTLE-HOLE-INVENTORY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Battle Hole And Fill Inventory"
     },
     {
@@ -315,7 +315,7 @@ Reviewers should reject:
 
 | # | Task | Status | Depends On | Closure target |
 | ---: | --- | --- | --- | --- |
-| 1 | RKBC-BATTLE-HOLE-INVENTORY - Battle Hole And Fill Inventory | ready-for-research | baseline | Inventory every current `BattleHole` and fill kind; classify semantic frontier, deterministic projection, unsupported, or dead branch. |
+| 1 | RKBC-BATTLE-HOLE-INVENTORY - Battle Hole And Fill Inventory | done | baseline | Inventory every current `BattleHole` and fill kind; classify semantic frontier, deterministic projection, unsupported, or dead branch. |
 | 2 | RKBC-BATTLE-HOLE-TARGETS-AREAS - Battle Target And Area Hole Obligations | blocked | RKBC-BATTLE-HOLE-INVENTORY | Covered obligations for target, target-list, and area-choice hole families. |
 | 3 | RKBC-BATTLE-HOLE-MOVEMENT-ROUTE - Battle Movement Route And Spatial Fact Obligations | blocked | RKBC-BATTLE-HOLE-INVENTORY | Covered/boundary obligations for movement route and table spatial fact holes. |
 | 4 | RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION - Battle Damage Disposition And Type Choice Obligations | blocked | RKBC-BATTLE-HOLE-INVENTORY | Covered obligations for damage disposition and damage-type choice holes. |
@@ -344,7 +344,7 @@ Reviewers should reject:
 
 ### Task 1 - RKBC-BATTLE-HOLE-INVENTORY - Battle Hole And Fill Inventory
 
-Status: `ready-for-research`
+Status: `done`
 
 Scope: inventory every current `BattleHole` kind and fill kind admitted by the
 battle reducer. Classify each as reducer-semantic frontier, deterministic
