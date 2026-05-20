@@ -47,6 +47,24 @@
         "packages/character-sheet-runtime/src/index.test.ts:monksFocusShortRestRecoveryTestName"
       ]
     },
+    "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_font_of_magic": {
+      "taskId": "L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS",
+      "profile": "Character Sheet class-feature point-pool resource and Spell Slot conversion runtime",
+      "summary": "Font of Magic is read from CharacterBuild resources and the installed Surface feature record, then projected as Character Sheet Sorcery Point point-pool state. The runtime derives capacity from Sorcerer class level, stores only expended Sorcery Points, restores all expended points on Long Rest, and executes the no-action ordinary Spell Slot to Sorcery Point conversion by spending one existing ordinary Spell Slot and reducing the shared point-pool expenditure by exactly the slot level only when the full gain fits under the cap. It does not store duplicate class progression, temporary Spell Slot creation, or Metamagic option state.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/index.ts:characterSheetResources",
+        "packages/character-sheet-runtime/src/index.ts:classFeaturePointPoolResourcesForBuild",
+        "packages/character-sheet-runtime/src/index.ts:parseStoredResourceExpenditures",
+        "packages/character-sheet-runtime/src/index.ts:completeLongRest",
+        "packages/character-sheet-runtime/src/index.ts:convertFontOfMagicSpellSlotToSorceryPoints",
+        "packages/character-sheet-runtime/src/index.ts:replacePointPoolResourceExpenditure"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/index.test.ts:sorcererFontOfMagicLongRestRecoveryTestName",
+        "packages/character-sheet-runtime/src/index.test.ts:sorcererFontOfMagicSlotConversionTestName",
+        "packages/character-sheet-runtime/src/index.test.ts:sorcererFontOfMagicSlotConversionGateTestName"
+      ]
+    },
     "srd521:classes/monk:level-2:class-feature-grant:monk_uncanny_metabolism": {
       "taskId": "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME",
       "profile": "Character Sheet Uncanny Metabolism Initiative recovery and Long Rest use state runtime",
