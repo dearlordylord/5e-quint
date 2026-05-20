@@ -13,31 +13,31 @@
     {
       "number": 2,
       "id": "RKBC-BATTLE-HOLE-TARGETS-AREAS",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Battle Target And Area Hole Obligations"
     },
     {
       "number": 3,
       "id": "RKBC-BATTLE-HOLE-MOVEMENT-ROUTE",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Battle Movement Route And Spatial Fact Obligations"
     },
     {
       "number": 4,
       "id": "RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Battle Damage Disposition And Type Choice Obligations"
     },
     {
       "number": 5,
       "id": "RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Battle Ability Skill And Command Hole Obligations"
     },
     {
       "number": 6,
       "id": "RKBC-BATTLE-HOLE-REACTION-CONCENTRATION",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Battle Reaction And Concentration Hole Obligations"
     },
     {
@@ -316,11 +316,11 @@ Reviewers should reject:
 | # | Task | Status | Depends On | Closure target |
 | ---: | --- | --- | --- | --- |
 | 1 | RKBC-BATTLE-HOLE-INVENTORY - Battle Hole And Fill Inventory | done | baseline | Inventory every current `BattleHole` and fill kind; classify semantic frontier, deterministic projection, unsupported, or dead branch. |
-| 2 | RKBC-BATTLE-HOLE-TARGETS-AREAS - Battle Target And Area Hole Obligations | blocked | RKBC-BATTLE-HOLE-INVENTORY | Covered obligations for target, target-list, and area-choice hole families. |
-| 3 | RKBC-BATTLE-HOLE-MOVEMENT-ROUTE - Battle Movement Route And Spatial Fact Obligations | blocked | RKBC-BATTLE-HOLE-INVENTORY | Covered/boundary obligations for movement route and table spatial fact holes. |
-| 4 | RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION - Battle Damage Disposition And Type Choice Obligations | blocked | RKBC-BATTLE-HOLE-INVENTORY | Covered obligations for damage disposition and damage-type choice holes. |
-| 5 | RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND - Battle Ability Skill And Command Hole Obligations | blocked | RKBC-BATTLE-HOLE-INVENTORY | Covered/boundary obligations for ability choice, skill choice, and Command option holes. |
-| 6 | RKBC-BATTLE-HOLE-REACTION-CONCENTRATION - Battle Reaction And Concentration Hole Obligations | blocked | RKBC-BATTLE-HOLE-INVENTORY | Covered obligations for reaction decisions, continuation resumption, and Concentration Saving Throw holes not already owned. |
+| 2 | RKBC-BATTLE-HOLE-TARGETS-AREAS - Battle Target And Area Hole Obligations | ready-for-research | RKBC-BATTLE-HOLE-INVENTORY | Covered obligations for target, target-list, and area-choice hole families. |
+| 3 | RKBC-BATTLE-HOLE-MOVEMENT-ROUTE - Battle Movement Route And Spatial Fact Obligations | ready-for-research | RKBC-BATTLE-HOLE-INVENTORY | Covered/boundary obligations for movement route and table spatial fact holes. |
+| 4 | RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION - Battle Damage Disposition And Type Choice Obligations | ready-for-research | RKBC-BATTLE-HOLE-INVENTORY | Covered obligations for damage disposition and damage-type choice holes. |
+| 5 | RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND - Battle Ability Skill And Command Hole Obligations | ready-for-research | RKBC-BATTLE-HOLE-INVENTORY | Covered/boundary obligations for ability choice, skill choice, and Command option holes. |
+| 6 | RKBC-BATTLE-HOLE-REACTION-CONCENTRATION - Battle Reaction And Concentration Hole Obligations | ready-for-research | RKBC-BATTLE-HOLE-INVENTORY | Covered obligations for reaction decisions, continuation resumption, and Concentration Saving Throw holes not already owned. |
 | 7 | RKBC-PROFILE-JOIN-FEATURE-PASSIVE-RESOURCE - Feature Passive Resource And Persistent Profile Join | ready-for-research | baseline | Map feature passive/resource/persistent profiles to covered obligations or create missing obligations. |
 | 8 | RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS - Feature Reaction Bonus Action And Resource Profile Join | ready-for-research | baseline | Map feature reaction, bonus-action, and failed-roll resource profiles to covered obligations or create missing obligations. |
 | 9 | RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION - Spell Damage Condition And Scalar Profile Join | ready-for-research | baseline | Map Spell Definition profiles for damage, condition, scalar, and roll modifiers to covered Spell Effect/Invocation obligations or create missing obligations. |
@@ -361,7 +361,7 @@ Acceptance:
 
 ### Task 2 - RKBC-BATTLE-HOLE-TARGETS-AREAS - Battle Target And Area Hole Obligations
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `RKBC-BATTLE-HOLE-INVENTORY`.
 
@@ -378,7 +378,7 @@ Acceptance:
 
 ### Task 3 - RKBC-BATTLE-HOLE-MOVEMENT-ROUTE - Battle Movement Route And Spatial Fact Obligations
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `RKBC-BATTLE-HOLE-INVENTORY`.
 
@@ -394,7 +394,7 @@ Acceptance:
 
 ### Task 4 - RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION - Battle Damage Disposition And Type Choice Obligations
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `RKBC-BATTLE-HOLE-INVENTORY`.
 
@@ -411,7 +411,7 @@ Acceptance:
 
 ### Task 5 - RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND - Battle Ability Skill And Command Hole Obligations
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `RKBC-BATTLE-HOLE-INVENTORY`.
 
@@ -429,7 +429,7 @@ Acceptance:
 
 ### Task 6 - RKBC-BATTLE-HOLE-REACTION-CONCENTRATION - Battle Reaction And Concentration Hole Obligations
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `RKBC-BATTLE-HOLE-INVENTORY`.
 
