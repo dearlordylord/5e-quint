@@ -55,7 +55,7 @@ import {
 } from "./server.ts";
 import type { BattleToolResult } from "./battle-tools.ts";
 import type { CharacterToolResult } from "./character-tools.ts";
-import { characterUnitRefsWithBattleSupportProfiles } from "./battle-support-profiles.ts";
+import { characterUnitRefsWithBattleSupportProfiles } from "@dnd/character-battle-runtime";
 import {
   availableCharacterSession,
   characterIdFromDraftId,
