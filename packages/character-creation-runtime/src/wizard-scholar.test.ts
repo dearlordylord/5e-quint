@@ -39,7 +39,7 @@ import {
 } from "./phase1-manifest.ts";
 import { supportedHoleOptionIds } from "./support-gates.ts";
 import { eligibleExpertiseSkills } from "./discovery.ts";
-import { wizardSpellcastingCreationAtLevel } from "./wizard-spellcasting.ts";
+import { wizardSpellcastingCreationAtLevel } from "./class-spellcasting.ts";
 
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-CLASS-WIZARD-SCHOLAR wizard_scholar
 

@@ -1,10 +1,8 @@
 import type {
   ClassSpellcastingCreation,
+  ListPreparedSpellcastingProgressionCreation,
   WizardSpellcastingCreation,
 } from "@dnd/surface/surface/types";
-
-import { listPreparedSpellcastingCreationAtLevel } from "./list-prepared-spellcasting.ts";
-import { wizardSpellcastingCreationAtLevel } from "./wizard-spellcasting.ts";
 
 export type ReadableClassSpellcasting = ClassSpellcastingCreation;
 
@@ -67,4 +65,81 @@ function isProgressionListPreparedSpellcastingCreation(
   return (
     spellcasting.kind === "list_prepared_spellcasting_progression_creation"
   );
+}
+
+export function wizardSpellcastingCreationAtLevel(
+  spellcasting: WizardSpellcastingCreation,
+  classLevel: number,
+): WizardSpellcastingCreation | undefined {
+  const progression = spellcastingProgressionAtLevel(
+    spellcasting.spellcastingProgression,
+    classLevel,
+  );
+  if (progression === undefined) {
+    return undefined;
+  }
+
+  return {
+    ...spellcasting,
+    cantripAccess: {
+      ...spellcasting.cantripAccess,
+      choose: progression.cantripCount,
+    },
+    spellbookAccess: {
+      ...spellcasting.spellbookAccess,
+      choose: progression.spellbookSpellCount,
+    },
+    preparedAccess: {
+      ...spellcasting.preparedAccess,
+      choose: progression.preparedSpellCount,
+    },
+    spellSlotProjection: {
+      ...spellcasting.spellSlotProjection,
+      slots: progression.spellSlots,
+    },
+  };
+}
+
+function listPreparedSpellcastingCreationAtLevel(
+  spellcasting: ListPreparedSpellcastingProgressionCreation,
+  classLevel: number,
+): ListPreparedSpellcastingProgressionCreation | undefined {
+  const progression = spellcastingProgressionAtLevel(
+    spellcasting.spellcastingProgression,
+    classLevel,
+  );
+  if (progression === undefined) {
+    return undefined;
+  }
+
+  const projected = {
+    ...spellcasting,
+    preparedAccess: {
+      ...spellcasting.preparedAccess,
+      choose: progression.preparedSpellCount,
+    },
+    spellSlotProjection: {
+      ...spellcasting.spellSlotProjection,
+      slots: progression.spellSlots,
+    },
+  };
+
+  if (spellcasting.cantripAccess === undefined) {
+    return projected;
+  }
+
+  return {
+    ...projected,
+    cantripAccess: {
+      ...spellcasting.cantripAccess,
+      choose: progression.cantripCount,
+    },
+  };
+}
+
+function spellcastingProgressionAtLevel<T extends { readonly atLevel: number }>(
+  progression: readonly T[],
+  classLevel: number,
+): T | undefined {
+  return progression.find((row) => row.atLevel === classLevel);
 }
