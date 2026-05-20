@@ -18,6 +18,7 @@ import {
   DRUID_WILD_SHAPE_UNIT_ID,
   MONK_MONKS_FOCUS_UNIT_ID,
   characterBuildDruidWildShapeFacts,
+  characterBuildMonkUncannyMetabolismFacts,
   characterBuildMonksFocusFacts,
   characterEquipmentItemSourceFromId,
   eldritchInvocationOptionForInvocationId,
@@ -43,6 +44,7 @@ import {
   type CharacterBuildPactMagicSlotPool,
   type CharacterBuildProficiencyChoiceSubject,
   type CharacterBuildResource,
+  type CharacterBuildMonkUncannyMetabolismFacts,
   type CharacterBuildSpellcasting,
   type CharacterBuildSpellcastingFocus,
   type CharacterBuildSpellcastingSource,
@@ -144,6 +146,7 @@ import { Brand, Either, Match, Option } from "effect";
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.ability-check-proficiency-bonus
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.pact-slot-recovery
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-long-rest-use-state
 
 const WEAPON_PROFICIENCY_CATEGORY_VALUES = ["simple", "martial"] as const;
 const ARMOR_TRAINING_CATEGORY_VALUES = [
@@ -167,6 +170,7 @@ export const BARD_JACK_OF_ALL_TRADES_UNIT_ID =
   "bard_jack_of_all_trades" as const satisfies UnitRecord["id"];
 const ARCANE_RECOVERY_REST_FEATURE_TAG = "arcaneRecovery" as const;
 const MAGICAL_CUNNING_REST_FEATURE_TAG = "magicalCunning" as const;
+const UNCANNY_METABOLISM_REST_FEATURE_TAG = "uncannyMetabolism" as const;
 const JACK_OF_ALL_TRADES_PROFICIENCY_BONUS_DIVISOR = 2;
 const LAY_ON_HANDS_POISONED_REMOVAL_COST = resourceCount(5);
 const RITUAL_ADDITIONAL_CASTING_TIME_MINUTES = 10;
@@ -295,6 +299,10 @@ export type CharacterSheetRestFeatureUse =
   | {
       readonly tag: typeof MAGICAL_CUNNING_REST_FEATURE_TAG;
       readonly usedSinceLongRest: true;
+    }
+  | {
+      readonly tag: typeof UNCANNY_METABOLISM_REST_FEATURE_TAG;
+      readonly usedSinceLongRest: true;
     };
 
 type CharacterSheetTaggedResourceExpenditure = {
@@ -350,6 +358,14 @@ export type CharacterSheetMonksFocusSaveDc = {
   readonly unitId: typeof MONK_MONKS_FOCUS_UNIT_ID;
   readonly dc: DifficultyClass;
 };
+
+export type CharacterSheetMonkUncannyMetabolismUseState =
+  CharacterBuildMonkUncannyMetabolismFacts & {
+    readonly usedSinceLongRest: boolean;
+    readonly focusRecovery: CharacterBuildMonkUncannyMetabolismFacts["focusRecovery"] & {
+      readonly resourceUnitId: typeof MONK_MONKS_FOCUS_UNIT_ID;
+    };
+  };
 
 export type CharacterSheetArcaneRecoverySlotRefund = {
   readonly spellLevel: SpellSlotLevel;
@@ -1198,6 +1214,28 @@ export function characterSheetMonksFocusSaveDc(
         proficiencyBonusForCharacterLevel(
           computeTotalLevel(sheet.build.progression),
         ),
+    ),
+  });
+}
+
+export function characterSheetMonkUncannyMetabolismUseState(
+  sheet: CharacterSheet,
+  unitLibrary: UnitCatalog,
+): Either.Either<
+  CharacterSheetMonkUncannyMetabolismUseState | undefined,
+  CharacterSheetIssue
+> {
+  const facts = characterBuildMonkUncannyMetabolismFacts({
+    build: sheet.build,
+    unitLibrary,
+  });
+  if (Either.isLeft(facts)) return characterSheetIssue(facts.left.message);
+  if (facts.right === undefined) return Either.right(undefined);
+
+  return Either.right({
+    ...facts.right,
+    usedSinceLongRest: sheet.restFeatureUses.some(
+      (use) => use.tag === UNCANNY_METABOLISM_REST_FEATURE_TAG,
     ),
   });
 }
@@ -2457,6 +2495,16 @@ function restFeatureUseStateMatchesBuild(
     ) {
       return characterSheetIssue(
         "Magical Cunning rest feature use requires the Warlock Magical Cunning feature.",
+      );
+    }
+    return Either.right(undefined);
+  }
+  if (use.tag === UNCANNY_METABOLISM_REST_FEATURE_TAG) {
+    const facts = characterBuildMonkUncannyMetabolismFacts(input);
+    if (Either.isLeft(facts)) return characterSheetIssue(facts.left.message);
+    if (facts.right === undefined) {
+      return characterSheetIssue(
+        "Uncanny Metabolism rest feature use requires the Monk Uncanny Metabolism feature.",
       );
     }
     return Either.right(undefined);
@@ -3756,7 +3804,8 @@ function parseStoredRestFeatureUses(
     }
     if (
       (use.tag !== ARCANE_RECOVERY_REST_FEATURE_TAG &&
-        use.tag !== MAGICAL_CUNNING_REST_FEATURE_TAG) ||
+        use.tag !== MAGICAL_CUNNING_REST_FEATURE_TAG &&
+        use.tag !== UNCANNY_METABOLISM_REST_FEATURE_TAG) ||
       use.usedSinceLongRest !== true
     ) {
       return characterSheetIssue("Expected supported rest feature use state.");

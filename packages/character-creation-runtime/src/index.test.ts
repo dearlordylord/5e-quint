@@ -31,12 +31,15 @@ import {
   characterBuildArmorTraining,
   characterBuildFeatureUnitIds,
   characterBuildDruidWildShapeFacts,
+  characterBuildMonkUncannyMetabolismFacts,
   characterBuildMonksFocusFacts,
   characterBuildHitPoints,
   characterBuildProficiencies,
   characterBuildResources,
   DRUID_WILD_SHAPE_UNIT_ID,
+  MONK_MARTIAL_ARTS_UNIT_ID,
   MONK_MONKS_FOCUS_UNIT_ID,
+  MONK_UNCANNY_METABOLISM_UNIT_ID,
   exactChoiceCardinality,
   boundedChoiceCardinality,
   choiceCardinalityBounds,
@@ -141,6 +144,7 @@ import {
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.class-feature-advancement-replacement
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.warlock-pact-magic-advancement
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.class-feature-resource-projection
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.class-feature-source-fact-projection
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-03 fighter_fighting_style
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE warlock_eldritch_invocations
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-06 cleric_divine_order druid_primal_order
@@ -150,6 +154,7 @@ import {
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY cleric_channel_divinity
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS druid_wild_shape
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS monk_monks_focus
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS monk_uncanny_metabolism
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -4042,6 +4047,65 @@ describe("character creation finalization", () => {
       }),
     );
     expect(levelFourFocusFacts?.focusPointUseCount.maximum).toBe(4);
+  });
+
+  test("projects Monk 2 Uncanny Metabolism source facts without duplicating Focus or Martial Arts tables", () => {
+    const monkTwo = completeSupportedProgressionDraft({
+      draftId: "draft:monk-uncanny-metabolism",
+      progression: testProgression("class_monk", 2),
+    });
+    const result = finalizeCharacterDraft({ draft: monkTwo, unitLibrary });
+
+    expect(result.tag).toBe("ready");
+    if (result.tag !== "ready") return;
+
+    expect(characterBuildFeatureUnitIds(result.build, unitLibrary)).toEqual(
+      expect.arrayContaining([
+        MONK_MARTIAL_ARTS_UNIT_ID,
+        MONK_MONKS_FOCUS_UNIT_ID,
+        MONK_UNCANNY_METABOLISM_UNIT_ID,
+      ]),
+    );
+
+    const facts = expectRight(
+      characterBuildMonkUncannyMetabolismFacts({
+        build: result.build,
+        unitLibrary,
+      }),
+    );
+    if (facts === undefined) {
+      throw new Error(
+        "Expected Monk 2 build to project Uncanny Metabolism facts.",
+      );
+    }
+    expect(facts).toEqual({
+      unitId: MONK_UNCANNY_METABOLISM_UNIT_ID,
+      trigger: "roll_initiative",
+      optional: true,
+      oncePerLongRestUse: {
+        resetCadence: { kind: "long_rest" },
+      },
+      focusRecovery: {
+        resourceUnitId: MONK_MONKS_FOCUS_UNIT_ID,
+        recoversAllExpended: true,
+      },
+      healing: {
+        target: "self",
+        martialArtsDieSourceUnitId: MONK_MARTIAL_ARTS_UNIT_ID,
+        monkLevelBonus: 2,
+      },
+    });
+
+    const levelFourFacts = expectRight(
+      characterBuildMonkUncannyMetabolismFacts({
+        build: {
+          features: result.build.features,
+          progression: testProgression("class_monk", 4),
+        },
+        unitLibrary,
+      }),
+    );
+    expect(levelFourFacts?.healing.monkLevelBonus).toBe(4);
   });
 
   test("projects Druid 4 Wild Shape roster thresholds without known-form defaults", () => {

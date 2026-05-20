@@ -156,6 +156,7 @@ export {
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.class-feature-advancement-replacement
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.warlock-pact-magic-advancement
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.class-feature-resource-projection
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.class-feature-source-fact-projection
 
 export {
   LEVEL_ONE_ELDRITCH_INVOCATION_OPTIONS,
@@ -205,6 +206,13 @@ export {
   type CharacterBuildMonksFocusFacts,
   type CharacterBuildMonksFocusFactsIssue,
 } from "./monk-focus.ts";
+export {
+  MONK_MARTIAL_ARTS_UNIT_ID,
+  MONK_UNCANNY_METABOLISM_UNIT_ID,
+  characterBuildMonkUncannyMetabolismFacts,
+  type CharacterBuildMonkUncannyMetabolismFacts,
+  type CharacterBuildMonkUncannyMetabolismFactsIssue,
+} from "./monk-uncanny-metabolism.ts";
 export {
   classLevelLinearValueAtClassLevel,
   classLevelChoiceCountAtLevel,

@@ -9,14 +9,11 @@ import type {
 import type { UnitCatalog } from "./types.ts";
 import { characterBuildFeatureUnitIds } from "./finalization.ts";
 import {
-  classLevelForUnit,
-  progressionClassUnitIds,
-} from "./character-progression-types.ts";
-import {
   classLevelLinearValueAtClassLevel,
   isClassLevelLinearPerLevel,
 } from "./class-level-scaling.ts";
 import type { CharacterBuild } from "./types.ts";
+import { characterBuildClassFeatureOwnerLevel } from "./class-feature-facts.ts";
 
 export const MONK_MONKS_FOCUS_UNIT_ID =
   "monk_monks_focus" as const satisfies UnitRecord["id"];
@@ -87,12 +84,14 @@ export function characterBuildMonksFocusFacts(input: {
     );
   }
 
-  const monkLevel = classLevelForMonkFocusFeature({
+  const monkLevel = characterBuildClassFeatureOwnerLevel({
     build: input.build,
     unitLibrary: input.unitLibrary,
     feature: featureUnit.value,
   });
-  if (Either.isLeft(monkLevel)) return Either.left(monkLevel.left);
+  if (Either.isLeft(monkLevel)) {
+    return monksFocusFactsIssue(monkLevel.left.message);
+  }
 
   const focusPointMaximum = monkFocusPointMaximum({
     feature: featureUnit.value,
@@ -133,28 +132,6 @@ function isMonkFocusFeature(unit: UnitRecord): unit is MonkFocusFeature {
     unit.mechanics.effectSaveDc?.kind === "class_feature_ability_save_dc" &&
     unit.mechanics.effectSaveDc.base === 8 &&
     unit.mechanics.effectSaveDc.ability === MONK_MONKS_FOCUS_SAVE_DC_ABILITY
-  );
-}
-
-function classLevelForMonkFocusFeature(input: {
-  readonly build: Pick<CharacterBuild, "progression">;
-  readonly unitLibrary: UnitCatalog;
-  readonly feature: MonkFocusFeature;
-}): Either.Either<number, CharacterBuildMonksFocusFactsIssue> {
-  for (const classUnitId of progressionClassUnitIds(input.build.progression)) {
-    const classUnit = input.unitLibrary.getUnit(classUnitId);
-    if (
-      Option.isSome(classUnit) &&
-      classUnit.value.kind === "class" &&
-      classUnit.value.className === input.feature.className
-    ) {
-      return Either.right(
-        classLevelForUnit(input.build.progression, classUnitId),
-      );
-    }
-  }
-  return monksFocusFactsIssue(
-    "Monk's Focus projection requires Monk class progression.",
   );
 }
 

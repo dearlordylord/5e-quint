@@ -2544,6 +2544,30 @@
         "packages/character-creation-runtime/src/index.test.ts:accepts Monk 2 Monk's Focus as shared Focus Point character facts"
       ]
     },
+    "srd521:classes/monk:level-2:class-feature-grant:monk_uncanny_metabolism": {
+      "taskId": "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS",
+      "profile": "character-creation.class-feature-source-fact-projection support profile",
+      "summary": "Uncanny Metabolism is retained from the level-2 Monk class feature grant and projected into CharacterBuild source facts from the authored Surface Initiative recovery record. The projection derives its optional Initiative trigger, Long Rest reset cadence, shared Monk's Focus resource link, Martial Arts die source link, self-healing target, and Monk-level healing bonus from the retained feature, Monk's Focus facts, Martial Arts facts, and Monk class level without duplicating Focus Point capacity, Martial Arts die tiers, or class progression state.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverInitialDraftHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds",
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildUnitRefs",
+        "packages/character-creation-runtime/src/class-feature-facts.ts:characterBuildClassFeatureOwnerLevel",
+        "packages/character-creation-runtime/src/monk-focus.ts:characterBuildMonksFocusFacts",
+        "packages/character-creation-runtime/src/monk-uncanny-metabolism.ts:characterBuildMonkUncannyMetabolismFacts"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:projects Monk 2 Uncanny Metabolism source facts without duplicating Focus or Martial Arts tables"
+      ]
+    },
     "srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy": {
       "taskId": "SRDINV18",
       "profile": "level-1 Ranger class-feature support profile",

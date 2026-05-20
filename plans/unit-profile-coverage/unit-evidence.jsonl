@@ -243,6 +243,8 @@
 {"unitId":"druid_wild_shape","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
 {"unitId":"monk_monks_focus","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"monk_monks_focus","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
+{"unitId":"monk_uncanny_metabolism","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
+{"unitId":"monk_uncanny_metabolism","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
 {"unitId":"monk_monks_focus","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS","ownerPath":"packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"}}
 {"unitId":"monk_monks_focus","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS","ownerPath":"packages/battle-runtime/src/battle-runtime-monk-focus.test.ts"}}
 {"unitId":"misty_step","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-SPELL-MISTY-STEP","ownerPath":"packages/battle-runtime/src/unit-profile-admission-misty-step.test.ts"}}
