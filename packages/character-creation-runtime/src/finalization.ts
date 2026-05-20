@@ -84,6 +84,7 @@ import {
   WIZARD_PREPARED_SPELL_CHOICE_KEY,
   WIZARD_SPELLBOOK_CHOICE_KEY,
   ELDRITCH_INVOCATIONS_CHOICE_KEY,
+  SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY,
 } from "./phase1-manifest.ts";
 import { selectedEldritchInvocationFeatures } from "./eldritch-invocations.ts";
 import {
@@ -119,6 +120,7 @@ import {
   nonEmptyReadonlyArray,
   loadoutSourceKey,
   isCharacterBuildToolProficiencyId,
+  sorcererMetamagicOptionId,
   unitChoiceKey,
   unitChoiceSourceKey,
   type AbilityScoreAssignment,
@@ -1896,6 +1898,13 @@ function finalizedClassChoiceFeaturesForSupportedChoices(
       });
     }
 
+    if (selection.source.choiceKey === SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY) {
+      return selectedSorcererMetamagicOptionFeatures({
+        selectedFromUnitId: selection.source.unitId,
+        optionIds: selection.options.map((option) => option.optionId),
+      });
+    }
+
     return unitRefsForSupportedClassChoice(
       selection.source,
       selection.options,
@@ -1904,6 +1913,24 @@ function finalizedClassChoiceFeaturesForSupportedChoices(
       unitId,
       selectedFromUnitId: selection.source.unitId,
     }));
+  });
+}
+
+function selectedSorcererMetamagicOptionFeatures(input: {
+  readonly selectedFromUnitId: UnitRecord["id"];
+  readonly optionIds: readonly CreationChoiceOptionId[];
+}): readonly CharacterBuildFeature[] {
+  return input.optionIds.flatMap((optionId) => {
+    const parsed = sorcererMetamagicOptionId(optionId);
+    return Either.isRight(parsed)
+      ? [
+          {
+            kind: "selectedSorcererMetamagicOption" as const,
+            selectedFromUnitId: input.selectedFromUnitId,
+            optionId: parsed.right,
+          },
+        ]
+      : [];
   });
 }
 

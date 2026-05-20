@@ -53,6 +53,7 @@ import {
   SRD_PALADIN_CLASS_UNIT_ID,
   SRD_RANGER_CLASS_UNIT_ID,
   SRD_LEVEL_ONE_CLASS_UNIT_IDS,
+  SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY,
   SRD_SORCERER_CLASS_UNIT_ID,
   SRD_CHARACTER_ADMISSION_SPECIES_UNIT_IDS,
   progressionOptionId,
@@ -71,6 +72,7 @@ import {
   abilityScoreIncreaseChoiceOptionIds,
 } from "./phase1-manifest.ts";
 import { LEVEL_ONE_ELDRITCH_INVOCATION_OPTIONS } from "./eldritch-invocations.ts";
+import { SORCERER_METAMAGIC_OPTION_IDS } from "@dnd/surface/surface/schema";
 import type {
   BackgroundAbilityScoreIncreaseSelection,
   CharacterAlignment,
@@ -352,6 +354,9 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
       SUPPORTED_SKILL_PROFICIENCY_OPTION_IDS,
     [ELDRITCH_INVOCATIONS_CHOICE_KEY]:
       LEVEL_ONE_ELDRITCH_INVOCATION_OPTIONS.map((option) => option.optionId),
+    [SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY]: SORCERER_METAMAGIC_OPTION_IDS.map(
+      creationChoiceOptionId,
+    ),
     [WEAPON_MASTERY_OPTIONS_CHOICE_KEY]: SUPPORTED_WEAPON_MASTERY_OPTION_IDS,
     [WIZARD_CANTRIP_CHOICE_KEY]: [
       creationChoiceOptionId("light"),

@@ -38,6 +38,7 @@ export {
   parseCreationHoleId,
   parseLoadoutSourceKey,
   parseUnitChoiceSourceKey,
+  sorcererMetamagicOptionId,
   unitChoiceKey,
   unitChoiceSourceHoleIdText,
   unitChoiceSourceKey,
@@ -130,6 +131,8 @@ export {
   type LoadoutSourceKeyText,
   type NonEmptyReadonlyArray,
   type SelectableStandardLanguage,
+  type SorcererMetamagicOptionId,
+  type SorcererMetamagicOptionIdIssue,
   type StandardLanguage,
   type SupportedAbilityScoreMethod,
   type TwoAndOneBackgroundAbilityScoreIncreaseSelection,
@@ -222,6 +225,14 @@ export {
   type CharacterBuildSorcererFontOfMagicFactsIssue,
 } from "./sorcerer-font-of-magic.ts";
 export {
+  SORCERER_METAMAGIC_UNIT_ID,
+  characterBuildSorcererMetamagicFacts,
+  parseSorcererMetamagicOptionId,
+  type CharacterBuildSorcererMetamagicFacts,
+  type CharacterBuildSorcererMetamagicFactsIssue,
+  type CharacterBuildSorcererMetamagicOptionFact,
+} from "./sorcerer-metamagic.ts";
+export {
   classLevelLinearValueAtClassLevel,
   classLevelChoiceCountAtLevel,
   isClassLevelLinearPerLevel,
@@ -307,6 +318,7 @@ export {
   PHASE1_SPECIES_ORC_UNIT_ID,
   PHASE1_WEAPON_LONGSWORD_UNIT_ID,
   PHASE1_WEAPON_MASTERY_UNIT_IDS,
+  SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY,
   SUPPORTED_FIGHTER_SKILL_OPTION_IDS,
   SUPPORTED_LANGUAGE_OPTION_IDS,
   WEAPON_MASTERY_OPTIONS_CHOICE_KEY,

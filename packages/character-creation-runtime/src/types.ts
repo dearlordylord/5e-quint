@@ -21,6 +21,10 @@ import {
   type SupportedAbilityScoreMethod,
 } from "@dnd/shared-algebras/ability-score-algebra";
 import {
+  SORCERER_METAMAGIC_OPTION_IDS,
+  SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY,
+} from "@dnd/surface/surface/schema";
+import {
   Index,
   NonNegativeInteger,
   PositiveInteger,
@@ -124,6 +128,7 @@ export const UNIT_CHOICE_KEYS = [
   "ranger_multiclass_skill_proficiency",
   "rogue_multiclass_skill_proficiency",
   "eldritch_invocations",
+  SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY,
   "weapon_mastery_options",
   "class_cantrip_choices",
   "class_prepared_spell_choices",
@@ -137,6 +142,23 @@ export type EldritchInvocationId = string & Brand.Brand<"EldritchInvocationId">;
 const EldritchInvocationId = Brand.nominal<EldritchInvocationId>();
 export const eldritchInvocationId: (value: string) => EldritchInvocationId =
   EldritchInvocationId;
+
+export type SorcererMetamagicOptionId = string &
+  Brand.Brand<"SorcererMetamagicOptionId">;
+const SorcererMetamagicOptionId = Brand.nominal<SorcererMetamagicOptionId>();
+
+export type SorcererMetamagicOptionIdIssue = {
+  readonly tag: "unsupportedSorcererMetamagicOptionId";
+  readonly value: string;
+};
+
+export function sorcererMetamagicOptionId(
+  value: string,
+): Either.Either<SorcererMetamagicOptionId, SorcererMetamagicOptionIdIssue> {
+  return SORCERER_METAMAGIC_OPTION_IDS.some((optionId) => optionId === value)
+    ? Either.right(SorcererMetamagicOptionId(value))
+    : Either.left({ tag: "unsupportedSorcererMetamagicOptionId", value });
+}
 
 export const LOADOUT_SLOTS = ["armor", "shield", "weapon"] as const;
 export type LoadoutSlot = (typeof LOADOUT_SLOTS)[number];
@@ -1027,6 +1049,10 @@ export type CharacterBuildFeature =
   | (CharacterBuildSelectedFeatureSource & {
       readonly kind: "selectedEldritchInvocation";
       readonly selection: CharacterBuildEldritchInvocationSelection;
+    })
+  | (CharacterBuildSelectedFeatureSource & {
+      readonly kind: "selectedSorcererMetamagicOption";
+      readonly optionId: SorcererMetamagicOptionId;
     })
   | CharacterBuildAbilityCheckBonusFeature;
 

@@ -19,6 +19,7 @@ import {
   MONK_MONKS_FOCUS_UNIT_ID,
   SORCERER_FONT_OF_MAGIC_UNIT_ID,
   characterBuildSorcererFontOfMagicFacts,
+  characterBuildSorcererMetamagicFacts,
   characterBuildDruidWildShapeFacts,
   characterBuildMonkUncannyMetabolismFacts,
   characterBuildMonksFocusFacts,
@@ -34,6 +35,7 @@ import {
   isClassLevelLinearPerLevel,
   isClassLevelThresholdTiers,
   replaceDruidWildShapeKnownForm,
+  sorcererMetamagicOptionId,
   thresholdTierValueAtClassLevel,
   validateDruidWildShapeKnownForms,
   weaponMasteryChoiceProfileForFeature,
@@ -1508,8 +1510,7 @@ export function convertFontOfMagicSpellSlotToSorceryPoints(
 
   return Either.right({
     ...input.sheet,
-    spellSlotExpenditures:
-      spellSlotSpend.right.ordinarySpellSlotExpenditures,
+    spellSlotExpenditures: spellSlotSpend.right.ordinarySpellSlotExpenditures,
     createdSpellSlots: spellSlotSpend.right.createdSpellSlots,
     resourceExpenditures: replacePointPoolResourceExpenditure({
       expenditures: input.sheet.resourceExpenditures,
@@ -4996,9 +4997,26 @@ function parseCharacterBuild(
   }
   const eldritchInvocationIssue =
     storedEldritchInvocationKnownCantripSelectionIssue(build, unitLibrary);
-  return Either.isLeft(eldritchInvocationIssue)
-    ? Either.left(eldritchInvocationIssue.left)
+  if (Either.isLeft(eldritchInvocationIssue)) {
+    return Either.left(eldritchInvocationIssue.left);
+  }
+  const sorcererMetamagicIssue = storedSorcererMetamagicSelectionIssue(
+    build,
+    unitLibrary,
+  );
+  return Either.isLeft(sorcererMetamagicIssue)
+    ? Either.left(sorcererMetamagicIssue.left)
     : Either.right(build);
+}
+
+function storedSorcererMetamagicSelectionIssue(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+): Either.Either<void, CharacterSheetIssue> {
+  const facts = characterBuildSorcererMetamagicFacts({ build, unitLibrary });
+  return Either.isLeft(facts)
+    ? characterSheetIssue(facts.left.message)
+    : Either.right(undefined);
 }
 
 function storedEldritchInvocationKnownCantripSelectionIssue(
@@ -5628,6 +5646,21 @@ function parseStoredFeatures(
       features.push({
         kind: "selectedEldritchInvocation" as const,
         selection: selection.right,
+        selectedFromUnitId: feature.selectedFromUnitId,
+      });
+    } else if (
+      feature.kind === "selectedSorcererMetamagicOption" &&
+      typeof feature.optionId === "string"
+    ) {
+      const optionId = sorcererMetamagicOptionId(feature.optionId);
+      if (Either.isLeft(optionId)) {
+        return characterSheetIssue(
+          "Character Build Sorcerer Metamagic option selection is invalid.",
+        );
+      }
+      features.push({
+        kind: "selectedSorcererMetamagicOption" as const,
+        optionId: optionId.right,
         selectedFromUnitId: feature.selectedFromUnitId,
       });
     } else if (feature.kind === "abilityCheckBonus") {

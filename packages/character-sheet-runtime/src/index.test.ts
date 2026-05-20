@@ -1,6 +1,7 @@
 import type { CharacterBuild } from "@dnd/character-creation-runtime";
 import {
   abilityScoreAssignment,
+  characterBuildSorcererMetamagicFacts,
   characterBuildResources,
   characterEquipmentItemId,
   characterEquipmentItemUnitId,
@@ -10,6 +11,8 @@ import {
   MONK_MONKS_FOCUS_UNIT_ID,
   MONK_UNCANNY_METABOLISM_UNIT_ID,
   SORCERER_FONT_OF_MAGIC_UNIT_ID,
+  SORCERER_METAMAGIC_UNIT_ID,
+  sorcererMetamagicOptionId,
 } from "@dnd/character-creation-runtime";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { elapsedTimeTicks, timeSpanDuration } from "@dnd/shared/elapsed-time";
@@ -80,6 +83,7 @@ import {
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS monk_monks_focus
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS monk_uncanny_metabolism
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS sorcerer_font_of_magic
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS sorcerer_metamagic
 
 const build = armorClassBuild({ startingClass: "class_fighter" });
 
@@ -581,6 +585,70 @@ describe("Character Sheet runtime", () => {
         },
       ]),
     );
+  });
+
+  test("round-trips stored Sorcerer Metamagic known options through sheet parsing", () => {
+    const sheet = parseCharacterSheet(
+      {
+        ...storedAvailableSheetInput({
+          characterId: "character:sorcerer-metamagic",
+          build: sorcererFontOfMagicBuild(),
+        }),
+        spellSlotExpenditures: [{ spellLevel: 1, expended: 0 }],
+      },
+      unitLibrary,
+    );
+
+    const parsed = requireRight(sheet);
+    expect(parsed.build.features).toEqual(
+      expect.arrayContaining([
+        {
+          kind: "selectedSorcererMetamagicOption",
+          selectedFromUnitId: SORCERER_METAMAGIC_UNIT_ID,
+          optionId: "sorcerer_empowered_spell",
+        },
+        {
+          kind: "selectedSorcererMetamagicOption",
+          selectedFromUnitId: SORCERER_METAMAGIC_UNIT_ID,
+          optionId: "sorcerer_heightened_spell",
+        },
+      ]),
+    );
+    const metamagicFacts = requireRight(
+      characterBuildSorcererMetamagicFacts({
+        build: parsed.build,
+        unitLibrary,
+      }),
+    );
+    expect(
+      metamagicFacts?.knownOptions.map((option) => option.optionId),
+    ).toEqual(["sorcerer_empowered_spell", "sorcerer_heightened_spell"]);
+    expect(metamagicFacts?.sorceryPointResource).toEqual({
+      resourceUnitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
+      poolId: SRD_SORCERY_POINTS_POOL_ID,
+    });
+  });
+
+  test("rejects stored Sorcerer Metamagic selections that do not match Sorcerer level", () => {
+    const build = sorcererFontOfMagicBuild();
+    const sheet = parseCharacterSheet(
+      storedAvailableSheetInput({
+        characterId: "character:sorcerer-metamagic-missing-option",
+        build: {
+          ...build,
+          features: build.features.slice(0, 1),
+        },
+      }),
+      unitLibrary,
+    );
+
+    expect(sheet).toMatchObject({
+      _tag: "Left",
+      left: {
+        tag: "characterSheetIssue",
+        message: "Metamagic known option count must match the Sorcerer level.",
+      },
+    });
   });
 
   test("rejects stored Eldritch Invocation cantrip choices absent from known Warlock cantrips", () => {
@@ -3312,14 +3380,29 @@ function sorcererFontOfMagicBuild(
     }[];
   } = {},
 ): CharacterBuild {
+  const build = armorClassBuild({
+    startingClass: "class_sorcerer",
+    advancements: Array.from(
+      { length: input.sorcererAdvancements ?? 1 },
+      () => "class_sorcerer",
+    ),
+  });
+
   return {
-    ...armorClassBuild({
-      startingClass: "class_sorcerer",
-      advancements: Array.from(
-        { length: input.sorcererAdvancements ?? 1 },
-        () => "class_sorcerer",
-      ),
-    }),
+    ...build,
+    features: [
+      ...build.features,
+      {
+        kind: "selectedSorcererMetamagicOption" as const,
+        selectedFromUnitId: SORCERER_METAMAGIC_UNIT_ID,
+        optionId: testSorcererMetamagicOptionId("sorcerer_empowered_spell"),
+      },
+      {
+        kind: "selectedSorcererMetamagicOption" as const,
+        selectedFromUnitId: SORCERER_METAMAGIC_UNIT_ID,
+        optionId: testSorcererMetamagicOptionId("sorcerer_heightened_spell"),
+      },
+    ],
     spellcasting: {
       sources: [
         {
@@ -3339,6 +3422,10 @@ function sorcererFontOfMagicBuild(
       },
     },
   };
+}
+
+function testSorcererMetamagicOptionId(optionId: string) {
+  return requireRight(sorcererMetamagicOptionId(optionId));
 }
 
 function warlockSpellcastingWithCantrips(

@@ -41,11 +41,13 @@ import {
   MONK_MONKS_FOCUS_UNIT_ID,
   MONK_UNCANNY_METABOLISM_UNIT_ID,
   SORCERER_FONT_OF_MAGIC_UNIT_ID,
+  SORCERER_METAMAGIC_UNIT_ID,
   exactChoiceCardinality,
   boundedChoiceCardinality,
   choiceCardinalityBounds,
   characterBuildUnitRefs,
   characterBuildSorcererFontOfMagicFacts,
+  characterBuildSorcererMetamagicFacts,
   computeTotalLevel,
   CHARACTER_EQUIPMENT_ITEM_SLOTS,
   LOADOUT_SLOTS,
@@ -72,6 +74,7 @@ import {
   parseLoadoutSourceKey,
   parseUnitChoiceSourceKey,
   replaceDruidWildShapeKnownForm,
+  sorcererMetamagicOptionId,
   startingClassUnitId,
   unitChoiceKey,
   unitChoiceSourceHoleIdText,
@@ -130,6 +133,7 @@ import {
   ELDRITCH_INVOCATIONS_CHOICE_KEY,
   progressionOptionId,
   SRD_LEVEL_ONE_CLASS_UNIT_IDS,
+  SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY,
   WEAPON_MASTERY_OPTIONS_CHOICE_KEY,
 } from "./phase1-manifest.ts";
 import {
@@ -160,6 +164,7 @@ const SRD_SORCERY_POINTS_POOL_ID = "sorcery_points";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS monk_monks_focus
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS monk_uncanny_metabolism
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS sorcerer_font_of_magic
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS sorcerer_metamagic
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -4215,6 +4220,115 @@ describe("character creation finalization", () => {
     expect(levelFourFontFacts?.sorceryPointPool.maximum).toBe(4);
   });
 
+  test("projects Sorcerer Metamagic known option facts from finalized CharacterBuild selections", () => {
+    const preferredMetamagicOptionIds = [
+      creationChoiceOptionId("sorcerer_empowered_spell"),
+      creationChoiceOptionId("sorcerer_heightened_spell"),
+    ] as const;
+    const sorcererTwo = completeSupportedProgressionDraft({
+      draftId: "draft:sorcerer-metamagic-facts",
+      progression: testProgression("class_sorcerer", 2),
+      preferredOptionIdsBySource: {
+        [testUnitChoiceSourceKey(
+          SORCERER_METAMAGIC_UNIT_ID,
+          SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY,
+        )]: preferredMetamagicOptionIds,
+      },
+    });
+    const result = finalizeCharacterDraft({ draft: sorcererTwo, unitLibrary });
+
+    expect(result.tag).toBe("ready");
+    if (result.tag !== "ready") return;
+
+    expect(
+      selectedChoiceOptionIds(
+        sorcererTwo,
+        SORCERER_METAMAGIC_UNIT_ID,
+        SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY,
+      ),
+    ).toEqual(preferredMetamagicOptionIds);
+    expect(
+      selectedBuildSorcererMetamagicOptionIds(
+        result.build,
+        SORCERER_METAMAGIC_UNIT_ID,
+      ),
+    ).toEqual(preferredMetamagicOptionIds);
+    expect(
+      selectedBuildClassChoiceUnitIds(result.build, SORCERER_METAMAGIC_UNIT_ID),
+    ).toEqual([]);
+    expect(
+      characterBuildUnitRefs(result.build, unitLibrary).map(
+        (ref) => ref.unitId,
+      ),
+    ).toEqual(expect.not.arrayContaining([...preferredMetamagicOptionIds]));
+
+    const metamagicFacts = expectRight(
+      characterBuildSorcererMetamagicFacts({
+        build: result.build,
+        unitLibrary,
+      }),
+    );
+    if (metamagicFacts === undefined) {
+      throw new Error("Expected Sorcerer 2 build to project Metamagic facts.");
+    }
+    expect(metamagicFacts).toEqual({
+      unitId: SORCERER_METAMAGIC_UNIT_ID,
+      ownerClassLevel: 2,
+      choiceCount: 2,
+      knownOptions: [
+        {
+          optionId: "sorcerer_empowered_spell",
+          sorceryPointCost: 1,
+          stackingMode: "can_combine_with_different_metamagic",
+          effectKind: "damage_dice_reroll",
+        },
+        {
+          optionId: "sorcerer_heightened_spell",
+          sorceryPointCost: 2,
+          stackingMode: "one_per_spell",
+          effectKind: "saving_throw_disadvantage",
+        },
+      ],
+      selectionRepeatability: "unique",
+      sorceryPointResource: {
+        resourceUnitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
+        poolId: SRD_SORCERY_POINTS_POOL_ID,
+      },
+      spellUseLimit: "one_per_spell_unless_option_allows_stacking",
+    });
+
+    const levelTenMetamagicFacts = expectRight(
+      characterBuildSorcererMetamagicFacts({
+        build: {
+          features: [
+            ...result.build.features,
+            {
+              kind: "selectedSorcererMetamagicOption" as const,
+              selectedFromUnitId: SORCERER_METAMAGIC_UNIT_ID,
+              optionId: testSorcererMetamagicOptionId("sorcerer_seeking_spell"),
+            },
+            {
+              kind: "selectedSorcererMetamagicOption" as const,
+              selectedFromUnitId: SORCERER_METAMAGIC_UNIT_ID,
+              optionId: testSorcererMetamagicOptionId("sorcerer_subtle_spell"),
+            },
+          ],
+          progression: testProgression("class_sorcerer", 10),
+        },
+        unitLibrary,
+      }),
+    );
+    expect(levelTenMetamagicFacts?.choiceCount).toBe(4);
+    expect(
+      levelTenMetamagicFacts?.knownOptions.map((option) => option.optionId),
+    ).toEqual([
+      "sorcerer_empowered_spell",
+      "sorcerer_heightened_spell",
+      "sorcerer_seeking_spell",
+      "sorcerer_subtle_spell",
+    ]);
+  });
+
   test("projects Druid 4 Wild Shape roster thresholds without known-form defaults", () => {
     const druidTwo = completeSupportedProgressionDraft({
       draftId: "draft:druid-wild-shape-level-four",
@@ -6836,6 +6950,22 @@ function selectedBuildEldritchInvocationIds(
       ? [feature.selection.invocationId]
       : [],
   );
+}
+
+function selectedBuildSorcererMetamagicOptionIds(
+  build: CharacterBuild,
+  selectedFromUnitId: UnitRecord["id"],
+): readonly string[] {
+  return build.features.flatMap((feature) =>
+    feature.kind === "selectedSorcererMetamagicOption" &&
+    feature.selectedFromUnitId === selectedFromUnitId
+      ? [feature.optionId]
+      : [],
+  );
+}
+
+function testSorcererMetamagicOptionId(optionId: string) {
+  return expectRight(sorcererMetamagicOptionId(optionId));
 }
 
 function selectedBuildEldritchInvocations(

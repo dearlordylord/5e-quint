@@ -12577,13 +12577,23 @@
         "status": "installed"
       },
       "claim": {
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-ADVANCEMENT-REPLACEMENT",
+            "mechanic": "Sorcerer-level Metamagic advancement replacement and later option gains: consume the class-level replacement source fact during Sorcerer level gain, replace exactly one known option with one unknown option, and add the two new known options at Sorcerer levels 10 and 17 without duplicating progression or option roster state."
+          },
+          {
+            "followUpTaskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION",
+            "mechanic": "Cast-time Metamagic option execution: spend the shared Sorcery Point resource, enforce one-option-per-Spell-Invocation plus Empowered and Seeking exceptions, enforce Quickened level-1-plus spell turn limits, and apply Careful, Distant, Empowered, Extended, Heightened, Quickened, Seeking, Subtle, Transmuted, and Twinned spell modifications."
+          }
+        ],
         "followUpTasks": [
           {
-            "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS",
-            "mechanic": "Retain the Metamagic feature ref with Sorcerer level-2 progression, then project chosen Metamagic option count, Sorcerer-level replacement, unique known-option roster, option costs, stacking exceptions, and the source link to the shared Font of Magic Sorcery Point resource without duplicating class progression or Sorcery Point pool state.",
-            "owner": "character-creation-runtime plus character-sheet-runtime",
-            "requiredOutput": "Owner evidence for CharacterBuild or Character Sheet retained Metamagic feature ref, known Metamagic options, replacement lifecycle, option costs, stacking facts, and reference to the shared Font of Magic Sorcery Point resource.",
-            "title": "Sorcerer Metamagic Character Facts And Option Projection"
+            "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-ADVANCEMENT-REPLACEMENT",
+            "mechanic": "Consume the Metamagic replacement source fact during Sorcerer level gain, preserving the known-option count, replacing exactly one known option with one unknown option, and adding the two new known options at Sorcerer levels 10 and 17 from the Surface choice-count thresholds without duplicating progression or option roster state.",
+            "owner": "character-creation-runtime advancement workflow",
+            "requiredOutput": "Production CharacterBuild advancement workflow and focused tests for Sorcerer Metamagic option replacement and level-10/17 option gains, with coverage updated to claim the advancement replacement only after the workflow consumes it.",
+            "title": "Sorcerer Metamagic Advancement Replacement"
           },
           {
             "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION",
@@ -12593,15 +12603,72 @@
             "title": "Sorcerer Metamagic Cast-Time Option Execution"
           }
         ],
-        "futureProfileOwner": "character-creation-runtime plus character-sheet-runtime plus character-battle-runtime spell invocation resource handoff",
-        "reason": "Metamagic is authored and installed as an SRD Surface class-feature record with catalog-level option grant, option cost, replacement, stacking, and shared Font of Magic Sorcery Point resource-reference metadata only. It remains blocked by the concrete follow-up split listed on this claim; Task 19 claims no CharacterBuild option projection or cast-time Metamagic execution profile.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "character-creation.class-feature-option-projection",
+          "character-creation.class-feature-source-fact-projection"
+        ],
+        "supportedMechanics": [
+          "Character Creation admits same-class Sorcerer level-2 progression, discovers the Metamagic choice container from the installed Surface feature, and finalizes exactly two unique selected Metamagic option ids as CharacterBuild option facts instead of retained option Unit refs",
+          "Character Creation projects Metamagic source facts from the retained Surface feature and Sorcerer class level: known-option count thresholds at Sorcerer levels 2, 10, and 17; unique known-option roster; option Sorcery Point costs; Empowered and Seeking stacking exceptions; the one-option-per-spell default; and the shared Font of Magic Sorcery Point resource link without duplicating the Sorcery Point pool",
+          "Character Sheet parsing preserves the selected CharacterBuild Metamagic option facts and rejects stored Metamagic option selections that do not match the retained feature and Sorcerer-level option count"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS"
+        },
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-creation.class-feature-option-projection",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface class-feature option records such as Divine Order and Primal Order projected from accepted Character Draft selections into CharacterBuild facts.",
+          "taskRefs": [
+            "AT-L1-03S"
+          ],
+          "title": "Character Creation projects class-feature option choices into build facts",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-creation.class-feature-source-fact-projection",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface class-feature records retained by class progression can project source links to other owned facts, such as Uncanny Metabolism linking to the shared Monk's Focus resource and existing Martial Arts die source, without storing duplicate resource caps, die tiers, or class progression state.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS"
+          ],
+          "title": "Character Creation projects retained class-feature source links into CharacterBuild facts",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/sorcerer_metamagic.json",
       "unitId": "sorcerer_metamagic"
     },

@@ -24,6 +24,7 @@ import {
 import type { CharacterProgression } from "./character-progression-types.ts";
 import { SURFACE_ABILITIES } from "@dnd/shared/game-facts";
 import type { UnitRecord } from "@dnd/surface/surface/types";
+import { SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY as SURFACE_SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY } from "@dnd/surface/surface/schema";
 
 export const INITIAL_CHARACTER_DRAFT_PATHS = [
   "draft.progression.initial",
@@ -222,6 +223,8 @@ export const ROGUE_MULTICLASS_SKILL_PROFICIENCY_CHOICE_KEY =
   "rogue_multiclass_skill_proficiency" satisfies UnitChoiceKey;
 export const ELDRITCH_INVOCATIONS_CHOICE_KEY =
   "eldritch_invocations" satisfies UnitChoiceKey;
+export const SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY =
+  SURFACE_SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY satisfies UnitChoiceKey;
 export const MULTICLASS_PROFICIENCY_CHOICE_KEYS = [
   BARD_MULTICLASS_SKILL_PROFICIENCY_CHOICE_KEY,
   BARD_MULTICLASS_MUSICAL_INSTRUMENT_PROFICIENCY_CHOICE_KEY,

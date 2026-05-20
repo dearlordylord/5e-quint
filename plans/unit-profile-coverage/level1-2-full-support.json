@@ -2397,14 +2397,14 @@
     },
     {
       "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
+      "claimTag": "profile-subset-supported",
       "closureKinds": [
         "follow-up-split"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS: Retain the Metamagic feature ref with Sorcerer level-2 progression, then project chosen Metamagic option count, Sorcerer-level replacement, unique known-option roster, option costs, stacking exceptions, and the source link to the shared Font of Magic Sorcery Point resource without duplicating class progression or Sorcery Point pool state. Owner: character-creation-runtime plus character-sheet-runtime. Required output: Owner evidence for CharacterBuild or Character Sheet retained Metamagic feature ref, known Metamagic options, replacement lifecycle, option costs, stacking facts, and reference to the shared Font of Magic Sorcery Point resource.; L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION: Execute known Metamagic options at spell-cast time by spending the shared Sorcery Point resource projected from Font of Magic, enforcing the one-option-per-spell rule plus Empowered and Seeking stacking exceptions, Quickened level-1-plus spell turn limits, and the option-specific spell modifications for Careful, Distant, Empowered, Extended, Heightened, Quickened, Seeking, Subtle, Transmuted, and Twinned Spell. Owner: character-battle-runtime plus battle-runtime spell invocation hooks. Required output: Supported runtime profile and owner evidence for Metamagic option execution that consumes the shared Sorcery Point resource rather than a synthetic Metamagic-local point pool.",
+      "reason": "L12G-FOLLOWUP-SORCERER-METAMAGIC-ADVANCEMENT-REPLACEMENT: Consume the Metamagic replacement source fact during Sorcerer level gain, preserving the known-option count, replacing exactly one known option with one unknown option, and adding the two new known options at Sorcerer levels 10 and 17 from the Surface choice-count thresholds without duplicating progression or option roster state. Owner: character-creation-runtime advancement workflow. Required output: Production CharacterBuild advancement workflow and focused tests for Sorcerer Metamagic option replacement and level-10/17 option gains, with coverage updated to claim the advancement replacement only after the workflow consumes it.; L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION: Execute known Metamagic options at spell-cast time by spending the shared Sorcery Point resource projected from Font of Magic, enforcing the one-option-per-spell rule plus Empowered and Seeking stacking exceptions, Quickened level-1-plus spell turn limits, and the option-specific spell modifications for Careful, Distant, Empowered, Extended, Heightened, Quickened, Seeking, Subtle, Transmuted, and Twinned Spell. Owner: character-battle-runtime plus battle-runtime spell invocation hooks. Required output: Supported runtime profile and owner evidence for Metamagic option execution that consumes the shared Sorcery Point resource rather than a synthetic Metamagic-local point pool.",
       "sourceRecordPath": "packages/surface/content/sorcerer_metamagic.json",
       "sourceRows": [
         {
@@ -2871,13 +2871,12 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 491,
-      "percent": "88.3%",
+      "numerator": 492,
+      "percent": "88.5%",
       "rowsByStatus": {
-        "accepted": 361,
+        "accepted": 362,
         "accepted-no-battle-effect": 130,
         "battle-runtime-required": 53,
-        "owner-evidence-required": 1,
         "partial-battle-runtime": 11
       }
     },
@@ -8054,9 +8053,9 @@
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
       "missing": 1,
-      "profile-subset-supported": 18,
+      "profile-subset-supported": 19,
       "supported-profile": 109,
-      "unsupported-profile": 38
+      "unsupported-profile": 37
     },
     "groupsByStatus": {
       "blocked-follow-up-split": 22,
