@@ -1433,6 +1433,7 @@ export function areaSaveGateSpellRangeFeet(
     Match.when({ kind: "primaryTargetOriginEmanation" }, () =>
       fixedPointRangeFeet(range),
     ),
+    Match.when({ kind: "pointOriginCylinder" }, () => fixedPointRangeFeet(range)),
     Match.when({ kind: "targetList" }, () => fixedPointRangeFeet(range)),
     Match.exhaustive,
   );

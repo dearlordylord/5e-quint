@@ -34,6 +34,7 @@ import {
   BattleSubjectSchema,
   BATTLE_READIED_SPELL_TRIGGERS,
   addBattleCombatant,
+  battleAreaId,
   battleObscurementZones,
   battleReactionRollOrDamageReductionSupportForUnit,
   battleUnitSupportProfilesForUnit,
@@ -69,6 +70,7 @@ import {
   resolveFindFamiliarForm,
   resolvePactOfTheChainFindFamiliarForm,
   resolveSuccessfulAbilityCheckReactionReduction,
+  type BattleAreaId,
   type BattleFill,
   type BattleHole,
   type BattleHidePrerequisite,
@@ -395,9 +397,9 @@ export function subjectName(
   | "castAttackHitBonusActionSpell"
   | "opportunityAttack"
   | "greaseGroundHazardSave"
-  | "flamingSphereSave"
-  | "flamingSphereReposition"
-  | "flamingSphereRam"
+  | "movableZoneSave"
+  | "movableZoneReposition"
+  | "movableZoneRam"
   | "jumpMovementReplacement"
   | "commandGrovel"
   | "commandDrop"
@@ -1618,7 +1620,7 @@ export function movementFill(
   };
 }
 
-export function castGroundHazardForMovementTest(areaId: string): BattleState {
+export function castGroundHazardForMovementTest(areaId: BattleAreaId): BattleState {
   const battleState = startBattleRight({
     battleId: battleId(`battle-grease-movement-${areaId}`),
     combatants: [
@@ -1670,7 +1672,7 @@ export function fogCloudBattle(battleIdValue: string): BattleState {
 
 export function castFogCloud(
   battleIdValue: string,
-  areaId: string,
+  areaId: BattleAreaId,
 ): Extract<
   ReturnType<typeof resolveBattleSubject>,
   { readonly tag: "resolved" }
@@ -1692,7 +1694,7 @@ export function castFogCloud(
 
 export function fogCloudAreaFill(
   hole: BattleHole,
-  areaId: string,
+  areaId: BattleAreaId,
 ): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
   if (hole.kind !== "spellAreaChoice") {
     throw new Error("Expected spellAreaChoice hole.");
@@ -1706,7 +1708,7 @@ export function fogCloudAreaFill(
 
 function greaseGroundAreaSavingThrowFill(
   hole: BattleHole,
-  areaId: string,
+  areaId: BattleAreaId,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   if (hole.kind !== "savingThrowOutcome") {
     throw new Error("Expected savingThrowOutcome hole.");
@@ -3914,6 +3916,7 @@ export {
   attackBonus,
   BATTLE_READIED_SPELL_TRIGGERS,
   battleAbilityModifier,
+  battleAreaId,
   battleBonusActionStandardActionSupportForUnit,
   BattleFillSchema,
   BattleHoleSchema,

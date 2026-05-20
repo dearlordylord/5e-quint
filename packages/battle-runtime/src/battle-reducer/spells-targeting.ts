@@ -364,7 +364,12 @@ export function commandOptionChoiceHoleId(
 export function spellAreaChoiceHole(
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "fogCloudObscurement" | "flamingSphere" }
+    {
+      readonly procedure:
+        | "fogCloudObscurement"
+        | "flamingSphere"
+        | "moonbeam";
+    }
   >,
 ): BattleSpellAreaChoiceHole {
   const holeKey = `battle:spell:area-choice:${invocation.spell.id}`;
@@ -381,7 +386,12 @@ export function spellAreaChoiceHole(
 export function spellAreaChoiceHoleId(
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "fogCloudObscurement" | "flamingSphere" }
+    {
+      readonly procedure:
+        | "fogCloudObscurement"
+        | "flamingSphere"
+        | "moonbeam";
+    }
   >,
 ): BattleHoleId {
   return holeId(`battle:spell:area-choice:${invocation.spell.id}`);

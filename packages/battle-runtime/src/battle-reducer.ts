@@ -99,6 +99,7 @@ import type {
   FindFamiliarState,
 } from "./find-familiar-lifecycle.ts";
 import type {
+  BattleAreaId,
   BattleDancingLightId,
   BattleObjectId,
   SpellId,
@@ -220,6 +221,8 @@ export {
   resolveFlamingSphereRepositionCommand,
   resolveFlamingSphereRamCommand,
   resolveFlamingSphereSaveCommand,
+  resolveMoonbeamRepositionCommand,
+  resolveMoonbeamSaveCommand,
   resolveCommandApproachAfterMovement,
   resolveCommandApproachCommand,
   resolveCommandDropCommand,
@@ -693,7 +696,7 @@ export type BattleActiveEffect =
     })
   | (BattleSpellEffectBase & {
       readonly kind: "greaseGroundHazard";
-      readonly areaId: string;
+      readonly areaId: BattleAreaId;
       readonly save: {
         readonly ability: Extract<Ability, "dex">;
         readonly dc: DcSource;
@@ -705,7 +708,7 @@ export type BattleActiveEffect =
     })
   | (BattleSpellEffectBase & {
       readonly kind: "flamingSphere";
-      readonly areaId: string;
+      readonly areaId: BattleAreaId;
       readonly save: {
         readonly ability: Extract<Ability, "dex">;
         readonly dc: DcSource;
@@ -721,8 +724,26 @@ export type BattleActiveEffect =
       >;
     })
   | (BattleSpellEffectBase & {
+      readonly kind: "moonbeam";
+      readonly areaId: BattleAreaId;
+      readonly save: {
+        readonly ability: Extract<Ability, "con">;
+        readonly dc: DcSource;
+      };
+      readonly damage: {
+        readonly expr: DiceExpr;
+        readonly damageType: Extract<DamageType, "radiant">;
+      };
+      readonly repositionMaxMoveFeet: MovementFeet;
+      readonly savedThisTurn: readonly CombatantId[];
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "concentration" }
+      >;
+    })
+  | (BattleSpellEffectBase & {
       readonly kind: "fogCloudObscurement";
-      readonly areaId: string;
+      readonly areaId: BattleAreaId;
       readonly radiusFeet: MovementFeet;
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,
@@ -1028,7 +1049,7 @@ export type BattleObscurementZone = {
   readonly obscurement: "heavilyObscured";
   readonly area: {
     readonly kind: "pointOriginSphere";
-    readonly areaId: string;
+    readonly areaId: BattleAreaId;
     readonly radiusFeet: MovementFeet;
   };
   readonly expiresAt: Extract<
@@ -1551,7 +1572,7 @@ export type BattleGreaseGroundDifficultTerrainMovementFact = {
   readonly kind: "greaseGroundDifficultTerrain";
   readonly sourceCombatantId: CombatantId;
   readonly sourceSpellId: SpellRecord["id"];
-  readonly areaId: string;
+  readonly areaId: BattleAreaId;
   readonly totalDistanceFeet: MovementFeet;
   readonly greaseDistanceFeet: MovementFeet;
 };
@@ -1714,7 +1735,7 @@ export type BattleTargetSpatialFact =
       readonly kind: "spellTargetsInPointOriginSphere";
       readonly casterId: CombatantId;
       readonly spellId: SpellRecord["id"];
-      readonly areaId: string;
+      readonly areaId: BattleAreaId;
       readonly radiusFeet: MovementFeet;
       readonly targetIds: readonly CombatantId[];
     }
@@ -1938,6 +1959,11 @@ export type SpellTargeting =
       readonly diameterFeet: MovementFeet;
     }
   | {
+      readonly kind: "pointOriginCylinder";
+      readonly radiusFeet: MovementFeet;
+      readonly heightFeet: MovementFeet;
+    }
+  | {
       readonly kind: "pointOriginCubeExcludingCaster";
       readonly sideFeet: MovementFeet;
     }
@@ -1965,14 +1991,22 @@ export type BattleFlamingSphereAreaChoice = Extract<
   BattleSpellAreaIdentityChoice,
   { readonly kind: "flamingSphereArea" }
 >;
+export type BattleMoonbeamAreaChoice = Extract<
+  BattleSpellAreaIdentityChoice,
+  { readonly kind: "moonbeamCylinderArea" }
+>;
 export type BattleSpellAreaIdentityChoice =
   | {
       readonly kind: "fogCloudArea";
-      readonly areaId: string;
+      readonly areaId: BattleAreaId;
     }
   | {
       readonly kind: "flamingSphereArea";
-      readonly areaId: string;
+      readonly areaId: BattleAreaId;
+    }
+  | {
+      readonly kind: "moonbeamCylinderArea";
+      readonly areaId: BattleAreaId;
     };
 export type SpellPostDamageRider =
   | {
@@ -2982,6 +3016,25 @@ export type SupportedSpellInvocation =
   | {
       readonly access: PreparedSpellAccess;
       readonly resource: SpellSlotInvocationResource;
+      readonly procedure: "moonbeam";
+      readonly spell: SpellRecord;
+      readonly ability: Extract<Ability, "con">;
+      readonly dc: DcSource;
+      readonly targeting: Extract<
+        SpellTargeting,
+        { readonly kind: "pointOriginCylinder" }
+      >;
+      readonly durationTicks: ElapsedTimeTicks;
+      readonly rangeFeet: MovementFeet;
+      readonly repositionMaxMoveFeet: MovementFeet;
+      readonly damage: {
+        readonly expr: DiceExpr;
+        readonly damageType: Extract<DamageType, "radiant">;
+      };
+    }
+  | {
+      readonly access: PreparedSpellAccess;
+      readonly resource: SpellSlotInvocationResource;
       readonly procedure: "command";
       readonly spell: SpellRecord;
       readonly actionCost: "magicAction";
@@ -3140,6 +3193,7 @@ type AnySupportedDamageSpellInvocation = Exclude<
       | "greaseGroundHazard"
       | "fogCloudObscurement"
       | "flamingSphere"
+      | "moonbeam"
       | "chainedSpellAttackDamage";
   }
 >;
@@ -3642,11 +3696,21 @@ export type BattleSpellAreaChoiceHole = {
   readonly label: string;
   readonly spell: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "fogCloudObscurement" | "flamingSphere" }
+    {
+      readonly procedure:
+        | "fogCloudObscurement"
+        | "flamingSphere"
+        | "moonbeam";
+    }
   >;
   readonly area: Extract<
     SpellTargeting,
-    { readonly kind: "pointOriginSphere" | "pointOriginSphereDiameter" }
+    {
+      readonly kind:
+        | "pointOriginSphere"
+        | "pointOriginSphereDiameter"
+        | "pointOriginCylinder";
+    }
   >;
 };
 export type BattleTeleportDestinationHole = {
@@ -3974,7 +4038,7 @@ export type BattleGreaseGroundHazardSavingThrowOutcomeHole = {
     readonly targetId: CombatantId;
     readonly sourceSpellId: SpellRecord["id"];
     readonly sourceCombatantId: CombatantId;
-    readonly areaId: string;
+    readonly areaId: BattleAreaId;
     readonly trigger: BattleGreaseGroundHazardTrigger;
     readonly save: {
       readonly ability: Extract<Ability, "dex">;
@@ -4011,26 +4075,26 @@ export type BattleFlamingSphereTrigger =
 export type BattleFlamingSphereRamMovementHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
-  readonly kind: "flamingSphereRamMovement";
+  readonly kind: "movableZoneRamMovement";
   readonly label: string;
-  readonly flamingSphere: {
+  readonly movableZone: {
     readonly targetId: CombatantId;
     readonly sourceSpellId: SpellRecord["id"];
     readonly sourceCombatantId: CombatantId;
-    readonly areaId: string;
+    readonly areaId: BattleAreaId;
     readonly maxMoveFeet: MovementFeet;
   };
   readonly requiresTableSpatialFact: true;
 };
-export type BattleFlamingSphereRepositionMovementHole = {
+export type BattleMovableZoneRepositionMovementHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
-  readonly kind: "flamingSphereRepositionMovement";
+  readonly kind: "movableZoneRepositionMovement";
   readonly label: string;
-  readonly flamingSphere: {
+  readonly movableZone: {
     readonly sourceSpellId: SpellRecord["id"];
     readonly sourceCombatantId: CombatantId;
-    readonly areaId: string;
+    readonly areaId: BattleAreaId;
     readonly maxMoveFeet: MovementFeet;
   };
   readonly requiresTableSpatialFact: true;
@@ -4040,11 +4104,11 @@ export type BattleFlamingSphereSavingThrowOutcomeHole = {
   readonly holeId: BattleHoleId;
   readonly kind: "savingThrowOutcome";
   readonly label: string;
-  readonly flamingSphere: {
+  readonly movableZone: {
     readonly targetId: CombatantId;
     readonly sourceSpellId: SpellRecord["id"];
     readonly sourceCombatantId: CombatantId;
-    readonly areaId: string;
+    readonly areaId: BattleAreaId;
     readonly trigger: BattleFlamingSphereTrigger;
     readonly save: {
       readonly ability: Extract<Ability, "dex">;
@@ -4055,17 +4119,59 @@ export type BattleFlamingSphereSavingThrowOutcomeHole = {
   readonly dc: DcSource;
   readonly areaChoices: readonly [];
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
+  readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
 };
 export type BattleFlamingSphereDamageRollHole = Extract<
   RuntimeHole,
   { readonly kind: "rolledDice" }
 > & {
-  readonly flamingSphere: {
+  readonly movableZone: {
     readonly targetId: CombatantId;
     readonly sourceSpellId: SpellRecord["id"];
     readonly sourceCombatantId: CombatantId;
-    readonly areaId: string;
+    readonly areaId: BattleAreaId;
     readonly trigger: BattleFlamingSphereTrigger;
+    readonly damage: SpellTurnStartDamage;
+  };
+  readonly critical: false;
+};
+export type BattleMoonbeamSaveTrigger =
+  | "appearsInArea"
+  | "areaMovesIntoSpace"
+  | "entersArea"
+  | "endsTurnInArea";
+export type BattleMoonbeamSavingThrowOutcomeHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "savingThrowOutcome";
+  readonly label: string;
+  readonly movableZone: {
+    readonly targetId: CombatantId;
+    readonly sourceSpellId: SpellRecord["id"];
+    readonly sourceCombatantId: CombatantId;
+    readonly areaId: BattleAreaId;
+    readonly trigger: BattleMoonbeamSaveTrigger;
+    readonly save: {
+      readonly ability: Extract<Ability, "con">;
+      readonly dc: DcSource;
+    };
+  };
+  readonly ability: Extract<Ability, "con">;
+  readonly dc: DcSource;
+  readonly areaChoices: readonly [];
+  readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
+  readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
+};
+export type BattleMoonbeamDamageRollHole = Extract<
+  RuntimeHole,
+  { readonly kind: "rolledDice" }
+> & {
+  readonly movableZone: {
+    readonly targetId: CombatantId;
+    readonly sourceSpellId: SpellRecord["id"];
+    readonly sourceCombatantId: CombatantId;
+    readonly areaId: BattleAreaId;
+    readonly trigger: BattleMoonbeamSaveTrigger;
     readonly damage: SpellTurnStartDamage;
   };
   readonly critical: false;
@@ -4255,7 +4361,7 @@ type BattleSpellAreaChoiceKind =
     }
   | {
       readonly kind: "greaseGroundArea";
-      readonly areaId: string;
+      readonly areaId: BattleAreaId;
     }
   | {
       readonly kind: "fireballArea";
@@ -4516,8 +4622,10 @@ export type BattleHole =
   | BattleGreaseGroundHazardSavingThrowOutcomeHole
   | BattleSpellConditionEndTurnSavingThrowOutcomeHole
   | BattleFlamingSphereRamMovementHole
-  | BattleFlamingSphereRepositionMovementHole
+  | BattleMovableZoneRepositionMovementHole
   | BattleFlamingSphereSavingThrowOutcomeHole
+  | BattleMoonbeamSavingThrowOutcomeHole
+  | BattleMoonbeamDamageRollHole
   | BattleProtectionRelevantEffectSavingThrowOutcomeHole
   | BattleUnitFeatureSavingThrowOutcomeHole
   | BattleUnitFeatureRollHole
@@ -4654,14 +4762,14 @@ export type BattleFill =
       readonly value: BattleSpellAreaIdentityChoice;
     }
   | {
-      readonly kind: "flamingSphereRamMovement";
+      readonly kind: "movableZoneRamMovement";
       readonly holeId: BattleHoleId;
       readonly value: {
         readonly moveFeet: MovementFeet;
       };
     }
   | {
-      readonly kind: "flamingSphereRepositionMovement";
+      readonly kind: "movableZoneRepositionMovement";
       readonly holeId: BattleHoleId;
       readonly value: {
         readonly moveFeet: MovementFeet;

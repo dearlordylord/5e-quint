@@ -22,6 +22,7 @@ import {
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
+  battleAreaId,
   movementFeet,
   resolveBattleSubject,
   spellSlotInvocationRef,
@@ -283,7 +284,7 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
                 kind: "spellTargetsInPointOriginSphere",
                 casterId: spellCasterId,
                 spellId: massCureWoundsUnitId,
-                areaId: "area-a",
+                areaId: battleAreaId("area-a"),
                 radiusFeet: movementFeet(30),
                 targetIds: [targetIds[0]],
               },
@@ -291,7 +292,7 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
                 kind: "spellTargetsInPointOriginSphere",
                 casterId: spellCasterId,
                 spellId: massCureWoundsUnitId,
-                areaId: "area-b",
+                areaId: battleAreaId("area-b"),
                 radiusFeet: movementFeet(30),
                 targetIds: [targetIds[1]],
               },

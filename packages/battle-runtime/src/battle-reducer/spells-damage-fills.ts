@@ -893,6 +893,7 @@ export function spellAreaTargetingLabel(
       { kind: "primaryTargetOriginEmanation" },
       () => "primary-target-origin Emanation",
     ),
+    Match.when({ kind: "pointOriginCylinder" }, () => "point-origin Cylinder"),
     Match.when({ kind: "targetList" }, () => "target-list"),
     Match.exhaustive,
   );

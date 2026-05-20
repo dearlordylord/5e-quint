@@ -7,6 +7,7 @@ export {
   BattleTablePositionId,
   CombatantId,
   SpellId,
+  battleAreaId,
   battleCombatantSide,
   battleDancingLightId,
   battleId,
@@ -17,6 +18,7 @@ export {
   combatantId,
   initiativeScore,
   spellId,
+  type BattleAreaId,
   type CharacterId,
   type InitiativeScore,
 } from "./identity.ts";

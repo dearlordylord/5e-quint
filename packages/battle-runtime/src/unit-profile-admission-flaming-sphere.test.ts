@@ -21,6 +21,7 @@ import {
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
+  battleAreaId,
   elapsedTimeTicks,
   endTurn,
   Hp,
@@ -286,7 +287,7 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       tag: "invalid",
       reason: "invalidFill",
       message:
-        "Flaming Sphere end-within-5-feet save received duplicate sphere fills.",
+        "Movable zone end-within-5-feet save received duplicate sphere fills.",
     });
   });
 
@@ -312,12 +313,12 @@ describe("L12G deterministic Flaming Sphere admission", () => {
     const reposition = flamingSphereRepositionAct(cast.state);
     const movement = requireHole(
       reposition.initialHoles,
-      "flamingSphereRepositionMovement",
+      "movableZoneRepositionMovement",
     );
     expect(reposition.initialHoles).toEqual([
       expect.objectContaining({
-        kind: "flamingSphereRepositionMovement",
-        flamingSphere: expect.objectContaining({
+        kind: "movableZoneRepositionMovement",
+        movableZone: expect.objectContaining({
           sourceCombatantId: spellCasterId,
           sourceSpellId: flamingSphereUnitId,
           areaId: flamingSphereAreaId,
@@ -370,12 +371,12 @@ describe("L12G deterministic Flaming Sphere admission", () => {
     const ram = flamingSphereRamAct(cast.state);
     const movement = requireHole(
       ram.initialHoles,
-      "flamingSphereRamMovement",
+      "movableZoneRamMovement",
     );
     expect(movement).toEqual(
       expect.objectContaining({
         label: "flaming_sphere ram movement",
-        flamingSphere: expect.objectContaining({
+        movableZone: expect.objectContaining({
           targetId: spellTargetId,
           sourceCombatantId: spellCasterId,
           sourceSpellId: flamingSphereUnitId,
@@ -455,15 +456,15 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       }),
     );
     expect(
-      requireHole(selfRam.initialHoles, "flamingSphereRamMovement"),
+      requireHole(selfRam.initialHoles, "movableZoneRamMovement"),
     ).toEqual(
       expect.objectContaining({
-        flamingSphere: expect.objectContaining({ targetId: spellCasterId }),
+        movableZone: expect.objectContaining({ targetId: spellCasterId }),
       }),
     );
     expect(requireHole(selfRam.initialHoles, "savingThrowOutcome")).toEqual(
       expect.objectContaining({
-        flamingSphere: expect.objectContaining({ targetId: spellCasterId }),
+        movableZone: expect.objectContaining({ targetId: spellCasterId }),
       }),
     );
   });
@@ -488,7 +489,7 @@ describe("L12G deterministic Flaming Sphere admission", () => {
     const ram = flamingSphereRamAct(cast.state);
     const movement = requireHole(
       ram.initialHoles,
-      "flamingSphereRamMovement",
+      "movableZoneRamMovement",
     );
     const save = requireHole(ram.initialHoles, "savingThrowOutcome");
     const succeededSave = singleTargetSavingThrowOutcomeFill(
@@ -505,7 +506,7 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       }),
     ).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "flamingSphereRamMovement" })],
+      holes: [expect.objectContaining({ kind: "movableZoneRamMovement" })],
     });
     expect(
       resolveBattleSubject({
@@ -516,7 +517,7 @@ describe("L12G deterministic Flaming Sphere admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: "Flaming Sphere ram movement distance exceeds the spell's maximum.",
+      message: "Movable zone ram movement distance exceeds the spell's maximum.",
     });
     expect(
       resolveBattleSubject({
@@ -527,7 +528,7 @@ describe("L12G deterministic Flaming Sphere admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: "Flaming Sphere ram movement distance must be a positive integer.",
+      message: "Movable zone ram movement distance must be a positive integer.",
     });
   });
 
@@ -551,7 +552,7 @@ describe("L12G deterministic Flaming Sphere admission", () => {
     const ram = flamingSphereRamAct(cast.state);
     const movement = requireHole(
       ram.initialHoles,
-      "flamingSphereRamMovement",
+      "movableZoneRamMovement",
     );
     const movementFill = flamingSphereRamMovementFill(movement);
     const save = requireHole(ram.initialHoles, "savingThrowOutcome");
@@ -579,7 +580,7 @@ describe("L12G deterministic Flaming Sphere admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: "Flaming Sphere ram received a fill for an unrelated hole.",
+      message: "Movable zone ram received a fill for an unrelated hole.",
     });
     expect(
       resolveBattleSubject({
@@ -590,7 +591,7 @@ describe("L12G deterministic Flaming Sphere admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: "Flaming Sphere ram received a fill for an unrelated hole.",
+      message: "Movable zone ram received a fill for an unrelated hole.",
     });
 
     const needsDamage = resolveBattleSubject({
@@ -611,7 +612,7 @@ describe("L12G deterministic Flaming Sphere admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: "Flaming Sphere ram received a fill for an unrelated hole.",
+      message: "Movable zone ram received a fill for an unrelated hole.",
     });
     expect(
       resolveBattleSubject({
@@ -622,7 +623,7 @@ describe("L12G deterministic Flaming Sphere admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: "Flaming Sphere ram received a fill for an unrelated hole.",
+      message: "Movable zone ram received a fill for an unrelated hole.",
     });
   });
 
@@ -639,12 +640,12 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       sameBattleSubject(
         {
           ...base,
-          command: "flamingSphereSave",
+          command: "movableZoneSave",
           trigger: "endsTurnWithinFiveFeetOfSphere",
         },
         {
           ...base,
-          command: "flamingSphereRam",
+          command: "movableZoneRam",
           actorId: spellCasterId,
           targetId: spellTargetId,
           trigger: "rammedBySphere",
@@ -655,13 +656,13 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       sameBattleSubject(
         {
           ...base,
-          command: "flamingSphereSave",
+          command: "movableZoneSave",
           trigger: "endsTurnWithinFiveFeetOfSphere",
         },
         {
           ...base,
-          command: "flamingSphereSave",
-          areaId: "second-flaming-sphere-area",
+          command: "movableZoneSave",
+          areaId: battleAreaId("second-flaming-sphere-area"),
           trigger: "endsTurnWithinFiveFeetOfSphere",
         },
       ),

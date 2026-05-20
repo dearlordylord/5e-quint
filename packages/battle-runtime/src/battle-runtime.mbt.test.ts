@@ -3560,14 +3560,14 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
       "Battle runtime MBT does not model teleport destination holes.",
     );
   }
-  if (hole.kind === "flamingSphereRamMovement") {
+  if (hole.kind === "movableZoneRamMovement") {
     throw new Error(
-      "Battle runtime MBT does not model Flaming Sphere ram movement holes.",
+      "Battle runtime MBT does not model movable zone ram movement holes.",
     );
   }
-  if (hole.kind === "flamingSphereRepositionMovement") {
+  if (hole.kind === "movableZoneRepositionMovement") {
     throw new Error(
-      "Battle runtime MBT does not model Flaming Sphere reposition movement holes.",
+      "Battle runtime MBT does not model movable zone reposition movement holes.",
     );
   }
   return [

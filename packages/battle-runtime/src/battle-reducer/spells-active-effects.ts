@@ -13,7 +13,7 @@ import type {
   SpellRecord,
 } from "@dnd/surface/surface/types";
 import { battleDancingLightId } from "../identity.ts";
-import type { CombatantId } from "../identity.ts";
+import type { BattleAreaId, CombatantId } from "../identity.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state.ts";
 import {
@@ -1376,7 +1376,7 @@ export function applyGreaseGroundHazardCastEffects(input: {
 export function applyFogCloudObscurementCastEffect(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
-  readonly areaId: string;
+  readonly areaId: BattleAreaId;
   readonly invocation: Extract<
     SupportedSpellInvocation,
     { readonly procedure: "fogCloudObscurement" }
@@ -1416,7 +1416,7 @@ export function applyFogCloudObscurementCastEffect(input: {
 export function applyFlamingSphereCastEffect(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
-  readonly areaId: string;
+  readonly areaId: BattleAreaId;
   readonly invocation: Extract<
     SupportedSpellInvocation,
     { readonly procedure: "flamingSphere" }
@@ -1456,6 +1456,97 @@ export function applyFlamingSphereCastEffect(input: {
   ];
   combatants.set(input.actorId, { ...caster, activeEffects });
   return { ...input.state, combatants };
+}
+
+export function applyMoonbeamCastEffect(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly areaId: BattleAreaId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "moonbeam" }
+  >;
+}): BattleState {
+  const combatants = new Map(input.state.combatants);
+  const caster = combatants.get(input.actorId);
+  if (caster === undefined) {
+    return input.state;
+  }
+  const replacing = caster.activeEffects.filter(
+    (effect) =>
+      effect.kind === "moonbeam" &&
+      effect.sourceSpellId === input.invocation.spell.id &&
+      effect.sourceCombatantId === input.actorId &&
+      effect.areaId === input.areaId,
+  );
+  const activeEffects = [
+    ...caster.activeEffects.filter((effect) => !replacing.includes(effect)),
+    {
+      kind: "moonbeam" as const,
+      sourceSpellId: input.invocation.spell.id,
+      sourceCombatantId: input.actorId,
+      areaId: input.areaId,
+      save: {
+        ability: input.invocation.ability,
+        dc: input.invocation.dc,
+      },
+      damage: input.invocation.damage,
+      repositionMaxMoveFeet: input.invocation.repositionMaxMoveFeet,
+      savedThisTurn: [],
+      expiresAt: {
+        kind: "concentration" as const,
+        combatantId: input.actorId,
+        durationTicks: input.invocation.durationTicks,
+      },
+    },
+  ];
+  combatants.set(input.actorId, { ...caster, activeEffects });
+  return { ...input.state, combatants };
+}
+
+export function resetAllMoonbeamSavedThisTurn(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  const next = new Map(combatants);
+  for (const [id, combatant] of next) {
+    const activeEffects = combatant.activeEffects.map((effect) =>
+      effect.kind === "moonbeam" && effect.savedThisTurn.length > 0
+        ? { ...effect, savedThisTurn: [] as readonly CombatantId[] }
+        : effect,
+    );
+    if (activeEffects.some((e, i) => e !== combatant.activeEffects[i])) {
+      next.set(id, { ...combatant, activeEffects });
+    }
+  }
+  return next;
+}
+
+export function markMoonbeamSavedThisTurn(
+  state: BattleState,
+  targetId: CombatantId,
+  effect: Extract<BattleActiveEffect, { readonly kind: "moonbeam" }>,
+): BattleState {
+  const caster = state.combatants.get(effect.sourceCombatantId);
+  if (caster === undefined) {
+    return state;
+  }
+  if (effect.savedThisTurn.includes(targetId)) {
+    return state;
+  }
+  const activeEffects = caster.activeEffects.map((current) =>
+    current === effect
+      ? {
+          ...current,
+          savedThisTurn: [...current.savedThisTurn, targetId],
+        }
+      : current,
+  );
+  const combatants = new Map(state.combatants);
+  combatants.set(effect.sourceCombatantId, {
+    ...caster,
+    activeEffects,
+  });
+  return { ...state, combatants };
 }
 
 export function applyGreaseProneToTarget(

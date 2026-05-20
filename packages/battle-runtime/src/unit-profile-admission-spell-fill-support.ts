@@ -4,11 +4,13 @@ import type { Ability, Size } from "@dnd/surface/surface/types";
 import { expect } from "vitest";
 import type { SupportedDamageSpellInvocation } from "./battle-reducer.ts";
 import {
+  battleAreaId,
   battleObjectId,
   battleTablePositionId,
   discoverBattleActs,
   spellId,
   type AvailableBattleAct,
+  type BattleAreaId,
   type BattleFill,
   type BattleHole,
   type BattleObjectDamageDisposition,
@@ -29,6 +31,7 @@ import type {
 import {
   flamingSphereAreaId,
   greaseAreaId,
+  moonbeamAreaId,
   resistanceUnitId,
   spellCasterId,
   spellTargetId,
@@ -439,7 +442,7 @@ export function spellTargetListFill(
           kind: "spellTargetsInPointOriginSphere",
           casterId,
           spellId,
-          areaId: `test:${spellId}:point-origin-sphere`,
+          areaId: battleAreaId(`test:${spellId}:point-origin-sphere`),
           radiusFeet: hole.spell.targeting.area.radiusFeet,
           targetIds,
         },
@@ -641,12 +644,23 @@ export function flamingSphereAreaFill(
   };
 }
 
-export function flamingSphereRamMovementFill(
-  hole: Extract<BattleHole, { readonly kind: "flamingSphereRamMovement" }>,
-  moveFeet = 30,
-): Extract<BattleFill, { readonly kind: "flamingSphereRamMovement" }> {
+export function moonbeamAreaFill(
+  hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>,
+  areaId = moonbeamAreaId,
+): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
   return {
-    kind: "flamingSphereRamMovement",
+    kind: "spellAreaChoice",
+    holeId: hole.holeId,
+    value: { kind: "moonbeamCylinderArea", areaId },
+  };
+}
+
+export function flamingSphereRamMovementFill(
+  hole: Extract<BattleHole, { readonly kind: "movableZoneRamMovement" }>,
+  moveFeet = 30,
+): Extract<BattleFill, { readonly kind: "movableZoneRamMovement" }> {
+  return {
+    kind: "movableZoneRamMovement",
     holeId: hole.holeId,
     value: { moveFeet: movementFeet(moveFeet) },
   };
@@ -655,15 +669,15 @@ export function flamingSphereRamMovementFill(
 export function flamingSphereRepositionMovementFill(
   hole: Extract<
     BattleHole,
-    { readonly kind: "flamingSphereRepositionMovement" }
+    { readonly kind: "movableZoneRepositionMovement" }
   >,
   moveFeet = 30,
 ): Extract<
   BattleFill,
-  { readonly kind: "flamingSphereRepositionMovement" }
+  { readonly kind: "movableZoneRepositionMovement" }
 > {
   return {
-    kind: "flamingSphereRepositionMovement",
+    kind: "movableZoneRepositionMovement",
     holeId: hole.holeId,
     value: { moveFeet: movementFeet(moveFeet) },
   };
@@ -779,7 +793,7 @@ export function flamingSphereEndTurnAct(
     BattleSubject,
     {
       readonly tag: "runtimeCommand";
-      readonly command: "flamingSphereSave";
+      readonly command: "movableZoneSave";
     }
   >;
 } {
@@ -791,12 +805,13 @@ export function flamingSphereEndTurnAct(
         BattleSubject,
         {
           readonly tag: "runtimeCommand";
-          readonly command: "flamingSphereSave";
+          readonly command: "movableZoneSave";
         }
       >;
     } =>
       candidate.subject.tag === "runtimeCommand" &&
-      candidate.subject.command === "flamingSphereSave" &&
+      candidate.subject.command === "movableZoneSave" &&
+      candidate.subject.trigger === "endsTurnWithinFiveFeetOfSphere" &&
       candidate.subject.actorId === actorId &&
       candidate.subject.areaId === flamingSphereAreaId,
   );
@@ -814,7 +829,7 @@ export function flamingSphereRepositionAct(
     BattleSubject,
     {
       readonly tag: "runtimeCommand";
-      readonly command: "flamingSphereReposition";
+      readonly command: "movableZoneReposition";
     }
   >;
 } {
@@ -826,12 +841,12 @@ export function flamingSphereRepositionAct(
         BattleSubject,
         {
           readonly tag: "runtimeCommand";
-          readonly command: "flamingSphereReposition";
+          readonly command: "movableZoneReposition";
         }
       >;
     } =>
       candidate.subject.tag === "runtimeCommand" &&
-      candidate.subject.command === "flamingSphereReposition" &&
+      candidate.subject.command === "movableZoneReposition" &&
       candidate.subject.actorId === actorId &&
       candidate.subject.areaId === flamingSphereAreaId,
   );
@@ -850,7 +865,7 @@ export function flamingSphereRamAct(
     BattleSubject,
     {
       readonly tag: "runtimeCommand";
-      readonly command: "flamingSphereRam";
+      readonly command: "movableZoneRam";
     }
   >;
 } {
@@ -862,18 +877,101 @@ export function flamingSphereRamAct(
         BattleSubject,
         {
           readonly tag: "runtimeCommand";
-          readonly command: "flamingSphereRam";
+          readonly command: "movableZoneRam";
         }
       >;
     } =>
       candidate.subject.tag === "runtimeCommand" &&
-      candidate.subject.command === "flamingSphereRam" &&
+      candidate.subject.command === "movableZoneRam" &&
       candidate.subject.actorId === actorId &&
       candidate.subject.targetId === targetId &&
       candidate.subject.areaId === flamingSphereAreaId,
   );
   if (act === undefined) {
     throw new Error("Expected Flaming Sphere ram act.");
+  }
+  return act;
+}
+
+export function moonbeamRepositionMovementFill(
+  hole: Extract<BattleHole, { readonly kind: "movableZoneRepositionMovement" }>,
+  moveFeet = 60,
+): Extract<BattleFill, { readonly kind: "movableZoneRepositionMovement" }> {
+  return {
+    kind: "movableZoneRepositionMovement",
+    holeId: hole.holeId,
+    value: { moveFeet: movementFeet(moveFeet) },
+  };
+}
+
+export function moonbeamEndTurnSaveAct(
+  state: BattleState,
+  actorId: CombatantId = spellTargetId,
+  areaId: BattleAreaId = moonbeamAreaId,
+): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "movableZoneSave";
+    }
+  >;
+} {
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "movableZoneSave";
+        }
+      >;
+    } =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "movableZoneSave" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.trigger === "endsTurnInArea" &&
+      candidate.subject.areaId === areaId,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Moonbeam end-turn save act.");
+  }
+  return act;
+}
+
+export function moonbeamRepositionAct(
+  state: BattleState,
+  actorId: CombatantId = spellCasterId,
+): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "movableZoneReposition";
+    }
+  >;
+} {
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "movableZoneReposition";
+        }
+      >;
+    } =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "movableZoneReposition" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.areaId === moonbeamAreaId,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Moonbeam reposition act.");
   }
   return act;
 }

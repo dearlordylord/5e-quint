@@ -154,6 +154,21 @@ export function discoverSupportedSpellInvocations(
           },
         ];
       }
+      if (invocation.procedure === "moonbeam") {
+        return [
+          {
+            subject: {
+              tag: "actionSpell" as const,
+              actorId,
+              invocation: supportedSpellInvocationRef(invocation),
+              mode: { tag: "cast" as const },
+            },
+            label: invocation.spell.name,
+            summary: `${spellActivationInvocationCastSummary(invocation)} The table supplies the Moonbeam cylinder area identity.`,
+            initialHoles: [spellAreaChoiceHole(invocation)],
+          },
+        ];
+      }
       if (invocation.procedure === "selfTeleport") {
         return [
           {
@@ -978,6 +993,7 @@ export function spellActivationInvocationCastSummary(
         | "greaseGroundHazard"
         | "fogCloudObscurement"
         | "flamingSphere"
+        | "moonbeam"
         | "dancingLightsSeparateCast"
         | "dancingLightsCombinedCast"
         | "jumpMovementReplacement"

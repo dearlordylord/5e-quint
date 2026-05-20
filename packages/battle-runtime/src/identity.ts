@@ -12,6 +12,12 @@ export type BattleObjectId = typeof BattleObjectId.Type;
 export const battleObjectId: (value: string) => BattleObjectId =
   BattleObjectId.make;
 
+export const BattleAreaId = Schema.NonEmptyTrimmedString.pipe(
+  Schema.brand("BattleAreaId"),
+);
+export type BattleAreaId = typeof BattleAreaId.Type;
+export const battleAreaId: (value: string) => BattleAreaId = BattleAreaId.make;
+
 export const BattleTablePositionId = Schema.NonEmptyTrimmedString.pipe(
   Schema.brand("BattleTablePositionId"),
 );

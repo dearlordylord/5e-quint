@@ -2,11 +2,16 @@
 // extracted from ../battle-reducer.ts. Mechanical move; no behavior change
 // intended.
 
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram spell.invocation-moonbeam-movable-zone
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
-import { resetTurnActionEconomy } from "@dnd/shared-algebras/action-economy-algebra";
+import { Either } from "effect";
+
+import {
+  resetTurnActionEconomy,
+  spendAction,
+} from "@dnd/shared-algebras/action-economy-algebra";
 
 import {
   rolledDiceTotal,
@@ -130,6 +135,8 @@ import {
   applyCommandGrovelProneToTarget,
   applyGreaseProneToTarget,
   expireBattleLightEmitters,
+  markMoonbeamSavedThisTurn,
+  resetAllMoonbeamSavedThisTurn,
   tickDurationBattleLightEmitters,
 } from "./spells-active-effects.ts";
 
@@ -156,9 +163,12 @@ import type {
   BattleFill,
   BattleFlamingSphereDamageRollHole,
   BattleFlamingSphereRamMovementHole,
-  BattleFlamingSphereRepositionMovementHole,
   BattleFlamingSphereSavingThrowOutcomeHole,
   BattleFlamingSphereTrigger,
+  BattleMoonbeamDamageRollHole,
+  BattleMoonbeamSaveTrigger,
+  BattleMoonbeamSavingThrowOutcomeHole,
+  BattleMovableZoneRepositionMovementHole,
   BattleGreaseGroundDifficultTerrainMovementFact,
   BattleGrappleLink,
   BattleGreaseGroundHazardSavingThrowOutcomeHole,
@@ -318,8 +328,11 @@ export function resolveEndTurn(
     combatantsAfterStartOngoingFeatures,
     nextActorId,
   );
-  const combatantsAfterStartTurnEffects = applyStartOfTurnActiveEffects(
+  const combatantsAfterMoonbeamReset = resetAllMoonbeamSavedThisTurn(
     combatantsAfterStartEffects,
+  );
+  const combatantsAfterStartTurnEffects = applyStartOfTurnActiveEffects(
+    combatantsAfterMoonbeamReset,
     nextActorId,
   );
   const combatantsAfterSpellTurnStartDamage = applyStartTurnSpellDamageFills(
@@ -867,6 +880,10 @@ export type GreaseGroundHazardEffect = Extract<
 export type FlamingSphereEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "flamingSphere" }
+>;
+export type MoonbeamEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "moonbeam" }
 >;
 export type CommandPendingEffect = Extract<
   BattleActiveEffect,
@@ -1833,9 +1850,9 @@ function flamingSphereEffectFor(
     {
       readonly tag: "runtimeCommand";
       readonly command:
-        | "flamingSphereSave"
-        | "flamingSphereReposition"
-        | "flamingSphereRam";
+        | "movableZoneSave"
+        | "movableZoneReposition"
+        | "movableZoneRam";
     }
   >,
 ): FlamingSphereEffect | undefined {
@@ -1868,11 +1885,11 @@ export function flamingSphereRamMovementHole(
 ): BattleFlamingSphereRamMovementHole {
   const key = `battle:flaming-sphere-ram-movement:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}`;
   return {
-    kind: "flamingSphereRamMovement",
+    kind: "movableZoneRamMovement",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
     label: `${effect.sourceSpellId} ram movement`,
-    flamingSphere: {
+    movableZone: {
       targetId,
       sourceSpellId: effect.sourceSpellId,
       sourceCombatantId: effect.sourceCombatantId,
@@ -1885,14 +1902,14 @@ export function flamingSphereRamMovementHole(
 
 export function flamingSphereRepositionMovementHole(
   effect: FlamingSphereEffect,
-): BattleFlamingSphereRepositionMovementHole {
+): BattleMovableZoneRepositionMovementHole {
   const key = `battle:flaming-sphere-reposition-movement:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}`;
   return {
-    kind: "flamingSphereRepositionMovement",
+    kind: "movableZoneRepositionMovement",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
     label: `${effect.sourceSpellId} reposition movement`,
-    flamingSphere: {
+    movableZone: {
       sourceSpellId: effect.sourceSpellId,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
@@ -1914,7 +1931,7 @@ export function flamingSphereSavingThrowOutcomeHole(
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
     label: `${effect.sourceSpellId} ${flamingSphereTriggerLabel(trigger)} DEX save`,
-    flamingSphere: {
+    movableZone: {
       targetId,
       sourceSpellId: effect.sourceSpellId,
       sourceCombatantId: effect.sourceCombatantId,
@@ -1929,6 +1946,9 @@ export function flamingSphereSavingThrowOutcomeHole(
       state,
       effect.save.ability,
     ).filter((projection) => projection.targetId === targetId),
+    targetFlatBonuses: savingThrowFlatBonusProjections(state).filter(
+      (projection) => projection.targetId === targetId,
+    ),
   };
 }
 
@@ -1943,7 +1963,7 @@ function flamingSphereDamageRollHole(
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
     label: `${effect.sourceSpellId} ${flamingSphereTriggerLabel(trigger)} damage`,
-    flamingSphere: {
+    movableZone: {
       targetId,
       sourceSpellId: effect.sourceSpellId,
       sourceCombatantId: effect.sourceCombatantId,
@@ -1960,14 +1980,14 @@ function savingThrowOutcomeFillForHole(
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[],
-  hole: BattleFlamingSphereSavingThrowOutcomeHole,
+  hole: { readonly holeId: BattleHoleId },
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
   return fills.find((fill) => fill.holeId === hole.holeId);
 }
 
 function rolledDiceFillForHole(
   fills: readonly Extract<BattleFill, { readonly kind: "rolledDice" }>[],
-  hole: BattleFlamingSphereDamageRollHole,
+  hole: { readonly holeId: BattleHoleId },
 ): Extract<BattleFill, { readonly kind: "rolledDice" }> | undefined {
   return fills.find((fill) => fill.holeId === hole.holeId);
 }
@@ -1984,11 +2004,11 @@ function validateFlamingSphereSavingThrowOutcome(
   targetId: CombatantId,
 ): string | null {
   if ("area" in value) {
-    return "Flaming Sphere Saving Throw outcome must not include area facts.";
+    return "Movable zone saving throw outcome must not include area facts.";
   }
   return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
     ? null
-    : "Flaming Sphere Saving Throw outcome must match the triggering target.";
+    : "Movable zone saving throw outcome must match the triggering target.";
 }
 
 function validateFlamingSphereDamageRoll(
@@ -1996,52 +2016,52 @@ function validateFlamingSphereDamageRoll(
   hole: BattleFlamingSphereDamageRollHole,
 ): string | null {
   if (fill.holeId !== hole.holeId) {
-    return "Flaming Sphere damage must use the selected sphere damage hole.";
+    return "Movable zone damage must use the selected damage hole.";
   }
   const validation = validateRolledDiceForDiceExpr(
     fill.value,
-    hole.flamingSphere.damage.expr,
+    hole.movableZone.damage.expr,
   );
   return validation === null ? null : validation.reason;
 }
 
 function validateFlamingSphereRamMovement(
-  fill: Extract<BattleFill, { readonly kind: "flamingSphereRamMovement" }>,
+  fill: Extract<BattleFill, { readonly kind: "movableZoneRamMovement" }>,
   hole: BattleFlamingSphereRamMovementHole,
 ): string | null {
   if (fill.holeId !== hole.holeId) {
-    return "Flaming Sphere ram movement must use the selected sphere movement hole.";
+    return "Movable zone ram movement must use the selected sphere movement hole.";
   }
   if (
     Number(fill.value.moveFeet) <= 0 ||
     !Number.isInteger(fill.value.moveFeet)
   ) {
-    return "Flaming Sphere ram movement distance must be a positive integer.";
+    return "Movable zone ram movement distance must be a positive integer.";
   }
-  return Number(fill.value.moveFeet) <= Number(hole.flamingSphere.maxMoveFeet)
+  return Number(fill.value.moveFeet) <= Number(hole.movableZone.maxMoveFeet)
     ? null
-    : "Flaming Sphere ram movement distance exceeds the spell's maximum.";
+    : "Movable zone ram movement distance exceeds the spell's maximum.";
 }
 
 function validateFlamingSphereRepositionMovement(
   fill: Extract<
     BattleFill,
-    { readonly kind: "flamingSphereRepositionMovement" }
+    { readonly kind: "movableZoneRepositionMovement" }
   >,
-  hole: BattleFlamingSphereRepositionMovementHole,
+  hole: BattleMovableZoneRepositionMovementHole,
 ): string | null {
   if (fill.holeId !== hole.holeId) {
-    return "Flaming Sphere reposition movement must use the selected sphere movement hole.";
+    return "Movable zone reposition movement must use the selected sphere movement hole.";
   }
   if (
     Number(fill.value.moveFeet) <= 0 ||
     !Number.isInteger(fill.value.moveFeet)
   ) {
-    return "Flaming Sphere reposition movement distance must be a positive integer.";
+    return "Movable zone reposition movement distance must be a positive integer.";
   }
-  return Number(fill.value.moveFeet) <= Number(hole.flamingSphere.maxMoveFeet)
+  return Number(fill.value.moveFeet) <= Number(hole.movableZone.maxMoveFeet)
     ? null
-    : "Flaming Sphere reposition movement distance exceeds the spell's maximum.";
+    : "Movable zone reposition movement distance exceeds the spell's maximum.";
 }
 
 function flamingSphereAdjustedDamage(input: {
@@ -2099,31 +2119,48 @@ export function resolveFlamingSphereSaveCommand(
       BattleSubject,
       {
         readonly tag: "runtimeCommand";
-        readonly command: "flamingSphereSave";
+        readonly command: "movableZoneSave";
       }
     >;
     readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
   },
 ): BattleResolutionResult {
+  if (
+    input.fills.some(
+      (fill) =>
+        fill.kind !== "savingThrowOutcome" &&
+        fill.kind !== "rolledDice" &&
+        fill.kind !== "concentrationSavingThrow",
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Movable zone save accepts only save, damage, and Concentration fills.",
+    );
+  }
   const effect = flamingSphereEffectFor(input.state, input.subject);
   const target = input.state.combatants.get(input.subject.actorId);
   if (effect === undefined || target === undefined) {
     return invalidResult(
       input.state,
       "staleSubject",
-      "Flaming Sphere save is no longer available.",
+      "Movable zone save is no longer available.",
     );
   }
+  // Dispatcher only routes here when trigger === "endsTurnWithinFiveFeetOfSphere".
+  const flamingSphereTrigger =
+    input.subject.trigger as BattleFlamingSphereTrigger;
   const saveHole = flamingSphereSavingThrowOutcomeHole(
     input.state,
     input.subject.actorId,
     effect,
-    input.subject.trigger,
+    flamingSphereTrigger,
   );
   const damageHole = flamingSphereDamageRollHole(
     input.subject.actorId,
     effect,
-    input.subject.trigger,
+    flamingSphereTrigger,
   );
   const saveFills = input.fills.filter(
     (
@@ -2139,7 +2176,7 @@ export function resolveFlamingSphereSaveCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Flaming Sphere end-within-5-feet save received duplicate sphere fills.",
+      "Movable zone end-within-5-feet save received duplicate sphere fills.",
     );
   }
   const concentrationHoleId = concentrationSavingThrowHole(target, 1)?.holeId;
@@ -2239,7 +2276,7 @@ export function resolveFlamingSphereSaveCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Flaming Sphere end-within-5-feet save received duplicate sphere fills.",
+      "Movable zone end-within-5-feet save received duplicate sphere fills.",
     );
   }
   const concentrationFill =
@@ -2286,18 +2323,18 @@ export function resolveFlamingSphereRepositionCommand(
       BattleSubject,
       {
         readonly tag: "runtimeCommand";
-        readonly command: "flamingSphereReposition";
+        readonly command: "movableZoneReposition";
       }
     >;
   },
 ): BattleResolutionResult {
   if (
-    input.fills.some((fill) => fill.kind !== "flamingSphereRepositionMovement")
+    input.fills.some((fill) => fill.kind !== "movableZoneRepositionMovement")
   ) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Flaming Sphere reposition accepts only movement fills.",
+      "Movable zone reposition accepts only movement fills.",
     );
   }
   const effect = flamingSphereEffectFor(input.state, input.subject);
@@ -2309,14 +2346,14 @@ export function resolveFlamingSphereRepositionCommand(
     return invalidResult(
       input.state,
       "staleSubject",
-      "Flaming Sphere reposition is no longer available.",
+      "Movable zone reposition is no longer available.",
     );
   }
   if (!input.state.currentTurnResources.currentHasBonusAction) {
     return invalidResult(
       input.state,
       "staleSubject",
-      "Flaming Sphere reposition requires an available Bonus Action.",
+      "Movable zone reposition requires an available Bonus Action.",
     );
   }
   const movementHole = flamingSphereRepositionMovementHole(effect);
@@ -2325,21 +2362,21 @@ export function resolveFlamingSphereRepositionCommand(
       fill,
     ): fill is Extract<
       BattleFill,
-      { readonly kind: "flamingSphereRepositionMovement" }
-    > => fill.kind === "flamingSphereRepositionMovement",
+      { readonly kind: "movableZoneRepositionMovement" }
+    > => fill.kind === "movableZoneRepositionMovement",
   );
   if (!everyFillUsesHoleId(movementFills, movementHole.holeId)) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Flaming Sphere reposition received a fill for an unrelated hole.",
+      "Movable zone reposition received a fill for an unrelated hole.",
     );
   }
   if (movementFills.length > 1) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Flaming Sphere reposition received duplicate sphere fills.",
+      "Movable zone reposition received duplicate sphere fills.",
     );
   }
   const movementFill = movementFills[0];
@@ -2373,7 +2410,7 @@ export function resolveFlamingSphereRamCommand(
       BattleSubject,
       {
         readonly tag: "runtimeCommand";
-        readonly command: "flamingSphereRam";
+        readonly command: "movableZoneRam";
       }
     >;
     readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
@@ -2384,14 +2421,14 @@ export function resolveFlamingSphereRamCommand(
       (fill) =>
         fill.kind !== "savingThrowOutcome" &&
         fill.kind !== "rolledDice" &&
-        fill.kind !== "flamingSphereRamMovement" &&
+        fill.kind !== "movableZoneRamMovement" &&
         fill.kind !== "concentrationSavingThrow",
     )
   ) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Flaming Sphere ram accepts only movement, save, damage, and Concentration fills.",
+      "Movable zone ram accepts only movement, save, damage, and Concentration fills.",
     );
   }
   const effect = flamingSphereEffectFor(input.state, input.subject);
@@ -2405,14 +2442,14 @@ export function resolveFlamingSphereRamCommand(
     return invalidResult(
       input.state,
       "staleSubject",
-      "Flaming Sphere ram is no longer available.",
+      "Movable zone ram is no longer available.",
     );
   }
   if (!input.state.currentTurnResources.currentHasBonusAction) {
     return invalidResult(
       input.state,
       "staleSubject",
-      "Flaming Sphere ram requires an available Bonus Action.",
+      "Movable zone ram requires an available Bonus Action.",
     );
   }
   const saveHole = flamingSphereSavingThrowOutcomeHole(
@@ -2435,8 +2472,8 @@ export function resolveFlamingSphereRamCommand(
       fill,
     ): fill is Extract<
       BattleFill,
-      { readonly kind: "flamingSphereRamMovement" }
-    > => fill.kind === "flamingSphereRamMovement",
+      { readonly kind: "movableZoneRamMovement" }
+    > => fill.kind === "movableZoneRamMovement",
   );
   const saveFills = input.fills.filter(
     (
@@ -2464,7 +2501,7 @@ export function resolveFlamingSphereRamCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Flaming Sphere ram received a fill for an unrelated hole.",
+      "Movable zone ram received a fill for an unrelated hole.",
     );
   }
   if (
@@ -2475,7 +2512,7 @@ export function resolveFlamingSphereRamCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Flaming Sphere ram received duplicate sphere fills.",
+      "Movable zone ram received duplicate sphere fills.",
     );
   }
   const movementFill = movementFills[0];
@@ -2507,7 +2544,7 @@ export function resolveFlamingSphereRamCommand(
       return invalidResult(
         input.state,
         "invalidFill",
-        "Flaming Sphere ram received a fill for an unrelated hole.",
+        "Movable zone ram received a fill for an unrelated hole.",
       );
     }
   } else {
@@ -2539,14 +2576,14 @@ export function resolveFlamingSphereRamCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Flaming Sphere ram received a fill for an unrelated hole.",
+      "Movable zone ram received a fill for an unrelated hole.",
     );
   }
   if (concentrationFills.length > 1) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Flaming Sphere ram received duplicate sphere fills.",
+      "Movable zone ram received duplicate sphere fills.",
     );
   }
   const concentrationFill =
@@ -2592,6 +2629,511 @@ export function resolveFlamingSphereRamCommand(
       ...damaged.currentTurnResources,
       currentHasBonusAction: false,
     },
+  };
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function moonbeamEffectFor(
+  state: BattleState,
+  subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "movableZoneSave" | "movableZoneReposition";
+    }
+  >,
+): MoonbeamEffect | undefined {
+  const source = state.combatants.get(subject.sourceCombatantId);
+  return source?.activeEffects.find(
+    (effect): effect is MoonbeamEffect =>
+      effect.kind === "moonbeam" &&
+      effect.sourceSpellId === subject.sourceSpellId &&
+      effect.sourceCombatantId === subject.sourceCombatantId &&
+      effect.areaId === subject.areaId,
+  );
+}
+
+function moonbeamTriggerLabel(
+  trigger: BattleMoonbeamSaveTrigger,
+): "appears-in-area" | "area-moves-into-space" | "enters-area" | "ends-turn-in-area" {
+  if (trigger === "appearsInArea") {
+    return "appears-in-area";
+  }
+  if (trigger === "areaMovesIntoSpace") {
+    return "area-moves-into-space";
+  }
+  if (trigger === "entersArea") {
+    return "enters-area";
+  }
+  if (trigger === "endsTurnInArea") {
+    return "ends-turn-in-area";
+  }
+  const _: never = trigger;
+  return _;
+}
+
+export function moonbeamSavingThrowOutcomeHole(
+  state: BattleState,
+  targetId: CombatantId,
+  effect: MoonbeamEffect,
+  trigger: BattleMoonbeamSaveTrigger,
+): BattleMoonbeamSavingThrowOutcomeHole {
+  const key = `battle:moonbeam-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}:${trigger}`;
+  return {
+    kind: "savingThrowOutcome",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: `${effect.sourceSpellId} ${moonbeamTriggerLabel(trigger)} CON save`,
+    movableZone: {
+      targetId,
+      sourceSpellId: effect.sourceSpellId,
+      sourceCombatantId: effect.sourceCombatantId,
+      areaId: effect.areaId,
+      trigger,
+      save: effect.save,
+    },
+    ability: effect.save.ability,
+    dc: effect.save.dc,
+    areaChoices: [],
+    targetRollModes: savingThrowRollModeProjections(
+      state,
+      effect.save.ability,
+    ).filter((projection) => projection.targetId === targetId),
+    targetFlatBonuses: savingThrowFlatBonusProjections(state).filter(
+      (projection) => projection.targetId === targetId,
+    ),
+  };
+}
+
+function moonbeamDamageRollHole(
+  targetId: CombatantId,
+  effect: MoonbeamEffect,
+  trigger: BattleMoonbeamSaveTrigger,
+): BattleMoonbeamDamageRollHole {
+  const key = `battle:moonbeam-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}:${trigger}`;
+  return {
+    kind: "rolledDice",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: `${effect.sourceSpellId} ${moonbeamTriggerLabel(trigger)} damage`,
+    movableZone: {
+      targetId,
+      sourceSpellId: effect.sourceSpellId,
+      sourceCombatantId: effect.sourceCombatantId,
+      areaId: effect.areaId,
+      trigger,
+      damage: effect.damage,
+    },
+    critical: false,
+  };
+}
+
+export function moonbeamRepositionMovementHole(
+  effect: MoonbeamEffect,
+): BattleMovableZoneRepositionMovementHole {
+  const key = `battle:moonbeam-reposition-movement:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}`;
+  return {
+    kind: "movableZoneRepositionMovement",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: `${effect.sourceSpellId} reposition movement`,
+    movableZone: {
+      sourceSpellId: effect.sourceSpellId,
+      sourceCombatantId: effect.sourceCombatantId,
+      areaId: effect.areaId,
+      maxMoveFeet: effect.repositionMaxMoveFeet,
+    },
+    requiresTableSpatialFact: true,
+  };
+}
+
+function validateMoonbeamSavingThrowOutcome(
+  value: BattleSavingThrowOutcomeValue,
+  targetId: CombatantId,
+): string | null {
+  if ("area" in value) {
+    return "Movable zone saving throw outcome must not include area facts.";
+  }
+  return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
+    ? null
+    : "Movable zone saving throw outcome must match the triggering target.";
+}
+
+function validateMoonbeamDamageRoll(
+  fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+  hole: BattleMoonbeamDamageRollHole,
+): string | null {
+  if (fill.holeId !== hole.holeId) {
+    return "Movable zone save damage must use the selected damage hole.";
+  }
+  const validation = validateRolledDiceForDiceExpr(fill.value, hole.movableZone.damage.expr);
+  return validation === null ? null : validation.reason;
+}
+
+function validateMoonbeamRepositionMovement(
+  fill: Extract<BattleFill, { readonly kind: "movableZoneRepositionMovement" }>,
+  hole: BattleMovableZoneRepositionMovementHole,
+): string | null {
+  if (fill.holeId !== hole.holeId) {
+    return "Movable zone reposition movement must use the selected movement hole.";
+  }
+  if (Number(fill.value.moveFeet) <= 0 || !Number.isInteger(fill.value.moveFeet)) {
+    return "Movable zone reposition movement distance must be a positive integer.";
+  }
+  return Number(fill.value.moveFeet) <= Number(hole.movableZone.maxMoveFeet)
+    ? null
+    : "Movable zone reposition movement distance exceeds the spell's maximum.";
+}
+
+function moonbeamAdjustedDamage(input: {
+  readonly target: BattleCreatureState;
+  readonly effect: MoonbeamEffect;
+  readonly damageFill: Extract<BattleFill, { readonly kind: "rolledDice" }>;
+  readonly saveSucceeded: boolean;
+}): number {
+  const rolledDamage =
+    rolledDiceTotal(input.damageFill.value) + (input.effect.damage.expr.flat ?? 0);
+  const saveAdjustedDamage = input.saveSucceeded
+    ? Math.floor(rolledDamage / 2)
+    : rolledDamage;
+  return damageAmountAfterTargetAdjustments(
+    input.target,
+    saveAdjustedDamage,
+    input.effect.damage.damageType,
+  );
+}
+
+function applyMoonbeamDamage(input: {
+  readonly state: BattleState;
+  readonly targetId: CombatantId;
+  readonly effect: MoonbeamEffect;
+  readonly damageFill: Extract<BattleFill, { readonly kind: "rolledDice" }>;
+  readonly saveSucceeded: boolean;
+  readonly concentrationSavingThrow?:
+    | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
+    | undefined;
+}): BattleState {
+  const target = input.state.combatants.get(input.targetId);
+  if (target === undefined) {
+    return input.state;
+  }
+  return applyPreparedSlotSpellDamage(
+    input.state,
+    input.targetId,
+    moonbeamAdjustedDamage({
+      target,
+      effect: input.effect,
+      damageFill: input.damageFill,
+      saveSucceeded: input.saveSucceeded,
+    }),
+    {
+      damageSourceId: input.effect.sourceCombatantId,
+      concentrationSavingThrow: input.concentrationSavingThrow,
+    },
+  );
+}
+
+export function resolveMoonbeamSaveCommand(
+  input: BattleResolutionInput & {
+    readonly subject: Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "movableZoneSave";
+      }
+    >;
+    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+  },
+): BattleResolutionResult {
+  if (
+    input.fills.some(
+      (fill) =>
+        fill.kind !== "savingThrowOutcome" &&
+        fill.kind !== "rolledDice" &&
+        fill.kind !== "concentrationSavingThrow",
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Movable zone save accepts only save, damage, and Concentration fills.",
+    );
+  }
+  const effect = moonbeamEffectFor(input.state, input.subject);
+  const target = input.state.combatants.get(input.subject.actorId);
+  if (effect === undefined || target === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Movable zone save is no longer available.",
+    );
+  }
+  const isEndTurn = input.subject.trigger === "endsTurnInArea";
+  const endTurnSubject = {
+    tag: "runtimeCommand" as const,
+    actorId: input.subject.actorId,
+    command: "endTurn" as const,
+  };
+  if (effect.savedThisTurn.includes(input.subject.actorId)) {
+    if (isEndTurn) {
+      const endTurnResult = resolveEndTurnCommand({
+        state: input.state,
+        subject: endTurnSubject,
+        fills: input.fills,
+      });
+      return endTurnResult.tag === "needsHoles"
+        ? { ...endTurnResult, subject: input.subject }
+        : endTurnResult;
+    }
+    return {
+      tag: "resolved",
+      state: input.state,
+      snapshot: snapshotBattle(input.state),
+    };
+  }
+  // Dispatcher only routes here when trigger is a BattleMoonbeamSaveTrigger
+  // (not "endsTurnWithinFiveFeetOfSphere" which routes to flamingSphere).
+  const moonbeamTrigger = input.subject.trigger as BattleMoonbeamSaveTrigger;
+  const saveHole = moonbeamSavingThrowOutcomeHole(
+    input.state,
+    input.subject.actorId,
+    effect,
+    moonbeamTrigger,
+  );
+  const damageHole = moonbeamDamageRollHole(
+    input.subject.actorId,
+    effect,
+    moonbeamTrigger,
+  );
+  const saveFills = input.fills.filter(
+    (fill): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
+      fill.kind === "savingThrowOutcome" && fill.holeId === saveHole.holeId,
+  );
+  const damageFills = input.fills.filter(
+    (fill): fill is Extract<BattleFill, { readonly kind: "rolledDice" }> =>
+      fill.kind === "rolledDice" && fill.holeId === damageHole.holeId,
+  );
+  if (saveFills.length > 1 || damageFills.length > 1) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Movable zone save received duplicate fills.",
+    );
+  }
+  const concentrationHoleId = concentrationSavingThrowHole(target, 1)?.holeId;
+  const endTurnFills = isEndTurn
+    ? input.fills.filter(
+        (fill) =>
+          fill.holeId !== saveHole.holeId &&
+          fill.holeId !== damageHole.holeId &&
+          fill.holeId !== concentrationHoleId,
+      )
+    : [];
+  const endTurnProbe = isEndTurn
+    ? resolveEndTurnCommand({
+        state: input.state,
+        subject: endTurnSubject,
+        fills: endTurnFills,
+      })
+    : null;
+  const saveFill = savingThrowOutcomeFillForHole(saveFills, saveHole);
+  if (saveFill === undefined) {
+    if (endTurnProbe?.tag === "invalid") {
+      return endTurnProbe;
+    }
+    return needsHolesResult(input.state, input.subject, [
+      saveHole,
+      ...(endTurnProbe?.tag === "needsHoles" ? endTurnProbe.holes : []),
+    ]);
+  }
+  const saveValidation = validateMoonbeamSavingThrowOutcome(
+    saveFill.value,
+    input.subject.actorId,
+  );
+  if (saveValidation !== null) {
+    return invalidResult(input.state, "invalidFill", saveValidation);
+  }
+  const saveOutcome = saveFill.value.outcomes[0]!;
+  if (!saveOutcome.succeeded) {
+    const saveFailedReactionWindow = maybeOpenReactionWindow(
+      input.state,
+      {
+        trigger: "saveFailed",
+        targetId: input.subject.actorId,
+        sourceSpellId: effect.sourceSpellId,
+        continuation: {
+          kind: "replay",
+          subject: input.subject,
+          fills: input.fills,
+        },
+      },
+      input.suppressedReactionTrigger,
+    );
+    if (saveFailedReactionWindow !== null) {
+      return saveFailedReactionWindow;
+    }
+  }
+  const damageFill = rolledDiceFillForHole(damageFills, damageHole);
+  if (damageFill === undefined) {
+    if (endTurnProbe?.tag === "invalid") {
+      return endTurnProbe;
+    }
+    return needsHolesResult(input.state, input.subject, [
+      damageHole,
+      ...(endTurnProbe?.tag === "needsHoles" ? endTurnProbe.holes : []),
+    ]);
+  }
+  const damageValidation = validateMoonbeamDamageRoll(damageFill, damageHole);
+  if (damageValidation !== null) {
+    return invalidResult(input.state, "invalidFill", damageValidation);
+  }
+  const adjustedDamage = moonbeamAdjustedDamage({
+    target,
+    effect,
+    damageFill,
+    saveSucceeded: saveOutcome.succeeded,
+  });
+  const concentrationHole = concentrationSavingThrowHole(target, adjustedDamage);
+  const concentrationFills =
+    concentrationHole === null
+      ? []
+      : input.fills.filter(
+          (fill): fill is Extract<
+            BattleFill,
+            { readonly kind: "concentrationSavingThrow" }
+          > =>
+            fill.kind === "concentrationSavingThrow" &&
+            fill.holeId === concentrationHole.holeId,
+        );
+  if (concentrationFills.length > 1) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Movable zone save received duplicate concentration save fills.",
+    );
+  }
+  const concentrationFill =
+    concentrationHole === null
+      ? undefined
+      : concentrationSavingThrowFillFor(concentrationFills, concentrationHole);
+  if (concentrationHole !== null && concentrationFill === undefined) {
+    if (endTurnProbe?.tag === "invalid") {
+      return endTurnProbe;
+    }
+    return needsHolesResult(input.state, input.subject, [
+      concentrationHole,
+      ...(endTurnProbe?.tag === "needsHoles" ? endTurnProbe.holes : []),
+    ]);
+  }
+  if (endTurnProbe?.tag === "needsHoles") {
+    return { ...endTurnProbe, subject: input.subject };
+  }
+  if (endTurnProbe?.tag === "invalid") {
+    return endTurnProbe;
+  }
+  const afterDamage = applyMoonbeamDamage({
+    state: input.state,
+    targetId: input.subject.actorId,
+    effect,
+    damageFill,
+    saveSucceeded: saveOutcome.succeeded,
+    concentrationSavingThrow: concentrationFill,
+  });
+  const afterMark = markMoonbeamSavedThisTurn(afterDamage, input.subject.actorId, effect);
+  if (isEndTurn) {
+    const endTurnResult = resolveEndTurnCommand({
+      state: afterMark,
+      subject: endTurnSubject,
+      fills: endTurnFills,
+    });
+    return endTurnResult.tag === "needsHoles"
+      ? { ...endTurnResult, subject: input.subject }
+      : endTurnResult;
+  }
+  return {
+    tag: "resolved",
+    state: afterMark,
+    snapshot: snapshotBattle(afterMark),
+  };
+}
+
+export function resolveMoonbeamRepositionCommand(
+  input: BattleResolutionInput & {
+    readonly subject: Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "movableZoneReposition";
+      }
+    >;
+  },
+): BattleResolutionResult {
+  if (input.fills.some((fill) => fill.kind !== "movableZoneRepositionMovement")) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Movable zone reposition accepts only movement fills.",
+    );
+  }
+  const effect = moonbeamEffectFor(input.state, input.subject);
+  if (
+    effect === undefined ||
+    input.subject.actorId !== input.subject.sourceCombatantId ||
+    input.subject.actorId !== currentActorId(input.state)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Movable zone reposition is no longer available.",
+    );
+  }
+  const movementHole = moonbeamRepositionMovementHole(effect);
+  const movementFills = input.fills.filter(
+    (fill): fill is Extract<
+      BattleFill,
+      { readonly kind: "movableZoneRepositionMovement" }
+    > => fill.kind === "movableZoneRepositionMovement",
+  );
+  if (!everyFillUsesHoleId(movementFills, movementHole.holeId)) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Movable zone reposition received a fill for an unrelated hole.",
+    );
+  }
+  if (movementFills.length > 1) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Movable zone reposition received duplicate fills.",
+    );
+  }
+  const movementFill = movementFills[0];
+  if (movementFill === undefined) {
+    return needsHolesResult(input.state, input.subject, [movementHole]);
+  }
+  const movementValidation = validateMoonbeamRepositionMovement(
+    movementFill,
+    movementHole,
+  );
+  if (movementValidation !== null) {
+    return invalidResult(input.state, "invalidFill", movementValidation);
+  }
+  const spendResult = spendAction(input.state.currentTurnResources, "magic");
+  if (Either.isLeft(spendResult)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Movable zone reposition requires an available Magic action.",
+    );
+  }
+  const nextState = {
+    ...input.state,
+    currentTurnResources: spendResult.right,
   };
   return {
     tag: "resolved",

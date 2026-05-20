@@ -16,6 +16,7 @@ import {
   magicSubject,
   expendedLevelOneSlots,
   wizardId,
+  battleAreaId,
   battleId,
   battleObscurementZones,
   breakBattleConcentration,
@@ -93,7 +94,7 @@ describe("battle runtime: Fog Cloud", () => {
       resolveBattleSubject({
         state,
         subject,
-        fills: [fogCloudAreaFill(area, "fog-1")],
+        fills: [fogCloudAreaFill(area, battleAreaId("fog-1"))],
       }),
     );
     const caster = resolved.state.combatants.get(wizardId);
@@ -137,7 +138,7 @@ describe("battle runtime: Fog Cloud", () => {
   });
 
   test("Fog Cloud ends when Concentration breaks or strong wind disperses it", () => {
-    const cast = castFogCloud("battle-fog-cloud-ends", "fog-1");
+    const cast = castFogCloud("battle-fog-cloud-ends", battleAreaId("fog-1"));
     const broken = breakBattleConcentration(cast.state, wizardId);
 
     expect(broken.combatants.get(wizardId)?.activeEffects).toEqual([]);
@@ -167,7 +168,7 @@ describe("battle runtime: Fog Cloud", () => {
   });
 
   test("Fog Cloud source zone does not impose attack-roll Disadvantage without a sight witness", () => {
-    const cast = castFogCloud("battle-fog-cloud-no-implicit-sight", "fog-1");
+    const cast = castFogCloud("battle-fog-cloud-no-implicit-sight", battleAreaId("fog-1"));
     const goblinTurn = requireResolved(
       endTurn({ state: cast.state, actorId: wizardId }),
     ).state;
