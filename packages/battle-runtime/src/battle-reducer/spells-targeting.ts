@@ -1,18 +1,19 @@
 // Spell target holes and target legality validation extracted from spells-holes-fills.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 
 import {
   holeId,
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { SIZES } from "@dnd/shared/types";
-import type { CombatantId } from "../identity.ts";
 import { battleCreatureType } from "./domain-helpers.ts";
 import {
   KNOWN_WILLING_TARGET_DAMAGE_REDUCTION_SPELL_IDS,
   KNOWN_WILLING_TARGET_ROLL_MODIFIER_SPELL_IDS,
   ATTACK_TARGET_HOLE_ID,
   ATTACK_TARGET_HOLE_INSTANCE,
+  type BattleObjectContactTargetsHole,
   type BattleHoleId,
   type BattleCommandOptionChoiceHole,
   type BattleDancingLightsPlacementHole,
@@ -32,9 +33,13 @@ import {
   type TargetListSpellInvocation,
 } from "../battle-reducer.ts";
 import { COMMAND_OPTIONS } from "./domain-constants.ts";
-import { spellAttackSequencePartName } from "./spells-profile-shared.ts";
-import type { BattleObjectId } from "../identity.ts";
+import {
+  spellId,
+  type BattleObjectId,
+  type CombatantId,
+} from "../identity.ts";
 import { combatantWearingArmor } from "./creature-state-leaves.ts";
+import { spellAttackSequencePartName } from "./spells-profile-shared.ts";
 
 type SingleCreatureOrObjectSpellAttackDamageInvocation =
   Extract<
@@ -69,6 +74,13 @@ type SingleObjectSpellInvocation =
   | Extract<
       SupportedSpellInvocation,
       {
+        readonly procedure: "objectContactDamage";
+        readonly spell: { readonly id: string; readonly name: string };
+      }
+    >
+  | Extract<
+      SupportedSpellInvocation,
+      {
         readonly procedure: "objectLight";
         readonly spell: { readonly id: string; readonly name: string };
       }
@@ -92,6 +104,10 @@ type ObjectTargetSightFact = Extract<
 type ObjectIgnitionFact = Extract<
   BattleTargetSpatialFact,
   { readonly kind: "spellObjectIgnition" }
+>;
+type ManufacturedMetalObjectTargetFact = Extract<
+  BattleTargetSpatialFact,
+  { readonly kind: "spellManufacturedMetalObjectTarget" }
 >;
 type ObjectLightTargetSize = LightCantripObjectTargetFact["size"];
 
@@ -206,6 +222,43 @@ export function spellObjectTargetHoleId(
   invocation: SingleObjectSpellInvocation,
 ): BattleHoleId {
   return holeId(`battle:spell:object-target:${invocation.spell.id}`);
+}
+
+export function spellObjectContactTargetsHole(input: {
+  readonly state: BattleState;
+  readonly sourceCombatantId: CombatantId;
+  readonly objectId: BattleObjectId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "objectContactDamage" | "objectContactDamageRepeat" }
+  >;
+  readonly requiresObjectWithinRange: boolean;
+}): BattleObjectContactTargetsHole {
+  const holeKey = `battle:spell:object-contact-targets:${input.invocation.spell.id}:${input.objectId}`;
+  return {
+    kind: "objectContactTargets",
+    holeId: holeId(holeKey),
+    holeInstanceKey: holeInstanceKey(holeKey),
+    label: `${input.invocation.spell.name} contact creatures`,
+    objectContact: {
+      sourceCombatantId: input.sourceCombatantId,
+      sourceSpellId: spellId(input.invocation.spell.id),
+      objectId: input.objectId,
+      rangeFeet: input.invocation.rangeFeet,
+      requiresObjectWithinRange: input.requiresObjectWithinRange,
+    },
+    choices: [...input.state.combatants.keys()],
+    requiresTableSpatialFact: true,
+  };
+}
+
+export function spellObjectContactTargetsHoleId(input: {
+  readonly spellId: string;
+  readonly objectId: BattleObjectId;
+}): BattleHoleId {
+  return holeId(
+    `battle:spell:object-contact-targets:${input.spellId}:${input.objectId}`,
+  );
 }
 
 export function spellDancingLightsPlacementHole(
@@ -585,6 +638,27 @@ export function spellObjectIgnitionFact(
         fact.casterId === actorId &&
         fact.objectId === objectId &&
         fact.spellId === invocation.spell.id,
+    ) ?? null
+  );
+}
+
+export function spellManufacturedMetalObjectTargetFact(
+  facts: readonly ManufacturedMetalObjectTargetFact[],
+  actorId: CombatantId,
+  objectId: BattleObjectId,
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "objectContactDamage" }
+  >,
+): ManufacturedMetalObjectTargetFact | null {
+  return (
+    facts.find(
+      (fact) =>
+        fact.casterId === actorId &&
+        fact.objectId === objectId &&
+        fact.spellId === invocation.spell.id &&
+        fact.rangeFeet === invocation.rangeFeet &&
+        fact.casterCanSeeObject,
     ) ?? null
   );
 }

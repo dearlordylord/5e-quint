@@ -24,15 +24,15 @@
     "obligations[].profiles": "Derived from profileObligations by obligation id; authored obligations.jsonl rows must not contain profiles."
   },
   "battleHoleFrontierSummary": {
-    "total": 83,
+    "total": 85,
     "bySubject": {
-      "battle-hole-family": 51,
-      "battle-fill-kind": 32
+      "battle-hole-family": 52,
+      "battle-fill-kind": 33
     },
     "byClassification": {
       "semantic-frontier": 64,
       "deterministic-boundary-projection": 0,
-      "table-owned-fact": 19,
+      "table-owned-fact": 21,
       "unsupported-dead-branch": 0
     }
   },
@@ -2162,6 +2162,32 @@
       "id": "selfTransformationModeChoice",
       "reason": "Self-transformation mode fills choose the reducer-visible spell mode rather than presentation metadata; self-transformation parity remains split follow-up work.",
       "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [
+        "RKBC-PROFILE-JOIN-TABLE-CALLER"
+      ],
+      "holeKind": "objectContactTargets",
+      "id": "BattleObjectContactTargetsHole",
+      "reason": "Heat Metal object-contact target identity, physical-contact witnesses, and later-turn object-within-range witness are caller/table facts. The reducer consumes selected combatant ids and object-contact witness facts without deriving inventory, map geometry, or object position state; spell damage lifecycle remains owned by the object-contact spell profile.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "fillKind": "objectContactTargets",
+      "followUpTaskIds": [
+        "RKBC-PROFILE-JOIN-TABLE-CALLER"
+      ],
+      "id": "objectContactTargets",
+      "reason": "Object-contact target fills supply selected contact creatures plus table-witnessed physical-contact and object-within-range facts for Heat Metal. Contact and range derivation stay at the caller/table boundary while reducer damage semantics are handled by the spell invocation profile.",
+      "subject": "battle-fill-kind"
     }
   ],
   "profileObligations": [
@@ -2704,9 +2730,11 @@
     "spell.invocation-marked-damage-rider",
     "spell.invocation-mirror-image-hit-interception",
     "spell.invocation-moonbeam-movable-zone",
+    "spell.invocation-object-contact-damage",
     "spell.invocation-object-light",
     "spell.invocation-roll-modifier",
     "spell.invocation-sanctuary-targeting-interdiction",
+    "spell.invocation-save-gated-condition-immunity",
     "spell.invocation-self-ability-check-advantage",
     "spell.invocation-self-teleport",
     "spell.invocation-self-transformation-mode",

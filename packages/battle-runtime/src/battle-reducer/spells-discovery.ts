@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // Spell discovery (Cluster K). Mechanical extraction from battle-reducer.ts.
 // Discovers per-actor SupportedSpellInvocation acts, computes cast-summary
 // strings, classifies invocations, and synthesises the optional readied-spell
@@ -61,6 +62,7 @@ import {
 } from "./spells-holes-fills.ts";
 import {
   spellDancingLightsPlacementHole,
+  spellObjectContactTargetsHole,
   targetListTargetingHasFixedMaximum,
 } from "./spells-targeting.ts";
 import { spellCreatedHeldObjectHasFreeHand } from "./spell-created-held-object.ts";
@@ -188,6 +190,44 @@ export function discoverSupportedSpellInvocations(
             label: invocation.spell.name,
             summary: `${spellActivationInvocationCastSummary(invocation)} The table supplies the Moonbeam cylinder area identity.`,
             initialHoles: [spellAreaChoiceHole(invocation)],
+          },
+        ];
+      }
+      if (invocation.procedure === "objectContactDamage") {
+        return [
+          {
+            subject: {
+              tag: "actionSpell" as const,
+              actorId,
+              invocation: supportedSpellInvocationRef(invocation),
+              mode: { tag: "cast" as const },
+            },
+            label: invocation.spell.name,
+            summary: spellInvocationCastSummary(invocation),
+            initialHoles: [spellObjectTargetHole(invocation)],
+          },
+        ];
+      }
+      if (invocation.procedure === "objectContactDamageRepeat") {
+        return [
+          {
+            subject: {
+              tag: "bonusActionSpell" as const,
+              actorId,
+              invocation: supportedSpellInvocationRef(invocation),
+              mode: { tag: "cast" as const },
+            },
+            label: `${invocation.spell.name} damage`,
+            summary: spellInvocationCastSummary(invocation),
+            initialHoles: [
+              spellObjectContactTargetsHole({
+                state,
+                sourceCombatantId: invocation.activeEffect.sourceCombatantId,
+                objectId: invocation.activeEffect.objectId,
+                invocation,
+                requiresObjectWithinRange: true,
+              }),
+            ],
           },
         ];
       }
@@ -961,6 +1001,12 @@ export function spellInvocationCastSummary(
   if (invocation.procedure === "spellCreatedHeldObjectReEvoke") {
     return `Re-evoke ${invocation.spell.name} with a Bonus Action.`;
   }
+  if (invocation.procedure === "objectContactDamage") {
+    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+  }
+  if (invocation.procedure === "objectContactDamageRepeat") {
+    return `Use a Bonus Action to repeat ${invocation.spell.name} contact damage.`;
+  }
   if (invocation.procedure === "repeatedDamageAllocation") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot, allocating ${invocation.targeting.repeatedEffectCount} repeated effects among targets.`;
   }
@@ -1108,6 +1154,7 @@ export function spellActivationInvocationCastSummary(
         | "fogCloudObscurement"
         | "flamingSphere"
         | "moonbeam"
+        | "objectContactDamage"
         | "dancingLightsSeparateCast"
         | "dancingLightsCombinedCast"
         | "selfTransformationMode"
@@ -1138,6 +1185,9 @@ export function spellSubjectTagForInvocation(
     return "bonusActionSpell";
   }
   if (invocation.procedure === "dancingLightsReposition") {
+    return "bonusActionSpell";
+  }
+  if (invocation.procedure === "objectContactDamageRepeat") {
     return "bonusActionSpell";
   }
   if (
@@ -1189,6 +1239,7 @@ export function spellInvocationIsSpellcasting(
   return !(
     invocation.procedure === "spellCreatedHeldObjectAttack" ||
     invocation.procedure === "spellCreatedHeldObjectReEvoke" ||
+    invocation.procedure === "objectContactDamageRepeat" ||
     invocation.procedure === "dancingLightsReposition" ||
     (invocation.procedure === "markedDamageRider" &&
       invocation.action === "transfer")
@@ -1223,6 +1274,14 @@ export function spellInvocationCasterPrerequisiteIsMet(
           effect.sourceCombatantId === actor.combatantId &&
           effect.objectState.kind === "notHeld",
       )) &&
+    (invocation.procedure !== "objectContactDamageRepeat" ||
+      actor.activeEffects.some(
+        (effect) =>
+          effect.kind === "spellObjectContactDamage" &&
+          effect.effectId === invocation.activeEffect.effectId &&
+          effect.sourceSpellId === invocation.spell.id &&
+          effect.sourceCombatantId === actor.combatantId,
+      )) &&
     (invocation.procedure !== "dancingLightsReposition" ||
       actor.activeEffects.some(
         (effect) =>
@@ -1246,6 +1305,8 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "spellCreatedHeldObject" &&
     invocation.procedure !== "spellCreatedHeldObjectAttack" &&
     invocation.procedure !== "spellCreatedHeldObjectReEvoke" &&
+    invocation.procedure !== "objectContactDamage" &&
+    invocation.procedure !== "objectContactDamageRepeat" &&
     invocation.procedure !== "dancingLightsSeparateCast" &&
     invocation.procedure !== "dancingLightsCombinedCast" &&
     invocation.procedure !== "dancingLightsReposition" &&
@@ -1301,6 +1362,8 @@ export function readiedSpellAct(
     invocation.procedure === "spellCreatedHeldObject" ||
     invocation.procedure === "spellCreatedHeldObjectAttack" ||
     invocation.procedure === "spellCreatedHeldObjectReEvoke" ||
+    invocation.procedure === "objectContactDamage" ||
+    invocation.procedure === "objectContactDamageRepeat" ||
     invocation.procedure === "damageReduction" ||
     invocation.procedure === "makeStable" ||
     invocation.procedure === "spellHostedWeaponAttack" ||

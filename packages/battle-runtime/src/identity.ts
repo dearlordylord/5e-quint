@@ -32,6 +32,15 @@ export type BattleDancingLightId = typeof BattleDancingLightId.Type;
 export const battleDancingLightId: (value: string) => BattleDancingLightId =
   BattleDancingLightId.make;
 
+export const BattleSpellEffectOccurrenceId = Schema.NonEmptyTrimmedString.pipe(
+  Schema.brand("BattleSpellEffectOccurrenceId"),
+);
+export type BattleSpellEffectOccurrenceId =
+  typeof BattleSpellEffectOccurrenceId.Type;
+export const battleSpellEffectOccurrenceId: (
+  value: string,
+) => BattleSpellEffectOccurrenceId = BattleSpellEffectOccurrenceId.make;
+
 export const SpellId = Schema.NonEmptyTrimmedString.pipe(
   Schema.brand("SpellId"),
 );

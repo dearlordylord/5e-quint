@@ -375,6 +375,62 @@ export function spellObjectTargetFill(input: {
   };
 }
 
+export function spellManufacturedMetalObjectTargetFill(input: {
+  readonly hole: Extract<BattleHole, { readonly kind: "objectTargetChoice" }>;
+  readonly objectId?: ObjectTargetChoiceFill["value"];
+  readonly spellId: string;
+  readonly casterId: CombatantId;
+  readonly rangeFeet?: ReturnType<typeof movementFeet>;
+}): ObjectTargetChoiceFill {
+  const objectId = input.objectId ?? battleObjectId("heat-metal-object");
+  return {
+    kind: "objectTargetChoice",
+    holeId: input.hole.holeId,
+    value: objectId,
+    spatialFacts: [
+      {
+        kind: "spellManufacturedMetalObjectTarget",
+        casterId: input.casterId,
+        objectId,
+        spellId: input.spellId,
+        rangeFeet: input.rangeFeet ?? movementFeet(60),
+        casterCanSeeObject: true,
+      },
+    ],
+  };
+}
+
+export function spellObjectContactTargetsFill(input: {
+  readonly hole: Extract<BattleHole, { readonly kind: "objectContactTargets" }>;
+  readonly targetIds: readonly CombatantId[];
+}): Extract<BattleFill, { readonly kind: "objectContactTargets" }> {
+  return {
+    kind: "objectContactTargets",
+    holeId: input.hole.holeId,
+    value: { targetIds: input.targetIds },
+    spatialFacts: [
+      ...(input.hole.objectContact.requiresObjectWithinRange
+        ? [
+            {
+              kind: "spellObjectWithinSpellRange" as const,
+              sourceCombatantId: input.hole.objectContact.sourceCombatantId,
+              sourceSpellId: input.hole.objectContact.sourceSpellId,
+              objectId: input.hole.objectContact.objectId,
+              rangeFeet: input.hole.objectContact.rangeFeet,
+            },
+          ]
+        : []),
+      ...input.targetIds.map((targetId) => ({
+        kind: "spellObjectPhysicalContact" as const,
+        sourceCombatantId: input.hole.objectContact.sourceCombatantId,
+        sourceSpellId: input.hole.objectContact.sourceSpellId,
+        objectId: input.hole.objectContact.objectId,
+        targetId,
+      })),
+    ],
+  };
+}
+
 export function spellObjectLightTargetFill(input: {
   readonly hole: Extract<BattleHole, { readonly kind: "objectTargetChoice" }>;
   readonly objectId?: ObjectTargetChoiceFill["value"];

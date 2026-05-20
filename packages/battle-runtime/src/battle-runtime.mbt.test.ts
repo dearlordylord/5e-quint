@@ -3577,6 +3577,11 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
       "Battle runtime MBT does not model self-transformation mode holes.",
     );
   }
+  if (hole.kind === "objectContactTargets") {
+    throw new Error(
+      "Battle runtime MBT does not model object contact target holes.",
+    );
+  }
   return [
     Match.value(hole).pipe(
     Match.when({ kind: "targetChoice" }, () => "TargetChoice" as const),

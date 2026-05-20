@@ -278,6 +278,12 @@ module battleRuntimeTimedEffects {
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
             ramMaxMoveFeet: data.ramMaxMoveFeet,
           })
+        | HeatMetalObjectContactDamage(data) => HeatMetalObjectContactDamage({
+            objectId: data.objectId,
+            damageDice: data.damageDice,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+            startedRound: data.startedRound,
+          })
         | BardicInspirationDie(data) => BardicInspirationDie({
             source: data.source,
             dieSize: data.dieSize,
@@ -318,6 +324,7 @@ module battleRuntimeTimedEffects {
         | GreaseGroundHazard(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | FogCloudObscurement(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | FlamingSphere(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | HeatMetalObjectContactDamage(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | BardicInspirationDie(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | _ => true
       })

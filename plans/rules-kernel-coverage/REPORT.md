@@ -78,18 +78,18 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Battle Hole Frontier
 
-- Total classified rows: 83
+- Total classified rows: 85
 
 | Subject | Count |
 | --- | ---: |
-| battle-hole-family | 51 |
-| battle-fill-kind | 32 |
+| battle-hole-family | 52 |
+| battle-fill-kind | 33 |
 
 | Classification | Count |
 | --- | ---: |
 | semantic-frontier | 64 |
 | deterministic-boundary-projection | 0 |
-| table-owned-fact | 19 |
+| table-owned-fact | 21 |
 | unsupported-dead-branch | 0 |
 
 | Subject | Id | Kind | Classification | Coverage | Follow-up |
@@ -177,6 +177,8 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | battle-hole-family | `BattleMoonbeamSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
 | battle-hole-family | `BattleMoonbeamDamageRollHole` | `rolledDice` | semantic-frontier | `SHARED.HIT_POINTS.POSITIVE_DAMAGE`, `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
 | battle-fill-kind | `selfTransformationModeChoice` | `selfTransformationModeChoice` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | `RKBC-SPELL-SELF-TRANSFORMATION-PARITY` |
+| battle-hole-family | `BattleObjectContactTargetsHole` | `objectContactTargets` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
+| battle-fill-kind | `objectContactTargets` | `objectContactTargets` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
 
 ## Generator Readiness
 

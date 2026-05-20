@@ -126,6 +126,21 @@ export function supportedSpellInvocationRef(
       procedure: "moonbeam",
     };
   }
+  if (invocation.procedure === "objectContactDamage") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "objectContactDamage",
+    };
+  }
+  if (invocation.procedure === "objectContactDamageRepeat") {
+    return spellEffectInvocationRef(
+      invocation.spell.id,
+      invocation.activeEffect.sourceCombatantId,
+      "objectContactDamageRepeat",
+    );
+  }
   if (invocation.procedure === "spellCreatedHeldObject") {
     return {
       tag: "spellSlot",
