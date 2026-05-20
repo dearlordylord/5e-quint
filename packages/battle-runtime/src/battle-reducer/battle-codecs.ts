@@ -555,7 +555,7 @@ const SupportedAttackActionOptionSchema = Schema.Union(
         }),
       ),
     }),
-    attackAbility: AbilitySchema,
+    attackAbility: Schema.Union(AbilitySchema, Schema.Literal("spellcasting")),
     attackAbilityModifier: AbilityModifier,
     attackBonus: AttackBonus,
     damageAbilityModifier: AbilityModifier,
@@ -1628,6 +1628,15 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       modeChoices: Schema.NonEmptyArray(
         Schema.Literal(...SELF_TRANSFORMATION_MODE_KINDS),
       ),
+      naturalWeaponFacts: Schema.Struct({
+        damage: Schema.Struct({
+          dice: Schema.Literal(1),
+          dieSize: DamageDieSizeSchema,
+          damageTypeChoices: Schema.NonEmptyArray(DamageTypeSchema),
+        }),
+        spellcastingAbilityModifier: AbilityModifier,
+        attackBonus: AttackBonus,
+      }),
       expiresAt: BattleRuntimeObjectSchema,
     }),
     Schema.Struct({

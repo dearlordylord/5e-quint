@@ -565,20 +565,43 @@ function selfTransformationModeReplacementActs(
   }
   return SELF_TRANSFORMATION_MODE_KINDS.filter(
     (mode): mode is SelfTransformationModeKind => mode !== activeEffect.mode,
-  ).map((mode) => ({
-    subject: {
-      tag: "runtimeCommand" as const,
-      actorId,
-      command: "replaceSelfTransformationMode" as const,
-      sourceCombatantId: activeEffect.sourceCombatantId,
-      sourceSpellId: spellId(activeEffect.sourceSpellId),
-      mode,
-    },
-    label: `Self Transformation: ${selfTransformationModeLabel(mode)}`,
-    summary:
-      "Replace the active self-transformation option with a Magic action.",
-    initialHoles: [],
-  }));
+  ).flatMap((mode): readonly AvailableBattleAct[] => {
+    const baseAct = {
+      summary:
+        "Replace the active self-transformation option with a Magic action.",
+      initialHoles: [],
+    };
+    return mode === "naturalWeapons"
+      ? activeEffect.naturalWeaponFacts.damage.damageTypeChoices.map(
+          (naturalWeaponDamageType) => ({
+            ...baseAct,
+            subject: {
+              tag: "runtimeCommand" as const,
+              actorId,
+              command: "replaceSelfTransformationMode" as const,
+              sourceCombatantId: activeEffect.sourceCombatantId,
+              sourceSpellId: spellId(activeEffect.sourceSpellId),
+              mode,
+              naturalWeaponDamageType,
+            },
+            label: `Self Transformation: ${selfTransformationModeLabel(mode)} (${naturalWeaponDamageType})`,
+          }),
+        )
+      : [
+          {
+            ...baseAct,
+            subject: {
+              tag: "runtimeCommand" as const,
+              actorId,
+              command: "replaceSelfTransformationMode" as const,
+              sourceCombatantId: activeEffect.sourceCombatantId,
+              sourceSpellId: spellId(activeEffect.sourceSpellId),
+              mode,
+            },
+            label: `Self Transformation: ${selfTransformationModeLabel(mode)}`,
+          },
+        ];
+  });
 }
 
 function pactOfTheChainFamiliarAttackActs(

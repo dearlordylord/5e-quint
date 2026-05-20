@@ -1,14 +1,18 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram spell.invocation-self-transformation-mode
 
 import { Match, Schema } from "effect";
 import { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
 import { SpellSlotLevel, spellSlotLevel } from "@dnd/shared/types";
+import { DamageTypeSchema } from "@dnd/surface/surface/schema";
 import { CombatantId, SpellId, spellId as makeSpellId } from "./identity.ts";
 import {
   BATTLE_REACTION_TRIGGERS,
   BATTLE_READIED_SPELL_TRIGGERS,
 } from "./battle-reaction-triggers.ts";
-import { SELF_TRANSFORMATION_MODE_KINDS } from "./battle-reducer/domain-constants.ts";
+import {
+  SELF_TRANSFORMATION_NATURAL_WEAPONS_MODE_KIND,
+  SELF_TRANSFORMATION_NON_NATURAL_WEAPON_MODE_KINDS,
+} from "./battle-reducer/domain-constants.ts";
 
 export const BATTLE_SUBJECT_ACTIONS = [
   "attack",
@@ -562,7 +566,16 @@ export const BattleSubjectSchema = Schema.Union(
     command: Schema.Literal("replaceSelfTransformationMode"),
     sourceCombatantId: CombatantId,
     sourceSpellId: SpellId,
-    mode: Schema.Literal(...SELF_TRANSFORMATION_MODE_KINDS),
+    mode: Schema.Literal(...SELF_TRANSFORMATION_NON_NATURAL_WEAPON_MODE_KINDS),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("replaceSelfTransformationMode"),
+    sourceCombatantId: CombatantId,
+    sourceSpellId: SpellId,
+    mode: Schema.Literal(SELF_TRANSFORMATION_NATURAL_WEAPONS_MODE_KIND),
+    naturalWeaponDamageType: DamageTypeSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
@@ -848,6 +861,9 @@ function battleSubjectKey(subject: BattleSubject): string {
         "sourceCombatantId" in command ? command.sourceCombatantId : null,
         "sourceSpellId" in command ? command.sourceSpellId : null,
         "mode" in command ? command.mode : null,
+        "naturalWeaponDamageType" in command
+          ? command.naturalWeaponDamageType
+          : null,
         "areaId" in command ? command.areaId : null,
         "trigger" in command ? command.trigger : null,
         "relevantEffect" in command ? command.relevantEffect : null,

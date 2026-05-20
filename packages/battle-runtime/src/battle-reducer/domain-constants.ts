@@ -36,9 +36,18 @@ export const COMMAND_OPTIONS = [
 export const SELF_TRANSFORMATION_MODE_KINDS = [
   "aquaticAdaptation",
   "changeAppearance",
+  "naturalWeapons",
 ] as const;
 export type SelfTransformationModeKind =
   (typeof SELF_TRANSFORMATION_MODE_KINDS)[number];
+export const SELF_TRANSFORMATION_NON_NATURAL_WEAPON_MODE_KINDS = [
+  "aquaticAdaptation",
+  "changeAppearance",
+] as const satisfies ReadonlyArray<SelfTransformationModeKind>;
+export type SelfTransformationNonNaturalWeaponModeKind =
+  (typeof SELF_TRANSFORMATION_NON_NATURAL_WEAPON_MODE_KINDS)[number];
+export const SELF_TRANSFORMATION_NATURAL_WEAPONS_MODE_KIND =
+  "naturalWeapons" satisfies SelfTransformationModeKind;
 // Required SRD cross-record reference: Shield explicitly also triggers when
 // targeted by the Magic Missile spell.
 export const SHIELD_MAGIC_MISSILE_SPELL_ID =
@@ -98,9 +107,7 @@ export const THAUMATURGY_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_ID = holeId(
   "battle:spell:booming-voice:influence-ability-check",
 );
 export const THAUMATURGY_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_INSTANCE =
-  holeInstanceKey(
-    "battle:spell:booming-voice:influence-ability-check",
-  );
+  holeInstanceKey("battle:spell:booming-voice:influence-ability-check");
 export const WARDING_BOND_ARMOR_CLASS_BONUS = 1;
 export const WARDING_BOND_SAVING_THROW_BONUS = 1;
 export const WARDING_BOND_CAST_RANGE_FEET = movementFeet(5);

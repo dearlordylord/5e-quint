@@ -81,47 +81,6 @@
       "unitId": "alarm"
     },
     {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "follow-up-split"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME: After the Surface option shape and shared mode-replacement runtime are present, promote Natural Weapons as a spell-owned Unarmed Strike override that uses the chosen damage type, deals 1d6 damage instead of the normal Unarmed Strike damage, uses the caster's spellcasting ability for attack and damage rolls, and cleans up on Concentration end. Owner: battle-runtime self-transformation spell invocation/effect lifecycle plus character-battle-runtime Unarmed Strike projection. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Natural Weapons Unarmed Strike attack and damage projection, damage-type choice, spellcasting-ability replacement, mode replacement, and cleanup.",
-      "sourceRecordPath": "packages/surface/content/alter_self.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Alter Self",
-          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_alter_self",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 270,
-            "lineStart": 270,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Alter Self",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_alter_self",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 198,
-            "lineStart": 198,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "blocked-follow-up-split",
-      "strictTargetClosed": true,
-      "unitId": "alter_self"
-    },
-    {
       "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
@@ -2625,12 +2584,13 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 105,
+      "count": 106,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
         "acid_splash",
         "aid",
+        "alter_self",
         "animal_friendship",
         "bane",
         "barbarian_danger_sense",
@@ -2737,12 +2697,11 @@
       ]
     },
     {
-      "count": 22,
+      "count": 21,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
         "acid_arrow",
-        "alter_self",
         "continual_flame",
         "dragons_breath",
         "druid_wild_shape",
@@ -2838,35 +2797,35 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 484,
-      "percent": "87.1%",
+      "numerator": 486,
+      "percent": "87.4%",
       "rowsByStatus": {
-        "accepted": 348,
+        "accepted": 350,
         "accepted-no-battle-effect": 136,
         "battle-runtime-required": 60,
         "owner-evidence-required": 3,
-        "partial-battle-runtime": 9
+        "partial-battle-runtime": 7
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 75,
+      "denominator": 76,
       "numerator": 12,
-      "percent": "16%"
+      "percent": "15.8%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 75,
+      "denominator": 76,
       "numerator": 17,
-      "percent": "22.7%"
+      "percent": "22.4%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 105,
+      "denominator": 106,
       "numerator": 31,
-      "percent": "29.5%"
+      "percent": "29.2%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 161,
-      "numerator": 105,
-      "percent": "65.2%"
+      "numerator": 106,
+      "percent": "65.8%"
     },
     "strictTargetClosure": {
       "denominator": 161,
@@ -5697,9 +5656,9 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 105,
+        "denominator": 106,
         "numerator": 31,
-        "percent": "29.5%"
+        "percent": "29.2%"
       }
     },
     "units": [
@@ -5752,6 +5711,18 @@
           }
         ],
         "unitId": "aid"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-self-transformation-mode",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "alter_self"
       },
       {
         "joinStatus": "unmapped",
@@ -7637,20 +7608,20 @@
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
       "missing": 5,
-      "profile-subset-supported": 14,
-      "supported-profile": 105,
+      "profile-subset-supported": 13,
+      "supported-profile": 106,
       "unsupported-profile": 37
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 22,
+      "blocked-follow-up-split": 21,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 20,
       "open-runtime-behavior": 5,
-      "supported-profile": 105
+      "supported-profile": 106
     },
-    "nonSupportedFrontier": 56,
+    "nonSupportedFrontier": 55,
     "strictDenominator": 161
   }
 }

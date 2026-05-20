@@ -290,6 +290,8 @@ export function supportedSpellActs(
         actor.combatantId,
         spell,
         spellcasting.spellSlots,
+        spellcasting.spellcastingAbilityModifier,
+        spellcasting.proficiencyBonus,
       ),
     ),
     ...preparedSpells.flatMap((spell) =>

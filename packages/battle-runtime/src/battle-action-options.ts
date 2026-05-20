@@ -67,7 +67,7 @@ export type UnarmedStrikeDamageEffect = {
 export type CharacterUnarmedStrikeActionOption = {
   readonly kind: "unarmedStrike";
   readonly effect: UnarmedStrikeDamageEffect;
-  readonly attackAbility: Ability;
+  readonly attackAbility: Ability | "spellcasting";
   readonly attackAbilityModifier: AbilityModifier;
   readonly attackBonus: AttackBonus;
   readonly damageAbilityModifier: AbilityModifier;

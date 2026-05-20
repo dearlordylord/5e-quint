@@ -182,13 +182,13 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 484,
-      "percent": "87.1%",
+      "numerator": 486,
+      "percent": "87.4%",
       "rowsByStatus": {
-        "accepted": 348,
+        "accepted": 350,
         "accepted-no-battle-effect": 136,
         "battle-runtime-required": 60,
-        "partial-battle-runtime": 9,
+        "partial-battle-runtime": 7,
         "owner-evidence-required": 3
       }
     },
@@ -20160,7 +20160,7 @@
         "state": "installed",
         "unitId": "alter_self"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -20170,12 +20170,12 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME at packages/battle-runtime/src/unit-profile-admission-alter-self.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME at packages/battle-runtime/src/unit-profile-admission-alter-self.test.ts",
           "status": "owner evidence present"
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_blindness_deafness",
@@ -25523,7 +25523,7 @@
         "state": "installed",
         "unitId": "alter_self"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -25533,12 +25533,12 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME at packages/battle-runtime/src/unit-profile-admission-alter-self.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME at packages/battle-runtime/src/unit-profile-admission-alter-self.test.ts",
           "status": "owner evidence present"
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_arcane_lock",

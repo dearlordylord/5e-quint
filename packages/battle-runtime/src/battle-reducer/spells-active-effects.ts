@@ -1,4 +1,5 @@
 // Spell active-effect application extracted from spells-holes-fills.ts.
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode
 
 import { Match } from "effect";
 import {
@@ -52,6 +53,7 @@ import {
   type BattleSpellAreaChoice,
   type BattleState,
   type BattleSpecialSpeedKind,
+  type SelfTransformationModeEffectPayload,
   type SelfTransformationModeKind,
   type SpellActiveEffectPostDamageRider,
   type SpellFailedSaveConditionChoiceEffect,
@@ -990,6 +992,7 @@ export type SelfTransformationModeActiveEffect = Extract<
 const SELF_TRANSFORMATION_MODE_LABELS = {
   aquaticAdaptation: "Aquatic Adaptation",
   changeAppearance: "Change Appearance",
+  naturalWeapons: "Natural Weapons",
 } as const satisfies Record<SelfTransformationModeKind, string>;
 
 export function selfTransformationModeLabel(
@@ -1022,6 +1025,18 @@ export function battleCreatureCanBreatheUnderwater(
   );
 }
 
+export function activeSelfTransformationNaturalWeaponsEffect(
+  combatant: BattleCreatureState | undefined,
+):
+  | Extract<
+      SelfTransformationModeActiveEffect,
+      { readonly mode: "naturalWeapons" }
+    >
+  | undefined {
+  const effect = activeSelfTransformationModeEffect(combatant);
+  return effect?.mode === "naturalWeapons" ? effect : undefined;
+}
+
 export function selfTransformationModeSpecialSpeedKind(
   effect: BattleActiveEffect,
 ): BattleSpecialSpeedKind | null {
@@ -1036,7 +1051,7 @@ export function applySelfTransformationModeEffect(input: {
   readonly actorId: CombatantId;
   readonly sourceCombatantId: CombatantId;
   readonly sourceSpellId: SpellRecord["id"];
-  readonly mode: SelfTransformationModeKind;
+  readonly modeEffect: SelfTransformationModeEffectPayload;
   readonly expiresAt: SelfTransformationModeActiveEffect["expiresAt"];
 }): BattleState {
   const actor = input.state.combatants.get(input.actorId);
@@ -1056,7 +1071,7 @@ export function applySelfTransformationModeEffect(input: {
       kind: "selfTransformation" as const,
       sourceSpellId: input.sourceSpellId,
       sourceCombatantId: input.sourceCombatantId,
-      mode: input.mode,
+      ...input.modeEffect,
       expiresAt: input.expiresAt,
     },
   ];

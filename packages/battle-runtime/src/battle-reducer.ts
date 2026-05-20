@@ -137,6 +137,7 @@ import {
   PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS,
   type ScorchingRayRayCount,
   type SelfTransformationModeKind,
+  type SelfTransformationNonNaturalWeaponModeKind,
   SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS,
   THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
 } from "./battle-reducer/domain-constants.ts";
@@ -571,6 +572,26 @@ export type MarkedDamageRiderTransferState =
       readonly retargetTiming: "laterTurn";
       readonly droppedOnTurn: BattleTurnAnchor;
     };
+export type SelfTransformationNaturalWeaponFacts = {
+  readonly damage: {
+    readonly dice: 1;
+    readonly dieSize: DamageDieSize;
+    readonly damageTypeChoices: readonly [DamageType, ...DamageType[]];
+  };
+  readonly spellcastingAbilityModifier: AbilityModifier;
+  readonly attackBonus: AttackBonus;
+};
+export type SelfTransformationModeEffectPayload = {
+  readonly naturalWeaponFacts: SelfTransformationNaturalWeaponFacts;
+} & (
+  | {
+      readonly mode: SelfTransformationNonNaturalWeaponModeKind;
+    }
+  | {
+      readonly mode: "naturalWeapons";
+      readonly naturalWeaponDamageType: DamageType;
+    }
+);
 export type BattleActiveEffect =
   | (BattleUnitFeatureEffectBase & {
       readonly kind: "bardicInspirationDie";
@@ -592,12 +613,11 @@ export type BattleActiveEffect =
     })
   | (BattleSpellEffectBase & {
       readonly kind: "selfTransformation";
-      readonly mode: SelfTransformationModeKind;
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,
         { readonly kind: "concentration" }
       > & { readonly durationTicks: ElapsedTimeTicks };
-    })
+    } & SelfTransformationModeEffectPayload)
   | (BattleSpellEffectBase & {
       readonly kind: "spellArmorClassBonus";
       readonly bonus: number;
@@ -2392,6 +2412,7 @@ export type SelfTransformationModeSpellInvocation = {
     SelfTransformationModeKind,
     ...SelfTransformationModeKind[],
   ];
+  readonly naturalWeaponFacts: SelfTransformationNaturalWeaponFacts;
   readonly expiresAt: Extract<
     BattleActiveEffectExpiration,
     { readonly kind: "concentration" }
@@ -3769,6 +3790,7 @@ export type BattleSpellDamageTypeChoiceHole = {
       readonly procedure:
         | "chainedSpellAttackDamage"
         | "damageReduction"
+        | "selfTransformationMode"
         | "spellAttackDamage"
         | "spellHostedWeaponAttack";
     }

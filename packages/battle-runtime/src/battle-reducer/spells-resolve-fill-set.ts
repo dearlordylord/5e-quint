@@ -941,6 +941,7 @@ export function spellFillSet(
           invocation.procedure === "spellAttackDamage" &&
           invocation.damage.kind === "sorcerousBurstDamageTypeChoice"
         ) &&
+        invocation.procedure !== "selfTransformationMode" &&
         invocation.procedure !== "spellHostedWeaponAttack"
       ) {
         return {

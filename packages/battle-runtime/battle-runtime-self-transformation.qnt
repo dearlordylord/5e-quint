@@ -10,6 +10,63 @@ module battleRuntimeSelfTransformation {
 
   pure def alterSelfDurationTicks: int = 60 * 10
 
+  pure def alterSelfNaturalWeaponsMode(
+    damageType: DamageType,
+    spellcastingAbilityModifier: int,
+    proficiencyBonus: int,
+  ): SelfTransformationMode =
+    NaturalWeaponsMode({
+      damageType: damageType,
+      spellcastingAbilityModifier: spellcastingAbilityModifier,
+      attackBonus: spellcastingAbilityModifier + proficiencyBonus,
+    })
+
+  pure def selfTransformationModeIsSameOption(
+    left: SelfTransformationMode,
+    right: SelfTransformationMode,
+  ): bool =
+    match left {
+      | AquaticAdaptationMode => right == AquaticAdaptationMode
+      | ChangeAppearanceMode => right == ChangeAppearanceMode
+      | NaturalWeaponsMode(_) => match right {
+        | NaturalWeaponsMode(_) => true
+        | _ => false
+      }
+    }
+
+  pure def selfTransformationModeIsNaturalWeapons(mode: SelfTransformationMode): bool =
+    match mode {
+      | NaturalWeaponsMode(_) => true
+      | _ => false
+    }
+
+  pure def naturalWeaponsUnarmedStrikeDamageDieSize(mode: SelfTransformationMode): int =
+    match mode {
+      | NaturalWeaponsMode(_) => 6
+      | _ => 0
+    }
+
+  pure def naturalWeaponsUnarmedStrikeDamageType(mode: SelfTransformationMode): DamageType =
+    match mode {
+      | NaturalWeaponsMode(data) => data.damageType
+      | _ => Bludgeoning
+    }
+
+  pure def naturalWeaponsUnarmedStrikeAttackBonus(mode: SelfTransformationMode): int =
+    match mode {
+      | NaturalWeaponsMode(data) => data.attackBonus
+      | _ => 0
+    }
+
+  pure def naturalWeaponsUnarmedStrikeDamage(
+    mode: SelfTransformationMode,
+    damageRoll: int,
+  ): int =
+    match mode {
+      | NaturalWeaponsMode(data) => damageRoll + data.spellcastingAbilityModifier
+      | _ => 0
+    }
+
   pure def selfTransformationModeActiveEffect(
     source: Actor,
     mode: SelfTransformationMode,
@@ -46,6 +103,17 @@ module battleRuntimeSelfTransformation {
   ): bool =
     effects.exists(effect => match effect {
       | SelfTransformationModeEffect(data) => data.source == source and data.mode == mode
+      | _ => false
+    })
+
+  pure def activeEffectsContainSelfTransformationModeOption(
+    effects: Set[ActiveEffect],
+    source: Actor,
+    mode: SelfTransformationMode,
+  ): bool =
+    effects.exists(effect => match effect {
+      | SelfTransformationModeEffect(data) =>
+        data.source == source and selfTransformationModeIsSameOption(data.mode, mode)
       | _ => false
     })
 
@@ -115,7 +183,7 @@ module battleRuntimeSelfTransformation {
       currentActor(state) == Fighter and
       state.fighter.concentrating and
       activeEffectsContainSelfTransformationModeFrom(state.fighter.activeEffects, Fighter) and
-      not(activeEffectsContainSelfTransformationMode(state.fighter.activeEffects, Fighter, mode)) and
+      not(activeEffectsContainSelfTransformationModeOption(state.fighter.activeEffects, Fighter, mode)) and
       canSpendFighterSpellActionCost(state, SpellMagicAction) and
       not(state.fighter.unconscious) and
       not(state.fighter.incapacitated)

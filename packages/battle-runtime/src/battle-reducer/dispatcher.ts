@@ -1128,6 +1128,28 @@ function resolveReplaceSelfTransformationModeCommand(
       "Self-transformation mode is already active.",
     );
   }
+  const modeEffect =
+    input.subject.mode === "naturalWeapons"
+      ? activeEffect.naturalWeaponFacts.damage.damageTypeChoices.includes(
+          input.subject.naturalWeaponDamageType,
+        )
+        ? {
+            mode: input.subject.mode,
+            naturalWeaponFacts: activeEffect.naturalWeaponFacts,
+            naturalWeaponDamageType: input.subject.naturalWeaponDamageType,
+          }
+        : null
+      : {
+          mode: input.subject.mode,
+          naturalWeaponFacts: activeEffect.naturalWeaponFacts,
+        };
+  if (modeEffect === null) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Natural Weapons damage type is no longer available.",
+    );
+  }
   const spent = spendAction(input.state.currentTurnResources, "magic");
   if (Either.isLeft(spent)) {
     return invalidResult(
@@ -1141,7 +1163,7 @@ function resolveReplaceSelfTransformationModeCommand(
     actorId: input.subject.actorId,
     sourceCombatantId: activeEffect.sourceCombatantId,
     sourceSpellId: activeEffect.sourceSpellId,
-    mode: input.subject.mode,
+    modeEffect,
     expiresAt: activeEffect.expiresAt,
   });
   return {

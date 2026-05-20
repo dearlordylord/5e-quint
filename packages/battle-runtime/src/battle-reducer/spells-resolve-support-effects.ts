@@ -1,4 +1,5 @@
 // Support-effect spell resolution extracted from spells-resolve.ts.
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // Covers healing, scalar buffs, roll modifiers, protection, damage reduction,
 // and condition-immunity/temporary-hit-point procedures.
@@ -10,6 +11,8 @@ import {
   type ActionSpellBattleResolutionInput,
   type BattleFill,
   type BattleResolutionResult,
+  type SelfTransformationModeEffectPayload,
+  type SelfTransformationModeKind,
   type BonusActionSpellBattleResolutionInput,
   type BattleTeleportDestination,
   type BattleTeleportDestinationFact,
@@ -413,7 +416,6 @@ export function resolveSelfTransformationModeSpellAct(input: {
     input.fillSet.areaChoice !== undefined ||
     input.fillSet.teleportDestination !== undefined ||
     input.fillSet.dancingLightsPlacement !== undefined ||
-    input.fillSet.damageTypeChoice !== undefined ||
     input.fillSet.concentrationSavingThrows.length > 0 ||
     input.fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
     input.fillSet.damageDispositions.length > 0 ||
@@ -427,13 +429,26 @@ export function resolveSelfTransformationModeSpellAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Self-transformation mode spells use one mode choice fill.",
+      "Self-transformation mode spells use one mode choice fill and Natural Weapons damage type choice.",
     );
   }
   if (input.fillSet.selfTransformationModeChoice === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
       selfTransformationModeChoiceHole(input.invocation),
     ]);
+  }
+  const modeEffect = selfTransformationModeEffectPayload(
+    input.invocation,
+    input.fillSet.selfTransformationModeChoice,
+    input.fillSet.damageTypeChoice,
+  );
+  if (modeEffect.tag === "needsDamageType") {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      spellDamageTypeChoiceHole(input.invocation),
+    ]);
+  }
+  if (modeEffect.tag === "invalid") {
+    return invalidResult(input.input.state, "invalidFill", modeEffect.message);
   }
 
   const spellCastReactionWindow = maybeOpenReactionWindow(
@@ -464,7 +479,7 @@ export function resolveSelfTransformationModeSpellAct(input: {
     actorId: input.actorId,
     sourceCombatantId: input.actorId,
     sourceSpellId: input.invocation.spell.id,
-    mode: input.fillSet.selfTransformationModeChoice,
+    modeEffect: modeEffect.modeEffect,
     expiresAt: input.invocation.expiresAt,
   });
   const resourced = spendSpellCastResources({
@@ -480,6 +495,61 @@ export function resolveSelfTransformationModeSpellAct(input: {
         state: resourced.state,
         snapshot: snapshotBattle(resourced.state),
       };
+}
+
+function selfTransformationModeEffectPayload(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "selfTransformationMode" }
+  >,
+  mode: SelfTransformationModeKind,
+  damageTypeChoice:
+    | Extract<BattleFill, { readonly kind: "damageTypeChoice" }>
+    | undefined,
+):
+  | {
+      readonly tag: "ok";
+      readonly modeEffect: SelfTransformationModeEffectPayload;
+    }
+  | { readonly tag: "needsDamageType" }
+  | { readonly tag: "invalid"; readonly message: string } {
+  if (mode !== "naturalWeapons") {
+    return damageTypeChoice === undefined
+      ? {
+          tag: "ok",
+          modeEffect: {
+            mode,
+            naturalWeaponFacts: invocation.naturalWeaponFacts,
+          },
+        }
+      : {
+          tag: "invalid",
+          message:
+            "Self-transformation damage type choice is only valid for Natural Weapons.",
+        };
+  }
+  if (damageTypeChoice === undefined) {
+    return { tag: "needsDamageType" };
+  }
+  const selectedDamageType = damageTypeChoice.value;
+  if (
+    !invocation.naturalWeaponFacts.damage.damageTypeChoices.includes(
+      selectedDamageType,
+    )
+  ) {
+    return {
+      tag: "invalid",
+      message: "Natural Weapons damage type choice is not available.",
+    };
+  }
+  return {
+    tag: "ok",
+    modeEffect: {
+      mode,
+      naturalWeaponFacts: invocation.naturalWeaponFacts,
+      naturalWeaponDamageType: selectedDamageType,
+    },
+  };
 }
 
 export function resolveRollModifierSpellAct(input: {

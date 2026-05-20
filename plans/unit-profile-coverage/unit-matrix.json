@@ -62,8 +62,8 @@
       "value": 208
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 128,
-      "numerator": 128,
+      "denominator": 129,
+      "numerator": 129,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -92,9 +92,9 @@
       "percent": "26%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 128,
+      "denominator": 129,
       "numerator": 42,
-      "percent": "32.8%"
+      "percent": "32.6%"
     },
     "runtimeMappingCoverage": {
       "denominator": 73,
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 128,
+      "denominator": 129,
       "numerator": 105,
-      "percent": "82%"
+      "percent": "81.4%"
     },
     "supportedProfileCoverage": {
       "denominator": 176,
-      "numerator": 128,
-      "percent": "72.7%"
+      "numerator": 129,
+      "percent": "73.3%"
     }
   },
   "metricSemantics": [
@@ -2783,14 +2783,20 @@
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
-        "packages/battle-runtime/src/battle-reducer/dispatcher.ts"
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+        "packages/battle-runtime/src/battle-subjects.ts"
       ],
-      "sourceBoundary": "The runtime consumes an authored self Spell Effect option choice shape with Aquatic Adaptation and Change Appearance modes. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration up to 1 hour, one active selected mode, Magic Action mode replacement without resetting the remaining duration or spending another Spell Slot, Aquatic Adaptation water breathing, Swim Speed derived from the creature's current Speed, and cleanup on Concentration or duration end. Change Appearance is retained as a spell-owned mode with no statistic mutation. Natural Weapons remains a separate Unarmed Strike override follow-up.",
+      "sourceBoundary": "The runtime consumes an authored Alter Self self Spell Effect option choice shape with Aquatic Adaptation, Change Appearance, and Natural Weapons modes. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration up to 1 hour, one active selected mode, Magic Action mode replacement without resetting the remaining duration or spending another Spell Slot, Aquatic Adaptation water breathing, Swim Speed derived from the creature's current Speed, Change Appearance as a spell-owned mode with no statistic mutation, selected Natural Weapons damage type from the authored growth options, Natural Weapons 1d6 Unarmed Strike damage replacement, spellcasting ability modifier use for the Natural Weapons attack and damage rolls, and cleanup on Concentration or duration end.",
       "taskRefs": [
-        "L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME"
+        "L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME"
       ],
-      "title": "Spell invocation applies a self transformation mode with Magic Action replacement and derived Aquatic projections",
+      "title": "Spell invocation applies Alter Self self-transformation modes with Magic Action replacement, Aquatic projections, and Natural Weapons Unarmed Strike override",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -3610,9 +3616,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 128,
+          "denominator": 129,
           "numerator": 42,
-          "percent": "32.8%"
+          "percent": "32.6%"
         }
       },
       "units": [
@@ -3665,6 +3671,18 @@
             }
           ],
           "unitId": "aid"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-self-transformation-mode",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "alter_self"
         },
         {
           "joinStatus": "unmapped",
@@ -7714,19 +7732,19 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Promoted battle-runtime Quint facts for Alter Self's self-transformation mode casting, Aquatic Adaptation water breathing and linked Swim Speed projection, Change Appearance no-stat mode, Magic Action mode replacement, Spell Slot spending, and Concentration/duration cleanup.",
+      "note": "Promoted battle-runtime Quint facts cover Alter Self self-transformation mode casting, Aquatic Adaptation water breathing and linked Swim Speed projection, Change Appearance no-stat mode, Natural Weapons Unarmed Strike replacement with selected damage type, 1d6 damage, spellcasting ability attack and damage rolls, Magic Action mode replacement, Spell Slot spending, and Concentration/duration cleanup.",
       "profileIds": [
         "spell.invocation-self-transformation-mode"
       ],
-      "taskId": "L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME"
+      "taskId": "L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME"
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests cover Alter Self admission, cast-time mode choice, Aquatic Adaptation projections, Change Appearance no-stat closure, Magic Action mode replacement without another Spell Slot, and Concentration cleanup.",
+      "note": "Focused battle-runtime tests cover Alter Self admission, cast-time mode choice, Aquatic Adaptation projections, Change Appearance no-stat closure, Natural Weapons damage-type choice holes and Unarmed Strike override, Magic Action mode replacement without another Spell Slot, and Concentration cleanup.",
       "profileIds": [
         "spell.invocation-self-transformation-mode"
       ],
-      "taskId": "L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME"
+      "taskId": "L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME"
     }
   ],
   "units": [
@@ -12604,21 +12622,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "followUpTaskId": "L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME",
-            "mechanic": "Natural Weapons Unarmed Strike override including damage-type choice, 1d6 damage die, spellcasting-ability attack and damage replacement, mode replacement, and cleanup."
-          }
-        ],
-        "followUpTasks": [
-          {
-            "id": "L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME",
-            "mechanic": "After the Surface option shape and shared mode-replacement runtime are present, promote Natural Weapons as a spell-owned Unarmed Strike override that uses the chosen damage type, deals 1d6 damage instead of the normal Unarmed Strike damage, uses the caster's spellcasting ability for attack and damage rolls, and cleans up on Concentration end.",
-            "owner": "battle-runtime self-transformation spell invocation/effect lifecycle plus character-battle-runtime Unarmed Strike projection",
-            "requiredOutput": "Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Natural Weapons Unarmed Strike attack and damage projection, damage-type choice, spellcasting-ability replacement, mode replacement, and cleanup.",
-            "title": "Alter Self Natural Weapons Runtime"
-          }
-        ],
         "profileIds": [
           "spell.invocation-self-transformation-mode"
         ],
@@ -12627,21 +12630,24 @@
         ],
         "supportedMechanics": [
           "Magic Action level-2-or-higher Spell Slot casting from the authored SRD Alter Self Unit",
-          "cast-time selected self-transformation mode for Aquatic Adaptation or Change Appearance",
+          "cast-time selected self-transformation mode for Aquatic Adaptation, Change Appearance, or Natural Weapons",
           "caster-owned Concentration up to 1 hour with active-mode cleanup on Concentration break or duration expiry",
           "later Magic Action replacement between supported modes without spending another Spell Slot or resetting the remaining duration",
           "Aquatic Adaptation water breathing projection",
           "Aquatic Adaptation Swim Speed derived from the creature's current Speed instead of copied spell state",
-          "Change Appearance retained as an active mode with no battle statistic mutation"
+          "Change Appearance retained as an active mode with no battle statistic mutation",
+          "Natural Weapons uses the selected damage type from the authored claws, fangs, horns, or hooves options",
+          "Natural Weapons replaces Unarmed Strike damage with 1d6 of the selected damage type",
+          "Natural Weapons uses the caster's spellcasting ability modifier for Unarmed Strike attack and damage rolls"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-alter-self.test.ts",
           "tag": "deterministic-admission-projection",
-          "taskId": "L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME"
+          "taskId": "L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME"
         }
       ],
       "executableMechanics": true,
@@ -12655,14 +12661,20 @@
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
             "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
-            "packages/battle-runtime/src/battle-reducer/dispatcher.ts"
+            "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+            "packages/battle-runtime/src/battle-subjects.ts"
           ],
-          "sourceBoundary": "The runtime consumes an authored self Spell Effect option choice shape with Aquatic Adaptation and Change Appearance modes. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration up to 1 hour, one active selected mode, Magic Action mode replacement without resetting the remaining duration or spending another Spell Slot, Aquatic Adaptation water breathing, Swim Speed derived from the creature's current Speed, and cleanup on Concentration or duration end. Change Appearance is retained as a spell-owned mode with no statistic mutation. Natural Weapons remains a separate Unarmed Strike override follow-up.",
+          "sourceBoundary": "The runtime consumes an authored Alter Self self Spell Effect option choice shape with Aquatic Adaptation, Change Appearance, and Natural Weapons modes. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration up to 1 hour, one active selected mode, Magic Action mode replacement without resetting the remaining duration or spending another Spell Slot, Aquatic Adaptation water breathing, Swim Speed derived from the creature's current Speed, Change Appearance as a spell-owned mode with no statistic mutation, selected Natural Weapons damage type from the authored growth options, Natural Weapons 1d6 Unarmed Strike damage replacement, spellcasting ability modifier use for the Natural Weapons attack and damage rolls, and cleanup on Concentration or duration end.",
           "taskRefs": [
-            "L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME"
+            "L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME"
           ],
-          "title": "Spell invocation applies a self transformation mode with Magic Action replacement and derived Aquatic projections",
+          "title": "Spell invocation applies Alter Self self-transformation modes with Magic Action replacement, Aquatic projections, and Natural Weapons Unarmed Strike override",
           "verificationOwners": [
             {
               "kind": "qnt-proof",

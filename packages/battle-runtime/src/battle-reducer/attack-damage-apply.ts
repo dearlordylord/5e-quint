@@ -1,6 +1,6 @@
 // Attack damage hole/disposition helpers extracted from battle-reducer.ts.
 // Cluster U (attack_damage_apply). Mechanical extraction — no behavior change.
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.martial-arts-attack-projection spell.invocation-weapon-attack-override
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.martial-arts-attack-projection spell.invocation-weapon-attack-override spell.invocation-self-transformation-mode
 
 import {
   abilityModifier,
@@ -53,6 +53,7 @@ import {
   attackCanCarryKnockOutChoice,
   weaponAttackDamageExpression,
 } from "./statblock-attacks.ts";
+import { activeSelfTransformationNaturalWeaponsEffect } from "./spells-active-effects.ts";
 import {
   statBlockAttackActionOptions,
   statBlockAttackResourceAvailable,
@@ -339,9 +340,13 @@ export function attackActionOptionsForActor(
     return [];
   }
   const actor = state.combatants.get(actorId);
-  if (actor?.origin.kind === "character") {
+  if (actor !== undefined && actor.origin.kind === "character") {
+    const unarmedStrike = unarmedStrikeWithActiveSelfTransformationOverride(
+      actor,
+      actor.origin.unarmedStrike,
+    );
     return actor.origin.attack == null
-      ? [actor.origin.unarmedStrike]
+      ? [unarmedStrike]
       : [
           ...attackActionVariantOptions(
             weaponAttackWithActiveSpellOverride(
@@ -350,7 +355,7 @@ export function attackActionOptionsForActor(
               mainHandWeaponItemIdForAttack(actor, actor.origin.attack),
             ),
           ),
-          actor.origin.unarmedStrike,
+          unarmedStrike,
         ];
   }
 
@@ -537,13 +542,46 @@ export function martialArtsBonusUnarmedStrikeActionOptionForActor(
 ): CharacterUnarmedStrikeActionOption | undefined {
   const actor = state.combatants.get(actorId);
   if (
-    actor?.origin.kind !== "character" ||
+    actor === undefined ||
+    actor.origin.kind !== "character" ||
     !hasMartialArtsAttackProjectionSupport(actor) ||
     !martialArtsLoadoutEligible(actor.origin)
   ) {
     return undefined;
   }
-  return actor.origin.unarmedStrike;
+  return unarmedStrikeWithActiveSelfTransformationOverride(
+    actor,
+    actor.origin.unarmedStrike,
+  );
+}
+
+function unarmedStrikeWithActiveSelfTransformationOverride(
+  actor: BattleCreatureState,
+  unarmedStrike: CharacterUnarmedStrikeActionOption,
+): CharacterUnarmedStrikeActionOption {
+  const effect = activeSelfTransformationNaturalWeaponsEffect(actor);
+  if (effect === undefined) {
+    return unarmedStrike;
+  }
+  return {
+    ...unarmedStrike,
+    effect: {
+      kind: "damage",
+      damage: {
+        kind: "authoredReplacement",
+        sourceUnitId: effect.sourceSpellId,
+        dice: effect.naturalWeaponFacts.damage.dice,
+        dieSize: effect.naturalWeaponFacts.damage.dieSize,
+        damageType: effect.naturalWeaponDamageType,
+      },
+    },
+    attackAbility: "spellcasting",
+    attackAbilityModifier:
+      effect.naturalWeaponFacts.spellcastingAbilityModifier,
+    attackBonus: effect.naturalWeaponFacts.attackBonus,
+    damageAbilityModifier:
+      effect.naturalWeaponFacts.spellcastingAbilityModifier,
+  };
 }
 
 export function offHandAttackPrerequisiteMet(

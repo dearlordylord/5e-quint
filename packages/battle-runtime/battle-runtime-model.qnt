@@ -42,7 +42,7 @@ module battleRuntimeModel {
     | TargetListSaveTargets({ minTargets: int, baseSlotLevel: int, baseTargets: int, additionalTargetsPerSlotLevel: int })
   type SaveGatedDamageSuccess = NoDamageOnSaveSuccess | HalfDamageOnSaveSuccess
   type MovementSpeedKind = WalkSpeedKind | ClimbSpeedKind | SwimSpeedKind
-  type SelfTransformationMode = AquaticAdaptationMode | ChangeAppearanceMode
+  type SelfTransformationMode = AquaticAdaptationMode | ChangeAppearanceMode | NaturalWeaponsMode({ damageType: DamageType, spellcastingAbilityModifier: int, attackBonus: int })
   type JumpMovementLandingFact = JumpLegalLandingNoCheck | JumpLegalLandingAcrobaticsPassed | JumpLegalLandingAcrobaticsFailed | JumpIllegalLanding
   type DirectHitPointRestorationSpell = HealingWordRestoration | CureWoundsRestoration | MassHealingWordRestoration
   type ScalarBuffSpell = FalseLifeScalarBuff | LongstriderScalarBuff | ShieldOfFaithScalarBuff | SpiderClimbScalarBuff | BarkskinScalarBuff | AidScalarBuff

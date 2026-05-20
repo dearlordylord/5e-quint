@@ -1,4 +1,5 @@
 // Spell hole construction, fill validation, and damage application extracted from spells-holes-fills.ts.
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.passive-saving-throw-roll-mode
 
@@ -215,6 +216,7 @@ export function spellDamageTypeChoiceHole(
       readonly procedure:
         | "chainedSpellAttackDamage"
         | "damageReduction"
+        | "selfTransformationMode"
         | "spellAttackDamage"
         | "spellHostedWeaponAttack";
     }
@@ -225,11 +227,13 @@ export function spellDamageTypeChoiceHole(
       ? `battle:spell:damage-type:${invocation.spell.id}:${invocation.componentWeapon.itemId}`
       : `battle:spell:damage-type:${invocation.spell.id}`;
   const choices =
-    invocation.procedure === "spellAttackDamage"
-      ? invocation.damage.kind === "sorcerousBurstDamageTypeChoice"
-        ? invocation.damage.damageTypeChoices
-        : []
-      : invocation.damageTypeChoices;
+    invocation.procedure === "selfTransformationMode"
+      ? invocation.naturalWeaponFacts.damage.damageTypeChoices
+      : invocation.procedure === "spellAttackDamage"
+        ? invocation.damage.kind === "sorcerousBurstDamageTypeChoice"
+          ? invocation.damage.damageTypeChoices
+          : []
+        : invocation.damageTypeChoices;
   return {
     kind: "damageTypeChoice",
     holeId: holeId(protocolId),
