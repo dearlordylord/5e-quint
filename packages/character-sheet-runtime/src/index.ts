@@ -156,6 +156,11 @@ const ARMOR_TRAINING_CATEGORY_VALUES = [
   "heavy",
   "shield",
 ] as const;
+// AUTHORED-IDENTITY DEBT — do not extend. This admits features into the generic
+// use-count-resource mechanic by enumerating concrete authored Unit ids. The
+// durable pattern admits by parsed support-profile shape / typed facts, not an
+// authored-id allowlist. Do not add new ids here; migrate to shape-based
+// admission and delete this set.
 const CHARACTER_SHEET_USE_COUNT_RESOURCE_UNIT_IDS = [
   DRUID_WILD_SHAPE_UNIT_ID,
   MONK_MONKS_FOCUS_UNIT_ID,
@@ -167,6 +172,10 @@ const DEFAULT_SRD_STAT_BLOCK_CATALOG_RESULT = buildStatBlockCatalog({
   collections: [srdStatBlockCollection],
 });
 const byKind = Match.discriminator("kind");
+// AUTHORED-IDENTITY DEBT — do not repeat. A concrete authored Unit id hard-coded
+// in runtime, used to look up and tag the feature's record and choose its rule.
+// The durable pattern carries this as a typed support-profile fact, not a literal
+// id. Slated for removal.
 export const BARD_JACK_OF_ALL_TRADES_UNIT_ID =
   "bard_jack_of_all_trades" as const satisfies UnitRecord["id"];
 const ARCANE_RECOVERY_REST_FEATURE_TAG = "arcaneRecovery" as const;
@@ -2879,6 +2888,9 @@ function isRestResetCadence(
   );
 }
 
+// AUTHORED-IDENTITY DEBT — do not repeat. This matches against the hard-coded
+// use-count Unit-id set instead of a typed support-profile fact. Replace with
+// shape-based admission once the use-count mechanic reads a profile.
 export function isCharacterSheetUseCountResourceUnitId(
   unitId: UnitRecord["id"],
 ): unitId is CharacterSheetUseCountResourceUnitId {
