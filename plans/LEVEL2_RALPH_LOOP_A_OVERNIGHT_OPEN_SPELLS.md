@@ -85,7 +85,7 @@
     {
       "number": 14,
       "id": "L12G-RECURSIVE-TAIL-LOOP-A",
-      "status": "ready-for-research",
+      "status": "blocked",
       "title": "LOOP-A Recursive Next-Batch Planning Tail"
     }
   ]
@@ -120,7 +120,7 @@ Reviewers should reject:
 - table-detached detection/social/exploration facts added as runtime state;
 - object, geometry, light, or pathfinding derivation hidden inside spell support;
 - duplicated Spell Definition, Spell Access, Spell Invocation, Spell Effect, Character Sheet, resource, or class progression state;
-- companion behavior, companion control, or caller/table decision automation.
+- automation of player choices, table adjudication, or companion/familiar turn/action control; callers may only provide typed/branded player choices or table-witness facts at explicit boundaries.
 
 ## Task Output Contract
 
@@ -130,6 +130,12 @@ Every implementation task must leave its Unit in one concrete end state:
 - `profile-subset-supported` only when the executable subset is precise and every residual has an accepted closure kind;
 - `unsupported-profile` with an accepted runtime-detached closure when the rule is outside product runtime;
 - a smaller follow-up split only when RAW proves the listed task cannot fit in one coding session, with the original metric row left in a precise blocked state rather than generic todo wording.
+
+Each task output must include:
+
+- a RAW traceability note listing every modeled, supported-subset, and closed residual clause with exact local SRD file/heading/line references or an `ASSUMPTIONS.md` entry; if no local RAW source exists, the task must block or close instead of inferring mechanics from backlog wording;
+- a boundary discipline note: when the task touches a boundary that uses bare primitives for domain ids, spell/unit/action/condition/damage identifiers, resource names, or authored content names, Ralph must either fix that touched boundary with existing branded/domain types or block with a precise follow-up. Do not ignore touched primitive/domain-id/authored-identity dispatch as pre-existing;
+- when authoring or changing SRD catalog records, SRD provenance must be modeled at the SRD collection boundary so mixed-provenance or mixed-license records cannot be admitted; 5e-tools or other structured inputs, if consulted, remain structured input only and are not stored as provenance.
 
 Every implementation task runs:
 
@@ -154,7 +160,7 @@ Do not run battle-runtime MBT unless the task changes promoted battle-runtime be
 
 ## Recursive Tail Policy
 
-The final task is intentionally runnable and placed last. Use it only when no earlier task in this plan is runnable. It must plan new concrete work from current metrics and history; it must not substitute for same-plan dependency unblocking, and it must not reopen external Claude, Wild Shape, or companion work.
+The final task is intentionally blocked on every real task in this plan and placed last. It auto-unblocks only after the planned implementation queue is done. It must plan new concrete work from current metrics and history; it must not substitute for same-plan dependency unblocking, and it must not reopen external Claude, Wild Shape, or companion work.
 
 ## DAG / Queue Order
 
@@ -173,7 +179,7 @@ The final task is intentionally runnable and placed last. Use it only when no ea
 | 11 | L12G-MISSING-DETECT-THOUGHTS - Detect Thoughts Definition And Closure | ready-for-research | completed baseline | A lane; Unit `detect_thoughts`. |
 | 12 | L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME - Gust of Wind Line Runtime Support | ready-for-research | completed baseline | A lane; Unit `gust_of_wind`. |
 | 13 | L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE - Gust of Wind Gas And Flame Presentation Closure | ready-for-research | completed baseline | A lane; Unit `gust_of_wind`. |
-| 14 | L12G-RECURSIVE-TAIL-LOOP-A - LOOP-A Recursive Next-Batch Planning Tail | ready-for-research | completed baseline | Last-resort next-batch planning safety net; do not use before earlier runnable tasks are exhausted. |
+| 14 | L12G-RECURSIVE-TAIL-LOOP-A - LOOP-A Recursive Next-Batch Planning Tail | blocked | L12G-SPELL-LESSER-RESTORATION, L12G-SPELL-MAGIC-WEAPON, L12G-SPELL-MIND-SPIKE, L12G-SPELL-WEB, L12G-MISSING-ANIMAL-MESSENGER, L12G-MISSING-ARCANISTS-MAGIC-AURA, L12G-MISSING-AUGURY, L12G-MISSING-CALM-EMOTIONS, L12G-MISSING-DARKNESS, L12G-MISSING-DARKVISION, L12G-MISSING-DETECT-THOUGHTS, L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME, L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE | Last-resort next-batch planning safety net; auto-unblocks only after every real task in this plan is `done`. |
 
 ## Task Details
 
@@ -187,7 +193,7 @@ Dependencies: none.
 
 Pre-researched scope:
 
-- Promote or precisely close Lesser Restoration as a level-2 spell that removes one supported condition/disease/poison subset without adding a duplicate condition owner.
+- Promote or precisely close Lesser Restoration as a level-2 spell that ends exactly one RAW-listed condition, `Blinded`, `Deafened`, `Paralyzed`, or `Poisoned`; do not model disease or poison removal unless local SRD or `ASSUMPTIONS.md` supplies a separate source.
 
 Inputs:
 
@@ -310,7 +316,7 @@ Dependencies: none.
 
 Pre-researched scope:
 
-- Promote or split Web around caller-supplied area membership, Restrained lifecycle, escape/burning cleanup, and table-owned spatial facts.
+- Promote or split Web around table-witnessed area membership, Restrained lifecycle, escape/burning cleanup, and table-owned spatial facts.
 
 Inputs:
 
@@ -351,7 +357,7 @@ Dependencies: none.
 
 Pre-researched scope:
 
-- Author the missing SRD-provenance Unit record or close it as runtime-detached messaging/table adjudication with checker-visible evidence.
+- Author only SRD-provenance Surface/catalog facts and close Beast route choice, recipient matching, travel progress, delivery success, message loss, and return behavior as runtime-detached table-owned Beast routing/message-delivery adjudication unless an existing non-companion travel/message owner already consumes those facts.
 
 Inputs:
 
@@ -392,7 +398,7 @@ Dependencies: none.
 
 Pre-researched scope:
 
-- Author the missing SRD-provenance Unit record and close aura deception/detection consequences as runtime-detached unless an existing owner consumes them.
+- Author the missing SRD-provenance Spell Definition/Unit record and close aura deception/detection consequences as runtime-detached unless an existing owner consumes them.
 
 Inputs:
 
@@ -433,7 +439,7 @@ Dependencies: none.
 
 Pre-researched scope:
 
-- Author the missing SRD-provenance Unit record and close omen/advice adjudication as runtime-detached table knowledge.
+- Author the missing SRD-provenance Spell Definition/Unit record and close omen/advice adjudication as runtime-detached table knowledge.
 
 Inputs:
 
@@ -515,7 +521,7 @@ Dependencies: none.
 
 Pre-researched scope:
 
-- Author the missing spell and either promote table-supplied light/obscurement witness support or close pure presentation/spatial clauses as runtime-detached.
+- Author Darkness facts and support only witnesses consumed by an existing light/visibility/spell-area owner; do not add Darkness-local light, obscurement, object-cover, or spatial derivation state. Otherwise close those clauses as runtime-detached.
 
 Inputs:
 
@@ -556,7 +562,7 @@ Dependencies: none.
 
 Pre-researched scope:
 
-- Author and connect Darkvision as a character/sense fact only if it is consumed by a supported visibility owner; otherwise close as presentation witness pressure.
+- Author the SRD-provenance Spell Definition and project a Character Sheet sense fact only if a supported visibility owner consumes it; otherwise close visibility/presentation clauses as runtime-detached.
 
 Inputs:
 
@@ -597,7 +603,7 @@ Dependencies: none.
 
 Pre-researched scope:
 
-- Author the missing spell and close thought reading, Search, hidden presence, and Probe knowledge adjudication as runtime-detached unless a precise check owner already exists.
+- Author the missing SRD-provenance Spell Definition/Unit record and close thought reading, Search, hidden presence, and Probe knowledge adjudication as runtime-detached unless a precise check owner already exists. If a touched check-owner boundary exists but is too weak, do not ignore it as pre-existing debt; either strengthen the owner in this task when local, or leave a precise blocked split naming the owner invariant needed before support can be claimed.
 
 Inputs:
 
@@ -638,7 +644,7 @@ Dependencies: none.
 
 Pre-researched scope:
 
-- Promote Gust of Wind battle-visible Line profile: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caller-supplied self-origin Line identity/direction, initial and end-turn Strength saves for caller-supplied creatures in the Line, failed-save 15-foot push facts away from the caster, active 2-for-1 Movement cost when moving closer to the caster using table-supplied movement facts, Bonus Action direction replacement, and cleanup on Concentration/duration end.
+- Promote Gust of Wind battle-visible Line profile: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caster-selected direction, branded Spell Effect/area occurrence identity, table-witnessed creatures occupying the Line, initial and end-turn Strength saves, failed-save 15-foot push facts away from the caster, active 2-for-1 Movement cost when moving closer to the caster using table-witnessed movement facts, Bonus Action direction replacement, and cleanup on Concentration/duration end.
 
 Inputs:
 
@@ -679,7 +685,7 @@ Dependencies: none.
 
 Pre-researched scope:
 
-- Decide whether strong-wind gas/vapor dispersal executes against promoted gas/vapor areas, and close or support candle, unprotected-flame, protected-flame dancing, and 50 percent protected-flame extinguishing clauses without adding duplicate environmental wind state.
+- Do not create spell-local gas, vapor, flame, candle, lantern, or environmental wind state. Support Gust of Wind gas/vapor/flame clauses only through an existing object/environment owner with caller-supplied typed witnesses; otherwise accepted-close them as presentation/environment-runtime-detached.
 
 Inputs:
 
@@ -712,11 +718,11 @@ Acceptance:
 
 ### Task 14 - L12G-RECURSIVE-TAIL-LOOP-A - LOOP-A Recursive Next-Batch Planning Tail
 
-Status: `ready-for-research`
+Status: `blocked`
 
 Unit: `level1_2_frontier`.
 Origin: Safety-net planning task for when this plan has no earlier runnable implementation tasks.
-Dependencies: none.
+Dependencies: L12G-SPELL-LESSER-RESTORATION, L12G-SPELL-MAGIC-WEAPON, L12G-SPELL-MIND-SPIKE, L12G-SPELL-WEB, L12G-MISSING-ANIMAL-MESSENGER, L12G-MISSING-ARCANISTS-MAGIC-AURA, L12G-MISSING-AUGURY, L12G-MISSING-CALM-EMOTIONS, L12G-MISSING-DARKNESS, L12G-MISSING-DARKVISION, L12G-MISSING-DETECT-THOUGHTS, L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME, L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE.
 
 Pre-researched scope:
 

@@ -20,7 +20,7 @@
       "number": 3,
       "id": "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS",
       "status": "blocked",
-      "title": "Monk Uncanny Metabolism Character Facts And Use State"
+      "title": "Monk Uncanny Metabolism Character Facts And Rest-Scoped Use-State Projection"
     },
     {
       "number": 4,
@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "L12G-RECURSIVE-TAIL-LOOP-C",
-      "status": "ready-for-research",
+      "status": "blocked",
       "title": "LOOP-C Recursive Next-Batch Planning Tail"
     }
   ]
@@ -96,7 +96,7 @@ Reviewers should reject:
 - table-detached detection/social/exploration facts added as runtime state;
 - object, geometry, light, or pathfinding derivation hidden inside spell support;
 - duplicated Spell Definition, Spell Access, Spell Invocation, Spell Effect, Character Sheet, resource, or class progression state;
-- companion behavior, companion control, or caller/table decision automation.
+- automation of player choices, table adjudication, or companion/familiar turn/action control; callers may only provide typed/branded player choices or table-witness facts at explicit boundaries.
 
 ## Task Output Contract
 
@@ -106,6 +106,12 @@ Every implementation task must leave its Unit in one concrete end state:
 - `profile-subset-supported` only when the executable subset is precise and every residual has an accepted closure kind;
 - `unsupported-profile` with an accepted runtime-detached closure when the rule is outside product runtime;
 - a smaller follow-up split only when RAW proves the listed task cannot fit in one coding session, with the original metric row left in a precise blocked state rather than generic todo wording.
+
+Each task output must include:
+
+- a RAW traceability note listing every modeled, supported-subset, and closed residual clause with exact local SRD file/heading/line references or an `ASSUMPTIONS.md` entry; if no local RAW source exists, the task must block or close instead of inferring mechanics from backlog wording;
+- a boundary discipline note: when the task touches a boundary that uses bare primitives for domain ids, spell/unit/action/condition/damage identifiers, resource names, or authored content names, Ralph must either fix that touched boundary with existing branded/domain types or block with a precise follow-up. Do not ignore touched primitive/domain-id/authored-identity dispatch as pre-existing;
+- when authoring or changing SRD catalog records, SRD provenance must be modeled at the SRD collection boundary so mixed-provenance or mixed-license records cannot be admitted; 5e-tools or other structured inputs, if consulted, remain structured input only and are not stored as provenance.
 
 Every implementation task runs:
 
@@ -130,7 +136,7 @@ Do not run battle-runtime MBT unless the task changes promoted battle-runtime be
 
 ## Recursive Tail Policy
 
-The final task is intentionally runnable and placed last. Use it only when no earlier task in this plan is runnable. It must plan new concrete work from current metrics and history; it must not substitute for same-plan dependency unblocking, and it must not reopen external Claude, Wild Shape, or companion work.
+The final task is intentionally blocked on every real task in this plan and placed last. It auto-unblocks only after the planned implementation queue is done. It must plan new concrete work from current metrics and history; it must not substitute for same-plan dependency unblocking, and it must not reopen external Claude, Wild Shape, or companion work.
 
 ## DAG / Queue Order
 
@@ -138,14 +144,14 @@ The final task is intentionally runnable and placed last. Use it only when no ea
 | ---: | --- | --- | --- | --- |
 | 1 | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS - Monk's Focus Character Facts And Resource Projection | ready-for-research | completed baseline | C lane; Unit `monk_monks_focus`. |
 | 2 | L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS - Monk's Focus Battle Option Execution | blocked | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS | C lane; Unit `monk_monks_focus`. |
-| 3 | L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS - Monk Uncanny Metabolism Character Facts And Use State | blocked | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS | C lane; Unit `monk_uncanny_metabolism`. |
-| 4 | L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME - Monk Uncanny Metabolism Initiative Recovery Runtime | blocked | L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS | C lane; Unit `monk_uncanny_metabolism`. |
+| 3 | L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS - Monk Uncanny Metabolism Character Facts And Rest-Scoped Use-State Projection | blocked | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS | C lane; Unit `monk_uncanny_metabolism`. |
+| 4 | L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME - Monk Uncanny Metabolism Initiative Recovery Runtime | blocked | L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS | C lane; Unit `monk_uncanny_metabolism`. |
 | 5 | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS - Sorcerer Font Of Magic Sorcery Point Resource Facts | ready-for-research | completed baseline | C lane; Unit `sorcerer_font_of_magic`. |
 | 6 | L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS - Sorcerer Font Of Magic Spell Slot To Sorcery Points | blocked | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS | C lane; Unit `sorcerer_font_of_magic`. |
 | 7 | L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS - Sorcerer Font Of Magic Sorcery Points To Spell Slot | blocked | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS | C lane; Unit `sorcerer_font_of_magic`. |
 | 8 | L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS - Sorcerer Metamagic Character Facts And Option Projection | blocked | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS | C lane; Unit `sorcerer_metamagic`. |
 | 9 | L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION - Sorcerer Metamagic Cast-Time Option Execution | blocked | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS | C lane; Unit `sorcerer_metamagic`. |
-| 10 | L12G-RECURSIVE-TAIL-LOOP-C - LOOP-C Recursive Next-Batch Planning Tail | ready-for-research | completed baseline | Last-resort next-batch planning safety net; do not use before earlier runnable tasks are exhausted. |
+| 10 | L12G-RECURSIVE-TAIL-LOOP-C - LOOP-C Recursive Next-Batch Planning Tail | blocked | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME, L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS, L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS, L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION | Last-resort next-batch planning safety net; auto-unblocks only after every real task in this plan is `done`. |
 
 ## Task Details
 
@@ -231,7 +237,7 @@ Acceptance:
 - reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
 - battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
 
-### Task 3 - L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS - Monk Uncanny Metabolism Character Facts And Use State
+### Task 3 - L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS - Monk Uncanny Metabolism Character Facts And Rest-Scoped Use-State Projection
 
 Status: `blocked`
 
@@ -241,7 +247,7 @@ Dependencies: L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS.
 
 Pre-researched scope:
 
-- Project Uncanny Metabolism use state and resource relationship from authored Monk facts after the shared Focus Point owner lands.
+- Project durable Uncanny Metabolism feature facts separately from rest-scoped use state, deriving the runtime recovery relationship from the shared Focus Point owner.
 
 Inputs:
 
@@ -278,11 +284,11 @@ Status: `blocked`
 
 Unit: `monk_uncanny_metabolism`.
 Origin: Original backlog task 82.
-Dependencies: L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS.
+Dependencies: L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS.
 
 Pre-researched scope:
 
-- Promote initiative-time recovery/runtime behavior using the existing Focus Point owner and Uncanny Metabolism use-state facts.
+- Promote initiative-time recovery/runtime behavior using the existing Focus Point owner and Uncanny Metabolism rest-scoped use-state facts.
 
 Inputs:
 
@@ -405,7 +411,7 @@ Dependencies: L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS.
 
 Pre-researched scope:
 
-- Execute Bonus Action Sorcery-Point-to-temporary-Spell-Slot conversion, table costs, minimum Sorcerer level, slot-level cap, and Long Rest expiry.
+- Execute Bonus Action Sorcery-Point-to-temporary-Spell-Slot conversion, RAW conversion-cost table, minimum Sorcerer level, slot-level cap, and Long Rest expiry.
 
 Inputs:
 
@@ -446,7 +452,7 @@ Dependencies: L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS.
 
 Pre-researched scope:
 
-- Project known Metamagic options, replacement lifecycle, option costs, stacking exceptions, and link to the shared Font of Magic Sorcery Point resource.
+- Project SRD Metamagic options present in `.references/srd-5.2.1/Classes/Sorcerer.md` as typed option facts with one canonical branded option id or typed procedure fact; display/authored names stay derived from the SRD catalog only where presentation needs them. Include replacement lifecycle, option costs, stacking exceptions, and link to the shared Font of Magic Sorcery Point resource. Non-SRD examples must be synthetic and must not copy PHB+ option names, ids, slugs, or catalog identity.
 
 Inputs:
 
@@ -487,7 +493,7 @@ Dependencies: L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS, L12G-FOLLOWUP-SORCERER
 
 Pre-researched scope:
 
-- Execute known Metamagic options at spell-cast time, enforcing Sorcery Point spend, one-option-per-spell plus exceptions, Quickened limits, and option-specific modifications.
+- Execute character-selected Metamagic options at Spell Invocation time, enforcing Sorcery Point spend, one-option-per-Spell-Invocation plus RAW exceptions, Quickened limits, and option-specific modifications. Runtime execution must dispatch on typed option facts/procedure shapes, not option name, slug, unit id, or provenance text.
 
 Inputs:
 
@@ -520,11 +526,11 @@ Acceptance:
 
 ### Task 10 - L12G-RECURSIVE-TAIL-LOOP-C - LOOP-C Recursive Next-Batch Planning Tail
 
-Status: `ready-for-research`
+Status: `blocked`
 
 Unit: `level1_2_frontier`.
 Origin: Safety-net planning task for when this plan has no earlier runnable implementation tasks.
-Dependencies: none.
+Dependencies: L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME, L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS, L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS, L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION.
 
 Pre-researched scope:
 

@@ -26,7 +26,7 @@
       "number": 4,
       "id": "L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME",
       "status": "blocked",
-      "title": "Alter Self Aquatic Adaptation Runtime"
+      "title": "Alter Self Mode Lifecycle And Aquatic Runtime"
     },
     {
       "number": 5,
@@ -73,7 +73,7 @@
     {
       "number": 12,
       "id": "L12G-RECURSIVE-TAIL-LOOP-B",
-      "status": "ready-for-research",
+      "status": "blocked",
       "title": "LOOP-B Recursive Next-Batch Planning Tail"
     }
   ]
@@ -108,7 +108,7 @@ Reviewers should reject:
 - table-detached detection/social/exploration facts added as runtime state;
 - object, geometry, light, or pathfinding derivation hidden inside spell support;
 - duplicated Spell Definition, Spell Access, Spell Invocation, Spell Effect, Character Sheet, resource, or class progression state;
-- companion behavior, companion control, or caller/table decision automation.
+- automation of player choices, table adjudication, or companion/familiar turn/action control; callers may only provide typed/branded player choices or table-witness facts at explicit boundaries.
 
 ## Task Output Contract
 
@@ -118,6 +118,12 @@ Every implementation task must leave its Unit in one concrete end state:
 - `profile-subset-supported` only when the executable subset is precise and every residual has an accepted closure kind;
 - `unsupported-profile` with an accepted runtime-detached closure when the rule is outside product runtime;
 - a smaller follow-up split only when RAW proves the listed task cannot fit in one coding session, with the original metric row left in a precise blocked state rather than generic todo wording.
+
+Each task output must include:
+
+- a RAW traceability note listing every modeled, supported-subset, and closed residual clause with exact local SRD file/heading/line references or an `ASSUMPTIONS.md` entry; if no local RAW source exists, the task must block or close instead of inferring mechanics from backlog wording;
+- a boundary discipline note: when the task touches a boundary that uses bare primitives for domain ids, spell/unit/action/condition/damage identifiers, resource names, or authored content names, Ralph must either fix that touched boundary with existing branded/domain types or block with a precise follow-up. Do not ignore touched primitive/domain-id/authored-identity dispatch as pre-existing;
+- when authoring or changing SRD catalog records, SRD provenance must be modeled at the SRD collection boundary so mixed-provenance or mixed-license records cannot be admitted; 5e-tools or other structured inputs, if consulted, remain structured input only and are not stored as provenance.
 
 Every implementation task runs:
 
@@ -142,7 +148,7 @@ Do not run battle-runtime MBT unless the task changes promoted battle-runtime be
 
 ## Recursive Tail Policy
 
-The final task is intentionally runnable and placed last. Use it only when no earlier task in this plan is runnable. It must plan new concrete work from current metrics and history; it must not substitute for same-plan dependency unblocking, and it must not reopen external Claude, Wild Shape, or companion work.
+The final task is intentionally blocked on every real task in this plan and placed last. It auto-unblocks only after the planned implementation queue is done. It must plan new concrete work from current metrics and history; it must not substitute for same-plan dependency unblocking, and it must not reopen external Claude, Wild Shape, or companion work.
 
 ## DAG / Queue Order
 
@@ -151,7 +157,7 @@ The final task is intentionally runnable and placed last. Use it only when no ea
 | 1 | L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE - Acid Arrow Surface Damage Shape | ready-for-research | completed baseline | B lane; Unit `acid_arrow`. |
 | 2 | L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT - Acid Arrow Delayed Runtime Support | blocked | L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE | B lane; Unit `acid_arrow`. |
 | 3 | L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE - Alter Self Surface Option Shape | ready-for-research | completed baseline | B lane; Unit `alter_self`. |
-| 4 | L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME - Alter Self Aquatic Adaptation Runtime | blocked | L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE | B lane; Unit `alter_self`. |
+| 4 | L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME - Alter Self Mode Lifecycle And Aquatic Runtime | blocked | L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE | B lane; Unit `alter_self`. |
 | 5 | L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME - Alter Self Natural Weapons Runtime | blocked | L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE, L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME | B lane; Unit `alter_self`. |
 | 6 | L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL - Continual Flame Dispel And Suppression Removal | ready-for-research | completed baseline | B lane; Unit `continual_flame`. |
 | 7 | L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE - Flame Blade Surface Lifecycle Shape | ready-for-research | completed baseline | B lane; Unit `flame_blade`. |
@@ -159,7 +165,7 @@ The final task is intentionally runnable and placed last. Use it only when no ea
 | 9 | L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE - Heat Metal Surface Contact Escape Shape | ready-for-research | completed baseline | B lane; Unit `heat_metal`. |
 | 10 | L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME - Heat Metal Contact Damage Runtime | blocked | L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE | B lane; Unit `heat_metal`. |
 | 11 | L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY - Heat Metal Holding Wearing Penalty Runtime | blocked | L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE, L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME | B lane; Unit `heat_metal`. |
-| 12 | L12G-RECURSIVE-TAIL-LOOP-B - LOOP-B Recursive Next-Batch Planning Tail | ready-for-research | completed baseline | Last-resort next-batch planning safety net; do not use before earlier runnable tasks are exhausted. |
+| 12 | L12G-RECURSIVE-TAIL-LOOP-B - LOOP-B Recursive Next-Batch Planning Tail | blocked | L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE, L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT, L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE, L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME, L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME, L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL, L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE, L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT, L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE, L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME, L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY | Last-resort next-batch planning safety net; auto-unblocks only after every real task in this plan is `done`. |
 
 ## Task Details
 
@@ -173,7 +179,7 @@ Dependencies: none.
 
 Pre-researched scope:
 
-- Replace Acid Arrow lossy mechanics with lossless Surface facts for initial hit damage, end-of-next-turn damage, immediate half-of-initial miss damage only, and slot scaling for both initial and later damage.
+- First reconcile Acid Arrow's local RAW text against `ASSUMPTIONS.md` or an owner-approved corpus correction. Do not model immediate initial hit damage from implication alone; if the local RAW remains contradictory, block or close the initial-hit portion with a precise RAW-corpus issue. After that, replace Acid Arrow lossy mechanics with lossless Surface facts for the approved damage timing, miss branch, end-of-next-turn damage, and slot scaling.
 
 Inputs:
 
@@ -214,7 +220,7 @@ Dependencies: L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE.
 
 Pre-researched scope:
 
-- Promote Acid Arrow runtime after the Surface shape lands: attack roll, immediate hit damage, miss half-damage, delayed end-of-target-next-turn damage, slot scaling, resource spending, and cleanup.
+- Promote Acid Arrow runtime after the Surface shape and RAW-corpus reconciliation land: attack roll, approved hit/miss damage timing, delayed end-of-target-next-turn damage where sourced, slot scaling, resource spending, typed Spell Effect occurrence identity, and cleanup.
 
 Inputs:
 
@@ -286,7 +292,7 @@ Acceptance:
 - reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
 - battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
 
-### Task 4 - L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME - Alter Self Aquatic Adaptation Runtime
+### Task 4 - L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME - Alter Self Mode Lifecycle And Aquatic Runtime
 
 Status: `blocked`
 
@@ -296,7 +302,7 @@ Dependencies: L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE.
 
 Pre-researched scope:
 
-- Promote spell-owned Alter Self option state, Magic-action mode replacement, Concentration cleanup, water breathing, linked Swim Speed equal to Speed, and Change Appearance closure.
+- Promote Alter Self Spell Effect state for the active player-selected option, Magic Action option replacement, Concentration cleanup, shared mode-lifecycle API, Aquatic Adaptation water breathing, linked Swim Speed equal to Speed, and Change Appearance closure.
 
 Inputs:
 
@@ -337,7 +343,7 @@ Dependencies: L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE, L12G-FOLLOWUP-ALTER
 
 Pre-researched scope:
 
-- Promote Natural Weapons as a spell-owned Unarmed Strike override using chosen damage type, 1d6 damage, caster spellcasting ability for attack and damage rolls, mode replacement, and cleanup.
+- Promote Natural Weapons as active Alter Self Spell Effect state that overrides Unarmed Strike using a player-selected typed `DamageType`, 1d6 damage, caster spellcasting ability for attack and damage rolls, shared mode replacement, and cleanup.
 
 Inputs:
 
@@ -378,7 +384,7 @@ Dependencies: none.
 
 Pre-researched scope:
 
-- Close or promote Continual Flame removal/suppression interactions without introducing duplicate object-light or spell-effect state.
+- Close or promote only RAW-sourced Continual Flame interactions: `Until dispelled`, covered/hidden presentation, not smothered/quenched, and any separately sourced interaction such as Darkness dispelling spell-created light. Do not add generic suppression/removal mechanics.
 
 Inputs:
 
@@ -501,7 +507,7 @@ Dependencies: none.
 
 Pre-researched scope:
 
-- Replace Heat Metal lossy ongoing-effect encoding with lossless Surface facts for manufactured metal object targeting, object-contact recipients, immediate cast damage and cast-time save, later Bonus Action repeat damage, and drop-if-possible or Disadvantage fallback.
+- Replace Heat Metal lossy ongoing-effect encoding with lossless Surface facts for table-witnessed manufactured-metal object targeting, table-witnessed contact/wearing/holding facts, Spell Invocation damage/save facts, later Bonus Action repeat damage, and typed drop-capability/drop-result witness facts rather than runtime object derivation.
 
 Inputs:
 
@@ -542,7 +548,7 @@ Dependencies: L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE.
 
 Pre-researched scope:
 
-- Promote Heat Metal damage lifecycle after the Surface shape lands: spell spend, object/contact witnesses, immediate and repeat Fire damage, slot scaling, damage disposition, Concentration saves, and cleanup.
+- Promote Heat Metal damage lifecycle after the Surface shape lands: spell spend, table-witnessed object/contact facts, immediate and repeat Fire damage, slot scaling, damage disposition, Concentration saves, branded active Spell Effect occurrence identity, and cleanup.
 
 Inputs:
 
@@ -583,7 +589,7 @@ Dependencies: L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE, L12G-FOLLOW
 
 Pre-researched scope:
 
-- Promote the held/worn object save, drop outcome, fallback Attack Roll and Ability Check Disadvantage, caster-turn-start expiry, and cleanup tied to the same Heat Metal occurrence.
+- Promote the held/worn object save, typed drop-capability/drop-result witness, fallback Attack Roll and Ability Check Disadvantage, caster-turn-start expiry, and cleanup tied to the same branded Heat Metal Spell Effect occurrence.
 
 Inputs:
 
@@ -616,11 +622,11 @@ Acceptance:
 
 ### Task 12 - L12G-RECURSIVE-TAIL-LOOP-B - LOOP-B Recursive Next-Batch Planning Tail
 
-Status: `ready-for-research`
+Status: `blocked`
 
 Unit: `level1_2_frontier`.
 Origin: Safety-net planning task for when this plan has no earlier runnable implementation tasks.
-Dependencies: none.
+Dependencies: L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE, L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT, L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE, L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME, L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME, L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL, L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE, L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT, L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE, L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME, L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY.
 
 Pre-researched scope:
 
