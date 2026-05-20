@@ -186,12 +186,12 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 486,
-      "percent": "87.4%",
+      "numerator": 488,
+      "percent": "87.8%",
       "rowsByStatus": {
-        "accepted": 356,
+        "accepted": 358,
         "accepted-no-battle-effect": 130,
-        "battle-runtime-required": 57,
+        "battle-runtime-required": 55,
         "partial-battle-runtime": 11,
         "owner-evidence-required": 2
       }
@@ -207,18 +207,18 @@
       "catalog-installed-owner-evidence-required": 2
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 372,
+      "catalog-installed-owner-evidence-present": 374,
       "non-runtime": 24,
       "catalog-only/dead-for-now": 101,
       "missing-authored-record": 22,
-      "catalog-installed-owner-evidence-required": 21,
+      "catalog-installed-owner-evidence-required": 19,
       "catalog-authored-executable-follow-up": 16
     },
     "spellPressureRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 209,
+      "catalog-installed-owner-evidence-present": 211,
       "catalog-only/dead-for-now": 101,
       "missing-authored-record": 22,
-      "catalog-installed-owner-evidence-required": 19,
+      "catalog-installed-owner-evidence-required": 17,
       "catalog-authored-executable-follow-up": 16
     },
     "levelOneRowsByCategory": {
@@ -11642,8 +11642,14 @@
         "state": "installed",
         "unitId": "flame_blade"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial and presentation owner",
+        "reason": "Map reach adjudication, flame presentation, and Material component availability or consumption remain outside this runtime profile."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -11651,13 +11657,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell-created held object lifecycle plus promoted Quint parity",
-          "evidence": "Promote follow-up split L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT: L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT owns Promote Flame Blade as a level-2-or-higher prepared spell: Bonus Action Spell Slot spend, caster-owned Concentration, caller-supplied free-hand and holding witnesses, active spell-created blade state, source-owned held light emitter, Magic Action melee spell attack while the blade is active, Fire damage slot scaling with spellcasting ability modifier, Concentration and duration cleanup, let-go cleanup, and Bonus Action re-evocation from the same active spell occurrence without a second Spell Slot spend while the spell lasts. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial creation, active attack, light projection, cleanup, and re-evocation.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV95 at packages/battle-runtime/src/unit-profile-admission-flame-blade.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT: L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT owns Promote Flame Blade as a level-2-or-higher prepared spell: Bonus Action Spell Slot spend, caster-owned Concentration, caller-supplied free-hand and holding witnesses, active spell-created blade state, source-owned held light emitter, Magic Action melee spell attack while the blade is active, Fire damage slot scaling with spellcasting ability modifier, Concentration and duration cleanup, let-go cleanup, and Bonus Action re-evocation from the same active spell occurrence without a second Spell Slot spend while the spell lasts. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial creation, active attack, light projection, cleanup, and re-evocation.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_flaming_sphere",
@@ -20691,8 +20697,14 @@
         "state": "installed",
         "unitId": "flame_blade"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial and presentation owner",
+        "reason": "Map reach adjudication, flame presentation, and Material component availability or consumption remain outside this runtime profile."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -20700,13 +20712,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell-created held object lifecycle plus promoted Quint parity",
-          "evidence": "Promote follow-up split L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT: L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT owns Promote Flame Blade as a level-2-or-higher prepared spell: Bonus Action Spell Slot spend, caster-owned Concentration, caller-supplied free-hand and holding witnesses, active spell-created blade state, source-owned held light emitter, Magic Action melee spell attack while the blade is active, Fire damage slot scaling with spellcasting ability modifier, Concentration and duration cleanup, let-go cleanup, and Bonus Action re-evocation from the same active spell occurrence without a second Spell Slot spend while the spell lasts. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial creation, active attack, light projection, cleanup, and re-evocation.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV95 at packages/battle-runtime/src/unit-profile-admission-flame-blade.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT: L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT owns Promote Flame Blade as a level-2-or-higher prepared spell: Bonus Action Spell Slot spend, caster-owned Concentration, caller-supplied free-hand and holding witnesses, active spell-created blade state, source-owned held light emitter, Magic Action melee spell attack while the blade is active, Fire damage slot scaling with spellcasting ability modifier, Concentration and duration cleanup, let-go cleanup, and Bonus Action re-evocation from the same active spell occurrence without a second Spell Slot spend while the spell lasts. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial creation, active attack, light projection, cleanup, and re-evocation.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_flaming_sphere",

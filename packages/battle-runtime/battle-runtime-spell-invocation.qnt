@@ -109,6 +109,7 @@ module battleRuntimeSpellInvocation {
       | DancingLightsSpell => false
       | Light => false
       | ContinualFlame => true
+      | FlameBlade => true
       | TrueStrike => false
       | Grease => true
       | FogCloud => true

@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram spell.invocation-self-transformation-mode
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram spell.invocation-self-transformation-mode spell.invocation-spell-created-held-object
 
 import { Match, Schema } from "effect";
 import { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
@@ -54,6 +54,7 @@ export const BATTLE_RUNTIME_COMMANDS = [
   "movableZoneSave",
   "movableZoneReposition",
   "movableZoneRam",
+  "releaseSpellCreatedHeldObject",
   "protectionRelevantEffectSave",
   "disperseFogCloud",
   "wardingBondSeparation",
@@ -122,6 +123,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "fogCloudObscurement",
   "flamingSphere",
   "moonbeam",
+  "spellCreatedHeldObject",
   "command",
   "repeatedDamageAllocation",
   "directHitPointRestoration",
@@ -181,7 +183,11 @@ export const SpellInvocationRefSchema = Schema.Union(
     tag: Schema.Literal("spellEffect"),
     spellId: SpellId,
     sourceCombatantId: CombatantId,
-    procedure: Schema.Literal("markedDamageRiderTransfer"),
+    procedure: Schema.Literal(
+      "markedDamageRiderTransfer",
+      "spellCreatedHeldObjectAttack",
+      "spellCreatedHeldObjectReEvoke",
+    ),
   }),
 );
 export type SpellInvocationRef = typeof SpellInvocationRefSchema.Type;
@@ -214,7 +220,10 @@ export function spellSlotInvocationRef(
 export function spellEffectInvocationRef(
   rawSpellId: string,
   sourceCombatantId: CombatantId,
-  procedure: "markedDamageRiderTransfer",
+  procedure:
+    | "markedDamageRiderTransfer"
+    | "spellCreatedHeldObjectAttack"
+    | "spellCreatedHeldObjectReEvoke",
 ): SpellInvocationRef {
   return {
     tag: "spellEffect",
@@ -577,6 +586,13 @@ export const BattleSubjectSchema = Schema.Union(
     sourceSpellId: SpellId,
     areaId: BattleSubjectTextSchema,
     trigger: Schema.Literal("rammedBySphere"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("releaseSpellCreatedHeldObject"),
+    sourceCombatantId: CombatantId,
+    sourceSpellId: SpellId,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),

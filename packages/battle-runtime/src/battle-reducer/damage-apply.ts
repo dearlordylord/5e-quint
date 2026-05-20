@@ -101,6 +101,7 @@ import {
   removeHideousLaughterEffectFromTarget,
   removeSleepEffectsFromTarget,
 } from "./spell-condition-effects-helpers.ts";
+import { battleCreatureWithSpellCreatedHeldObjectHandStateFromActiveEffects } from "./spell-created-held-object.ts";
 import {
   sameStatBlockPartKey,
   statBlockLimitedUseForPart,
@@ -1513,7 +1514,9 @@ export function breakCombatantConcentration(
               activeEffects,
             };
       const nextCombatant = applyHitPointMaximumIncreaseExpiration(
-        nextCombatantBase,
+        battleCreatureWithSpellCreatedHeldObjectHandStateFromActiveEffects(
+          nextCombatantBase,
+        ),
         expiring,
       );
       return [id, nextCombatant];

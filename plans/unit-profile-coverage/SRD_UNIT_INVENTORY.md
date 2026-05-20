@@ -27,13 +27,13 @@ This is the default `%` for level-1 readiness questions. A row counts only when 
 
 This is the default `%` for level-1 plus level-2 readiness questions. It uses the same acceptance rules as the level-1 metric, but includes level-2 class-feature rows and level-2 spell-list pressure.
 
-- Accepted: 486/556 (87.4%)
+- Accepted: 488/556 (87.8%)
 
 #### Level 1-2 Battle Readiness by Status
 
-- accepted: 356
+- accepted: 358
 - accepted-no-battle-effect: 130
-- battle-runtime-required: 57
+- battle-runtime-required: 55
 - owner-evidence-required: 2
 - partial-battle-runtime: 11
 
@@ -65,8 +65,8 @@ This is the default `%` for level-1 plus level-2 readiness questions. It uses th
 ### Spell Unit Pressure by Disposition
 
 - catalog-authored-executable-follow-up: 16
-- catalog-installed-owner-evidence-present: 209
-- catalog-installed-owner-evidence-required: 19
+- catalog-installed-owner-evidence-present: 211
+- catalog-installed-owner-evidence-required: 17
 - catalog-only/dead-for-now: 101
 - missing-authored-record: 22
 

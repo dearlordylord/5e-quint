@@ -121,6 +121,7 @@ import {
   conditionsAfterExpiringSpellConditionEffects,
   conditionHadNonSpellSourceBeforeSpellEffect,
 } from "./spell-condition-effects-helpers.ts";
+import { battleCreatureWithSpellCreatedHeldObjectHandStateFromActiveEffects } from "./spell-created-held-object.ts";
 
 import { damageAmountAfterTargetAdjustments } from "./damage-helpers.ts";
 
@@ -3579,7 +3580,9 @@ export function tickDurationEffects(
             }
           : { ...combatant, activeEffects };
       const nextCombatant = applyHitPointMaximumIncreaseExpiration(
-        nextCombatantBase,
+        battleCreatureWithSpellCreatedHeldObjectHandStateFromActiveEffects(
+          nextCombatantBase,
+        ),
         expiring,
       );
       return [id, nextCombatant];
@@ -3694,7 +3697,9 @@ function expireConcentrationDurationSource(
               activeEffects,
             };
       const nextCombatant = applyHitPointMaximumIncreaseExpiration(
-        nextCombatantBase,
+        battleCreatureWithSpellCreatedHeldObjectHandStateFromActiveEffects(
+          nextCombatantBase,
+        ),
         expiring,
       );
       return [id, nextCombatant];
@@ -3725,7 +3730,9 @@ export function expireActiveEffects(
             }
           : { ...combatant, activeEffects };
       const nextCombatant = applyHitPointMaximumIncreaseExpiration(
-        nextCombatantBase,
+        battleCreatureWithSpellCreatedHeldObjectHandStateFromActiveEffects(
+          nextCombatantBase,
+        ),
         expiring,
       );
       return [id, nextCombatant];

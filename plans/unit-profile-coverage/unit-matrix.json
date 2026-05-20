@@ -62,8 +62,8 @@
       "value": 215
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 131,
-      "numerator": 131,
+      "denominator": 132,
+      "numerator": 132,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -72,49 +72,49 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 76,
-      "numerator": 76,
+      "denominator": 77,
+      "numerator": 77,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 76,
-      "numerator": 75,
+      "denominator": 77,
+      "numerator": 76,
       "percent": "98.7%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 102,
+      "denominator": 103,
       "numerator": 26,
-      "percent": "25.5%"
+      "percent": "25.2%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 102,
+      "denominator": 103,
       "numerator": 31,
-      "percent": "30.4%"
+      "percent": "30.1%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 131,
+      "denominator": 132,
       "numerator": 45,
-      "percent": "34.4%"
+      "percent": "34.1%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 76,
-      "numerator": 76,
+      "denominator": 77,
+      "numerator": 77,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 76,
-      "numerator": 76,
+      "denominator": 77,
+      "numerator": 77,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 131,
+      "denominator": 132,
       "numerator": 105,
-      "percent": "80.2%"
+      "percent": "79.5%"
     },
     "supportedProfileCoverage": {
       "denominator": 183,
-      "numerator": 131,
-      "percent": "71.6%"
+      "numerator": 132,
+      "percent": "72.1%"
     }
   },
   "metricSemantics": [
@@ -1482,6 +1482,46 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-produce-flame.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.invocation-spell-created-held-object",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-created-held-object.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-invocation-ref.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-release.ts",
+        "packages/battle-runtime/src/battle-subjects.ts"
+      ],
+      "sourceBoundary": "Runtime admits the spell-created held-object lifecycle by exact Surface shape rather than authored identity. Runtime owns Bonus Action level-2-or-higher Spell Slot creation, canonical free-hand gating through armorClass hand-use plus Grapple occupancy, canonical hand occupancy and release for the spell-created held object, caster-owned Concentration and duration cleanup, active held/not-held spell occurrence state, source-owned held Bright/Dim light emitter projection while held, let-go cleanup to the not-held occurrence state, same-occurrence Bonus Action re-evocation without a Spell Slot spend, and active-object-gated Magic Action melee spell attack with Fire damage slot scaling plus spellcasting ability modifier. Table map reach/adjudication, flame presentation, and Material component availability or consumption remain outside this profile.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT"
+      ],
+      "title": "Spell invocation creates, releases, re-evokes, and attacks with a spell-created held object",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-flame-blade.test.ts"
         }
       ]
     },
@@ -2969,14 +3009,14 @@
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 102,
+        "denominator": 103,
         "numerator": 26,
-        "percent": "25.5%"
+        "percent": "25.2%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 102,
+        "denominator": 103,
         "numerator": 31,
-        "percent": "30.4%"
+        "percent": "30.1%"
       }
     },
     "profileKinds": [
@@ -3360,6 +3400,12 @@
         "joinStatus": "unmapped",
         "obligations": [],
         "profileId": "spell.invocation-held-light-emitter",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-spell-created-held-object",
         "profileKind": "spell-invocation"
       },
       {
@@ -3850,9 +3896,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 131,
+          "denominator": 132,
           "numerator": 45,
-          "percent": "34.4%"
+          "percent": "34.1%"
         }
       },
       "units": [
@@ -4715,6 +4761,18 @@
             }
           ],
           "unitId": "fire_bolt"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-spell-created-held-object",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "flame_blade"
         },
         {
           "joinStatus": "unmapped",
@@ -7853,6 +7911,22 @@
         "spell.invocation-object-light"
       ],
       "taskId": "L12G-SPELL-CONTINUAL-FLAME"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover Flame Blade level-2-or-higher Bonus Action Spell Slot creation with canonical free-hand gating and hand occupancy, caster-owned Concentration and duration cleanup, held Bright/Dim light projection, let-go not-held state with hand release, same-occurrence Bonus Action re-evocation without a Spell Slot, and active held-blade Magic Action Fire melee spell attack.",
+      "profileIds": [
+        "spell.invocation-spell-created-held-object"
+      ],
+      "taskId": "L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Flame Blade exact Surface-shape admission, level-2+ Bonus Action Spell Slot casting with canonical hand occupancy, no-free-hand rejection, Grapple/free-hand interaction while held, concentration/active-effect/light projection, Magic Action melee spell attack Fire damage scaling with spellcasting ability modifier, let-go cleanup with hand release, and re-evocation without another Spell Slot.",
+      "profileIds": [
+        "spell.invocation-spell-created-held-object"
+      ],
+      "taskId": "L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT"
     },
     {
       "claimKind": "completed-runtime-parity",
@@ -15549,24 +15623,83 @@
         "status": "installed"
       },
       "claim": {
-        "followUpTasks": [
-          {
-            "id": "L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT",
-            "mechanic": "Promote Flame Blade as a level-2-or-higher prepared spell: Bonus Action Spell Slot spend, caster-owned Concentration, caller-supplied free-hand and holding witnesses, active spell-created blade state, source-owned held light emitter, Magic Action melee spell attack while the blade is active, Fire damage slot scaling with spellcasting ability modifier, Concentration and duration cleanup, let-go cleanup, and Bonus Action re-evocation from the same active spell occurrence without a second Spell Slot spend while the spell lasts.",
-            "owner": "battle-runtime spell-created held object lifecycle plus promoted Quint parity",
-            "requiredOutput": "Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial creation, active attack, light projection, cleanup, and re-evocation.",
-            "title": "Flame Blade Runtime Support"
-          }
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "table/spatial and presentation owner",
+          "reason": "Map reach adjudication, flame presentation, and Material component availability or consumption remain outside this runtime profile."
+        },
+        "profileIds": [
+          "spell.invocation-spell-created-held-object"
         ],
-        "futureProfileOwner": "battle-runtime spell-created held object lifecycle plus promoted Quint parity",
-        "reason": "Flame Blade is authored as an SRD Surface Spell Definition with Bonus Action creation, free-hand requirement, spell-created held object lifecycle, let-go disappearance, Bonus Action re-evocation, active-blade-gated held light and Magic Action melee spell attack, Fire damage equal to 3d6 plus the caster's spellcasting ability modifier, and +1d6 per spell slot level above 2. Task 8 claims the Surface lifecycle shape only; no promoted battle-runtime profile is claimed because runtime still needs spell invocation/effect lifecycle, caller-supplied free-hand and holding witnesses, active blade state cleanup, light projection, attack execution, and re-evocation from the same active spell occurrence.",
-        "tag": "unsupported-profile"
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Bonus Action prepared spell cast with a level-2-or-higher Spell Slot",
+          "canonical free-hand gating through armorClass hand-use plus Grapple occupancy",
+          "canonical hand occupancy and release while the spell-created blade is held or let go",
+          "caster-owned Concentration and ten-minute duration lifecycle",
+          "active spell-created blade occurrence state with held and not-held states",
+          "source-owned held Bright Light 10-foot radius plus Dim Light for an additional 10 feet while held",
+          "let-go cleanup that removes the held light and active attack while preserving the same spell occurrence",
+          "Bonus Action re-evocation from the same active spell occurrence without a second Spell Slot spend",
+          "Magic Action melee spell attack while the blade is held",
+          "Fire damage equal to 3d6 plus spellcasting ability modifier with +1d6 per spell slot level above 2"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-flame-blade.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV95"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-spell-created-held-object",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+            "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-created-held-object.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-invocation-ref.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-release.ts",
+            "packages/battle-runtime/src/battle-subjects.ts"
+          ],
+          "sourceBoundary": "Runtime admits the spell-created held-object lifecycle by exact Surface shape rather than authored identity. Runtime owns Bonus Action level-2-or-higher Spell Slot creation, canonical free-hand gating through armorClass hand-use plus Grapple occupancy, canonical hand occupancy and release for the spell-created held object, caster-owned Concentration and duration cleanup, active held/not-held spell occurrence state, source-owned held Bright/Dim light emitter projection while held, let-go cleanup to the not-held occurrence state, same-occurrence Bonus Action re-evocation without a Spell Slot spend, and active-object-gated Magic Action melee spell attack with Fire damage slot scaling plus spellcasting ability modifier. Table map reach/adjudication, flame presentation, and Material component availability or consumption remain outside this profile.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT"
+          ],
+          "title": "Spell invocation creates, releases, re-evokes, and attacks with a spell-created held object",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-flame-blade.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/flame_blade.json",
       "unitId": "flame_blade"
     },

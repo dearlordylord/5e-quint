@@ -1,5 +1,5 @@
 // Spell active-effect application extracted from spells-holes-fills.ts.
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode spell.invocation-spell-created-held-object
 
 // KERNEL-COVERAGE: runtime-owner BATTLE.COMMAND.OPTION_AND_NEXT_TURN
 import { Match } from "effect";
@@ -54,6 +54,8 @@ import {
   type BattleSightObscurement,
   type BattleSpellAreaChoice,
   type BattleState,
+  type SpellCreatedHeldObjectActiveEffect,
+  type SpellCreatedHeldObjectState,
   type BattleSpecialSpeedKind,
   type SelfTransformationModeEffectPayload,
   type SelfTransformationModeKind,
@@ -70,6 +72,12 @@ import {
 } from "../battle-reducer.ts";
 import type { BattleObjectId } from "../identity.ts";
 import { HIDEOUS_LAUGHTER_DURATION_TICKS } from "./domain-constants.ts";
+import {
+  battleCreatureWithSpellCreatedHeldObjectHand,
+  battleCreatureWithSpellCreatedHeldObjectHandStateFromActiveEffects,
+  battleCreatureWithoutSpellCreatedHeldObjectHand,
+  spellCreatedHeldObjectFreeHand,
+} from "./spell-created-held-object.ts";
 
 export const FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND = 60;
 export const FAERIE_FIRE_DIM_LIGHT_RADIUS_FEET = movementFeet(10);
@@ -290,9 +298,9 @@ export function battleLightEmitters(
                     effect,
                   ),
                 ]
-              : effect.kind === "heldLight"
-                ? [
-                    {
+                : effect.kind === "heldLight"
+                  ? [
+                      {
                       kind: "spellLightEmitter",
                       sourceSpellId: effect.sourceSpellId,
                       sourceCombatantId: effect.sourceCombatantId,
@@ -307,8 +315,31 @@ export function battleLightEmitters(
                       },
                       opaqueCoverInteraction: { kind: "doesNotBlockEmission" },
                       expiresAt: effect.expiresAt,
-                    },
-                  ]
+                      },
+                    ]
+                  : effect.kind === "spellCreatedHeldObject" &&
+                      effect.objectState.kind === "held"
+                    ? [
+                        {
+                          kind: "spellLightEmitter" as const,
+                          sourceSpellId: effect.sourceSpellId,
+                          sourceCombatantId: effect.sourceCombatantId,
+                          attachment: {
+                            kind: "combatant" as const,
+                            combatantId: combatant.combatantId,
+                          },
+                          emission: {
+                            kind: "brightAndDim" as const,
+                            brightRadiusFeet: effect.light.brightRadiusFeet,
+                            dimAdditionalFeet:
+                              effect.light.dimAdditionalFeet,
+                          },
+                          opaqueCoverInteraction: {
+                            kind: "doesNotBlockEmission" as const,
+                          },
+                          expiresAt: effect.expiresAt,
+                        },
+                      ]
                 : effect.kind === "dancingLights"
                   ? dancingLightsFromEffect(effect).map((light) => ({
                       kind: "spellLightEmitter" as const,
@@ -394,6 +425,156 @@ export function battlePerceptionRollModeForSight(
   return battleSightObscurement(illumination, observer) === "lightlyObscured"
     ? PERCEPTION_LIGHTLY_OBSCURED_ROLL_MODE
     : undefined;
+}
+
+export function spellCreatedHeldObjectEffectForSource(
+  combatant: BattleCreatureState | undefined,
+  sourceCombatantId: CombatantId,
+  sourceSpellId: SpellRecord["id"],
+): SpellCreatedHeldObjectActiveEffect | undefined {
+  return combatant?.activeEffects.find(
+    (effect): effect is SpellCreatedHeldObjectActiveEffect =>
+      effect.kind === "spellCreatedHeldObject" &&
+      effect.sourceCombatantId === sourceCombatantId &&
+      effect.sourceSpellId === sourceSpellId,
+  );
+}
+
+export function spellCreatedHeldObjectEffectsForActor(
+  combatant: BattleCreatureState | undefined,
+): readonly SpellCreatedHeldObjectActiveEffect[] {
+  return (
+    combatant?.activeEffects.filter(
+      (effect): effect is SpellCreatedHeldObjectActiveEffect =>
+        effect.kind === "spellCreatedHeldObject" &&
+        effect.sourceCombatantId === combatant.combatantId,
+    ) ?? []
+  );
+}
+
+export function applySpellCreatedHeldObjectEffect(
+  input: {
+    readonly state: BattleState;
+    readonly actorId: CombatantId;
+    readonly activeEffect: SpellCreatedHeldObjectActiveEffect;
+  },
+):
+  | { readonly tag: "updated"; readonly state: BattleState }
+  | { readonly tag: "invalid"; readonly message: string } {
+  const actor = input.state.combatants.get(input.actorId);
+  if (actor === undefined) {
+    return {
+      tag: "invalid",
+      message: "Spell-created held object actor is not in this battle.",
+    };
+  }
+  const freeHand = spellCreatedHeldObjectFreeHand(input.state, input.actorId);
+  if (freeHand === undefined) {
+    return {
+      tag: "invalid",
+      message: "Spell-created held object requires a free hand.",
+    };
+  }
+  const activeEffects = [
+    ...actor.activeEffects.filter(
+      (effect) =>
+        !(
+          effect.kind === "spellCreatedHeldObject" &&
+          effect.sourceSpellId === input.activeEffect.sourceSpellId &&
+          effect.sourceCombatantId === input.activeEffect.sourceCombatantId
+        ),
+    ),
+    input.activeEffect,
+  ];
+  const nextActor = battleCreatureWithSpellCreatedHeldObjectHand(
+    {
+      ...actor,
+      activeEffects,
+    },
+    freeHand,
+  );
+  return {
+    tag: "updated",
+    state: {
+      ...input.state,
+      combatants: new Map(input.state.combatants).set(
+        input.actorId,
+        nextActor,
+      ),
+    },
+  };
+}
+
+export function setSpellCreatedHeldObjectState(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly effect: SpellCreatedHeldObjectActiveEffect;
+  readonly objectState: SpellCreatedHeldObjectState;
+}):
+  | { readonly tag: "updated"; readonly state: BattleState }
+  | { readonly tag: "invalid"; readonly message: string } {
+  const actor = input.state.combatants.get(input.actorId);
+  if (actor === undefined) {
+    return {
+      tag: "invalid",
+      message: "Spell-created held object actor is not in this battle.",
+    };
+  }
+  const activeEffects = actor.activeEffects.map((effect) =>
+    effect === input.effect
+      ? { ...input.effect, objectState: input.objectState }
+      : effect,
+  );
+  const nextActor =
+    input.objectState.kind === "held"
+      ? spellCreatedHeldObjectHeldActor({
+          state: input.state,
+          actor: { ...actor, activeEffects },
+          actorId: input.actorId,
+        })
+      : {
+          tag: "updated" as const,
+          actor: battleCreatureWithoutSpellCreatedHeldObjectHand({
+            ...actor,
+            activeEffects,
+          }),
+        };
+  if (nextActor.tag === "invalid") {
+    return nextActor;
+  }
+  return {
+    tag: "updated",
+    state: {
+      ...input.state,
+      combatants: new Map(input.state.combatants).set(
+        input.actorId,
+        nextActor.actor,
+      ),
+    },
+  };
+}
+
+function spellCreatedHeldObjectHeldActor(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly actor: BattleCreatureState;
+}):
+  | { readonly tag: "updated"; readonly actor: BattleCreatureState }
+  | { readonly tag: "invalid"; readonly message: string } {
+  const freeHand = spellCreatedHeldObjectFreeHand(input.state, input.actorId);
+  if (freeHand === undefined) {
+    return {
+      tag: "invalid",
+      message: "Spell-created held object requires a free hand.",
+    };
+  }
+  return {
+    tag: "updated",
+    actor: battleCreatureWithSpellCreatedHeldObjectHand(
+      input.actor,
+      freeHand,
+    ),
+  };
 }
 
 function lightEmitterMatchesProjectionFact(
@@ -974,7 +1155,7 @@ export function battleCreatureWithSpellActiveEffects(
   combatant: BattleCreatureState,
   activeEffects: readonly BattleActiveEffect[],
 ): BattleCreatureState {
-  return combatant.positiveHpUnconscious === null
+  const nextCombatant = combatant.positiveHpUnconscious === null
     ? {
         ...combatant,
         activeEffects,
@@ -984,6 +1165,9 @@ export function battleCreatureWithSpellActiveEffects(
         ),
       }
     : { ...combatant, activeEffects };
+  return battleCreatureWithSpellCreatedHeldObjectHandStateFromActiveEffects(
+    nextCombatant,
+  );
 }
 
 export type SelfTransformationModeActiveEffect = Extract<

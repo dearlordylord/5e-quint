@@ -1,4 +1,5 @@
 // Held-light, rider, ready, and release spell resolution extracted from spells-resolve.ts.
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 
 import {
   spendAction,
@@ -16,6 +17,7 @@ import {
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type BattleActiveEffect,
+  type BattleResolutionInputForSubject,
   type BattleResolutionResult,
   type BattleDancingLightsPlacementValue,
   type BattleState,
@@ -24,6 +26,7 @@ import {
   type SpellMarkedDamageRider,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
+import type { BattleSubject } from "../battle-subjects.ts";
 import type { CombatantId } from "../identity.ts";
 import {
   damageDispositionFillFor,
@@ -58,8 +61,11 @@ import { expendSpellSlot } from "./spell-effects.ts";
 import {
   applyDancingLightsSpellEffect,
   applyHeldLightSpellEffect,
+  applySpellCreatedHeldObjectEffect,
   applyMarkedDamageRiderSpellEffect,
   applyObjectLightSpellEffect,
+  setSpellCreatedHeldObjectState,
+  spellCreatedHeldObjectEffectForSource,
   repositionDancingLightsSpellEffect,
   dancingLightsFromEffect,
   applyWeaponAttackOverrideSpellEffect,
@@ -101,6 +107,9 @@ import {
 } from "./spells-resolve-fill-set.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import { spellDancingLightsPlacementHole } from "./spells-targeting.ts";
+import {
+  spellCreatedHeldObjectHasFreeHand,
+} from "./spell-created-held-object.ts";
 
 export function resolveHeldLightSpellAct(input: {
   readonly input: BonusActionSpellBattleResolutionInput;
@@ -170,6 +179,257 @@ export function resolveHeldLightSpellAct(input: {
         state: resourced.state,
         snapshot: snapshotBattle(resourced.state),
       };
+}
+
+export function resolveSpellCreatedHeldObjectSpellAct(input: {
+  readonly input: BonusActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "spellCreatedHeldObject" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  const handStateError = spellCreatedHeldObjectHandStateError(
+    input.input.state,
+    input.actorId,
+    input.fillSet,
+    {
+      allowSpellCastReactionFacts: true,
+      unrelatedFillsMessage:
+        "Spell-created held object creation only accepts spell-cast Reaction facts.",
+    },
+  );
+  if (handStateError !== null) {
+    return invalidResult(
+      input.input.state,
+      handStateError.reason,
+      handStateError.message,
+    );
+  }
+  const spellCastReactionWindow = maybeOpenReactionWindow(
+    input.input.state,
+    spellCastReactionFrame({
+      casterId: input.actorId,
+      invocation: input.invocation,
+      targetIds: [input.actorId],
+      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+      castingResource: { kind: "bonusAction" },
+      continuation: {
+        kind: "replay",
+        subject: input.input.subject,
+        fills: input.input.fills,
+      },
+    }),
+    input.input.suppressedReactionTrigger,
+  );
+  if (spellCastReactionWindow !== null) {
+    return spellCastReactionWindow;
+  }
+  const resourced = spendSpellCastResources({
+    state: input.input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+  });
+  if (resourced.tag === "invalid") {
+    return resourced;
+  }
+  const effected = applySpellCreatedHeldObjectEffect({
+    state: resourced.state,
+    actorId: input.actorId,
+    activeEffect: input.invocation.activeEffect,
+  });
+  if (effected.tag === "invalid") {
+    return invalidResult(input.input.state, "staleSubject", effected.message);
+  }
+  return {
+    tag: "resolved",
+    state: effected.state,
+    snapshot: snapshotBattle(effected.state),
+  };
+}
+
+export function resolveSpellCreatedHeldObjectReEvokeSpellAct(input: {
+  readonly input: BonusActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "spellCreatedHeldObjectReEvoke" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  const handStateError = spellCreatedHeldObjectHandStateError(
+    input.input.state,
+    input.actorId,
+    input.fillSet,
+    {
+      allowSpellCastReactionFacts: false,
+      unrelatedFillsMessage:
+        "Spell-created held object re-evocation does not accept fills.",
+    },
+  );
+  if (handStateError !== null) {
+    return invalidResult(
+      input.input.state,
+      handStateError.reason,
+      handStateError.message,
+    );
+  }
+  const actor = input.input.state.combatants.get(input.actorId);
+  const activeEffect = spellCreatedHeldObjectEffectForSource(
+    actor,
+    input.invocation.activeEffect.sourceCombatantId,
+    input.invocation.spell.id,
+  );
+  if (activeEffect === undefined || activeEffect.objectState.kind !== "notHeld") {
+    return invalidResult(
+      input.input.state,
+      "staleSubject",
+      "Spell-created held object can no longer be re-evoked.",
+    );
+  }
+  const spent = spendActivationResource(input.input.state.currentTurnResources, {
+    kind: "bonusAction",
+  });
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.input.state,
+      "staleSubject",
+      "Bonus Action spell-created held object re-evocation is no longer available.",
+    );
+  }
+  const reEvoked = setSpellCreatedHeldObjectState({
+    state: { ...input.input.state, currentTurnResources: spent.right },
+    actorId: input.actorId,
+    effect: activeEffect,
+    objectState: { kind: "held" },
+  });
+  if (reEvoked.tag === "invalid") {
+    return invalidResult(input.input.state, "staleSubject", reEvoked.message);
+  }
+  return {
+    tag: "resolved",
+    state: reEvoked.state,
+    snapshot: snapshotBattle(reEvoked.state),
+  };
+}
+
+export function resolveReleaseSpellCreatedHeldObjectCommand(
+  input: BattleResolutionInputForSubject<
+    Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "releaseSpellCreatedHeldObject";
+      }
+    >
+  >,
+): BattleResolutionResult {
+  if (input.fills.length > 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Spell-created held object release does not accept fills.",
+    );
+  }
+  const actor = input.state.combatants.get(input.subject.actorId);
+  const effect = spellCreatedHeldObjectEffectForSource(
+    actor,
+    input.subject.sourceCombatantId,
+    input.subject.sourceSpellId,
+  );
+  if (effect === undefined || effect.objectState.kind !== "held") {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Spell-created held object is no longer held by this actor.",
+    );
+  }
+  const released = setSpellCreatedHeldObjectState({
+    state: input.state,
+    actorId: input.subject.actorId,
+    effect,
+    objectState: { kind: "notHeld" },
+  });
+  if (released.tag === "invalid") {
+    return invalidResult(input.state, "staleSubject", released.message);
+  }
+  return {
+    tag: "resolved",
+    state: released.state,
+    snapshot: snapshotBattle(released.state),
+  };
+}
+
+function spellCreatedHeldObjectHandStateError(
+  state: BattleState,
+  actorId: CombatantId,
+  fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>,
+  options: {
+    readonly allowSpellCastReactionFacts: boolean;
+    readonly unrelatedFillsMessage: string;
+  },
+):
+  | {
+      readonly reason: "invalidFill" | "staleSubject";
+      readonly message: string;
+    }
+  | null {
+  if (
+    spellCreatedHeldObjectHasUnrelatedFills(fillSet) ||
+    (!options.allowSpellCastReactionFacts &&
+      fillSet.reactionSpellTargetFacts.length > 0)
+  ) {
+    return { reason: "invalidFill", message: options.unrelatedFillsMessage };
+  }
+  if (!spellCreatedHeldObjectHasFreeHand(state, actorId)) {
+    return {
+      reason: "staleSubject",
+      message: "Spell-created held object requires a free hand.",
+    };
+  }
+  return null;
+}
+
+function spellCreatedHeldObjectHasUnrelatedFills(
+  fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>,
+): boolean {
+  return (
+    fillSet.targetId !== undefined ||
+    fillSet.objectTarget !== undefined ||
+    fillSet.targetSpatialFacts.length > 0 ||
+    fillSet.targetAllocation !== undefined ||
+    fillSet.targetList !== undefined ||
+    fillSet.attackSequencePartFills.some(
+      (attackSequencePartFill) =>
+        attackSequencePartFill.target !== undefined ||
+        attackSequencePartFill.attackRoll !== undefined ||
+        attackSequencePartFill.mirrorImageDuplicateRoll !== undefined ||
+        attackSequencePartFill.damageRoll !== undefined,
+    ) ||
+    fillSet.attackRoll !== undefined ||
+    fillSet.savingThrowOutcomes !== undefined ||
+    fillSet.skillChoice !== undefined ||
+    fillSet.abilityChoice !== undefined ||
+    fillSet.thaumaturgyActiveOneMinuteEffectCount !== undefined ||
+    fillSet.commandOptionChoice !== undefined ||
+    fillSet.selfTransformationModeChoice !== undefined ||
+    fillSet.conditionChoice !== undefined ||
+    fillSet.areaChoice !== undefined ||
+    fillSet.teleportDestination !== undefined ||
+    fillSet.dancingLightsPlacement !== undefined ||
+    fillSet.damageTypeChoice !== undefined ||
+    fillSet.concentrationSavingThrows.length > 0 ||
+    fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
+    fillSet.damageDispositions.length > 0 ||
+    fillSet.damageRoll !== undefined ||
+    fillSet.mirrorImageDuplicateRoll !== undefined ||
+    fillSet.movement !== undefined ||
+    fillSet.spellDamageReductionRolls.length > 0 ||
+    fillSet.attackBurstDamageRoll !== undefined ||
+    fillSet.healingRoll !== undefined
+  );
 }
 
 export function resolveDancingLightsCastSpellAct(input: {

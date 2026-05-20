@@ -171,6 +171,8 @@ import spareTheDyingInput from "../../surface/content/spare_the_dying.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type {
   AreaDirectEffectAtom,
+  ActivationPhase,
+  Attachment,
   EffectAtom,
   SpellRecord,
   StatBlockRecord,
@@ -395,6 +397,7 @@ export function subjectName(
   | "releaseGrapple"
   | "releaseReadiedSpell"
   | "releaseReadiedMovement"
+  | "releaseSpellCreatedHeldObject"
   | "castTriggeredReactionSpell"
   | "castAttackHitBonusActionSpell"
   | "opportunityAttack"
@@ -3721,25 +3724,28 @@ export function acidSplashWithRadius(radiusFeet: number): SpellRecord {
   ) {
     throw new Error("Expected Acid Splash point-origin Sphere phase.");
   }
+  const areaAttachment = phase.attachment.value as Extract<
+    Attachment,
+    { readonly kind: "area" }
+  >;
+  const resizedPhase = {
+    ...phase,
+    attachment: {
+      ...phase.attachment,
+      value: {
+        ...areaAttachment,
+        shape: {
+          ...areaAttachment.shape,
+          radiusFeet,
+        },
+      },
+    },
+  } as ActivationPhase;
   return {
     ...spell,
     mechanics: {
       ...spell.mechanics,
-      phases: [
-        {
-          ...phase,
-          attachment: {
-            ...phase.attachment,
-            value: {
-              ...phase.attachment.value,
-              shape: {
-                ...phase.attachment.value.shape,
-                radiusFeet,
-              },
-            },
-          },
-        },
-      ],
+      phases: [resizedPhase],
     },
   };
 }

@@ -1,5 +1,6 @@
 // Runtime codecs for battle reducer public payloads.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // Extracted from ../battle-reducer.ts; this module owns Effect Schema values,
 // while domain types remain exported by the reducer facade.
 
@@ -581,6 +582,11 @@ const ArmorOfShadowsSpellAccessSchema = Schema.Struct({
   tag: Schema.Literal("armorOfShadows"),
 });
 
+const SpellEffectSpellAccessSchema = Schema.Struct({
+  tag: Schema.Literal("spellEffect"),
+  sourceCombatantId: CombatantId,
+});
+
 const SpellSlotInvocationResourceSchema = Schema.Struct({
   tag: Schema.Literal("spellSlot"),
   slotLevel: SpellSlotLevel,
@@ -1109,6 +1115,39 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       rangeFeet: MovementFeet,
       attackKind: Schema.Literal("ranged_spell_attack"),
       attackBonus: AttackBonus,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("spellCreatedHeldObject"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("bonusAction"),
+      activeEffect: BattleRuntimeObjectSchema,
+    }),
+    Schema.Struct({
+      access: SpellEffectSpellAccessSchema,
+      resource: NoSpellInvocationResourceSchema,
+      procedure: Schema.Literal("spellCreatedHeldObjectAttack"),
+      spell: BattleRuntimeObjectSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("singleCombatant"),
+      }),
+      damage: Schema.Struct({
+        expr: BattleRuntimeObjectSchema,
+        damageType: DamageTypeSchema,
+      }),
+      rangeFeet: MovementFeet,
+      attackKind: Schema.Literal("melee_spell_attack"),
+      attackBonus: AttackBonus,
+      activeEffect: BattleRuntimeObjectSchema,
+    }),
+    Schema.Struct({
+      access: SpellEffectSpellAccessSchema,
+      resource: NoSpellInvocationResourceSchema,
+      procedure: Schema.Literal("spellCreatedHeldObjectReEvoke"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("bonusAction"),
+      activeEffect: BattleRuntimeObjectSchema,
     }),
     Schema.Struct({
       access: ClassCantripSpellAccessSchema,

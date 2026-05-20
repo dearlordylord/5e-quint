@@ -43,6 +43,7 @@ export const HAND_USES = [
   "offWeapon",
   "shield",
   "grapple",
+  "spellCreatedHeldObject",
 ] as const;
 export type HandUse = (typeof HAND_USES)[number];
 

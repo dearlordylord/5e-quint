@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Flame Blade Runtime Support"
     },
     {
@@ -187,7 +187,7 @@ The final task is intentionally blocked on every real task in this plan and plac
 | 6 | L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME - Alter Self Natural Weapons Runtime | done | L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE, L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME | B lane; Unit `alter_self`. |
 | 7 | L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL - Continual Flame Dispel And Suppression Removal | done | completed baseline | B lane; Unit `continual_flame`; split remaining RAW-sourced cleanup owners into concrete follow-up tasks. |
 | 8 | L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE - Flame Blade Surface Lifecycle Shape | done | completed baseline | B lane; Unit `flame_blade`; installed Surface lifecycle shape and left runtime support to Task 9. |
-| 9 | L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT - Flame Blade Runtime Support | ready-for-research | L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE | B lane; Unit `flame_blade`. |
+| 9 | L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT - Flame Blade Runtime Support | done | L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE | B lane; Unit `flame_blade`; promoted spell-created held object runtime support. |
 | 10 | L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE - Heat Metal Surface Contact Escape Shape | ready-for-research | completed baseline | B lane; Unit `heat_metal`. |
 | 11 | L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME - Heat Metal Contact Damage Runtime | blocked | L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE | B lane; Unit `heat_metal`. |
 | 12 | L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY - Heat Metal Holding Wearing Penalty Runtime | blocked | L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE, L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME | B lane; Unit `heat_metal`. |
@@ -519,7 +519,7 @@ Acceptance:
 
 ### Task 9 - L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT - Flame Blade Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `flame_blade`.
 Origin: Original backlog task 95.

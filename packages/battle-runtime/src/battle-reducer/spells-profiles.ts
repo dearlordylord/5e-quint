@@ -1,3 +1,4 @@
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // Spell profile predicates and projections (Cluster O). Mechanical extraction
 // from battle-reducer.ts. Aggregates: per-procedure `supported*Profile`
 // predicates, spell-specific authoring bodies (faerieFire, animalFriendship,
@@ -105,6 +106,8 @@ import {
   supportedPreparedScalarBuffSpellProfile,
   supportedPreparedSelfTransformationModeSpellProfile,
   supportedPreparedSelfTeleportSpellProfile,
+  supportedPreparedSpellCreatedHeldObjectProfile,
+  supportedSpellCreatedHeldObjectActiveEffectProfile,
   supportedPreparedSlotSpellProfile,
   supportedPreparedWardingBondSpellProfile,
   supportedPreparedWeaponDamageRiderSpellProfile,
@@ -344,6 +347,18 @@ export function supportedSpellActs(
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedObjectLightSpellProfile(spell, spellcasting.spellSlots),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      supportedPreparedSpellCreatedHeldObjectProfile(
+        actor.combatantId,
+        spell,
+        spellcasting.spellSlots,
+        spellcasting.spellcastingAbilityModifier,
+        spellcasting.proficiencyBonus,
+      ),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      supportedSpellCreatedHeldObjectActiveEffectProfile(actor, spell),
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedConditionImmunityAndTurnStartTemporaryHitPointsSpellProfile(
