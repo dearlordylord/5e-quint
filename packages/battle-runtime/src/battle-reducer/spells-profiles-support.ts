@@ -1,14 +1,17 @@
 // Support, defensive, and rider spell profile projections extracted from spells-profiles.ts.
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import type { CreatureType } from "@dnd/shared/game-facts";
 import {
+  attackBonus,
   movementDeltaFeet,
   movementFeet,
   spellSlotLevel,
   type AbilityModifier,
   type MovementFeet,
+  type ProficiencyBonus as ProficiencyBonusType,
   type SpellSlotLevel,
 } from "@dnd/shared/types";
 import { DamageTypeSchema } from "@dnd/surface/surface/schema";
@@ -54,6 +57,8 @@ import {
   type RollModifierSpellTargeting,
   type ScalarBuffSpellEffect,
   type ScalarBuffSpellTargeting,
+  type SelfTransformationModeKind,
+  type SelfTransformationModeSpellInvocation,
   type SelfTeleportSpellInvocation,
   type SupportedSpellInvocation,
   type ThaumaturgyBoomingVoiceSpellInvocation,
@@ -77,6 +82,7 @@ import {
   MIRROR_IMAGE_UNAFFECTED_BY,
   PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES,
   PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS,
+  SELF_TRANSFORMATION_MODE_KINDS,
   THAUMATURGY_BOOMING_VOICE_DURATION_TICKS,
   THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL,
   WARDING_BOND_ARMOR_CLASS_BONUS,
@@ -115,6 +121,16 @@ type AbilityCheckRollModeSpellProjection = {
 type RollModifierSpellProjection =
   | D20RollModifierSpellProjection
   | AbilityCheckRollModeSpellProjection;
+type SpellActivationPhase = Extract<
+  SpellRecord["mechanics"],
+  { readonly family: "activation" }
+>["phases"][number];
+type DirectActivationPhase = Extract<
+  SpellActivationPhase,
+  { readonly kind: "direct" }
+>;
+type CastTimeEffectModeChoice = NonNullable<DirectActivationPhase["mode"]>;
+type CastTimeEffectModeOption = CastTimeEffectModeChoice["options"][number];
 
 function isD20RollModifierSpellProjection(
   projection: RollModifierSpellProjection,
@@ -720,6 +736,229 @@ export function supportedPreparedScalarBuffSpellProfile(
           },
         ];
   });
+}
+
+export function supportedPreparedSelfTransformationModeSpellProfile(
+  actorId: CombatantId,
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+  spellcastingAbilityModifier: AbilityModifier,
+  proficiencyBonus: ProficiencyBonusType,
+): readonly SelfTransformationModeSpellInvocation[] {
+  const projection = selfTransformationModeSpellProjection({
+    actorId,
+    spell,
+    spellcastingAbilityModifier,
+    proficiencyBonus,
+  });
+  if (projection === null) {
+    return [];
+  }
+  return spellSlots.flatMap(
+    (slot): readonly SelfTransformationModeSpellInvocation[] =>
+      Number(slot.spellLevel) < spell.mechanics.level
+        ? []
+        : [
+            {
+              access: { tag: "prepared" },
+              resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+              procedure: "selfTransformationMode",
+              spell,
+              actionCost: "magicAction",
+              modeChoices: projection.modeChoices,
+              naturalWeaponFacts: projection.naturalWeaponFacts,
+              expiresAt: projection.expiresAt,
+            },
+          ],
+  );
+}
+
+function selfTransformationModeSpellProjection(input: {
+  readonly actorId: CombatantId;
+  readonly spell: SpellRecord;
+  readonly spellcastingAbilityModifier: AbilityModifier;
+  readonly proficiencyBonus: ProficiencyBonusType;
+}): Pick<
+  SelfTransformationModeSpellInvocation,
+  "modeChoices" | "naturalWeaponFacts" | "expiresAt"
+> | null {
+  const spell = input.spell;
+  if (
+    spell.mechanics.family !== "activation" ||
+    spell.mechanics.level !== 2 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "self" ||
+    spell.mechanics.duration.kind !== "concentration" ||
+    spell.mechanics.phases.length !== 1
+  ) {
+    return null;
+  }
+  const phase = spell.mechanics.phases[0];
+  if (
+    phase === undefined ||
+    phase.kind !== "direct" ||
+    phase.attachment.kind !== "self" ||
+    phase.effects !== undefined ||
+    phase.mode?.allowsMidDurationSwitchAs !== "magic_action"
+  ) {
+    return null;
+  }
+  const modeProjection = selfTransformationModeOptionsProjection(
+    phase.mode.options,
+    input.spellcastingAbilityModifier,
+    input.proficiencyBonus,
+  );
+  if (modeProjection === null) {
+    return null;
+  }
+  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
+    spell.mechanics.duration.upTo,
+  );
+  return Either.isLeft(durationTicks)
+    ? null
+    : {
+        modeChoices: modeProjection.modeChoices,
+        naturalWeaponFacts: modeProjection.naturalWeaponFacts,
+        expiresAt: {
+          kind: "concentration",
+          combatantId: input.actorId,
+          durationTicks: durationTicks.right,
+        },
+      };
+}
+
+function selfTransformationModeOptionsProjection(
+  options: CastTimeEffectModeChoice["options"],
+  spellcastingAbilityModifier: AbilityModifier,
+  proficiencyBonus: ProficiencyBonusType,
+): Pick<
+  SelfTransformationModeSpellInvocation,
+  "modeChoices" | "naturalWeaponFacts"
+> | null {
+  const naturalWeaponFacts = options.reduce<
+    SelfTransformationModeSpellInvocation["naturalWeaponFacts"] | null
+  >(
+    (projected, option) =>
+      projected ??
+      selfTransformationNaturalWeaponProjection(
+        option.effects,
+        spellcastingAbilityModifier,
+        proficiencyBonus,
+      ),
+    null,
+  );
+  const modeChoices = SELF_TRANSFORMATION_MODE_KINDS.filter((mode) =>
+    selfTransformationModeIsSupportedByOptions(mode, options),
+  );
+  const [firstMode, ...restModes] = modeChoices;
+  return naturalWeaponFacts === null ||
+    firstMode === undefined ||
+    modeChoices.length !== SELF_TRANSFORMATION_MODE_KINDS.length
+    ? null
+    : {
+        modeChoices: [firstMode, ...restModes],
+        naturalWeaponFacts,
+      };
+}
+
+function selfTransformationModeIsSupportedByOptions(
+  mode: SelfTransformationModeKind,
+  options: CastTimeEffectModeChoice["options"],
+): boolean {
+  return options.some((option) =>
+    Match.value(mode).pipe(
+      Match.when("aquaticAdaptation", () =>
+        effectsAreAquaticAdaptation(option.effects),
+      ),
+      Match.when("changeAppearance", () => option.effects === undefined),
+      Match.when("naturalWeapons", () =>
+        effectsAreNaturalWeapons(option.effects),
+      ),
+      Match.exhaustive,
+    ),
+  );
+}
+
+function effectsAreAquaticAdaptation(
+  effects: CastTimeEffectModeOption["effects"] | undefined,
+): boolean {
+  return (
+    effects?.length === 2 &&
+    effects.some((effect) => effect.kind === "water_breathing") &&
+    effects.some(
+      (effect) =>
+        effect.kind === "grant_speed" &&
+        effect.speedKind === "swim" &&
+        typeof effect.feet !== "number" &&
+        effect.feet.kind === "walk_speed",
+    )
+  );
+}
+
+function effectsAreNaturalWeapons(
+  effects: CastTimeEffectModeOption["effects"] | undefined,
+): boolean {
+  return selfTransformationNaturalWeaponsEffect(effects) !== null;
+}
+
+function selfTransformationNaturalWeaponProjection(
+  effects: CastTimeEffectModeOption["effects"] | undefined,
+  spellcastingAbilityModifier: AbilityModifier,
+  proficiencyBonus: ProficiencyBonusType,
+): SelfTransformationModeSpellInvocation["naturalWeaponFacts"] | null {
+  const effect = selfTransformationNaturalWeaponsEffect(effects);
+  if (effect === null) {
+    return null;
+  }
+  const damageTypeChoices = uniqueDamageTypeChoices(
+    effect.damageType.options.map((option) => option.damageType),
+  );
+  return damageTypeChoices === null
+    ? null
+    : {
+        damage: {
+          dice: 1,
+          dieSize: effect.damageDie,
+          damageTypeChoices,
+        },
+        spellcastingAbilityModifier,
+        attackBonus: attackBonus(
+          Number(spellcastingAbilityModifier) + Number(proficiencyBonus),
+        ),
+      };
+}
+
+function selfTransformationNaturalWeaponsEffect(
+  effects: CastTimeEffectModeOption["effects"] | undefined,
+): Extract<EffectAtom, { readonly kind: "natural_weapons" }> | null {
+  if (effects?.length !== 1) {
+    return null;
+  }
+  const effect = effects[0];
+  if (
+    effect === undefined ||
+    effect.kind !== "natural_weapons" ||
+    effect.damageDie !== 6 ||
+    effect.replacesAbility !== "str" ||
+    effect.attackRollAbility !== "spellcasting" ||
+    effect.damageRollAbility !== "spellcasting"
+  ) {
+    return null;
+  }
+  return effect;
+}
+
+function uniqueDamageTypeChoices(
+  damageTypes: readonly DamageType[],
+): readonly [DamageType, ...DamageType[]] | null {
+  const unique: DamageType[] = [];
+  for (const damageType of damageTypes) {
+    if (!unique.includes(damageType)) {
+      unique.push(damageType);
+    }
+  }
+  const [first, ...rest] = unique;
+  return first === undefined ? null : [first, ...rest];
 }
 
 function scalarBuffSpellProjection(spell: SpellRecord): {

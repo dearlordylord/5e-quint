@@ -20,6 +20,7 @@ import {
   type BattleSpellTargetAllocationSpatialFact,
   type BattleSpellTargetListSpatialFact,
   type BattleSpellCastReactionFact,
+  type SelfTransformationModeKind,
   type BattleTargetSpatialFact,
   type SpellTargeting,
   type SupportedSpellInvocation,
@@ -50,6 +51,7 @@ import {
   spellRollModifierAbilityChoiceHoleId,
   spellRollModifierSkillChoiceHoleId,
   spellSavingThrowOutcomeHoleId,
+  selfTransformationModeChoiceHoleId,
   spellTargetAllocationHoleId,
   spellTargetListHoleId,
 } from "./spells-holes-fills.ts";
@@ -142,6 +144,9 @@ export type SpellFillSet =
           >
         | undefined;
       readonly commandOptionChoice: BattleCommandOption | undefined;
+      readonly selfTransformationModeChoice:
+        | SelfTransformationModeKind
+        | undefined;
       readonly conditionChoice: Condition | undefined;
       readonly areaChoice: BattleSpellAreaIdentityChoice | undefined;
       readonly teleportDestination:
@@ -243,6 +248,7 @@ export function spellFillSet(
       >
     | undefined;
   let commandOptionChoice: BattleCommandOption | undefined;
+  let selfTransformationModeChoice: SelfTransformationModeKind | undefined;
   let conditionChoice: Condition | undefined;
   let areaChoice: BattleSpellAreaIdentityChoice | undefined;
   let teleportDestination:
@@ -779,6 +785,36 @@ export function spellFillSet(
       continue;
     }
 
+    if (fill.kind === "selfTransformationModeChoice") {
+      if (invocation.procedure !== "selfTransformationMode") {
+        return {
+          tag: "invalid",
+          message: "Self-transformation mode choice does not match this spell.",
+        };
+      }
+      if (fill.holeId !== selfTransformationModeChoiceHoleId(invocation)) {
+        return {
+          tag: "invalid",
+          message:
+            "Self-transformation mode choice must use the selected spell act mode-choice hole.",
+        };
+      }
+      if (!invocation.modeChoices.includes(fill.value)) {
+        return {
+          tag: "invalid",
+          message: "Self-transformation mode choice is not available.",
+        };
+      }
+      if (selfTransformationModeChoice !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Self-transformation mode was filled twice.",
+        };
+      }
+      selfTransformationModeChoice = fill.value;
+      continue;
+    }
+
     if (fill.kind === "conditionChoice") {
       if (!spellInvocationHasConditionChoice(invocation)) {
         return {
@@ -904,6 +940,7 @@ export function spellFillSet(
           invocation.procedure === "spellAttackDamage" &&
           invocation.damage.kind === "sorcerousBurstDamageTypeChoice"
         ) &&
+        invocation.procedure !== "selfTransformationMode" &&
         invocation.procedure !== "spellHostedWeaponAttack"
       ) {
         return {
@@ -1149,6 +1186,7 @@ export function spellFillSet(
     abilityChoice,
     thaumaturgyActiveOneMinuteEffectCount,
     commandOptionChoice,
+    selfTransformationModeChoice,
     conditionChoice,
     areaChoice,
     teleportDestination,
@@ -1190,6 +1228,7 @@ export function spellFillSetContainsOnlySpellCastReactionFacts(
     fillSet.abilityChoice === undefined &&
     fillSet.thaumaturgyActiveOneMinuteEffectCount === undefined &&
     fillSet.commandOptionChoice === undefined &&
+    fillSet.selfTransformationModeChoice === undefined &&
     fillSet.conditionChoice === undefined &&
     fillSet.areaChoice === undefined &&
     fillSet.teleportDestination === undefined &&

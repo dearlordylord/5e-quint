@@ -57,6 +57,7 @@ import {
   attackTargetConstraint,
 } from "./statblock-attacks.ts";
 import { attackActionOptionsForActor } from "./attack-damage-apply.ts";
+import { selfTransformationModeSpecialSpeedKind } from "./spells-active-effects.ts";
 import {
   combatantCanSee,
   combatantWearingArmor,
@@ -268,6 +269,11 @@ function activeSpecialSpeedGrantKinds(
   for (const effect of combatant.activeEffects) {
     if (effect.kind === "specialSpeedGrant") {
       kinds.add(effect.speedKind);
+    }
+    const selfTransformationSpeedKind =
+      selfTransformationModeSpecialSpeedKind(effect);
+    if (selfTransformationSpeedKind !== null) {
+      kinds.add(selfTransformationSpeedKind);
     }
   }
   return BATTLE_SPECIAL_SPEED_KINDS.filter((kind) => kinds.has(kind));

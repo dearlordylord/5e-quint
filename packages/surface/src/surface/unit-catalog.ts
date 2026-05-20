@@ -4,6 +4,7 @@ import { Option } from "effect";
 // Keep authoring changes in Dhall, then regenerate JSON and trace output.
 import armorChainMailInput from "../../content/armor_chain_mail.json";
 import aidInput from "../../content/aid.json";
+import alterSelfInput from "../../content/alter_self.json";
 import animalFriendshipInput from "../../content/animal_friendship.json";
 import animalMessengerInput from "../../content/animal_messenger.json";
 import arcanistsMagicAuraInput from "../../content/arcanists_magic_aura.json";
@@ -83,6 +84,7 @@ import dissonantWhispersInput from "../../content/dissonant_whispers.json";
 import falseLifeInput from "../../content/false_life.json";
 import fireBoltInput from "../../content/fire_bolt.json";
 import fireballInput from "../../content/fireball.json";
+import flameBladeInput from "../../content/flame_blade.json";
 import findFamiliarInput from "../../content/find_familiar.json";
 import findTrapsInput from "../../content/find_traps.json";
 import flamingSphereInput from "../../content/flaming_sphere.json";
@@ -423,6 +425,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     speciesTieflingDarkvisionInput,
     acidSplashInput,
     aidInput,
+    alterSelfInput,
     animalFriendshipInput,
     animalMessengerInput,
     arcanistsMagicAuraInput,
@@ -455,6 +458,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     falseLifeInput,
     fireBoltInput,
     fireballInput,
+    flameBladeInput,
     findFamiliarInput,
     findTrapsInput,
     flamingSphereInput,

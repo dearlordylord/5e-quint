@@ -48,6 +48,7 @@ import {
   spellRollModifierSkillChoiceHole,
   spellSavingThrowAbility,
   spellSavingThrowOutcomeHole,
+  selfTransformationModeChoiceHole,
   spellTargetAllocationHole,
   spellTargetHole,
   spellTargetListHole,
@@ -60,7 +61,10 @@ import {
   spellDancingLightsPlacementHole,
   targetListTargetingHasFixedMaximum,
 } from "./spells-targeting.ts";
-import { dancingLightsFromEffect } from "./spells-active-effects.ts";
+import {
+  dancingLightsFromEffect,
+  selfTransformationModeLabel,
+} from "./spells-active-effects.ts";
 import { attackTargetHole } from "./hole-helpers.ts";
 import { spellCastReactionFactsHole } from "./spell-cast-reaction-frame.ts";
 import {
@@ -123,6 +127,21 @@ export function discoverSupportedSpellInvocations(
                 initialHoles: [targetHole, commandOptionChoiceHole(invocation)],
               },
             ];
+      }
+      if (invocation.procedure === "selfTransformationMode") {
+        return [
+          {
+            subject: {
+              tag: "actionSpell" as const,
+              actorId,
+              invocation: supportedSpellInvocationRef(invocation),
+              mode: { tag: "cast" as const },
+            },
+            label: invocation.spell.name,
+            summary: spellInvocationCastSummary(invocation),
+            initialHoles: [selfTransformationModeChoiceHole(invocation)],
+          },
+        ];
       }
       if (invocation.procedure === "fogCloudObscurement") {
         return [
@@ -884,6 +903,9 @@ export function spellInvocationCastSummary(
   if (invocation.procedure === "scalarBuff") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
+  if (invocation.procedure === "selfTransformationMode") {
+    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot and choose ${invocation.modeChoices.map(selfTransformationModeLabel).join(" or ")}.`;
+  }
   if (invocation.procedure === "rollModifier") {
     return invocation.resource.tag === "spellSlot"
       ? `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`
@@ -1020,6 +1042,7 @@ export function spellActivationInvocationCastSummary(
         | "moonbeam"
         | "dancingLightsSeparateCast"
         | "dancingLightsCombinedCast"
+        | "selfTransformationMode"
         | "jumpMovementReplacement"
         | "selfTeleport"
         | "sanctuaryTargetingInterdiction"
@@ -1146,6 +1169,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "conditionRemovalProtection" &&
     invocation.procedure !== "directConditionRemoval" &&
     invocation.procedure !== "scalarBuff" &&
+    invocation.procedure !== "selfTransformationMode" &&
     invocation.procedure !== "weaponDamageRider" &&
     invocation.procedure !== "afterHitDamage" &&
     invocation.procedure !== "afterHitSaveGatedCondition" &&
@@ -1182,6 +1206,7 @@ export function readiedSpellAct(
     invocation.procedure === "makeStable" ||
     invocation.procedure === "spellHostedWeaponAttack" ||
     invocation.procedure === "scalarBuff" ||
+    invocation.procedure === "selfTransformationMode" ||
     invocation.procedure === "weaponDamageRider" ||
     invocation.procedure === "weaponAttackOverride" ||
     invocation.procedure === "markedDamageRider" ||

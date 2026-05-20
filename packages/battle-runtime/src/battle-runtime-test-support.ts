@@ -401,6 +401,7 @@ export function subjectName(
   | "movableZoneReposition"
   | "movableZoneRam"
   | "jumpMovementReplacement"
+  | "replaceSelfTransformationMode"
   | "commandGrovel"
   | "commandDrop"
   | "commandApproach"

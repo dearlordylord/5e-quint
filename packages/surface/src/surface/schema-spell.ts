@@ -114,6 +114,20 @@ export const DivinationOmenEffectSchema = strictStruct({
   }),
 });
 
+const SPELL_CREATED_HELD_OBJECT_REQUIREMENTS = [
+  "free_hand",
+] as const satisfies ReadonlyNonEmptyArray<string>;
+const SpellCreatedHeldObjectRequirementSchema = Schema.Literal(
+  ...SPELL_CREATED_HELD_OBJECT_REQUIREMENTS,
+);
+
+const SPELL_CREATED_HELD_OBJECT_DISAPPEARANCE_TRIGGERS = [
+  "caster_lets_go",
+] as const satisfies ReadonlyNonEmptyArray<string>;
+const SpellCreatedHeldObjectDisappearanceTriggerSchema = Schema.Literal(
+  ...SPELL_CREATED_HELD_OBJECT_DISAPPEARANCE_TRIGGERS,
+);
+
 export const LinearPerLevelNumberSchema = Schema.Struct({
   kind: Schema.Literal("linear_per_level"),
   axis: LevelAxisSchema,
@@ -227,6 +241,34 @@ export const DamageTypeRefSchema = Schema.Union(
   DamageTypeRefBaseSchema,
   makeHoleSchema(DamageTypeRefBaseSchema),
 );
+
+const AlterSelfNaturalWeaponGrowthDamageTypeChoiceSchema = strictStruct({
+  kind: Schema.Literal("choice_table"),
+  holeId: Schema.Literal("alter_self_natural_weapon_growth"),
+  label: Schema.Literal("natural weapon growth"),
+  options: Schema.Tuple(
+    strictStruct({
+      id: Schema.Literal("claws"),
+      displayName: Schema.Literal("claws"),
+      damageType: Schema.Literal("slashing"),
+    }),
+    strictStruct({
+      id: Schema.Literal("fangs"),
+      displayName: Schema.Literal("fangs"),
+      damageType: Schema.Literal("piercing"),
+    }),
+    strictStruct({
+      id: Schema.Literal("horns"),
+      displayName: Schema.Literal("horns"),
+      damageType: Schema.Literal("piercing"),
+    }),
+    strictStruct({
+      id: Schema.Literal("hooves"),
+      displayName: Schema.Literal("hooves"),
+      damageType: Schema.Literal("bludgeoning"),
+    }),
+  ),
+});
 
 export const ActionRestrictionSchema = Schema.Union(
   Schema.Struct({
@@ -358,6 +400,9 @@ type ClassLevelChoiceCount = Schema.Schema.Type<
   typeof ClassLevelChoiceCountSchema
 >;
 type ClassSpellListName = (typeof CLASS_SPELLCASTING_CLASS_NAMES)[number];
+type AlterSelfNaturalWeaponGrowthDamageTypeChoice = Schema.Schema.Type<
+  typeof AlterSelfNaturalWeaponGrowthDamageTypeChoiceSchema
+>;
 
 function distinctSkills(skills: readonly Skill[]): boolean {
   return new Set(skills).size === skills.length;
@@ -979,8 +1024,11 @@ type EffectAtom =
   | { readonly kind: "alter_item_kind"; readonly newKind: string }
   | {
       readonly kind: "natural_weapons";
-      readonly damageType: Schema.Schema.Type<typeof DamageTypeSchema>;
-      readonly damageDie: number;
+      readonly damageType: AlterSelfNaturalWeaponGrowthDamageTypeChoice;
+      readonly damageDie: 6;
+      readonly replacesAbility: "str";
+      readonly attackRollAbility: "spellcasting";
+      readonly damageRollAbility: "spellcasting";
     }
   | { readonly kind: "water_breathing" }
   | {
@@ -1023,6 +1071,24 @@ type EffectAtom =
       readonly kind: "emit_dim_light";
       readonly radiusFeet: number;
       readonly expiresAt: "end_of_caster_next_turn";
+    }
+  | {
+      readonly kind: "spell_created_held_object";
+      readonly heldBy: "caster";
+      readonly requirements: ReadonlyNonEmptyArray<
+        Schema.Schema.Type<typeof SpellCreatedHeldObjectRequirementSchema>
+      >;
+      readonly disappearsWhen: ReadonlyNonEmptyArray<
+        Schema.Schema.Type<
+          typeof SpellCreatedHeldObjectDisappearanceTriggerSchema
+        >
+      >;
+      readonly reEvoke: {
+        readonly cost: { readonly kind: "bonus_action" };
+        readonly requirements: ReadonlyNonEmptyArray<
+          Schema.Schema.Type<typeof SpellCreatedHeldObjectRequirementSchema>
+        >;
+      };
     }
   | ({ readonly kind: "grant_feat" } & (
       | {
@@ -2057,6 +2123,9 @@ export const OngoingPredicateSchema = Schema.Union(
     kind: Schema.Literal("has_condition"),
     condition: ConditionSchema,
   }),
+  Schema.Struct({
+    kind: Schema.Literal("spell_created_held_object_active"),
+  }),
 );
 
 const BaseAcReplacementFormulaSchema = Schema.Union(
@@ -2896,8 +2965,11 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       }),
       Schema.Struct({
         kind: Schema.Literal("natural_weapons"),
-        damageType: DamageTypeSchema,
-        damageDie: Schema.Number,
+        damageType: AlterSelfNaturalWeaponGrowthDamageTypeChoiceSchema,
+        damageDie: Schema.Literal(6),
+        replacesAbility: Schema.Literal("str"),
+        attackRollAbility: Schema.Literal("spellcasting"),
+        damageRollAbility: Schema.Literal("spellcasting"),
       }),
       Schema.Struct({ kind: Schema.Literal("water_breathing") }),
       Schema.Struct({
@@ -2988,6 +3060,18 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         kind: Schema.Literal("emit_dim_light"),
         radiusFeet: Schema.Number,
         expiresAt: Schema.Literal("end_of_caster_next_turn"),
+      }),
+      strictStruct({
+        kind: Schema.Literal("spell_created_held_object"),
+        heldBy: Schema.Literal("caster"),
+        requirements: nonEmpty(SpellCreatedHeldObjectRequirementSchema),
+        disappearsWhen: nonEmpty(
+          SpellCreatedHeldObjectDisappearanceTriggerSchema,
+        ),
+        reEvoke: strictStruct({
+          cost: strictStruct({ kind: Schema.Literal("bonus_action") }),
+          requirements: nonEmpty(SpellCreatedHeldObjectRequirementSchema),
+        }),
       }),
       Schema.Struct({
         kind: Schema.Literal("composite"),

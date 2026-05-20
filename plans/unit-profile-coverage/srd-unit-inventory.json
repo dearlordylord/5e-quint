@@ -182,13 +182,13 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 485,
-      "percent": "87.2%",
+      "numerator": 484,
+      "percent": "87.1%",
       "rowsByStatus": {
-        "accepted": 355,
+        "accepted": 354,
         "accepted-no-battle-effect": 130,
-        "battle-runtime-required": 61,
-        "partial-battle-runtime": 7,
+        "battle-runtime-required": 58,
+        "partial-battle-runtime": 11,
         "owner-evidence-required": 3
       }
     },
@@ -203,19 +203,19 @@
       "catalog-installed-owner-evidence-required": 4
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 367,
+      "catalog-installed-owner-evidence-present": 370,
       "non-runtime": 24,
       "catalog-only/dead-for-now": 101,
       "missing-authored-record": 22,
-      "catalog-installed-owner-evidence-required": 21,
-      "catalog-authored-executable-follow-up": 21
+      "catalog-installed-owner-evidence-required": 23,
+      "catalog-authored-executable-follow-up": 16
     },
     "spellPressureRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 206,
+      "catalog-installed-owner-evidence-present": 209,
       "catalog-only/dead-for-now": 101,
       "missing-authored-record": 22,
-      "catalog-installed-owner-evidence-required": 17,
-      "catalog-authored-executable-follow-up": 21
+      "catalog-installed-owner-evidence-required": 19,
+      "catalog-authored-executable-follow-up": 16
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -8752,12 +8752,6 @@
       },
       "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
-      "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "future dispel/suppression spell-effect lifecycle owner; character inventory/equipment spell-component legality owner; runtime-detached object presentation and table adjudication owner",
-        "reason": "The object-light profile records Continual Flame as until-dispelled state, but this task does not promote a generic Dispel Magic or antimagic spell-effect removal procedure.; SRD component rules require the costly consumed Material component for Continual Flame. Promoted battle runtime spends the Magic Action and Spell Slot and records battle-visible spell effects; inventory, hand access, focus/component substitution eligibility, and costly consumed Material component consumption belong to the character equipment/component legality boundary.; Promoted battle runtime consumes object light and opaque-cover facts; it does not render flame appearance, object covering/hiding, heat, fuel, smothering, or quenching presentation facts."
-      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -8771,7 +8765,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "accepted"
+      "battleReadinessStatus": "partial-battle-runtime"
     },
     {
       "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_enhance_ability",
@@ -11439,12 +11433,6 @@
       },
       "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
-      "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "future dispel/suppression spell-effect lifecycle owner; character inventory/equipment spell-component legality owner; runtime-detached object presentation and table adjudication owner",
-        "reason": "The object-light profile records Continual Flame as until-dispelled state, but this task does not promote a generic Dispel Magic or antimagic spell-effect removal procedure.; SRD component rules require the costly consumed Material component for Continual Flame. Promoted battle runtime spends the Magic Action and Spell Slot and records battle-visible spell effects; inventory, hand access, focus/component substitution eligibility, and costly consumed Material component consumption belong to the character equipment/component legality boundary.; Promoted battle runtime consumes object light and opaque-cover facts; it does not render flame appearance, object covering/hiding, heat, fuel, smothering, or quenching presentation facts."
-      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -11458,7 +11446,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "accepted"
+      "battleReadinessStatus": "partial-battle-runtime"
     },
     {
       "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_darkvision",
@@ -11647,13 +11635,24 @@
         "sourceRecordPath": "packages/surface/content/flame_blade.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "flame_blade"
       },
       "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE, L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT: L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE owns Replace the lossy Flame Blade mechanics with a lossless SRD Surface shape for the spell-created held blade: Bonus Action creation and re-evocation, free-hand requirement, let-go disappearance, Concentration up to 10 minutes, self-attached held Bright Light 10 feet plus Dim Light for an additional 10 feet, active-blade-gated Magic Action melee spell attack, Fire damage equal to 3d6 plus the caster's spellcasting ability modifier, and +1d6 per slot level above 2. Required output: Flame Blade Dhall/JSON content, and schema/tracer support if needed, represent the held spell-created object lifecycle and active-blade-gated attack as executable facts that can be projected by battle-runtime without relying on prose or runtime constants.; L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT owns Promote Flame Blade as a level-2-or-higher prepared spell: Bonus Action Spell Slot spend, caster-owned Concentration, caller-supplied free-hand and holding witnesses, active spell-created blade state, source-owned held light emitter, Magic Action melee spell attack while the blade is active, Fire damage slot scaling with spellcasting ability modifier, Concentration and duration cleanup, let-go cleanup, and Bonus Action re-evocation from the same active spell occurrence without a second Spell Slot spend while the spell lasts. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial creation, active attack, light projection, cleanup, and re-evocation.",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit flame_blade is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell-created held object lifecycle plus promoted Quint parity",
+          "evidence": "Promote follow-up split L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT: L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT owns Promote Flame Blade as a level-2-or-higher prepared spell: Bonus Action Spell Slot spend, caster-owned Concentration, caller-supplied free-hand and holding witnesses, active spell-created blade state, source-owned held light emitter, Magic Action melee spell attack while the blade is active, Fire damage slot scaling with spellcasting ability modifier, Concentration and duration cleanup, let-go cleanup, and Bonus Action re-evocation from the same active spell occurrence without a second Spell Slot spend while the spell lasts. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial creation, active attack, light projection, cleanup, and re-evocation.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT: L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT owns Promote Flame Blade as a level-2-or-higher prepared spell: Bonus Action Spell Slot spend, caster-owned Concentration, caller-supplied free-hand and holding witnesses, active spell-created blade state, source-owned held light emitter, Magic Action melee spell attack while the blade is active, Fire damage slot scaling with spellcasting ability modifier, Concentration and duration cleanup, let-go cleanup, and Bonus Action re-evocation from the same active spell occurrence without a second Spell Slot spend while the spell lasts. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial creation, active attack, light projection, cleanup, and re-evocation.",
       "battleReadinessStatus": "battle-runtime-required"
     },
     {
@@ -11987,14 +11986,25 @@
         "sourceRecordPath": "packages/surface/content/moonbeam.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "moonbeam"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME, L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER: L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME owns Promote Moonbeam as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot, consumes caller-supplied Cylinder area identity and affected-creature facts for appearance saves, records a Concentration-owned movable area effect, exposes later Magic-action beam movement up to 60 feet from caller-supplied destination facts, resolves table-triggered area-moves-into-creature-space, creature-enters-area, and end-turn saves at most once per creature per turn, applies slot-scaled Radiant damage with half damage on success, projects Dim Light and Lightly Obscured facts for the active Cylinder, and performs concentration and duration cleanup. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Moonbeam zone damage, movement, once-per-turn save limiting, Dim Light projection, resource spending, and cleanup while leaving automatic geometry and area membership derivation table-owned.; L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER owns Execute the failed-save shape-shift rider by consuming a battle-visible shape-shifted and true-form state, reverting a shape-shifted target to its true form when it fails the Moonbeam Constitution Saving Throw, preventing that creature from shape-shifting again while it remains in the Moonbeam Cylinder, and clearing the prevention when it leaves the Cylinder or the spell ends without duplicating the shape-shifting source state. Required output: Supported runtime profile or profile-subset evidence for Moonbeam's shape-shift reversion and suppression rider integrated with the promoted shape-shifting owner, including focused tests and Quint/runtime parity for failed save, successful save, exit cleanup, and spell cleanup.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit moonbeam is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME at packages/battle-runtime/src/unit-profile-admission-moonbeam.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "partial-battle-runtime"
     },
     {
       "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_pass_without_trace",
@@ -20319,14 +20329,25 @@
         "sourceRecordPath": "packages/surface/content/alter_self.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "alter_self"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE, L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME, L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME: L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE owns Replace the lossy Natural Weapons placeholder with a lossless SRD Surface shape for claws, fangs, horns, and hooves, preserving the Slashing, Piercing, and Bludgeoning cast-time damage-type choice and the spellcasting-ability attack and damage replacement facts without duplicating Unarmed Strike state. Required output: Alter Self Dhall/JSON content, and schema/tracer support if needed, represent Aquatic Adaptation, Change Appearance, and Natural Weapons as executable option facts, with Natural Weapons carrying the chosen natural growth, damage type, d6 damage die, and spellcasting-ability replacement facts.; L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME owns Promote the spell-owned Alter Self option state, Magic-action mode replacement, Concentration cleanup, Aquatic Adaptation water breathing, and linked Swim Speed equal to Speed without copying creature Speed into parallel spell state; keep Change Appearance as runtime-detached presentation facts with no statistic mutation. Required output: Profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Alter Self casting, mode replacement, water breathing, linked Swim Speed projection, Concentration cleanup, Change Appearance closure, and a separate Natural Weapons runtime task.; L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME owns After the Surface option shape and shared mode-replacement runtime are present, promote Natural Weapons as a spell-owned Unarmed Strike override that uses the chosen damage type, deals 1d6 damage instead of the normal Unarmed Strike damage, uses the caster's spellcasting ability for attack and damage rolls, and cleans up on Concentration end. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Natural Weapons Unarmed Strike attack and damage projection, damage-type choice, spellcasting-ability replacement, mode replacement, and cleanup.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit alter_self is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME at packages/battle-runtime/src/unit-profile-admission-alter-self.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_blindness_deafness",
@@ -20642,13 +20663,24 @@
         "sourceRecordPath": "packages/surface/content/flame_blade.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "flame_blade"
       },
       "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE, L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT: L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE owns Replace the lossy Flame Blade mechanics with a lossless SRD Surface shape for the spell-created held blade: Bonus Action creation and re-evocation, free-hand requirement, let-go disappearance, Concentration up to 10 minutes, self-attached held Bright Light 10 feet plus Dim Light for an additional 10 feet, active-blade-gated Magic Action melee spell attack, Fire damage equal to 3d6 plus the caster's spellcasting ability modifier, and +1d6 per slot level above 2. Required output: Flame Blade Dhall/JSON content, and schema/tracer support if needed, represent the held spell-created object lifecycle and active-blade-gated attack as executable facts that can be projected by battle-runtime without relying on prose or runtime constants.; L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT owns Promote Flame Blade as a level-2-or-higher prepared spell: Bonus Action Spell Slot spend, caster-owned Concentration, caller-supplied free-hand and holding witnesses, active spell-created blade state, source-owned held light emitter, Magic Action melee spell attack while the blade is active, Fire damage slot scaling with spellcasting ability modifier, Concentration and duration cleanup, let-go cleanup, and Bonus Action re-evocation from the same active spell occurrence without a second Spell Slot spend while the spell lasts. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial creation, active attack, light projection, cleanup, and re-evocation.",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit flame_blade is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell-created held object lifecycle plus promoted Quint parity",
+          "evidence": "Promote follow-up split L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT: L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT owns Promote Flame Blade as a level-2-or-higher prepared spell: Bonus Action Spell Slot spend, caster-owned Concentration, caller-supplied free-hand and holding witnesses, active spell-created blade state, source-owned held light emitter, Magic Action melee spell attack while the blade is active, Fire damage slot scaling with spellcasting ability modifier, Concentration and duration cleanup, let-go cleanup, and Bonus Action re-evocation from the same active spell occurrence without a second Spell Slot spend while the spell lasts. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial creation, active attack, light projection, cleanup, and re-evocation.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT: L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT owns Promote Flame Blade as a level-2-or-higher prepared spell: Bonus Action Spell Slot spend, caster-owned Concentration, caller-supplied free-hand and holding witnesses, active spell-created blade state, source-owned held light emitter, Magic Action melee spell attack while the blade is active, Fire damage slot scaling with spellcasting ability modifier, Concentration and duration cleanup, let-go cleanup, and Bonus Action re-evocation from the same active spell occurrence without a second Spell Slot spend while the spell lasts. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial creation, active attack, light projection, cleanup, and re-evocation.",
       "battleReadinessStatus": "battle-runtime-required"
     },
     {
@@ -25665,7 +25697,7 @@
       "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE, L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT: L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE owns Replace the current lossy Acid Arrow mechanics with a lossless SRD Surface shape for the spell's initial hit damage, later damage at the end of the target's next turn, immediate half-of-initial miss damage only, and slot scaling for both initial and later damage without storing the miss branch as an independently fixed 2d4 approximation. Required output: Acid Arrow Dhall/JSON content, and schema/tracer support if needed, represent the RAW initial/later/miss damage relationships as executable facts that can be projected by battle-runtime without duplicating or reinterpreting spell damage state.; L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT owns Promote Acid Arrow as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot, resolves a ranged Spell Attack, applies immediate Acid damage on hit, stores the Acid damage Spell Effect that applies at the end of the target's next turn on hit, applies immediate half-of-initial Acid damage on miss only, and scales all RAW damage amounts by slot level. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Acid Arrow hit, miss, delayed target-turn damage, slot scaling, and resource spending.",
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION, L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE, L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT: L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION owns Resolve the local SRD Acid Arrow damage contradiction by either correcting the local corpus or adding an owner-approved ASSUMPTIONS.md entry that explicitly identifies whether initial hit damage exists, how miss-only half damage is derived, which damage occurs at the end of the target's next turn, and how slot scaling applies. Required output: Owner-approved RAW corpus correction or ASSUMPTIONS.md entry that makes the initial/later/miss damage relationship modelable without inference from contradictory prose.; L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE owns After RAW reconciliation, replace Acid Arrow's lossy mechanics with a lossless SRD Surface shape for the approved damage timing, miss branch, end-of-target-next-turn damage, and slot scaling without storing miss damage as an independently fixed approximation. Required output: Acid Arrow Dhall/JSON content, and schema/tracer support if needed, represent the approved initial/later/miss damage relationships as executable facts that can be projected by battle-runtime without duplicating or reinterpreting spell damage state.; L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT owns After RAW reconciliation and Surface repair, promote Acid Arrow as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot, resolves a ranged Spell Attack, applies only approved immediate hit or miss damage, stores approved delayed Acid damage for the end of the target's next turn where sourced, scales approved damage amounts by slot level, and cleans up the Spell Effect occurrence. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the approved Acid Arrow hit, miss, delayed target-turn damage, slot scaling, resource spending, and cleanup behavior.",
       "battleReadinessStatus": "battle-runtime-required"
     },
     {
@@ -25691,14 +25723,25 @@
         "sourceRecordPath": "packages/surface/content/alter_self.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "alter_self"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE, L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME, L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME: L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE owns Replace the lossy Natural Weapons placeholder with a lossless SRD Surface shape for claws, fangs, horns, and hooves, preserving the Slashing, Piercing, and Bludgeoning cast-time damage-type choice and the spellcasting-ability attack and damage replacement facts without duplicating Unarmed Strike state. Required output: Alter Self Dhall/JSON content, and schema/tracer support if needed, represent Aquatic Adaptation, Change Appearance, and Natural Weapons as executable option facts, with Natural Weapons carrying the chosen natural growth, damage type, d6 damage die, and spellcasting-ability replacement facts.; L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME owns Promote the spell-owned Alter Self option state, Magic-action mode replacement, Concentration cleanup, Aquatic Adaptation water breathing, and linked Swim Speed equal to Speed without copying creature Speed into parallel spell state; keep Change Appearance as runtime-detached presentation facts with no statistic mutation. Required output: Profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Alter Self casting, mode replacement, water breathing, linked Swim Speed projection, Concentration cleanup, Change Appearance closure, and a separate Natural Weapons runtime task.; L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME owns After the Surface option shape and shared mode-replacement runtime are present, promote Natural Weapons as a spell-owned Unarmed Strike override that uses the chosen damage type, deals 1d6 damage instead of the normal Unarmed Strike damage, uses the caster's spellcasting ability for attack and damage rolls, and cleans up on Concentration end. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Natural Weapons Unarmed Strike attack and damage projection, damage-type choice, spellcasting-ability replacement, mode replacement, and cleanup.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit alter_self is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME at packages/battle-runtime/src/unit-profile-admission-alter-self.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_arcane_lock",
@@ -25950,12 +25993,6 @@
       },
       "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
-      "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "future dispel/suppression spell-effect lifecycle owner; character inventory/equipment spell-component legality owner; runtime-detached object presentation and table adjudication owner",
-        "reason": "The object-light profile records Continual Flame as until-dispelled state, but this task does not promote a generic Dispel Magic or antimagic spell-effect removal procedure.; SRD component rules require the costly consumed Material component for Continual Flame. Promoted battle runtime spends the Magic Action and Spell Slot and records battle-visible spell effects; inventory, hand access, focus/component substitution eligibility, and costly consumed Material component consumption belong to the character equipment/component legality boundary.; Promoted battle runtime consumes object light and opaque-cover facts; it does not render flame appearance, object covering/hiding, heat, fuel, smothering, or quenching presentation facts."
-      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -25969,7 +26006,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "accepted"
+      "battleReadinessStatus": "partial-battle-runtime"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_darkness",

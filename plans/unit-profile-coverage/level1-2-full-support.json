@@ -14,7 +14,7 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE: Replace the current lossy Acid Arrow mechanics with a lossless SRD Surface shape for the spell's initial hit damage, later damage at the end of the target's next turn, immediate half-of-initial miss damage only, and slot scaling for both initial and later damage without storing the miss branch as an independently fixed 2d4 approximation. Owner: surface Spell Definition authoring. Required output: Acid Arrow Dhall/JSON content, and schema/tracer support if needed, represent the RAW initial/later/miss damage relationships as executable facts that can be projected by battle-runtime without duplicating or reinterpreting spell damage state.; L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT: Promote Acid Arrow as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot, resolves a ranged Spell Attack, applies immediate Acid damage on hit, stores the Acid damage Spell Effect that applies at the end of the target's next turn on hit, applies immediate half-of-initial Acid damage on miss only, and scales all RAW damage amounts by slot level. Owner: battle-runtime spell invocation/effect lifecycle. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Acid Arrow hit, miss, delayed target-turn damage, slot scaling, and resource spending.",
+      "reason": "L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION: Resolve the local SRD Acid Arrow damage contradiction by either correcting the local corpus or adding an owner-approved ASSUMPTIONS.md entry that explicitly identifies whether initial hit damage exists, how miss-only half damage is derived, which damage occurs at the end of the target's next turn, and how slot scaling applies. Owner: RAW corpus and ASSUMPTIONS owner. Required output: Owner-approved RAW corpus correction or ASSUMPTIONS.md entry that makes the initial/later/miss damage relationship modelable without inference from contradictory prose.; L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE: After RAW reconciliation, replace Acid Arrow's lossy mechanics with a lossless SRD Surface shape for the approved damage timing, miss branch, end-of-target-next-turn damage, and slot scaling without storing miss damage as an independently fixed approximation. Owner: surface Spell Definition authoring. Required output: Acid Arrow Dhall/JSON content, and schema/tracer support if needed, represent the approved initial/later/miss damage relationships as executable facts that can be projected by battle-runtime without duplicating or reinterpreting spell damage state.; L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT: After RAW reconciliation and Surface repair, promote Acid Arrow as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot, resolves a ranged Spell Attack, applies only approved immediate hit or miss damage, stores approved delayed Acid damage for the end of the target's next turn where sourced, scales approved damage amounts by slot level, and cleans up the Spell Effect occurrence. Owner: battle-runtime spell invocation/effect lifecycle. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the approved Acid Arrow hit, miss, delayed target-turn damage, slot scaling, resource spending, and cleanup behavior.",
       "sourceRecordPath": "packages/surface/content/acid_arrow.json",
       "sourceRows": [
         {
@@ -79,52 +79,6 @@
       "status": "closed-runtime-detached-table-adjudication",
       "strictTargetClosed": true,
       "unitId": "alarm"
-    },
-    {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "follow-up-split"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE: Replace the lossy Natural Weapons placeholder with a lossless SRD Surface shape for claws, fangs, horns, and hooves, preserving the Slashing, Piercing, and Bludgeoning cast-time damage-type choice and the spellcasting-ability attack and damage replacement facts without duplicating Unarmed Strike state. Owner: surface Spell Definition authoring. Required output: Alter Self Dhall/JSON content, and schema/tracer support if needed, represent Aquatic Adaptation, Change Appearance, and Natural Weapons as executable option facts, with Natural Weapons carrying the chosen natural growth, damage type, d6 damage die, and spellcasting-ability replacement facts.; L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME: Promote the spell-owned Alter Self option state, Magic-action mode replacement, Concentration cleanup, Aquatic Adaptation water breathing, and linked Swim Speed equal to Speed without copying creature Speed into parallel spell state; keep Change Appearance as runtime-detached presentation facts with no statistic mutation. Owner: battle-runtime self-transformation spell invocation/effect lifecycle. Required output: Profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Alter Self casting, mode replacement, water breathing, linked Swim Speed projection, Concentration cleanup, Change Appearance closure, and a separate Natural Weapons runtime task.; L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME: After the Surface option shape and shared mode-replacement runtime are present, promote Natural Weapons as a spell-owned Unarmed Strike override that uses the chosen damage type, deals 1d6 damage instead of the normal Unarmed Strike damage, uses the caster's spellcasting ability for attack and damage rolls, and cleans up on Concentration end. Owner: battle-runtime self-transformation spell invocation/effect lifecycle plus character-battle-runtime Unarmed Strike projection. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Natural Weapons Unarmed Strike attack and damage projection, damage-type choice, spellcasting-ability replacement, mode replacement, and cleanup.",
-      "sourceRecordPath": "packages/surface/content/alter_self.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Alter Self",
-          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_alter_self",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 270,
-            "lineStart": 270,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Alter Self",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_alter_self",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 198,
-            "lineStart": 198,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "blocked-follow-up-split",
-      "strictTargetClosed": true,
-      "unitId": "alter_self"
     },
     {
       "catalogStatus": "installed",
@@ -509,7 +463,7 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL: Consume until-dispelled spell-effect markers such as Continual Flame object emitters from Dispel Magic, antimagic, or another promoted spell-suppression/removal procedure without making each spell maintain a parallel removal registry. Owner: battle-runtime generic dispel/suppression spell-effect lifecycle. Required output: Supported runtime profile and owner evidence for removing or suppressing object-attached until-dispelled spell occurrences, with focused tests and promoted Quint/runtime parity for Continual Flame cleanup through the generic dispel/suppression owner.",
+      "reason": "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING: Promote Dispel Magic's target creature, object, or magical effect procedure so it ends ongoing spells on the target, including object-attached Continual Flame occurrences, using spell-level and higher-slot gates from the Dispel Magic RAW without adding a Continual Flame-specific removal registry. Owner: Dispel Magic Unit support plus battle-runtime ongoing Spell Effect lifecycle owner. Required output: Supported Dispel Magic profile or accepted closure with focused tests and promoted Quint/runtime parity for ending ongoing spell occurrences on targets, including object-attached until-dispelled light emitters exposed by the object-light profile.; L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL: Author or explicitly close the SRD Darkness Unit, then support or close the overlap rule that dispels another level-2-or-lower spell when Darkness overlaps Bright Light or Dim Light created by that spell, consuming generic spell-created light facts such as Continual Flame rather than spell identity. Owner: Darkness Surface definition plus battle-runtime Darkness area and spell-created light overlap owner. Required output: SRD Darkness authored/catalog outcome plus focused tests and promoted Quint/runtime parity or accepted closure for overlap-triggered dispel of spell-created light, with the missing Darkness Unit row resolved before it is named as an owner.; L12G-FOLLOWUP-ANTIMAGIC-FIELD-SPELL-EFFECT-SUPPRESSION: Promote Antimagic Field's suppression of ongoing spells in its area, excluding artifact/deity spell sources, so object-attached light emitters such as Continual Flame stop functioning while suppressed and resume from the same spell occurrence without duplicating emitter state. Owner: Antimagic Field Unit support plus generic ongoing Spell Effect suppression owner. Required output: Supported Antimagic Field profile or accepted closure with focused tests and promoted Quint/runtime parity for suppressing and restoring ongoing Spell Effects, including object-attached until-dispelled light emitters.",
       "sourceRecordPath": "packages/surface/content/continual_flame.json",
       "sourceRows": [
         {
@@ -1214,12 +1168,7 @@
       "unitId": "find_traps"
     },
     {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
+      "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
         "follow-up-split"
@@ -1227,7 +1176,7 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE: Replace the lossy Flame Blade mechanics with a lossless SRD Surface shape for the spell-created held blade: Bonus Action creation and re-evocation, free-hand requirement, let-go disappearance, Concentration up to 10 minutes, self-attached held Bright Light 10 feet plus Dim Light for an additional 10 feet, active-blade-gated Magic Action melee spell attack, Fire damage equal to 3d6 plus the caster's spellcasting ability modifier, and +1d6 per slot level above 2. Owner: surface Spell Definition authoring. Required output: Flame Blade Dhall/JSON content, and schema/tracer support if needed, represent the held spell-created object lifecycle and active-blade-gated attack as executable facts that can be projected by battle-runtime without relying on prose or runtime constants.; L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT: Promote Flame Blade as a level-2-or-higher prepared spell: Bonus Action Spell Slot spend, caster-owned Concentration, caller-supplied free-hand and holding witnesses, active spell-created blade state, source-owned held light emitter, Magic Action melee spell attack while the blade is active, Fire damage slot scaling with spellcasting ability modifier, Concentration and duration cleanup, let-go cleanup, and Bonus Action re-evocation from the same active spell occurrence without a second Spell Slot spend while the spell lasts. Owner: battle-runtime spell-created held object lifecycle plus promoted Quint parity. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial creation, active attack, light projection, cleanup, and re-evocation.",
+      "reason": "L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT: Promote Flame Blade as a level-2-or-higher prepared spell: Bonus Action Spell Slot spend, caster-owned Concentration, caller-supplied free-hand and holding witnesses, active spell-created blade state, source-owned held light emitter, Magic Action melee spell attack while the blade is active, Fire damage slot scaling with spellcasting ability modifier, Concentration and duration cleanup, let-go cleanup, and Bonus Action re-evocation from the same active spell occurrence without a second Spell Slot spend while the spell lasts. Owner: battle-runtime spell-created held object lifecycle plus promoted Quint parity. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial creation, active attack, light projection, cleanup, and re-evocation.",
       "sourceRecordPath": "packages/surface/content/flame_blade.json",
       "sourceRows": [
         {
@@ -1986,20 +1935,15 @@
       "unitId": "monk_uncanny_metabolism"
     },
     {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "unsupported-profile",
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
       "closureKinds": [
         "follow-up-split"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME: Promote Moonbeam as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot, consumes caller-supplied Cylinder area identity and affected-creature facts for appearance saves, records a Concentration-owned movable area effect, exposes later Magic-action beam movement up to 60 feet from caller-supplied destination facts, resolves table-triggered area-moves-into-creature-space, creature-enters-area, and end-turn saves at most once per creature per turn, applies slot-scaled Radiant damage with half damage on success, projects Dim Light and Lightly Obscured facts for the active Cylinder, and performs concentration and duration cleanup. Owner: battle-runtime spell invocation/effect lifecycle plus table/spatial owner. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Moonbeam zone damage, movement, once-per-turn save limiting, Dim Light projection, resource spending, and cleanup while leaving automatic geometry and area membership derivation table-owned.; L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER: Execute the failed-save shape-shift rider by consuming a battle-visible shape-shifted and true-form state, reverting a shape-shifted target to its true form when it fails the Moonbeam Constitution Saving Throw, preventing that creature from shape-shifting again while it remains in the Moonbeam Cylinder, and clearing the prevention when it leaves the Cylinder or the spell ends without duplicating the shape-shifting source state. Owner: stat-block-control shape-shifting runtime plus battle-runtime spell effect lifecycle. Required output: Supported runtime profile or profile-subset evidence for Moonbeam's shape-shift reversion and suppression rider integrated with the promoted shape-shifting owner, including focused tests and Quint/runtime parity for failed save, successful save, exit cleanup, and spell cleanup.",
+      "reason": "L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER: Execute the failed-save shape-shift rider by consuming a battle-visible shape-shifted and true-form state, reverting a shape-shifted target to its true form when it fails the Moonbeam Constitution Saving Throw, preventing that creature from shape-shifting again while it remains in the Moonbeam Cylinder, and clearing the prevention when it leaves the Cylinder or the spell ends without duplicating the shape-shifting source state. Owner: stat-block-control shape-shifting runtime plus battle-runtime spell effect lifecycle. Required output: Supported runtime profile or profile-subset evidence for Moonbeam's shape-shift reversion and suppression rider integrated with the promoted shape-shifting owner, including focused tests and Quint/runtime parity for failed save, successful save, exit cleanup, and spell cleanup.",
       "sourceRecordPath": "packages/surface/content/moonbeam.json",
       "sourceRows": [
         {
@@ -2690,12 +2634,13 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 106,
+      "count": 107,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
         "acid_splash",
         "aid",
+        "alter_self",
         "animal_friendship",
         "bane",
         "barbarian_danger_sense",
@@ -2804,37 +2749,6 @@
     },
     {
       "count": 24,
-      "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
-      "status": "blocked-follow-up-split",
-      "unitIds": [
-        "acid_arrow",
-        "alter_self",
-        "continual_flame",
-        "dragons_breath",
-        "druid_wild_shape",
-        "enhance_ability",
-        "enlarge_reduce",
-        "enthrall",
-        "flame_blade",
-        "gust_of_wind",
-        "heat_metal",
-        "levitate",
-        "magic_weapon",
-        "monk_monks_focus",
-        "monk_uncanny_metabolism",
-        "moonbeam",
-        "prayer_of_healing",
-        "ray_of_enfeeblement",
-        "see_invisibility",
-        "sorcerer_font_of_magic",
-        "sorcerer_metamagic",
-        "spike_growth",
-        "spiritual_weapon",
-        "web"
-      ]
-    },
-    {
-      "count": 24,
       "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
@@ -2862,6 +2776,36 @@
         "silent_image",
         "speak_with_animals",
         "thaumaturgy"
+      ]
+    },
+    {
+      "count": 23,
+      "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
+      "status": "blocked-follow-up-split",
+      "unitIds": [
+        "acid_arrow",
+        "continual_flame",
+        "dragons_breath",
+        "druid_wild_shape",
+        "enhance_ability",
+        "enlarge_reduce",
+        "enthrall",
+        "flame_blade",
+        "gust_of_wind",
+        "heat_metal",
+        "levitate",
+        "magic_weapon",
+        "monk_monks_focus",
+        "monk_uncanny_metabolism",
+        "moonbeam",
+        "prayer_of_healing",
+        "ray_of_enfeeblement",
+        "see_invisibility",
+        "sorcerer_font_of_magic",
+        "sorcerer_metamagic",
+        "spike_growth",
+        "spiritual_weapon",
+        "web"
       ]
     },
     {
@@ -2906,35 +2850,35 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 485,
-      "percent": "87.2%",
+      "numerator": 484,
+      "percent": "87.1%",
       "rowsByStatus": {
-        "accepted": 355,
+        "accepted": 354,
         "accepted-no-battle-effect": 130,
-        "battle-runtime-required": 61,
+        "battle-runtime-required": 58,
         "owner-evidence-required": 3,
-        "partial-battle-runtime": 7
+        "partial-battle-runtime": 11
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 76,
+      "denominator": 77,
       "numerator": 12,
-      "percent": "15.8%"
+      "percent": "15.6%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 76,
+      "denominator": 77,
       "numerator": 17,
-      "percent": "22.4%"
+      "percent": "22.1%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 106,
+      "denominator": 107,
       "numerator": 31,
-      "percent": "29.2%"
+      "percent": "29%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 164,
-      "numerator": 106,
-      "percent": "64.6%"
+      "numerator": 107,
+      "percent": "65.2%"
     },
     "strictTargetClosure": {
       "denominator": 164,
@@ -5659,9 +5603,9 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 106,
+        "denominator": 107,
         "numerator": 31,
-        "percent": "29.2%"
+        "percent": "29%"
       }
     },
     "units": [
@@ -5714,6 +5658,18 @@
           }
         ],
         "unitId": "aid"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-self-transformation-mode",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "alter_self"
       },
       {
         "joinStatus": "unmapped",
@@ -7611,20 +7567,20 @@
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
       "missing": 1,
-      "profile-subset-supported": 14,
-      "supported-profile": 106,
-      "unsupported-profile": 43
+      "profile-subset-supported": 15,
+      "supported-profile": 107,
+      "unsupported-profile": 41
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 24,
+      "blocked-follow-up-split": 23,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 24,
       "open-runtime-behavior": 1,
-      "supported-profile": 106
+      "supported-profile": 107
     },
-    "nonSupportedFrontier": 58,
+    "nonSupportedFrontier": 57,
     "strictDenominator": 164
   }
 }

@@ -773,6 +773,8 @@ export function describeOngoingPredicate(
       }
     case "has_condition":
       return `has condition: ${p.condition}`;
+    case "spell_created_held_object_active":
+      return "spell-created held object active";
     default: {
       const _exhaustive: never = p;
       throw new Error(`unhandled ongoing predicate: ${String(_exhaustive)}`);

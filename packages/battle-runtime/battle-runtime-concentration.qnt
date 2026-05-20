@@ -45,6 +45,7 @@ module battleRuntimeConcentration {
         | DancingLightsEffect(_) => false
         | InvisibilityCondition(_) => false
         | MindSpikeConcentrationDuration(_) => false
+        | SelfTransformationModeEffect(_) => false
         | _ => true
       })
 

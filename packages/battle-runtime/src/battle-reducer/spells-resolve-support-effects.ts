@@ -1,4 +1,5 @@
 // Support-effect spell resolution extracted from spells-resolve.ts.
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // Covers healing, scalar buffs, roll modifiers, protection, damage reduction,
 // and condition-immunity/temporary-hit-point procedures.
@@ -10,6 +11,8 @@ import {
   type ActionSpellBattleResolutionInput,
   type BattleFill,
   type BattleResolutionResult,
+  type SelfTransformationModeEffectPayload,
+  type SelfTransformationModeKind,
   type BonusActionSpellBattleResolutionInput,
   type BattleTeleportDestination,
   type BattleTeleportDestinationFact,
@@ -32,12 +35,14 @@ import {
   applyMirrorImageHitInterceptionSpellEffect,
   applyRollModifierSpellEffect,
   applyScalarBuffSpellEffect,
+  applySelfTransformationModeEffect,
   applyThaumaturgyBoomingVoiceSpellEffect,
   isThaumaturgyBoomingVoiceEffectForInvocation,
   spellDamageTypeChoiceHole,
   spellConditionChoiceHole,
   spellHealingRollHole,
   spellScalarBuffRollHole,
+  selfTransformationModeChoiceHole,
   spellTargetHole,
   spellTargetIsKnownWilling,
   spellTargetIsLegal,
@@ -386,6 +391,168 @@ export function resolveScalarBuffSpellAct(input: {
         state: resourced.state,
         snapshot: snapshotBattle(resourced.state),
       };
+}
+
+export function resolveSelfTransformationModeSpellAct(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "selfTransformationMode" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  if (
+    input.fillSet.targetId !== undefined ||
+    input.fillSet.objectTarget !== undefined ||
+    input.fillSet.targetSpatialFacts.length > 0 ||
+    input.fillSet.targetAllocation !== undefined ||
+    input.fillSet.targetList !== undefined ||
+    input.fillSet.attackSequencePartFills.length > 0 ||
+    input.fillSet.attackRoll !== undefined ||
+    input.fillSet.savingThrowOutcomes !== undefined ||
+    input.fillSet.skillChoice !== undefined ||
+    input.fillSet.abilityChoice !== undefined ||
+    input.fillSet.thaumaturgyActiveOneMinuteEffectCount !== undefined ||
+    input.fillSet.commandOptionChoice !== undefined ||
+    input.fillSet.conditionChoice !== undefined ||
+    input.fillSet.areaChoice !== undefined ||
+    input.fillSet.teleportDestination !== undefined ||
+    input.fillSet.dancingLightsPlacement !== undefined ||
+    input.fillSet.concentrationSavingThrows.length > 0 ||
+    input.fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
+    input.fillSet.damageDispositions.length > 0 ||
+    input.fillSet.damageRoll !== undefined ||
+    input.fillSet.mirrorImageDuplicateRoll !== undefined ||
+    input.fillSet.movement !== undefined ||
+    input.fillSet.spellDamageReductionRolls.length > 0 ||
+    input.fillSet.attackBurstDamageRoll !== undefined ||
+    input.fillSet.healingRoll !== undefined
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Self-transformation mode spells use one mode choice fill and Natural Weapons damage type choice.",
+    );
+  }
+  if (input.fillSet.selfTransformationModeChoice === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      selfTransformationModeChoiceHole(input.invocation),
+    ]);
+  }
+  const modeEffect = selfTransformationModeEffectPayload(
+    input.invocation,
+    input.fillSet.selfTransformationModeChoice,
+    input.fillSet.damageTypeChoice,
+  );
+  if (modeEffect.tag === "needsDamageType") {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      spellDamageTypeChoiceHole(input.invocation),
+    ]);
+  }
+  if (modeEffect.tag === "invalid") {
+    return invalidResult(input.input.state, "invalidFill", modeEffect.message);
+  }
+
+  const spellCastReactionWindow = maybeOpenReactionWindow(
+    input.input.state,
+    spellCastReactionFrame({
+      casterId: input.actorId,
+      invocation: input.invocation,
+      targetIds: [input.actorId],
+      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+      castingResource: { kind: "magicAction" },
+      continuation: {
+        kind: "replay",
+        subject: input.input.subject,
+        fills: input.input.fills,
+      },
+    }),
+    input.input.suppressedReactionTrigger,
+  );
+  if (spellCastReactionWindow !== null) {
+    return spellCastReactionWindow;
+  }
+
+  const concentrationBase = spellRequiresConcentration(input.invocation)
+    ? breakBattleConcentration(input.input.state, input.actorId)
+    : input.input.state;
+  const effected = applySelfTransformationModeEffect({
+    state: concentrationBase,
+    actorId: input.actorId,
+    sourceCombatantId: input.actorId,
+    sourceSpellId: input.invocation.spell.id,
+    modeEffect: modeEffect.modeEffect,
+    expiresAt: input.invocation.expiresAt,
+  });
+  const resourced = spendSpellCastResources({
+    state: effected,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+  });
+  return resourced.tag === "invalid"
+    ? resourced
+    : {
+        tag: "resolved",
+        state: resourced.state,
+        snapshot: snapshotBattle(resourced.state),
+      };
+}
+
+function selfTransformationModeEffectPayload(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "selfTransformationMode" }
+  >,
+  mode: SelfTransformationModeKind,
+  damageTypeChoice:
+    | Extract<BattleFill, { readonly kind: "damageTypeChoice" }>
+    | undefined,
+):
+  | {
+      readonly tag: "ok";
+      readonly modeEffect: SelfTransformationModeEffectPayload;
+    }
+  | { readonly tag: "needsDamageType" }
+  | { readonly tag: "invalid"; readonly message: string } {
+  if (mode !== "naturalWeapons") {
+    return damageTypeChoice === undefined
+      ? {
+          tag: "ok",
+          modeEffect: {
+            mode,
+            naturalWeaponFacts: invocation.naturalWeaponFacts,
+          },
+        }
+      : {
+          tag: "invalid",
+          message:
+            "Self-transformation damage type choice is only valid for Natural Weapons.",
+        };
+  }
+  if (damageTypeChoice === undefined) {
+    return { tag: "needsDamageType" };
+  }
+  const selectedDamageType = damageTypeChoice.value;
+  if (
+    !invocation.naturalWeaponFacts.damage.damageTypeChoices.includes(
+      selectedDamageType,
+    )
+  ) {
+    return {
+      tag: "invalid",
+      message: "Natural Weapons damage type choice is not available.",
+    };
+  }
+  return {
+    tag: "ok",
+    modeEffect: {
+      mode,
+      naturalWeaponFacts: invocation.naturalWeaponFacts,
+      naturalWeaponDamageType: selectedDamageType,
+    },
+  };
 }
 
 export function resolveRollModifierSpellAct(input: {

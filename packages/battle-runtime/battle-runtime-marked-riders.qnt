@@ -45,6 +45,7 @@ module battleRuntimeMarkedRiders {
       | DancingLightsEffect(_) => true
       | InvisibilityCondition(_) => true
       | MindSpikeConcentrationDuration(_) => true
+      | SelfTransformationModeEffect(_) => true
       | _ => false
     })
 

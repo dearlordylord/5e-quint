@@ -33,6 +33,21 @@ export const COMMAND_OPTIONS = [
   "approach",
   "flee",
 ] as const;
+export const SELF_TRANSFORMATION_MODE_KINDS = [
+  "aquaticAdaptation",
+  "changeAppearance",
+  "naturalWeapons",
+] as const;
+export type SelfTransformationModeKind =
+  (typeof SELF_TRANSFORMATION_MODE_KINDS)[number];
+export const SELF_TRANSFORMATION_NON_NATURAL_WEAPON_MODE_KINDS = [
+  "aquaticAdaptation",
+  "changeAppearance",
+] as const satisfies ReadonlyArray<SelfTransformationModeKind>;
+export type SelfTransformationNonNaturalWeaponModeKind =
+  (typeof SELF_TRANSFORMATION_NON_NATURAL_WEAPON_MODE_KINDS)[number];
+export const SELF_TRANSFORMATION_NATURAL_WEAPONS_MODE_KIND =
+  "naturalWeapons" satisfies SelfTransformationModeKind;
 // Required SRD cross-record reference: Shield explicitly also triggers when
 // targeted by the Magic Missile spell.
 export const SHIELD_MAGIC_MISSILE_SPELL_ID =

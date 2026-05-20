@@ -184,6 +184,7 @@ export {
   resolvePreparedHealingSpellAct,
   resolveRollModifierSpellAct,
   resolveScalarBuffSpellAct,
+  resolveSelfTransformationModeSpellAct,
   resolveSelfTeleportSpellAct,
   resolveThaumaturgyBoomingVoiceSpellAct,
   resolveWardingBondSpellAct,
@@ -223,6 +224,7 @@ import {
   resolvePreparedHealingSpellAct,
   resolveRollModifierSpellAct,
   resolveScalarBuffSpellAct,
+  resolveSelfTransformationModeSpellAct,
   resolveSelfTeleportSpellAct,
   resolveThaumaturgyBoomingVoiceSpellAct,
   resolveWardingBondSpellAct,
@@ -642,6 +644,14 @@ export function resolveSpellAct(
   }
   if (invocation.procedure === "scalarBuff") {
     return resolveScalarBuffSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "selfTransformationMode") {
+    return resolveSelfTransformationModeSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

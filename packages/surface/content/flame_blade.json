@@ -1,5 +1,5 @@
 {
-  "description": "You evoke a fiery blade in your free hand for the duration. As a Magic action, you can make a melee spell attack with the blade. On a hit, the target takes Fire damage equal to 3d6 plus your spellcasting ability modifier. The blade sheds Bright Light in a 10-foot radius and Dim Light for an additional 10 feet. Using a Higher-Level Spell Slot. The damage increases by 1d6 for each spell slot level above 2.",
+  "description": "You evoke a fiery blade in your free hand. The blade is similar in size and shape to a scimitar, and it lasts for the duration. If you let go of the blade, it disappears, but you can evoke it again as a Bonus Action. As a Magic action, you can make a melee spell attack with the fiery blade. On a hit, the target takes Fire damage equal to 3d6 plus your spellcasting ability modifier. The flaming blade sheds Bright Light in a 10-foot radius and Dim Light for an additional 10 feet. Using a Higher-Level Spell Slot. The damage increases by 1d6 for each spell slot level above 2.",
   "id": "flame_blade",
   "kind": "spell",
   "mechanics": {
@@ -22,6 +22,32 @@
       }
     },
     "family": "ongoing_effect",
+    "initialPhase": {
+      "attachment": {
+        "kind": "self"
+      },
+      "effects": [
+        {
+          "disappearsWhen": [
+            "caster_lets_go"
+          ],
+          "heldBy": "caster",
+          "kind": "spell_created_held_object",
+          "reEvoke": {
+            "cost": {
+              "kind": "bonus_action"
+            },
+            "requirements": [
+              "free_hand"
+            ]
+          },
+          "requirements": [
+            "free_hand"
+          ]
+        }
+      ],
+      "kind": "direct"
+    },
     "level": 2,
     "operations": [
       {
@@ -29,6 +55,9 @@
           "brightRadiusFeet": 10,
           "dimAdditionalFeet": 10,
           "kind": "emit_light"
+        },
+        "predicate": {
+          "kind": "spell_created_held_object_active"
         },
         "trigger": {
           "kind": "passive"
@@ -63,6 +92,9 @@
               "kind": "none"
             }
           ]
+        },
+        "predicate": {
+          "kind": "spell_created_held_object_active"
         },
         "trigger": {
           "cost": {

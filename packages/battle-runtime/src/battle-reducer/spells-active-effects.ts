@@ -1,4 +1,5 @@
 // Spell active-effect application extracted from spells-holes-fills.ts.
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode
 
 import { Match } from "effect";
 import {
@@ -52,6 +53,9 @@ import {
   type BattleSightObscurement,
   type BattleSpellAreaChoice,
   type BattleState,
+  type BattleSpecialSpeedKind,
+  type SelfTransformationModeEffectPayload,
+  type SelfTransformationModeKind,
   type SpellActiveEffectPostDamageRider,
   type SpellFailedSaveConditionChoiceEffect,
   type SpellFailedSaveConditionEffect,
@@ -979,6 +983,106 @@ export function battleCreatureWithSpellActiveEffects(
         ),
       }
     : { ...combatant, activeEffects };
+}
+
+export type SelfTransformationModeActiveEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "selfTransformation" }
+>;
+
+const SELF_TRANSFORMATION_MODE_LABELS = {
+  aquaticAdaptation: "Aquatic Adaptation",
+  changeAppearance: "Change Appearance",
+  naturalWeapons: "Natural Weapons",
+} as const satisfies Record<SelfTransformationModeKind, string>;
+
+export function selfTransformationModeLabel(
+  mode: SelfTransformationModeKind,
+): string {
+  return SELF_TRANSFORMATION_MODE_LABELS[mode];
+}
+
+export function activeSelfTransformationModeEffect(
+  combatant: BattleCreatureState | undefined,
+  source?: {
+    readonly sourceCombatantId: CombatantId;
+    readonly sourceSpellId: SpellRecord["id"];
+  },
+): SelfTransformationModeActiveEffect | undefined {
+  return combatant?.activeEffects.find(
+    (effect): effect is SelfTransformationModeActiveEffect =>
+      effect.kind === "selfTransformation" &&
+      (source === undefined ||
+        (effect.sourceCombatantId === source.sourceCombatantId &&
+          effect.sourceSpellId === source.sourceSpellId)),
+  );
+}
+
+export function battleCreatureCanBreatheUnderwater(
+  combatant: BattleCreatureState | undefined,
+): boolean {
+  return (
+    activeSelfTransformationModeEffect(combatant)?.mode === "aquaticAdaptation"
+  );
+}
+
+export function activeSelfTransformationNaturalWeaponsEffect(
+  combatant: BattleCreatureState | undefined,
+):
+  | Extract<
+      SelfTransformationModeActiveEffect,
+      { readonly mode: "naturalWeapons" }
+    >
+  | undefined {
+  const effect = activeSelfTransformationModeEffect(combatant);
+  return effect?.mode === "naturalWeapons" ? effect : undefined;
+}
+
+export function selfTransformationModeSpecialSpeedKind(
+  effect: BattleActiveEffect,
+): BattleSpecialSpeedKind | null {
+  return effect.kind === "selfTransformation" &&
+    effect.mode === "aquaticAdaptation"
+    ? "swim"
+    : null;
+}
+
+export function applySelfTransformationModeEffect(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly sourceCombatantId: CombatantId;
+  readonly sourceSpellId: SpellRecord["id"];
+  readonly modeEffect: SelfTransformationModeEffectPayload;
+  readonly expiresAt: SelfTransformationModeActiveEffect["expiresAt"];
+}): BattleState {
+  const actor = input.state.combatants.get(input.actorId);
+  if (actor === undefined) {
+    return input.state;
+  }
+  const activeEffects = [
+    ...actor.activeEffects.filter(
+      (effect) =>
+        !(
+          effect.kind === "selfTransformation" &&
+          effect.sourceCombatantId === input.sourceCombatantId &&
+          effect.sourceSpellId === input.sourceSpellId
+        ),
+    ),
+    {
+      kind: "selfTransformation" as const,
+      sourceSpellId: input.sourceSpellId,
+      sourceCombatantId: input.sourceCombatantId,
+      ...input.modeEffect,
+      expiresAt: input.expiresAt,
+    },
+  ];
+  return {
+    ...input.state,
+    combatants: new Map(input.state.combatants).set(
+      input.actorId,
+      battleCreatureWithSpellActiveEffects(actor, activeEffects),
+    ),
+  };
 }
 
 export function applyDirectConditionSpellEffects(

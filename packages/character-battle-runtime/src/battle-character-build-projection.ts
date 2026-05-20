@@ -576,7 +576,9 @@ function martialArtsWeaponAttack(
 }
 
 function martialArtsUnarmedStrike(
-  attack: CharacterUnarmedStrikeActionOption,
+  attack: CharacterUnarmedStrikeActionOption & {
+    readonly attackAbility: Ability;
+  },
   build: CharacterBuild,
   projection: MartialArtsAttackProjection,
 ): CharacterUnarmedStrikeActionOption {

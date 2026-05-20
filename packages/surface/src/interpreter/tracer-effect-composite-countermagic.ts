@@ -4,6 +4,7 @@ import { Match } from "effect";
 import {
   describeClassLevelChoiceCount,
   describeDc,
+  describeDamageTypeRef,
   describeLinkedSpeed,
   describeScaling,
 } from "./tracer-rule-labels.ts";
@@ -350,7 +351,11 @@ export function traceCompositeAndCountermagicEffectAtom(
         id,
         category: "effect",
         atomKind: "natural_weapons",
-        label: `natural_weapons\n1d${e.damageDie} ${e.damageType}\nuses spellcasting ability`,
+        label:
+          `natural_weapons\n1d${e.damageDie} ${describeDamageTypeRef(e.damageType)}` +
+          `\n${e.attackRollAbility} for attack rolls` +
+          `\n${e.damageRollAbility} for damage rolls` +
+          `\nreplaces ${e.replacesAbility.toUpperCase()}`,
       });
       return id;
     }

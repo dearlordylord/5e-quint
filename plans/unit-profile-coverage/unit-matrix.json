@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 392,
-      "numerator": 179,
-      "percent": "45.7%"
+      "numerator": 182,
+      "percent": "46.4%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 464,
-      "numerator": 211,
-      "percent": "45.5%"
+      "numerator": 214,
+      "percent": "46.1%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,62 +59,62 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 212
+      "value": 215
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 129,
-      "numerator": 129,
+      "denominator": 130,
+      "numerator": 130,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 212,
-      "numerator": 212,
+      "denominator": 215,
+      "numerator": 215,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 73,
-      "numerator": 73,
+      "denominator": 75,
+      "numerator": 75,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 73,
-      "numerator": 73,
-      "percent": "100%"
+      "denominator": 75,
+      "numerator": 74,
+      "percent": "98.7%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 96,
+      "denominator": 98,
       "numerator": 20,
-      "percent": "20.8%"
+      "percent": "20.4%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 96,
+      "denominator": 98,
       "numerator": 25,
-      "percent": "26%"
+      "percent": "25.5%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 129,
+      "denominator": 130,
       "numerator": 42,
-      "percent": "32.6%"
+      "percent": "32.3%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 73,
-      "numerator": 73,
+      "denominator": 75,
+      "numerator": 75,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 73,
-      "numerator": 73,
+      "denominator": 75,
+      "numerator": 75,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 129,
+      "denominator": 130,
       "numerator": 105,
-      "percent": "81.4%"
+      "percent": "80.8%"
     },
     "supportedProfileCoverage": {
-      "denominator": 180,
-      "numerator": 129,
-      "percent": "71.7%"
+      "denominator": 183,
+      "numerator": 130,
+      "percent": "71%"
     }
   },
   "metricSemantics": [
@@ -1366,7 +1366,7 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
-      "sourceBoundary": "Runtime consumes typed table-supplied object identity facts, emitter-distance facts, and opaque-cover witnesses. Light additionally consumes size and worn/carried facts and owns one-hour duration cleanup plus same-caster recast replacement. Continual Flame consumes a touched-object fact, owns level-2+ Spell Slot casting, source-owned object attachment, Bright/Dim 20-foot radii, non-ticking until-dispelled persistence, and preserves prior Continual Flame emitters from the same caster. Existing light projection derives Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences without duplicating emitter state. Colored/flame presentation, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, non-heat/fuel presentation, smother/quenched adjudication, and costly consumed Material component availability/consumption are outside this object-emitter runtime boundary.",
+      "sourceBoundary": "Runtime consumes typed table-supplied object identity facts, emitter-distance facts, and opaque-cover witnesses. Light additionally consumes size and worn/carried facts and owns one-hour duration cleanup plus same-caster recast replacement. Continual Flame consumes a touched-object fact, owns level-2+ Spell Slot casting, source-owned object attachment, Bright/Dim 20-foot radii, non-ticking until-dispelled persistence, and preserves prior Continual Flame emitters from the same caster. Existing light projection derives Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences without duplicating emitter state. Removal or suppression triggers such as Dispel Magic, Darkness overlap, and Antimagic Field are outside this object-emitter profile; this profile exposes object attachment and the until-dispelled marker for those future owners, while any additional generic Spell Effect facts belong to the remover or suppressor owner rather than a Continual Flame-specific registry. Colored/flame presentation, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, non-heat/fuel presentation, smother/quenched adjudication, and costly consumed Material component availability/consumption are outside this object-emitter runtime boundary.",
       "taskRefs": [
         "SRDINV70B",
         "SRDINV89C",
@@ -2799,20 +2799,76 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts"
         }
       ]
+    },
+    {
+      "id": "spell.invocation-self-transformation-mode",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+        "packages/battle-runtime/src/battle-subjects.ts"
+      ],
+      "sourceBoundary": "The runtime consumes an authored Alter Self self Spell Effect option choice shape with Aquatic Adaptation, Change Appearance, and Natural Weapons modes. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration up to 1 hour, one active selected mode, Magic Action mode replacement without resetting the remaining duration or spending another Spell Slot, Aquatic Adaptation water breathing, Swim Speed derived from the creature's current Speed, Change Appearance as a spell-owned mode with no statistic mutation, selected Natural Weapons damage type from the authored growth options, Natural Weapons 1d6 Unarmed Strike damage replacement, spellcasting ability modifier use for the Natural Weapons attack and damage rolls, and cleanup on Concentration or duration end.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME"
+      ],
+      "title": "Spell invocation applies Alter Self self-transformation modes with Magic Action replacement, Aquatic projections, and Natural Weapons Unarmed Strike override",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-alter-self.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.invocation-moonbeam-movable-zone",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+      ],
+      "sourceBoundary": "The runtime consumes the authored Moonbeam spell, caller-supplied Cylinder area identity, movement trigger witnesses, and saving throw and damage fills. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration, active movable area effect state, once-per-creature-per-turn save limiting across Moonbeam area triggers, slot-scaled Radiant damage with half damage on a successful Constitution save, Magic-action beam reposition, and cleanup on Concentration or duration end. Automatic geometry, area membership, Dim Light projection, and the shape-shifting rider remain outside this profile subset.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME"
+      ],
+      "title": "Spell invocation creates and moves a Moonbeam Cylinder with table-supplied area witnesses",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-moonbeam.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 96,
+        "denominator": 98,
         "numerator": 20,
-        "percent": "20.8%"
+        "percent": "20.4%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 96,
+        "denominator": 98,
         "numerator": 25,
-        "percent": "26%"
+        "percent": "25.5%"
       }
     },
     "profileKinds": [
@@ -3598,6 +3654,18 @@
         "obligations": [],
         "profileId": "spell.invocation-direct-condition-removal",
         "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-self-transformation-mode",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-moonbeam-movable-zone",
+        "profileKind": "spell-invocation"
       }
     ],
     "sourceArtifacts": {
@@ -3608,9 +3676,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 129,
+          "denominator": 130,
           "numerator": 42,
-          "percent": "32.6%"
+          "percent": "32.3%"
         }
       },
       "units": [
@@ -3663,6 +3731,18 @@
             }
           ],
           "unitId": "aid"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-self-transformation-mode",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "alter_self"
         },
         {
           "joinStatus": "unmapped",
@@ -7737,6 +7817,30 @@
         "spell.invocation-direct-condition-removal"
       ],
       "taskId": "L12G-SPELL-LESSER-RESTORATION"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover Alter Self self-transformation mode casting, Aquatic Adaptation water breathing and linked Swim Speed projection, Change Appearance no-stat mode, Natural Weapons Unarmed Strike replacement with selected damage type, 1d6 damage, spellcasting ability attack and damage rolls, Magic Action mode replacement, Spell Slot spending, and Concentration/duration cleanup.",
+      "profileIds": [
+        "spell.invocation-self-transformation-mode"
+      ],
+      "taskId": "L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Alter Self admission, cast-time mode choice, Aquatic Adaptation projections, Change Appearance no-stat closure, Natural Weapons damage-type choice holes and Unarmed Strike override, Magic Action mode replacement without another Spell Slot, and Concentration cleanup.",
+      "profileIds": [
+        "spell.invocation-self-transformation-mode"
+      ],
+      "taskId": "L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Moonbeam admission, caller-supplied Cylinder area fill, Spell Slot and Magic Action spending, source-owned area effect recording, end-turn Constitution save damage with half damage on success, once-per-turn save limiting, Magic-action beam reposition movement fill, and Concentration cleanup.",
+      "profileIds": [
+        "spell.invocation-moonbeam-movable-zone"
+      ],
+      "taskId": "L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME"
     }
   ],
   "units": [
@@ -12615,6 +12719,81 @@
       },
       "claim": {
         "profileIds": [
+          "spell.invocation-self-transformation-mode"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action level-2-or-higher Spell Slot casting from the authored SRD Alter Self Unit",
+          "cast-time selected self-transformation mode for Aquatic Adaptation, Change Appearance, or Natural Weapons",
+          "caster-owned Concentration up to 1 hour with active-mode cleanup on Concentration break or duration expiry",
+          "later Magic Action replacement between supported modes without spending another Spell Slot or resetting the remaining duration",
+          "Aquatic Adaptation water breathing projection",
+          "Aquatic Adaptation Swim Speed derived from the creature's current Speed instead of copied spell state",
+          "Change Appearance retained as an active mode with no battle statistic mutation",
+          "Natural Weapons uses the selected damage type from the authored claws, fangs, horns, or hooves options",
+          "Natural Weapons replaces Unarmed Strike damage with 1d6 of the selected damage type",
+          "Natural Weapons uses the caster's spellcasting ability modifier for Unarmed Strike attack and damage rolls"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-alter-self.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-self-transformation-mode",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+            "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+            "packages/battle-runtime/src/battle-subjects.ts"
+          ],
+          "sourceBoundary": "The runtime consumes an authored Alter Self self Spell Effect option choice shape with Aquatic Adaptation, Change Appearance, and Natural Weapons modes. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration up to 1 hour, one active selected mode, Magic Action mode replacement without resetting the remaining duration or spending another Spell Slot, Aquatic Adaptation water breathing, Swim Speed derived from the creature's current Speed, Change Appearance as a spell-owned mode with no statistic mutation, selected Natural Weapons damage type from the authored growth options, Natural Weapons 1d6 Unarmed Strike damage replacement, spellcasting ability modifier use for the Natural Weapons attack and damage rolls, and cleanup on Concentration or duration end.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME"
+          ],
+          "title": "Spell invocation applies Alter Self self-transformation modes with Magic Action replacement, Aquatic projections, and Natural Weapons Unarmed Strike override",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-alter-self.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/alter_self.json",
+      "unitId": "alter_self"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
           "spell.creature-type-protection-and-charm"
         ],
         "rawRequirementIds": [
@@ -13612,13 +13791,16 @@
       "claim": {
         "deferredMechanics": [
           {
-            "battleReadinessClosure": {
-              "kind": "outside-battle-runtime",
-              "owner": "future dispel/suppression spell-effect lifecycle owner",
-              "reason": "The object-light profile records Continual Flame as until-dispelled state, but this task does not promote a generic Dispel Magic or antimagic spell-effect removal procedure."
-            },
-            "followUpTaskId": "L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL",
-            "mechanic": "Dispel Magic, antimagic, or other future spell-suppression/removal procedures that consume the until-dispelled emitter marker and remove or suppress the object-attached spell occurrence"
+            "followUpTaskId": "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING",
+            "mechanic": "Dispel Magic ending of an ongoing Continual Flame spell occurrence on a targeted object or magical effect, including spell-level and higher-slot gates, is blocked on a shared ongoing Spell Effect ending owner rather than a Continual Flame-specific remover registry."
+          },
+          {
+            "followUpTaskId": "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL",
+            "mechanic": "Darkness overlap dispelling spell-created Bright Light or Dim Light from level-2-or-lower spells is blocked until Darkness has an SRD-authored Unit and a runtime/profile owner that can consume spell-created light facts such as Continual Flame without dispatching on spell identity."
+          },
+          {
+            "followUpTaskId": "L12G-FOLLOWUP-ANTIMAGIC-FIELD-SPELL-EFFECT-SUPPRESSION",
+            "mechanic": "Antimagic Field suppression of ongoing spells in its area is blocked on a generic Spell Effect suppression owner that can suppress object-attached light emitters without deleting their spell occurrence or duplicating emitter state."
           },
           {
             "battleReadinessClosure": {
@@ -13639,14 +13821,28 @@
         ],
         "followUpTasks": [
           {
-            "id": "L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL",
-            "mechanic": "Consume until-dispelled spell-effect markers such as Continual Flame object emitters from Dispel Magic, antimagic, or another promoted spell-suppression/removal procedure without making each spell maintain a parallel removal registry.",
-            "owner": "battle-runtime generic dispel/suppression spell-effect lifecycle",
-            "requiredOutput": "Supported runtime profile and owner evidence for removing or suppressing object-attached until-dispelled spell occurrences, with focused tests and promoted Quint/runtime parity for Continual Flame cleanup through the generic dispel/suppression owner.",
-            "title": "Continual Flame Dispel And Suppression Removal"
+            "id": "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING",
+            "mechanic": "Promote Dispel Magic's target creature, object, or magical effect procedure so it ends ongoing spells on the target, including object-attached Continual Flame occurrences, using spell-level and higher-slot gates from the Dispel Magic RAW without adding a Continual Flame-specific removal registry.",
+            "owner": "Dispel Magic Unit support plus battle-runtime ongoing Spell Effect lifecycle owner",
+            "requiredOutput": "Supported Dispel Magic profile or accepted closure with focused tests and promoted Quint/runtime parity for ending ongoing spell occurrences on targets, including object-attached until-dispelled light emitters exposed by the object-light profile.",
+            "title": "Dispel Magic Ongoing Spell Ending"
+          },
+          {
+            "id": "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL",
+            "mechanic": "Author or explicitly close the SRD Darkness Unit, then support or close the overlap rule that dispels another level-2-or-lower spell when Darkness overlaps Bright Light or Dim Light created by that spell, consuming generic spell-created light facts such as Continual Flame rather than spell identity.",
+            "owner": "Darkness Surface definition plus battle-runtime Darkness area and spell-created light overlap owner",
+            "requiredOutput": "SRD Darkness authored/catalog outcome plus focused tests and promoted Quint/runtime parity or accepted closure for overlap-triggered dispel of spell-created light, with the missing Darkness Unit row resolved before it is named as an owner.",
+            "title": "Darkness Spell-Created Light Dispel"
+          },
+          {
+            "id": "L12G-FOLLOWUP-ANTIMAGIC-FIELD-SPELL-EFFECT-SUPPRESSION",
+            "mechanic": "Promote Antimagic Field's suppression of ongoing spells in its area, excluding artifact/deity spell sources, so object-attached light emitters such as Continual Flame stop functioning while suppressed and resume from the same spell occurrence without duplicating emitter state.",
+            "owner": "Antimagic Field Unit support plus generic ongoing Spell Effect suppression owner",
+            "requiredOutput": "Supported Antimagic Field profile or accepted closure with focused tests and promoted Quint/runtime parity for suppressing and restoring ongoing Spell Effects, including object-attached until-dispelled light emitters.",
+            "title": "Antimagic Field Spell Effect Suppression"
           }
         ],
-        "futureProfileOwner": "battle-runtime generic dispel/suppression spell-effect lifecycle plus character inventory/equipment component legality plus runtime-detached object presentation owner",
+        "futureProfileOwner": "Dispel Magic ongoing Spell Effect ending plus Darkness authored Unit/profile support plus Antimagic Field Spell Effect suppression plus character inventory/equipment component legality plus runtime-detached object presentation owner",
         "profileIds": [
           "spell.invocation-object-light"
         ],
@@ -13684,7 +13880,7 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
-          "sourceBoundary": "Runtime consumes typed table-supplied object identity facts, emitter-distance facts, and opaque-cover witnesses. Light additionally consumes size and worn/carried facts and owns one-hour duration cleanup plus same-caster recast replacement. Continual Flame consumes a touched-object fact, owns level-2+ Spell Slot casting, source-owned object attachment, Bright/Dim 20-foot radii, non-ticking until-dispelled persistence, and preserves prior Continual Flame emitters from the same caster. Existing light projection derives Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences without duplicating emitter state. Colored/flame presentation, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, non-heat/fuel presentation, smother/quenched adjudication, and costly consumed Material component availability/consumption are outside this object-emitter runtime boundary.",
+          "sourceBoundary": "Runtime consumes typed table-supplied object identity facts, emitter-distance facts, and opaque-cover witnesses. Light additionally consumes size and worn/carried facts and owns one-hour duration cleanup plus same-caster recast replacement. Continual Flame consumes a touched-object fact, owns level-2+ Spell Slot casting, source-owned object attachment, Bright/Dim 20-foot radii, non-ticking until-dispelled persistence, and preserves prior Continual Flame emitters from the same caster. Existing light projection derives Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences without duplicating emitter state. Removal or suppression triggers such as Dispel Magic, Darkness overlap, and Antimagic Field are outside this object-emitter profile; this profile exposes object attachment and the until-dispelled marker for those future owners, while any additional generic Spell Effect facts belong to the remover or suppressor owner rather than a Continual Flame-specific registry. Colored/flame presentation, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, non-heat/fuel presentation, smother/quenched adjudication, and costly consumed Material component availability/consumption are outside this object-emitter runtime boundary.",
           "taskRefs": [
             "SRDINV70B",
             "SRDINV89C",
@@ -14848,6 +15044,34 @@
       ],
       "sourceRecordPath": "packages/surface/content/fireball.json",
       "unitId": "fireball"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT",
+            "mechanic": "Promote Flame Blade as a level-2-or-higher prepared spell: Bonus Action Spell Slot spend, caster-owned Concentration, caller-supplied free-hand and holding witnesses, active spell-created blade state, source-owned held light emitter, Magic Action melee spell attack while the blade is active, Fire damage slot scaling with spellcasting ability modifier, Concentration and duration cleanup, let-go cleanup, and Bonus Action re-evocation from the same active spell occurrence without a second Spell Slot spend while the spell lasts.",
+            "owner": "battle-runtime spell-created held object lifecycle plus promoted Quint parity",
+            "requiredOutput": "Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial creation, active attack, light projection, cleanup, and re-evocation.",
+            "title": "Flame Blade Runtime Support"
+          }
+        ],
+        "futureProfileOwner": "battle-runtime spell-created held object lifecycle plus promoted Quint parity",
+        "reason": "Flame Blade is authored as an SRD Surface Spell Definition with Bonus Action creation, free-hand requirement, spell-created held object lifecycle, let-go disappearance, Bonus Action re-evocation, active-blade-gated held light and Magic Action melee spell attack, Fire damage equal to 3d6 plus the caster's spellcasting ability modifier, and +1d6 per spell slot level above 2. Task 8 claims the Surface lifecycle shape only; no promoted battle-runtime profile is claimed because runtime still needs spell invocation/effect lifecycle, caller-supplied free-hand and holding witnesses, active blade state cleanup, light projection, attack execution, and re-evocation from the same active spell occurrence.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/flame_blade.json",
+      "unitId": "flame_blade"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -16169,7 +16393,7 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
-          "sourceBoundary": "Runtime consumes typed table-supplied object identity facts, emitter-distance facts, and opaque-cover witnesses. Light additionally consumes size and worn/carried facts and owns one-hour duration cleanup plus same-caster recast replacement. Continual Flame consumes a touched-object fact, owns level-2+ Spell Slot casting, source-owned object attachment, Bright/Dim 20-foot radii, non-ticking until-dispelled persistence, and preserves prior Continual Flame emitters from the same caster. Existing light projection derives Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences without duplicating emitter state. Colored/flame presentation, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, non-heat/fuel presentation, smother/quenched adjudication, and costly consumed Material component availability/consumption are outside this object-emitter runtime boundary.",
+          "sourceBoundary": "Runtime consumes typed table-supplied object identity facts, emitter-distance facts, and opaque-cover witnesses. Light additionally consumes size and worn/carried facts and owns one-hour duration cleanup plus same-caster recast replacement. Continual Flame consumes a touched-object fact, owns level-2+ Spell Slot casting, source-owned object attachment, Bright/Dim 20-foot radii, non-ticking until-dispelled persistence, and preserves prior Continual Flame emitters from the same caster. Existing light projection derives Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences without duplicating emitter state. Removal or suppression triggers such as Dispel Magic, Darkness overlap, and Antimagic Field are outside this object-emitter profile; this profile exposes object attachment and the until-dispelled marker for those future owners, while any additional generic Spell Effect facts belong to the remover or suppressor owner rather than a Continual Flame-specific registry. Colored/flame presentation, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, non-heat/fuel presentation, smother/quenched adjudication, and costly consumed Material component availability/consumption are outside this object-emitter runtime boundary.",
           "taskRefs": [
             "SRDINV70B",
             "SRDINV89C",
@@ -18488,6 +18712,89 @@
         "status": "installed"
       },
       "claim": {
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "table/spatial owner",
+          "reason": "Automatic Cylinder area membership derivation, Dim Light and Lightly Obscured projection, and table-geometry-triggered save emission for appearsInArea, areaMovesIntoSpace, and entersArea remain caller-supplied table/spatial facts outside the Moonbeam runtime profile."
+        },
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER",
+            "mechanic": "failed-save shape-shift reversion and shape-shifting suppression while in the Cylinder"
+          }
+        ],
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER",
+            "mechanic": "Execute the failed-save shape-shift rider by consuming a battle-visible shape-shifted and true-form state, reverting a shape-shifted target to its true form when it fails the Moonbeam Constitution Saving Throw, preventing that creature from shape-shifting again while it remains in the Moonbeam Cylinder, and clearing the prevention when it leaves the Cylinder or the spell ends without duplicating the shape-shifting source state.",
+            "owner": "stat-block-control shape-shifting runtime plus battle-runtime spell effect lifecycle",
+            "requiredOutput": "Supported runtime profile or profile-subset evidence for Moonbeam's shape-shift reversion and suppression rider integrated with the promoted shape-shifting owner, including focused tests and Quint/runtime parity for failed save, successful save, exit cleanup, and spell cleanup.",
+            "title": "Moonbeam Shape-Shifting Rider Runtime"
+          }
+        ],
+        "profileIds": [
+          "spell.invocation-moonbeam-movable-zone"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action level-2-or-higher Spell Slot casting",
+          "caller-supplied point-origin Cylinder (5-foot radius, 40-foot height) area identity via moonbeamCylinderArea fill",
+          "Concentration-owned moonbeam active effect recorded on the caster with areaId, save profile, slot-scaled damage, repositionMaxMoveFeet, and per-turn savedThisTurn ledger enforcing the once-per-creature-per-turn RAW invariant across all four save triggers",
+          "Constitution Saving Throw on endsTurnInArea trigger with full damage on failed save and half damage on success",
+          "BattleMoonbeamSaveTrigger discriminant for appearsInArea, areaMovesIntoSpace, entersArea, and endsTurnInArea triggers callable by the table/spatial owner when area membership changes",
+          "slot-scaled Radiant damage (2d10 base, +1d10 per slot level above 2)",
+          "Magic-action beam reposition up to 60 feet via moonbeamReposition command with caller-supplied movement fill",
+          "Concentration and duration cleanup removing the moonbeam effect and its area"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-moonbeam.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-moonbeam-movable-zone",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the authored Moonbeam spell, caller-supplied Cylinder area identity, movement trigger witnesses, and saving throw and damage fills. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration, active movable area effect state, once-per-creature-per-turn save limiting across Moonbeam area triggers, slot-scaled Radiant damage with half damage on a successful Constitution save, Magic-action beam reposition, and cleanup on Concentration or duration end. Automatic geometry, area membership, Dim Light projection, and the shape-shifting rider remain outside this profile subset.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME"
+          ],
+          "title": "Spell invocation creates and moves a Moonbeam Cylinder with table-supplied area witnesses",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-moonbeam.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/moonbeam.json",
+      "unitId": "moonbeam"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "profileIds": [
           "spell.hit-point-restoration"
         ],
@@ -20141,22 +20448,29 @@
       "claim": {
         "followUpTasks": [
           {
+            "id": "L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION",
+            "mechanic": "Resolve the local SRD Acid Arrow damage contradiction by either correcting the local corpus or adding an owner-approved ASSUMPTIONS.md entry that explicitly identifies whether initial hit damage exists, how miss-only half damage is derived, which damage occurs at the end of the target's next turn, and how slot scaling applies.",
+            "owner": "RAW corpus and ASSUMPTIONS owner",
+            "requiredOutput": "Owner-approved RAW corpus correction or ASSUMPTIONS.md entry that makes the initial/later/miss damage relationship modelable without inference from contradictory prose.",
+            "title": "Acid Arrow RAW Corpus Reconciliation"
+          },
+          {
             "id": "L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE",
-            "mechanic": "Replace the current lossy Acid Arrow mechanics with a lossless SRD Surface shape for the spell's initial hit damage, later damage at the end of the target's next turn, immediate half-of-initial miss damage only, and slot scaling for both initial and later damage without storing the miss branch as an independently fixed 2d4 approximation.",
+            "mechanic": "After RAW reconciliation, replace Acid Arrow's lossy mechanics with a lossless SRD Surface shape for the approved damage timing, miss branch, end-of-target-next-turn damage, and slot scaling without storing miss damage as an independently fixed approximation.",
             "owner": "surface Spell Definition authoring",
-            "requiredOutput": "Acid Arrow Dhall/JSON content, and schema/tracer support if needed, represent the RAW initial/later/miss damage relationships as executable facts that can be projected by battle-runtime without duplicating or reinterpreting spell damage state.",
+            "requiredOutput": "Acid Arrow Dhall/JSON content, and schema/tracer support if needed, represent the approved initial/later/miss damage relationships as executable facts that can be projected by battle-runtime without duplicating or reinterpreting spell damage state.",
             "title": "Acid Arrow Surface Damage Shape"
           },
           {
             "id": "L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT",
-            "mechanic": "Promote Acid Arrow as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot, resolves a ranged Spell Attack, applies immediate Acid damage on hit, stores the Acid damage Spell Effect that applies at the end of the target's next turn on hit, applies immediate half-of-initial Acid damage on miss only, and scales all RAW damage amounts by slot level.",
+            "mechanic": "After RAW reconciliation and Surface repair, promote Acid Arrow as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot, resolves a ranged Spell Attack, applies only approved immediate hit or miss damage, stores approved delayed Acid damage for the end of the target's next turn where sourced, scales approved damage amounts by slot level, and cleans up the Spell Effect occurrence.",
             "owner": "battle-runtime spell invocation/effect lifecycle",
-            "requiredOutput": "Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Acid Arrow hit, miss, delayed target-turn damage, slot scaling, and resource spending.",
+            "requiredOutput": "Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the approved Acid Arrow hit, miss, delayed target-turn damage, slot scaling, resource spending, and cleanup behavior.",
             "title": "Acid Arrow Delayed Runtime Support"
           }
         ],
-        "futureProfileOwner": "surface Spell Definition authoring plus battle-runtime spell invocation/effect lifecycle",
-        "reason": "Acid Arrow is authored as an SRD Surface Spell Definition, but its current executable shape is not a safe runtime source for the level 1-2 gate: the authored record stores only delayed hit damage plus a fixed unscaled miss damage approximation, while the local SRD passage and gate row require distinct initial damage, later end of the target's next turn damage, and half immediate miss damage with slot scaling. Task 21 therefore claims no battle-runtime support and leaves the row blocked by the concrete follow-up tasks listed on this claim.",
+        "futureProfileOwner": "RAW corpus reconciliation plus surface Spell Definition authoring plus battle-runtime spell invocation/effect lifecycle",
+        "reason": "Acid Arrow remains unsupported because the local SRD 5.2.1 passage is internally contradictory at the damage-timing boundary: the hit branch states only 4d4 Acid damage at the end of the target's next turn, while the miss branch refers to half of the initial damage and the higher-level clause says both initial and later damage increase. No ASSUMPTIONS.md entry or owner-approved corpus correction defines the missing initial hit damage, so the installed Unit catalog must not admit Acid Arrow as a runtime source, and the follow-up Surface repair must not model immediate initial damage or derive the miss branch from implication alone.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
@@ -20212,53 +20526,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/alert.json",
       "unitId": "alert"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "followUpTasks": [
-          {
-            "id": "L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE",
-            "mechanic": "Replace the lossy Natural Weapons placeholder with a lossless SRD Surface shape for claws, fangs, horns, and hooves, preserving the Slashing, Piercing, and Bludgeoning cast-time damage-type choice and the spellcasting-ability attack and damage replacement facts without duplicating Unarmed Strike state.",
-            "owner": "surface Spell Definition authoring",
-            "requiredOutput": "Alter Self Dhall/JSON content, and schema/tracer support if needed, represent Aquatic Adaptation, Change Appearance, and Natural Weapons as executable option facts, with Natural Weapons carrying the chosen natural growth, damage type, d6 damage die, and spellcasting-ability replacement facts.",
-            "title": "Alter Self Surface Option Shape"
-          },
-          {
-            "id": "L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME",
-            "mechanic": "Promote the spell-owned Alter Self option state, Magic-action mode replacement, Concentration cleanup, Aquatic Adaptation water breathing, and linked Swim Speed equal to Speed without copying creature Speed into parallel spell state; keep Change Appearance as runtime-detached presentation facts with no statistic mutation.",
-            "owner": "battle-runtime self-transformation spell invocation/effect lifecycle",
-            "requiredOutput": "Profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Alter Self casting, mode replacement, water breathing, linked Swim Speed projection, Concentration cleanup, Change Appearance closure, and a separate Natural Weapons runtime task.",
-            "title": "Alter Self Aquatic Adaptation Runtime"
-          },
-          {
-            "id": "L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME",
-            "mechanic": "After the Surface option shape and shared mode-replacement runtime are present, promote Natural Weapons as a spell-owned Unarmed Strike override that uses the chosen damage type, deals 1d6 damage instead of the normal Unarmed Strike damage, uses the caster's spellcasting ability for attack and damage rolls, and cleans up on Concentration end.",
-            "owner": "battle-runtime self-transformation spell invocation/effect lifecycle plus character-battle-runtime Unarmed Strike projection",
-            "requiredOutput": "Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Natural Weapons Unarmed Strike attack and damage projection, damage-type choice, spellcasting-ability replacement, mode replacement, and cleanup.",
-            "title": "Alter Self Natural Weapons Runtime"
-          }
-        ],
-        "futureProfileOwner": "surface Spell Definition authoring plus battle-runtime self-transformation spell invocation/effect lifecycle plus character-battle-runtime Unarmed Strike projection",
-        "reason": "Alter Self is authored as an SRD Surface Spell Definition with self-targeted Aquatic Adaptation, Change Appearance, and Natural Weapons modes, but Task 23 claims no battle-runtime support because the executable modes require spell-owned option state and the Natural Weapons authored shape is not lossless. Change Appearance changes presentation without changing statistics and remains runtime-detached table/appearance adjudication; Aquatic Adaptation and Natural Weapons remain blocked by the concrete follow-up tasks listed on this claim.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/alter_self.json",
-      "unitId": "alter_self"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -21627,46 +21894,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/fire_storm.json",
       "unitId": "fire_storm"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "followUpTasks": [
-          {
-            "id": "L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE",
-            "mechanic": "Replace the lossy Flame Blade mechanics with a lossless SRD Surface shape for the spell-created held blade: Bonus Action creation and re-evocation, free-hand requirement, let-go disappearance, Concentration up to 10 minutes, self-attached held Bright Light 10 feet plus Dim Light for an additional 10 feet, active-blade-gated Magic Action melee spell attack, Fire damage equal to 3d6 plus the caster's spellcasting ability modifier, and +1d6 per slot level above 2.",
-            "owner": "surface Spell Definition authoring",
-            "requiredOutput": "Flame Blade Dhall/JSON content, and schema/tracer support if needed, represent the held spell-created object lifecycle and active-blade-gated attack as executable facts that can be projected by battle-runtime without relying on prose or runtime constants.",
-            "title": "Flame Blade Surface Lifecycle Shape"
-          },
-          {
-            "id": "L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT",
-            "mechanic": "Promote Flame Blade as a level-2-or-higher prepared spell: Bonus Action Spell Slot spend, caster-owned Concentration, caller-supplied free-hand and holding witnesses, active spell-created blade state, source-owned held light emitter, Magic Action melee spell attack while the blade is active, Fire damage slot scaling with spellcasting ability modifier, Concentration and duration cleanup, let-go cleanup, and Bonus Action re-evocation from the same active spell occurrence without a second Spell Slot spend while the spell lasts.",
-            "owner": "battle-runtime spell-created held object lifecycle plus promoted Quint parity",
-            "requiredOutput": "Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial creation, active attack, light projection, cleanup, and re-evocation.",
-            "title": "Flame Blade Runtime Support"
-          }
-        ],
-        "futureProfileOwner": "surface Spell Definition held-created-object shape plus battle-runtime spell-created held object lifecycle and promoted Quint parity",
-        "reason": "Flame Blade is authored as an SRD Surface Spell Definition, but the authored executable shape records only the light rider and Magic Action attack while explicitly deferring the held spell-created blade lifecycle. Task 29 claims no promoted battle-runtime profile because the RAW spell-created blade must appear in a free hand, disappear when let go, be evoked again as a Bonus Action while the spell lasts, emit self-held light, and gate repeat Magic Action melee spell attacks on the active blade. Existing Produce Flame held-light/hurl and Shillelagh held-weapon profiles do not model that spell-created held melee object lifecycle.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/flame_blade.json",
-      "unitId": "flame_blade"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -23676,46 +23903,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/monk_epic_boon.json",
       "unitId": "monk_epic_boon"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "followUpTasks": [
-          {
-            "id": "L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME",
-            "mechanic": "Promote Moonbeam as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot, consumes caller-supplied Cylinder area identity and affected-creature facts for appearance saves, records a Concentration-owned movable area effect, exposes later Magic-action beam movement up to 60 feet from caller-supplied destination facts, resolves table-triggered area-moves-into-creature-space, creature-enters-area, and end-turn saves at most once per creature per turn, applies slot-scaled Radiant damage with half damage on success, projects Dim Light and Lightly Obscured facts for the active Cylinder, and performs concentration and duration cleanup.",
-            "owner": "battle-runtime spell invocation/effect lifecycle plus table/spatial owner",
-            "requiredOutput": "Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Moonbeam zone damage, movement, once-per-turn save limiting, Dim Light projection, resource spending, and cleanup while leaving automatic geometry and area membership derivation table-owned.",
-            "title": "Moonbeam Movable Zone Runtime"
-          },
-          {
-            "id": "L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER",
-            "mechanic": "Execute the failed-save shape-shift rider by consuming a battle-visible shape-shifted and true-form state, reverting a shape-shifted target to its true form when it fails the Moonbeam Constitution Saving Throw, preventing that creature from shape-shifting again while it remains in the Moonbeam Cylinder, and clearing the prevention when it leaves the Cylinder or the spell ends without duplicating the shape-shifting source state.",
-            "owner": "stat-block-control shape-shifting runtime plus battle-runtime spell effect lifecycle",
-            "requiredOutput": "Supported runtime profile or profile-subset evidence for Moonbeam's shape-shift reversion and suppression rider integrated with the promoted shape-shifting owner, including focused tests and Quint/runtime parity for failed save, successful save, exit cleanup, and spell cleanup.",
-            "title": "Moonbeam Shape-Shifting Rider Runtime"
-          }
-        ],
-        "futureProfileOwner": "battle-runtime movable area-effect lifecycle plus stat-block-control shape-shifting runtime",
-        "reason": "Moonbeam Surface authoring is complete: the Dhall/JSON content represents the point-origin 5-foot-radius 40-foot-high Cylinder, Concentration duration, Dim Light area (area_emits_dim_light passive — source-level illumination fact distinct from derived Lightly Obscured), Magic-action Cylinder movement up to 60 feet, initial Constitution Saving Throw, once-per-turn recurring saves on creature-ends-turn-in-area, creature-entry, and area-moves-into-creature-space triggers sharing a single per-turn window via limitGroup \"moonbeam_save_per_turn\" so the cross-trigger RAW invariant is executable, slot-scaled Radiant damage, and failed-save shape-shift reversion and suppression (revert_shape_shift_to_true_form and suppress_shape_shifting_while_in_area both with onlyIfTargetIsShapeShifted: true per RAW \"if the creature is shape-shifted\") as executable Surface schema facts. No battle-runtime Unit profile is claimed because the movable-zone runtime execution and shape-shifting rider execution remain blocked by the concrete follow-up tasks listed on this claim.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/moonbeam.json",
-      "unitId": "moonbeam"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 
-import { Either, Schema } from "effect";
+import { Either, Option, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import findFamiliarInput from "../../content/find_familiar.json";
@@ -47,6 +47,18 @@ const task184WeaponMasteryUnitIds = [
   "ranger_weapon_mastery",
   "rogue_weapon_mastery",
 ] as const;
+
+const alterSelfNaturalWeaponGrowthDamageType = {
+  kind: "choice_table",
+  holeId: "alter_self_natural_weapon_growth",
+  label: "natural weapon growth",
+  options: [
+    { id: "claws", displayName: "claws", damageType: "slashing" },
+    { id: "fangs", displayName: "fangs", damageType: "piercing" },
+    { id: "horns", displayName: "horns", damageType: "piercing" },
+    { id: "hooves", displayName: "hooves", damageType: "bludgeoning" },
+  ],
+} as const;
 
 const requiredFirstVerticalUnitIds = [
   "class_barbarian",
@@ -238,6 +250,129 @@ describe("SRD Unit catalog boundary", () => {
         },
       ]);
     }
+  });
+
+  test("keeps Acid Arrow out of the installed SRD catalog until RAW damage timing is reconciled", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      expect(Option.isNone(result.catalog.getUnit("acid_arrow"))).toBe(true);
+    }
+  });
+
+  test("decodes Alter Self as a self option mode with lossless natural weapon growth facts", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const alterSelf = result.catalog.requireUnit("alter_self");
+
+    expect(alterSelf.kind).toBe("spell");
+    if (alterSelf.kind !== "spell") return;
+    expect(alterSelf.mechanics.family).toBe("activation");
+    if (alterSelf.mechanics.family !== "activation") return;
+
+    expect(alterSelf.mechanics).toMatchObject({
+      level: 2,
+      school: "transmutation",
+      castingTime: { kind: "action" },
+      range: { kind: "self" },
+      components: { v: true, s: true, m: false },
+      duration: { kind: "concentration", upTo: { unit: "hour", amount: 1 } },
+    });
+
+    expect(alterSelf.mechanics.phases).toEqual([
+      {
+        kind: "direct",
+        attachment: { kind: "self" },
+        mode: {
+          label: "Choose an alteration",
+          allowsMidDurationSwitchAs: "magic_action",
+          options: [
+            {
+              id: "aquatic_adaptation",
+              displayName: "Aquatic Adaptation",
+              effects: [
+                { kind: "water_breathing" },
+                {
+                  kind: "grant_speed",
+                  speedKind: "swim",
+                  feet: { kind: "walk_speed" },
+                },
+              ],
+            },
+            {
+              id: "change_appearance",
+              displayName: "Change Appearance",
+            },
+            {
+              id: "natural_weapons",
+              displayName: "Natural Weapons",
+              effects: [
+                {
+                  kind: "natural_weapons",
+                  damageType: alterSelfNaturalWeaponGrowthDamageType,
+                  damageDie: 6,
+                  replacesAbility: "str",
+                  attackRollAbility: "spellcasting",
+                  damageRollAbility: "spellcasting",
+                },
+              ],
+            },
+          ],
+        },
+      },
+    ]);
+  });
+
+  test("rejects lossy Alter Self Natural Weapons placeholders", () => {
+    const decode = Schema.decodeUnknownEither(EffectAtomSchema);
+    const completeNaturalWeapons = {
+      kind: "natural_weapons",
+      damageType: alterSelfNaturalWeaponGrowthDamageType,
+      damageDie: 6,
+      replacesAbility: "str",
+      attackRollAbility: "spellcasting",
+      damageRollAbility: "spellcasting",
+    };
+
+    expect(
+      Either.isLeft(
+        decode({
+          ...completeNaturalWeapons,
+          damageType: "slashing",
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          ...completeNaturalWeapons,
+          damageDie: 8,
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          ...completeNaturalWeapons,
+          damageType: {
+            ...alterSelfNaturalWeaponGrowthDamageType,
+            holeId: "natural_weapon_damage_type",
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          kind: "natural_weapons",
+          damageType: alterSelfNaturalWeaponGrowthDamageType,
+          damageDie: 6,
+        }),
+      ),
+    ).toBe(true);
   });
 
   test("keeps Prayer of Healing's SRD 5.2.1 rest-healing shell in the catalog projection", () => {
@@ -1084,6 +1219,80 @@ describe("SRD Unit catalog boundary", () => {
               subject: "triggering_attack_or_spell",
             },
             onSuccess: { kind: "none" },
+          },
+        },
+      ]);
+    }
+  });
+
+  test("decodes Flame Blade as a spell-created held blade lifecycle", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const flameBlade = result.catalog.requireUnit("flame_blade");
+      expect(flameBlade.kind).toBe("spell");
+      if (flameBlade.kind !== "spell") return;
+      expect(flameBlade.mechanics.family).toBe("ongoing_effect");
+      if (flameBlade.mechanics.family !== "ongoing_effect") return;
+
+      expect(flameBlade.mechanics.duration).toEqual({
+        kind: "concentration",
+        upTo: { unit: "minute", amount: 10 },
+      });
+      expect(flameBlade.mechanics.initialPhase).toEqual({
+        kind: "direct",
+        attachment: { kind: "self" },
+        effects: [
+          {
+            kind: "spell_created_held_object",
+            heldBy: "caster",
+            requirements: ["free_hand"],
+            disappearsWhen: ["caster_lets_go"],
+            reEvoke: {
+              cost: { kind: "bonus_action" },
+              requirements: ["free_hand"],
+            },
+          },
+        ],
+      });
+      expect(flameBlade.mechanics.operations).toEqual([
+        {
+          trigger: { kind: "passive" },
+          predicate: { kind: "spell_created_held_object_active" },
+          effect: {
+            kind: "emit_light",
+            brightRadiusFeet: 10,
+            dimAdditionalFeet: 10,
+          },
+        },
+        {
+          trigger: {
+            kind: "on_caster_spends_action",
+            cost: { kind: "standard_action", action: "magic" },
+          },
+          predicate: { kind: "spell_created_held_object_active" },
+          effect: {
+            kind: "attack_roll",
+            attackKind: "melee_spell_attack",
+            onHit: [
+              {
+                kind: "damage",
+                damageType: "fire",
+                amount: {
+                  kind: "linear_per_level",
+                  axis: "slot",
+                  base: {
+                    dice: 3,
+                    dieSize: 6,
+                    spellcastingMod: true,
+                  },
+                  perLevel: { dice: 1, dieSize: 6 },
+                  startingAtLevel: 2,
+                },
+              },
+            ],
+            onMiss: [{ kind: "none" }],
           },
         },
       ]);

@@ -103,6 +103,7 @@ import {
   supportedPreparedMirrorImageHitInterceptionSpellProfile,
   supportedPreparedRollModifierSpellProfile,
   supportedPreparedScalarBuffSpellProfile,
+  supportedPreparedSelfTransformationModeSpellProfile,
   supportedPreparedSelfTeleportSpellProfile,
   supportedPreparedSlotSpellProfile,
   supportedPreparedWardingBondSpellProfile,
@@ -288,6 +289,15 @@ export function supportedSpellActs(
         actor.combatantId,
         spell,
         spellcasting.spellSlots,
+      ),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      supportedPreparedSelfTransformationModeSpellProfile(
+        actor.combatantId,
+        spell,
+        spellcasting.spellSlots,
+        spellcasting.spellcastingAbilityModifier,
+        spellcasting.proficiencyBonus,
       ),
     ),
     ...preparedSpells.flatMap((spell) =>
