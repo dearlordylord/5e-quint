@@ -16,6 +16,9 @@ export function traceEffectAtomScaling(
   ids: IdGen,
 ): void {
   switch (e.kind) {
+    case "object_contact_damage":
+      traceDiceAmountScaling(e.amount, effectId, slotId, nodes, edges, ids);
+      return;
     case "damage":
     case "conditional_bonus_damage":
     case "retaliatory_damage":

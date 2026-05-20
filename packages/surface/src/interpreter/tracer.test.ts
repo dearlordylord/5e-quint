@@ -6,6 +6,7 @@ import auguryInput from "../../content/augury.json";
 import classFighterInput from "../../content/class_fighter.json";
 import dragonsBreathInput from "../../content/dragons_breath.json";
 import flameBladeInput from "../../content/flame_blade.json";
+import heatMetalInput from "../../content/heat_metal.json";
 import locateAnimalsOrPlantsInput from "../../content/locate_animals_or_plants.json";
 import locateObjectInput from "../../content/locate_object.json";
 import magicMouthInput from "../../content/magic_mouth.json";
@@ -92,6 +93,36 @@ describe("Surface trace interpreter", () => {
         expect.objectContaining({
           atomKind: "attack_roll",
           label: "attack_roll\nmelee_spell_attack",
+        }),
+      ]),
+    );
+  });
+
+  test("renders Heat Metal object-contact and drop witness facts", () => {
+    const trace = traceUnit(decodeUnitRecordSync(heatMetalInput));
+
+    expect(trace.nodes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          atomKind: "object_contact_damage",
+          label: expect.stringContaining(
+            "table_witnessed_physical_contact_with_spell_object",
+          ),
+        }),
+        expect.objectContaining({
+          atomKind: "holding_or_wearing_save",
+          label: expect.stringContaining(
+            "table_witnessed_holding_or_wearing_spell_object",
+          ),
+        }),
+        expect.objectContaining({
+          atomKind: "drop_if_possible",
+          label: expect.stringContaining("table_witnessed_drop_result"),
+        }),
+        expect.objectContaining({
+          atomKind: "ongoing_predicate",
+          label:
+            "ongoing_predicate\ntable-witnessed attachment within spell range",
         }),
       ]),
     );

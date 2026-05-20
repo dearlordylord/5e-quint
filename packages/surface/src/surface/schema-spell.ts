@@ -530,7 +530,47 @@ type ReactionTrigger =
       readonly triggers: ReadonlyNonEmptyArray<ReactionTrigger>;
     };
 
+type AttackRollAbilityCheckDisadvantageUntilCasterTurnStart = {
+  readonly kind: "modify_roll_advantage";
+  readonly mode: "disadvantage";
+  readonly on: readonly ["attack_roll", "ability_check"];
+  readonly expiresOn: { readonly kind: "caster_turn_start" };
+};
+
+type ObjectContactDamageEffect = {
+  readonly kind: "object_contact_damage";
+  readonly contact: {
+    readonly kind: "table_witnessed_physical_contact_with_spell_object";
+  };
+  readonly damageType: DamageTypeRef;
+  readonly amount: DiceAmount;
+  readonly holdingOrWearingSave: {
+    readonly appliesIf: {
+      readonly kind: "table_witnessed_holding_or_wearing_spell_object";
+    };
+    readonly ability: "con";
+    readonly dc: DcSource;
+    readonly onSuccess: { readonly kind: "none" };
+    readonly onFailure: {
+      readonly kind: "drop_if_possible_else_disadvantage";
+      readonly dropCapabilityWitness: {
+        readonly kind: "table_witnessed_drop_capability";
+        readonly subject: "damaged_creature";
+        readonly object: "spell_object";
+      };
+      readonly dropResultWitness: {
+        readonly kind: "table_witnessed_drop_result";
+        readonly subject: "damaged_creature";
+        readonly object: "spell_object";
+      };
+      readonly fallbackWhen: "object_not_dropped";
+      readonly fallback: AttackRollAbilityCheckDisadvantageUntilCasterTurnStart;
+    };
+  };
+};
+
 type EffectAtom =
+  | ObjectContactDamageEffect
   | {
       readonly kind: "damage";
       readonly damageType: DamageTypeRef;
@@ -1871,8 +1911,12 @@ export const ObjectTargetRelationSchema = Schema.Literal(
 export const ObjectAccessPreventionMeansSchema =
   Schema.Literal("mundane_or_magical");
 
+export const ObjectVisibilityRequirementSchema =
+  Schema.Literal("caster_can_see");
+
 export const ObjectFilterSchema = Schema.Struct({
   material: optionalExact(ObjectMaterialSchema),
+  visibility: optionalExact(ObjectVisibilityRequirementSchema),
   targetRelation: optionalExact(ObjectTargetRelationSchema),
   maxWeightPounds: optionalExact(PositiveIntegerSchema),
   manufactured: optionalExact(Schema.Boolean),
@@ -2126,6 +2170,9 @@ export const OngoingPredicateSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("spell_created_held_object_active"),
   }),
+  Schema.Struct({
+    kind: Schema.Literal("table_witnessed_attachment_within_spell_range"),
+  }),
 );
 
 const BaseAcReplacementFormulaSchema = Schema.Union(
@@ -2246,9 +2293,50 @@ export const ShapeShiftRevertTriggerSchema = Schema.Union(
   }),
 );
 
+export const ObjectContactDamageEffectSchema = strictStruct({
+  kind: Schema.Literal("object_contact_damage"),
+  contact: strictStruct({
+    kind: Schema.Literal("table_witnessed_physical_contact_with_spell_object"),
+  }),
+  damageType: DamageTypeRefSchema,
+  amount: DiceAmountSchema,
+  holdingOrWearingSave: strictStruct({
+    appliesIf: strictStruct({
+      kind: Schema.Literal("table_witnessed_holding_or_wearing_spell_object"),
+    }),
+    ability: Schema.Literal("con"),
+    dc: DcSourceSchema,
+    onSuccess: strictStruct({ kind: Schema.Literal("none") }),
+    onFailure: strictStruct({
+      kind: Schema.Literal("drop_if_possible_else_disadvantage"),
+      dropCapabilityWitness: strictStruct({
+        kind: Schema.Literal("table_witnessed_drop_capability"),
+        subject: Schema.Literal("damaged_creature"),
+        object: Schema.Literal("spell_object"),
+      }),
+      dropResultWitness: strictStruct({
+        kind: Schema.Literal("table_witnessed_drop_result"),
+        subject: Schema.Literal("damaged_creature"),
+        object: Schema.Literal("spell_object"),
+      }),
+      fallbackWhen: Schema.Literal("object_not_dropped"),
+      fallback: strictStruct({
+        kind: Schema.Literal("modify_roll_advantage"),
+        mode: Schema.Literal("disadvantage"),
+        on: Schema.Tuple(
+          Schema.Literal("attack_roll"),
+          Schema.Literal("ability_check"),
+        ),
+        expiresOn: strictStruct({ kind: Schema.Literal("caster_turn_start") }),
+      }),
+    }),
+  }),
+});
+
 export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
   Schema.suspend(() =>
     Schema.Union(
+      ObjectContactDamageEffectSchema,
       Schema.Struct({
         kind: Schema.Literal("damage"),
         damageType: DamageTypeRefSchema,
@@ -3473,7 +3561,7 @@ export const AnchorTargetSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("object"),
-    visibility: Schema.Literal("caster_can_see"),
+    visibility: ObjectVisibilityRequirementSchema,
     wornOrCarried: Schema.Literal("not_worn_or_carried_by_another_creature"),
   }),
   Schema.Struct({

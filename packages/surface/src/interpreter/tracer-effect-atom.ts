@@ -35,6 +35,7 @@ export function traceEffectAtom(
       });
       return id;
     }
+    case "object_contact_damage":
     case "none":
     case "damage":
     case "conditional_bonus_damage":
