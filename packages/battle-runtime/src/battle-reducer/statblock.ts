@@ -1,3 +1,4 @@
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
 // StatBlock action-option and resource helpers extracted from battle-reducer.ts.
 // Cluster V (statblock). Mechanical extraction — no behavior change.
 // V depends on W (statblock-attacks.ts) for supportedStatBlockAttack* and
@@ -6,32 +7,33 @@
 
 import { resourceCount } from "@dnd/shared/types";
 import type {
-CreatureActions,
-CreatureLimitedUse,
-CreatureNamedAttackRoll,
-StatBlockRecord,
+  CreatureActions,
+  CreatureLimitedUse,
+  CreatureNamedAttackRoll,
+  StatBlockRecord,
 } from "@dnd/surface/surface/types";
 import { Match } from "effect";
 import type {
-StatBlockAttackActionOption,
-StatBlockDailyUseState,
-StatBlockLimitedUseSnapshot,
-StatBlockMutableResourceState,
-StatBlockPartKey,
-StatBlockPartSection,
-StatBlockResourceSnapshot,
-SupportedAttackActionOption,
-SupportedCreatureNamedAttackRoll,
+  StatBlockAttackActionOption,
+  StatBlockDailyUseState,
+  StatBlockLimitedUseSnapshot,
+  StatBlockMutableResourceState,
+  StatBlockPartKey,
+  StatBlockPartSection,
+  StatBlockResourceSnapshot,
+  SupportedAttackActionOption,
+  SupportedCreatureNamedAttackRoll,
 } from "../battle-action-options.ts";
 import {
-type BattleState,
-type StatBlockBattleCreatureState,
+  type BattleState,
+  type StatBlockBattleCreatureState,
 } from "../battle-reducer.ts";
 import type { CombatantId } from "../identity.ts";
+import { creatureNamedAttackRollIsSupported } from "../statblock-action-support.ts";
 import {
-supportedStatBlockAttackDamage,
-supportedStatBlockAttackTargetConstraint,
-} from "./statblock-attacks.ts";
+  activeDruidWildShape,
+  updateActiveDruidWildShapeResources,
+} from "./druid-wild-shape.ts";
 
 export function supportedStatBlockAttackActionOption(
   attack: CreatureNamedAttackRoll,
@@ -87,12 +89,7 @@ export function statBlockActionSectionAttackOptions(
 export function isSupportedCreatureNamedAttackRoll(
   attack: CreatureNamedAttackRoll,
 ): attack is SupportedCreatureNamedAttackRoll {
-  return (
-    attack.multiattackCount === undefined &&
-    attack.attackBonus.kind === "literal" &&
-    supportedStatBlockAttackDamage(attack) !== null &&
-    supportedStatBlockAttackTargetConstraint(attack) !== null
-  );
+  return creatureNamedAttackRollIsSupported(attack);
 }
 
 export function statBlockResourceState(
@@ -343,6 +340,21 @@ export function spendStatBlockAttackResources(input: {
     return input.state;
   }
   const actor = input.state.combatants.get(input.actorId);
+  const wildShape = activeDruidWildShape(actor);
+  if (actor?.origin.kind === "character" && wildShape !== null) {
+    const resources = spendStatBlockPartResources(
+      wildShape.form.statBlock,
+      wildShape.effect.resources,
+      input.attack.part,
+    );
+    return {
+      ...input.state,
+      combatants: new Map(input.state.combatants).set(
+        input.actorId,
+        updateActiveDruidWildShapeResources(actor, resources),
+      ),
+    };
+  }
   if (actor?.origin.kind !== "statBlock") {
     return input.state;
   }
@@ -483,4 +495,3 @@ export function assertUniqueStatBlockPartKeys(
 export function statBlockPartKeyString(key: StatBlockPartKey): string {
   return `${key.section}\u0000${key.name}`;
 }
-

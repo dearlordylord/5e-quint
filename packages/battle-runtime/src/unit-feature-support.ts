@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.druid-wild-shape-known-form unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement
 import { Match } from "effect";
 import * as Either from "effect/Either";
 import {
@@ -29,14 +29,24 @@ import type {
   DamageType,
   EffectAtom,
   EquipmentPredicate,
+  CreatureType,
   StandardActionKind,
   UnitRecord,
   WeaponRecord,
 } from "@dnd/surface/surface/types";
 import { isEffectAtom } from "@dnd/surface/surface/types";
+import {
+  druidWildShapeKnownFormRosterFromPhase,
+  isDruidWildShapeFeatureRecord,
+  type DruidWildShapeActivationPhase,
+  type DruidWildShapeKnownFormsRoster,
+} from "@dnd/surface/surface/druid-wild-shape-readers";
 import type { BattleMovementSpeedKind } from "./battle-subjects.ts";
 import type { BattleUnitRef } from "./battle-init.ts";
-import type { CharacterBattleClassLevel } from "./character-class-level.ts";
+import type {
+  CharacterBattleClassLevel,
+  CharacterBattleClassLevelInit,
+} from "./character-class-level.ts";
 
 export const WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE =
   "weaponOrUnarmedCriticalRange19";
@@ -74,6 +84,8 @@ export const BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE =
   "bardicInspirationGrant";
 export const MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE =
   "monkFocusBattleOptions";
+export const DRUID_WILD_SHAPE_KNOWN_FORM_SUPPORT_PROFILE =
+  "druidWildShapeKnownForm";
 export const WEAPON_MASTERY_SAP_SUPPORT_PROFILE = "weaponMasterySap";
 export const WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE = "weaponMasteryTopple";
 export const WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE = "weaponMasteryCleave";
@@ -128,6 +140,7 @@ export const BATTLE_UNIT_SUPPORT_PROFILES = [
   MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE,
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
   BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE,
+  DRUID_WILD_SHAPE_KNOWN_FORM_SUPPORT_PROFILE,
   BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
   FAILED_ABILITY_CHECK_RESOURCE_BOOST_SUPPORT_PROFILE,
   MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE,
@@ -266,6 +279,21 @@ export type BattleMonkFocusBattleOptionsSupportProfile = {
     readonly focusActions: readonly ["disengage", "dash"];
   };
 };
+export type BattleDruidWildShapeKnownFormSupportProfile = {
+  readonly kind: typeof DRUID_WILD_SHAPE_KNOWN_FORM_SUPPORT_PROFILE;
+  readonly classLevel: ClassLevel;
+  readonly knownFormRoster: {
+    readonly creatureType: CreatureType;
+    readonly count: number;
+    readonly maxChallengeRating: number;
+    readonly flySpeed: "allowed" | "forbidden";
+  };
+};
+
+export type SupportedDruidWildShapeKnownFormProfile =
+  BattleDruidWildShapeKnownFormSupportProfile & {
+    readonly unit: UnitRecord;
+  };
 export type BattleUnitSupportProfile =
   | BattleAlternateActionCostSupportProfile
   | BattleMonkFocusBattleOptionsSupportProfile
@@ -277,6 +305,7 @@ export type BattleUnitSupportProfile =
   | BattleAttackActionAttackCountScalingSupportProfile
   | BattleBonusActionDashTemporaryHitPointsSupportProfile
   | BattleFailedAbilityCheckResourceBoostSupportProfile
+  | BattleDruidWildShapeKnownFormSupportProfile
   | Exclude<
       (typeof BATTLE_UNIT_SUPPORT_PROFILES)[number],
       | "alternateActionCost"
@@ -289,6 +318,7 @@ export type BattleUnitSupportProfile =
       | "attackActionAttackCountScaling"
       | "bonusActionDashTemporaryHitPoints"
       | "failedAbilityCheckResourceBoost"
+      | "druidWildShapeKnownForm"
     >;
 
 export type BattleUnitSupportProfileIssue = {
@@ -321,6 +351,7 @@ function battleUnitSupportProfileIssue(
 
 export function battleUnitSupportProfilesForUnit(input: {
   readonly unit: BattleUnitSupportSource;
+  readonly classLevels?: readonly CharacterBattleClassLevel[];
 }): Either.Either<
   readonly BattleUnitSupportProfile[],
   BattleUnitSupportProfileIssue
@@ -552,6 +583,22 @@ export function battleUnitSupportProfilesForUnit(input: {
     supportProfiles.push(bardicInspirationGrantSupport);
   }
 
+  const druidWildShapeKnownFormSupport =
+    input.classLevels === undefined
+      ? battleDruidWildShapeKnownFormSupportForUnit(input.unit)
+      : battleDruidWildShapeKnownFormSupportForUnitAtClassLevels(
+          input.unit,
+          input.classLevels,
+        );
+  if (druidWildShapeKnownFormSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle Druid Wild Shape Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (druidWildShapeKnownFormSupport !== null) {
+    supportProfiles.push(druidWildShapeKnownFormSupport);
+  }
+
   const weaponMasterySapSupport = battleWeaponMasterySapSupportForUnit(
     input.unit,
   );
@@ -594,6 +641,7 @@ export function battleUnitSupportProfilesForUnit(input: {
 export function battleUnitRefWithSupportProfiles(input: {
   readonly unitRef: Pick<BattleUnitRef, "unitId">;
   readonly unit: BattleUnitSupportSource;
+  readonly classLevels?: readonly CharacterBattleClassLevelInit[];
 }): Either.Either<BattleUnitRef, BattleUnitSupportProfileIssue> {
   if (input.unitRef.unitId !== input.unit.id) {
     return battleUnitSupportProfileIssue(
@@ -602,6 +650,9 @@ export function battleUnitRefWithSupportProfiles(input: {
   }
   const supportProfiles = battleUnitSupportProfilesForUnit({
     unit: input.unit,
+    ...(input.classLevels === undefined
+      ? {}
+      : { classLevels: parseBattleUnitSupportClassLevels(input.classLevels) }),
   });
   if (Either.isLeft(supportProfiles)) return Either.left(supportProfiles.left);
   return Either.right({
@@ -752,7 +803,6 @@ type AuthoredAttackDamageReductionZeroDamageRedirect = {
     };
   };
 };
-
 type AttackDamageReductionZeroDamageRedirectProfile = NonNullable<
   Extract<
     ReactionRollOrDamageReductionProfile,
@@ -1045,6 +1095,7 @@ export type SupportedUnitFeatureProfile =
         readonly amount: 1;
       };
     }
+  | SupportedDruidWildShapeKnownFormProfile
   | {
       readonly kind: "attackActionAttackCountScaling";
       readonly unit: UnitRecord;
@@ -1551,6 +1602,11 @@ export type BattleBonusActionDashTemporaryHitPointsSupport =
 
 export type BattleFailedAbilityCheckResourceBoostSupport =
   | BattleFailedAbilityCheckResourceBoostSupportProfile
+  | "unsupported"
+  | null;
+
+export type BattleDruidWildShapeKnownFormSupport =
+  | BattleDruidWildShapeKnownFormSupportProfile
   | "unsupported"
   | null;
 
@@ -2574,6 +2630,7 @@ export function parseSupportedUnitFeatureProfile(
     parseWeaponDamageDiceRollChoiceUnitFeatureProfile(unit) ??
     parseMartialArtsAttackProjectionUnitFeatureProfile(unit, classLevels) ??
     parseBardicInspirationGrantUnitFeatureProfile(unit, classLevels) ??
+    parseDruidWildShapeKnownFormUnitFeatureProfile(unit, classLevels) ??
     attackActionAttackCountScalingProfileForUnit(unit) ??
     zeroHitPointReplacementProfileForUnit(unit) ??
     bonusActionDashTemporaryHitPointsProfileForUnit(unit) ??
@@ -2600,6 +2657,156 @@ export function battleBardicInspirationGrantSupportForUnit(
     )
     ? "unsupported"
     : null;
+}
+
+export function battleDruidWildShapeKnownFormSupportForUnit(
+  unit: UnitRecord,
+): BattleDruidWildShapeKnownFormSupport {
+  if (
+    unit.kind !== "class_feature" ||
+    unit.className !== "druid" ||
+    unit.mechanics.family !== "activation"
+  ) {
+    return null;
+  }
+  if (
+    !unit.mechanics.phases.some((phase) => phaseHasWildShapeTransform(phase))
+  ) {
+    return null;
+  }
+  return (
+    druidWildShapeKnownFormSupportProfile(
+      parseDruidWildShapeKnownFormUnitFeatureProfile(unit, [
+        { className: "druid", level: classLevel(unit.acquiredAtLevel) },
+      ]),
+    ) ?? "unsupported"
+  );
+}
+
+function battleDruidWildShapeKnownFormSupportForUnitAtClassLevels(
+  unit: UnitRecord,
+  classLevels: readonly CharacterBattleClassLevel[],
+): BattleDruidWildShapeKnownFormSupport {
+  if (
+    unit.kind !== "class_feature" ||
+    unit.className !== "druid" ||
+    unit.mechanics.family !== "activation"
+  ) {
+    return null;
+  }
+  if (
+    !unit.mechanics.phases.some((phase) => phaseHasWildShapeTransform(phase))
+  ) {
+    return null;
+  }
+  const profile = parseDruidWildShapeKnownFormUnitFeatureProfile(
+    unit,
+    classLevels,
+  );
+  if (profile !== null) {
+    return druidWildShapeKnownFormSupportProfile(profile);
+  }
+  const actualClassLevel = findCharacterClassLevel(classLevels, unit.className);
+  if (
+    isDruidWildShapeFeatureRecord(unit) &&
+    (actualClassLevel === undefined ||
+      actualClassLevel < unit.acquiredAtLevel ||
+      Number(actualClassLevel) >= 18)
+  ) {
+    return null;
+  }
+  return "unsupported";
+}
+
+function parseBattleUnitSupportClassLevels(
+  classLevels: readonly CharacterBattleClassLevelInit[],
+): readonly CharacterBattleClassLevel[] {
+  return classLevels.map((entry) => ({
+    className: entry.className,
+    level: classLevel(entry.level),
+  }));
+}
+
+function parseDruidWildShapeKnownFormUnitFeatureProfile(
+  unit: UnitRecord,
+  classLevels: readonly CharacterBattleClassLevel[],
+): SupportedDruidWildShapeKnownFormProfile | null {
+  if (!isDruidWildShapeFeatureRecord(unit)) {
+    return null;
+  }
+  const classLevel = findCharacterClassLevel(classLevels, unit.className);
+  if (classLevel === undefined || classLevel < unit.acquiredAtLevel) {
+    return null;
+  }
+  if (Number(classLevel) >= 18) {
+    return null;
+  }
+  const phase = unit.mechanics.phases[0];
+  const knownFormRoster = druidWildShapeKnownFormRosterFromPhase(phase);
+  const knownFormCount =
+    knownFormRoster === undefined
+      ? undefined
+      : classLevelTotalChoicesAtLevel(knownFormRoster.knownForms, classLevel);
+  if (knownFormRoster === undefined || knownFormCount == null) {
+    return null;
+  }
+  return {
+    kind: DRUID_WILD_SHAPE_KNOWN_FORM_SUPPORT_PROFILE,
+    unit,
+    classLevel,
+    knownFormRoster: {
+      creatureType: knownFormRoster.creatureType,
+      count: knownFormCount,
+      maxChallengeRating: thresholdTierNumberAtClassLevel(
+        knownFormRoster.maxChallengeRating,
+        classLevel,
+      ),
+      flySpeed:
+        knownFormRoster.flySpeed.kind === "allowed_at_class_level" &&
+        Number(classLevel) >= knownFormRoster.flySpeed.atLevel
+          ? "allowed"
+          : "forbidden",
+    },
+  };
+}
+
+function druidWildShapeKnownFormSupportProfile(
+  profile: SupportedDruidWildShapeKnownFormProfile | null,
+): BattleDruidWildShapeKnownFormSupportProfile | null {
+  return profile === null
+    ? null
+    : {
+        kind: profile.kind,
+        classLevel: profile.classLevel,
+        knownFormRoster: profile.knownFormRoster,
+      };
+}
+
+function phaseHasWildShapeTransform(
+  phase: DruidWildShapeActivationPhase,
+): boolean {
+  return druidWildShapeKnownFormRosterFromPhase(phase) !== undefined;
+}
+
+function classLevelTotalChoicesAtLevel(
+  choices: DruidWildShapeKnownFormsRoster["knownForms"],
+  classLevel: ClassLevel,
+): number | null {
+  if (choices.kind !== "class_level_total_choices") return null;
+  return choices.levels.reduce(
+    (total, tier) => (Number(classLevel) >= tier.atLevel ? tier.total : total),
+    0,
+  );
+}
+
+function thresholdTierNumberAtClassLevel(
+  tiers: DruidWildShapeKnownFormsRoster["maxChallengeRating"],
+  classLevel: ClassLevel,
+): number {
+  return tiers.tiers.reduce(
+    (value, tier) => (Number(classLevel) >= tier.atLevel ? tier.value : value),
+    tiers.base,
+  );
 }
 
 export function battleWeaponMasterySapSupportForUnit(

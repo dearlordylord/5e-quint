@@ -4,13 +4,14 @@ import type {
   StatBlockCatalog,
   StatBlockId,
 } from "@dnd/surface/surface/stat-block-catalog";
-import type {
-  ClassFeatureRecord,
-  ShapeShiftFormSource,
-  StatBlockRecord,
-  UnitRecord,
-  UseCountResource,
-} from "@dnd/surface/surface/types";
+import {
+  druidWildShapeDurationHoursForClassLevel,
+  druidWildShapeKnownFormRosterFromPhase,
+  isDruidWildShapeFeatureRecord,
+  type DruidWildShapeFeatureRecord,
+  type DruidWildShapeKnownFormsRoster,
+} from "@dnd/surface/surface/druid-wild-shape-readers";
+import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "./types.ts";
 import { characterBuildFeatureUnitIds } from "./finalization.ts";
 import {
@@ -27,34 +28,10 @@ import type { CharacterBuild } from "./types.ts";
 export const DRUID_WILD_SHAPE_UNIT_ID =
   "druid_wild_shape" as const satisfies UnitRecord["id"];
 
-const DRUID_WILD_SHAPE_DURATION_DIVISOR = 2;
 const byKind = Match.discriminator("kind");
 
-type DruidWildShapeFeature = ClassFeatureRecord & {
-  readonly className: "druid";
-  readonly mechanics: Extract<
-    ClassFeatureRecord["mechanics"],
-    { readonly family: "activation" }
-  > & {
-    readonly resource: UseCountResource;
-    readonly resetCadence: {
-      readonly kind: "partial_short_full_long";
-      readonly shortRestRefill: number;
-    };
-    readonly duration: {
-      readonly kind: "timed";
-      readonly value: { readonly kind: "half_class_level_rounded_down_hours" };
-    };
-  };
-};
-
-type DruidWildShapeKnownFormsRoster = Extract<
-  ShapeShiftFormSource,
-  { readonly kind: "known_forms_roster" }
->;
-
 export type CharacterBuildDruidWildShapeFacts = {
-  readonly unitId: typeof DRUID_WILD_SHAPE_UNIT_ID;
+  readonly unitId: UnitRecord["id"];
   readonly useCount: {
     readonly maximum: ResourceCount;
     readonly shortRestRefill: ResourceCount;
@@ -90,37 +67,27 @@ export function characterBuildDruidWildShapeFacts(input: {
   CharacterBuildDruidWildShapeFacts | undefined,
   CharacterBuildDruidWildShapeFactsIssue
 > {
-  if (
-    !characterBuildFeatureUnitIds(input.build, input.unitLibrary).includes(
-      DRUID_WILD_SHAPE_UNIT_ID,
-    )
-  ) {
+  const featureUnit = characterDruidWildShapeFeatureUnit(input);
+  if (Either.isLeft(featureUnit)) return Either.left(featureUnit.left);
+  if (featureUnit.right === undefined) {
     return Either.right(undefined);
   }
-  const featureUnit = input.unitLibrary.getUnit(DRUID_WILD_SHAPE_UNIT_ID);
-  if (Option.isNone(featureUnit)) {
-    return druidWildShapeFactsIssue("Wild Shape requires an installed Unit.");
-  }
-  if (!isDruidWildShapeFeature(featureUnit.value)) {
-    return druidWildShapeFactsIssue(
-      "Wild Shape requires the installed Surface feature record.",
-    );
-  }
+  const feature = featureUnit.right;
 
   const druidLevel = classLevelForWildShapeFeature({
     build: input.build,
     unitLibrary: input.unitLibrary,
-    feature: featureUnit.value,
+    feature,
   });
   if (Either.isLeft(druidLevel)) return Either.left(druidLevel.left);
 
-  const knownFormRoster = wildShapeKnownFormRoster(featureUnit.value);
+  const knownFormRoster = wildShapeKnownFormRoster(feature);
   if (knownFormRoster === undefined) {
     return druidWildShapeFactsIssue(
       "Wild Shape requires known Beast form roster facts.",
     );
   }
-  const useCountCap = featureUnit.value.mechanics.resource.cap;
+  const useCountCap = feature.mechanics.resource.cap;
   const maxChallengeRating = knownFormRoster.maxChallengeRating;
   const knownFormCount = classLevelChoiceCountAtLevel(
     knownFormRoster.knownForms,
@@ -136,19 +103,19 @@ export function characterBuildDruidWildShapeFacts(input: {
     );
   }
   return Either.right({
-    unitId: DRUID_WILD_SHAPE_UNIT_ID,
+    unitId: feature.id,
     useCount: {
       maximum: resourceCount(
         thresholdTierValueAtClassLevel(useCountCap, druidLevel.right),
       ),
       shortRestRefill: resourceCount(
-        featureUnit.value.mechanics.resetCadence.shortRestRefill,
+        feature.mechanics.resetCadence.shortRestRefill,
       ),
       longRestRefillsAll: true,
     },
     duration: {
       unit: "hour",
-      amount: Math.floor(druidLevel.right / DRUID_WILD_SHAPE_DURATION_DIVISOR),
+      amount: druidWildShapeDurationHoursForClassLevel(druidLevel.right),
     },
     knownFormRoster: {
       creatureType: knownFormRoster.creatureType,
@@ -165,6 +132,31 @@ export function characterBuildDruidWildShapeFacts(input: {
         knownFormRoster.knownFormChange.replacementCount,
     },
   });
+}
+
+function characterDruidWildShapeFeatureUnit(input: {
+  readonly build: Pick<CharacterBuild, "progression" | "features">;
+  readonly unitLibrary: UnitCatalog;
+}): Either.Either<
+  DruidWildShapeFeatureRecord | undefined,
+  CharacterBuildDruidWildShapeFactsIssue
+> {
+  const matches: DruidWildShapeFeatureRecord[] = [];
+  for (const unitId of characterBuildFeatureUnitIds(
+    input.build,
+    input.unitLibrary,
+  )) {
+    const unit = input.unitLibrary.getUnit(unitId);
+    if (Option.isSome(unit) && isDruidWildShapeFeatureRecord(unit.value)) {
+      matches.push(unit.value);
+    }
+  }
+  if (matches.length > 1) {
+    return druidWildShapeFactsIssue(
+      "Wild Shape projection supports exactly one Druid Wild Shape feature.",
+    );
+  }
+  return Either.right(matches[0]);
 }
 
 export function replaceDruidWildShapeKnownForm(input: {
@@ -253,34 +245,35 @@ export function validateDruidWildShapeKnownForms(input: {
   return Either.right(input.knownFormStatBlockIds);
 }
 
-function isDruidWildShapeFeature(
-  unit: UnitRecord,
-): unit is DruidWildShapeFeature {
+export function validateDruidWildShapeKnownFormRecords(input: {
+  readonly facts: CharacterBuildDruidWildShapeFacts;
+  readonly knownForms: readonly StatBlockRecord[];
+}): Either.Either<
+  readonly StatBlockRecord[],
+  CharacterBuildDruidWildShapeFactsIssue
+> {
   if (
-    unit.kind !== "class_feature" ||
-    unit.className !== "druid" ||
-    unit.mechanics.family !== "activation"
+    input.knownForms.length !== input.facts.knownFormRoster.count ||
+    hasDuplicateStatBlockIds(input.knownForms.map((form) => form.id))
   ) {
-    return false;
+    return druidWildShapeFactsIssue(
+      "Wild Shape known forms must match the Druid's known-form count.",
+    );
   }
-  const duration = unit.mechanics.duration;
-  const durationValue =
-    duration !== undefined && "kind" in duration && duration.kind === "timed"
-      ? duration.value
-      : undefined;
-  return (
-    unit.mechanics.resource?.kind === "use_count" &&
-    unit.mechanics.resetCadence?.kind === "partial_short_full_long" &&
-    durationValue !== undefined &&
-    "kind" in durationValue &&
-    durationValue.kind === "half_class_level_rounded_down_hours"
-  );
+  for (const statBlock of input.knownForms) {
+    const eligibility = druidWildShapeStatBlockEligibility({
+      facts: input.facts,
+      statBlock,
+    });
+    if (Either.isLeft(eligibility)) return Either.left(eligibility.left);
+  }
+  return Either.right(input.knownForms);
 }
 
 function classLevelForWildShapeFeature(input: {
   readonly build: Pick<CharacterBuild, "progression">;
   readonly unitLibrary: UnitCatalog;
-  readonly feature: DruidWildShapeFeature;
+  readonly feature: DruidWildShapeFeatureRecord;
 }): Either.Either<number, CharacterBuildDruidWildShapeFactsIssue> {
   for (const classUnitId of progressionClassUnitIds(input.build.progression)) {
     const classUnit = input.unitLibrary.getUnit(classUnitId);
@@ -300,22 +293,9 @@ function classLevelForWildShapeFeature(input: {
 }
 
 function wildShapeKnownFormRoster(
-  feature: DruidWildShapeFeature,
+  feature: DruidWildShapeFeatureRecord,
 ): DruidWildShapeKnownFormsRoster | undefined {
-  for (const phase of feature.mechanics.phases) {
-    if (phase.kind !== "direct" || phase.effects === undefined) continue;
-    const effect = phase.effects.find(
-      (effect) =>
-        effect.kind === "transform_target" &&
-        effect.newForm.kind === "known_forms_roster",
-    );
-    if (effect?.kind === "transform_target") {
-      return effect.newForm.kind === "known_forms_roster"
-        ? effect.newForm
-        : undefined;
-    }
-  }
-  return undefined;
+  return druidWildShapeKnownFormRosterFromPhase(feature.mechanics.phases[0]);
 }
 
 function wildShapeFlySpeedAtClassLevel(

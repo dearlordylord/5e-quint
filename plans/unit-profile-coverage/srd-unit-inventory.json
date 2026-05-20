@@ -10009,6 +10009,11 @@
           "owner": "character-sheet-runtime",
           "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS Character Sheet class-feature use-count resource runtime; Druid Wild Shape is read from the installed Surface class-feature record and projected as Character Sheet use-count and known-form state. The runtime requires explicit selected known Beast form Stat Block identities for Wild Shape sheet creation, validates and stores them as current known-form state, derives capacity and reset cadence from CharacterBuild resources and Surface feature facts, stores only expended use-count state plus current known-form identities, regains one expended use on Short Rest, clears expended uses on Long Rest, and applies one eligible known-form replacement on Long Rest.",
           "status": "owner evidence present"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME at packages/battle-runtime/src/battle-runtime-druid-wild-shape.test.ts",
+          "status": "owner evidence present"
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",

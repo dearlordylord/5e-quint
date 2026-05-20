@@ -1,9 +1,11 @@
 import {
   battleCreatureInitFromStatBlock,
+  battleDruidWildShapeKnownForms,
   characterBattleResourceForUnit,
   characterBattleResourceMaxUses,
   characterBattleResourceSupportedForUnit,
   parseCharacterBattleClassLevels,
+  parseSupportedUnitFeatureProfile,
   scoreModifier,
   startBattle,
   unitIsSupportedClassFeatureSpellFreeCastResource,
@@ -21,27 +23,36 @@ import {
   type CharacterId,
   type CombatantId,
   type BattleCreatureInit,
+  type BattleDruidWildShapeKnownForm,
   type InitiativeScore,
   type StatBlockBattleInitInput,
 } from "@dnd/battle-runtime";
 import {
+  characterBuildDruidWildShapeFacts,
   characterBuildFeatureUnitIds,
   characterBuildHitPoints,
   characterBuildProficiencies,
   progressionClassLevels,
   type CharacterBuild,
+  type CharacterBuildDruidWildShapeFacts,
 } from "@dnd/character-creation-runtime";
 import type {
   CharacterSheetArmorClassBaseChoice,
   CharacterSheetResourceExpenditure,
 } from "@dnd/character-sheet-runtime";
 import {
+  ClassLevel,
   Hp,
   abilityModifier,
   movementFeet,
+  resourceCount,
   type Condition,
 } from "@dnd/shared/types";
-import type { SpeciesRecord, UnitRecord } from "@dnd/surface/surface/types";
+import type {
+  SpeciesRecord,
+  StatBlockRecord,
+  UnitRecord,
+} from "@dnd/surface/surface/types";
 import { supportedClassFeatureSpellFreeCastGrantsForUnit } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Either, Option } from "effect";
@@ -85,6 +96,7 @@ export type CharacterBuildCreatureInput = {
   readonly spellSlots?: readonly CharacterBattleSpellSlotState[];
   readonly bookOfShadowsPresence?: CharacterBattleBookOfShadowsPresence;
   readonly resourceExpenditures?: readonly CharacterSheetResourceExpenditure[];
+  readonly druidWildShapeKnownForms?: readonly StatBlockRecord[];
   readonly armorClassBaseChoice?: CharacterSheetArmorClassBaseChoice;
   readonly pactBladeBondedWeaponItemId?:
     | NonNullable<CharacterBuild["equipment"]["loadout"]["weapon"]>["itemId"]
@@ -137,16 +149,6 @@ export function battleCreatureInitFromCharacterBuild(
       weaponMasteries.left.map((issue) => issue.message).join("; "),
     );
   }
-  const characterUnitRefs = characterUnitRefsWithBattleSupportProfiles(
-    input.build,
-    input.unitLibrary,
-    weaponMasteries.right,
-  );
-  if (Either.isLeft(characterUnitRefs)) {
-    return battleCreatureInitIssue(
-      characterUnitRefs.left.map((issue) => issue.message).join("; "),
-    );
-  }
   const currentHp = input.currentHp ?? maxHp;
   if (currentHp > maxHp) {
     return battleCreatureInitIssue(
@@ -184,6 +186,17 @@ export function battleCreatureInitFromCharacterBuild(
   );
   if (Either.isLeft(classLevels)) {
     return battleCreatureInitIssue(classLevels.left.message);
+  }
+  const characterUnitRefs = characterUnitRefsWithBattleSupportProfiles(
+    input.build,
+    input.unitLibrary,
+    weaponMasteries.right,
+    classLevels.right,
+  );
+  if (Either.isLeft(characterUnitRefs)) {
+    return battleCreatureInitIssue(
+      characterUnitRefs.left.map((issue) => issue.message).join("; "),
+    );
   }
   const pactBladeBondedWeaponItemId = characterPactBladeBondedWeaponItemId({
     build: input.build,
@@ -257,6 +270,32 @@ export function battleCreatureInitFromCharacterBuild(
   if (Either.isLeft(unarmedStrike)) {
     return battleCreatureInitIssue(unarmedStrike.left.message);
   }
+  const druidWildShapeFacts = characterBuildDruidWildShapeFacts({
+    build: input.build,
+    unitLibrary: input.unitLibrary,
+  });
+  if (Either.isLeft(druidWildShapeFacts)) {
+    return battleCreatureInitIssue(druidWildShapeFacts.left.message);
+  }
+  const supportProfileClassLevels = classLevels.right.map((level) => ({
+    className: level.className,
+    level: ClassLevel.make(level.level),
+  }));
+  const druidWildShapeProfile = singleDruidWildShapeProfile(
+    resources.right,
+    supportProfileClassLevels,
+  );
+  if (Either.isLeft(druidWildShapeProfile)) {
+    return Either.left(druidWildShapeProfile.left);
+  }
+  const druidWildShapeKnownForms = battleDruidWildShapeKnownFormsFromInput(
+    input.druidWildShapeKnownForms,
+    druidWildShapeFacts.right,
+    druidWildShapeProfile.right,
+  );
+  if (Either.isLeft(druidWildShapeKnownForms)) {
+    return Either.left(druidWildShapeKnownForms.left);
+  }
 
   return Either.right({
     combatantId: input.combatantId,
@@ -305,8 +344,74 @@ export function battleCreatureInitFromCharacterBuild(
       ...(spellcasting === undefined
         ? {}
         : { spellcasting: spellcasting.right }),
+      ...(druidWildShapeKnownForms.right === undefined
+        ? {}
+        : { druidWildShapeKnownForms: druidWildShapeKnownForms.right }),
     },
   });
+}
+
+type SupportedDruidWildShapeProfile = Extract<
+  NonNullable<ReturnType<typeof parseSupportedUnitFeatureProfile>>,
+  { readonly kind: "druidWildShapeKnownForm" }
+>;
+
+function singleDruidWildShapeProfile(
+  resources: readonly CharacterBattleResourceInit[],
+  classLevels: Parameters<typeof parseSupportedUnitFeatureProfile>[1],
+): Either.Either<
+  SupportedDruidWildShapeProfile | undefined,
+  BattleCreatureInitIssue
+> {
+  const profiles = resources.flatMap((resource) => {
+    const profile = parseSupportedUnitFeatureProfile(
+      resource.unit,
+      classLevels,
+    );
+    return profile?.kind === "druidWildShapeKnownForm" ? [profile] : [];
+  });
+  if (profiles.length > 1) {
+    return battleCreatureInitIssue(
+      "Druid Wild Shape battle initialization supports exactly one Druid Wild Shape resource.",
+    );
+  }
+  return Either.right(profiles[0]);
+}
+
+function battleDruidWildShapeKnownFormsFromInput(
+  forms: readonly StatBlockRecord[] | undefined,
+  facts: CharacterBuildDruidWildShapeFacts | undefined,
+  profile: SupportedDruidWildShapeProfile | undefined,
+): Either.Either<
+  | readonly [BattleDruidWildShapeKnownForm, ...BattleDruidWildShapeKnownForm[]]
+  | undefined,
+  BattleCreatureInitIssue
+> {
+  if (facts === undefined) {
+    return forms === undefined
+      ? Either.right(undefined)
+      : battleCreatureInitIssue(
+          "Druid Wild Shape known forms require the Druid Wild Shape feature.",
+        );
+  }
+  if (forms === undefined) {
+    return battleCreatureInitIssue(
+      "Druid Wild Shape battle initialization requires known Beast forms.",
+    );
+  }
+  if (profile === undefined) {
+    return battleCreatureInitIssue(
+      "Druid Wild Shape level 18+ requires Beast Spells support before battle initialization.",
+    );
+  }
+  const knownForms = battleDruidWildShapeKnownForms({
+    forms,
+    profile,
+  });
+  if (Either.isLeft(knownForms)) {
+    return battleCreatureInitIssue(knownForms.left.message);
+  }
+  return Either.right(knownForms.right);
 }
 
 function characterBattleSpeciesSize(
@@ -398,6 +503,7 @@ export function characterBattleResourceInitsFromBuild(
     const init = characterBattleResourceInit(
       build,
       unit.value,
+      unitLibrary,
       resourceExpenditures,
       parsedLevels,
     );
@@ -413,12 +519,14 @@ function characterBattleResourceInit(
     UnitRecord,
     { readonly kind: "class_feature" | "species_trait" }
   >,
+  unitLibrary: UnitCatalog,
   resourceExpenditures: readonly CharacterSheetResourceExpenditure[],
   classLevels: readonly CharacterBattleClassLevel[],
 ): Either.Either<CharacterBattleResourceInit, BattleCreatureInitIssue> {
   const persistedUsesRemaining = characterBattlePersistedUsesRemaining(
     build,
     unit,
+    unitLibrary,
     resourceExpenditures,
     classLevels,
   );
@@ -447,9 +555,32 @@ function characterBattleResourceInit(
 function characterBattlePersistedUsesRemaining(
   build: CharacterBuild,
   unit: UnitRecord,
+  unitLibrary: UnitCatalog,
   resourceExpenditures: readonly CharacterSheetResourceExpenditure[],
   classLevels: readonly CharacterBattleClassLevel[],
 ): Either.Either<number | undefined, BattleCreatureInitIssue> {
+  const facts = characterBuildDruidWildShapeFacts({ build, unitLibrary });
+  if (Either.isLeft(facts)) {
+    return battleCreatureInitIssue(facts.left.message);
+  }
+  const wildShapeFacts = facts.right;
+  if (wildShapeFacts !== undefined && unit.id === wildShapeFacts.unitId) {
+    const expended =
+      resourceExpenditures.find(
+        (expenditure) =>
+          expenditure.tag === "useCountResource" &&
+          expenditure.unitId === wildShapeFacts.unitId,
+      )?.expended ?? resourceCount(0);
+    if (expended > wildShapeFacts.useCount.maximum) {
+      return battleCreatureInitIssue(
+        "Druid Wild Shape expenditure exceeds its character resource cap.",
+      );
+    }
+    return Either.right(
+      Number(wildShapeFacts.useCount.maximum) - Number(expended),
+    );
+  }
+
   if (unitIsSupportedClassFeatureSpellFreeCastResource(unit)) {
     const profile =
       supportedClassFeatureSpellFreeCastGrantsForUnit(unit)?.profile;

@@ -36,6 +36,7 @@ import {
   addBattleCombatant,
   battleAreaId,
   battleObscurementZones,
+  battleDruidWildShapeKnownForms,
   battleReactionRollOrDamageReductionSupportForUnit,
   battleUnitSupportProfilesForUnit,
   battleId,
@@ -55,6 +56,7 @@ import {
   initiativeScore,
   KNOCKED_OUT_UNCONSCIOUS,
   objectInvisibleBenefitDenied,
+  parseSupportedUnitFeatureProfile,
   resolveBattleSubject,
   resolveBardicInspirationFailedD20Test,
   resolveBattleReaction,
@@ -86,7 +88,10 @@ import {
   type OngoingFeatureSourceKey,
   type SpellInvocationRef,
 } from "./index.ts";
-import { characterBattleResourceIsUnlimited } from "./character-battle-resources.ts";
+import {
+  characterBattleResourceIsUnlimited,
+  parseCharacterBattleClassLevels,
+} from "./character-battle-resources.ts";
 import {
   supportedSpellInvocationMatchesRef,
   supportedSpellInvocationRef,
@@ -389,6 +394,7 @@ export function subjectName(
   | "monkFocusOption"
   | "monkFocusFlurryOfBlowsStrike"
   | "unitFeature"
+  | "druidWildShape"
   | "endTurn"
   | "move"
   | "standFromProne"
@@ -441,6 +447,9 @@ export function subjectName(
   }
   if (subject.tag === "unitFeature") {
     return "unitFeature";
+  }
+  if (subject.tag === "druidWildShape") {
+    return "druidWildShape";
   }
   return subject.command;
 }
@@ -1950,6 +1959,7 @@ export function characterSeed(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["characterUnitRefs"];
+  readonly druidWildShapeKnownForms?: readonly StatBlockRecord[];
   readonly spellcasting?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -1974,6 +1984,54 @@ export function characterSeed(input: {
       level: input.classLevel ?? 1,
     },
   ];
+  const druidWildShapeProfile =
+    input.druidWildShapeKnownForms === undefined
+      ? undefined
+      : (input.resources ?? []).flatMap((resource) => {
+          const profile = parseSupportedUnitFeatureProfile(
+            resource.unit,
+            parseCharacterBattleClassLevels(classLevels),
+          );
+          return profile?.kind === "druidWildShapeKnownForm" ? [profile] : [];
+        })[0];
+  if (
+    input.druidWildShapeKnownForms !== undefined &&
+    druidWildShapeProfile === undefined
+  ) {
+    throw new Error(
+      "Test Druid Wild Shape known forms require a support profile.",
+    );
+  }
+  const druidWildShapeKnownForms =
+    input.druidWildShapeKnownForms === undefined ||
+    druidWildShapeProfile === undefined
+      ? undefined
+      : battleDruidWildShapeKnownForms({
+          forms: input.druidWildShapeKnownForms,
+          profile: druidWildShapeProfile,
+        });
+  if (
+    druidWildShapeKnownForms !== undefined &&
+    Either.isLeft(druidWildShapeKnownForms)
+  ) {
+    throw new Error(druidWildShapeKnownForms.left.message);
+  }
+  const firstDruidWildShapeKnownForm = druidWildShapeKnownForms?.right[0];
+  if (
+    input.druidWildShapeKnownForms !== undefined &&
+    firstDruidWildShapeKnownForm === undefined
+  ) {
+    throw new Error("Test Druid Wild Shape known forms must be non-empty.");
+  }
+  const parsedDruidWildShapeKnownForms =
+    druidWildShapeKnownForms === undefined
+      ? undefined
+      : firstDruidWildShapeKnownForm === undefined
+        ? undefined
+        : ([
+            firstDruidWildShapeKnownForm,
+            ...druidWildShapeKnownForms.right.slice(1),
+          ] as const);
   return {
     combatantId: input.combatantId ?? fighterId,
     displayName: input.displayName ?? "Fighter",
@@ -2016,6 +2074,9 @@ export function characterSeed(input: {
         ? {}
         : { invocationFeatures: input.invocationFeatures }),
       ...(input.resources === undefined ? {} : { resources: input.resources }),
+      ...(parsedDruidWildShapeKnownForms === undefined
+        ? {}
+        : { druidWildShapeKnownForms: parsedDruidWildShapeKnownForms }),
       ...(input.spellcasting === undefined
         ? {}
         : { spellcasting: input.spellcasting }),
@@ -3721,7 +3782,7 @@ export function acidSplashWithRadius(radiusFeet: number): SpellRecord {
   ) {
     throw new Error("Expected Acid Splash point-origin Sphere phase.");
   }
-  return {
+  const updatedSpell = decodeUnitRecordSync({
     ...spell,
     mechanics: {
       ...spell.mechanics,
@@ -3741,7 +3802,11 @@ export function acidSplashWithRadius(radiusFeet: number): SpellRecord {
         },
       ],
     },
-  };
+  });
+  if (updatedSpell.kind !== "spell") {
+    throw new Error("Expected updated Acid Splash to decode as a spell.");
+  }
+  return updatedSpell;
 }
 
 export function slotAttackDamageSpell(input?: {

@@ -1,3 +1,4 @@
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-mirror-image-hit-interception
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode
@@ -48,6 +49,7 @@ import {
   movementFeet,
   type Condition,
   type DamageDieSize,
+  type ReadonlyNonEmptyArray,
   type Round as RoundType,
 } from "@dnd/shared/types";
 import type {
@@ -74,6 +76,7 @@ import type {
   SupportedAttackActionOption,
 } from "./battle-action-options.ts";
 import type {
+  BattleDruidWildShapeKnownForm,
   BattlePositiveHpUnconscious,
   CharacterBattleInvocationFeature,
   BattleUnitRef,
@@ -185,6 +188,7 @@ export {
   hasReactionRollOrDamageReductionRangeFact,
   ongoingFeatureIsAvailable,
   resolveBardicInspirationFailedD20Test,
+  resolveDruidWildShapeUnitFeature,
   resolveExtraActionGrantUnitFeature,
   resolveFailedAbilityCheckResourceBoost,
   resolveOngoingFeatureUnitFeature,
@@ -198,6 +202,7 @@ export {
   selfBonusActionHealingRollHoleInstanceKey,
   selfBonusActionHealingRollProtocolId,
   selfBonusActionHealingStaleMessage,
+  druidWildShapeActsForResource,
   supportedUnitFeatureActs,
   supportedUnitFeatureProfileForResource,
 } from "./battle-reducer/unit-features.ts";
@@ -612,6 +617,16 @@ export type BattleActiveEffect =
   | (BattleUnitFeatureEffectBase & {
       readonly kind: "bardicInspirationDie";
       readonly dieSize: DamageDieSize;
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "duration" }
+      >;
+    })
+  | (BattleUnitFeatureEffectBase & {
+      readonly kind: "druidWildShapeForm";
+      readonly formStatBlockId: BattleDruidWildShapeKnownForm["id"];
+      readonly equipmentDisposition: "merged";
+      readonly resources: StatBlockMutableResourceState;
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,
         { readonly kind: "duration" }
@@ -3544,6 +3559,7 @@ type BattleCreatureStateCommon = {
         readonly characterId: CharacterId;
         readonly characterUnitRefs: readonly BattleUnitRef[];
         readonly classLevels: readonly CharacterBattleClassLevel[];
+        readonly druidWildShapeKnownForms?: ReadonlyNonEmptyArray<BattleDruidWildShapeKnownForm>;
         readonly weaponProficiencies: readonly WeaponProficiency[];
         readonly selectedLoadout: CharacterBattleLoadoutRef;
         readonly weaponMasteries: readonly CharacterBattleWeaponMasterySelection[];
@@ -5110,6 +5126,10 @@ export type MonkFocusFlurryOfBlowsStrikeBattleResolutionInput =
       | readonly AttackSpellDamageAddition[]
       | undefined;
   };
+export type DruidWildShapeBattleResolutionInput =
+  BattleResolutionInputForSubject<
+    Extract<BattleSubject, { readonly tag: "druidWildShape" }>
+  >;
 
 export const BATTLE_INVALID_REASON_CODES = [
   "staleSubject",

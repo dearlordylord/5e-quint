@@ -263,7 +263,6 @@ export type CharacterSheetBookOfShadowsPresence =
   | { readonly tag: "notOnPerson" };
 
 export type CharacterSheetDruidWildShapeKnownForms = {
-  readonly unitId: typeof DRUID_WILD_SHAPE_UNIT_ID;
   readonly statBlockIds: readonly StatBlockId[];
 };
 
@@ -315,7 +314,7 @@ type CharacterSheetTaggedResourceExpenditure = {
 
 type CharacterSheetUseCountResourceExpenditure = {
   readonly tag: "useCountResource";
-  readonly unitId: CharacterSheetUseCountResourceUnitId;
+  readonly unitId: UnitRecord["id"];
   readonly expended: ResourceCount;
 };
 
@@ -335,7 +334,7 @@ type CharacterSheetClassFeatureSpellFreeCastResource = {
 };
 
 type CharacterSheetUseCountResource = CharacterBuildResource & {
-  readonly unitId: CharacterSheetUseCountResourceUnitId;
+  readonly unitId: UnitRecord["id"];
   readonly resource: UseCountResource;
   readonly resetCadence: RestResetCadence;
 };
@@ -898,7 +897,6 @@ function druidWildShapeKnownFormsFromInput(
   if (Either.isLeft(knownForms))
     return characterSheetIssue(knownForms.left.message);
   return Either.right({
-    unitId: DRUID_WILD_SHAPE_UNIT_ID,
     statBlockIds: knownForms.right,
   });
 }
@@ -1594,7 +1592,6 @@ function druidWildShapeKnownFormsAfterLongRest(input: {
   if (Either.isLeft(replaced))
     return characterSheetIssue(replaced.left.message);
   return Either.right({
-    unitId: DRUID_WILD_SHAPE_UNIT_ID,
     statBlockIds: replaced.right,
   });
 }
@@ -3046,7 +3043,7 @@ function shortRestUseCountExpendedAfterRecovery(
 
 function replaceUseCountResourceExpenditure(input: {
   readonly expenditures: readonly CharacterSheetResourceExpenditure[];
-  readonly unitId: CharacterSheetUseCountResourceUnitId;
+  readonly unitId: UnitRecord["id"];
   readonly expended: ResourceCount;
 }): CharacterSheetResourceExpenditure[] {
   const next = input.expenditures.filter(
@@ -3830,25 +3827,20 @@ function parseStoredDruidWildShapeKnownForms(
   if (value === undefined) return Either.right(undefined);
   if (
     !isRecord(value) ||
-    value.unitId !== DRUID_WILD_SHAPE_UNIT_ID ||
     !Array.isArray(value.statBlockIds) ||
     value.statBlockIds.some((statBlockId) => typeof statBlockId !== "string")
   ) {
     return characterSheetIssue("Expected Wild Shape known-form state.");
   }
   return Either.right({
-    unitId: DRUID_WILD_SHAPE_UNIT_ID,
     statBlockIds: value.statBlockIds,
   });
 }
 
 function parseUseCountResourceExpenditureUnitId(
   expenditure: Record<string, unknown>,
-): Either.Either<CharacterSheetUseCountResourceUnitId, CharacterSheetIssue> {
-  if (
-    typeof expenditure.unitId !== "string" ||
-    !isCharacterSheetUseCountResourceUnitId(expenditure.unitId)
-  ) {
+): Either.Either<UnitRecord["id"], CharacterSheetIssue> {
+  if (typeof expenditure.unitId !== "string") {
     return characterSheetIssue(
       "Character Sheet use-count expenditure requires a supported class feature Unit id.",
     );

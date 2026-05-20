@@ -32,6 +32,7 @@ export function finalizeCharacterSessionsFromBattle(
       combatant,
       sheet: session.sheet,
       unitLibrary: root.unitLibrary,
+      statBlockCatalog: root.statBlockCatalog,
     });
     if (Either.isLeft(availableSession)) {
       return errorContent("Battle character session handoff failed.", {

@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram spell.invocation-self-transformation-mode
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form spell.invocation-flaming-sphere-hazard-ram spell.invocation-self-transformation-mode
 
 import { Match, Schema } from "effect";
 import { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
@@ -482,6 +482,20 @@ export const BattleSubjectSchema = Schema.Union(
     unitId: BattleSubjectTextSchema,
   }),
   Schema.Struct({
+    tag: Schema.Literal("druidWildShape"),
+    actorId: CombatantId,
+    unitId: BattleSubjectTextSchema,
+    action: Schema.Literal("assumeForm"),
+    formStatBlockId: BattleSubjectTextSchema,
+    equipmentDisposition: Schema.Literal("merged"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("druidWildShape"),
+    actorId: CombatantId,
+    unitId: BattleSubjectTextSchema,
+    action: Schema.Literal("dismiss"),
+  }),
+  Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("endTurn"),
@@ -790,6 +804,16 @@ function battleSubjectKey(subject: BattleSubject): string {
       subject.actorId,
       subject.resourceUnitId,
       subject.attackName,
+    ]);
+  }
+  if (subject.tag === "druidWildShape") {
+    return JSON.stringify([
+      subject.tag,
+      subject.actorId,
+      subject.unitId,
+      subject.action,
+      "formStatBlockId" in subject ? subject.formStatBlockId : null,
+      "equipmentDisposition" in subject ? subject.equipmentDisposition : null,
     ]);
   }
   return Match.value(subject).pipe(

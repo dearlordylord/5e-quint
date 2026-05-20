@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.martial-arts-attack-projection
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form unit-feature.martial-arts-attack-projection
 // Movement-budget and speed helpers extracted from battle-reducer.ts.
 // Cluster S (movement_speed). Mechanical extraction — no behavior change.
 // Reads creature-state-leaves.ts to avoid cycling back into G.
@@ -21,7 +21,8 @@ import {
   type SpeedChange,
 } from "@dnd/shared-algebras/speed-algebra";
 import type { SpeedType } from "@dnd/shared/game-facts";
-import type { Size } from "@dnd/surface/surface/types";
+import type { Size, StatBlockRecord } from "@dnd/surface/surface/types";
+import type { BattleDruidWildShapeKnownForm } from "../battle-init.ts";
 import type { CombatantId } from "../identity.ts";
 import {
   BATTLE_MOVEMENT_SPEED_KINDS,
@@ -68,6 +69,10 @@ import {
   grappledBy,
 } from "./creature-state-leaves.ts";
 import { isPresentFindFamiliarCombatant } from "../find-familiar-state.ts";
+import {
+  activeDruidWildShapeForm,
+  combatantEffectiveSize,
+} from "./druid-wild-shape.ts";
 
 export function battleMovementBudget(
   combatant: BattleCreatureState | undefined,
@@ -169,10 +174,22 @@ export function effectiveMovementSpeed(
 }
 
 export function baseWalkSpeed(combatant: BattleCreatureState): number {
+  const wildShapeForm = activeDruidWildShapeForm(combatant);
+  if (wildShapeForm !== null) {
+    return druidWildShapeWalkSpeed(wildShapeForm);
+  }
   if (combatant.origin.kind === "character") {
     return Number(combatant.origin.speed.walkFeet);
   }
-  const walkSpeed = combatant.origin.statBlock.statBlock.speeds.find(
+  return literalWalkSpeed(combatant.origin.statBlock);
+}
+
+function druidWildShapeWalkSpeed(form: BattleDruidWildShapeKnownForm): number {
+  return form.statBlock.speeds[0].feet.value;
+}
+
+function literalWalkSpeed(statBlock: StatBlockRecord): number {
+  const walkSpeed = statBlock.statBlock.speeds.find(
     (speed) => speed.kind === "walk" && speed.feet.kind === "literal",
   );
   return walkSpeed?.feet.kind === "literal" ? walkSpeed.feet.value : 0;
@@ -214,8 +231,11 @@ export function battleSpecialSpeedCandidates(
   for (const speedType of activeSpecialSpeedGrantKinds(combatant)) {
     candidates.push({ kind: "equalToSpeed", speedType });
   }
-  if (combatant.origin.kind === "statBlock") {
-    for (const speed of combatant.origin.statBlock.statBlock.speeds) {
+  const statBlockSpeedSource =
+    activeDruidWildShapeForm(combatant) ??
+    (combatant.origin.kind === "statBlock" ? combatant.origin.statBlock : null);
+  if (statBlockSpeedSource !== null) {
+    for (const speed of statBlockSpeedSource.statBlock.speeds) {
       if (isBattleLiteralSpecialSpeed(speed)) {
         candidates.push({
           kind: "fixed",
@@ -252,8 +272,11 @@ export function representedMovementSpeedKinds(
   for (const kind of activeSpecialSpeedGrantKinds(combatant)) {
     kinds.add(kind);
   }
-  if (combatant.origin.kind === "statBlock") {
-    for (const speed of combatant.origin.statBlock.statBlock.speeds) {
+  const statBlockSpeedSource =
+    activeDruidWildShapeForm(combatant) ??
+    (combatant.origin.kind === "statBlock" ? combatant.origin.statBlock : null);
+  if (statBlockSpeedSource !== null) {
+    for (const speed of statBlockSpeedSource.statBlock.speeds) {
       if (isBattleLiteralSpecialSpeed(speed)) {
         kinds.add(speed.kind);
       }
@@ -544,11 +567,20 @@ export function grappleLinkForTarget(
   if (grappledBy(state, targetId) !== undefined) {
     return { tag: "invalid", message: "Grapple target is already Grappled." };
   }
+  if (activeDruidWildShapeForm(grappler) !== null) {
+    return {
+      tag: "invalid",
+      message:
+        "Grapple while using a Beast form requires unsupported form anatomy and free-hand projection.",
+    };
+  }
   const hand = firstFreeHand(grappler, state.grapples);
   if (hand === undefined) {
     return { tag: "invalid", message: "Grapple requires a free hand." };
   }
-  if (!targetIsNoMoreThanOneSizeLarger(grappler.size, target.size)) {
+  const grapplerSize = combatantEffectiveSize(grappler);
+  const targetSize = combatantEffectiveSize(target);
+  if (!targetIsNoMoreThanOneSizeLarger(grapplerSize, targetSize)) {
     return {
       tag: "invalid",
       message: "Grapple target cannot be more than one size larger.",
@@ -575,10 +607,7 @@ export function grappleLinkForTarget(
       escapeDc: unarmedStrikeSaveDc(grappler),
       reachFeet: movementFeet(5),
       hand,
-      targetExemptFromDragCost: grappleDragCostExempt(
-        grappler.size,
-        target.size,
-      ),
+      targetExemptFromDragCost: grappleDragCostExempt(grapplerSize, targetSize),
     },
   };
 }
@@ -599,7 +628,12 @@ export function shoveForTarget(
       message: "Shove target must be another combatant in this battle.",
     };
   }
-  if (!targetIsNoMoreThanOneSizeLarger(shover.size, target.size)) {
+  if (
+    !targetIsNoMoreThanOneSizeLarger(
+      combatantEffectiveSize(shover),
+      combatantEffectiveSize(target),
+    )
+  ) {
     return {
       tag: "invalid",
       message: "Shove target cannot be more than one size larger.",
@@ -650,6 +684,10 @@ export function unarmedStrikeSaveDc(
 export function unarmedStrikeSaveDcAbilityModifier(
   combatant: BattleCreatureState,
 ): number {
+  const wildShapeForm = activeDruidWildShapeForm(combatant);
+  if (wildShapeForm !== null) {
+    return Math.floor((wildShapeForm.statBlock.abilityScores.str - 10) / 2);
+  }
   if (combatant.origin.kind === "statBlock") {
     return Math.floor(
       (combatant.origin.statBlock.statBlock.abilityScores.str - 10) / 2,

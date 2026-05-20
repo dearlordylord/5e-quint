@@ -133,6 +133,10 @@ import {
 } from "./spells-damage-fills.ts";
 import { wardingBondSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
 import {
+  activeDruidWildShape,
+  updateActiveDruidWildShapeResources,
+} from "./druid-wild-shape.ts";
+import {
   applyCommandGrovelProneToTarget,
   applyGreaseProneToTarget,
   expireBattleLightEmitters,
@@ -2259,7 +2263,10 @@ export function resolveFlamingSphereSaveCommand(
     damageFill,
     saveSucceeded: saveOutcome.succeeded,
   });
-  const concentrationHole = concentrationSavingThrowHole(target, adjustedDamage);
+  const concentrationHole = concentrationSavingThrowHole(
+    target,
+    adjustedDamage,
+  );
   const concentrationFills =
     concentrationHole === null
       ? []
@@ -3848,20 +3855,22 @@ export function resolveEndTurnCommand(
   const hideousLaughterRepeatSaveHoles = hideousLaughterRepeatSaveRequests.map(
     (request) => request.hole,
   );
-  const spellConditionEndTurnSaveRequests =
-    spellConditionEndTurnSaveEffects(actor).map((effect) => ({
+  const spellConditionEndTurnSaveRequests = spellConditionEndTurnSaveEffects(
+    actor,
+  ).map((effect) => ({
+    effect,
+    hole: spellConditionEndTurnSavingThrowOutcomeHole(
+      actorId,
       effect,
-      hole: spellConditionEndTurnSavingThrowOutcomeHole(
-        actorId,
-        effect,
-        input.state,
-        actor === undefined
-          ? []
-          : wardingBondSavingThrowFlatBonusProjectionsForTarget(actor),
-      ),
-    }));
-  const spellConditionEndTurnSaveHoles =
-    spellConditionEndTurnSaveRequests.map((request) => request.hole);
+      input.state,
+      actor === undefined
+        ? []
+        : wardingBondSavingThrowFlatBonusProjectionsForTarget(actor),
+    ),
+  }));
+  const spellConditionEndTurnSaveHoles = spellConditionEndTurnSaveRequests.map(
+    (request) => request.hole,
+  );
   const needsDeathSavingThrow = startTurnDeathSavingThrowRequired(nextActor);
   const rechargeHole = statBlockRechargeRollHole(nextActor);
   const startTurnDamageEffects = spellTurnStartDamageEffects(nextActor);
@@ -3967,14 +3976,15 @@ export function resolveEndTurnCommand(
       return fill === undefined ? [] : [fill];
     },
   );
-  const spellConditionEndTurnSaves =
-    spellConditionEndTurnSaveRequests.flatMap((request) => {
+  const spellConditionEndTurnSaves = spellConditionEndTurnSaveRequests.flatMap(
+    (request) => {
       const fill = spellConditionEndTurnSavingThrowOutcomeFor(
         savingThrowOutcomeFills,
         request.hole,
       );
       return fill === undefined ? [] : [fill];
-    });
+    },
+  );
   const missingSleepRepeatSaveHoles = sleepRepeatSaveRequests.flatMap(
     (request) =>
       sleepRepeatSavingThrowOutcomeFor(
@@ -5063,6 +5073,16 @@ export function resetStartOfTurnCombatant(
     movementSpentFeet: movementFeet(0),
     attackRollMissToHitReplacementsUsedSinceTurnStart: [],
   };
+  const wildShape = activeDruidWildShape(resetCombatant);
+  if (wildShape !== null) {
+    return updateActiveDruidWildShapeResources(
+      resetCombatant,
+      refreshStatBlockStartTurnResources(
+        wildShape.effect.resources,
+        wildShape.form.statBlock,
+      ),
+    );
+  }
   if (resetCombatant.origin.kind !== "statBlock") {
     return resetCombatant;
   }

@@ -1594,7 +1594,6 @@ describe("Character Sheet runtime", () => {
       ),
     ).toBe(true);
     expect(characterSheetDruidWildShapeKnownForms(spent)).toEqual({
-      unitId: DRUID_WILD_SHAPE_UNIT_ID,
       statBlockIds: druidWildShapeFixtureKnownFormStatBlockIds,
     });
     expect(characterSheetResources(spent, unitLibrary)).toMatchObject({
@@ -1615,7 +1614,6 @@ describe("Character Sheet runtime", () => {
     );
 
     expect(characterSheetDruidWildShapeKnownForms(shortRested)).toEqual({
-      unitId: DRUID_WILD_SHAPE_UNIT_ID,
       statBlockIds: druidWildShapeFixtureKnownFormStatBlockIds,
     });
     expect(characterSheetResources(shortRested, unitLibrary)).toMatchObject({
@@ -1643,7 +1641,6 @@ describe("Character Sheet runtime", () => {
 
     expect(longRested.resourceExpenditures).toEqual([]);
     expect(characterSheetDruidWildShapeKnownForms(longRested)).toEqual({
-      unitId: DRUID_WILD_SHAPE_UNIT_ID,
       statBlockIds: [
         "stat_block_cat",
         "stat_block_riding_horse",

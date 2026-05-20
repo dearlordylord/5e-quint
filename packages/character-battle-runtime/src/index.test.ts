@@ -1,5 +1,5 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.invocation-marked-damage-rider
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-use-count-resource
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-use-count-resource unit-feature.druid-wild-shape-known-form
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.monk-uncanny-metabolism-initiative-recovery
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.monk-focus-battle-options
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B mastery_sap mastery_topple mastery_cleave
@@ -8,10 +8,13 @@ import type {
   BattleFill,
   BattleCreatureState,
   BattleHole,
+  BattleSubject,
+  BattleState,
   CharacterBattleResourceState,
   CharacterBattleSpellcastingState,
 } from "@dnd/battle-runtime";
 import {
+  battleCreatureInitFromStatBlock,
   battleCombatantSide,
   battleId,
   characterBattleResourceForUnit,
@@ -20,6 +23,7 @@ import {
   discoverBattleActs,
   initiativeScore,
   resolveBattleSubject,
+  startBattle,
 } from "@dnd/battle-runtime";
 import {
   abilityScoreAssignment,
@@ -39,6 +43,7 @@ import {
   characterSheetTempHp,
   createFreshCharacterSheet as createFreshCharacterSheetCore,
   useMonkUncannyMetabolismWhenRollingInitiative,
+  type CharacterSheet,
   type CharacterSheetInput,
 } from "@dnd/character-sheet-runtime";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
@@ -60,6 +65,7 @@ import {
 import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
+  type StatBlockCatalog,
 } from "@dnd/surface/surface/stat-block-catalog";
 import { Either } from "effect";
 import { describe, expect, test } from "vitest";
@@ -67,9 +73,10 @@ import { describe, expect, test } from "vitest";
 import {
   applyBattleHandoffToCharacterSheet,
   battleCreatureInitFromCharacterBuild,
+  characterUnitRefsWithBattleSupportProfiles,
+  characterSheetBattleInit,
   characterArmorClassState,
   characterBattleResourceInitsFromBuild,
-  characterSheetBattleInit,
   characterSpellcasting,
   startBattleFromCharacterBuildAndStatBlock,
 } from "./index.ts";
@@ -90,8 +97,8 @@ const statBlockCatalog = statBlockCatalogResult.catalog;
 const DRUID_WILD_SHAPE_KNOWN_FORM_IDS = [
   "stat_block_rat",
   "stat_block_riding_horse",
-  "stat_block_spider",
-  "stat_block_wolf",
+  "stat_block_lizard",
+  "stat_block_cat",
 ] as const;
 
 function createFreshCharacterSheet(
@@ -223,10 +230,181 @@ describe("Character Sheet battle handoff", () => {
     expect(Either.isRight(handoff)).toBe(true);
     if (Either.isRight(handoff)) {
       expect(characterSheetDruidWildShapeKnownForms(handoff.right)).toEqual({
-        unitId: "druid_wild_shape",
         statBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
       });
     }
+  });
+
+  test("passes the caller Stat Block catalog while preserving Wild Shape forms", () => {
+    const sheet = createFreshCharacterSheet({
+      characterId: characterSheetId("character:druid-wild-shape-catalog"),
+      build: druidWildShapeBuild(),
+      maximumHp: Hp(16),
+      currentHp: Hp(16),
+      tempHp: Hp(0),
+      unitLibrary,
+      statBlockCatalog,
+      druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
+    });
+    expect(Either.isRight(sheet)).toBe(true);
+    if (Either.isLeft(sheet)) return;
+
+    const countedStatBlockCatalog = statBlockCatalogWithLookupCount();
+    const handoff = applyBattleHandoffToCharacterSheet({
+      sheet: sheet.right,
+      unitLibrary,
+      statBlockCatalog: countedStatBlockCatalog.catalog,
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:druid-wild-shape-catalog"),
+        },
+        hp: Hp(12),
+        maxHp: Hp(16),
+        tempHp: Hp(0),
+        positiveHpUnconscious: null,
+      }),
+    });
+
+    expect(Either.isRight(handoff)).toBe(true);
+    if (Either.isRight(handoff)) {
+      expect(characterSheetDruidWildShapeKnownForms(handoff.right)).toEqual({
+        statBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
+      });
+    }
+    expect(countedStatBlockCatalog.lookupCount()).toBeGreaterThan(0);
+  });
+
+  test("threads Druid Wild Shape known forms into battle initialization", () => {
+    const sheet = createFreshCharacterSheet({
+      characterId: characterSheetId("character:druid-wild-shape-init"),
+      build: druidWildShapeBuild(),
+      maximumHp: Hp(15),
+      currentHp: Hp(15),
+      tempHp: Hp(0),
+      unitLibrary,
+      statBlockCatalog,
+      druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
+    });
+    expect(Either.isRight(sheet)).toBe(true);
+    if (Either.isLeft(sheet)) return;
+
+    const init = expectRight(
+      characterSheetBattleInit({
+        combatantId: combatantId("druid-wild-shape-init"),
+        displayName: "Druid",
+        sheet: sheet.right,
+        initiative: initiativeScore(20),
+        side: battleCombatantSide("party"),
+        unitLibrary,
+        statBlockCatalog,
+      }),
+    );
+
+    expect(init.creatureInit.kind).toBe("character");
+    if (init.creatureInit.kind !== "character") return;
+    expect(
+      init.creatureInit.druidWildShapeKnownForms?.map((form) => form.id),
+    ).toEqual(DRUID_WILD_SHAPE_KNOWN_FORM_IDS);
+  });
+
+  test("rejects ineligible Druid Wild Shape known forms during battle initialization", () => {
+    const init = battleCreatureInitFromCharacterBuild({
+      combatantId: combatantId("druid-wild-shape-ineligible-form"),
+      characterId: characterId("character:druid-wild-shape-ineligible-form"),
+      displayName: "Druid",
+      build: druidWildShapeBuild(),
+      initiative: initiativeScore(20),
+      side: battleCombatantSide("party"),
+      unitLibrary,
+      druidWildShapeKnownForms: [
+        statBlockCatalog.requireStatBlock("stat_block_rat"),
+        statBlockCatalog.requireStatBlock("stat_block_riding_horse"),
+        statBlockCatalog.requireStatBlock("stat_block_cat"),
+        statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+      ],
+    });
+
+    expect(init).toEqual(
+      Either.left({
+        tag: "battleCreatureInitIssue",
+        message:
+          "Druid Wild Shape battle forms require eligible Beast Stat Blocks.",
+      }),
+    );
+  });
+
+  test("does not project Wild Shape Unit-ref support at Beast Spells levels", () => {
+    const refs = expectRight(
+      characterUnitRefsWithBattleSupportProfiles(
+        druidWildShapeBuildAtLevel(18),
+        unitLibrary,
+        undefined,
+        [{ className: "druid", level: 18 }],
+      ),
+    );
+    const wildShapeRef = refs.find(
+      (candidate) => candidate.unitId === "druid_wild_shape",
+    );
+
+    expect(
+      wildShapeRef?.supportProfiles.some(
+        (profile) =>
+          typeof profile === "object" &&
+          profile.kind === "druidWildShapeKnownForm",
+      ),
+    ).toBe(false);
+  });
+
+  test("blocks active Wild Shape handoff and persists spent use after dismissal", () => {
+    const sheet = createFreshCharacterSheet({
+      characterId: characterSheetId("character:druid-wild-shape-resource"),
+      build: druidWildShapeBuild(),
+      maximumHp: Hp(15),
+      currentHp: Hp(15),
+      tempHp: Hp(0),
+      unitLibrary,
+      statBlockCatalog,
+      druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
+    });
+    expect(Either.isRight(sheet)).toBe(true);
+    if (Either.isLeft(sheet)) return;
+    const state = startDruidWildShapeSheetBattle(sheet.right);
+    const assume = requireResolvedBattleSubject(
+      resolveBattleSubject({
+        state,
+        subject: druidWildShapeAct(state, "assumeForm"),
+        fills: [],
+      }),
+    );
+    const activeHandoff = applyBattleHandoffToCharacterSheet({
+      sheet: sheet.right,
+      unitLibrary,
+      combatant: requireCombatant(assume.state, combatantId("druid")),
+    });
+    expect(Either.isLeft(activeHandoff)).toBe(true);
+
+    const dismissableState = restoreBonusAction(assume.state);
+    const dismissed = requireResolvedBattleSubject(
+      resolveBattleSubject({
+        state: dismissableState,
+        subject: druidWildShapeAct(dismissableState, "dismiss"),
+        fills: [],
+      }),
+    );
+    const handoff = expectRight(
+      applyBattleHandoffToCharacterSheet({
+        sheet: sheet.right,
+        unitLibrary,
+        combatant: requireCombatant(dismissed.state, combatantId("druid")),
+      }),
+    );
+
+    expect(handoff.resourceExpenditures).toContainEqual({
+      tag: "useCountResource",
+      unitId: "druid_wild_shape",
+      expended: resourceCount(1),
+    });
   });
 
   test("rejects stable battle handoff when the sheet has in-progress Stable recovery time", () => {
@@ -540,12 +718,13 @@ describe("Character Sheet battle handoff", () => {
       throw new Error("Expected finite Monk Focus resource.");
     }
     const init = expectRight(
-      characterSheetBattleInit({
-        sheet: recovered,
-        unitLibrary,
-        combatantId: combatantId("combatant:monk-uncanny-handoff"),
-        displayName: "Monk",
-        initiative: initiativeScore(16),
+	      characterSheetBattleInit({
+	        sheet: recovered,
+	        unitLibrary,
+	        statBlockCatalog,
+	        combatantId: combatantId("combatant:monk-uncanny-handoff"),
+	        displayName: "Monk",
+	        initiative: initiativeScore(16),
         side: battleCombatantSide("party"),
       }),
     );
@@ -2310,6 +2489,87 @@ function requireResolvedBattleSubject(
   return result;
 }
 
+function startDruidWildShapeSheetBattle(sheet: CharacterSheet): BattleState {
+  const characterInit = expectRight(
+    characterSheetBattleInit({
+      combatantId: combatantId("druid"),
+      displayName: "Druid",
+      sheet,
+      initiative: initiativeScore(20),
+      side: battleCombatantSide("party"),
+      unitLibrary,
+      statBlockCatalog,
+    }),
+  );
+  return expectRight(
+    startBattle({
+      battleId: battleId("character-sheet-druid-wild-shape"),
+      combatants: [
+        characterInit,
+        battleCreatureInitFromStatBlock({
+          combatantId: combatantId("skeleton"),
+          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          initiative: initiativeScore(10),
+          side: battleCombatantSide("monsters"),
+        }),
+      ],
+    }),
+  );
+}
+
+function statBlockCatalogWithLookupCount(): {
+  readonly catalog: StatBlockCatalog;
+  readonly lookupCount: () => number;
+} {
+  let getStatBlockCalls = 0;
+  return {
+    catalog: {
+      getStatBlock: (id) => {
+        getStatBlockCalls += 1;
+        return statBlockCatalog.getStatBlock(id);
+      },
+      listStatBlocks: () => statBlockCatalog.listStatBlocks(),
+      requireStatBlock: (id) => statBlockCatalog.requireStatBlock(id),
+    },
+    lookupCount: () => getStatBlockCalls,
+  };
+}
+
+function druidWildShapeAct(
+  state: BattleState,
+  action: "assumeForm" | "dismiss",
+): Extract<BattleSubject, { readonly tag: "druidWildShape" }> {
+  const subject = discoverBattleActs(state).find(
+    (act) =>
+      act.subject.tag === "druidWildShape" && act.subject.action === action,
+  )?.subject;
+  if (subject?.tag !== "druidWildShape") {
+    throw new Error(`Expected Druid Wild Shape ${action} act.`);
+  }
+  return subject;
+}
+
+function restoreBonusAction(state: BattleState): BattleState {
+  return {
+    ...state,
+    currentTurnResources: {
+      ...state.currentTurnResources,
+      currentHasBonusAction: true,
+    },
+  };
+}
+
+function requireCombatant(
+  state: BattleState,
+  combatantIdValue: ReturnType<typeof combatantId>,
+): BattleCreatureState {
+  const combatant = state.combatants.get(combatantIdValue);
+  if (combatant === undefined) {
+    throw new Error("Expected battle combatant.");
+  }
+  return combatant;
+}
+
 function targetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
   targetId: ReturnType<typeof combatantId>,
@@ -2929,6 +3189,10 @@ function druidDruidicBuild(): CharacterBuild {
 }
 
 function druidWildShapeBuild(): CharacterBuild {
+  return druidWildShapeBuildAtLevel(2);
+}
+
+function druidWildShapeBuildAtLevel(level: number): CharacterBuild {
   const base = druidDruidicBuild();
   if (base.spellcasting === undefined) {
     throw new Error("Expected Druid Wild Shape test build to cast spells.");
@@ -2937,12 +3201,10 @@ function druidWildShapeBuild(): CharacterBuild {
     ...base,
     progression: {
       startingClass: classUnitId("class_druid"),
-      advancements: [
-        {
+      advancements: Array.from({ length: level - 1 }, () => ({
           classUnitId: classUnitId("class_druid"),
           hitPointRule: { tag: "fixedHigherLevelGain" },
-        },
-      ],
+      })),
     },
     spellcasting: {
       sources: base.spellcasting.sources,
@@ -3101,5 +3363,12 @@ function handoffBranchCombatant(
 ): BattleCreatureState {
   // Branch-specific handoff fixtures provide every field read before the tested
   // branch exits. BattleCreatureState's remaining fields are unreachable here.
-  return combatant as BattleCreatureState;
+  return {
+    ...combatant,
+    origin: {
+      classLevels: [],
+      resources: [],
+      ...combatant.origin,
+    },
+  } as BattleCreatureState;
 }

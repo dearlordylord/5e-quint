@@ -85,6 +85,10 @@ import {
   knockedOutOneHp,
 } from "./creature-state.ts";
 import {
+  activeDruidWildShape,
+  updateActiveDruidWildShapeResources,
+} from "./druid-wild-shape.ts";
+import {
   applySpellDamageReductions,
   attackDamageByType,
   damageAmountByTypeAfterTargetAdjustments,
@@ -210,9 +214,7 @@ type HitPointMaximumIncreaseEffect = Extract<
   { readonly kind: "hitPointMaximumIncrease" }
 >;
 
-export function effectiveHitPointMaximum(
-  combatant: BattleCreatureState,
-): Hp {
+export function effectiveHitPointMaximum(combatant: BattleCreatureState): Hp {
   return Hp(
     Number(combatant.maxHp) +
       appliedHitPointMaximumIncreaseAmount(combatant.activeEffects),
@@ -231,8 +233,7 @@ export function applyHitPointMaximumIncrease(
     combatant.activeEffects,
   );
   const activeEffects = [...combatant.activeEffects, effect];
-  const nextActiveAmount =
-    appliedHitPointMaximumIncreaseAmount(activeEffects);
+  const nextActiveAmount = appliedHitPointMaximumIncreaseAmount(activeEffects);
   const currentHitPointIncrease = nextActiveAmount - activeAmount;
   if (currentHitPointIncrease <= 0) {
     return { ...combatant, activeEffects };
@@ -626,16 +627,14 @@ function wardingBondDamageShareCasters(
   state: BattleState,
   target: BattleCreatureState,
 ): readonly BattleCreatureState[] {
-  return target.activeEffects
-    .filter(isWardingBondEffect)
-    .flatMap((effect) => {
-      const caster = wardingBondDamageShareCaster(
-        state,
-        target,
-        effect.sourceCombatantId,
-      );
-      return caster === null ? [] : [caster];
-    });
+  return target.activeEffects.filter(isWardingBondEffect).flatMap((effect) => {
+    const caster = wardingBondDamageShareCaster(
+      state,
+      target,
+      effect.sourceCombatantId,
+    );
+    return caster === null ? [] : [caster];
+  });
 }
 
 function wardingBondDamageShareCaster(
@@ -1337,11 +1336,20 @@ export function deathSavingThrowHole(
 export function statBlockRechargeRollHole(
   combatant: BattleCreatureState | undefined,
 ): BattleStatBlockRechargeRollHole | null {
-  if (combatant?.origin.kind !== "statBlock") return null;
-  const rechargeTargets = unavailableRechargeTargets(
-    combatant.origin.statBlock.statBlock,
-    combatant.origin.resources,
-  );
+  if (combatant === undefined) return null;
+  const wildShape = activeDruidWildShape(combatant);
+  const rechargeTargets =
+    wildShape === null
+      ? combatant.origin.kind === "statBlock"
+        ? unavailableRechargeTargets(
+            combatant.origin.statBlock.statBlock,
+            combatant.origin.resources,
+          )
+        : []
+      : unavailableRechargeTargets(
+          wildShape.form.statBlock,
+          wildShape.effect.resources,
+        );
   if (rechargeTargets.length === 0) return null;
   return {
     kind: "statBlockRechargeRoll",
@@ -1368,12 +1376,24 @@ export function processStatBlockRechargeRolls(
   rolls: readonly BattleStatBlockRechargeRollResult[],
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
   const combatant = combatants.get(actorId);
-  if (combatant?.origin.kind !== "statBlock") return combatants;
-  const statBlock = combatant.origin.statBlock.statBlock;
+  if (combatant === undefined) return combatants;
+  const wildShape = activeDruidWildShape(combatant);
+  const statBlock =
+    wildShape === null
+      ? combatant.origin.kind === "statBlock"
+        ? combatant.origin.statBlock.statBlock
+        : null
+      : wildShape.form.statBlock;
+  if (statBlock === null) return combatants;
+  const resources =
+    wildShape === null && combatant.origin.kind === "statBlock"
+      ? combatant.origin.resources
+      : wildShape?.effect.resources;
+  if (resources === undefined) return combatants;
   const nextResources = {
-    ...combatant.origin.resources,
-    unavailableRechargeParts:
-      combatant.origin.resources.unavailableRechargeParts.filter((key) => {
+    ...resources,
+    unavailableRechargeParts: resources.unavailableRechargeParts.filter(
+      (key) => {
         const limitedUse = statBlockLimitedUseForPart(statBlock, key);
         const result = rolls.find((roll) =>
           sameStatBlockPartKey(roll.target, key),
@@ -1383,8 +1403,16 @@ export function processStatBlockRechargeRolls(
           result === undefined ||
           result.roll < limitedUse.minimumRoll
         );
-      }),
+      },
+    ),
   };
+  if (wildShape !== null) {
+    return new Map(combatants).set(
+      actorId,
+      updateActiveDruidWildShapeResources(combatant, nextResources),
+    );
+  }
+  if (combatant.origin.kind !== "statBlock") return combatants;
   return new Map(combatants).set(actorId, {
     ...combatant,
     origin: {
@@ -1411,9 +1439,8 @@ export function concentrationSavingThrowHole(
     combatantId: combatant.combatantId,
     dc: concentrationSavingThrowDc(effectiveDamage),
     damageAmount: toDamageAmount(effectiveDamage),
-    targetFlatBonuses: wardingBondSavingThrowFlatBonusProjectionsForTarget(
-      combatant,
-    ),
+    targetFlatBonuses:
+      wardingBondSavingThrowFlatBonusProjectionsForTarget(combatant),
     ...(combatantHasEldritchMind(combatant)
       ? { rollMode: "advantage" as const }
       : {}),

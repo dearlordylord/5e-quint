@@ -28,6 +28,7 @@ import {
 import {
   battleCreatureStateFromInit,
   combatantInitiativeInsertionIndex,
+  characterDruidWildShapeKnownFormsInitIssue,
   characterResourceInitIssue,
   characterSpellcastingInitIssue,
   hidePrerequisitesReferenceCombatantsIssue,
@@ -69,6 +70,11 @@ export function startBattle(input: {
     const characterResourceIssue = characterResourceInitIssue(combatant);
     if (characterResourceIssue !== null) {
       return characterResourceIssue;
+    }
+    const druidWildShapeKnownFormsIssue =
+      characterDruidWildShapeKnownFormsInitIssue(combatant);
+    if (druidWildShapeKnownFormsIssue !== null) {
+      return druidWildShapeKnownFormsIssue;
     }
     const characterSpellcastingIssue =
       characterSpellcastingInitIssue(combatant);
@@ -176,6 +182,11 @@ export function addBattleCombatant(input: {
   const characterResourceIssue = characterResourceInitIssue(input.combatant);
   if (characterResourceIssue !== null) {
     return characterResourceIssue;
+  }
+  const druidWildShapeKnownFormsIssue =
+    characterDruidWildShapeKnownFormsInitIssue(input.combatant);
+  if (druidWildShapeKnownFormsIssue !== null) {
+    return druidWildShapeKnownFormsIssue;
   }
   const characterSpellcastingIssue = characterSpellcastingInitIssue(
     input.combatant,

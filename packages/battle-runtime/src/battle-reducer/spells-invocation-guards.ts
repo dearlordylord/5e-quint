@@ -1,3 +1,4 @@
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
 // Spell invocation predicates and lightweight projections extracted from
 // ../battle-reducer.ts. Keeps narrowing logic close to the spell invocation
 // vocabulary while the reducer facade continues to own the public type surface.
@@ -14,6 +15,7 @@ import {
   activeOngoingFeatureOccurrencesForCombatant,
   ongoingFeatureProfileForSourceKey,
 } from "./creature-state.ts";
+import { activeDruidWildShapeEffect } from "./druid-wild-shape.ts";
 
 export function isPreparedDamageSpellSource(
   source: DamageSpellSource,
@@ -74,11 +76,14 @@ export function isTargetListSpellInvocation(
 export function activeOngoingFeaturesPreventSpellcasting(
   actor: BattleCreatureState,
 ): boolean {
-  return [...activeOngoingFeatureOccurrencesForCombatant(actor)].some(
-    ([key]) =>
-      ongoingFeatureProfileForSourceKey(
-        actor,
-        key,
-      )?.actionRestrictions.includes("spellcasting") === true,
+  return (
+    activeDruidWildShapeEffect(actor) !== null ||
+    [...activeOngoingFeatureOccurrencesForCombatant(actor)].some(
+      ([key]) =>
+        ongoingFeatureProfileForSourceKey(
+          actor,
+          key,
+        )?.actionRestrictions.includes("spellcasting") === true,
+    )
   );
 }

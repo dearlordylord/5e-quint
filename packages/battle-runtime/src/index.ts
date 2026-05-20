@@ -168,6 +168,8 @@ export type {
   UnarmedStrikeDamageProfile,
 } from "./battle-action-options.ts";
 export type {
+  BattleDruidWildShapeKnownForm,
+  BattleDruidWildShapeKnownFormIssue,
   BattleCreatureInit,
   BattlePositiveHpUnconscious,
   BattleUnitRef,
@@ -179,7 +181,10 @@ export type {
   StatBlockBattleCreatureInit,
   StatBlockBattleInitInput,
 } from "./battle-init.ts";
-export { KNOCKED_OUT_UNCONSCIOUS } from "./battle-init.ts";
+export {
+  KNOCKED_OUT_UNCONSCIOUS,
+  battleDruidWildShapeKnownForms,
+} from "./battle-init.ts";
 export {
   ActiveOngoingFeatureOccurrenceSnapshotSchema,
   BATTLE_INVALID_REASON_CODES,
@@ -242,6 +247,7 @@ export {
   type BattleCreatureSnapshot,
   type BattleCreatureState,
   type BattleCreatureZeroHpLifecycleSnapshot,
+  type CharacterBattleCreatureState,
   type BattleDamageRollHole,
   type BattleDeathSavingThrowHole,
   type BattleFailedAbilityCheckFacts,
@@ -336,6 +342,7 @@ export {
   BATTLE_UNIT_SUPPORT_PROFILES,
   ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
   BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE,
+  DRUID_WILD_SHAPE_KNOWN_FORM_SUPPORT_PROFILE,
   FAILED_ABILITY_CHECK_RESOURCE_BOOST_SUPPORT_PROFILE,
   PASSIVE_ARMOR_CLASS_BONUS_SUPPORT_PROFILE,
   PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
@@ -355,6 +362,7 @@ export {
   battleAttackActionAttackCountScalingSupportForUnit,
   battleBonusActionStandardActionSupportForUnit,
   battleBardicInspirationGrantSupportForUnit,
+  battleDruidWildShapeKnownFormSupportForUnit,
   battleAttackRollMissToHitReplacementSupportForUnit,
   battleFailedAbilityCheckResourceBoostSupportForUnit,
   battlePassiveArmorClassBonusSupportForUnit,
@@ -363,6 +371,7 @@ export {
   battlePassiveSpeedBonusSupportForUnit,
   battleReactionRollOrDamageReductionSupportForUnit,
   battleSaveDamageReplacementSupportForUnit,
+  parseSupportedUnitFeatureProfile,
   battleUnitRefWithSupportProfiles,
   battleUnitSupportProfilesForUnit,
   battleWeaponDamageDiceRollChoiceSupportForUnit,
@@ -385,6 +394,9 @@ export {
   type BattleAttackRollMissToHitReplacementSupport,
   type BattleAttackRollMissToHitReplacementSupportProfile,
   type BattleBonusActionStandardActionSupport,
+  type BattleDruidWildShapeKnownFormSupport,
+  type BattleDruidWildShapeKnownFormSupportProfile,
+  type SupportedDruidWildShapeKnownFormProfile,
   type BattleFailedAbilityCheckResourceBoostSupport,
   type BattleFailedAbilityCheckResourceBoostSupportProfile,
   type BattlePassiveArmorClassBonusSupport,
@@ -415,3 +427,11 @@ export {
   type MartialArtsAttackProjectionProfile,
   type WeaponDamageDiceRollChoiceProfile,
 } from "./unit-feature-support.ts";
+export {
+  activeDruidWildShapeEffect,
+  activeDruidWildShapeForm,
+  combatantDruidWildShapeArmorClassState,
+  combatantEffectiveSize,
+  combatantHasActiveDruidWildShape,
+  removeEndedDruidWildShapeEffects,
+} from "./battle-reducer/druid-wild-shape.ts";

@@ -1,11 +1,19 @@
 import type { ArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
-import type { Condition, Hp, MovementFeet } from "@dnd/shared/types";
 import type {
+  Condition,
+  Hp,
+  MovementFeet,
+  ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
+import type {
+  CreatureSpeed,
   Size,
   StatBlockRecord,
+  StatBlockValue,
   UnitRecord,
   WeaponProficiency,
 } from "@dnd/surface/surface/types";
+import * as Either from "effect/Either";
 import type {
   CharacterUnarmedStrikeActionOption,
   CharacterWeaponAttackActionOption,
@@ -22,8 +30,12 @@ import type {
   CombatantId,
   InitiativeScore,
 } from "./identity.ts";
-import type { BattleUnitSupportProfile } from "./unit-feature-support.ts";
+import type {
+  BattleDruidWildShapeKnownFormSupportProfile,
+  BattleUnitSupportProfile,
+} from "./unit-feature-support.ts";
 import type { CharacterZeroHpLifecycleInit } from "./zero-hp-lifecycle.ts";
+import { statBlockActionSurfaceIsSupported } from "./statblock-action-support.ts";
 
 export type BattleUnitRef = {
   readonly unitId: UnitRecord["id"];
@@ -56,6 +68,201 @@ export type BattleWalkSpeed = {
   readonly walkFeet: MovementFeet;
 };
 
+type LiteralStatBlockValue = Extract<
+  StatBlockValue,
+  { readonly kind: "literal" }
+>;
+
+type LiteralCreatureSpeedFeet = Extract<
+  CreatureSpeed["feet"],
+  { readonly kind: "literal" }
+>;
+
+type LiteralStatBlockSpeed = {
+  readonly kind: CreatureSpeed["kind"];
+  readonly feet: LiteralCreatureSpeedFeet;
+};
+
+type LiteralWalkStatBlockSpeed = LiteralStatBlockSpeed & {
+  readonly kind: "walk";
+};
+
+type BattleDruidWildShapeFormSpeeds = readonly [
+  LiteralWalkStatBlockSpeed,
+  ...LiteralStatBlockSpeed[],
+];
+
+type BattleDruidWildShapeFormProjectionStatBlock = StatBlockRecord & {
+  readonly statBlock: Omit<
+    StatBlockRecord["statBlock"],
+    "ac" | "size" | "speeds"
+  > & {
+    readonly ac: LiteralStatBlockValue;
+    readonly size: Size;
+    readonly speeds: BattleDruidWildShapeFormSpeeds;
+  };
+};
+
+declare const battleDruidWildShapeKnownFormBrand: unique symbol;
+
+export type BattleDruidWildShapeKnownForm =
+  BattleDruidWildShapeFormProjectionStatBlock & {
+    readonly [battleDruidWildShapeKnownFormBrand]: true;
+  };
+
+export type BattleDruidWildShapeKnownFormIssue = {
+  readonly tag: "battleDruidWildShapeKnownFormIssue";
+  readonly message: string;
+};
+
+export function battleDruidWildShapeKnownForms(input: {
+  readonly forms: readonly StatBlockRecord[];
+  readonly profile: BattleDruidWildShapeKnownFormSupportProfile;
+}): Either.Either<
+  ReadonlyNonEmptyArray<BattleDruidWildShapeKnownForm>,
+  BattleDruidWildShapeKnownFormIssue
+> {
+  if (
+    input.forms.length !== input.profile.knownFormRoster.count ||
+    new Set(input.forms.map((form) => form.id)).size !== input.forms.length
+  ) {
+    return Either.left({
+      tag: "battleDruidWildShapeKnownFormIssue",
+      message:
+        "Druid Wild Shape battle initialization requires the character's distinct known-form count.",
+    });
+  }
+  const parsed: BattleDruidWildShapeKnownForm[] = [];
+  for (const form of input.forms) {
+    if (
+      form.statBlock.creatureType !== input.profile.knownFormRoster.creatureType
+    ) {
+      return Either.left({
+        tag: "battleDruidWildShapeKnownFormIssue",
+        message:
+          "Druid Wild Shape battle forms require eligible Beast Stat Blocks.",
+      });
+    }
+    if (
+      form.challengeRating > input.profile.knownFormRoster.maxChallengeRating
+    ) {
+      return Either.left({
+        tag: "battleDruidWildShapeKnownFormIssue",
+        message:
+          "Druid Wild Shape battle forms cannot exceed the Druid's maximum Challenge Rating.",
+      });
+    }
+    if (
+      input.profile.knownFormRoster.flySpeed === "forbidden" &&
+      statBlockHasFlySpeed(form)
+    ) {
+      return Either.left({
+        tag: "battleDruidWildShapeKnownFormIssue",
+        message:
+          "Druid Wild Shape battle forms cannot have a Fly Speed at this Druid level.",
+      });
+    }
+    const projected = battleDruidWildShapeFormProjectionStatBlock(form);
+    if (Either.isLeft(projected)) return Either.left(projected.left);
+    if (!statBlockActionSurfaceIsSupported(form.statBlock)) {
+      return Either.left({
+        tag: "battleDruidWildShapeKnownFormIssue",
+        message:
+          "Druid Wild Shape battle forms require supported Stat Block action sections.",
+      });
+    }
+    parsed.push(battleDruidWildShapeKnownForm(projected.right));
+  }
+  const first = parsed[0];
+  return first === undefined
+    ? Either.left({
+        tag: "battleDruidWildShapeKnownFormIssue",
+        message:
+          "Druid Wild Shape battle initialization requires at least one known form.",
+      })
+    : Either.right([first, ...parsed.slice(1)]);
+}
+
+function battleDruidWildShapeKnownForm(
+  form: BattleDruidWildShapeFormProjectionStatBlock,
+): BattleDruidWildShapeKnownForm {
+  // Brands are erased at runtime; the parser applies this brand only after
+  // proving roster eligibility, projection facts, and supported actions.
+  return form as BattleDruidWildShapeKnownForm;
+}
+
+function battleDruidWildShapeFormProjectionStatBlock(
+  form: StatBlockRecord,
+): Either.Either<
+  BattleDruidWildShapeFormProjectionStatBlock,
+  BattleDruidWildShapeKnownFormIssue
+> {
+  const armorClass = form.statBlock.ac;
+  if (armorClass.kind !== "literal") {
+    return Either.left({
+      tag: "battleDruidWildShapeKnownFormIssue",
+      message: "Druid Wild Shape battle forms require literal Armor Class.",
+    });
+  }
+  const creatureSize = form.statBlock.size;
+  if (typeof creatureSize !== "string") {
+    return Either.left({
+      tag: "battleDruidWildShapeKnownFormIssue",
+      message: "Druid Wild Shape battle forms require literal Size.",
+    });
+  }
+  const speeds = battleDruidWildShapeFormProjectionSpeeds(form);
+  if (Either.isLeft(speeds)) return Either.left(speeds.left);
+  return Either.right({
+    ...form,
+    statBlock: {
+      ...form.statBlock,
+      ac: armorClass,
+      size: creatureSize,
+      speeds: speeds.right,
+    },
+  });
+}
+
+function battleDruidWildShapeFormProjectionSpeeds(
+  form: StatBlockRecord,
+): Either.Either<
+  BattleDruidWildShapeFormSpeeds,
+  BattleDruidWildShapeKnownFormIssue
+> {
+  const literalSpeeds: LiteralStatBlockSpeed[] = [];
+  for (const speed of form.statBlock.speeds) {
+    if (
+      speed.feet.kind !== "literal" ||
+      speed.requiresSlotLevel !== undefined
+    ) {
+      return Either.left({
+        tag: "battleDruidWildShapeKnownFormIssue",
+        message:
+          "Druid Wild Shape battle forms require unconditional literal Speeds.",
+      });
+    }
+    literalSpeeds.push({ kind: speed.kind, feet: speed.feet });
+  }
+  const walkSpeed = literalSpeeds.find(
+    (speed): speed is LiteralWalkStatBlockSpeed => speed.kind === "walk",
+  );
+  if (walkSpeed === undefined) {
+    return Either.left({
+      tag: "battleDruidWildShapeKnownFormIssue",
+      message: "Druid Wild Shape battle forms require literal Walk Speed.",
+    });
+  }
+  return Either.right([
+    walkSpeed,
+    ...literalSpeeds.filter((speed) => speed !== walkSpeed),
+  ]);
+}
+
+function statBlockHasFlySpeed(form: StatBlockRecord): boolean {
+  return form.statBlock.speeds.some((speed) => speed.kind === "fly");
+}
+
 // SRD 5.2.1 "Knocking Out a Creature": a knocked-out creature is left at 1 HP
 // with the Unconscious condition. That condition ends when the Short Rest
 // started by Knock Out completes, when it regains HP, or after successful
@@ -73,6 +280,7 @@ export type CharacterBattleCreatureInit = {
   readonly characterId: CharacterId;
   readonly characterUnitRefs: readonly BattleUnitRef[];
   readonly classLevels: readonly CharacterBattleClassLevelInit[];
+  readonly druidWildShapeKnownForms?: ReadonlyNonEmptyArray<BattleDruidWildShapeKnownForm>;
   readonly weaponProficiencies?: readonly WeaponProficiency[];
   readonly armorClass: ArmorClassState;
   readonly size: Size;

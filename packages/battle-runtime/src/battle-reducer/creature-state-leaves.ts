@@ -54,6 +54,9 @@ export function combatantWearingArmorCategory(
   combatant: BattleCreatureState,
   category: ArmorCategory,
 ): boolean {
+  if (combatantMergedDruidWildShapeEquipmentSuppressed(combatant)) {
+    return false;
+  }
   return (
     combatant.armorClass.base.kind === "armor" &&
     combatant.armorClass.base.category === category
@@ -61,12 +64,18 @@ export function combatantWearingArmorCategory(
 }
 
 export function combatantWearingArmor(combatant: BattleCreatureState): boolean {
+  if (combatantMergedDruidWildShapeEquipmentSuppressed(combatant)) {
+    return false;
+  }
   return combatant.armorClass.base.kind === "armor";
 }
 
 export function combatantWieldingShield(
   combatant: BattleCreatureState,
 ): boolean {
+  if (combatantMergedDruidWildShapeEquipmentSuppressed(combatant)) {
+    return false;
+  }
   return (
     combatant.armorClass.leftHandUse === "shield" ||
     combatant.armorClass.rightHandUse === "shield"
@@ -84,9 +93,19 @@ export function combatantHandUses(
   combatant: BattleCreatureState,
   grapples: readonly BattleGrappleLink[],
 ): { readonly left: HandUse; readonly right: HandUse } {
+  const leftHandUse = combatantMergedDruidWildShapeEquipmentSuppressed(
+    combatant,
+  )
+    ? "free"
+    : combatant.armorClass.leftHandUse;
+  const rightHandUse = combatantMergedDruidWildShapeEquipmentSuppressed(
+    combatant,
+  )
+    ? "free"
+    : combatant.armorClass.rightHandUse;
   return {
     left: handUseForOccupancy(
-      combatant.armorClass.leftHandUse,
+      leftHandUse,
       grapples.some(
         (grapple) =>
           grapple.grapplerId === combatant.combatantId &&
@@ -94,7 +113,7 @@ export function combatantHandUses(
       ),
     ),
     right: handUseForOccupancy(
-      combatant.armorClass.rightHandUse,
+      rightHandUse,
       grapples.some(
         (grapple) =>
           grapple.grapplerId === combatant.combatantId &&
@@ -102,6 +121,40 @@ export function combatantHandUses(
       ),
     ),
   };
+}
+
+function combatantMergedDruidWildShapeEquipmentSuppressed(
+  combatant: BattleCreatureState,
+): boolean {
+  if (
+    !combatantHasUnendedDruidWildShapeEffect(combatant) ||
+    combatant.origin.kind !== "character"
+  ) {
+    return false;
+  }
+  const origin = combatant.origin;
+  return combatant.activeEffects.some(
+    (effect) =>
+      effect.kind === "druidWildShapeForm" &&
+      effect.equipmentDisposition === "merged" &&
+      origin.druidWildShapeKnownForms?.some(
+        (form) => form.id === effect.formStatBlockId,
+      ) === true,
+  );
+}
+
+export function combatantHasUnendedDruidWildShapeEffect(
+  combatant: BattleCreatureState,
+): boolean {
+  return (
+    combatant.activeEffects?.some(
+      (effect) => effect.kind === "druidWildShapeForm",
+    ) === true &&
+    Number(combatant.hp) > 0 &&
+    !isIncapacitated(combatant.conditions) &&
+    (combatant.zeroHpLifecycle === undefined ||
+      !zeroHpLifecycleIsTerminal(combatant))
+  );
 }
 
 function handUseForOccupancy(

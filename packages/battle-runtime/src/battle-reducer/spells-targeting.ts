@@ -34,6 +34,7 @@ import {
 import { COMMAND_OPTIONS } from "./domain-constants.ts";
 import { spellAttackSequencePartName } from "./spells-profile-shared.ts";
 import type { BattleObjectId } from "../identity.ts";
+import { combatantWearingArmor } from "./creature-state-leaves.ts";
 
 type SingleCreatureOrObjectSpellAttackDamageInvocation =
   Extract<
@@ -171,7 +172,10 @@ export function spellAttackSequencePartObjectTargetHole(
   invocation: SpellAttackSequenceObjectTargetHoleInvocation,
   partIndex: number,
 ): BattleObjectTargetChoiceHole {
-  const holeKey = spellAttackSequencePartObjectTargetHoleKey(invocation, partIndex);
+  const holeKey = spellAttackSequencePartObjectTargetHoleKey(
+    invocation,
+    partIndex,
+  );
   const partName = spellAttackSequencePartName();
   return {
     kind: "objectTargetChoice",
@@ -186,7 +190,9 @@ export function spellAttackSequencePartObjectTargetHoleId(
   invocation: SpellAttackSequenceInvocation,
   partIndex: number,
 ): BattleHoleId {
-  return holeId(spellAttackSequencePartObjectTargetHoleKey(invocation, partIndex));
+  return holeId(
+    spellAttackSequencePartObjectTargetHoleKey(invocation, partIndex),
+  );
 }
 
 function spellAttackSequencePartObjectTargetHoleKey(
@@ -642,7 +648,8 @@ export function spellTargetHasNonSpatialPrerequisites(
   }
   if (
     invocation.procedure === "persistentArmorEffect" &&
-    target?.armorClass.base.kind === "armor"
+    target !== undefined &&
+    combatantWearingArmor(target)
   ) {
     return false;
   }

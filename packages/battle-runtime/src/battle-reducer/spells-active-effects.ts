@@ -16,7 +16,10 @@ import type {
 } from "@dnd/surface/surface/types";
 import { battleDancingLightId } from "../identity.ts";
 import type { BattleAreaId, CombatantId } from "../identity.ts";
-import { currentActorId } from "./creature-state-leaves.ts";
+import {
+  combatantWearingArmor,
+  currentActorId,
+} from "./creature-state-leaves.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state.ts";
 import {
   applyHitPointMaximumIncrease,
@@ -2057,7 +2060,7 @@ export function applyPersistentSpellActiveEffect(
   >,
 ): BattleState {
   const target = state.combatants.get(targetId);
-  if (target == null || target.armorClass.base.kind === "armor") {
+  if (target == null || combatantWearingArmor(target)) {
     return state;
   }
 

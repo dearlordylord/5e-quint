@@ -2308,7 +2308,7 @@
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:supportedFinalizationChoiceHoles",
         "packages/character-creation-runtime/src/finalization.ts:expertiseSubjectsForSelection",
-        "packages/character-creation-runtime/src/wizard-spellcasting.ts:wizardSpellcastingCreationAtLevel"
+        "packages/character-creation-runtime/src/class-spellcasting.ts:wizardSpellcastingCreationAtLevel"
       ],
       "buildProjection": [
         "packages/character-creation-runtime/src/finalization.ts:characterBuildProficiencies"
@@ -2354,7 +2354,7 @@
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:supportedFinalizationChoiceHoles",
         "packages/character-creation-runtime/src/finalization.ts:expertiseSubjectsForSelection",
-        "packages/character-creation-runtime/src/list-prepared-spellcasting.ts:listPreparedSpellcastingCreationAtLevel"
+        "packages/character-creation-runtime/src/class-spellcasting.ts:listPreparedSpellcastingCreationAtLevel"
       ],
       "buildProjection": [
         "packages/character-creation-runtime/src/finalization.ts:characterBuildProficiencies"

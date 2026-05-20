@@ -185,6 +185,7 @@ const battleRuntimeRelevantFeatureUnitIds = new Set([
 const levelTwoBattleRuntimeOwnerEvidenceUnitIds = new Set([
   "barbarian_danger_sense",
   "barbarian_reckless_attack",
+  "druid_wild_shape",
   "fighter_action_surge",
   "fighter_tactical_mind",
   "monk_monks_focus",

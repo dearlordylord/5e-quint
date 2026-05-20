@@ -7,6 +7,8 @@ import {
   findAct,
   targetFill,
   characterSeed,
+  combatantId,
+  elapsedTimeTicks,
   skeletonCreatureInit,
   wizardSpellcasting,
   spellRecord,
@@ -25,6 +27,9 @@ import {
   sameBattleSubject,
   spellSlotInvocationRef,
   startBattle,
+  statBlockCatalog,
+  resourceCount,
+  unitLibrary,
 } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 
@@ -175,6 +180,209 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
       reason: "invalidFill",
     });
     expect(state.combatants.get(wizardId)?.origin.kind).toBe("character");
+  });
+
+  test("Mage Armor uses Beast Dexterity for Wild Shaped targets with merged equipment", () => {
+    const armored = {
+      ...defaultArmorClassState(),
+      base: {
+        kind: "armor" as const,
+        category: "medium" as const,
+        formula: { kind: "medium_dex_max_2" as const, base: 14 },
+      },
+    };
+    const druidId = combatantId("mage-armor-wild-shaped-druid");
+    const state = startBattleRight({
+      battleId: battleId("battle-mage-armor-wild-shape-target"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("mage_armor")],
+          }),
+        }),
+        characterSeed({
+          combatantId: druidId,
+          displayName: "Wild Shaped Druid",
+          initiative: 10,
+          attack: null,
+          armorClass: armored,
+          classLevels: [{ className: "druid", level: 2 }],
+          resources: [{ unit: unitLibrary.requireUnit("druid_wild_shape") }],
+          druidWildShapeKnownForms: [
+            statBlockCatalog.requireStatBlock("stat_block_rat"),
+            statBlockCatalog.requireStatBlock("stat_block_riding_horse"),
+            statBlockCatalog.requireStatBlock("stat_block_lizard"),
+            statBlockCatalog.requireStatBlock("stat_block_cat"),
+          ],
+        }),
+      ],
+    });
+    const druid = state.combatants.get(druidId);
+    if (druid === undefined) {
+      throw new Error("Expected Druid target.");
+    }
+    const wildShapedState = {
+      ...state,
+      combatants: new Map(state.combatants).set(druidId, {
+        ...druid,
+        activeEffects: [
+          ...druid.activeEffects,
+          {
+            kind: "druidWildShapeForm" as const,
+            sourceUnitId: "druid_wild_shape",
+            sourceCombatantId: druidId,
+            formStatBlockId: "stat_block_cat",
+            equipmentDisposition: "merged",
+            resources: {
+              legendaryActionUsesRemaining: resourceCount(0),
+              dailyUses: [],
+              unavailableRechargeParts: [],
+              unavailableRestRechargeParts: [],
+            },
+            expiresAt: {
+              kind: "duration" as const,
+              durationTicks: elapsedTimeTicks(600),
+            },
+          },
+        ],
+      }),
+    };
+    const target = requireHole(
+      resolveBattleSubject({
+        state: wildShapedState,
+        subject: magicSubject("mage_armor"),
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    if (target.kind !== "targetChoice") {
+      throw new Error("Expected targetChoice hole.");
+    }
+
+    const knownWillingDruidTarget = targetFill(target, druidId, [
+      {
+        kind: "spellTarget",
+        casterId: wizardId,
+        targetId: druidId,
+        spellId: "mage_armor",
+      },
+      {
+        kind: "spellTargetKnownWilling",
+        casterId: wizardId,
+        targetId: druidId,
+        spellId: "mage_armor",
+      },
+    ]);
+    const result = requireResolved(
+      resolveBattleSubject({
+        state: wildShapedState,
+        subject: magicSubject("mage_armor"),
+        fills: [knownWillingDruidTarget],
+      }),
+    );
+    const druidSnapshot = result.snapshot.combatants.find(
+      (combatant) => combatant.combatantId === druidId,
+    );
+    expect(Number(druidSnapshot?.armorClass)).toBe(15);
+  });
+
+  test("Mage Armor treats unresolved Wild Shape effects as still wearing armor", () => {
+    const armored = {
+      ...defaultArmorClassState(),
+      base: {
+        kind: "armor" as const,
+        category: "medium" as const,
+        formula: { kind: "medium_dex_max_2" as const, base: 14 },
+      },
+    };
+    const druidId = combatantId("mage-armor-stale-wild-shape-druid");
+    const state = startBattleRight({
+      battleId: battleId("battle-mage-armor-stale-wild-shape-target"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("mage_armor")],
+          }),
+        }),
+        characterSeed({
+          combatantId: druidId,
+          displayName: "Stale Wild Shape Druid",
+          initiative: 10,
+          attack: null,
+          armorClass: armored,
+          classLevels: [{ className: "druid", level: 2 }],
+          resources: [{ unit: unitLibrary.requireUnit("druid_wild_shape") }],
+          druidWildShapeKnownForms: [
+            statBlockCatalog.requireStatBlock("stat_block_rat"),
+            statBlockCatalog.requireStatBlock("stat_block_riding_horse"),
+            statBlockCatalog.requireStatBlock("stat_block_lizard"),
+            statBlockCatalog.requireStatBlock("stat_block_cat"),
+          ],
+        }),
+      ],
+    });
+    const druid = state.combatants.get(druidId);
+    if (druid === undefined) {
+      throw new Error("Expected Druid target.");
+    }
+    const staleWildShapeState = {
+      ...state,
+      combatants: new Map(state.combatants).set(druidId, {
+        ...druid,
+        activeEffects: [
+          ...druid.activeEffects,
+          {
+            kind: "druidWildShapeForm" as const,
+            sourceUnitId: "druid_wild_shape",
+            sourceCombatantId: druidId,
+            formStatBlockId: "missing_wild_shape_form",
+            equipmentDisposition: "merged",
+            resources: {
+              legendaryActionUsesRemaining: resourceCount(0),
+              dailyUses: [],
+              unavailableRechargeParts: [],
+              unavailableRestRechargeParts: [],
+            },
+            expiresAt: {
+              kind: "duration" as const,
+              durationTicks: elapsedTimeTicks(600),
+            },
+          },
+        ],
+      }),
+    };
+
+    const target = requireHole(
+      resolveBattleSubject({
+        state: staleWildShapeState,
+        subject: magicSubject("mage_armor"),
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    if (target.kind !== "targetChoice") {
+      throw new Error("Expected targetChoice hole.");
+    }
+
+    expect(target.choices).not.toContain(druidId);
+    expect(
+      resolveBattleSubject({
+        state: staleWildShapeState,
+        subject: magicSubject("mage_armor"),
+        fills: [targetFill(target, druidId)],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
   });
 
   test("Armor of Shadows casts self-only Mage Armor without expending a Spell Slot", () => {

@@ -1,11 +1,16 @@
 import {
   combatantKnockedOutUnconscious,
+  combatantHasActiveDruidWildShape,
   classFeatureSpellFreeCastProfileForResource,
   characterBattleResourceMaxUses,
   KNOCKED_OUT_UNCONSCIOUS,
+  parseSupportedUnitFeatureProfile,
   type BattleCreatureState,
   type CharacterZeroHpLifecycleInit,
 } from "@dnd/battle-runtime";
+import {
+  characterBuildDruidWildShapeFacts,
+} from "@dnd/character-creation-runtime";
 import {
   CHARACTER_SHEET_KNOCKED_OUT_UNCONSCIOUS,
   characterSheetCurrentHp,
@@ -31,14 +36,19 @@ import {
   hasCondition,
 } from "@dnd/shared-algebras/conditions-algebra";
 import { isSupportedClassFeatureSpellFreeCastResourceTag } from "@dnd/surface/surface/types";
+import type { StatBlockRecord } from "@dnd/surface/surface/types";
+import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
-import { Either } from "effect";
+import { Either, Option } from "effect";
 
 import {
   battleCreatureInitFromCharacterBuild,
   type CharacterBuildCreatureInput,
 } from "./battle-creature-init.ts";
-import { battleCreatureInitIssue } from "./battle-character-build-projection.ts";
+import {
+  battleCreatureInitIssue,
+  type BattleCreatureInitIssue,
+} from "./battle-character-build-projection.ts";
 
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.monk-uncanny-metabolism-initiative-recovery
@@ -77,9 +87,11 @@ export type CharacterSheetBattleInitInput = Omit<
   | "zeroHpLifecycle"
   | "spellSlots"
   | "bookOfShadowsPresence"
+  | "druidWildShapeKnownForms"
 > & {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
+  readonly statBlockCatalog: StatBlockCatalog;
 };
 
 export type CharacterSheetBattleHandoffIssue =
@@ -90,10 +102,17 @@ export type CharacterSheetBattleHandoffIssue =
   | CharacterSheetIssue;
 
 export function characterSheetBattleInit(input: CharacterSheetBattleInitInput) {
-  const { sheet, unitLibrary, ...battleInput } = input;
+  const { sheet, unitLibrary, statBlockCatalog, ...battleInput } = input;
   const stableRecoveryIssue = unsupportedStableRecoveryBattleBoundary(sheet);
   if (stableRecoveryIssue !== null) {
     return battleCreatureInitIssue(stableRecoveryIssue);
+  }
+  const druidWildShapeKnownForms = battleDruidWildShapeKnownFormsFromSheet({
+    sheet,
+    statBlockCatalog,
+  });
+  if (Either.isLeft(druidWildShapeKnownForms)) {
+    return Either.left(druidWildShapeKnownForms.left);
   }
   return battleCreatureInitFromCharacterBuild({
     ...battleInput,
@@ -103,6 +122,9 @@ export function characterSheetBattleInit(input: CharacterSheetBattleInitInput) {
     currentHp: characterSheetCurrentHp(sheet),
     tempHp: characterSheetTempHp(sheet),
     ...withDefinedCharacterBattleSheetState(sheet),
+    ...(druidWildShapeKnownForms.right === undefined
+      ? {}
+      : { druidWildShapeKnownForms: druidWildShapeKnownForms.right }),
   });
 }
 
@@ -110,6 +132,7 @@ export function applyBattleHandoffToCharacterSheet(input: {
   readonly sheet: CharacterSheet;
   readonly combatant: BattleCreatureState;
   readonly unitLibrary: UnitCatalog;
+  readonly statBlockCatalog?: StatBlockCatalog;
 }): Either.Either<CharacterSheet, CharacterSheetBattleHandoffIssue> {
   if (input.combatant.origin.kind !== "character") {
     return characterSheetBattleHandoffIssue(
@@ -129,6 +152,11 @@ export function applyBattleHandoffToCharacterSheet(input: {
   if (input.combatant.hp > input.sheet.maximumHp) {
     return characterSheetBattleHandoffIssue(
       "Battle handoff current HP exceeds Character Sheet maximum HP.",
+    );
+  }
+  if (combatantHasActiveDruidWildShape(input.combatant)) {
+    return characterSheetBattleHandoffIssue(
+      "Battle handoff while Wild Shape is active is blocked; dismiss or resolve reversion before Character Sheet handoff.",
     );
   }
 
@@ -184,12 +212,16 @@ export function applyBattleHandoffToCharacterSheet(input: {
     spentHitDice: input.sheet.spentHitDice,
     restFeatureUses: input.sheet.restFeatureUses,
     resourceExpenditures: resourceExpenditures.right,
+    ...(input.statBlockCatalog === undefined
+      ? {}
+      : { statBlockCatalog: input.statBlockCatalog }),
   });
 }
 
 function characterResourceExpendituresFromBattle(input: {
   readonly sheet: CharacterSheet;
   readonly combatant: BattleCreatureState;
+  readonly unitLibrary: UnitCatalog;
 }): Either.Either<
   readonly CharacterSheetResourceExpenditure[],
   CharacterSheetBattleHandoffIssue
@@ -197,23 +229,35 @@ function characterResourceExpendituresFromBattle(input: {
   if (input.combatant.origin.kind !== "character") {
     return Either.right(input.sheet.resourceExpenditures);
   }
-  const battleResources = input.combatant.origin.resources ?? [];
+  const origin = input.combatant.origin;
+  const wildShapeUnitId = characterSheetDruidWildShapeResourceUnitId(input);
+  if (Either.isLeft(wildShapeUnitId)) {
+    return Either.left(wildShapeUnitId.left);
+  }
+  const battleResources = origin.resources;
   const battleUseCountResourceUnitIds =
-    new Set<CharacterSheetUseCountResourceUnitId>(
-      battleResources.flatMap((resource) => {
-        const unitId =
-          characterSheetUseCountResourceUnitIdForBattleResource(resource);
-        return unitId === null ? [] : [unitId];
-      }),
-    );
+    new Set<CharacterSheetUseCountResourceUnitId>();
+  for (const resource of battleResources) {
+    const unitId = characterSheetUseCountResourceUnitIdForBattleResource(resource);
+    if (unitId !== null) battleUseCountResourceUnitIds.add(unitId);
+  }
+  if (wildShapeUnitId.right !== undefined) {
+    battleUseCountResourceUnitIds.add(wildShapeUnitId.right);
+  }
   const nextExpenditures = input.sheet.resourceExpenditures.filter(
     (expenditure) =>
       !isSupportedClassFeatureSpellFreeCastResourceTag(expenditure.tag) &&
       (expenditure.tag !== "useCountResource" ||
+        !isCharacterSheetUseCountResourceUnitId(expenditure.unitId) ||
         !battleUseCountResourceUnitIds.has(expenditure.unitId)),
   );
   const nextFreeCastExpenditures: CharacterSheetResourceExpenditure[] = [];
   const nextUseCountExpenditures: CharacterSheetResourceExpenditure[] = [];
+  const druidWildShapeExpenditure =
+    druidWildShapeResourceExpenditureFromBattle(input);
+  if (Either.isLeft(druidWildShapeExpenditure)) {
+    return Either.left(druidWildShapeExpenditure.left);
+  }
   for (const resource of battleResources) {
     const profile = classFeatureSpellFreeCastProfileForResource(resource);
     if (profile !== null) {
@@ -239,6 +283,12 @@ function characterResourceExpendituresFromBattle(input: {
           expended: resourceCount(expended),
         });
       }
+      continue;
+    }
+    if (
+      parseSupportedUnitFeatureProfile(resource.unit, origin.classLevels)
+        ?.kind === "druidWildShapeKnownForm"
+    ) {
       continue;
     }
     const useCountUnitId =
@@ -272,6 +322,9 @@ function characterResourceExpendituresFromBattle(input: {
     ...nextExpenditures,
     ...nextFreeCastExpenditures,
     ...nextUseCountExpenditures,
+    ...(druidWildShapeExpenditure.right === undefined
+      ? []
+      : [druidWildShapeExpenditure.right]),
   ]);
 }
 
@@ -287,6 +340,115 @@ function characterSheetUseCountResourceUnitIdForBattleResource(
     isCharacterSheetUseCountResourceUnitId(resource.unit.id)
     ? resource.unit.id
     : null;
+}
+
+function characterSheetDruidWildShapeResourceUnitId(input: {
+  readonly sheet: CharacterSheet;
+  readonly unitLibrary: UnitCatalog;
+}): Either.Either<
+  CharacterSheetUseCountResourceUnitId | undefined,
+  CharacterSheetBattleHandoffIssue
+> {
+  const facts = characterBuildDruidWildShapeFacts({
+    build: input.sheet.build,
+    unitLibrary: input.unitLibrary,
+  });
+  if (Either.isLeft(facts)) {
+    return characterSheetBattleHandoffIssue(facts.left.message);
+  }
+  const unitId = facts.right?.unitId;
+  if (unitId === undefined) {
+    return Either.right(undefined);
+  }
+  if (!isCharacterSheetUseCountResourceUnitId(unitId)) {
+    return characterSheetBattleHandoffIssue(
+      "Druid Wild Shape must use a Character Sheet use-count resource during battle handoff.",
+    );
+  }
+  return Either.right(unitId);
+}
+
+function battleDruidWildShapeKnownFormsFromSheet(input: {
+  readonly sheet: CharacterSheet;
+  readonly statBlockCatalog: StatBlockCatalog;
+}): Either.Either<
+  readonly StatBlockRecord[] | undefined,
+  BattleCreatureInitIssue
+> {
+  const knownForms = characterSheetDruidWildShapeKnownForms(input.sheet);
+  if (knownForms === undefined) return Either.right(undefined);
+  const forms: StatBlockRecord[] = [];
+  for (const statBlockId of knownForms.statBlockIds) {
+    const statBlock = input.statBlockCatalog.getStatBlock(statBlockId);
+    if (Option.isNone(statBlock)) {
+      return battleCreatureInitIssue(
+        `Wild Shape known-form Stat Block is unavailable to battle initialization: ${statBlockId}.`,
+      );
+    }
+    forms.push(statBlock.value);
+  }
+  return Either.right(forms);
+}
+
+function druidWildShapeResourceExpenditureFromBattle(input: {
+  readonly sheet: CharacterSheet;
+  readonly combatant: BattleCreatureState;
+  readonly unitLibrary: UnitCatalog;
+}): Either.Either<
+  CharacterSheetResourceExpenditure | undefined,
+  CharacterSheetBattleHandoffIssue
+> {
+  if (input.combatant.origin.kind !== "character") {
+    return Either.right(undefined);
+  }
+  const origin = input.combatant.origin;
+  const resources = origin.resources.filter(
+    (candidate) =>
+      parseSupportedUnitFeatureProfile(candidate.unit, origin.classLevels)
+        ?.kind === "druidWildShapeKnownForm",
+  );
+  if (resources.length > 1) {
+    return characterSheetBattleHandoffIssue(
+      "Battle handoff supports exactly one Druid Wild Shape resource.",
+    );
+  }
+  const resource = resources[0];
+  if (resource === undefined) {
+    return Either.right(undefined);
+  }
+  const facts = characterBuildDruidWildShapeFacts({
+    build: input.sheet.build,
+    unitLibrary: input.unitLibrary,
+  });
+  if (Either.isLeft(facts)) {
+    return characterSheetBattleHandoffIssue(facts.left.message);
+  }
+  if (facts.right === undefined) {
+    return characterSheetBattleHandoffIssue(
+      "Battle handoff Druid Wild Shape resource requires the Druid Wild Shape feature.",
+    );
+  }
+  if (!("usesRemaining" in resource)) {
+    return characterSheetBattleHandoffIssue(
+      "Druid Wild Shape must carry remaining uses during battle handoff.",
+    );
+  }
+  const expended =
+    Number(facts.right.useCount.maximum) - Number(resource.usesRemaining);
+  if (expended < 0) {
+    return characterSheetBattleHandoffIssue(
+      "Druid Wild Shape remaining uses exceed the character resource cap during battle handoff.",
+    );
+  }
+  return Either.right(
+    expended === 0
+      ? undefined
+      : {
+          tag: "useCountResource",
+          unitId: resource.unit.id,
+          expended: resourceCount(expended),
+        },
+  );
 }
 
 function characterSheetInitialConditions(

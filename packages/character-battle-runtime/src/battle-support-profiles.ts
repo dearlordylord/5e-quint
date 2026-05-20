@@ -32,6 +32,7 @@ export function characterUnitRefsWithBattleSupportProfiles(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
   weaponMasteries?: readonly CharacterBattleWeaponMasterySelection[],
+  classLevels?: CharacterBattleCreatureInit["classLevels"],
 ): Either.Either<
   readonly BattleUnitRef[],
   ReadonlyNonEmptyArray<BattleSupportProfileIssue>
@@ -45,7 +46,7 @@ export function characterUnitRefsWithBattleSupportProfiles(
   }
   const buildUnitRefs = traverseValidation(
     characterBuildUnitRefs(build, unitLibrary),
-    (unitRef) => withBattleSupportProfiles(unitRef, unitLibrary),
+    (unitRef) => withBattleSupportProfiles(unitRef, unitLibrary, classLevels),
   );
   if (Either.isLeft(buildUnitRefs)) {
     return buildUnitRefs;
@@ -56,7 +57,7 @@ export function characterUnitRefsWithBattleSupportProfiles(
       selectedWeaponMasteries.right,
       unitLibrary,
     ).map((unitId) => ({ unitId })),
-    (unitRef) => withBattleSupportProfiles(unitRef, unitLibrary),
+    (unitRef) => withBattleSupportProfiles(unitRef, unitLibrary, classLevels),
   );
   if (Either.isLeft(battleMasteryUnitRefs)) {
     return battleMasteryUnitRefs;
@@ -81,6 +82,7 @@ function battleSupportProfileIssue(
 function withBattleSupportProfiles(
   unitRef: ReturnType<typeof characterBuildUnitRefs>[number],
   unitLibrary: UnitCatalog,
+  classLevels: CharacterBattleCreatureInit["classLevels"] | undefined,
 ): Either.Either<BattleUnitRef, BattleSupportProfileIssue> {
   const unitOption = unitLibrary.getUnit(unitRef.unitId);
   if (Option.isNone(unitOption)) {
@@ -91,6 +93,7 @@ function withBattleSupportProfiles(
   const battleUnitRef = battleUnitRefWithSupportProfiles({
     unitRef,
     unit: unitOption.value,
+    ...(classLevels === undefined ? {} : { classLevels }),
   });
   return Either.isLeft(battleUnitRef)
     ? battleSupportProfileIssue(battleUnitRef.left.message)

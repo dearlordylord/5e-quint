@@ -1,6 +1,6 @@
 // Attack damage hole/disposition helpers extracted from battle-reducer.ts.
 // Cluster U (attack_damage_apply). Mechanical extraction — no behavior change.
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.martial-arts-attack-projection spell.invocation-weapon-attack-override spell.invocation-self-transformation-mode
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form unit-feature.martial-arts-attack-projection spell.invocation-weapon-attack-override spell.invocation-self-transformation-mode
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.ATTACK_BRANCHES BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP
 
 import {
@@ -60,6 +60,10 @@ import {
   statBlockAttackResourceAvailable,
   statBlockSectionMatchesSubject,
 } from "./statblock.ts";
+import {
+  activeDruidWildShape,
+  activeDruidWildShapeEffect,
+} from "./druid-wild-shape.ts";
 
 export function attackDamageHole(
   attack: SupportedAttackActionOption,
@@ -341,7 +345,17 @@ export function attackActionOptionsForActor(
     return [];
   }
   const actor = state.combatants.get(actorId);
-  if (actor !== undefined && actor.origin.kind === "character") {
+  if (actor?.origin.kind === "character") {
+    const wildShape = activeDruidWildShape(actor);
+    if (wildShape !== null) {
+      return statBlockAttackActionOptions(wildShape.form).filter((option) =>
+        statBlockAttackResourceAvailable(
+          wildShape.form.statBlock,
+          wildShape.effect.resources,
+          option,
+        ),
+      );
+    }
     const unarmedStrike = unarmedStrikeWithActiveSelfTransformationOverride(
       actor,
       actor.origin.unarmedStrike,
@@ -398,6 +412,7 @@ export function offHandAttackActionOptionsForActor(
 ): readonly CharacterWeaponAttackActionOption[] {
   const actor = state.combatants.get(actorId);
   if (actor?.origin.kind !== "character") return [];
+  if (activeDruidWildShapeEffect(actor) !== null) return [];
   const main = actor.origin.attack;
   const offHand = actor.origin.offHandAttack;
   if (main === null || offHand === undefined) return [];

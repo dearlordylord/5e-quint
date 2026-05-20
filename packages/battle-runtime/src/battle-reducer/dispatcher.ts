@@ -1,6 +1,7 @@
 // Battle dispatcher/orchestration extracted from ../battle-reducer.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form spell.invocation-warding-bond-linked-effect
 // Owns subject resolution, reaction windows, interrupted-procedure replay,
 // turn snapshots, and reaction-choice orchestration.
 
@@ -62,6 +63,7 @@ import {
   normalizeEarlyEndedOngoingFeatures,
   statBlockLegendaryActionWindowIsOpen,
 } from "./creature-state.ts";
+import { combatantEffectiveSize } from "./druid-wild-shape.ts";
 
 import {
   applyAttackDamageAmount,
@@ -287,6 +289,7 @@ import {
   resolveShakeAwakeFromSleep,
   resolveStandFromProneCommand,
   resolveStatBlockBonusActionOption,
+  resolveDruidWildShapeUnitFeature,
   resolveUnitFeature,
   subjectAllowedDuringStatBlockMultiattackDispatch,
 } from "../battle-reducer.ts";
@@ -590,6 +593,17 @@ export function resolveBattleSubjectInternal(
       "Unit feature is no longer available for the current actor.",
     );
   }
+  if (
+    input.subject.tag === "druidWildShape" &&
+    (!combatantCanTakeActions(input.state.combatants.get(actorId)) ||
+      !input.state.currentTurnResources.currentHasBonusAction)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Druid Wild Shape Bonus Action is no longer available.",
+    );
+  }
 
   const result = (() => {
     const subject = input.subject;
@@ -808,6 +822,9 @@ export function resolveBattleSubjectInternal(
     }
     if (subject.tag === "unitFeature") {
       return resolveUnitFeature({ ...input, subject });
+    }
+    if (subject.tag === "druidWildShape") {
+      return resolveDruidWildShapeUnitFeature({ ...input, subject });
     }
     if (subject.tag === "runtimeCommand" && subject.command === "endTurn") {
       return resolveEndTurnCommand(input);
@@ -1121,7 +1138,8 @@ function subjectSuppressedByCommandHalt(subject: BattleSubject): boolean {
     subject.tag === "bonusActionDashSpell" ||
     subject.tag === "monkFocusOption" ||
     subject.tag === "monkFocusFlurryOfBlowsStrike" ||
-    subject.tag === "unitFeature"
+    subject.tag === "unitFeature" ||
+    subject.tag === "druidWildShape"
   ) {
     return true;
   }
@@ -3255,7 +3273,7 @@ function attackHitSavingThrowOutcomeHole(
     label: `${invocation.spell.name} Saving Throw outcome`,
     targetRollModes: [
       ...base.targetRollModes,
-      ...(creatureSizeIsLargeOrLarger(target.size)
+      ...(creatureSizeIsLargeOrLarger(combatantEffectiveSize(target))
         ? [{ targetId: target.combatantId, rollMode: "advantage" as const }]
         : []),
     ],

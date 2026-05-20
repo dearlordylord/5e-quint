@@ -1,3 +1,4 @@
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
 // Unit feature discovery and resolution extracted from ../battle-reducer.ts.
 // Owns unit-feature act discovery, feature command resolution, ongoing feature
 // activation, failed/successful ability-check feature reactions, and self-heal
@@ -43,6 +44,7 @@ import { CombatantId } from "../identity.ts";
 import {
   parseSupportedUnitFeatureProfile,
   type SupportedUnitFeatureProfile,
+  type SupportedDruidWildShapeKnownFormProfile,
 } from "../unit-feature-support.ts";
 
 import {
@@ -58,6 +60,11 @@ import {
   ongoingFeatureSourceKeyForUnit,
   statBlockLegendaryActionWindowIsOpen,
 } from "./creature-state.ts";
+import {
+  activeDruidWildShapeEffect,
+  assumeDruidWildShapeForm,
+  dismissDruidWildShapeForm,
+} from "./druid-wild-shape.ts";
 
 import { applyHpHealing, breakBattleConcentration } from "./damage-apply.ts";
 
@@ -85,6 +92,7 @@ import { invalidResult } from "./result-helpers.ts";
 import { attackActionOptionName } from "./statblock-attacks.ts";
 
 import { attackTargetHole } from "./hole-helpers.ts";
+import { statBlockResourceState } from "./statblock.ts";
 
 import type {
   AvailableBattleAct,
@@ -99,6 +107,7 @@ import type {
   BattleTargetSpatialFact,
   BattleUnitFeatureRollHole,
   CharacterBattleCreatureState,
+  DruidWildShapeBattleResolutionInput,
   FailedAbilityCheckResourceBoostResolutionInput,
   FailedAbilityCheckResourceBoostResolutionResult,
   SuccessfulAbilityCheckReactionReductionResolutionInput,
@@ -186,6 +195,13 @@ export function supportedUnitFeatureActs(
       ];
     }
 
+    if (
+      unitFeature?.kind === "druidWildShapeKnownForm" &&
+      state.currentTurnResources.currentHasBonusAction
+    ) {
+      return druidWildShapeActsForResource(actor, resource, unitFeature);
+    }
+
     return unitFeature?.kind === "selfBonusActionHealing" &&
       resourceHasUsesRemaining(resource) &&
       state.currentTurnResources.currentHasBonusAction
@@ -203,6 +219,46 @@ export function supportedUnitFeatureActs(
         ]
       : [];
   });
+}
+
+export function druidWildShapeActsForResource(
+  actor: CharacterBattleCreatureState,
+  resource: CharacterBattleResourceState,
+  unitFeature: SupportedDruidWildShapeKnownFormProfile,
+): readonly AvailableBattleAct[] {
+  const assumeActs = resourceHasUsesRemaining(resource)
+    ? (actor.origin.druidWildShapeKnownForms ?? []).map((form) => ({
+        subject: {
+          tag: "druidWildShape" as const,
+          actorId: actor.combatantId,
+          unitId: unitFeature.unit.id,
+          action: "assumeForm" as const,
+          formStatBlockId: form.id,
+          equipmentDisposition: "merged" as const,
+        },
+        label: `${unitFeature.unit.name}: ${form.statBlock.displayName}`,
+        summary:
+          "Spend a Bonus Action and one use to assume this known Beast form with equipment merged.",
+        initialHoles: [],
+      }))
+    : [];
+  const dismissAct =
+    activeDruidWildShapeEffect(actor) === null
+      ? []
+      : [
+          {
+            subject: {
+              tag: "druidWildShape" as const,
+              actorId: actor.combatantId,
+              unitId: unitFeature.unit.id,
+              action: "dismiss" as const,
+            },
+            label: `${unitFeature.unit.name}: Dismiss`,
+            summary: "Spend a Bonus Action to dismiss the active Beast form.",
+            initialHoles: [],
+          },
+        ];
+  return [...assumeActs, ...dismissAct];
 }
 
 export function supportedUnitFeatureProfileForResource(
@@ -281,6 +337,129 @@ export function resolveUnitFeature(
     "staleSubject",
     "Unit feature is no longer available for the current actor.",
   );
+}
+
+export function resolveDruidWildShapeUnitFeature(
+  input: DruidWildShapeBattleResolutionInput,
+): BattleResolutionResult {
+  if (input.fills.length > 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Druid Wild Shape acts do not accept battle fills.",
+    );
+  }
+  const actor = input.state.combatants.get(input.subject.actorId);
+  if (!isCharacterBattleCreatureState(actor)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Druid Wild Shape is no longer available for the current actor.",
+    );
+  }
+  const resource = actor.origin.resources.find(
+    (candidate) => candidate.unit.id === input.subject.unitId,
+  );
+  const unitFeature =
+    resource === undefined
+      ? null
+      : supportedUnitFeatureProfileForResource(
+          actor,
+          resource,
+          actor.origin.classLevels,
+        );
+  if (
+    resource === undefined ||
+    unitFeature?.kind !== "druidWildShapeKnownForm"
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Druid Wild Shape is no longer available for the current actor.",
+    );
+  }
+
+  const spent = spendActivationResource(input.state.currentTurnResources, {
+    kind: "bonusAction",
+  });
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Druid Wild Shape Bonus Action is no longer available.",
+    );
+  }
+
+  if (input.subject.action === "dismiss") {
+    if (activeDruidWildShapeEffect(actor) === null) {
+      return invalidResult(
+        input.state,
+        "staleSubject",
+        "Druid Wild Shape has no active Beast form to dismiss.",
+      );
+    }
+    const nextState = dismissDruidWildShapeForm({
+      state: { ...input.state, currentTurnResources: spent.right },
+      actorId: actor.combatantId,
+    });
+    return {
+      tag: "resolved",
+      state: nextState,
+      snapshot: snapshotBattle(nextState),
+    };
+  }
+
+  const subject = input.subject;
+  if (!resourceHasUsesRemaining(resource)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Druid Wild Shape has no uses remaining.",
+    );
+  }
+  const form = actor.origin.druidWildShapeKnownForms?.find(
+    (candidate) => candidate.id === subject.formStatBlockId,
+  );
+  if (form === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Druid Wild Shape form is not one of the character's known Beast forms.",
+    );
+  }
+  const nextActor: CharacterBattleCreatureState = {
+    ...actor,
+    origin: {
+      ...actor.origin,
+      resources: actor.origin.resources.map((candidate) =>
+        candidate.unit.id === subject.unitId
+          ? spendCharacterResourceUse(candidate)
+          : candidate,
+      ),
+    },
+  };
+  const stateWithResourceSpend = {
+    ...input.state,
+    currentTurnResources: spent.right,
+    combatants: new Map(input.state.combatants).set(
+      actor.combatantId,
+      nextActor,
+    ),
+  };
+  const nextState = assumeDruidWildShapeForm({
+    state: stateWithResourceSpend,
+    actor: nextActor,
+    unitId: subject.unitId,
+    form,
+    equipmentDisposition: subject.equipmentDisposition,
+    formResources: statBlockResourceState(form.statBlock),
+    profile: unitFeature,
+  });
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
 }
 
 export function resolveBardicInspirationGrantUnitFeature(

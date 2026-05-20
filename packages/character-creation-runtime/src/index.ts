@@ -196,6 +196,7 @@ export {
   characterBuildDruidWildShapeFacts,
   replaceDruidWildShapeKnownForm,
   validateDruidWildShapeKnownForms,
+  validateDruidWildShapeKnownFormRecords,
   type CharacterBuildDruidWildShapeFacts,
   type CharacterBuildDruidWildShapeFactsIssue,
   type CharacterBuildDruidWildShapeKnownFormReplacement,

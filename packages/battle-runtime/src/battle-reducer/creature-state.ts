@@ -1,5 +1,5 @@
 // Creature state init/snapshot/lifecycle helpers extracted from
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form spell.invocation-warding-bond-linked-effect
 // battle-reducer.ts. Cluster G (creature_state). Mechanical extraction —
 // no behavior change. Pass 8 also absorbed:
 //   - `assertCurrentHpWithinMaxHp` (cycle #9)
@@ -69,6 +69,7 @@ import {
   PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
+  battleDruidWildShapeKnownFormSupportForUnit,
   parseSupportedUnitFeatureProfile,
   type BattleUnitSupportProfile,
   type SupportedUnitFeatureProfile,
@@ -113,6 +114,12 @@ import {
   statBlockResourceSnapshot,
   statBlockResourceState,
 } from "./statblock.ts";
+import {
+  combatantDruidWildShapeArmorClassState,
+  combatantEffectiveSize,
+  druidWildShapeKnownFormsIssueForProfile,
+  removeEndedDruidWildShapeEffects,
+} from "./druid-wild-shape.ts";
 
 export function ongoingFeatureSourceKey(
   source: OngoingFeatureSource,
@@ -199,6 +206,11 @@ export function battleCreatureStateFromInit(
         characterId: creatureInit.characterId,
         characterUnitRefs: creatureInit.characterUnitRefs,
         classLevels,
+        ...(creatureInit.druidWildShapeKnownForms === undefined
+          ? {}
+          : {
+              druidWildShapeKnownForms: creatureInit.druidWildShapeKnownForms,
+            }),
         weaponProficiencies: creatureInit.weaponProficiencies ?? [],
         selectedLoadout: creatureInit.selectedLoadout,
         weaponMasteries: creatureInit.weaponMasteries ?? [],
@@ -479,13 +491,13 @@ function activeEffectsWithoutDetachedWeaponAttackOverrides(
   combatant: BattleCreatureState,
 ): BattleCreatureState["activeEffects"] {
   if (combatant.origin.kind !== "character") {
-    return combatant.activeEffects;
+    return removeEndedDruidWildShapeEffects(combatant);
   }
   const heldWeaponItemIds = new Set([
     combatant.origin.selectedLoadout.weapon?.itemId,
     combatant.origin.selectedLoadout.offHandWeapon?.itemId,
   ]);
-  return combatant.activeEffects.filter(
+  return removeEndedDruidWildShapeEffects(combatant).filter(
     (effect) =>
       effect.kind !== "spellWeaponAttackOverride" ||
       heldWeaponItemIds.has(effect.weaponItemId),
@@ -507,7 +519,7 @@ export function combatantSnapshot(
     maxHp: effectiveHitPointMaximum(combatant),
     tempHp: combatant.tempHp,
     armorClass: currentArmorClass(activeEffectArmorClass(combatant)),
-    size: combatant.size,
+    size: combatantEffectiveSize(combatant),
     zeroHpLifecycle: combatantZeroHpLifecycleSnapshot(combatant),
     conditions: activeConditions(
       combatant.conditions,
@@ -575,12 +587,13 @@ export function activeEffectArmorClass(
   const baseArmorClassEffect = combatant.activeEffects.find(
     (effect) => effect.kind === "spellBaseArmorClass",
   );
+  const baseArmorClass =
+    combatantDruidWildShapeArmorClassState(combatant) ?? combatant.armorClass;
   const withBase =
-    baseArmorClassEffect === undefined ||
-    combatant.armorClass.base.kind === "armor"
-      ? combatant.armorClass
+    baseArmorClassEffect === undefined || baseArmorClass.base.kind === "armor"
+      ? baseArmorClass
       : {
-          ...combatant.armorClass,
+          ...baseArmorClass,
           base: {
             kind: "ability_sum" as const,
             base: armorClass(baseArmorClassEffect.base),
@@ -606,7 +619,7 @@ export function activeEffectArmorClass(
               sourceUnitId: effect.sourceSpellId,
             },
           ]
-      : [],
+        : [],
   );
   const withBonuses =
     spellArmorClassBonuses.length === 0
@@ -719,6 +732,59 @@ export function characterResourceInitIssue(
     }
   }
   return null;
+}
+
+export function characterDruidWildShapeKnownFormsInitIssue(
+  input: BattleCreatureInit,
+): Either.Either<never, BattleStateInitIssue> | null {
+  const creatureInit = input.creatureInit;
+  if (creatureInit.kind !== "character") return null;
+  const classLevels = parseCharacterBattleClassLevels(creatureInit.classLevels);
+  const wildShapeProfiles = (creatureInit.resources ?? []).flatMap(
+    (resource) => {
+      const profile = parseSupportedUnitFeatureProfile(
+        resource.unit,
+        classLevels,
+      );
+      return profile?.kind === "druidWildShapeKnownForm" ? [profile] : [];
+    },
+  );
+  if (wildShapeProfiles.length > 1) {
+    return battleStateInitIssue(
+      "Druid Wild Shape battle initialization supports exactly one Druid Wild Shape resource.",
+    );
+  }
+  const wildShapeProfile = wildShapeProfiles[0] ?? null;
+  if (wildShapeProfile === null) {
+    if (
+      creatureInit.resources?.some((resource) => {
+        const resourceUnit = resource.unit;
+        return (
+          battleDruidWildShapeKnownFormSupportForUnit(resourceUnit) !== null &&
+          resourceUnit.kind === "class_feature" &&
+          classLevels.some(
+            (classLevel) =>
+              classLevel.className === resourceUnit.className &&
+              Number(classLevel.level) >= 18,
+          )
+        );
+      }) === true
+    ) {
+      return battleStateInitIssue(
+        "Druid Wild Shape level 18+ requires Beast Spells support before battle initialization.",
+      );
+    }
+    return creatureInit.druidWildShapeKnownForms === undefined
+      ? null
+      : battleStateInitIssue(
+          "Druid Wild Shape known forms require the Druid Wild Shape feature.",
+        );
+  }
+  const issue = druidWildShapeKnownFormsIssueForProfile(
+    creatureInit.druidWildShapeKnownForms,
+    wildShapeProfile,
+  );
+  return issue === null ? null : battleStateInitIssue(issue);
 }
 
 export function characterSpellcastingInitIssue(

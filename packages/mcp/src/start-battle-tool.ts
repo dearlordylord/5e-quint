@@ -227,6 +227,7 @@ function startableBattleCombatant(input: {
         initiative: character.initiative,
         side: character.side,
         unitLibrary: root.unitLibrary,
+        statBlockCatalog: root.statBlockCatalog,
       });
       return Either.isLeft(characterInit)
         ? Either.left(
