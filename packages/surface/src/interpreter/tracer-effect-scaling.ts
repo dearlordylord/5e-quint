@@ -179,6 +179,7 @@ export function traceEffectAtomScaling(
     case "water_breathing":
     case "emit_light":
     case "emit_dim_light":
+    case "spell_created_held_object":
     case "block_reanimation":
     case "ignite_objects":
     case "create_object":

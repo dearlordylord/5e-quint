@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import classFighterInput from "../../content/class_fighter.json";
 import dragonsBreathInput from "../../content/dragons_breath.json";
+import flameBladeInput from "../../content/flame_blade.json";
 import locateAnimalsOrPlantsInput from "../../content/locate_animals_or_plants.json";
 import locateObjectInput from "../../content/locate_object.json";
 import magicMouthInput from "../../content/magic_mouth.json";
@@ -57,6 +58,37 @@ describe("Surface trace interpreter", () => {
         expect.objectContaining({
           atomKind: "save_gate",
           label: "save_gate\nDEX vs caster spell save DC",
+        }),
+      ]),
+    );
+  });
+
+  test("renders Flame Blade held-object lifecycle and active blade gates", () => {
+    const trace = traceUnit(decodeUnitRecordSync(flameBladeInput));
+
+    expect(trace.nodes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          atomKind: "spell_created_held_object",
+          label: [
+            "spell_created_held_object",
+            "held by caster",
+            "requires free_hand",
+            "disappears when caster_lets_go",
+            "re-evoke: bonus_action; requires free_hand",
+          ].join("\n"),
+        }),
+        expect.objectContaining({
+          atomKind: "ongoing_predicate",
+          label: "ongoing_predicate\nspell-created held object active",
+        }),
+        expect.objectContaining({
+          atomKind: "emit_light",
+          label: "emit_light\nbright: 10 ft\ndim: +10 ft",
+        }),
+        expect.objectContaining({
+          atomKind: "attack_roll",
+          label: "attack_roll\nmelee_spell_attack",
         }),
       ]),
     );

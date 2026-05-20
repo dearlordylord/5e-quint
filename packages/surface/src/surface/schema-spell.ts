@@ -87,6 +87,20 @@ type ObjectLocationSenseSearchModes = Schema.Schema.Type<
   typeof ObjectLocationSenseSearchModesSchema
 >;
 
+const SPELL_CREATED_HELD_OBJECT_REQUIREMENTS = [
+  "free_hand",
+] as const satisfies ReadonlyNonEmptyArray<string>;
+const SpellCreatedHeldObjectRequirementSchema = Schema.Literal(
+  ...SPELL_CREATED_HELD_OBJECT_REQUIREMENTS,
+);
+
+const SPELL_CREATED_HELD_OBJECT_DISAPPEARANCE_TRIGGERS = [
+  "caster_lets_go",
+] as const satisfies ReadonlyNonEmptyArray<string>;
+const SpellCreatedHeldObjectDisappearanceTriggerSchema = Schema.Literal(
+  ...SPELL_CREATED_HELD_OBJECT_DISAPPEARANCE_TRIGGERS,
+);
+
 export const LinearPerLevelNumberSchema = Schema.Struct({
   kind: Schema.Literal("linear_per_level"),
   axis: LevelAxisSchema,
@@ -1014,6 +1028,24 @@ type EffectAtom =
       readonly kind: "emit_dim_light";
       readonly radiusFeet: number;
       readonly expiresAt: "end_of_caster_next_turn";
+    }
+  | {
+      readonly kind: "spell_created_held_object";
+      readonly heldBy: "caster";
+      readonly requirements: ReadonlyNonEmptyArray<
+        Schema.Schema.Type<typeof SpellCreatedHeldObjectRequirementSchema>
+      >;
+      readonly disappearsWhen: ReadonlyNonEmptyArray<
+        Schema.Schema.Type<
+          typeof SpellCreatedHeldObjectDisappearanceTriggerSchema
+        >
+      >;
+      readonly reEvoke: {
+        readonly cost: { readonly kind: "bonus_action" };
+        readonly requirements: ReadonlyNonEmptyArray<
+          Schema.Schema.Type<typeof SpellCreatedHeldObjectRequirementSchema>
+        >;
+      };
     }
   | ({ readonly kind: "grant_feat" } & (
       | {
@@ -1963,6 +1995,9 @@ export const OngoingPredicateSchema = Schema.Union(
     kind: Schema.Literal("has_condition"),
     condition: ConditionSchema,
   }),
+  Schema.Struct({
+    kind: Schema.Literal("spell_created_held_object_active"),
+  }),
 );
 
 const BaseAcReplacementFormulaSchema = Schema.Union(
@@ -2882,6 +2917,18 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         kind: Schema.Literal("emit_dim_light"),
         radiusFeet: Schema.Number,
         expiresAt: Schema.Literal("end_of_caster_next_turn"),
+      }),
+      strictStruct({
+        kind: Schema.Literal("spell_created_held_object"),
+        heldBy: Schema.Literal("caster"),
+        requirements: nonEmpty(SpellCreatedHeldObjectRequirementSchema),
+        disappearsWhen: nonEmpty(
+          SpellCreatedHeldObjectDisappearanceTriggerSchema,
+        ),
+        reEvoke: strictStruct({
+          cost: strictStruct({ kind: Schema.Literal("bonus_action") }),
+          requirements: nonEmpty(SpellCreatedHeldObjectRequirementSchema),
+        }),
       }),
       Schema.Struct({
         kind: Schema.Literal("composite"),

@@ -19,6 +19,22 @@ export function traceEffectAtom(
   edges?: TraceEdge[],
 ): string | null {
   switch (e.kind) {
+    case "spell_created_held_object": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "spell_created_held_object",
+        label: [
+          "spell_created_held_object",
+          `held by ${e.heldBy}`,
+          `requires ${e.requirements.join(", ")}`,
+          `disappears when ${e.disappearsWhen.join(", ")}`,
+          `re-evoke: ${e.reEvoke.cost.kind}; requires ${e.reEvoke.requirements.join(", ")}`,
+        ].join("\n"),
+      });
+      return id;
+    }
     case "none":
     case "damage":
     case "conditional_bonus_damage":

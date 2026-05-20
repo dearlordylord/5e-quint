@@ -942,8 +942,14 @@ describe("SRD Unit catalog boundary", () => {
     const shapeShiftOnFail = {
       kind: "composite",
       effects: expect.arrayContaining([
-        { kind: "revert_shape_shift_to_true_form", onlyIfTargetIsShapeShifted: true },
-        { kind: "suppress_shape_shifting_while_in_area", onlyIfTargetIsShapeShifted: true },
+        {
+          kind: "revert_shape_shift_to_true_form",
+          onlyIfTargetIsShapeShifted: true,
+        },
+        {
+          kind: "suppress_shape_shifting_while_in_area",
+          onlyIfTargetIsShapeShifted: true,
+        },
       ]),
     };
 
@@ -955,7 +961,10 @@ describe("SRD Unit catalog boundary", () => {
     expect(moonbeam.mechanics.initialPhase).toMatchObject({
       kind: "save_gate",
       onFail: shapeShiftOnFail,
-      usageLimit: { kind: "once_per_turn", limitGroup: "moonbeam_save_per_turn" },
+      usageLimit: {
+        kind: "once_per_turn",
+        limitGroup: "moonbeam_save_per_turn",
+      },
     });
 
     // All three recurring save triggers (creature-ends-turn-in-area, creature-entry,
@@ -1206,6 +1215,80 @@ describe("SRD Unit catalog boundary", () => {
               subject: "triggering_attack_or_spell",
             },
             onSuccess: { kind: "none" },
+          },
+        },
+      ]);
+    }
+  });
+
+  test("decodes Flame Blade as a spell-created held blade lifecycle", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const flameBlade = result.catalog.requireUnit("flame_blade");
+      expect(flameBlade.kind).toBe("spell");
+      if (flameBlade.kind !== "spell") return;
+      expect(flameBlade.mechanics.family).toBe("ongoing_effect");
+      if (flameBlade.mechanics.family !== "ongoing_effect") return;
+
+      expect(flameBlade.mechanics.duration).toEqual({
+        kind: "concentration",
+        upTo: { unit: "minute", amount: 10 },
+      });
+      expect(flameBlade.mechanics.initialPhase).toEqual({
+        kind: "direct",
+        attachment: { kind: "self" },
+        effects: [
+          {
+            kind: "spell_created_held_object",
+            heldBy: "caster",
+            requirements: ["free_hand"],
+            disappearsWhen: ["caster_lets_go"],
+            reEvoke: {
+              cost: { kind: "bonus_action" },
+              requirements: ["free_hand"],
+            },
+          },
+        ],
+      });
+      expect(flameBlade.mechanics.operations).toEqual([
+        {
+          trigger: { kind: "passive" },
+          predicate: { kind: "spell_created_held_object_active" },
+          effect: {
+            kind: "emit_light",
+            brightRadiusFeet: 10,
+            dimAdditionalFeet: 10,
+          },
+        },
+        {
+          trigger: {
+            kind: "on_caster_spends_action",
+            cost: { kind: "standard_action", action: "magic" },
+          },
+          predicate: { kind: "spell_created_held_object_active" },
+          effect: {
+            kind: "attack_roll",
+            attackKind: "melee_spell_attack",
+            onHit: [
+              {
+                kind: "damage",
+                damageType: "fire",
+                amount: {
+                  kind: "linear_per_level",
+                  axis: "slot",
+                  base: {
+                    dice: 3,
+                    dieSize: 6,
+                    spellcastingMod: true,
+                  },
+                  perLevel: { dice: 1, dieSize: 6 },
+                  startingAtLevel: 2,
+                },
+              },
+            ],
+            onMiss: [{ kind: "none" }],
           },
         },
       ]);
