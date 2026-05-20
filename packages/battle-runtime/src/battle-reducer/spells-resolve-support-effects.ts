@@ -31,11 +31,13 @@ import {
   applyMirrorImageHitInterceptionSpellEffect,
   applyRollModifierSpellEffect,
   applyScalarBuffSpellEffect,
+  applySelfTransformationModeEffect,
   applyThaumaturgyBoomingVoiceSpellEffect,
   isThaumaturgyBoomingVoiceEffectForInvocation,
   spellDamageTypeChoiceHole,
   spellHealingRollHole,
   spellScalarBuffRollHole,
+  selfTransformationModeChoiceHole,
   spellTargetHole,
   spellTargetIsKnownWilling,
   spellTargetIsLegal,
@@ -370,6 +372,101 @@ export function resolveScalarBuffSpellAct(input: {
     input.invocation,
     input.fillSet.healingRoll,
   );
+  const resourced = spendSpellCastResources({
+    state: effected,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+  });
+  return resourced.tag === "invalid"
+    ? resourced
+    : {
+        tag: "resolved",
+        state: resourced.state,
+        snapshot: snapshotBattle(resourced.state),
+      };
+}
+
+export function resolveSelfTransformationModeSpellAct(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "selfTransformationMode" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  if (
+    input.fillSet.targetId !== undefined ||
+    input.fillSet.objectTarget !== undefined ||
+    input.fillSet.targetSpatialFacts.length > 0 ||
+    input.fillSet.targetAllocation !== undefined ||
+    input.fillSet.targetList !== undefined ||
+    input.fillSet.attackSequencePartFills.length > 0 ||
+    input.fillSet.attackRoll !== undefined ||
+    input.fillSet.savingThrowOutcomes !== undefined ||
+    input.fillSet.skillChoice !== undefined ||
+    input.fillSet.abilityChoice !== undefined ||
+    input.fillSet.thaumaturgyActiveOneMinuteEffectCount !== undefined ||
+    input.fillSet.commandOptionChoice !== undefined ||
+    input.fillSet.conditionChoice !== undefined ||
+    input.fillSet.areaChoice !== undefined ||
+    input.fillSet.teleportDestination !== undefined ||
+    input.fillSet.dancingLightsPlacement !== undefined ||
+    input.fillSet.damageTypeChoice !== undefined ||
+    input.fillSet.concentrationSavingThrows.length > 0 ||
+    input.fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
+    input.fillSet.damageDispositions.length > 0 ||
+    input.fillSet.damageRoll !== undefined ||
+    input.fillSet.mirrorImageDuplicateRoll !== undefined ||
+    input.fillSet.movement !== undefined ||
+    input.fillSet.spellDamageReductionRolls.length > 0 ||
+    input.fillSet.attackBurstDamageRoll !== undefined ||
+    input.fillSet.healingRoll !== undefined
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Self-transformation mode spells use one mode choice fill.",
+    );
+  }
+  if (input.fillSet.selfTransformationModeChoice === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      selfTransformationModeChoiceHole(input.invocation),
+    ]);
+  }
+
+  const spellCastReactionWindow = maybeOpenReactionWindow(
+    input.input.state,
+    spellCastReactionFrame({
+      casterId: input.actorId,
+      invocation: input.invocation,
+      targetIds: [input.actorId],
+      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+      castingResource: { kind: "magicAction" },
+      continuation: {
+        kind: "replay",
+        subject: input.input.subject,
+        fills: input.input.fills,
+      },
+    }),
+    input.input.suppressedReactionTrigger,
+  );
+  if (spellCastReactionWindow !== null) {
+    return spellCastReactionWindow;
+  }
+
+  const concentrationBase = spellRequiresConcentration(input.invocation)
+    ? breakBattleConcentration(input.input.state, input.actorId)
+    : input.input.state;
+  const effected = applySelfTransformationModeEffect({
+    state: concentrationBase,
+    actorId: input.actorId,
+    sourceCombatantId: input.actorId,
+    sourceSpellId: input.invocation.spell.id,
+    mode: input.fillSet.selfTransformationModeChoice,
+    expiresAt: input.invocation.expiresAt,
+  });
   const resourced = spendSpellCastResources({
     state: effected,
     actorId: input.actorId,

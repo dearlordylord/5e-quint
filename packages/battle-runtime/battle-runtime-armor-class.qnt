@@ -96,6 +96,7 @@ module battleRuntimeArmorClass {
         | FogCloudObscurement(_) => false
         | FlamingSphere(_) => false
         | CommandPending(_) => false
+        | SelfTransformationModeEffect(_) => false
       })) 13 + dexMod else baseAc
       val shieldBonus = if (effects.contains(ShieldArmorClassBonus)) 5 else 0
       val shieldOfFaithBonus = if (effects.contains(ShieldOfFaithArmorClassBonus)) 2 else 0

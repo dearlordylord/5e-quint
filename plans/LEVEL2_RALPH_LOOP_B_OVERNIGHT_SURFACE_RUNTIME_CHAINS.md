@@ -31,13 +31,13 @@
     {
       "number": 5,
       "id": "L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Alter Self Mode Lifecycle And Aquatic Runtime"
     },
     {
       "number": 6,
       "id": "L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Alter Self Natural Weapons Runtime"
     },
     {
@@ -165,8 +165,8 @@ The final task is intentionally blocked on every real task in this plan and plac
 | 2 | L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE - Acid Arrow Surface Damage Shape | blocked | L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION | B lane; Unit `acid_arrow`. |
 | 3 | L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT - Acid Arrow Delayed Runtime Support | blocked | L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE | B lane; Unit `acid_arrow`. |
 | 4 | L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE - Alter Self Surface Option Shape | done | completed baseline | B lane; Unit `alter_self`. |
-| 5 | L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME - Alter Self Mode Lifecycle And Aquatic Runtime | ready-for-research | L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE | B lane; Unit `alter_self`. |
-| 6 | L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME - Alter Self Natural Weapons Runtime | blocked | L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE, L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME | B lane; Unit `alter_self`. |
+| 5 | L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME - Alter Self Mode Lifecycle And Aquatic Runtime | done | L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE | B lane; Unit `alter_self`. |
+| 6 | L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME - Alter Self Natural Weapons Runtime | ready-for-research | L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE, L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME | B lane; Unit `alter_self`. |
 | 7 | L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL - Continual Flame Dispel And Suppression Removal | ready-for-research | completed baseline | B lane; Unit `continual_flame`. |
 | 8 | L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE - Flame Blade Surface Lifecycle Shape | ready-for-research | completed baseline | B lane; Unit `flame_blade`. |
 | 9 | L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT - Flame Blade Runtime Support | blocked | L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE | B lane; Unit `flame_blade`. |
@@ -334,7 +334,7 @@ Acceptance:
 
 ### Task 5 - L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME - Alter Self Mode Lifecycle And Aquatic Runtime
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `alter_self`.
 Origin: Original backlog task 91.
@@ -375,7 +375,7 @@ Acceptance:
 
 ### Task 6 - L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME - Alter Self Natural Weapons Runtime
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Unit: `alter_self`.
 Origin: Original backlog task 92.

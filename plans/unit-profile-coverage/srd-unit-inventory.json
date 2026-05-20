@@ -187,8 +187,8 @@
       "rowsByStatus": {
         "accepted": 348,
         "accepted-no-battle-effect": 136,
-        "battle-runtime-required": 62,
-        "partial-battle-runtime": 7,
+        "battle-runtime-required": 60,
+        "partial-battle-runtime": 9,
         "owner-evidence-required": 3
       }
     },
@@ -203,18 +203,18 @@
       "catalog-installed-owner-evidence-required": 4
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 360,
+      "catalog-installed-owner-evidence-present": 362,
       "non-runtime": 24,
       "catalog-only/dead-for-now": 107,
       "missing-authored-record": 29,
-      "catalog-installed-owner-evidence-required": 23,
+      "catalog-installed-owner-evidence-required": 21,
       "catalog-authored-executable-follow-up": 13
     },
     "spellPressureRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 199,
+      "catalog-installed-owner-evidence-present": 201,
       "catalog-only/dead-for-now": 107,
       "missing-authored-record": 29,
-      "catalog-installed-owner-evidence-required": 19,
+      "catalog-installed-owner-evidence-required": 17,
       "catalog-authored-executable-follow-up": 13
     },
     "levelOneRowsByCategory": {
@@ -20160,8 +20160,8 @@
         "state": "installed",
         "unitId": "alter_self"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -20169,13 +20169,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime self-transformation spell invocation/effect lifecycle; battle-runtime self-transformation spell invocation/effect lifecycle plus character-battle-runtime Unarmed Strike projection",
-          "evidence": "Promote follow-up split L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME, L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME: L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME owns Promote the spell-owned Alter Self option state, Magic-action mode replacement, Concentration cleanup, Aquatic Adaptation water breathing, and linked Swim Speed equal to Speed without copying creature Speed into parallel spell state; keep Change Appearance as runtime-detached presentation facts with no statistic mutation. Required output: Profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Alter Self casting, mode replacement, water breathing, linked Swim Speed projection, Concentration cleanup, Change Appearance closure, and a separate Natural Weapons runtime task.; L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME owns After the Surface option shape and shared mode-replacement runtime are present, promote Natural Weapons as a spell-owned Unarmed Strike override that uses the chosen damage type, deals 1d6 damage instead of the normal Unarmed Strike damage, uses the caster's spellcasting ability for attack and damage rolls, and cleans up on Concentration end. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Natural Weapons Unarmed Strike attack and damage projection, damage-type choice, spellcasting-ability replacement, mode replacement, and cleanup.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME at packages/battle-runtime/src/unit-profile-admission-alter-self.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME, L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME: L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME owns Promote the spell-owned Alter Self option state, Magic-action mode replacement, Concentration cleanup, Aquatic Adaptation water breathing, and linked Swim Speed equal to Speed without copying creature Speed into parallel spell state; keep Change Appearance as runtime-detached presentation facts with no statistic mutation. Required output: Profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Alter Self casting, mode replacement, water breathing, linked Swim Speed projection, Concentration cleanup, Change Appearance closure, and a separate Natural Weapons runtime task.; L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME owns After the Surface option shape and shared mode-replacement runtime are present, promote Natural Weapons as a spell-owned Unarmed Strike override that uses the chosen damage type, deals 1d6 damage instead of the normal Unarmed Strike damage, uses the caster's spellcasting ability for attack and damage rolls, and cleans up on Concentration end. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Natural Weapons Unarmed Strike attack and damage projection, damage-type choice, spellcasting-ability replacement, mode replacement, and cleanup.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "partial-battle-runtime"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_blindness_deafness",
@@ -25523,8 +25523,8 @@
         "state": "installed",
         "unitId": "alter_self"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -25532,13 +25532,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime self-transformation spell invocation/effect lifecycle; battle-runtime self-transformation spell invocation/effect lifecycle plus character-battle-runtime Unarmed Strike projection",
-          "evidence": "Promote follow-up split L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME, L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME: L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME owns Promote the spell-owned Alter Self option state, Magic-action mode replacement, Concentration cleanup, Aquatic Adaptation water breathing, and linked Swim Speed equal to Speed without copying creature Speed into parallel spell state; keep Change Appearance as runtime-detached presentation facts with no statistic mutation. Required output: Profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Alter Self casting, mode replacement, water breathing, linked Swim Speed projection, Concentration cleanup, Change Appearance closure, and a separate Natural Weapons runtime task.; L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME owns After the Surface option shape and shared mode-replacement runtime are present, promote Natural Weapons as a spell-owned Unarmed Strike override that uses the chosen damage type, deals 1d6 damage instead of the normal Unarmed Strike damage, uses the caster's spellcasting ability for attack and damage rolls, and cleans up on Concentration end. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Natural Weapons Unarmed Strike attack and damage projection, damage-type choice, spellcasting-ability replacement, mode replacement, and cleanup.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME at packages/battle-runtime/src/unit-profile-admission-alter-self.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME, L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME: L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME owns Promote the spell-owned Alter Self option state, Magic-action mode replacement, Concentration cleanup, Aquatic Adaptation water breathing, and linked Swim Speed equal to Speed without copying creature Speed into parallel spell state; keep Change Appearance as runtime-detached presentation facts with no statistic mutation. Required output: Profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Alter Self casting, mode replacement, water breathing, linked Swim Speed projection, Concentration cleanup, Change Appearance closure, and a separate Natural Weapons runtime task.; L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME owns After the Surface option shape and shared mode-replacement runtime are present, promote Natural Weapons as a spell-owned Unarmed Strike override that uses the chosen damage type, deals 1d6 damage instead of the normal Unarmed Strike damage, uses the caster's spellcasting ability for attack and damage rolls, and cleans up on Concentration end. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Natural Weapons Unarmed Strike attack and damage projection, damage-type choice, spellcasting-ability replacement, mode replacement, and cleanup.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "partial-battle-runtime"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_arcane_lock",

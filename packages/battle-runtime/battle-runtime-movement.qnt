@@ -356,10 +356,14 @@ module battleRuntimeMovement {
       | SpiderClimbClimbSpeedGrant(_) => true
       | _ => false
     })
+    val hasSelfTransformationSwimSpeedGrant = combatant.activeEffects.exists(effect => match effect {
+      | SelfTransformationModeEffect(data) => data.mode == AquaticAdaptationMode
+      | _ => false
+    })
     match speedKind {
       | WalkSpeedKind => walkSpeed
       | ClimbSpeedKind => if (combatant.hasRovingSpeedKindGrants or hasSpiderClimbSpeedGrant) walkSpeed else 0
-      | SwimSpeedKind => if (combatant.hasRovingSpeedKindGrants) walkSpeed else 0
+      | SwimSpeedKind => if (combatant.hasRovingSpeedKindGrants or hasSelfTransformationSwimSpeedGrant) walkSpeed else 0
     }
   }
 

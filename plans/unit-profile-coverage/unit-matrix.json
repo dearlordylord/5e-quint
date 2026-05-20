@@ -72,24 +72,24 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 72,
-      "numerator": 72,
+      "denominator": 73,
+      "numerator": 73,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 72,
-      "numerator": 72,
+      "denominator": 73,
+      "numerator": 73,
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 95,
+      "denominator": 96,
       "numerator": 20,
-      "percent": "21.1%"
+      "percent": "20.8%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 95,
+      "denominator": 96,
       "numerator": 25,
-      "percent": "26.3%"
+      "percent": "26%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 128,
@@ -97,13 +97,13 @@
       "percent": "32.8%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 72,
-      "numerator": 72,
+      "denominator": 73,
+      "numerator": 73,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 72,
-      "numerator": 72,
+      "denominator": 73,
+      "numerator": 73,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -2774,20 +2774,47 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-invisibility.test.ts"
         }
       ]
+    },
+    {
+      "id": "spell.invocation-self-transformation-mode",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts"
+      ],
+      "sourceBoundary": "The runtime consumes an authored self Spell Effect option choice shape with Aquatic Adaptation and Change Appearance modes. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration up to 1 hour, one active selected mode, Magic Action mode replacement without resetting the remaining duration or spending another Spell Slot, Aquatic Adaptation water breathing, Swim Speed derived from the creature's current Speed, and cleanup on Concentration or duration end. Change Appearance is retained as a spell-owned mode with no statistic mutation. Natural Weapons remains a separate Unarmed Strike override follow-up.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME"
+      ],
+      "title": "Spell invocation applies a self transformation mode with Magic Action replacement and derived Aquatic projections",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-alter-self.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 95,
+        "denominator": 96,
         "numerator": 20,
-        "percent": "21.1%"
+        "percent": "20.8%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 95,
+        "denominator": 96,
         "numerator": 25,
-        "percent": "26.3%"
+        "percent": "26%"
       }
     },
     "profileKinds": [
@@ -3566,6 +3593,12 @@
           }
         ],
         "profileId": "spell.invocation-direct-condition",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-self-transformation-mode",
         "profileKind": "spell-invocation"
       }
     ],
@@ -7678,6 +7711,22 @@
         "spell.invocation-direct-condition"
       ],
       "taskId": "L12G-SPELL-INVISIBILITY"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Alter Self's self-transformation mode casting, Aquatic Adaptation water breathing and linked Swim Speed projection, Change Appearance no-stat mode, Magic Action mode replacement, Spell Slot spending, and Concentration/duration cleanup.",
+      "profileIds": [
+        "spell.invocation-self-transformation-mode"
+      ],
+      "taskId": "L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Alter Self admission, cast-time mode choice, Aquatic Adaptation projections, Change Appearance no-stat closure, Magic Action mode replacement without another Spell Slot, and Concentration cleanup.",
+      "profileIds": [
+        "spell.invocation-self-transformation-mode"
+      ],
+      "taskId": "L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME"
     }
   ],
   "units": [
@@ -12555,14 +12604,13 @@
         "status": "installed"
       },
       "claim": {
-        "followUpTasks": [
+        "deferredMechanics": [
           {
-            "id": "L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME",
-            "mechanic": "Promote the spell-owned Alter Self option state, Magic-action mode replacement, Concentration cleanup, Aquatic Adaptation water breathing, and linked Swim Speed equal to Speed without copying creature Speed into parallel spell state; keep Change Appearance as runtime-detached presentation facts with no statistic mutation.",
-            "owner": "battle-runtime self-transformation spell invocation/effect lifecycle",
-            "requiredOutput": "Profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Alter Self casting, mode replacement, water breathing, linked Swim Speed projection, Concentration cleanup, Change Appearance closure, and a separate Natural Weapons runtime task.",
-            "title": "Alter Self Mode Lifecycle And Aquatic Runtime"
-          },
+            "followUpTaskId": "L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME",
+            "mechanic": "Natural Weapons Unarmed Strike override including damage-type choice, 1d6 damage die, spellcasting-ability attack and damage replacement, mode replacement, and cleanup."
+          }
+        ],
+        "followUpTasks": [
           {
             "id": "L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME",
             "mechanic": "After the Surface option shape and shared mode-replacement runtime are present, promote Natural Weapons as a spell-owned Unarmed Strike override that uses the chosen damage type, deals 1d6 damage instead of the normal Unarmed Strike damage, uses the caster's spellcasting ability for attack and damage rolls, and cleans up on Concentration end.",
@@ -12571,15 +12619,62 @@
             "title": "Alter Self Natural Weapons Runtime"
           }
         ],
-        "futureProfileOwner": "battle-runtime self-transformation spell invocation/effect lifecycle plus character-battle-runtime Unarmed Strike projection",
-        "reason": "Alter Self is authored and installed as an SRD Surface Spell Definition with self-targeted Aquatic Adaptation, Change Appearance, and lossless Natural Weapons option facts: water breathing, Swim Speed equal to Speed, no-statistics Change Appearance presentation, Natural Weapons growth-to-damage choice, 1d6 damage die, and spellcasting-ability attack and damage replacement. Task 4 claims only the Surface option-shape repair; no battle-runtime profile is promoted because Aquatic Adaptation and Natural Weapons still require spell-owned option state, Magic Action replacement, Concentration cleanup, linked Swim Speed projection, and Unarmed Strike override execution. Change Appearance changes presentation without changing statistics and remains runtime-detached table/appearance adjudication; Aquatic Adaptation and Natural Weapons remain blocked by the concrete runtime follow-up tasks listed on this claim.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "spell.invocation-self-transformation-mode"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action level-2-or-higher Spell Slot casting from the authored SRD Alter Self Unit",
+          "cast-time selected self-transformation mode for Aquatic Adaptation or Change Appearance",
+          "caster-owned Concentration up to 1 hour with active-mode cleanup on Concentration break or duration expiry",
+          "later Magic Action replacement between supported modes without spending another Spell Slot or resetting the remaining duration",
+          "Aquatic Adaptation water breathing projection",
+          "Aquatic Adaptation Swim Speed derived from the creature's current Speed instead of copied spell state",
+          "Change Appearance retained as an active mode with no battle statistic mutation"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-alter-self.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-self-transformation-mode",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+            "packages/battle-runtime/src/battle-reducer/dispatcher.ts"
+          ],
+          "sourceBoundary": "The runtime consumes an authored self Spell Effect option choice shape with Aquatic Adaptation and Change Appearance modes. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration up to 1 hour, one active selected mode, Magic Action mode replacement without resetting the remaining duration or spending another Spell Slot, Aquatic Adaptation water breathing, Swim Speed derived from the creature's current Speed, and cleanup on Concentration or duration end. Change Appearance is retained as a spell-owned mode with no statistic mutation. Natural Weapons remains a separate Unarmed Strike override follow-up.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME"
+          ],
+          "title": "Spell invocation applies a self transformation mode with Magic Action replacement and derived Aquatic projections",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-alter-self.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/alter_self.json",
       "unitId": "alter_self"
     },

@@ -148,6 +148,14 @@ export function supportedSpellInvocationRef(
       procedure: "expeditiousRetreatDash",
     };
   }
+  if (invocation.procedure === "selfTransformationMode") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "selfTransformationMode",
+    };
+  }
   if (invocation.procedure === "jumpMovementReplacement") {
     return {
       tag: "spellSlot",

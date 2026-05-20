@@ -33,9 +33,9 @@ This is the default `%` for level-1 plus level-2 readiness questions. It uses th
 
 - accepted: 348
 - accepted-no-battle-effect: 136
-- battle-runtime-required: 62
+- battle-runtime-required: 60
 - owner-evidence-required: 3
-- partial-battle-runtime: 7
+- partial-battle-runtime: 9
 
 ### Level-1 Rows by Disposition
 
@@ -65,8 +65,8 @@ This is the default `%` for level-1 plus level-2 readiness questions. It uses th
 ### Spell Unit Pressure by Disposition
 
 - catalog-authored-executable-follow-up: 13
-- catalog-installed-owner-evidence-present: 199
-- catalog-installed-owner-evidence-required: 19
+- catalog-installed-owner-evidence-present: 201
+- catalog-installed-owner-evidence-required: 17
 - catalog-only/dead-for-now: 107
 - missing-authored-record: 29
 

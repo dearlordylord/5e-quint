@@ -87,6 +87,7 @@ import {
   MIRROR_IMAGE_DUPLICATE_SUCCESS_AT_LEAST,
   MIRROR_IMAGE_UNAFFECTED_SENSES,
   SCORCHING_RAY_RAY_COUNTS,
+  SELF_TRANSFORMATION_MODE_KINDS,
   SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS,
   THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
 } from "./domain-constants.ts";
@@ -1621,6 +1622,17 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("selfTransformationMode"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      modeChoices: Schema.NonEmptyArray(
+        Schema.Literal(...SELF_TRANSFORMATION_MODE_KINDS),
+      ),
+      expiresAt: BattleRuntimeObjectSchema,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal(
         "conditionImmunityAndTurnStartTemporaryHitPoints",
       ),
@@ -2198,6 +2210,15 @@ export const BattleHoleSchema = Schema.Union(
     label: Schema.String,
     spell: SupportedSpellInvocationSchema,
     choices: Schema.Array(Schema.Literal(...COMMAND_OPTIONS)),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("selfTransformationModeChoice"),
+    label: Schema.String,
+    spell: SupportedSpellInvocationSchema,
+    choices: Schema.NonEmptyArray(
+      Schema.Literal(...SELF_TRANSFORMATION_MODE_KINDS),
+    ),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2863,6 +2884,11 @@ type BattleFillEncoded =
       readonly value: (typeof COMMAND_OPTIONS)[number];
     }
   | {
+      readonly kind: "selfTransformationModeChoice";
+      readonly holeId: string;
+      readonly value: (typeof SELF_TRANSFORMATION_MODE_KINDS)[number];
+    }
+  | {
       readonly kind: "dancingLightsPlacement";
       readonly holeId: string;
       readonly value:
@@ -3371,6 +3397,11 @@ export const BattleFillSchema: Schema.Schema<
       kind: Schema.Literal("commandOptionChoice"),
       holeId: BattleHoleIdSchema,
       value: Schema.Literal(...COMMAND_OPTIONS),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("selfTransformationModeChoice"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Literal(...SELF_TRANSFORMATION_MODE_KINDS),
     }),
     Schema.Struct({
       kind: Schema.Literal("dancingLightsPlacement"),

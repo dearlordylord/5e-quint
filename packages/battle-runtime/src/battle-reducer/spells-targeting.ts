@@ -16,6 +16,7 @@ import {
   type BattleHoleId,
   type BattleCommandOptionChoiceHole,
   type BattleDancingLightsPlacementHole,
+  type BattleSelfTransformationModeChoiceHole,
   type BattleSpellTargetAllocation,
   type BattleSpellAreaChoiceHole,
   type BattleSpellTargetAllocationHole,
@@ -359,6 +360,32 @@ export function commandOptionChoiceHoleId(
   >,
 ): BattleHoleId {
   return holeId(`battle:spell:command-option:${invocation.spell.id}`);
+}
+
+export function selfTransformationModeChoiceHole(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "selfTransformationMode" }
+  >,
+): BattleSelfTransformationModeChoiceHole {
+  const holeKey = `battle:spell:self-transformation-mode:${invocation.spell.id}`;
+  return {
+    kind: "selfTransformationModeChoice",
+    holeId: selfTransformationModeChoiceHoleId(invocation),
+    holeInstanceKey: holeInstanceKey(holeKey),
+    label: `${invocation.spell.name} mode`,
+    spell: invocation,
+    choices: invocation.modeChoices,
+  };
+}
+
+export function selfTransformationModeChoiceHoleId(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "selfTransformationMode" }
+  >,
+): BattleHoleId {
+  return holeId(`battle:spell:self-transformation-mode:${invocation.spell.id}`);
 }
 
 export function spellAreaChoiceHole(

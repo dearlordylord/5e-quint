@@ -8,6 +8,7 @@ import {
   BATTLE_REACTION_TRIGGERS,
   BATTLE_READIED_SPELL_TRIGGERS,
 } from "./battle-reaction-triggers.ts";
+import { SELF_TRANSFORMATION_MODE_KINDS } from "./battle-reducer/domain-constants.ts";
 
 export const BATTLE_SUBJECT_ACTIONS = [
   "attack",
@@ -53,6 +54,7 @@ export const BATTLE_RUNTIME_COMMANDS = [
   "disperseFogCloud",
   "wardingBondSeparation",
   "jumpMovementReplacement",
+  "replaceSelfTransformationMode",
   "commandGrovel",
   "commandDrop",
   "commandApproach",
@@ -109,6 +111,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "rollModifier",
   "wardingBond",
   "scalarBuff",
+  "selfTransformationMode",
   "conditionImmunityAndTurnStartTemporaryHitPoints",
   "creatureTypeProtection",
   "blurAttackRollDefense",
@@ -556,6 +559,14 @@ export const BattleSubjectSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
+    command: Schema.Literal("replaceSelfTransformationMode"),
+    sourceCombatantId: CombatantId,
+    sourceSpellId: SpellId,
+    mode: Schema.Literal(...SELF_TRANSFORMATION_MODE_KINDS),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
     command: Schema.Literal("commandGrovel"),
     sourceCombatantId: CombatantId,
     sourceSpellId: SpellId,
@@ -836,6 +847,7 @@ function battleSubjectKey(subject: BattleSubject): string {
         "attackName" in command ? command.attackName : null,
         "sourceCombatantId" in command ? command.sourceCombatantId : null,
         "sourceSpellId" in command ? command.sourceSpellId : null,
+        "mode" in command ? command.mode : null,
         "areaId" in command ? command.areaId : null,
         "trigger" in command ? command.trigger : null,
         "relevantEffect" in command ? command.relevantEffect : null,

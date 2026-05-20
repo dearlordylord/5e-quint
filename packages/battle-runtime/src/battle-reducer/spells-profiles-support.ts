@@ -54,6 +54,7 @@ import {
   type RollModifierSpellTargeting,
   type ScalarBuffSpellEffect,
   type ScalarBuffSpellTargeting,
+  type SelfTransformationModeSpellInvocation,
   type SelfTeleportSpellInvocation,
   type SupportedSpellInvocation,
   type ThaumaturgyBoomingVoiceSpellInvocation,
@@ -77,6 +78,7 @@ import {
   MIRROR_IMAGE_UNAFFECTED_BY,
   PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES,
   PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS,
+  SELF_TRANSFORMATION_MODE_KINDS,
   THAUMATURGY_BOOMING_VOICE_DURATION_TICKS,
   THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL,
   WARDING_BOND_ARMOR_CLASS_BONUS,
@@ -115,6 +117,16 @@ type AbilityCheckRollModeSpellProjection = {
 type RollModifierSpellProjection =
   | D20RollModifierSpellProjection
   | AbilityCheckRollModeSpellProjection;
+type SpellActivationPhase = Extract<
+  SpellRecord["mechanics"],
+  { readonly family: "activation" }
+>["phases"][number];
+type DirectActivationPhase = Extract<
+  SpellActivationPhase,
+  { readonly kind: "direct" }
+>;
+type CastTimeEffectModeChoice = NonNullable<DirectActivationPhase["mode"]>;
+type CastTimeEffectModeOption = CastTimeEffectModeChoice["options"][number];
 
 function isD20RollModifierSpellProjection(
   projection: RollModifierSpellProjection,
@@ -720,6 +732,98 @@ export function supportedPreparedScalarBuffSpellProfile(
           },
         ];
   });
+}
+
+export function supportedPreparedSelfTransformationModeSpellProfile(
+  actorId: CombatantId,
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SelfTransformationModeSpellInvocation[] {
+  const projection = selfTransformationModeSpellProjection(actorId, spell);
+  if (projection === null) {
+    return [];
+  }
+  return spellSlots.flatMap(
+    (slot): readonly SelfTransformationModeSpellInvocation[] =>
+      Number(slot.spellLevel) < spell.mechanics.level
+        ? []
+        : [
+            {
+              access: { tag: "prepared" },
+              resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+              procedure: "selfTransformationMode",
+              spell,
+              actionCost: "magicAction",
+              modeChoices: projection.modeChoices,
+              expiresAt: projection.expiresAt,
+            },
+          ],
+  );
+}
+
+function selfTransformationModeSpellProjection(
+  actorId: CombatantId,
+  spell: SpellRecord,
+): Pick<SelfTransformationModeSpellInvocation, "modeChoices" | "expiresAt"> | null {
+  if (
+    spell.mechanics.family !== "activation" ||
+    spell.mechanics.level !== 2 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "self" ||
+    spell.mechanics.duration.kind !== "concentration" ||
+    spell.mechanics.phases.length !== 1
+  ) {
+    return null;
+  }
+  const phase = spell.mechanics.phases[0];
+  if (
+    phase === undefined ||
+    phase.kind !== "direct" ||
+    phase.attachment.kind !== "self" ||
+    phase.effects !== undefined ||
+    phase.mode?.allowsMidDurationSwitchAs !== "magic_action" ||
+    !selfTransformationModeOptionsHaveSupportedChoices(phase.mode.options)
+  ) {
+    return null;
+  }
+  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
+    spell.mechanics.duration.upTo,
+  );
+  return Either.isLeft(durationTicks)
+    ? null
+    : {
+        modeChoices: SELF_TRANSFORMATION_MODE_KINDS,
+        expiresAt: {
+          kind: "concentration",
+          combatantId: actorId,
+          durationTicks: durationTicks.right,
+        },
+      };
+}
+
+function selfTransformationModeOptionsHaveSupportedChoices(
+  options: CastTimeEffectModeChoice["options"],
+): boolean {
+  return (
+    options.some((option) => effectsAreAquaticAdaptation(option.effects)) &&
+    options.some((option) => option.effects === undefined)
+  );
+}
+
+function effectsAreAquaticAdaptation(
+  effects: CastTimeEffectModeOption["effects"] | undefined,
+): boolean {
+  return (
+    effects?.length === 2 &&
+    effects.some((effect) => effect.kind === "water_breathing") &&
+    effects.some(
+      (effect) =>
+        effect.kind === "grant_speed" &&
+        effect.speedKind === "swim" &&
+        typeof effect.feet !== "number" &&
+        effect.feet.kind === "walk_speed",
+    )
+  );
 }
 
 function scalarBuffSpellProjection(spell: SpellRecord): {

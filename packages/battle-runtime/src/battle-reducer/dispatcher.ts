@@ -1,5 +1,6 @@
 // Battle dispatcher/orchestration extracted from ../battle-reducer.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode
 // Owns subject resolution, reaction windows, interrupted-procedure replay,
 // turn snapshots, and reaction-choice orchestration.
 
@@ -109,6 +110,10 @@ import {
 import { invalidResult } from "./result-helpers.ts";
 import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
 import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
+import {
+  activeSelfTransformationModeEffect,
+  applySelfTransformationModeEffect,
+} from "./spells-active-effects.ts";
 import {
   battleStateAfterWardingBondSeparation,
   wardingBondSeparationFactsAreSatisfied,
@@ -796,6 +801,15 @@ export function resolveBattleSubjectInternal(
     }
     if (
       subject.tag === "runtimeCommand" &&
+      subject.command === "replaceSelfTransformationMode"
+    ) {
+      return resolveReplaceSelfTransformationModeCommand({
+        ...input,
+        subject,
+      });
+    }
+    if (
+      subject.tag === "runtimeCommand" &&
       subject.command === "greaseGroundHazardSave"
     ) {
       return resolveGreaseGroundHazardSaveCommand({
@@ -1055,8 +1069,86 @@ function subjectSuppressedByCommandHalt(subject: BattleSubject): boolean {
     subject.tag === "runtimeCommand" &&
     (subject.command === "move" ||
       subject.command === "standFromProne" ||
-      subject.command === "jumpMovementReplacement")
+      subject.command === "jumpMovementReplacement" ||
+      subject.command === "replaceSelfTransformationMode")
   );
+}
+
+function resolveReplaceSelfTransformationModeCommand(
+  input: BattleResolutionInputForSubject<
+    Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "replaceSelfTransformationMode";
+      }
+    >
+  >,
+): BattleResolutionResult {
+  if (input.fills.length > 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Self-transformation mode replacement uses no fills.",
+    );
+  }
+  if (input.subject.actorId !== input.subject.sourceCombatantId) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Self-transformation mode replacement belongs to its source combatant.",
+    );
+  }
+  const actor = input.state.combatants.get(input.subject.actorId);
+  if (
+    !combatantCanTakeActions(actor) ||
+    !canSpendAction(input.state.currentTurnResources, "magic")
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Magic action is no longer available for the current actor.",
+    );
+  }
+  const activeEffect = activeSelfTransformationModeEffect(actor, {
+    sourceCombatantId: input.subject.sourceCombatantId,
+    sourceSpellId: input.subject.sourceSpellId,
+  });
+  if (activeEffect === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Self-transformation mode replacement requires an active self-transformation effect.",
+    );
+  }
+  if (activeEffect.mode === input.subject.mode) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Self-transformation mode is already active.",
+    );
+  }
+  const spent = spendAction(input.state.currentTurnResources, "magic");
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Magic action is no longer available for the current actor.",
+    );
+  }
+  const nextState = applySelfTransformationModeEffect({
+    state: { ...input.state, currentTurnResources: spent.right },
+    actorId: input.subject.actorId,
+    sourceCombatantId: activeEffect.sourceCombatantId,
+    sourceSpellId: activeEffect.sourceSpellId,
+    mode: input.subject.mode,
+    expiresAt: activeEffect.expiresAt,
+  });
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
 }
 
 function resolveProtectionRelevantEffectSaveCommand(

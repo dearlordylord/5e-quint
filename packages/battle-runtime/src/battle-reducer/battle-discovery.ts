@@ -1,5 +1,6 @@
 // Battle act discovery extracted from ../battle-reducer.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode
 // Owns top-level act discovery and subject/action-resource discovery helpers.
 // Mechanical move; no behavior change intended.
 
@@ -89,6 +90,10 @@ import {
 } from "./spell-condition-effects-helpers.ts";
 
 import { discoverSupportedSpellInvocations } from "./spells-discovery.ts";
+import {
+  activeSelfTransformationModeEffect,
+  selfTransformationModeLabel,
+} from "./spells-active-effects.ts";
 
 import { attackActionOptionName } from "./statblock-attacks.ts";
 
@@ -127,6 +132,7 @@ import type {
   BattleActiveEffect,
   BattleCreatureState,
   BattleState,
+  SelfTransformationModeKind,
   ClassFeatureExtraAttackActionResource,
   StatBlockBattleCreatureState,
   StatBlockMultiattackActionResource,
@@ -141,6 +147,7 @@ type FogCloudObscurementEffect = Extract<
   { readonly kind: "fogCloudObscurement" }
 >;
 import {
+  SELF_TRANSFORMATION_MODE_KINDS,
   SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS,
   discoverLegendaryActionActs,
 } from "../battle-reducer.ts";
@@ -249,6 +256,7 @@ export function discoverBattleActs(
     acts.push(...discoverLegendaryActionActs(state));
     return acts;
   }
+  acts.push(...selfTransformationModeReplacementActs(state, actorId));
   const attackActionOptions = attackActionOptionsForActor(
     state,
     actorId,
@@ -540,6 +548,37 @@ export function discoverBattleActs(
   acts.push(...discoverLegendaryActionActs(state));
 
   return acts;
+}
+
+function selfTransformationModeReplacementActs(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly AvailableBattleAct[] {
+  const actor = state.combatants.get(actorId);
+  const activeEffect = activeSelfTransformationModeEffect(actor);
+  if (
+    activeEffect === undefined ||
+    !combatantCanTakeActions(actor) ||
+    !canSpendAction(state.currentTurnResources, "magic")
+  ) {
+    return [];
+  }
+  return SELF_TRANSFORMATION_MODE_KINDS.filter(
+    (mode): mode is SelfTransformationModeKind => mode !== activeEffect.mode,
+  ).map((mode) => ({
+    subject: {
+      tag: "runtimeCommand" as const,
+      actorId,
+      command: "replaceSelfTransformationMode" as const,
+      sourceCombatantId: activeEffect.sourceCombatantId,
+      sourceSpellId: spellId(activeEffect.sourceSpellId),
+      mode,
+    },
+    label: `Self Transformation: ${selfTransformationModeLabel(mode)}`,
+    summary:
+      "Replace the active self-transformation option with a Magic action.",
+    initialHoles: [],
+  }));
 }
 
 function pactOfTheChainFamiliarAttackActs(

@@ -8,4 +8,5 @@ module battleRuntimeSelfTests {
   import battleRuntimeSaveSpellTests.* from "./battle-runtime-save-spell-tests"
   import battleRuntimeHpArmorBuffSpatialTests.* from "./battle-runtime-hp-armor-buff-spatial-tests"
   import battleRuntimeLightConcentrationMovementReactionTests.* from "./battle-runtime-light-concentration-movement-reaction-tests"
+  import battleRuntimeSelfTransformationTests.* from "./battle-runtime-self-transformation-tests"
 }

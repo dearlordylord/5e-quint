@@ -399,6 +399,7 @@ export function subjectName(
   | "flamingSphereReposition"
   | "flamingSphereRam"
   | "jumpMovementReplacement"
+  | "replaceSelfTransformationMode"
   | "commandGrovel"
   | "commandDrop"
   | "commandApproach"
