@@ -783,6 +783,28 @@ const BattleTargetSpatialFactSchema = Schema.Union(
     spellId: Schema.String,
   }),
   Schema.Struct({
+    kind: Schema.Literal("spellManufacturedMetalObjectTarget"),
+    casterId: CombatantId,
+    objectId: BattleObjectId,
+    spellId: Schema.String,
+    rangeFeet: MovementFeet,
+    casterCanSeeObject: Schema.Literal(true),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("spellObjectPhysicalContact"),
+    sourceCombatantId: CombatantId,
+    sourceSpellId: Schema.String,
+    objectId: BattleObjectId,
+    targetId: CombatantId,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("spellObjectWithinSpellRange"),
+    sourceCombatantId: CombatantId,
+    sourceSpellId: Schema.String,
+    objectId: BattleObjectId,
+    rangeFeet: MovementFeet,
+  }),
+  Schema.Struct({
     kind: Schema.Literal("spellLeapTargetWithinRange"),
     previousTargetId: CombatantId,
     targetId: CombatantId,
@@ -1603,6 +1625,35 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("objectContactDamage"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      targeting: Schema.Struct({
+        kind: Schema.Literal("singleManufacturedMetalObject"),
+      }),
+      damage: Schema.Struct({
+        expr: BattleRuntimeObjectSchema,
+        damageType: DamageTypeSchema,
+      }),
+      rangeFeet: MovementFeet,
+      durationTicks: BattleRuntimeObjectSchema,
+    }),
+    Schema.Struct({
+      access: SpellEffectSpellAccessSchema,
+      resource: NoSpellInvocationResourceSchema,
+      procedure: Schema.Literal("objectContactDamageRepeat"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("bonusAction"),
+      activeEffect: BattleRuntimeObjectSchema,
+      damage: Schema.Struct({
+        expr: BattleRuntimeObjectSchema,
+        damageType: DamageTypeSchema,
+      }),
+      rangeFeet: MovementFeet,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("command"),
       spell: BattleRuntimeObjectSchema,
       actionCost: Schema.Literal("magicAction"),
@@ -2099,6 +2150,19 @@ export const BattleHoleSchema = Schema.Union(
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("objectTargetChoice"),
+    requiresTableSpatialFact: Schema.Literal(true),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("objectContactTargets"),
+    objectContact: Schema.Struct({
+      sourceCombatantId: CombatantId,
+      sourceSpellId: SpellId,
+      objectId: BattleObjectId,
+      rangeFeet: MovementFeet,
+      requiresObjectWithinRange: Schema.Boolean,
+    }),
+    choices: Schema.Array(CombatantId),
     requiresTableSpatialFact: Schema.Literal(true),
   }),
   Schema.Struct({
@@ -2814,6 +2878,37 @@ type BattleFillEncoded =
             readonly objectId: string;
             readonly spellId: string;
           }
+        | {
+            readonly kind: "spellManufacturedMetalObjectTarget";
+            readonly casterId: string;
+            readonly objectId: string;
+            readonly spellId: string;
+            readonly rangeFeet: number;
+            readonly casterCanSeeObject: true;
+          }
+      )[];
+    }
+  | {
+      readonly kind: "objectContactTargets";
+      readonly holeId: string;
+      readonly value: {
+        readonly targetIds: readonly string[];
+      };
+      readonly spatialFacts: readonly (
+        | {
+            readonly kind: "spellObjectPhysicalContact";
+            readonly sourceCombatantId: string;
+            readonly sourceSpellId: string;
+            readonly objectId: string;
+            readonly targetId: string;
+          }
+        | {
+            readonly kind: "spellObjectWithinSpellRange";
+            readonly sourceCombatantId: string;
+            readonly sourceSpellId: string;
+            readonly objectId: string;
+            readonly rangeFeet: number;
+          }
       )[];
     }
   | {
@@ -3321,6 +3416,39 @@ export const BattleFillSchema: Schema.Schema<
             casterId: CombatantId,
             objectId: BattleObjectId,
             spellId: Schema.String,
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("spellManufacturedMetalObjectTarget"),
+            casterId: CombatantId,
+            objectId: BattleObjectId,
+            spellId: Schema.String,
+            rangeFeet: MovementFeet,
+            casterCanSeeObject: Schema.Literal(true),
+          }),
+        ),
+      ),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("objectContactTargets"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Struct({
+        targetIds: Schema.Array(CombatantId),
+      }),
+      spatialFacts: Schema.Array(
+        Schema.Union(
+          Schema.Struct({
+            kind: Schema.Literal("spellObjectPhysicalContact"),
+            sourceCombatantId: CombatantId,
+            sourceSpellId: Schema.String,
+            objectId: BattleObjectId,
+            targetId: CombatantId,
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("spellObjectWithinSpellRange"),
+            sourceCombatantId: CombatantId,
+            sourceSpellId: Schema.String,
+            objectId: BattleObjectId,
+            rangeFeet: MovementFeet,
           }),
         ),
       ),

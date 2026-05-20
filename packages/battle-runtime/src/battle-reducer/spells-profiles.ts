@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // Spell profile predicates and projections (Cluster O). Mechanical extraction
 // from battle-reducer.ts. Aggregates: per-procedure `supported*Profile`
 // predicates, spell-specific authoring bodies (faerieFire, animalFriendship,
@@ -16,6 +17,7 @@ import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import {
   elapsedTimeTicksFromHours,
   elapsedTimeTicksFromTimeSpanDuration,
+  type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   AbilityModifier,
@@ -25,7 +27,14 @@ import {
   type MovementFeet,
   type ProficiencyBonus as ProficiencyBonusType,
 } from "@dnd/shared/types";
-import type { SpellRecord } from "@dnd/surface/surface/types";
+import type {
+  DamageType,
+  DiceAmount,
+  DiceExpr,
+  DiceExprDelta,
+  EffectAtom,
+  SpellRecord,
+} from "@dnd/surface/surface/types";
 import { Either, Match } from "effect";
 import {
   type BattleCreatureState,
@@ -33,6 +42,7 @@ import {
   type BattleTurnResources,
   type BattleTurnSpellSlotUse,
   type PersistentArmorSpellInvocation,
+  type SpellObjectContactDamageActiveEffect,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import type {
@@ -46,6 +56,7 @@ import {
 } from "../character-battle-resources.ts";
 import type { CombatantId } from "../identity.ts";
 import { SHIELD_MAGIC_MISSILE_SPELL_ID } from "./domain-constants.ts";
+import { currentActorId } from "./creature-state-leaves.ts";
 
 import {
   hasSaveGateRepeatSaves,
@@ -76,6 +87,17 @@ type OngoingOperationEffect = Extract<
   SpellRecord["mechanics"],
   { readonly family: "ongoing_effect" }
 >["operations"][number]["effect"];
+type OngoingInitialEffect = NonNullable<
+  Extract<
+    NonNullable<
+      Extract<
+        SpellRecord["mechanics"],
+        { readonly family: "ongoing_effect" }
+      >["initialPhase"]
+    >,
+    { readonly kind: "direct" }
+  >["effects"]
+>[number];
 type OngoingSaveGateEffect = Extract<
   OngoingOperationEffect,
   { readonly kind: "save_gate" }
@@ -292,6 +314,15 @@ export function supportedSpellActs(
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedMoonbeamProfile(spell, spellcasting.spellSlots),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      supportedPreparedObjectContactDamageProfile(
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      supportedObjectContactDamageRepeatProfile(actor, state, spell),
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedCommandProfile(spell, spellcasting.spellSlots),
@@ -1253,6 +1284,271 @@ function isMoonbeamSaveGate(
     return null;
   }
   return damage;
+}
+
+export function supportedPreparedObjectContactDamageProfile(
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  const profile = objectContactDamageSpell(spell);
+  if (profile === null) {
+    return [];
+  }
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+    if (Number(slot.spellLevel) < spell.mechanics.level) {
+      return [];
+    }
+    const damageExpr = supportedDamageAmountExpr({
+      amount: profile.damageAmount,
+      spellLevel: spell.mechanics.level,
+      slotLevel: slot.spellLevel,
+    });
+    if (damageExpr === null) {
+      return [];
+    }
+    return [
+      {
+        access: { tag: "prepared" },
+        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+        procedure: "objectContactDamage",
+        spell,
+        actionCost: "magicAction",
+        targeting: { kind: "singleManufacturedMetalObject" },
+        damage: {
+          expr: damageExpr,
+          damageType: profile.damageType,
+        },
+        rangeFeet: profile.rangeFeet,
+        durationTicks: profile.durationTicks,
+      },
+    ];
+  });
+}
+
+export function supportedObjectContactDamageRepeatProfile(
+  actor: BattleCreatureState,
+  state: BattleState | undefined,
+  spell: SpellRecord,
+): readonly SupportedSpellInvocation[] {
+  if (objectContactDamageSpell(spell) === null) {
+    return [];
+  }
+  return actor.activeEffects.flatMap(
+    (effect): readonly SupportedSpellInvocation[] => {
+      if (
+        effect.kind !== "spellObjectContactDamage" ||
+        effect.sourceCombatantId !== actor.combatantId ||
+        effect.sourceSpellId !== spell.id ||
+        !objectContactDamageRepeatIsDiscoverable(effect, state)
+      ) {
+        return [];
+      }
+      return [
+        {
+          access: {
+            tag: "spellEffect",
+            sourceCombatantId: effect.sourceCombatantId,
+          },
+          resource: { tag: "none" },
+          procedure: "objectContactDamageRepeat",
+          spell,
+          actionCost: "bonusAction",
+          activeEffect: effect,
+          damage: effect.damage,
+          rangeFeet: effect.rangeFeet,
+        },
+      ];
+    },
+  );
+}
+
+function objectContactDamageRepeatIsDiscoverable(
+  effect: SpellObjectContactDamageActiveEffect,
+  state: BattleState | undefined,
+): boolean {
+  return (
+    state !== undefined &&
+    (currentActorId(state) !== effect.startedOn.actorId ||
+      state.initiative.round !== effect.startedOn.round)
+  );
+}
+
+function objectContactDamageSpell(spell: SpellRecord): {
+  readonly damageAmount: DiceAmount;
+  readonly damageType: DamageType;
+  readonly durationTicks: ElapsedTimeTicks;
+  readonly rangeFeet: MovementFeet;
+} | null {
+  if (spell.mechanics.family !== "ongoing_effect") {
+    return null;
+  }
+  const durationTicks =
+    spell.mechanics.duration.kind === "concentration"
+      ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.upTo)
+      : null;
+  const rangeFeet =
+    spell.mechanics.range.kind === "point" ? spell.mechanics.range.feet : null;
+  const attachment = spell.mechanics.attachment;
+  const initialPhase = spell.mechanics.initialPhase;
+  const initialEffect =
+    initialPhase?.kind === "direct" ? initialPhase.effects?.[0] : undefined;
+  const repeatOperation = spell.mechanics.operations[0];
+  const repeatEffect = repeatOperation?.effect;
+  if (
+    spell.mechanics.level !== 2 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    rangeFeet !== 60 ||
+    spell.mechanics.duration.kind !== "concentration" ||
+    spell.mechanics.duration.upTo.unit !== "minute" ||
+    spell.mechanics.duration.upTo.amount !== 1 ||
+    durationTicks === null ||
+    Either.isLeft(durationTicks) ||
+    spell.mechanics.operations.length !== 1 ||
+    !isManufacturedMetalObjectAttachment(attachment) ||
+    initialPhase?.kind !== "direct" ||
+    !isManufacturedMetalObjectAttachment(initialPhase.attachment) ||
+    !sameManufacturedMetalObjectHole(attachment, initialPhase.attachment) ||
+    initialPhase.effects?.length !== 1 ||
+    !isObjectContactDamageEffect(initialEffect) ||
+    repeatOperation?.trigger.kind !== "on_caster_spends_action" ||
+    repeatOperation.trigger.cost?.kind !== "bonus_action" ||
+    repeatOperation.trigger.laterTurnsOnly !== true ||
+    repeatOperation.predicate?.kind !==
+      "table_witnessed_attachment_within_spell_range" ||
+    !isObjectContactDamageEffect(repeatEffect) ||
+    !sameObjectContactDamageEffect(initialEffect, repeatEffect)
+  ) {
+    return null;
+  }
+  return {
+    damageAmount: initialEffect.amount,
+    damageType: initialEffect.damageType,
+    durationTicks: durationTicks.right,
+    rangeFeet: movementFeet(rangeFeet),
+  };
+}
+
+type ManufacturedMetalObjectAttachment = Extract<
+  Extract<
+    SpellRecord["mechanics"],
+    { readonly family: "ongoing_effect" }
+  >["attachment"],
+  { readonly kind: "hole" }
+> & {
+  readonly value: {
+    readonly kind: "object";
+    readonly count: 1;
+    readonly filter: {
+      readonly manufactured: true;
+      readonly material: "metal";
+      readonly visibility: "caster_can_see";
+    };
+  };
+};
+
+function isManufacturedMetalObjectAttachment(
+  attachment: Extract<
+    SpellRecord["mechanics"],
+    { readonly family: "ongoing_effect" }
+  >["attachment"],
+): attachment is ManufacturedMetalObjectAttachment {
+  return (
+    attachment.kind === "hole" &&
+    attachment.value.kind === "object" &&
+    attachment.value.count === 1 &&
+    attachment.value.filter?.manufactured === true &&
+    attachment.value.filter?.material === "metal" &&
+    attachment.value.filter?.visibility === "caster_can_see"
+  );
+}
+
+function sameManufacturedMetalObjectHole(
+  left: ManufacturedMetalObjectAttachment,
+  right: ManufacturedMetalObjectAttachment,
+): boolean {
+  return left.holeId === right.holeId;
+}
+
+type ObjectContactDamageEffect = Extract<
+  EffectAtom,
+  { readonly kind: "object_contact_damage" }
+>;
+type LinearPerLevelDiceAmount = Extract<
+  DiceAmount,
+  { readonly kind: "linear_per_level" }
+>;
+type SupportedHeatMetalDamageAmount = LinearPerLevelDiceAmount & {
+  readonly axis: "slot";
+  readonly base: DiceExpr & {
+    readonly dice: 2;
+    readonly dieSize: 8;
+    readonly flat?: undefined;
+    readonly spellcastingMod?: undefined;
+    readonly abilityModifier?: undefined;
+  };
+  readonly perLevel: DiceExprDelta & {
+    readonly dice: 1;
+    readonly dieSize?: undefined;
+    readonly flat?: undefined;
+  };
+  readonly startingAtLevel: 3;
+};
+type SupportedObjectContactDamageEffect = ObjectContactDamageEffect & {
+  readonly damageType: DamageType;
+  readonly amount: SupportedHeatMetalDamageAmount;
+};
+
+function isObjectContactDamageEffect(
+  effect: OngoingInitialEffect | OngoingOperationEffect | undefined,
+): effect is SupportedObjectContactDamageEffect {
+  if (effect?.kind !== "object_contact_damage") {
+    return false;
+  }
+  const amount = effect.amount;
+  return (
+    effect.contact.kind ===
+      "table_witnessed_physical_contact_with_spell_object" &&
+    effect.damageType === "fire" &&
+    isSupportedHeatMetalDamageAmount(amount)
+  );
+}
+
+function isSupportedHeatMetalDamageAmount(
+  amount: DiceAmount,
+): amount is SupportedHeatMetalDamageAmount {
+  return (
+    amount.kind === "linear_per_level" &&
+    amount.axis === "slot" &&
+    amount.startingAtLevel === 3 &&
+    amount.base.dice === 2 &&
+    amount.base.dieSize === 8 &&
+    amount.base.flat === undefined &&
+    amount.base.spellcastingMod === undefined &&
+    amount.base.abilityModifier === undefined &&
+    amount.perLevel.dice === 1 &&
+    amount.perLevel.dieSize === undefined &&
+    amount.perLevel.flat === undefined
+  );
+}
+
+function sameObjectContactDamageEffect(
+  left: SupportedObjectContactDamageEffect,
+  right: SupportedObjectContactDamageEffect,
+): boolean {
+  return (
+    left.damageType === right.damageType &&
+    left.amount.axis === right.amount.axis &&
+    left.amount.startingAtLevel === right.amount.startingAtLevel &&
+    left.amount.base.dice === right.amount.base.dice &&
+    left.amount.base.dieSize === right.amount.base.dieSize &&
+    left.amount.base.flat === right.amount.base.flat &&
+    left.amount.base.spellcastingMod === right.amount.base.spellcastingMod &&
+    left.amount.base.abilityModifier === right.amount.base.abilityModifier &&
+    left.amount.perLevel.dice === right.amount.perLevel.dice &&
+    left.amount.perLevel.dieSize === right.amount.perLevel.dieSize &&
+    left.amount.perLevel.flat === right.amount.perLevel.flat &&
+    left.contact.kind === right.contact.kind
+  );
 }
 
 function isFlamingSphereSaveEffect(

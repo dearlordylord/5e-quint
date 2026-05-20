@@ -124,6 +124,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "fogCloudObscurement",
   "flamingSphere",
   "moonbeam",
+  "objectContactDamage",
   "spellCreatedHeldObject",
   "command",
   "repeatedDamageAllocation",
@@ -186,6 +187,7 @@ export const SpellInvocationRefSchema = Schema.Union(
     sourceCombatantId: CombatantId,
     procedure: Schema.Literal(
       "markedDamageRiderTransfer",
+      "objectContactDamageRepeat",
       "spellCreatedHeldObjectAttack",
       "spellCreatedHeldObjectReEvoke",
     ),
@@ -223,6 +225,7 @@ export function spellEffectInvocationRef(
   sourceCombatantId: CombatantId,
   procedure:
     | "markedDamageRiderTransfer"
+    | "objectContactDamageRepeat"
     | "spellCreatedHeldObjectAttack"
     | "spellCreatedHeldObjectReEvoke",
 ): SpellInvocationRef {

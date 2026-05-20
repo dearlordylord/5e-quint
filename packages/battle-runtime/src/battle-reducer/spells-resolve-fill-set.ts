@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // Spell replay fill parser extracted from spells-resolve.ts.
 // Owns classification and validation of supplied fills against spell replay holes.
 
@@ -22,6 +23,7 @@ import {
   type BattleSpellTargetAllocationSpatialFact,
   type BattleSpellTargetListSpatialFact,
   type BattleSpellCastReactionFact,
+  type BattleObjectContactTargetSpatialFact,
   type SelfTransformationModeKind,
   type BattleTargetSpatialFact,
   type SpellTargeting,
@@ -92,6 +94,7 @@ type SpellObjectTargetFact = Extract<
       | "spellObjectLightTarget"
       | "spellTouchedObjectTarget"
       | "spellObjectIgnition"
+      | "spellManufacturedMetalObjectTarget"
       | "spellObjectTarget"
       | "spellObjectTargetSight";
   }
@@ -112,10 +115,18 @@ export type SpellFillSet =
                   | "spellObjectLightTarget"
                   | "spellTouchedObjectTarget"
                   | "spellObjectIgnition"
+                  | "spellManufacturedMetalObjectTarget"
                   | "spellObjectTarget"
                   | "spellObjectTargetSight";
               }
             >[];
+          }
+        | undefined;
+      readonly objectContactTargets:
+        | {
+            readonly holeId: BattleHoleId;
+            readonly targetIds: readonly CombatantId[];
+            readonly spatialFacts: readonly BattleObjectContactTargetSpatialFact[];
           }
         | undefined;
       readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
@@ -209,10 +220,18 @@ export function spellFillSet(
               | "spellObjectLightTarget"
               | "spellTouchedObjectTarget"
               | "spellObjectIgnition"
+              | "spellManufacturedMetalObjectTarget"
               | "spellObjectTarget"
               | "spellObjectTargetSight";
           }
         >[];
+      }
+    | undefined;
+  let objectContactTargets:
+    | {
+        readonly holeId: BattleHoleId;
+        readonly targetIds: readonly CombatantId[];
+        readonly spatialFacts: readonly BattleObjectContactTargetSpatialFact[];
       }
     | undefined;
   let targetSpatialFacts: readonly BattleTargetSpatialFact[] = [];
@@ -420,8 +439,10 @@ export function spellFillSet(
       if (
         (invocation.procedure !== "heldLightHurl" &&
           invocation.procedure !== "objectLight" &&
+          invocation.procedure !== "objectContactDamage" &&
           invocation.procedure !== "spellAttackDamage") ||
         (invocation.targeting.kind !== "singleCreatureOrObject" &&
+          invocation.targeting.kind !== "singleManufacturedMetalObject" &&
           invocation.targeting.kind !== "singleObject")
       ) {
         return {
@@ -449,9 +470,34 @@ export function spellFillSet(
             fact.kind === "spellObjectLightTarget" ||
             fact.kind === "spellTouchedObjectTarget" ||
             fact.kind === "spellObjectIgnition" ||
+            fact.kind === "spellManufacturedMetalObjectTarget" ||
             fact.kind === "spellObjectTarget" ||
             fact.kind === "spellObjectTargetSight",
         ),
+      };
+      continue;
+    }
+
+    if (fill.kind === "objectContactTargets") {
+      if (
+        invocation.procedure !== "objectContactDamage" &&
+        invocation.procedure !== "objectContactDamageRepeat"
+      ) {
+        return {
+          tag: "invalid",
+          message: "Object-contact target fill does not match this spell act.",
+        };
+      }
+      if (objectContactTargets !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Object-contact targets were filled twice.",
+        };
+      }
+      objectContactTargets = {
+        holeId: fill.holeId,
+        targetIds: fill.value.targetIds,
+        spatialFacts: fill.spatialFacts,
       };
       continue;
     }
@@ -1178,6 +1224,7 @@ export function spellFillSet(
     tag: "ok",
     targetId,
     objectTarget,
+    objectContactTargets,
     targetSpatialFacts,
     reactionSpellTargetFacts,
     targetAllocation,
@@ -1214,6 +1261,7 @@ export function spellFillSetContainsOnlySpellCastReactionFacts(
   return (
     fillSet.targetId === undefined &&
     fillSet.objectTarget === undefined &&
+    fillSet.objectContactTargets === undefined &&
     fillSet.targetSpatialFacts.length === 0 &&
     fillSet.targetAllocation === undefined &&
     fillSet.targetList === undefined &&

@@ -132,11 +132,19 @@ import {
   resolveMoonbeamSpellAct,
 } from "./spells-resolve-area-effects.ts";
 import { resolveSpellAttackSequenceAct } from "./spells-resolve-attack-sequence.ts";
+import {
+  resolveObjectContactDamageRepeatSpellAct,
+  resolveObjectContactDamageSpellAct,
+} from "./spells-resolve-object-contact-damage.ts";
 export {
   resolveFlamingSphereSpellAct,
   resolveFogCloudObscurementSpellAct,
   resolveMoonbeamSpellAct,
 } from "./spells-resolve-area-effects.ts";
+export {
+  resolveObjectContactDamageRepeatSpellAct,
+  resolveObjectContactDamageSpellAct,
+} from "./spells-resolve-object-contact-damage.ts";
 export { resolveAttackBurstSaveDamageSpellAct } from "./spells-resolve-attack-burst.ts";
 export {
   applyChainedSpellDamage,
@@ -292,6 +300,8 @@ function isSupportedDamageSpellInvocation(
   return (
     invocation.procedure === "heldLightHurl" ||
     invocation.procedure === "spellCreatedHeldObjectAttack" ||
+    invocation.procedure === "objectContactDamage" ||
+    invocation.procedure === "objectContactDamageRepeat" ||
     invocation.procedure === "repeatedDamageAllocation" ||
     (invocation.procedure === "spellAttackDamage" &&
       invocation.damage.kind !== "sorcerousBurstDamageTypeChoice") ||
@@ -439,6 +449,8 @@ export function resolveSpellAct(
       invocation.procedure === "fogCloudObscurement" ||
       invocation.procedure === "flamingSphere" ||
       invocation.procedure === "moonbeam" ||
+      invocation.procedure === "objectContactDamage" ||
+      invocation.procedure === "objectContactDamageRepeat" ||
       invocation.procedure === "spellCreatedHeldObject" ||
       invocation.procedure === "spellCreatedHeldObjectAttack" ||
       invocation.procedure === "spellCreatedHeldObjectReEvoke" ||
@@ -650,6 +662,14 @@ export function resolveSpellAct(
   }
   if (invocation.procedure === "moonbeam") {
     return resolveMoonbeamSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "objectContactDamage") {
+    return resolveObjectContactDamageSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
@@ -1847,6 +1867,14 @@ export function resolveBonusActionSpellAct(
         "Bonus Action spell subject requires a supported Bonus Action spell act.",
       );
     }
+  } else if (invocation.procedure === "objectContactDamageRepeat") {
+    if (invocation.actionCost !== "bonusAction") {
+      return invalidResult(
+        input.state,
+        "unsupportedSubject",
+        "Bonus Action spell subject requires a supported Bonus Action spell act.",
+      );
+    }
   } else if (
     invocation.procedure === "spellCreatedHeldObject" ||
     invocation.procedure === "spellCreatedHeldObjectReEvoke"
@@ -1993,6 +2021,14 @@ export function resolveBonusActionSpellAct(
   }
   if (invocation.procedure === "dancingLightsReposition") {
     return resolveDancingLightsRepositionSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "objectContactDamageRepeat") {
+    return resolveObjectContactDamageRepeatSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

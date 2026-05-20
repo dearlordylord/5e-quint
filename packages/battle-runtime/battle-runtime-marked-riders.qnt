@@ -42,6 +42,7 @@ module battleRuntimeMarkedRiders {
       | HuntersMarkDamageRider(_) => true
       | HexDamageRider(_) => true
       | FogCloudObscurement(_) => true
+      | HeatMetalObjectContactDamage(_) => true
       | DancingLightsEffect(_) => true
       | FlameBladeEffect(_) => true
       | InvisibilityCondition(_) => true

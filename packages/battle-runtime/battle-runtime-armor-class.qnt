@@ -99,6 +99,7 @@ module battleRuntimeArmorClass {
         | GreaseGroundHazard(_) => false
         | FogCloudObscurement(_) => false
         | FlamingSphere(_) => false
+        | HeatMetalObjectContactDamage(_) => false
         | CommandPending(_) => false
         | SelfTransformationModeEffect(_) => false
       })) 13 + dexMod else baseAc

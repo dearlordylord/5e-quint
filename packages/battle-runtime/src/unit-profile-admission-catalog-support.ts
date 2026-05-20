@@ -208,6 +208,8 @@ export const guidanceUnitId = "guidance";
 
 export const greaseUnitId = "grease";
 
+export const heatMetalUnitId = "heat_metal";
+
 export const heroismUnitId = "heroism";
 
 export const hellishRebukeUnitId = "hellish_rebuke";

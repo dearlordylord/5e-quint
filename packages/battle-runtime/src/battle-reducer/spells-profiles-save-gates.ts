@@ -2243,12 +2243,17 @@ export function supportedDamageAmountExpr(input: {
     amount.axis === "slot" &&
     input.spellLevel !== undefined &&
     input.slotLevel !== undefined &&
-    amount.startingAtLevel === input.spellLevel &&
+    (amount.startingAtLevel === input.spellLevel ||
+      amount.startingAtLevel === input.spellLevel + 1) &&
     amount.base.dieSize !== undefined
   ) {
+    const firstIncreasedSlot =
+      amount.startingAtLevel === input.spellLevel + 1;
     const slotDelta = Math.max(
       0,
-      Number(input.slotLevel) - amount.startingAtLevel,
+      Number(input.slotLevel) -
+        amount.startingAtLevel +
+        (firstIncreasedSlot ? 1 : 0),
     );
     return {
       dice: amount.base.dice + (amount.perLevel?.dice ?? 0) * slotDelta,

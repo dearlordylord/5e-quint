@@ -1,0 +1,169 @@
+// -*- mode: Bluespec; -*-
+
+module battleRuntimeObjectContactDamage {
+  import battleRuntimeModel.* from "./battle-runtime-model"
+  import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
+  import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
+  import battleRuntimeConcentration.* from "./battle-runtime-concentration"
+  import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
+  import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
+  import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
+
+  pure val heatMetalDurationTicks = 10
+  pure val heatMetalObjectId = 4
+
+  pure def heatMetalDamageDice(slotLevel: int): int =
+    2 + (slotLevel - 2)
+
+  pure def heatMetalObjectContactDamageEffect(
+    state: BattleState,
+    objectId: int,
+    slotLevel: int,
+  ): ActiveEffect =
+    HeatMetalObjectContactDamage({
+      objectId: objectId,
+      damageDice: heatMetalDamageDice(slotLevel),
+      durationTicks: heatMetalDurationTicks,
+      startedRound: state.initiative.round,
+    })
+
+  pure def activeEffectsWithoutHeatMetalObjectContactDamage(
+    effects: Set[ActiveEffect],
+    objectId: int,
+  ): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | HeatMetalObjectContactDamage(data) => data.objectId != objectId
+      | _ => true
+    })
+
+  pure def heatMetalObjectContactDamageActive(state: BattleState, objectId: int): bool =
+    state.fighter.activeEffects.exists(effect => match effect {
+      | HeatMetalObjectContactDamage(data) => data.objectId == objectId
+      | _ => false
+    })
+
+  pure def heatMetalObjectContactDamageActiveDamageDice(state: BattleState, objectId: int): int =
+    state.fighter.activeEffects
+      .map(effect => match effect {
+        | HeatMetalObjectContactDamage(data) => if (data.objectId == objectId) data.damageDice else 0
+        | _ => 0
+      })
+      .fold(0, (highest, damageDice) => if (highest > damageDice) highest else damageDice)
+
+  pure def heatMetalObjectContactDamageStartedRound(state: BattleState, objectId: int): int =
+    state.fighter.activeEffects
+      .map(effect => match effect {
+        | HeatMetalObjectContactDamage(data) => if (data.objectId == objectId) data.startedRound else 0
+        | _ => 0
+      })
+      .fold(0, (highest, round) => if (highest > round) highest else round)
+
+  pure def heatMetalAdjustedDamage(rolledDamage: int): int =
+    damageAfterAdjustments(
+      rolledDamage,
+      Fire,
+      Set(),
+      Set(),
+      Set(),
+    )
+
+  pure def combatantWithHeatMetalDamage(
+    target: Combatant,
+    rolledDamage: int,
+    concentrationSaveSucceeded: bool,
+  ): Combatant =
+    applyDamageFromSource(
+      target,
+      heatMetalAdjustedDamage(rolledDamage),
+      1,
+      concentrationSaveSucceeded,
+      OrdinaryDamage,
+      Fighter,
+    )
+
+  pure def stateAfterHeatMetalContactDamage(
+    state: BattleState,
+    contactTargets: Set[Actor],
+    rolledDamage: int,
+    fighterConcentrationSaveSucceeded: bool,
+    goblinConcentrationSaveSucceeded: bool,
+  ): BattleState =
+    {
+      ...state,
+      fighter:
+        if (contactTargets.contains(Fighter))
+          combatantWithHeatMetalDamage(state.fighter, rolledDamage, fighterConcentrationSaveSucceeded)
+        else
+          state.fighter,
+      goblin:
+        if (contactTargets.contains(Goblin))
+          combatantWithHeatMetalDamage(state.goblin, rolledDamage, goblinConcentrationSaveSucceeded)
+        else
+          state.goblin,
+    }
+
+  pure def resolveHeatMetal(
+    state: BattleState,
+    objectId: int,
+    contactTargets: Set[Actor],
+    slotLevel: int,
+    rolledDamage: int,
+    fighterConcentrationSaveSucceeded: bool,
+    goblinConcentrationSaveSucceeded: bool,
+  ): BattleState =
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)) or slotLevel < 2)
+      state
+    else {
+      val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
+      val cast = commitActorSpellSlotUse({
+        ...withoutPrior,
+        fighter: {
+          ...withoutPrior.fighter,
+          concentrating: true,
+          activeEffects: activeEffectsWithoutHeatMetalObjectContactDamage(withoutPrior.fighter.activeEffects, objectId)
+            .union(Set(heatMetalObjectContactDamageEffect(withoutPrior, objectId, slotLevel))),
+        },
+        actionAvailable: false,
+      }, Fighter)
+      stateAfterHeatMetalContactDamage(
+        cast,
+        contactTargets,
+        rolledDamage,
+        fighterConcentrationSaveSucceeded,
+        goblinConcentrationSaveSucceeded,
+      )
+    }
+
+  pure def heatMetalRepeatAvailable(
+    state: BattleState,
+    objectId: int,
+    objectWithinRange: bool,
+  ): bool =
+    currentActor(state) == Fighter and
+      state.bonusActionAvailable and
+      objectWithinRange and
+      heatMetalObjectContactDamageActive(state, objectId) and
+      heatMetalObjectContactDamageStartedRound(state, objectId) != state.initiative.round
+
+  pure def resolveHeatMetalRepeat(
+    state: BattleState,
+    objectId: int,
+    objectWithinRange: bool,
+    contactTargets: Set[Actor],
+    rolledDamage: int,
+    fighterConcentrationSaveSucceeded: bool,
+    goblinConcentrationSaveSucceeded: bool,
+  ): BattleState =
+    if (not(heatMetalRepeatAvailable(state, objectId, objectWithinRange)))
+      state
+    else {
+      val damaged = stateAfterHeatMetalContactDamage(
+        state,
+        contactTargets,
+        rolledDamage,
+        fighterConcentrationSaveSucceeded,
+        goblinConcentrationSaveSucceeded,
+      )
+      { ...damaged, bonusActionAvailable: false }
+    }
+}

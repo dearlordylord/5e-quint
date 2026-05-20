@@ -3,6 +3,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-mirror-image-hit-interception
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-moonbeam-movable-zone
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.monk-focus-battle-options
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
@@ -112,6 +113,7 @@ import type {
   BattleAreaId,
   BattleDancingLightId,
   BattleObjectId,
+  BattleSpellEffectOccurrenceId,
   SpellId,
   BattleTablePositionId,
   CharacterId,
@@ -637,6 +639,21 @@ export type SpellCreatedHeldObjectActiveEffect = BattleSpellEffectBase & {
     { readonly kind: "concentration" }
   > & { readonly durationTicks: ElapsedTimeTicks };
 };
+export type SpellObjectContactDamageActiveEffect = BattleSpellEffectBase & {
+  readonly kind: "spellObjectContactDamage";
+  readonly effectId: BattleSpellEffectOccurrenceId;
+  readonly objectId: BattleObjectId;
+  readonly rangeFeet: MovementFeet;
+  readonly damage: {
+    readonly expr: DiceExpr;
+    readonly damageType: DamageType;
+  };
+  readonly startedOn: BattleTurnAnchor;
+  readonly expiresAt: Extract<
+    BattleActiveEffectExpiration,
+    { readonly kind: "concentration" }
+  > & { readonly durationTicks: ElapsedTimeTicks };
+};
 export type BattleActiveEffect =
   | (BattleUnitFeatureEffectBase & {
       readonly kind: "bardicInspirationDie";
@@ -1049,6 +1066,7 @@ export type BattleActiveEffect =
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | SpellCreatedHeldObjectActiveEffect
+  | SpellObjectContactDamageActiveEffect
   | (BattleSpellEffectBase & {
       readonly kind: "dancingLights";
       readonly expiresAt: Extract<
@@ -1821,6 +1839,28 @@ export type BattleTargetSpatialFact =
       readonly casterId: CombatantId;
       readonly objectId: BattleObjectId;
       readonly spellId: SpellRecord["id"];
+    }
+  | {
+      readonly kind: "spellManufacturedMetalObjectTarget";
+      readonly casterId: CombatantId;
+      readonly objectId: BattleObjectId;
+      readonly spellId: SpellRecord["id"];
+      readonly rangeFeet: MovementFeet;
+      readonly casterCanSeeObject: true;
+    }
+  | {
+      readonly kind: "spellObjectPhysicalContact";
+      readonly sourceCombatantId: CombatantId;
+      readonly sourceSpellId: SpellRecord["id"];
+      readonly objectId: BattleObjectId;
+      readonly targetId: CombatantId;
+    }
+  | {
+      readonly kind: "spellObjectWithinSpellRange";
+      readonly sourceCombatantId: CombatantId;
+      readonly sourceSpellId: SpellRecord["id"];
+      readonly objectId: BattleObjectId;
+      readonly rangeFeet: MovementFeet;
     }
   | {
       readonly kind: "spellLeapTargetWithinRange";
@@ -2867,6 +2907,31 @@ export type SpellCreatedHeldObjectSpellInvocation =
         readonly objectState: { readonly kind: "notHeld" };
       };
     };
+export type ObjectContactDamageSpellInvocation =
+  | {
+      readonly access: PreparedSpellAccess;
+      readonly resource: SpellSlotInvocationResource;
+      readonly procedure: "objectContactDamage";
+      readonly spell: SpellRecord;
+      readonly actionCost: "magicAction";
+      readonly targeting: { readonly kind: "singleManufacturedMetalObject" };
+      readonly damage: {
+        readonly expr: DiceExpr;
+        readonly damageType: DamageType;
+      };
+      readonly rangeFeet: MovementFeet;
+      readonly durationTicks: ElapsedTimeTicks;
+    }
+  | {
+      readonly access: SpellEffectSpellAccess;
+      readonly resource: NoSpellInvocationResource;
+      readonly procedure: "objectContactDamageRepeat";
+      readonly spell: SpellRecord;
+      readonly actionCost: "bonusAction";
+      readonly activeEffect: SpellObjectContactDamageActiveEffect;
+      readonly damage: SpellObjectContactDamageActiveEffect["damage"];
+      readonly rangeFeet: MovementFeet;
+    };
 export type SpellAttackDamageTargeting = Extract<
   SpellTargeting,
   { readonly kind: "singleCombatant" | "singleCreatureOrObject" }
@@ -2983,6 +3048,7 @@ export type SupportedSpellInvocation =
   | HeldLightHurlSpellInvocation
   | DancingLightsSpellInvocation
   | SpellCreatedHeldObjectSpellInvocation
+  | ObjectContactDamageSpellInvocation
   | SpellHostedWeaponAttackInvocation
   | WeaponAttackOverrideSpellInvocation
   | DamageReductionSpellInvocation
@@ -3410,7 +3476,13 @@ export type SupportedDamageSpellInvocation =
 export type ReadiedSpellInvocation =
   | Exclude<
       SupportedDamageSpellInvocation,
-      { readonly procedure: "heldLightHurl" | "spellCreatedHeldObjectAttack" }
+      {
+        readonly procedure:
+          | "heldLightHurl"
+          | "objectContactDamage"
+          | "objectContactDamageRepeat"
+          | "spellCreatedHeldObjectAttack";
+      }
     >
   | Extract<
       SupportedSpellInvocation,
@@ -3863,6 +3935,29 @@ export type BattleObjectTargetChoiceHole = {
   readonly label: string;
   readonly requiresTableSpatialFact: true;
 };
+export type BattleObjectContactTargetSpatialFact = Extract<
+  BattleTargetSpatialFact,
+  {
+    readonly kind:
+      | "spellObjectPhysicalContact"
+      | "spellObjectWithinSpellRange";
+  }
+>;
+export type BattleObjectContactTargetsHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "objectContactTargets";
+  readonly label: string;
+  readonly objectContact: {
+    readonly sourceCombatantId: CombatantId;
+    readonly sourceSpellId: SpellId;
+    readonly objectId: BattleObjectId;
+    readonly rangeFeet: MovementFeet;
+    readonly requiresObjectWithinRange: boolean;
+  };
+  readonly choices: readonly CombatantId[];
+  readonly requiresTableSpatialFact: true;
+};
 export type BattleSpellCastReactionFactsHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -4125,6 +4220,8 @@ export type BattleSpellDamageRollHole = Extract<
         | "attackBurstSaveDamage"
         | "chainedSpellAttackDamage"
         | "heldLightHurl"
+        | "objectContactDamage"
+        | "objectContactDamageRepeat"
         | "repeatedDamageAllocation"
         | "saveGatedDamage"
         | "spellCreatedHeldObjectAttack"
@@ -4814,6 +4911,7 @@ export type BattleHole =
   | BattleSpellCastReactionFactsHole
   | BattleWardingBondSeparationFactsHole
   | BattleObjectTargetChoiceHole
+  | BattleObjectContactTargetsHole
   | BattleSpellAreaChoiceHole
   | BattleTeleportDestinationHole
   | BattleHeldObjectFactsHole
@@ -4977,10 +5075,19 @@ export type BattleFill =
             | "spellObjectLightTarget"
             | "spellTouchedObjectTarget"
             | "spellObjectIgnition"
+            | "spellManufacturedMetalObjectTarget"
             | "spellObjectTarget"
             | "spellObjectTargetSight";
         }
       >[];
+    }
+  | {
+      readonly kind: "objectContactTargets";
+      readonly holeId: BattleHoleId;
+      readonly value: {
+        readonly targetIds: readonly CombatantId[];
+      };
+      readonly spatialFacts: readonly BattleObjectContactTargetSpatialFact[];
     }
   | {
       readonly kind: "spellAreaChoice";
