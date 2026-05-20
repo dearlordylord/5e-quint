@@ -3770,11 +3770,7 @@ function dexHalfDamageCantrip(): SpellRecord {
 }
 
 export function acidSplashWithRadius(radiusFeet: number): SpellRecord {
-  const spell = spellRecord("acid_splash");
-  if (spell.mechanics.family !== "activation") {
-    throw new Error("Expected Acid Splash activation spell.");
-  }
-  const phase = spell.mechanics.phases[0];
+  const phase = acidSplashInput.mechanics.phases[0];
   if (
     phase?.kind !== "save_gate" ||
     phase.attachment.kind !== "hole" ||
@@ -3783,10 +3779,10 @@ export function acidSplashWithRadius(radiusFeet: number): SpellRecord {
   ) {
     throw new Error("Expected Acid Splash point-origin Sphere phase.");
   }
-  const updatedSpell = decodeUnitRecordSync({
-    ...spell,
+  const decoded = decodeUnitRecordSync({
+    ...acidSplashInput,
     mechanics: {
-      ...spell.mechanics,
+      ...acidSplashInput.mechanics,
       phases: [
         {
           ...phase,
@@ -3804,10 +3800,10 @@ export function acidSplashWithRadius(radiusFeet: number): SpellRecord {
       ],
     },
   });
-  if (updatedSpell.kind !== "spell") {
-    throw new Error("Expected updated Acid Splash to decode as a spell.");
+  if (decoded.kind !== "spell") {
+    throw new Error("Expected Acid Splash spell fixture.");
   }
-  return updatedSpell;
+  return decoded;
 }
 
 export function slotAttackDamageSpell(input?: {
@@ -3890,7 +3886,7 @@ export function slotSaveDamageSpell(): SpellRecord {
   };
 }
 
-export function spellRecord(spellId: SpellRecord["id"]) {
+export function spellRecord(spellId: SpellRecord["id"]): SpellRecord {
   const unit =
     testSpellRecords.get(spellId) ??
     Option.getOrUndefined(unitLibrary.getUnit(spellId));

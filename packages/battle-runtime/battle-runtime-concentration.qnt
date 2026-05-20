@@ -23,7 +23,7 @@ module battleRuntimeConcentration {
       NormalSavingThrow
 
   pure def spellEffectConcentrationActiveEffects(): Set[ActiveEffect] =
-    Set(ShieldOfFaithArmorClassBonus, HeroismFrightenedImmunity, BaneD20RollPenalty, BlessD20RollBonus, PassWithoutTraceStealthBonus, EntangleRestrained, FaerieFireOutline, ProtectionFromEvilAndGoodCreatureTypeProtection, Blurred, ExpeditiousRetreatDashBonusAction)
+    Set(ShieldOfFaithArmorClassBonus, HeroismFrightenedImmunity, CalmEmotionsCharmedImmunity, CalmEmotionsFrightenedImmunity, BaneD20RollPenalty, BlessD20RollBonus, PassWithoutTraceStealthBonus, EntangleRestrained, FaerieFireOutline, ProtectionFromEvilAndGoodCreatureTypeProtection, Blurred, ExpeditiousRetreatDashBonusAction)
 
   pure def activeEffectsWithoutSpellEffectConcentration(effects: Set[ActiveEffect]): Set[ActiveEffect] =
     effects

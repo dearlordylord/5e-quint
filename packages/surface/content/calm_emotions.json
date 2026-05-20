@@ -1,0 +1,79 @@
+{
+  "description": "Each Humanoid in a 20-foot-radius Sphere centered on a point you choose within range must make a Charisma saving throw. On a failed save, a target can be made immune to the Charmed and Frightened conditions until the spell ends, suppressing those conditions while the spell lasts. Alternatively, a Hostile target can become Indifferent about creatures of your choice until harmed or witnessing allies being harmed; the attitude returns when the spell ends.",
+  "id": "calm_emotions",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "activation",
+    "level": 2,
+    "phases": [
+      {
+        "ability": "cha",
+        "attachment": {
+          "holeId": "calm_emotions_sphere",
+          "kind": "hole",
+          "label": "spell origin point",
+          "value": {
+            "kind": "area",
+            "origin": {
+              "kind": "point_within_range"
+            },
+            "selection": {
+              "mode": "any_number",
+              "targetKinds": ["creature"],
+              "typeFilter": ["humanoid"]
+            },
+            "shape": {
+              "kind": "sphere",
+              "radiusFeet": 20
+            }
+          }
+        },
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "effects": [
+            {
+              "condition": "charmed",
+              "kind": "grant_condition_immunity"
+            },
+            {
+              "condition": "frightened",
+              "kind": "grant_condition_immunity"
+            }
+          ],
+          "kind": "composite"
+        },
+        "onSuccess": {
+          "kind": "none"
+        }
+      }
+    ],
+    "range": {
+      "feet": 60,
+      "kind": "point"
+    },
+    "school": "enchantment"
+  },
+  "name": "Calm Emotions",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Calm Emotions"
+  }
+}

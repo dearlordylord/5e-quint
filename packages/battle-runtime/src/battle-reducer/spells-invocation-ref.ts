@@ -317,6 +317,14 @@ export function supportedSpellInvocationRef(
       procedure: "conditionRemovalProtection",
     };
   }
+  if (invocation.procedure === "saveGatedConditionImmunity") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "saveGatedConditionImmunity",
+    };
+  }
   return Match.value(invocation).pipe(
     Match.when({ procedure: "heldLight" }, (cantrip) => ({
       tag: "cantrip" as const,

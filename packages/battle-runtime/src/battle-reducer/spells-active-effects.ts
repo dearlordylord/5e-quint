@@ -2047,6 +2047,52 @@ export function applyFailedSaveAttackRollAdvantageEffects(
   };
 }
 
+export function applySaveGatedConditionImmunityEffects(
+  state: BattleState,
+  actorId: CombatantId,
+  targetIds: readonly CombatantId[],
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "saveGatedConditionImmunity" }
+  >,
+): BattleState {
+  return targetIds.reduce((nextState, targetId) => {
+    const target = nextState.combatants.get(targetId);
+    if (target === undefined) {
+      return nextState;
+    }
+    const nextEffects = invocation.activeEffects.map((effect) => ({
+      ...effect,
+      sourceCombatantId: actorId,
+      conditionHadNonSpellSource: conditionHadNonSpellSourceBeforeSpellEffect(
+        target,
+        effect.condition,
+      ),
+    }));
+    const activeEffects = [
+      ...target.activeEffects.filter(
+        (effect) =>
+          !(
+            effect.kind === "conditionImmunity" &&
+            effect.sourceSpellId === invocation.spell.id &&
+            effect.sourceCombatantId === actorId &&
+            invocation.activeEffects.some(
+              (candidate) => candidate.condition === effect.condition,
+            )
+          ),
+      ),
+      ...nextEffects,
+    ];
+    return {
+      ...nextState,
+      combatants: new Map(nextState.combatants).set(
+        targetId,
+        battleCreatureWithSpellActiveEffects(target, activeEffects),
+      ),
+    };
+  }, state);
+}
+
 function faerieFireObjectOutlines(
   actorId: CombatantId,
   area: BattleSpellAreaChoice | undefined,
@@ -2893,10 +2939,19 @@ export function applyConditionImmunityAndTurnStartTemporaryHitPointsEffects(
     if (target === undefined) {
       return nextState;
     }
-    const nextEffects = invocation.activeEffects.map((effect) => ({
-      ...effect,
-      sourceCombatantId: actorId,
-    }));
+    const nextEffects = invocation.activeEffects.map((effect) =>
+      effect.kind === "conditionImmunity"
+        ? {
+            ...effect,
+            sourceCombatantId: actorId,
+            conditionHadNonSpellSource:
+              conditionHadNonSpellSourceBeforeSpellEffect(
+                target,
+                effect.condition,
+              ),
+          }
+        : { ...effect, sourceCombatantId: actorId },
+    );
     const activeEffects = [
       ...target.activeEffects.filter(
         (effect) =>

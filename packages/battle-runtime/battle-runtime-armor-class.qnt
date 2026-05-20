@@ -45,6 +45,8 @@ module battleRuntimeArmorClass {
         | AidHitPointMaximumIncrease(_) => false
         | HeroismFrightenedImmunity => false
         | HeroismTurnStartTemporaryHitPoints(_) => false
+        | CalmEmotionsCharmedImmunity => false
+        | CalmEmotionsFrightenedImmunity => false
         | BaneD20RollPenalty => false
         | BlessD20RollBonus => false
         | GuidanceAbilityCheckBonus(_) => false

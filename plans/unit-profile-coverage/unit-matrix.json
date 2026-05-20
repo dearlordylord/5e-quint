@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 392,
-      "numerator": 183,
-      "percent": "46.7%"
+      "denominator": 394,
+      "numerator": 185,
+      "percent": "47%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 464,
-      "numerator": 215,
-      "percent": "46.3%"
+      "denominator": 466,
+      "numerator": 217,
+      "percent": "46.6%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 216
+      "value": 218
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 132,
@@ -67,29 +67,29 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 216,
-      "numerator": 216,
+      "denominator": 218,
+      "numerator": 218,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 78,
-      "numerator": 78,
+      "denominator": 79,
+      "numerator": 79,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 78,
-      "numerator": 77,
+      "denominator": 79,
+      "numerator": 78,
       "percent": "98.7%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 106,
+      "denominator": 107,
       "numerator": 42,
-      "percent": "39.6%"
+      "percent": "39.3%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 106,
+      "denominator": 107,
       "numerator": 60,
-      "percent": "56.6%"
+      "percent": "56.1%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 132,
@@ -97,13 +97,13 @@
       "percent": "46.2%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 78,
-      "numerator": 78,
+      "denominator": 79,
+      "numerator": 79,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 78,
-      "numerator": 78,
+      "denominator": 79,
+      "numerator": 79,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -112,9 +112,9 @@
       "percent": "79.5%"
     },
     "supportedProfileCoverage": {
-      "denominator": 184,
+      "denominator": 186,
       "numerator": 132,
-      "percent": "71.7%"
+      "percent": "71%"
     }
   },
   "metricSemantics": [
@@ -2292,6 +2292,31 @@
       ]
     },
     {
+      "id": "spell.invocation-save-gated-condition-immunity",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "sourceBoundary": "Calm Emotions condition branch consumes typed area Saving Throw outcomes for Humanoid creatures; runtime owns Magic Action, Spell Slot, Concentration resource spend, failed-save Charmed and Frightened condition-immunity active effects, condition suppression through the existing condition-immunity projection, and Concentration cleanup. Hostile-to-Indifferent Attitude changes, chosen attitude recipients, damage or witness early ends, and return-to-normal social state are table/social-state facts outside this battle-runtime profile.",
+      "taskRefs": [
+        "L12G-MISSING-CALM-EMOTIONS"
+      ],
+      "title": "Spell invocation applies save-gated condition immunity to failed-save area targets",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-calm-emotions.test.ts"
+        }
+      ]
+    },
+    {
       "id": "spell.scalar-buff",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -3087,14 +3112,14 @@
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 106,
+        "denominator": 107,
         "numerator": 42,
-        "percent": "39.6%"
+        "percent": "39.3%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 106,
+        "denominator": 107,
         "numerator": 60,
-        "percent": "56.6%"
+        "percent": "56.1%"
       }
     },
     "profileKinds": [
@@ -3893,6 +3918,12 @@
           }
         ],
         "profileId": "spell.invocation-condition-immunity-turn-start-temporary-hit-points",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-save-gated-condition-immunity",
         "profileKind": "spell-invocation"
       },
       {
@@ -7656,6 +7687,22 @@
         "spell.invocation-attack-roll-advantage-save"
       ],
       "taskId": "SRDINV30E"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Calm Emotions' Humanoid area Saving Throw branch, failed-save Charmed and Frightened condition-immunity effects, Concentration cleanup, successful saves with no active effect, and non-Humanoid rejection.",
+      "profileIds": [
+        "spell.invocation-save-gated-condition-immunity"
+      ],
+      "taskId": "L12G-MISSING-CALM-EMOTIONS"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Surface and battle-runtime admission/reducer tests cover Calm Emotions' SRD authored spell record, Humanoid 20-foot Sphere condition-immunity branch, failed-save suppression through existing condition immunity projection, successful saves, non-Humanoid rejection, Spell Slot/Magic Action/Concentration resource handling, and explicit social Attitude closure.",
+      "profileIds": [
+        "spell.invocation-save-gated-condition-immunity"
+      ],
+      "taskId": "L12G-MISSING-CALM-EMOTIONS"
     },
     {
       "claimKind": "qnt-proof",
@@ -14819,6 +14866,79 @@
         "status": "installed"
       },
       "claim": {
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "social-knowledge-effect",
+              "owner": "runtime-detached table/social-state owner",
+              "reason": "Attitude is social monster disposition rather than battle-owned condition state; the runtime has no per-creature attitude relationship model."
+            },
+            "mechanic": "Hostile-to-Indifferent Attitude branch, including creatures-of-choice social targeting, damage or witnessed-ally-damage early end, and return to normal Attitude when the spell ends"
+          }
+        ],
+        "profileIds": [
+          "spell.invocation-save-gated-condition-immunity"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action level-2 Spell Slot casting with Concentration up to 1 minute",
+          "point-origin 20-foot-radius Sphere within 60 feet with caller-supplied area membership",
+          "Humanoid-only Charisma Spell Save DC gate",
+          "failed-save Charmed and Frightened condition Immunity active effects",
+          "pre-existing Charmed and Frightened conditions are suppressed while Concentration lasts and restored when the spell-owned immunity ends if their source remains",
+          "Concentration cleanup removes the spell-owned condition-immunity effects"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-calm-emotions.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-MISSING-CALM-EMOTIONS"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-save-gated-condition-immunity",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "Calm Emotions condition branch consumes typed area Saving Throw outcomes for Humanoid creatures; runtime owns Magic Action, Spell Slot, Concentration resource spend, failed-save Charmed and Frightened condition-immunity active effects, condition suppression through the existing condition-immunity projection, and Concentration cleanup. Hostile-to-Indifferent Attitude changes, chosen attitude recipients, damage or witness early ends, and return-to-normal social state are table/social-state facts outside this battle-runtime profile.",
+          "taskRefs": [
+            "L12G-MISSING-CALM-EMOTIONS"
+          ],
+          "title": "Spell invocation applies save-gated condition immunity to failed-save area targets",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-calm-emotions.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/calm_emotions.json",
+      "unitId": "calm_emotions"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "profileIds": [
           "spell.invocation-damage-save-or-attack",
           "spell.readied-action-time-spell"
@@ -15259,7 +15379,7 @@
           },
           {
             "followUpTaskId": "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL",
-            "mechanic": "Darkness overlap dispelling spell-created Bright Light or Dim Light from level-2-or-lower spells is blocked until Darkness has an SRD-authored Unit and a runtime/profile owner that can consume spell-created light facts such as Continual Flame without dispatching on spell identity."
+            "mechanic": "Darkness overlap dispelling spell-created Bright Light or Dim Light from level-2-or-lower spells is blocked on a Darkness runtime/profile owner that can consume generic spell-created light facts such as Continual Flame without dispatching on spell identity; the SRD Darkness Unit is authored separately by Task 9."
           },
           {
             "followUpTaskId": "L12G-FOLLOWUP-ANTIMAGIC-FIELD-SPELL-EFFECT-SUPPRESSION",
@@ -15292,9 +15412,9 @@
           },
           {
             "id": "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL",
-            "mechanic": "Author or explicitly close the SRD Darkness Unit, then support or close the overlap rule that dispels another level-2-or-lower spell when Darkness overlaps Bright Light or Dim Light created by that spell, consuming generic spell-created light facts such as Continual Flame rather than spell identity.",
-            "owner": "Darkness Surface definition plus battle-runtime Darkness area and spell-created light overlap owner",
-            "requiredOutput": "SRD Darkness authored/catalog outcome plus focused tests and promoted Quint/runtime parity or accepted closure for overlap-triggered dispel of spell-created light, with the missing Darkness Unit row resolved before it is named as an owner.",
+            "mechanic": "Promote or close the overlap rule that dispels another level-2-or-lower spell when Darkness overlaps Bright Light or Dim Light created by that spell, consuming generic spell-created light facts such as Continual Flame rather than spell identity.",
+            "owner": "battle-runtime Darkness area and spell-created light overlap owner",
+            "requiredOutput": "Focused tests and promoted Quint/runtime parity or accepted closure for overlap-triggered dispel of spell-created light; Continual Flame cleanup must remain represented through generic spell-created light facts.",
             "title": "Darkness Spell-Created Light Dispel"
           },
           {
@@ -15305,7 +15425,7 @@
             "title": "Antimagic Field Spell Effect Suppression"
           }
         ],
-        "futureProfileOwner": "Dispel Magic ongoing Spell Effect ending plus Darkness authored Unit/profile support plus Antimagic Field Spell Effect suppression plus character inventory/equipment component legality plus runtime-detached object presentation owner",
+        "futureProfileOwner": "Dispel Magic ongoing Spell Effect ending plus Darkness runtime spell-created light overlap support plus Antimagic Field Spell Effect suppression plus character inventory/equipment component legality plus runtime-detached object presentation owner",
         "profileIds": [
           "spell.invocation-object-light"
         ],
@@ -15545,6 +15665,48 @@
       ],
       "sourceRecordPath": "packages/surface/content/dancing_lights.json",
       "unitId": "dancing_lights"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME",
+            "mechanic": "Promote Darkness's point-origin Sphere branch: Magic Action and level-2-or-higher Spell Slot spend, caster-owned Concentration up to 10 minutes, caller-supplied 15-foot point-origin Sphere area identity, active magical Darkness/Heavily Obscured zone projection that ordinary sight and Darkvision cannot see through, nonmagical light denial as a light/obscurement witness consequence rather than deletion of existing light emitters, and cleanup when Concentration or duration ends.",
+            "owner": "battle-runtime spell invocation/effect lifecycle plus table/spatial visibility witness boundary",
+            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for point-origin magical Darkness without object-origin or spell-created-light-dispel behavior.",
+            "title": "Darkness Point-Origin Area Runtime Support"
+          },
+          {
+            "id": "L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH",
+            "mechanic": "Represent and promote or close Darkness's object branch: target object not worn or carried, 15-foot Emanation originating from that object, object-origin area identity, and opaque-cover blocking, consuming existing object and opaque-cover witness facts without adding duplicate map or cover state.",
+            "owner": "Surface Spell Definition authoring plus battle-runtime object-origin spell-area and opaque-cover witness boundary",
+            "requiredOutput": "Darkness Surface content and runtime owner decision with focused tests for the object-origin branch, or accepted closure if object attachment, movement, and opaque-cover blocking stay outside promoted runtime.",
+            "title": "Darkness Object-Origin Branch"
+          },
+          {
+            "id": "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL",
+            "mechanic": "Promote or close the overlap rule that dispels another level-2-or-lower spell when Darkness overlaps Bright Light or Dim Light created by that spell, consuming generic spell-created light facts such as Continual Flame rather than spell identity.",
+            "owner": "Darkness Surface definition plus battle-runtime Darkness area and spell-created light overlap owner",
+            "requiredOutput": "Focused tests and promoted Quint/runtime parity or accepted closure for overlap-triggered dispel of spell-created light; Continual Flame cleanup must remain represented through generic spell-created light facts.",
+            "title": "Darkness Spell-Created Light Dispel"
+          }
+        ],
+        "futureProfileOwner": "battle-runtime spell-area obscurement owner plus light/visibility witness boundary and spell-created light overlap owner",
+        "reason": "Darkness is authored as an SRD Surface Spell Definition for the point-origin branch, including Magic Action level-2 Spell Slot casting, Concentration up to 10 minutes, 60-foot range, a 15-foot-radius magical Darkness Sphere, and an executable Heavily Obscured area source fact. Task 9 claims no promoted battle-runtime profile yet because runtime has no Darkness-owned active spell-area admission that distinguishes magical Darkness from ordinary Heavy Obscurement for nonmagical-light denial, no object-origin Emanation and opaque-cover witness branch, and no overlap dispel owner for spell-created Bright Light or Dim Light without dispatching on spell identity.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/darkness.json",
+      "unitId": "darkness"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

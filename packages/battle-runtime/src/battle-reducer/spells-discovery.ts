@@ -209,6 +209,7 @@ export function discoverSupportedSpellInvocations(
       if (
         invocation.procedure === "saveGatedDamage" ||
         invocation.procedure === "saveGatedCondition" ||
+        invocation.procedure === "saveGatedConditionImmunity" ||
         invocation.procedure === "saveGatedAttackRollAdvantage" ||
         invocation.procedure === "sleepTargetAdmission" ||
         invocation.procedure === "hideousLaughter" ||
@@ -1098,6 +1099,7 @@ export function spellActivationInvocationCastSummary(
         | "mirrorImageHitInterception"
         | "saveGatedDamage"
         | "saveGatedCondition"
+        | "saveGatedConditionImmunity"
         | "saveGatedAttackRollAdvantage"
         | "sleepTargetAdmission"
         | "hideousLaughter"
@@ -1275,6 +1277,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "sanctuaryTargetingInterdiction" &&
     invocation.procedure !== "directCondition" &&
     invocation.procedure !== "saveGatedCondition" &&
+    invocation.procedure !== "saveGatedConditionImmunity" &&
     invocation.procedure !== "saveGatedAttackRollAdvantage" &&
     invocation.procedure !== "sleepTargetAdmission" &&
     invocation.procedure !== "hideousLaughter" &&
@@ -1326,6 +1329,7 @@ export function readiedSpellAct(
     invocation.procedure === "directConditionRemoval" ||
     invocation.procedure === "attackBurstSaveDamage" ||
     invocation.procedure === "saveGatedCondition" ||
+    invocation.procedure === "saveGatedConditionImmunity" ||
     invocation.procedure === "saveGatedAttackRollAdvantage" ||
     invocation.procedure === "sleepTargetAdmission" ||
     invocation.procedure === "hideousLaughter" ||

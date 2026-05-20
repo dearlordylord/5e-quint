@@ -38,6 +38,7 @@ import classRogueInput from "../../content/class_rogue.json";
 import classSorcererInput from "../../content/class_sorcerer.json";
 import classWarlockInput from "../../content/class_warlock.json";
 import classWizardInput from "../../content/class_wizard.json";
+import calmEmotionsInput from "../../content/calm_emotions.json";
 import charmPersonInput from "../../content/charm_person.json";
 import chillTouchInput from "../../content/chill_touch.json";
 import chromaticOrbInput from "../../content/chromatic_orb.json";
@@ -49,6 +50,7 @@ import continualFlameInput from "../../content/continual_flame.json";
 import counterspellInput from "../../content/counterspell.json";
 import cureWoundsInput from "../../content/cure_wounds.json";
 import dancingLightsInput from "../../content/dancing_lights.json";
+import darknessInput from "../../content/darkness.json";
 import divineFavorInput from "../../content/divine_favor.json";
 import divineSmiteInput from "../../content/divine_smite.json";
 import druidDruidicInput from "../../content/druid_druidic.json";
@@ -437,6 +439,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     blessInput,
     blurInput,
     burningHandsInput,
+    calmEmotionsInput,
     chillTouchInput,
     chromaticOrbInput,
     colorSprayInput,
@@ -445,6 +448,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     counterspellInput,
     cureWoundsInput,
     dancingLightsInput,
+    darknessInput,
     dissonantWhispersInput,
     divineFavorInput,
     divineSmiteInput,

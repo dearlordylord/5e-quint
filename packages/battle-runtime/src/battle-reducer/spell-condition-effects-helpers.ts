@@ -93,9 +93,11 @@ export function conditionHadNonSpellSourceBeforeSpellEffect(
     conditionHasNonSpellSource(combatant, condition) ||
     combatant.activeEffects.some(
       (effect) =>
-        activeEffectSourcesCondition(effect, condition) &&
         "conditionHadNonSpellSource" in effect &&
-        effect.conditionHadNonSpellSource,
+        effect.conditionHadNonSpellSource &&
+        (activeEffectSourcesCondition(effect, condition) ||
+          (effect.kind === "conditionImmunity" &&
+            effect.condition === condition)),
     )
   );
 }
@@ -805,7 +807,7 @@ export function conditionsAfterExpiringSpellConditionEffects(
   remainingEffects: readonly BattleActiveEffect[],
   expiringEffects: readonly BattleActiveEffect[],
 ): ConditionState {
-  return expiringEffects
+  const withoutExpiredConditionSources = expiringEffects
     .filter(isConditionApplyingActiveEffect)
     .reduce((nextConditions, effect) => {
       if (effect.kind === "hideousLaughter") {
@@ -823,6 +825,51 @@ export function conditionsAfterExpiringSpellConditionEffects(
         ? nextConditions
         : removeCondition(nextConditions, condition);
     }, conditions);
+  return expiringEffects
+    .filter(isConditionImmunityActiveEffect)
+    .reduce(
+      (nextConditions, effect) =>
+        conditionsAfterExpiringConditionImmunity(
+          nextConditions,
+          remainingEffects,
+          effect,
+        ),
+      withoutExpiredConditionSources,
+    );
+}
+
+function isConditionImmunityActiveEffect(
+  effect: BattleActiveEffect,
+): effect is Extract<
+  BattleActiveEffect,
+  { readonly kind: "conditionImmunity" }
+> {
+  return effect.kind === "conditionImmunity";
+}
+
+function conditionsAfterExpiringConditionImmunity(
+  conditions: ConditionState,
+  remainingEffects: readonly BattleActiveEffect[],
+  expiringEffect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "conditionImmunity" }
+  >,
+): ConditionState {
+  if (
+    remainingEffects.some(
+      (effect) =>
+        effect.kind === "conditionImmunity" &&
+        effect.condition === expiringEffect.condition,
+    )
+  ) {
+    return conditions;
+  }
+  return expiringEffect.conditionHadNonSpellSource ||
+    remainingEffects.some((effect) =>
+      activeEffectSourcesCondition(effect, expiringEffect.condition),
+    )
+    ? applyCondition(conditions, expiringEffect.condition)
+    : conditions;
 }
 
 function isConditionApplyingActiveEffect(

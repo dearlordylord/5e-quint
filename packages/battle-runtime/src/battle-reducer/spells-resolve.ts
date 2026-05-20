@@ -171,6 +171,7 @@ export {
   resolveHideousLaughterSpellAct,
   resolveSaveGateAttackRollAdvantageSpellAct,
   resolveSaveGateConditionSpellAct,
+  resolveSaveGateConditionImmunitySpellAct,
   resolveSaveGateDamageSpellAct,
   resolveSleepTargetAdmissionSpellAct,
   validateSavingThrowOutcomes,
@@ -245,6 +246,7 @@ import {
   resolveHideousLaughterSpellAct,
   resolveSaveGateAttackRollAdvantageSpellAct,
   resolveSaveGateConditionSpellAct,
+  resolveSaveGateConditionImmunitySpellAct,
   resolveSaveGateDamageSpellAct,
   resolveSleepTargetAdmissionSpellAct,
 } from "./spells-resolve-save-gates.ts";
@@ -430,6 +432,7 @@ export function resolveSpellAct(
       invocation.procedure === "afterHitTimedDamageAndSave" ||
       invocation.procedure === "afterHitDamageAndIllumination" ||
       invocation.procedure === "saveGatedCondition" ||
+      invocation.procedure === "saveGatedConditionImmunity" ||
       invocation.procedure === "saveGatedAttackRollAdvantage" ||
       invocation.procedure === "hideousLaughter" ||
       invocation.procedure === "command" ||
@@ -583,6 +586,14 @@ export function resolveSpellAct(
   }
   if (invocation.procedure === "saveGatedCondition") {
     return resolveSaveGateConditionSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "saveGatedConditionImmunity") {
+    return resolveSaveGateConditionImmunitySpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

@@ -116,6 +116,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "chainedSpellAttackDamage",
   "spellAttackSequence",
   "saveGatedCondition",
+  "saveGatedConditionImmunity",
   "saveGatedAttackRollAdvantage",
   "sleepTargetAdmission",
   "hideousLaughter",

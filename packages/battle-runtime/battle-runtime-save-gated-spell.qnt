@@ -299,6 +299,17 @@ module battleRuntimeSaveGatedSpell {
     else
       Set()
 
+  pure def saveGatedConditionImmunityReplayHoles(
+    canCastSpells: bool,
+    savingThrowOutcomesFilled: bool,
+  ): Set[Hole] =
+    if (not(canCastSpells))
+      Set()
+    else if (not(savingThrowOutcomesFilled))
+      Set(SavingThrowOutcome)
+    else
+      Set()
+
   pure def saveGatedDamageReplayHoles(
     invocation: SaveGatedDamageInvocation,
     canCastSpells: bool,
@@ -811,6 +822,65 @@ module battleRuntimeSaveGatedSpell {
     goblinSavingThrowSucceeded: bool,
   ): BattleState =
     resolveFaerieFireWithObjects(state, fighterSavingThrowSucceeded, goblinSavingThrowSucceeded, Set())
+
+  pure def calmEmotionsConditionImmunityEffects(): Set[ActiveEffect] =
+    Set(CalmEmotionsCharmedImmunity, CalmEmotionsFrightenedImmunity)
+
+  pure def calmEmotionsTarget(
+    target: Combatant,
+    savingThrowSucceeded: bool,
+  ): Combatant =
+    if (savingThrowSucceeded)
+      target
+    else
+      {
+        ...target,
+        activeEffects: target.activeEffects
+          .exclude(calmEmotionsConditionImmunityEffects)
+          .union(calmEmotionsConditionImmunityEffects),
+      }
+
+  pure def calmEmotionsIncludedTargetsAreLegal(
+    fighterIncluded: bool,
+    fighterCreatureType: RuntimeCreatureType,
+    goblinIncluded: bool,
+    goblinCreatureType: RuntimeCreatureType,
+  ): bool =
+    (not(fighterIncluded) or fighterCreatureType == HumanoidCreature) and
+      (not(goblinIncluded) or goblinCreatureType == HumanoidCreature)
+
+  pure def resolveCalmEmotions(
+    state: BattleState,
+    fighterIncluded: bool,
+    fighterCreatureType: RuntimeCreatureType,
+    fighterSavingThrowSucceeded: bool,
+    goblinIncluded: bool,
+    goblinCreatureType: RuntimeCreatureType,
+    goblinSavingThrowSucceeded: bool,
+  ): BattleState =
+    if (
+      not(state.actionAvailable) or
+      currentActor(state) != Fighter or
+      state.fighter.unconscious or
+      state.fighter.incapacitated or
+      fighterHasRage(state) or
+      not(canExpendSpellSlotThisTurn(state)) or
+      not(calmEmotionsIncludedTargetsAreLegal(fighterIncluded, fighterCreatureType, goblinIncluded, goblinCreatureType))
+    )
+      state
+    else {
+      val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
+      val fighterTarget = if (fighterIncluded)
+        calmEmotionsTarget(withoutPrior.fighter, fighterSavingThrowSucceeded)
+      else
+        withoutPrior.fighter
+      commitActorSpellSlotUse({
+        ...withoutPrior,
+        fighter: { ...fighterTarget, concentrating: true },
+        goblin: if (goblinIncluded) calmEmotionsTarget(withoutPrior.goblin, goblinSavingThrowSucceeded) else withoutPrior.goblin,
+        actionAvailable: false,
+      }, Fighter)
+    }
 
   pure def resolveEntangle(
     state: BattleState,

@@ -1495,6 +1495,25 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("saveGatedConditionImmunity"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      ability: AbilitySchema,
+      dc: DcSourceSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("pointOriginSphere"),
+        radiusFeet: MovementFeet,
+      }),
+      targetCreatureTypes: Schema.Array(Schema.String),
+      activeEffects: Schema.Tuple(
+        BattleRuntimeObjectSchema,
+        BattleRuntimeObjectSchema,
+      ),
+      rangeFeet: MovementFeet,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("saveGatedAttackRollAdvantage"),
       spell: BattleRuntimeObjectSchema,
       ability: AbilitySchema,

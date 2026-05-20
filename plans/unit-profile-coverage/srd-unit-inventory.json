@@ -188,12 +188,12 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 489,
-      "percent": "87.9%",
+      "numerator": 491,
+      "percent": "88.3%",
       "rowsByStatus": {
-        "accepted": 359,
+        "accepted": 361,
         "accepted-no-battle-effect": 130,
-        "battle-runtime-required": 55,
+        "battle-runtime-required": 53,
         "partial-battle-runtime": 11,
         "owner-evidence-required": 1
       }
@@ -209,18 +209,18 @@
       "catalog-installed-owner-evidence-required": 1
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 375,
+      "catalog-installed-owner-evidence-present": 377,
       "non-runtime": 24,
       "catalog-only/dead-for-now": 101,
-      "missing-authored-record": 22,
-      "catalog-installed-owner-evidence-required": 20,
+      "missing-authored-record": 17,
+      "catalog-installed-owner-evidence-required": 23,
       "catalog-authored-executable-follow-up": 14
     },
     "spellPressureRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 211,
+      "catalog-installed-owner-evidence-present": 213,
       "catalog-only/dead-for-now": 101,
-      "missing-authored-record": 22,
-      "catalog-installed-owner-evidence-required": 19,
+      "missing-authored-record": 17,
+      "catalog-installed-owner-evidence-required": 22,
       "catalog-authored-executable-follow-up": 14
     },
     "levelOneRowsByCategory": {
@@ -6246,16 +6246,36 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "calm_emotions",
+        "sourceRecordPath": "packages/surface/content/calm_emotions.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "calm_emotions"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "runtime-detached table/social-state owner",
+        "reason": "Attitude is social monster disposition rather than battle-owned condition state; the runtime has no per-creature attitude relationship model."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit calm_emotions is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-MISSING-CALM-EMOTIONS at packages/battle-runtime/src/unit-profile-admission-calm-emotions.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_detect_thoughts",
@@ -8730,16 +8750,36 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "calm_emotions",
+        "sourceRecordPath": "packages/surface/content/calm_emotions.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "calm_emotions"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "runtime-detached table/social-state owner",
+        "reason": "Attitude is social monster disposition rather than battle-owned condition state; the runtime has no per-creature attitude relationship model."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit calm_emotions is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-MISSING-CALM-EMOTIONS at packages/battle-runtime/src/unit-profile-admission-calm-emotions.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_continual_flame",
@@ -20518,15 +20558,29 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "darkness",
+        "sourceRecordPath": "packages/surface/content/darkness.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "darkness"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit darkness is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/effect lifecycle plus table/spatial visibility witness boundary; Surface Spell Definition authoring plus battle-runtime object-origin spell-area and opaque-cover witness boundary; Darkness Surface definition plus battle-runtime Darkness area and spell-created light overlap owner",
+          "evidence": "Promote follow-up split L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME, L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH, L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL: L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME owns Promote Darkness's point-origin Sphere branch: Magic Action and level-2-or-higher Spell Slot spend, caster-owned Concentration up to 10 minutes, caller-supplied 15-foot point-origin Sphere area identity, active magical Darkness/Heavily Obscured zone projection that ordinary sight and Darkvision cannot see through, nonmagical light denial as a light/obscurement witness consequence rather than deletion of existing light emitters, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for point-origin magical Darkness without object-origin or spell-created-light-dispel behavior.; L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH owns Represent and promote or close Darkness's object branch: target object not worn or carried, 15-foot Emanation originating from that object, object-origin area identity, and opaque-cover blocking, consuming existing object and opaque-cover witness facts without adding duplicate map or cover state. Required output: Darkness Surface content and runtime owner decision with focused tests for the object-origin branch, or accepted closure if object attachment, movement, and opaque-cover blocking stay outside promoted runtime.; L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL owns Promote or close the overlap rule that dispels another level-2-or-lower spell when Darkness overlaps Bright Light or Dim Light created by that spell, consuming generic spell-created light facts such as Continual Flame rather than spell identity. Required output: Focused tests and promoted Quint/runtime parity or accepted closure for overlap-triggered dispel of spell-created light; Continual Flame cleanup must remain represented through generic spell-created light facts.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME, L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH, L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL: L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME owns Promote Darkness's point-origin Sphere branch: Magic Action and level-2-or-higher Spell Slot spend, caster-owned Concentration up to 10 minutes, caller-supplied 15-foot point-origin Sphere area identity, active magical Darkness/Heavily Obscured zone projection that ordinary sight and Darkvision cannot see through, nonmagical light denial as a light/obscurement witness consequence rather than deletion of existing light emitters, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for point-origin magical Darkness without object-origin or spell-created-light-dispel behavior.; L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH owns Represent and promote or close Darkness's object branch: target object not worn or carried, 15-foot Emanation originating from that object, object-origin area identity, and opaque-cover blocking, consuming existing object and opaque-cover witness facts without adding duplicate map or cover state. Required output: Darkness Surface content and runtime owner decision with focused tests for the object-origin branch, or accepted closure if object attachment, movement, and opaque-cover blocking stay outside promoted runtime.; L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL owns Promote or close the overlap rule that dispels another level-2-or-lower spell when Darkness overlaps Bright Light or Dim Light created by that spell, consuming generic spell-created light facts such as Continual Flame rather than spell identity. Required output: Focused tests and promoted Quint/runtime parity or accepted closure for overlap-triggered dispel of spell-created light; Continual Flame cleanup must remain represented through generic spell-created light facts.",
       "battleReadinessStatus": "battle-runtime-required"
     },
     {
@@ -22830,15 +22884,29 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "darkness",
+        "sourceRecordPath": "packages/surface/content/darkness.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "darkness"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit darkness is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/effect lifecycle plus table/spatial visibility witness boundary; Surface Spell Definition authoring plus battle-runtime object-origin spell-area and opaque-cover witness boundary; Darkness Surface definition plus battle-runtime Darkness area and spell-created light overlap owner",
+          "evidence": "Promote follow-up split L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME, L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH, L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL: L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME owns Promote Darkness's point-origin Sphere branch: Magic Action and level-2-or-higher Spell Slot spend, caster-owned Concentration up to 10 minutes, caller-supplied 15-foot point-origin Sphere area identity, active magical Darkness/Heavily Obscured zone projection that ordinary sight and Darkvision cannot see through, nonmagical light denial as a light/obscurement witness consequence rather than deletion of existing light emitters, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for point-origin magical Darkness without object-origin or spell-created-light-dispel behavior.; L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH owns Represent and promote or close Darkness's object branch: target object not worn or carried, 15-foot Emanation originating from that object, object-origin area identity, and opaque-cover blocking, consuming existing object and opaque-cover witness facts without adding duplicate map or cover state. Required output: Darkness Surface content and runtime owner decision with focused tests for the object-origin branch, or accepted closure if object attachment, movement, and opaque-cover blocking stay outside promoted runtime.; L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL owns Promote or close the overlap rule that dispels another level-2-or-lower spell when Darkness overlaps Bright Light or Dim Light created by that spell, consuming generic spell-created light facts such as Continual Flame rather than spell identity. Required output: Focused tests and promoted Quint/runtime parity or accepted closure for overlap-triggered dispel of spell-created light; Continual Flame cleanup must remain represented through generic spell-created light facts.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME, L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH, L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL: L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME owns Promote Darkness's point-origin Sphere branch: Magic Action and level-2-or-higher Spell Slot spend, caster-owned Concentration up to 10 minutes, caller-supplied 15-foot point-origin Sphere area identity, active magical Darkness/Heavily Obscured zone projection that ordinary sight and Darkvision cannot see through, nonmagical light denial as a light/obscurement witness consequence rather than deletion of existing light emitters, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for point-origin magical Darkness without object-origin or spell-created-light-dispel behavior.; L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH owns Represent and promote or close Darkness's object branch: target object not worn or carried, 15-foot Emanation originating from that object, object-origin area identity, and opaque-cover blocking, consuming existing object and opaque-cover witness facts without adding duplicate map or cover state. Required output: Darkness Surface content and runtime owner decision with focused tests for the object-origin branch, or accepted closure if object attachment, movement, and opaque-cover blocking stay outside promoted runtime.; L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL owns Promote or close the overlap rule that dispels another level-2-or-lower spell when Darkness overlaps Bright Light or Dim Light created by that spell, consuming generic spell-created light facts such as Continual Flame rather than spell identity. Required output: Focused tests and promoted Quint/runtime parity or accepted closure for overlap-triggered dispel of spell-created light; Continual Flame cleanup must remain represented through generic spell-created light facts.",
       "battleReadinessStatus": "battle-runtime-required"
     },
     {
@@ -26097,15 +26165,29 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "darkness",
+        "sourceRecordPath": "packages/surface/content/darkness.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "darkness"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit darkness is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/effect lifecycle plus table/spatial visibility witness boundary; Surface Spell Definition authoring plus battle-runtime object-origin spell-area and opaque-cover witness boundary; Darkness Surface definition plus battle-runtime Darkness area and spell-created light overlap owner",
+          "evidence": "Promote follow-up split L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME, L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH, L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL: L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME owns Promote Darkness's point-origin Sphere branch: Magic Action and level-2-or-higher Spell Slot spend, caster-owned Concentration up to 10 minutes, caller-supplied 15-foot point-origin Sphere area identity, active magical Darkness/Heavily Obscured zone projection that ordinary sight and Darkvision cannot see through, nonmagical light denial as a light/obscurement witness consequence rather than deletion of existing light emitters, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for point-origin magical Darkness without object-origin or spell-created-light-dispel behavior.; L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH owns Represent and promote or close Darkness's object branch: target object not worn or carried, 15-foot Emanation originating from that object, object-origin area identity, and opaque-cover blocking, consuming existing object and opaque-cover witness facts without adding duplicate map or cover state. Required output: Darkness Surface content and runtime owner decision with focused tests for the object-origin branch, or accepted closure if object attachment, movement, and opaque-cover blocking stay outside promoted runtime.; L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL owns Promote or close the overlap rule that dispels another level-2-or-lower spell when Darkness overlaps Bright Light or Dim Light created by that spell, consuming generic spell-created light facts such as Continual Flame rather than spell identity. Required output: Focused tests and promoted Quint/runtime parity or accepted closure for overlap-triggered dispel of spell-created light; Continual Flame cleanup must remain represented through generic spell-created light facts.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME, L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH, L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL: L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME owns Promote Darkness's point-origin Sphere branch: Magic Action and level-2-or-higher Spell Slot spend, caster-owned Concentration up to 10 minutes, caller-supplied 15-foot point-origin Sphere area identity, active magical Darkness/Heavily Obscured zone projection that ordinary sight and Darkvision cannot see through, nonmagical light denial as a light/obscurement witness consequence rather than deletion of existing light emitters, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for point-origin magical Darkness without object-origin or spell-created-light-dispel behavior.; L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH owns Represent and promote or close Darkness's object branch: target object not worn or carried, 15-foot Emanation originating from that object, object-origin area identity, and opaque-cover blocking, consuming existing object and opaque-cover witness facts without adding duplicate map or cover state. Required output: Darkness Surface content and runtime owner decision with focused tests for the object-origin branch, or accepted closure if object attachment, movement, and opaque-cover blocking stay outside promoted runtime.; L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL owns Promote or close the overlap rule that dispels another level-2-or-lower spell when Darkness overlaps Bright Light or Dim Light created by that spell, consuming generic spell-created light facts such as Continual Flame rather than spell identity. Required output: Focused tests and promoted Quint/runtime parity or accepted closure for overlap-triggered dispel of spell-created light; Continual Flame cleanup must remain represented through generic spell-created light facts.",
       "battleReadinessStatus": "battle-runtime-required"
     },
     {
