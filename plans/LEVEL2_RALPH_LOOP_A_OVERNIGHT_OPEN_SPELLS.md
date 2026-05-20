@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "L12G-MISSING-DARKVISION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Darkvision Definition And Support Or Closure"
     },
     {
