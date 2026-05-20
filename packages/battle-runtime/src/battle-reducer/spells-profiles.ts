@@ -1137,10 +1137,8 @@ function moonbeamSpell(spell: SpellRecord) {
   );
 
   const initialDamage = isMoonbeamSaveGate(initialPhase);
+  // Shape-only admission: do not gate on spell name or provenance.
   if (
-    spell.name !== "Moonbeam" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-M-P#Moonbeam" ||
     spell.mechanics.level !== 2 ||
     spell.mechanics.castingTime.kind !== "action" ||
     spell.mechanics.range.kind !== "point" ||
