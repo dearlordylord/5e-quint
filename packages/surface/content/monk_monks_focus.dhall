@@ -5,11 +5,20 @@
 -- Save DC: 8 + Wisdom modifier + Proficiency Bonus.
 -- Initial Focus Point features: Flurry of Blows, Patient Defense,
 -- and Step of the Wind.
---
--- This record owns the Focus Point pool and names the initial resource-use
--- option set. Option execution remains a separate battle/runtime owner.
 
-let focusOption = { id : Text, displayName : Text }
+let jumpDistanceMultiplierType = { multiplier : Natural, expires : Text }
+
+let battleExecutionType =
+      { kind : Text
+      , focusPointCost : Natural
+      , strikeCount : Optional Natural
+      , freeAction : Optional Text
+      , focusActions : Optional (List Text)
+      , jumpDistanceMultiplier : Optional jumpDistanceMultiplierType
+      }
+
+let focusOption =
+      { id : Text, displayName : Text, battleExecution : battleExecutionType }
 
 let monksFocus =
       { acquiredAtLevel = 2
@@ -42,12 +51,39 @@ let monksFocus =
               , initialOptions =
                   [ { id = "monk_flurry_of_blows"
                     , displayName = "Flurry of Blows"
+                    , battleExecution =
+                        { kind = "bonus_action_unarmed_strike_sequence"
+                        , focusPointCost = 1
+                        , strikeCount = Some 2
+                        , freeAction = None Text
+                        , focusActions = None (List Text)
+                        , jumpDistanceMultiplier =
+                            None jumpDistanceMultiplierType
+                        }
                     }
                   , { id = "monk_patient_defense"
                     , displayName = "Patient Defense"
+                    , battleExecution =
+                        { kind = "bonus_action_defensive_modes"
+                        , focusPointCost = 1
+                        , strikeCount = None Natural
+                        , freeAction = Some "disengage"
+                        , focusActions = Some [ "disengage", "dodge" ]
+                        , jumpDistanceMultiplier =
+                            None jumpDistanceMultiplierType
+                        }
                     }
                   , { id = "monk_step_of_the_wind"
                     , displayName = "Step of the Wind"
+                    , battleExecution =
+                        { kind = "bonus_action_mobility_modes"
+                        , focusPointCost = 1
+                        , strikeCount = None Natural
+                        , freeAction = Some "dash"
+                        , focusActions = Some [ "disengage", "dash" ]
+                        , jumpDistanceMultiplier =
+                            Some { multiplier = 2, expires = "end_of_turn" }
+                        }
                     }
                   ] : List focusOption
               }

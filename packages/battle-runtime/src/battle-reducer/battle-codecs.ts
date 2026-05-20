@@ -2246,9 +2246,7 @@ export const BattleHoleSchema = Schema.Union(
     dc: DcSourceSchema,
     areaChoices: Schema.Array(BattleRuntimeObjectSchema),
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
-    targetFlatBonuses: Schema.Array(
-      BattleSavingThrowFlatBonusProjectionSchema,
-    ),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2259,9 +2257,7 @@ export const BattleHoleSchema = Schema.Union(
     dc: DcSourceSchema,
     areaChoices: Schema.Array(BattleRuntimeObjectSchema),
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
-    targetFlatBonuses: Schema.Array(
-      BattleSavingThrowFlatBonusProjectionSchema,
-    ),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2272,9 +2268,7 @@ export const BattleHoleSchema = Schema.Union(
     dc: DcSourceSchema,
     areaChoices: Schema.Array(BattleRuntimeObjectSchema),
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
-    targetFlatBonuses: Schema.Array(
-      BattleSavingThrowFlatBonusProjectionSchema,
-    ),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2285,9 +2279,7 @@ export const BattleHoleSchema = Schema.Union(
     dc: DcSourceSchema,
     areaChoices: Schema.Array(BattleRuntimeObjectSchema),
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
-    targetFlatBonuses: Schema.Array(
-      BattleSavingThrowFlatBonusProjectionSchema,
-    ),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2298,9 +2290,7 @@ export const BattleHoleSchema = Schema.Union(
     dc: DcSourceSchema,
     areaChoices: Schema.Array(BattleRuntimeObjectSchema),
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
-    targetFlatBonuses: Schema.Array(
-      BattleSavingThrowFlatBonusProjectionSchema,
-    ),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2340,9 +2330,7 @@ export const BattleHoleSchema = Schema.Union(
     dc: DcSourceSchema,
     areaChoices: Schema.Array(BattleRuntimeObjectSchema),
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
-    targetFlatBonuses: Schema.Array(
-      BattleSavingThrowFlatBonusProjectionSchema,
-    ),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2353,9 +2341,7 @@ export const BattleHoleSchema = Schema.Union(
     dc: BattleRuntimeObjectSchema,
     areaChoices: Schema.Array(BattleSpellAreaChoiceSchema),
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
-    targetFlatBonuses: Schema.Array(
-      BattleSavingThrowFlatBonusProjectionSchema,
-    ),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2366,9 +2352,7 @@ export const BattleHoleSchema = Schema.Union(
     dc: DcSourceSchema,
     targetIds: Schema.Array(CombatantId),
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
-    targetFlatBonuses: Schema.Array(
-      BattleSavingThrowFlatBonusProjectionSchema,
-    ),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -3688,6 +3672,12 @@ const RuntimeActionResourceSchema = Schema.Union(
     sourceOwnerId: Schema.String,
     sourceUnitId: Schema.String,
     restriction: BattleActionRestrictionSchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("action"),
+    source: Schema.Literal("monkFocusFlurryOfBlows"),
+    sourceOwnerId: Schema.String,
+    sourceUnitId: Schema.String,
   }),
 );
 

@@ -184,13 +184,13 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 484,
-      "percent": "87.1%",
+      "numerator": 485,
+      "percent": "87.2%",
       "rowsByStatus": {
-        "accepted": 348,
+        "accepted": 349,
         "accepted-no-battle-effect": 136,
         "battle-runtime-required": 61,
-        "partial-battle-runtime": 8,
+        "partial-battle-runtime": 7,
         "owner-evidence-required": 3
       }
     },
@@ -13377,6 +13377,12 @@
       },
       "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "battle-runtime shared jump movement witness boundary plus promoted Quint parity",
+        "reason": "Doubled jump distance depends on a shared ordinary jump movement witness boundary for Long Jump and High Jump distance, movement spend, and legal landing/table-spatial facts; Task 2 promotes only the action-economy and resource-spend subset."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -13392,10 +13398,15 @@
           "owner": "character-sheet-runtime",
           "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS Character Sheet class-feature use-count resource runtime; Monk's Focus is read from CharacterBuild resources and the installed Surface feature record, then projected as Character Sheet Focus Point use-count state. The runtime derives capacity from Monk class level, stores only expended Focus Point uses, restores all expended uses on Short or Long Rest, and derives the Focus save DC from the authored Wisdom source, current ability scores, and Proficiency Bonus without storing duplicate DC state.",
           "status": "owner evidence present"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS at packages/battle-runtime/src/battle-runtime-monk-focus.test.ts",
+          "status": "owner evidence present"
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/monk:level-2:class-feature-grant:monk_unarmored_movement",

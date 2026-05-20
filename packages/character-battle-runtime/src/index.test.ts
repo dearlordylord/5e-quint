@@ -1,5 +1,6 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.invocation-marked-damage-rider
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-use-count-resource
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.monk-focus-battle-options
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B mastery_sap mastery_topple mastery_cleave
 import type {
   BattleFill,
@@ -40,6 +41,7 @@ import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import {
   Hp,
   abilityModifier,
+  classLevel,
   DieRollResult,
   difficultyClass,
   proficiencyBonus,
@@ -421,6 +423,77 @@ describe("Character Sheet battle handoff", () => {
         usesRemaining: 1,
       }),
     );
+  });
+
+  test("hands shared Monk Focus use-count expenditures into and out of battle", () => {
+    const sheet = createFreshCharacterSheet({
+      characterId: characterSheetId("character:monk-focus-handoff"),
+      build: monkBuild({ level: 2, str: 12, dex: 16 }),
+      maximumHp: Hp(16),
+      currentHp: Hp(16),
+      tempHp: Hp(0),
+      unitLibrary,
+      resourceExpenditures: [
+        {
+          tag: "useCountResource",
+          unitId: "monk_monks_focus",
+          expended: resourceCount(1),
+        },
+      ],
+    });
+    expect(Either.isRight(sheet)).toBe(true);
+    if (Either.isLeft(sheet)) return;
+
+    const focusUnit = unitLibrary.requireUnit("monk_monks_focus");
+    const focusResource = characterBattleResourceForUnit(focusUnit);
+    if (!hasLimitedCharacterBattleResourceCap(focusResource)) {
+      throw new Error("Expected finite Monk Focus resource.");
+    }
+    const nextBattleResources = expectRight(
+      characterBattleResourceInitsFromBuild(
+        sheet.right.build,
+        unitLibrary,
+        sheet.right.resourceExpenditures,
+      ),
+    );
+    expect(nextBattleResources).toContainEqual(
+      expect.objectContaining({
+        unit: focusUnit,
+        usesRemaining: 1,
+      }),
+    );
+
+    const handoff = applyBattleHandoffToCharacterSheet({
+      sheet: sheet.right,
+      unitLibrary,
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:monk-focus-handoff"),
+          classLevels: [{ className: "monk", level: classLevel(2) }],
+          resources: [
+            {
+              unit: focusUnit,
+              resource: focusResource,
+              usedThisTurn: false,
+              usesRemaining: resourceCount(0),
+            },
+          ],
+        },
+        hp: Hp(16),
+        maxHp: Hp(16),
+        tempHp: Hp(0),
+        positiveHpUnconscious: null,
+      }),
+    });
+
+    expect(expectRight(handoff).resourceExpenditures).toEqual([
+      {
+        tag: "useCountResource",
+        unitId: "monk_monks_focus",
+        expended: 2,
+      },
+    ]);
   });
 
   test("persists Paladin's Smite free-cast spends for the next battle before Long Rest", () => {
@@ -2522,6 +2595,17 @@ function hasFixedCharacterBattleResourceCap(
   readonly cap: { readonly kind: "fixed" };
 } {
   return resource.cap.kind === "fixed";
+}
+
+function hasLimitedCharacterBattleResourceCap(
+  resource: CharacterBattleResourceState["resource"],
+): resource is CharacterBattleResourceState["resource"] & {
+  readonly cap: Exclude<
+    CharacterBattleResourceState["resource"]["cap"],
+    { readonly kind: "unlimited" }
+  >;
+} {
+  return resource.cap.kind !== "unlimited";
 }
 
 function armorOfShadowsWarlockBuild(

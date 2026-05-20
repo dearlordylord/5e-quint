@@ -92,6 +92,10 @@ export type ClassFeatureExtraAttackActionResource = Extract<
   RuntimeActionResource,
   { readonly source: "classFeatureExtraAttack" }
 >;
+export type MonkFocusFlurryOfBlowsActionResource = Extract<
+  RuntimeActionResource,
+  { readonly source: "monkFocusFlurryOfBlows" }
+>;
 export const HELP_ATTACK_ALLY_HOLE_ID = holeId("battle:help-attack:ally");
 export const HELP_ATTACK_TARGET_HOLE_ID = holeId("battle:help-attack:target");
 export const HELP_ATTACK_ALLY_HOLE_INSTANCE = holeInstanceKey(

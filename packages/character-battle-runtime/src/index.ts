@@ -1,6 +1,7 @@
 import {
   combatantKnockedOutUnconscious,
   classFeatureSpellFreeCastProfileForResource,
+  characterBattleResourceMaxUses,
   KNOCKED_OUT_UNCONSCIOUS,
   type BattleCreatureState,
   type CharacterZeroHpLifecycleInit,
@@ -13,12 +14,14 @@ import {
   characterSheetSpellSlots,
   characterSheetTempHp,
   createFreshCharacterSheet,
+  isCharacterSheetUseCountResourceUnitId,
   type CharacterSheet,
   type CharacterSheetBookOfShadowsPresence,
   type CharacterSheetIssue,
   type CharacterSheetPositiveHpUnconscious,
   type CharacterSheetResourceExpenditure,
   type CharacterSheetStableRecovery,
+  type CharacterSheetUseCountResourceUnitId,
   type CharacterSheetZeroHpLifecycleInput,
 } from "@dnd/character-sheet-runtime";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
@@ -38,6 +41,7 @@ import {
 import { battleCreatureInitIssue } from "./battle-character-build-projection.ts";
 
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.monk-focus-battle-options
 export {
   battleCreatureInitFromCharacterBuild,
   characterBattleResourceInitsFromBuild,
@@ -189,43 +193,99 @@ function characterResourceExpendituresFromBattle(input: {
   readonly CharacterSheetResourceExpenditure[],
   CharacterSheetBattleHandoffIssue
 > {
+  if (input.combatant.origin.kind !== "character") {
+    return Either.right(input.sheet.resourceExpenditures);
+  }
+  const battleResources = input.combatant.origin.resources ?? [];
+  const battleUseCountResourceUnitIds =
+    new Set<CharacterSheetUseCountResourceUnitId>(
+      battleResources.flatMap((resource) => {
+        const unitId =
+          characterSheetUseCountResourceUnitIdForBattleResource(resource);
+        return unitId === null ? [] : [unitId];
+      }),
+    );
   const nextExpenditures = input.sheet.resourceExpenditures.filter(
     (expenditure) =>
-      !isSupportedClassFeatureSpellFreeCastResourceTag(expenditure.tag),
+      !isSupportedClassFeatureSpellFreeCastResourceTag(expenditure.tag) &&
+      (expenditure.tag !== "useCountResource" ||
+        !battleUseCountResourceUnitIds.has(expenditure.unitId)),
   );
-  if (input.combatant.origin.kind !== "character") {
-    return Either.right(nextExpenditures);
-  }
   const nextFreeCastExpenditures: CharacterSheetResourceExpenditure[] = [];
-  for (const resource of input.combatant.origin.resources ?? []) {
+  const nextUseCountExpenditures: CharacterSheetResourceExpenditure[] = [];
+  for (const resource of battleResources) {
     const profile = classFeatureSpellFreeCastProfileForResource(resource);
-    if (profile === null) {
+    if (profile !== null) {
+      if (resource.resource.cap.kind !== "fixed") {
+        return characterSheetBattleHandoffIssue(
+          "Class feature spell free casts must use a fixed battle resource cap during battle handoff.",
+        );
+      }
+      if (resource.usesRemaining === undefined) {
+        return characterSheetBattleHandoffIssue(
+          "Class feature spell free casts must carry remaining uses during battle handoff.",
+        );
+      }
+      const expended = resource.resource.cap.uses - resource.usesRemaining;
+      if (expended < 0) {
+        return characterSheetBattleHandoffIssue(
+          "Class feature spell free-cast remaining uses exceed the battle resource cap during battle handoff.",
+        );
+      }
+      if (expended > 0) {
+        nextFreeCastExpenditures.push({
+          tag: profile.resourceTag,
+          expended: resourceCount(expended),
+        });
+      }
       continue;
     }
-    if (resource.resource.cap.kind !== "fixed") {
-      return characterSheetBattleHandoffIssue(
-        "Class feature spell free casts must use a fixed battle resource cap during battle handoff.",
-      );
-    }
-    if (resource.usesRemaining === undefined) {
-      return characterSheetBattleHandoffIssue(
-        "Class feature spell free casts must carry remaining uses during battle handoff.",
-      );
-    }
-    const expended = resource.resource.cap.uses - resource.usesRemaining;
-    if (expended < 0) {
-      return characterSheetBattleHandoffIssue(
-        "Class feature spell free-cast remaining uses exceed the battle resource cap during battle handoff.",
-      );
-    }
-    if (expended > 0) {
-      nextFreeCastExpenditures.push({
-        tag: profile.resourceTag,
-        expended: resourceCount(expended),
+    const useCountUnitId =
+      characterSheetUseCountResourceUnitIdForBattleResource(resource);
+    if (useCountUnitId !== null) {
+      const maxUses = characterBattleResourceMaxUses({
+        unit: resource.unit,
+        classLevels: input.combatant.origin.classLevels,
       });
+      if (maxUses === undefined || resource.usesRemaining === undefined) {
+        return characterSheetBattleHandoffIssue(
+          "Class feature use-count resources must carry finite remaining uses during battle handoff.",
+        );
+      }
+      const expended = Number(maxUses) - Number(resource.usesRemaining);
+      if (expended < 0) {
+        return characterSheetBattleHandoffIssue(
+          "Class feature use-count remaining uses exceed the battle resource cap during battle handoff.",
+        );
+      }
+      if (expended > 0) {
+        nextUseCountExpenditures.push({
+          tag: "useCountResource",
+          unitId: useCountUnitId,
+          expended: resourceCount(expended),
+        });
+      }
     }
   }
-  return Either.right([...nextExpenditures, ...nextFreeCastExpenditures]);
+  return Either.right([
+    ...nextExpenditures,
+    ...nextFreeCastExpenditures,
+    ...nextUseCountExpenditures,
+  ]);
+}
+
+function characterSheetUseCountResourceUnitIdForBattleResource(
+  resource: NonNullable<
+    Extract<
+      BattleCreatureState["origin"],
+      { readonly kind: "character" }
+    >["resources"]
+  >[number],
+): CharacterSheetUseCountResourceUnitId | null {
+  return resource.resource.kind === "use_count" &&
+    isCharacterSheetUseCountResourceUnitId(resource.unit.id)
+    ? resource.unit.id
+    : null;
 }
 
 function characterSheetInitialConditions(

@@ -3,133 +3,69 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
+import { DamageAmount } from "@dnd/shared/types";
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-import {
-DamageAmount
-} from "@dnd/shared/types";
-
-
-import type {
-UnitRecord
-} from "@dnd/surface/surface/types";
-
+import type { UnitRecord } from "@dnd/surface/surface/types";
 
 import { Match } from "effect";
 
-
-
-
-
-
-
-
 import {
-resourceHasUsesRemaining,
-spendCharacterResourceUse,
-type CharacterBattleResourceState
+  resourceHasUsesRemaining,
+  spendCharacterResourceUse,
+  type CharacterBattleResourceState,
 } from "../character-battle-resources.ts";
 
+import { CombatantId } from "../identity.ts";
 
+import { ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE } from "../unit-feature-support.ts";
 
-import {
-CombatantId
-} from "../identity.ts";
+import { combatantCanSee } from "./creature-state-leaves.ts";
 
-import {
-battleReactionRollOrDamageReductionSupportForUnit
-} from "../unit-feature-support.ts";
-
-
-
-
+import { applyAttackDamageAmount } from "./damage-apply.ts";
 
 import {
-combatantCanSee
-} from "./creature-state-leaves.ts";
-
-
-import {
-applyAttackDamageAmount
-} from "./damage-apply.ts";
-
-
-import {
-ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_DAMAGE_HOLE_ID,
-ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_DAMAGE_HOLE_INSTANCE,
-ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SAVE_HOLE_ID,
-ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SAVE_HOLE_INSTANCE,
-ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_TARGET_HOLE_ID,
-ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_TARGET_HOLE_INSTANCE
+  ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_DAMAGE_HOLE_ID,
+  ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_DAMAGE_HOLE_INSTANCE,
+  ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SAVE_HOLE_ID,
+  ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SAVE_HOLE_INSTANCE,
+  ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_TARGET_HOLE_ID,
+  ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_TARGET_HOLE_INSTANCE,
 } from "./domain-constants.ts";
 
-
-
-
-
-import {
-attackDamageEventAmountForTarget
-} from "./attack-damage-events.ts";
-import {
-rolledDiceFillTotal
-} from "./reaction-modifiers.ts";
+import { attackDamageEventAmountForTarget } from "./attack-damage-events.ts";
+import { rolledDiceFillTotal } from "./reaction-modifiers.ts";
 export {
-attackDamageEventAfterPendingReduction,
-attackDamageEventAfterPendingReductions,
-attackDamageEventAmountBeforeTargetAdjustments,
-attackDamageEventAmountForTarget,
-attackDamageEventEntries,
-attackDamageEventWithEntries,
-attackDamagePrefixFills,
-attackFillsThroughAttackRoll,
-damageAmountByTypeEntriesAfterScalarReduction
+  attackDamageEventAfterPendingReduction,
+  attackDamageEventAfterPendingReductions,
+  attackDamageEventAmountBeforeTargetAdjustments,
+  attackDamageEventAmountForTarget,
+  attackDamageEventEntries,
+  attackDamageEventWithEntries,
+  attackDamagePrefixFills,
+  attackFillsThroughAttackRoll,
+  damageAmountByTypeEntriesAfterScalarReduction,
 } from "./attack-damage-events.ts";
 
-
-
-
 import {
-savingThrowFlatBonusProjections,
-savingThrowRollModeProjections
+  savingThrowFlatBonusProjections,
+  savingThrowRollModeProjections,
 } from "./spells-holes-fills.ts";
 
-
-
-
-
-
-
 import type {
-AttackDamageReductionRedirectTargetGate,
-AttackDamageReductionZeroDamageRedirectAvailableOffer,
-AttackDamageReductionZeroDamageRedirectOffer,
-AttackDamageReductionZeroDamageRedirectSelection,
-BattleAttackKindForRedirect,
-BattleCreatureState,
-BattleFill,
-BattleHole,
-BattlePendingAttackDamageReduction,
-BattleRolledDiceFill,
-BattleState,
-BattleTargetSpatialFact
+  AttackDamageReductionRedirectTargetGate,
+  AttackDamageReductionZeroDamageRedirectAvailableOffer,
+  AttackDamageReductionZeroDamageRedirectOffer,
+  AttackDamageReductionZeroDamageRedirectSelection,
+  BattleAttackKindForRedirect,
+  BattleCreatureState,
+  BattleFill,
+  BattleHole,
+  BattlePendingAttackDamageReduction,
+  BattleRolledDiceFill,
+  BattleState,
+  BattleTargetSpatialFact,
 } from "../battle-reducer.ts";
-import {
-zeroHpLifecycleIsTerminal
-} from "../battle-reducer.ts";
+import { zeroHpLifecycleIsTerminal } from "../battle-reducer.ts";
 export function attackDamageReductionZeroDamageRedirectSelection(input: {
   readonly state: BattleState;
   readonly reactorId: CombatantId;
@@ -485,15 +421,20 @@ export function attackDamageReductionRedirectResource(
 ): CharacterBattleResourceState | undefined {
   if (reactor?.origin.kind !== "character") return undefined;
   const characterOrigin = reactor.origin;
+  const reducingFeatureIsProjected = characterOrigin.characterUnitRefs.some(
+    (unitRef) =>
+      unitRef.unitId === unitId &&
+      unitRef.supportProfiles.includes(
+        ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
+      ),
+  );
+  if (!reducingFeatureIsProjected) return undefined;
   return characterOrigin.resources.find(
     (resource) =>
       resource.unit.id === offer.spends.resourceUnitId &&
-      unitId === offer.spends.resourceUnitId &&
       offer.spends.amount === 1 &&
       resource.unit.kind === "class_feature" &&
-      resource.unit.mechanics.family === "reaction_roll_or_damage_reduction" &&
-      battleReactionRollOrDamageReductionSupportForUnit(resource.unit) ===
-        "attackDamageReductionZeroDamageRedirect" &&
+      resource.unit.mechanics.family === "resource_container" &&
       resourceHasUsesRemaining(resource),
   );
 }

@@ -597,6 +597,12 @@ module battleRuntimeModel {
     usesRemaining: int,
   }
 
+  type MonkFocusBattleOptionResult = {
+    state: BattleState,
+    focusPointsRemaining: int,
+    flurryStrikesRemaining: int,
+  }
+
   type FeatherFallLandingResult =
     | FeatherFallLandingMitigated({ state: BattleState })
     | FeatherFallLandingUnmitigated({ state: BattleState })

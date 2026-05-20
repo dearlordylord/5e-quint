@@ -12,10 +12,11 @@ import type {
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 
 import {
-  actionRestrictionAllows,
+  actionResourceAllows,
   spendAction,
   spendActivationResource,
   spendMatchingActionResource,
+  spendUnarmedStrikeActionResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
 
 import { validateRolledDiceForDiceExpr } from "@dnd/shared-algebras/runtime-dice-algebra";
@@ -1283,7 +1284,9 @@ export function resolveGrapple(
       "Grapple is not available during a Stat Block Multiattack dispatch.",
     );
   }
-  const spent = spendAction(input.state.currentTurnResources, "attack");
+  const spent = spendUnarmedStrikeActionResource(
+    input.state.currentTurnResources,
+  );
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -1378,7 +1381,9 @@ export function resolveShove(
       "Shove is not available during a Stat Block Multiattack dispatch.",
     );
   }
-  const spent = spendAction(input.state.currentTurnResources, "attack");
+  const spent = spendUnarmedStrikeActionResource(
+    input.state.currentTurnResources,
+  );
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -2039,11 +2044,7 @@ export function compatibleAttackActionResource(
 ): { readonly resource: RuntimeActionResource; readonly index: number } | null {
   const compatible = resources
     .map((resource, index) => ({ resource, index }))
-    .filter(({ resource }) =>
-      resource.source === "turn"
-        ? true
-        : actionRestrictionAllows(resource.restriction, "attack"),
-    );
+    .filter(({ resource }) => actionResourceAllows(resource, "attack"));
   const extraAttack = compatible.find(
     ({ resource }) => resource.source === "classFeatureExtraAttack",
   );

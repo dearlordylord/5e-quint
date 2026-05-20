@@ -63,6 +63,18 @@ export type BattleRuntimeCommand = (typeof BATTLE_RUNTIME_COMMANDS)[number];
 export const BATTLE_MOVEMENT_SPEED_KINDS = ["walk", "climb", "swim"] as const;
 export type BattleMovementSpeedKind =
   (typeof BATTLE_MOVEMENT_SPEED_KINDS)[number];
+export const MONK_FOCUS_PATIENT_DEFENSE_MODES = [
+  "freeDisengage",
+  "focusDisengageDodge",
+] as const;
+export type MonkFocusPatientDefenseMode =
+  (typeof MONK_FOCUS_PATIENT_DEFENSE_MODES)[number];
+export const MONK_FOCUS_STEP_OF_THE_WIND_MODES = [
+  "freeDash",
+  "focusDisengageDash",
+] as const;
+export type MonkFocusStepOfTheWindMode =
+  (typeof MONK_FOCUS_STEP_OF_THE_WIND_MODES)[number];
 
 export const BattleSubjectTextSchema = Schema.NonEmptyTrimmedString;
 
@@ -397,6 +409,35 @@ export const BattleSubjectSchema = Schema.Union(
     sourceUnitId: BattleSubjectTextSchema,
     action: Schema.Literal("disengage", "hide"),
   }),
+  Schema.Union(
+    Schema.Struct({
+      tag: Schema.Literal("monkFocusOption"),
+      actorId: CombatantId,
+      resourceUnitId: BattleSubjectTextSchema,
+      option: Schema.Literal("flurryOfBlows"),
+    }),
+    Schema.Struct({
+      tag: Schema.Literal("monkFocusOption"),
+      actorId: CombatantId,
+      resourceUnitId: BattleSubjectTextSchema,
+      option: Schema.Literal("patientDefense"),
+      mode: Schema.Literal(...MONK_FOCUS_PATIENT_DEFENSE_MODES),
+    }),
+    Schema.Struct({
+      tag: Schema.Literal("monkFocusOption"),
+      actorId: CombatantId,
+      resourceUnitId: BattleSubjectTextSchema,
+      option: Schema.Literal("stepOfTheWind"),
+      mode: Schema.Literal(...MONK_FOCUS_STEP_OF_THE_WIND_MODES),
+      speedKind: Schema.Literal(...BATTLE_MOVEMENT_SPEED_KINDS),
+    }),
+  ),
+  Schema.Struct({
+    tag: Schema.Literal("monkFocusFlurryOfBlowsStrike"),
+    actorId: CombatantId,
+    resourceUnitId: BattleSubjectTextSchema,
+    attackName: BattleSubjectTextSchema,
+  }),
   Schema.Struct({
     tag: Schema.Literal("actionSpell"),
     actorId: CombatantId,
@@ -613,6 +654,14 @@ export type BonusActionStandardActionSubject = {
       readonly action: "disengage" | "hide";
     }
 );
+export type MonkFocusOptionSubject = Extract<
+  BattleSubject,
+  { readonly tag: "monkFocusOption" }
+>;
+export type MonkFocusFlurryOfBlowsStrikeSubject = Extract<
+  BattleSubject,
+  { readonly tag: "monkFocusFlurryOfBlowsStrike" }
+>;
 
 export function sameBattleSubject(
   left: BattleSubject,
@@ -690,6 +739,24 @@ function battleSubjectKey(subject: BattleSubject): string {
       subject.tag,
       subject.actorId,
       subject.action,
+      subject.attackName,
+    ]);
+  }
+  if (subject.tag === "monkFocusOption") {
+    return JSON.stringify([
+      subject.tag,
+      subject.actorId,
+      subject.resourceUnitId,
+      subject.option,
+      "mode" in subject ? subject.mode : null,
+      "speedKind" in subject ? subject.speedKind : null,
+    ]);
+  }
+  if (subject.tag === "monkFocusFlurryOfBlowsStrike") {
+    return JSON.stringify([
+      subject.tag,
+      subject.actorId,
+      subject.resourceUnitId,
       subject.attackName,
     ]);
   }

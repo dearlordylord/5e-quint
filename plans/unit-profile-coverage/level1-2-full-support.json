@@ -1879,7 +1879,7 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS: Execute Flurry of Blows, Patient Defense, and Step of the Wind option modes, including Bonus Action economy, Focus Point spending where RAW requires it, Dodge and jump-distance effects, and shared Focus Point spending for later Focus spenders instead of synthetic per-feature pools. Owner: battle-runtime plus character-battle-runtime resource handoff. Required output: Supported runtime profile and owner evidence for Monk's Focus option execution and a single shared Focus Point resource consumed by Focus-spending Monk features.",
+      "reason": "L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME: Execute Step of the Wind's doubled jump distance through an ordinary Long Jump and High Jump movement witness boundary, using the existing movement budget and caller-supplied legal landing/table-spatial facts rather than storing an inert Monk-only active effect. Owner: battle-runtime shared jump movement witness boundary plus promoted Quint parity. Required output: Supported runtime owner evidence, focused tests, and promoted Quint/runtime parity for doubled Long Jump and High Jump distance under Step of the Wind without duplicating Strength, Speed, or table-spatial landing state.",
       "sourceRecordPath": "packages/surface/content/monk_monks_focus.json",
       "sourceRows": [
         {
@@ -2843,14 +2843,14 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 484,
-      "percent": "87.1%",
+      "numerator": 485,
+      "percent": "87.2%",
       "rowsByStatus": {
-        "accepted": 348,
+        "accepted": 349,
         "accepted-no-battle-effect": 136,
         "battle-runtime-required": 61,
         "owner-evidence-required": 3,
-        "partial-battle-runtime": 8
+        "partial-battle-runtime": 7
       }
     },
     "rulesKernelCoveredProfileJoin": {

@@ -27,15 +27,15 @@ This is the default `%` for level-1 readiness questions. A row counts only when 
 
 This is the default `%` for level-1 plus level-2 readiness questions. It uses the same acceptance rules as the level-1 metric, but includes level-2 class-feature rows and level-2 spell-list pressure.
 
-- Accepted: 484/556 (87.1%)
+- Accepted: 485/556 (87.2%)
 
 #### Level 1-2 Battle Readiness by Status
 
-- accepted: 348
+- accepted: 349
 - accepted-no-battle-effect: 136
 - battle-runtime-required: 61
 - owner-evidence-required: 3
-- partial-battle-runtime: 8
+- partial-battle-runtime: 7
 
 ### Level-1 Rows by Disposition
 
@@ -334,7 +334,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Fighter Action Surge|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Fighter.md:76|
 |Fighter Tactical Mind|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Fighter.md:82|
 |Fighter level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Fighter.md:32|
-|Monk Monk's Focus|class feature||current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|partial-battle-runtime||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present; character-sheet-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Monk.md:76|
+|Monk Monk's Focus|class feature||current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|accepted|profile-subset-remaining-mechanics-closed: battle-runtime shared jump movement witness boundary plus promoted Quint parity|Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present; character-sheet-runtime: owner evidence present; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Monk.md:76|
 |Monk Unarmored Movement|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Monk.md:92|
 |Monk Uncanny Metabolism|class feature||current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-required|owner-evidence-required||Unit catalog/admission: catalog evidence; character-creation-runtime plus character-sheet-runtime; battle-runtime plus character-battle-runtime resource handoff: owner evidence required|Promote follow-up split L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME: L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS owns Retain the Uncanny Metabolism feature ref with Monk level-2 progression after the sibling Monk's Focus character-facts task owns the shared Focus Point resource, then project only Uncanny Metabolism's once-per-Long-Rest use state and source links to Focus Points and the existing Martial Arts die without duplicating either table. Required output: Owner evidence for CharacterBuild or Character Sheet retained Uncanny Metabolism feature ref, once-per-Long-Rest use state, and links to the shared Focus Point resource and existing Martial Arts die source.; L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME owns Offer the optional Uncanny Metabolism choice when the Monk rolls Initiative, recover all expended shared Focus Points, roll the Martial Arts die from the existing Monk Martial Arts source, restore Hit Points equal to Monk level plus that die roll, and spend the once-per-Long-Rest feature use. Required output: Supported runtime profile and owner evidence for Initiative-window Focus Point recovery, self-healing, and Long Rest recharge using the shared Focus Point resource and existing Martial Arts die source.|.references/srd-5.2.1/Classes/Monk.md:96|
 |Monk level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Monk.md:33|

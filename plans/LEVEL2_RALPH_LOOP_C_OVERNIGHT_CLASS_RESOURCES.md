@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Monk's Focus Battle Option Execution"
     },
     {
@@ -60,6 +60,12 @@
     },
     {
       "number": 10,
+      "id": "L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Monk Step of the Wind Jump Distance Runtime"
+    },
+    {
+      "number": 11,
       "id": "L12G-RECURSIVE-TAIL-LOOP-C",
       "status": "blocked",
       "title": "LOOP-C Recursive Next-Batch Planning Tail"
@@ -70,7 +76,7 @@
 
 This is a runnable overnight Ralph plan split out of the stale monolithic A plan and the current level-1/2 strict frontier. It owns Monk level-2 Focus and Uncanny Metabolism resource/runtime tasks plus Sorcerer Font of Magic and Metamagic resource/runtime tasks.
 
-Preplanned load: 9 real atomic implementation/planning tasks plus one recursive planning tail. The recursive tail is a fallback only; ordinary `blocked` tasks already auto-unblock when their same-plan dependencies are marked `done`.
+Preplanned load: 10 real atomic implementation/planning tasks plus one recursive planning tail. The recursive tail is a fallback only; ordinary `blocked` tasks already auto-unblock when their same-plan dependencies are marked `done`.
 
 ## Worktree Safety Prefix
 
@@ -143,7 +149,7 @@ The final task is intentionally blocked on every real task in this plan and plac
 | # | Task | Status | Depends On | Notes |
 | ---: | --- | --- | --- | --- |
 | 1 | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS - Monk's Focus Character Facts And Resource Projection | done | completed baseline | C lane; Unit `monk_monks_focus`. |
-| 2 | L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS - Monk's Focus Battle Option Execution | ready-for-research | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS | C lane; Unit `monk_monks_focus`. |
+| 2 | L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS - Monk's Focus Battle Option Execution | done | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS | C lane; Unit `monk_monks_focus`. |
 | 3 | L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS - Monk Uncanny Metabolism Character Facts And Rest-Scoped Use-State Projection | ready-for-research | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS | C lane; Unit `monk_uncanny_metabolism`. |
 | 4 | L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME - Monk Uncanny Metabolism Initiative Recovery Runtime | blocked | L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS | C lane; Unit `monk_uncanny_metabolism`. |
 | 5 | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS - Sorcerer Font Of Magic Sorcery Point Resource Facts | ready-for-research | completed baseline | C lane; Unit `sorcerer_font_of_magic`. |
@@ -151,7 +157,8 @@ The final task is intentionally blocked on every real task in this plan and plac
 | 7 | L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS - Sorcerer Font Of Magic Sorcery Points To Spell Slot | blocked | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS | C lane; Unit `sorcerer_font_of_magic`. |
 | 8 | L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS - Sorcerer Metamagic Character Facts And Option Projection | blocked | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS | C lane; Unit `sorcerer_metamagic`. |
 | 9 | L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION - Sorcerer Metamagic Cast-Time Option Execution | blocked | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS | C lane; Unit `sorcerer_metamagic`. |
-| 10 | L12G-RECURSIVE-TAIL-LOOP-C - LOOP-C Recursive Next-Batch Planning Tail | blocked | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME, L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS, L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS, L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION | Last-resort next-batch planning safety net; auto-unblocks only after every real task in this plan is `done`. |
+| 10 | L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME - Monk Step of the Wind Jump Distance Runtime | ready-for-research | L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS | C lane; Unit `monk_monks_focus`. |
+| 11 | L12G-RECURSIVE-TAIL-LOOP-C - LOOP-C Recursive Next-Batch Planning Tail | blocked | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME, L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS, L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS, L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION, L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME | Last-resort next-batch planning safety net; auto-unblocks only after every real task in this plan is `done`. |
 
 ## Task Details
 
@@ -198,7 +205,7 @@ Acceptance:
 
 ### Task 2 - L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS - Monk's Focus Battle Option Execution
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `monk_monks_focus`.
 Origin: Original backlog task 80.
@@ -524,13 +531,55 @@ Acceptance:
 - reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
 - battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
 
-### Task 10 - L12G-RECURSIVE-TAIL-LOOP-C - LOOP-C Recursive Next-Batch Planning Tail
+### Task 10 - L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME - Monk Step of the Wind Jump Distance Runtime
+
+Status: `ready-for-research`
+
+Unit: `monk_monks_focus`.
+Origin: Split residual from Original backlog task 80.
+Dependencies: L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS.
+
+Pre-researched scope:
+
+- Execute Step of the Wind's doubled jump distance through an ordinary Long Jump and High Jump movement witness boundary, using the existing movement budget and caller-supplied legal landing/table-spatial facts rather than storing an inert Monk-only active effect.
+
+Inputs:
+
+- `plans/LEVEL2_RALPH_WRAPUP_BACKLOG.md` when this task has an archived backlog section;
+- `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md` when this task appears in the gate;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/UNIT_REPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`, especially `Classes/Monk.md`, jump rules, and action/movement rules;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface Monk's Focus `jumpDistanceMultiplier` facts, promoted Jump movement replacement/witness code, Unit claims, owner evidence, and focused tests for `monk_monks_focus`.
+
+Outputs:
+
+- satisfy the output contract from Original backlog task 80 for the remaining Step of the Wind jump-distance clause;
+- leave `monk_monks_focus` supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- update only the owner files required by the task;
+- regenerate coverage artifacts.
+
+Acceptance:
+
+- RAW and ubiquitous-language checks are performed before modeling;
+- doubled Long Jump and High Jump distance is consumed through the shared movement witness boundary without duplicating Strength, Speed, movement budget, or table-spatial landing state;
+- focused package tests cover the owner boundary touched by the task;
+- package typecheck is run for touched packages when dependencies are available;
+- `pnpm unit-profile-coverage:check --write` and `pnpm unit-profile-coverage:check` are run;
+- `git diff --check` passes;
+- reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
+- battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
+
+### Task 11 - L12G-RECURSIVE-TAIL-LOOP-C - LOOP-C Recursive Next-Batch Planning Tail
 
 Status: `blocked`
 
 Unit: `level1_2_frontier`.
 Origin: Safety-net planning task for when this plan has no earlier runnable implementation tasks.
-Dependencies: L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME, L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS, L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS, L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION.
+Dependencies: L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME, L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS, L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS, L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION, L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME.
 
 Pre-researched scope:
 

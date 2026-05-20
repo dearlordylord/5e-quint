@@ -35,6 +35,12 @@ export type RuntimeActionResource =
       readonly sourceOwnerId: CreatureId;
       readonly sourceUnitId: UnitRecord["id"];
       readonly restriction: ActionRestriction;
+    }
+  | {
+      readonly kind: "action";
+      readonly source: "monkFocusFlurryOfBlows";
+      readonly sourceOwnerId: CreatureId;
+      readonly sourceUnitId: UnitRecord["id"];
     };
 
 export type ActionEconomyState = {
@@ -149,13 +155,25 @@ export function actionRestrictionAllows(
   );
 }
 
-function actionResourceAllows(
+export function actionResourceAllows(
   resource: RuntimeActionResource,
   action: StandardActionKind,
 ): boolean {
+  if (resource.source === "monkFocusFlurryOfBlows") {
+    return false;
+  }
   return (
     resource.source === "turn" ||
     actionRestrictionAllows(resource.restriction, action)
+  );
+}
+
+export function unarmedStrikeActionResourceAllows(
+  resource: RuntimeActionResource,
+): boolean {
+  return (
+    resource.source === "monkFocusFlurryOfBlows" ||
+    actionResourceAllows(resource, "attack")
   );
 }
 
@@ -166,6 +184,18 @@ function compatibleActionResourceIndex(
   const compatible = resources
     .map((resource, index) => ({ resource, index }))
     .filter(({ resource }) => actionResourceAllows(resource, action));
+  const restricted = compatible.find(
+    ({ resource }) => resource.source !== "turn",
+  );
+  return (restricted ?? compatible[0])?.index ?? null;
+}
+
+function compatibleUnarmedStrikeActionResourceIndex(
+  resources: ReadonlyArray<RuntimeActionResource>,
+): number | null {
+  const compatible = resources
+    .map((resource, index) => ({ resource, index }))
+    .filter(({ resource }) => unarmedStrikeActionResourceAllows(resource));
   const restricted = compatible.find(
     ({ resource }) => resource.source !== "turn",
   );
@@ -189,6 +219,14 @@ export function canSpendAction(
   action: StandardActionKind,
 ): boolean {
   return compatibleActionResourceIndex(state.actionResources, action) !== null;
+}
+
+export function canSpendUnarmedStrikeActionResource(
+  state: ActionEconomyState,
+): boolean {
+  return (
+    compatibleUnarmedStrikeActionResourceIndex(state.actionResources) !== null
+  );
 }
 
 export function canSpendBonusAction(state: ActionEconomyState): boolean {
@@ -220,6 +258,24 @@ export function spendAction<T extends ActionEconomyState>(
   // TODO: If multiple compatible action resources are available and spending
   // one versus another can change later legality, expose resource choice as a
   // runtime hole instead of choosing deterministically here.
+  return Either.right({
+    ...state,
+    actionResources: state.actionResources.filter(
+      (_, index) => index !== actionResourceIndex,
+    ),
+  });
+}
+
+export function spendUnarmedStrikeActionResource<T extends ActionEconomyState>(
+  state: T,
+): Either.Either<T, ActionEconomySpendError> {
+  const actionResourceIndex = compatibleUnarmedStrikeActionResourceIndex(
+    state.actionResources,
+  );
+  if (actionResourceIndex === null) {
+    return Either.left("no action resource available");
+  }
+
   return Either.right({
     ...state,
     actionResources: state.actionResources.filter(

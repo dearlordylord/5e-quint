@@ -38,8 +38,10 @@ type MonkFocusFeature = ClassFeatureRecord & {
   };
 };
 
-type MonkFocusInitialOption =
-  MonkFocusFeature["mechanics"]["optionSet"]["initialOptions"][number];
+type MonkFocusInitialOption = Pick<
+  MonkFocusFeature["mechanics"]["optionSet"]["initialOptions"][number],
+  "id" | "displayName"
+>;
 
 export type CharacterBuildMonksFocusFacts = {
   readonly unitId: typeof MONK_MONKS_FOCUS_UNIT_ID;
@@ -107,7 +109,12 @@ export function characterBuildMonksFocusFacts(input: {
       shortRestRefillsAll: true,
       longRestRefillsAll: true,
     },
-    initialOptions: featureUnit.value.mechanics.optionSet.initialOptions,
+    initialOptions: featureUnit.value.mechanics.optionSet.initialOptions.map(
+      (option) => ({
+        id: option.id,
+        displayName: option.displayName,
+      }),
+    ),
     saveDc: {
       base: featureUnit.value.mechanics.effectSaveDc.base,
       ability: featureUnit.value.mechanics.effectSaveDc.ability,

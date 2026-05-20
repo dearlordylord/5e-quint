@@ -516,6 +516,37 @@ export const ClassFeatureResourceContainerMechanicsSchema = Schema.Struct({
       Schema.Struct({
         id: NonEmptyStringSchema,
         displayName: NonEmptyStringSchema,
+        battleExecution: exactOptional(
+          Schema.Union(
+            Schema.Struct({
+              kind: Schema.Literal("bonus_action_unarmed_strike_sequence"),
+              focusPointCost: Schema.Literal(1),
+              strikeCount: Schema.Literal(2),
+            }),
+            Schema.Struct({
+              kind: Schema.Literal("bonus_action_defensive_modes"),
+              freeAction: Schema.Literal("disengage"),
+              focusPointCost: Schema.Literal(1),
+              focusActions: Schema.Tuple(
+                Schema.Literal("disengage"),
+                Schema.Literal("dodge"),
+              ),
+            }),
+            Schema.Struct({
+              kind: Schema.Literal("bonus_action_mobility_modes"),
+              freeAction: Schema.Literal("dash"),
+              focusPointCost: Schema.Literal(1),
+              focusActions: Schema.Tuple(
+                Schema.Literal("disengage"),
+                Schema.Literal("dash"),
+              ),
+              jumpDistanceMultiplier: Schema.Struct({
+                multiplier: Schema.Literal(2),
+                expires: Schema.Literal("end_of_turn"),
+              }),
+            }),
+          ),
+        ),
       }),
     ),
   }),

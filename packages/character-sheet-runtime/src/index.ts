@@ -158,6 +158,7 @@ const CHARACTER_SHEET_USE_COUNT_RESOURCE_UNIT_IDS = [
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 type CharacterSheetUseCountResourceUnitId =
   (typeof CHARACTER_SHEET_USE_COUNT_RESOURCE_UNIT_IDS)[number];
+export type { CharacterSheetUseCountResourceUnitId };
 const DEFAULT_SRD_STAT_BLOCK_CATALOG_RESULT = buildStatBlockCatalog({
   collections: [srdStatBlockCollection],
 });
@@ -2765,7 +2766,7 @@ function isRestResetCadence(
   );
 }
 
-function isCharacterSheetUseCountResourceUnitId(
+export function isCharacterSheetUseCountResourceUnitId(
   unitId: UnitRecord["id"],
 ): unitId is CharacterSheetUseCountResourceUnitId {
   return CHARACTER_SHEET_USE_COUNT_RESOURCE_UNIT_IDS.some(

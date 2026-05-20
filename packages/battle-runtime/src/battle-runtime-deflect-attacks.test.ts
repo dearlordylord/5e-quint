@@ -211,7 +211,7 @@ describe("battle runtime: Deflect Attacks", () => {
     }
     expect(
       monk.origin.resources.find(
-        (resource) => resource.unit.id === "monk_deflect_attacks",
+        (resource) => resource.unit.id === "monk_monks_focus",
       )?.usesRemaining,
     ).toBe(3);
   });
