@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 391,
-      "numerator": 178,
-      "percent": "45.5%"
+      "denominator": 392,
+      "numerator": 179,
+      "percent": "45.7%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 463,
-      "numerator": 210,
-      "percent": "45.4%"
+      "denominator": 464,
+      "numerator": 211,
+      "percent": "45.5%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 211
+      "value": 212
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 129,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 211,
-      "numerator": 211,
+      "denominator": 212,
+      "numerator": 212,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "81.4%"
     },
     "supportedProfileCoverage": {
-      "denominator": 179,
+      "denominator": 180,
       "numerator": 129,
-      "percent": "72.1%"
+      "percent": "71.7%"
     }
   },
   "metricSemantics": [
@@ -12717,6 +12717,29 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/arcanists_magic_aura.json",
       "unitId": "arcanists_magic_aura"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table/session omen adjudication owner",
+          "reason": "Future-outcome adjudication, GM-chosen omen selection, changed-circumstances handling, and repeated-casting no-answer resolution are table/session knowledge facts outside promoted battle runtime."
+        },
+        "reason": "Augury is authored and installed as an SRD Surface Spell Definition with 1-minute or Ritual casting, Self range, V/S/M 25+ GP divinatory-token component, Instantaneous duration, a planned course-of-action window within 30 minutes, the closed GM-chosen Weal/Woe/Weal-and-woe/Indifference omen table, the changed-circumstances limitation, and the cumulative 25 percent no-answer chance for each casting after the first before a Long Rest. Task 7 claims no promoted battle-runtime profile because future-outcome adjudication, omen selection, changed circumstances, and repeated-casting no-answer resolution are runtime-detached table/session knowledge facts outside promoted battle Unit profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/augury.json",
+      "unitId": "augury"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

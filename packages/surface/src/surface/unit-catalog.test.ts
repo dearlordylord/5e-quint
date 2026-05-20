@@ -112,6 +112,7 @@ const requiredFirstVerticalUnitIds = [
   "light",
   "animal_messenger",
   "arcanists_magic_aura",
+  "augury",
   "ray_of_frost",
   "detect_evil_and_good",
   "detect_magic",
@@ -1787,6 +1788,68 @@ describe("SRD Unit catalog boundary", () => {
     expect(magicAura.description).toContain(
       "spells and other magical effects treat the target",
     );
+  });
+
+  test("decodes Augury as a GM-chosen divination omen table", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const augury = result.catalog.requireUnit("augury");
+
+    expect(augury.kind).toBe("spell");
+    if (augury.kind !== "spell") return;
+    expect(augury.mechanics.family).toBe("activation");
+    if (augury.mechanics.family !== "activation") return;
+
+    expect(augury.mechanics).toMatchObject({
+      level: 2,
+      school: "divination",
+      castingTime: { kind: "minutes", amount: 1, ritual: true },
+      range: { kind: "self" },
+      components: {
+        v: true,
+        s: true,
+        m: "specially marked sticks, bones, cards, or other divinatory tokens worth 25+ GP",
+        materialCostGp: 25,
+      },
+      duration: { kind: "instantaneous" },
+    });
+    expect(augury.mechanics.phases).toEqual([
+      {
+        kind: "direct",
+        attachment: { kind: "self" },
+        effects: [
+          {
+            kind: "divination_omen",
+            source: "otherworldly_entity",
+            subject: {
+              kind: "planned_course_of_action",
+              plannedWithinMinutes: 30,
+            },
+            adjudication: {
+              kind: "gm_chosen_omen_table",
+              table: {
+                good: "weal",
+                bad: "woe",
+                goodAndBad: "weal_and_woe",
+                neitherGoodNorBad: "indifference",
+              },
+            },
+            changedCircumstances: "not_accounted_for",
+            repeatCasting: {
+              resetBy: "long_rest",
+              noAnswerChance: {
+                kind: "cumulative_percent_per_cast_after_first",
+                percent: 25,
+                result: "no_answer",
+              },
+            },
+          },
+        ],
+      },
+    ]);
+    expect(augury.description).toContain("cumulative 25 percent chance");
   });
 
   test("decodes Locate Animals or Plants as ritual nearest-kind location disclosure", () => {

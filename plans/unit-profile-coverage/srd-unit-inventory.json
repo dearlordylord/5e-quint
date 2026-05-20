@@ -182,12 +182,12 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 482,
-      "percent": "86.7%",
+      "numerator": 485,
+      "percent": "87.2%",
       "rowsByStatus": {
         "accepted": 355,
-        "accepted-no-battle-effect": 127,
-        "battle-runtime-required": 64,
+        "accepted-no-battle-effect": 130,
+        "battle-runtime-required": 61,
         "partial-battle-runtime": 7,
         "owner-evidence-required": 3
       }
@@ -205,15 +205,15 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 367,
       "non-runtime": 24,
-      "catalog-only/dead-for-now": 98,
-      "missing-authored-record": 25,
+      "catalog-only/dead-for-now": 101,
+      "missing-authored-record": 22,
       "catalog-installed-owner-evidence-required": 21,
       "catalog-authored-executable-follow-up": 21
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 206,
-      "catalog-only/dead-for-now": 98,
-      "missing-authored-record": 25,
+      "catalog-only/dead-for-now": 101,
+      "missing-authored-record": 22,
       "catalog-installed-owner-evidence-required": 17,
       "catalog-authored-executable-follow-up": 21
     },
@@ -8618,19 +8618,39 @@
       "detail": "Augury (Divination; R, M)",
       "candidateUnitId": "augury",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "augury",
+        "sourceRecordPath": "packages/surface/content/augury.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "augury"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached table/session omen adjudication owner",
+        "reason": "Future-outcome adjudication, GM-chosen omen selection, changed-circumstances handling, and repeated-casting no-answer resolution are table/session knowledge facts outside promoted battle runtime."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit augury is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached table/session omen adjudication owner",
+          "evidence": "Future-outcome adjudication, GM-chosen omen selection, changed-circumstances handling, and repeated-casting no-answer resolution are table/session knowledge facts outside promoted battle runtime.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Future-outcome adjudication, GM-chosen omen selection, changed-circumstances handling, and repeated-casting no-answer resolution are table/session knowledge facts outside promoted battle runtime.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_blindness_deafness",
@@ -11314,19 +11334,39 @@
       "detail": "Augury (Divination; R, M)",
       "candidateUnitId": "augury",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "augury",
+        "sourceRecordPath": "packages/surface/content/augury.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "augury"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached table/session omen adjudication owner",
+        "reason": "Future-outcome adjudication, GM-chosen omen selection, changed-circumstances handling, and repeated-casting no-answer resolution are table/session knowledge facts outside promoted battle runtime."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit augury is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached table/session omen adjudication owner",
+          "evidence": "Future-outcome adjudication, GM-chosen omen selection, changed-circumstances handling, and repeated-casting no-answer resolution are table/session knowledge facts outside promoted battle runtime.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Future-outcome adjudication, GM-chosen omen selection, changed-circumstances handling, and repeated-casting no-answer resolution are table/session knowledge facts outside promoted battle runtime.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_barkskin",
@@ -25762,19 +25802,39 @@
       "detail": "Augury (Divination; R, M)",
       "candidateUnitId": "augury",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "augury",
+        "sourceRecordPath": "packages/surface/content/augury.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "augury"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached table/session omen adjudication owner",
+        "reason": "Future-outcome adjudication, GM-chosen omen selection, changed-circumstances handling, and repeated-casting no-answer resolution are table/session knowledge facts outside promoted battle runtime."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit augury is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached table/session omen adjudication owner",
+          "evidence": "Future-outcome adjudication, GM-chosen omen selection, changed-circumstances handling, and repeated-casting no-answer resolution are table/session knowledge facts outside promoted battle runtime.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Future-outcome adjudication, GM-chosen omen selection, changed-circumstances handling, and repeated-casting no-answer resolution are table/session knowledge facts outside promoted battle runtime.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_blindness_deafness",

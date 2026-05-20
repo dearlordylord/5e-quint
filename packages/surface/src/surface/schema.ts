@@ -52,6 +52,7 @@ export {
   CreatedObjectDurabilitySchema,
   DcSourceSchema,
   DamageTypeRefSchema,
+  DivinationOmenEffectSchema,
   DurationEndTriggerSchema,
   DurationSchema,
   EffectAtomSchema,

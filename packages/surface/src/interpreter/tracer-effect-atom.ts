@@ -204,6 +204,7 @@ export function traceEffectAtom(
     case "magical_identity_mask":
     case "locate_kind":
     case "object_location_sense":
+    case "divination_omen":
     case "assign_courier_task":
     case "negate_triggering_spell":
     case "reflect_triggering_spell":

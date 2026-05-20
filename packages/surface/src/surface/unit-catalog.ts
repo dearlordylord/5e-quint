@@ -7,6 +7,7 @@ import aidInput from "../../content/aid.json";
 import animalFriendshipInput from "../../content/animal_friendship.json";
 import animalMessengerInput from "../../content/animal_messenger.json";
 import arcanistsMagicAuraInput from "../../content/arcanists_magic_aura.json";
+import auguryInput from "../../content/augury.json";
 import backgroundSoldierInput from "../../content/background_soldier.json";
 import bardBardicInspirationInput from "../../content/bard_bardic_inspiration.json";
 import bardCuttingWordsInput from "../../content/bard_cutting_words.json";
@@ -424,6 +425,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     animalFriendshipInput,
     animalMessengerInput,
     arcanistsMagicAuraInput,
+    auguryInput,
     barkskinInput,
     blindnessDeafnessInput,
     baneInput,

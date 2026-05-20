@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import animalMessengerInput from "../../content/animal_messenger.json";
 import arcanistsMagicAuraInput from "../../content/arcanists_magic_aura.json";
+import auguryInput from "../../content/augury.json";
 import classFighterInput from "../../content/class_fighter.json";
 import dragonsBreathInput from "../../content/dragons_breath.json";
 import locateAnimalsOrPlantsInput from "../../content/locate_animals_or_plants.json";
@@ -206,6 +207,28 @@ describe("Surface trace interpreter", () => {
           label: expect.stringContaining(
             "permanent after 30 daily casts on same_target",
           ),
+        }),
+      ]),
+    );
+  });
+
+  test("renders Augury as a GM-chosen divination omen table", () => {
+    const trace = traceUnit(decodeUnitRecordSync(auguryInput));
+
+    expect(trace.nodes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          atomKind: "divination_omen",
+          label: [
+            "divination_omen",
+            "source: otherworldly_entity",
+            "subject: planned_course_of_action within 30 minutes",
+            "adjudication: gm_chosen_omen_table",
+            "omens: weal=good, woe=bad, weal_and_woe=good_and_bad, indifference=neither_good_nor_bad",
+            "changed circumstances: not_accounted_for",
+            "repeat casting: 25% cumulative_percent_per_cast_after_first until long_rest",
+            "repeat result: no_answer",
+          ].join("\n"),
         }),
       ]),
     );

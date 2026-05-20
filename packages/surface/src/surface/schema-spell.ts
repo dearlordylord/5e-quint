@@ -87,6 +87,33 @@ type ObjectLocationSenseSearchModes = Schema.Schema.Type<
   typeof ObjectLocationSenseSearchModesSchema
 >;
 
+export const DivinationOmenEffectSchema = strictStruct({
+  kind: Schema.Literal("divination_omen"),
+  source: Schema.Literal("otherworldly_entity"),
+  subject: strictStruct({
+    kind: Schema.Literal("planned_course_of_action"),
+    plannedWithinMinutes: Schema.Literal(30),
+  }),
+  adjudication: strictStruct({
+    kind: Schema.Literal("gm_chosen_omen_table"),
+    table: strictStruct({
+      good: Schema.Literal("weal"),
+      bad: Schema.Literal("woe"),
+      goodAndBad: Schema.Literal("weal_and_woe"),
+      neitherGoodNorBad: Schema.Literal("indifference"),
+    }),
+  }),
+  changedCircumstances: Schema.Literal("not_accounted_for"),
+  repeatCasting: strictStruct({
+    resetBy: Schema.Literal("long_rest"),
+    noAnswerChance: strictStruct({
+      kind: Schema.Literal("cumulative_percent_per_cast_after_first"),
+      percent: Schema.Literal(25),
+      result: Schema.Literal("no_answer"),
+    }),
+  }),
+});
+
 export const LinearPerLevelNumberSchema = Schema.Struct({
   kind: Schema.Literal("linear_per_level"),
   axis: LevelAxisSchema,
@@ -940,6 +967,7 @@ type EffectAtom =
       readonly result: "direction_to_location_and_movement";
       readonly blockedBy: "any_thickness_of_lead_direct_path";
     }
+  | Schema.Schema.Type<typeof DivinationOmenEffectSchema>
   | CourierTaskEffect
   | {
       readonly kind: "grant_speed";
@@ -2853,6 +2881,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         result: Schema.Literal("direction_to_location_and_movement"),
         blockedBy: Schema.Literal("any_thickness_of_lead_direct_path"),
       }),
+      DivinationOmenEffectSchema,
       CourierTaskEffectSchema,
       Schema.Struct({
         kind: Schema.Literal("grant_speed"),

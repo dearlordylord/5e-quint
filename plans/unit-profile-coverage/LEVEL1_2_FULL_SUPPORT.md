@@ -8,9 +8,9 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 
 | Metric | Covered |
 | --- | ---: |
-| Strict runtime/profile support | 106/163 (65%) |
-| Strict target closure | 162/163 (99.4%) |
-| Product readiness | 482/556 (86.7%) |
+| Strict runtime/profile support | 106/164 (64.6%) |
+| Strict target closure | 163/164 (99.4%) |
+| Product readiness | 485/556 (87.2%) |
 | Rules-kernel profile join | 17/76 (22.4%) |
 | Rules-kernel covered profile join | 12/76 (15.8%) |
 | Supported Unit rules-kernel chain | 31/106 (29.2%) |
@@ -21,10 +21,10 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | --- | ---: |
 | Candidate Unit ids before exclusions | 197 |
 | Companion-worktree exclusions | 1 |
-| SRD pressure with no Unit matrix row | 21 |
+| SRD pressure with no Unit matrix row | 20 |
 | Non-executable class containers | 12 |
-| Strict executable denominator | 163 |
-| Non-supported frontier | 57 |
+| Strict executable denominator | 164 |
+| Non-supported frontier | 58 |
 
 ## Status Groups
 
@@ -32,7 +32,7 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | --- | ---: | --- |
 | supported-profile | 106 | `acid_splash`, `aid`, `animal_friendship`, `bane`, `barbarian_danger_sense`, `barbarian_rage`, `barbarian_reckless_attack`, `barbarian_unarmored_defense`, `bard_bardic_inspiration`, `bard_jack_of_all_trades`, `barkskin`, `bless`, `blindness_deafness`, `blur`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_channel_divinity`, `cleric_divine_order`, `color_spray`, `command`, `cure_wounds`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `druid_primal_order`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `faerie_fire`, `false_life`, `feather_fall`, `fighter_action_surge`, `fighter_fighting_style`, `fighter_second_wind`, `fighter_tactical_mind`, `fire_bolt`, `flaming_sphere`, `fog_cloud`, `grease`, `guidance`, `guiding_bolt`, `healing_word`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `hold_person`, `hunters_mark`, `ice_knife`, `inflict_wounds`, `invisibility`, `jump`, `lesser_restoration`, `light`, `longstrider`, `mage_armor`, `magic_missile`, `mirror_image`, `misty_step`, `monk_martial_arts`, `monk_unarmored_defense`, `monk_unarmored_movement`, `paladin_lay_on_hands`, `paladin_paladins_smite`, `paladin_weapon_mastery`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `protection_from_poison`, `ranger_deft_explorer`, `ranger_weapon_mastery`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_cunning_action`, `rogue_expertise`, `rogue_sneak_attack`, `rogue_weapon_mastery`, `sacred_flame`, `sanctuary`, `scorching_ray`, `searing_smite`, `shatter`, `shield`, `shield_of_faith`, `shillelagh`, `shining_smite`, `shocking_grasp`, `sleep`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `spider_climb`, `starry_wisp`, `thunderwave`, `true_strike`, `vicious_mockery`, `warding_bond`, `warlock_eldritch_invocations`, `warlock_magical_cunning`, `wizard_arcane_recovery`, `wizard_ritual_adept`, `wizard_scholar` |
 | blocked-follow-up-split | 24 | `acid_arrow`, `alter_self`, `continual_flame`, `dragons_breath`, `druid_wild_shape`, `enhance_ability`, `enlarge_reduce`, `enthrall`, `flame_blade`, `gust_of_wind`, `heat_metal`, `levitate`, `magic_weapon`, `monk_monks_focus`, `monk_uncanny_metabolism`, `moonbeam`, `prayer_of_healing`, `ray_of_enfeeblement`, `see_invisibility`, `sorcerer_font_of_magic`, `sorcerer_metamagic`, `spike_growth`, `spiritual_weapon`, `web` |
-| closed-runtime-detached-table-adjudication | 23 | `alarm`, `animal_messenger`, `arcane_lock`, `arcanists_magic_aura`, `charm_person`, `comprehend_languages`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `find_traps`, `gentle_repose`, `identify`, `knock`, `locate_animals_or_plants`, `locate_object`, `magic_mouth`, `mind_spike`, `minor_illusion`, `pass_without_trace`, `rope_trick`, `silent_image`, `speak_with_animals`, `thaumaturgy` |
+| closed-runtime-detached-table-adjudication | 24 | `alarm`, `animal_messenger`, `arcane_lock`, `arcanists_magic_aura`, `augury`, `charm_person`, `comprehend_languages`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `find_traps`, `gentle_repose`, `identify`, `knock`, `locate_animals_or_plants`, `locate_object`, `magic_mouth`, `mind_spike`, `minor_illusion`, `pass_without_trace`, `rope_trick`, `silent_image`, `speak_with_animals`, `thaumaturgy` |
 | closed-later-level-only | 6 | `barbarian_weapon_mastery`, `bard_expertise`, `fighter_weapon_mastery`, `paladin_fighting_style`, `ranger_favored_enemy`, `ranger_fighting_style` |
 | closed-character-fact-and-runtime-detached-split | 2 | `druid_druidic`, `rogue_thieves_cant` |
 | closed-companion-control-boundary | 1 | `druid_wild_companion` |
@@ -136,6 +136,7 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `animal_messenger` | closed-runtime-detached-table-adjudication | unsupported-profile | installed | outside-runtime-presentation-exploration | Route choice, travel progress, recipient matching, arrival and delivery success, message playback, message loss, and return travel are table/exploration facts outside promoted battle runtime. |
 | `arcane_lock` | closed-runtime-detached-table-adjudication | unsupported-profile | not-in-unit-catalog | outside-runtime-presentation-exploration | Object lock state, designated opener and passcode/password handling, the one-minute password unlock window, nonmagical-unlock prevention, magic-suppression interaction for the object-attached lock, and any forced-entry Difficulty Class adjudication are object/table facts outside promoted battle runtime; local SRD 5.2.1 Arcane Lock does not define a forced-entry DC mechanic. |
 | `arcanists_magic_aura` | closed-runtime-detached-table-adjudication | unsupported-profile | installed | social-knowledge-effect | Magic Aura changes how spells and magical effects interpret a target's magical identity; promoted battle runtime has no generic owner for magical-aura deception or spell/effect effective Creature Type override state, so detection and identification consequences remain table/knowledge adjudication. |
+| `augury` | closed-runtime-detached-table-adjudication | unsupported-profile | installed | outside-runtime-presentation-exploration | Future-outcome adjudication, GM-chosen omen selection, changed-circumstances handling, and repeated-casting no-answer resolution are table/session knowledge facts outside promoted battle runtime. |
 | `barbarian_weapon_mastery` | closed-later-level-only | profile-subset-supported | installed | later-level-only | The remaining Barbarian Weapon Mastery selected-weapon count increases occur only after level 1. |
 | `bard_expertise` | closed-later-level-only | profile-subset-supported | installed | later-level-only | The remaining Bard Expertise selected-skill count increase occurs only at Bard level 9, outside the level 1-2 support lane. |
 | `charm_person` | closed-runtime-detached-table-adjudication | profile-subset-supported | installed | social-knowledge-effect | Friendly disposition, the Charmed condition's Social Advantage, social interaction adjudication, and target knowledge when the spell ends are social/knowledge facts outside promoted battle runtime state. |
@@ -217,7 +218,6 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 
 | Unit | Source rows | Reason | Adopted decision artifact | Concepts |
 | --- | ---: | --- | --- | --- |
-| `augury` | 3 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Cleric spell list Augury; Druid spell list Augury; Wizard spell list Augury |
 | `calm_emotions` | 2 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Bard spell list Calm Emotions; Cleric spell list Calm Emotions |
 | `create_or_destroy_water` | 2 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/create_or_destroy_water.md` | Cleric spell list Create or Destroy Water; Druid spell list Create or Destroy Water |
 | `darkness` | 3 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Sorcerer spell list Darkness; Warlock spell list Darkness; Wizard spell list Darkness |
