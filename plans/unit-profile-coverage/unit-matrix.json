@@ -9473,11 +9473,17 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused Character Creation tests cover Sorcerer level gains that consume the installed Metamagic class-level replacement fact, replace exactly one currently known Metamagic option with one currently unknown option while preserving known-option count, reject same-option, unknown replacement-source, and duplicate replacement or gain choices, and derive level 10 and 17 option gains from the Surface choice-count thresholds without duplicating class progression or option roster state. Cast-time Metamagic option execution remains split to L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION.",
+      "note": "Focused Character Creation tests cover Sorcerer level gains that consume the installed Metamagic class-level replacement fact, replace exactly one currently known Metamagic option with one currently unknown option while preserving known-option count, reject same-option, unknown replacement-source, and duplicate replacement or gain choices, and derive level 10 and 17 option gains from the Surface choice-count thresholds without duplicating class progression or option roster state. Cast-time Metamagic option execution remains split to the resource bridge, cast governor/Quickened, save-option, cast-property, damage-shape, and reroll follow-up tasks recorded on the sorcerer_metamagic Unit claim.",
       "profileIds": [
         "character-creation.class-feature-advancement-replacement"
       ],
       "taskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-ADVANCEMENT-REPLACEMENT"
+    },
+    {
+      "claimKind": "accepted-follow-up-split",
+      "note": "Task 10 closes the monolithic Sorcerer Metamagic cast-time execution follow-up by synchronizing the sorcerer_metamagic Unit claim and runnable Loop C plan around six executable follow-up tasks: L12G-FOLLOWUP-SORCERER-METAMAGIC-BATTLE-RESOURCE-BRIDGE, L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED, L12G-FOLLOWUP-SORCERER-METAMAGIC-SAVE-OPTIONS, L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-PROPERTY-OPTIONS, L12G-FOLLOWUP-SORCERER-METAMAGIC-DAMAGE-SHAPE-OPTIONS, and L12G-FOLLOWUP-SORCERER-METAMAGIC-REROLL-OPTIONS. No runtime profile is claimed by this closure task; the Unit remains profile-subset-supported and blocked by the executable split.",
+      "profileIds": [],
+      "taskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION"
     },
     {
       "claimKind": "completed-runtime-parity",
@@ -13007,17 +13013,72 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION",
-            "mechanic": "Cast-time Metamagic option execution: spend the shared Sorcery Point resource, enforce one-option-per-Spell-Invocation plus Empowered and Seeking exceptions, enforce Quickened level-1-plus spell turn limits, and apply Careful, Distant, Empowered, Extended, Heightened, Quickened, Seeking, Subtle, Transmuted, and Twinned spell modifications."
+            "followUpTaskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-BATTLE-RESOURCE-BRIDGE",
+            "mechanic": "Battle Sorcery Point and Metamagic option bridge: carry the existing Font of Magic point-pool expenditure and CharacterBuild selected Metamagic option facts into battle state, persist point-pool spend through Character Sheet handoff, and admit cast-time option selections by typed effectKind/stackingMode facts rather than option authored identity."
+          },
+          {
+            "followUpTaskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED",
+            "mechanic": "Metamagic cast-time governor and Quickened limits: enforce known-option selection, Sorcery Point affordability, one option per spell plus Empowered/Seeking stacking exceptions, Quickened action-to-Bonus-Action rewrite, and the current-turn level-1-plus spell prohibition."
+          },
+          {
+            "followUpTaskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-SAVE-OPTIONS",
+            "mechanic": "Careful and Heightened Spell saving throw modifiers: protect a Charisma-modifier-limited selected creature set with automatic save success and no half-damage-on-success, and give one target Disadvantage on saves against the spell."
+          },
+          {
+            "followUpTaskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-PROPERTY-OPTIONS",
+            "mechanic": "Distant, Extended, and Subtle Spell cast-property modifiers: double range only for spells with a range of at least 5 feet or make Touch range 30 feet, double eligible duration to a 24-hour cap plus Concentration save Advantage, and suppress eligible spell components while preserving consumed or priced Material components."
+          },
+          {
+            "followUpTaskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-DAMAGE-SHAPE-OPTIONS",
+            "mechanic": "Transmuted and Twinned Spell shape modifiers: substitute only Acid, Cold, Fire, Lightning, Poison, or Thunder spell damage among that closed set, and increase effective spell level by 1 only for spells whose higher-slot shape targets one additional creature."
+          },
+          {
+            "followUpTaskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-REROLL-OPTIONS",
+            "mechanic": "Empowered and Seeking Spell reroll modifiers: reroll damage dice up to Charisma modifier minimum one and reroll a missed spell attack d20, using the new rolls and preserving the options' different-Metamagic stacking exception."
           }
         ],
         "followUpTasks": [
           {
-            "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION",
-            "mechanic": "Execute known Metamagic options at spell-cast time by spending the shared Sorcery Point resource projected from Font of Magic, enforcing the one-option-per-spell rule plus Empowered and Seeking stacking exceptions, Quickened level-1-plus spell turn limits, and the option-specific spell modifications for Careful, Distant, Empowered, Extended, Heightened, Quickened, Seeking, Subtle, Transmuted, and Twinned Spell.",
-            "owner": "character-battle-runtime plus battle-runtime spell invocation hooks",
-            "requiredOutput": "Supported runtime profile and owner evidence for Metamagic option execution that consumes the shared Sorcery Point resource rather than a synthetic Metamagic-local point pool.",
-            "title": "Sorcerer Metamagic Cast-Time Option Execution"
+            "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-BATTLE-RESOURCE-BRIDGE",
+            "mechanic": "Project the existing Font of Magic Sorcery Point point-pool and selected Metamagic option facts into battle without creating a Metamagic-local pool or dispatching on option names, slugs, Unit ids, or provenance text.",
+            "owner": "character-battle-runtime plus battle-runtime character resource handoff",
+            "requiredOutput": "Character Battle and battle-runtime state can carry and spend the shared Sorcery Point point-pool, hand it back to Character Sheet resourceExpenditures, and expose known Metamagic options as typed effectKind/stackingMode/cost facts with focused tests and coverage evidence.",
+            "title": "Sorcerer Metamagic Battle Resource Bridge"
+          },
+          {
+            "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED",
+            "mechanic": "Apply known-option, Sorcery Point affordability, one-option-per-spell, Empowered/Seeking stacking, and Quickened action-cost plus level-1-plus turn-limit rules at the Spell Invocation boundary.",
+            "owner": "battle-runtime spell invocation discovery and resource spending",
+            "requiredOutput": "Profile-subset-supported or supported Unit claim with focused runtime tests and promoted Quint/runtime parity for Metamagic use admission, resource spend, one-per-spell and Empowered/Seeking stacking limits, Quickened Bonus Action casting, and the level-1-plus same-turn prohibition without claiming Sorcery Incarnate or Arcane Apotheosis feature modifiers.",
+            "title": "Sorcerer Metamagic Cast Governor And Quickened"
+          },
+          {
+            "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-SAVE-OPTIONS",
+            "mechanic": "Promote Careful Spell and Heightened Spell against supported save-for-half and save-gated spell procedures, including protected-target automatic success with no successful-save damage and one-target Disadvantage on saves against the spell.",
+            "owner": "battle-runtime saving throw spell resolution hooks",
+            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim with typed holes/fills, focused runtime tests, and promoted Quint/runtime parity for Careful and Heightened without option identity dispatch.",
+            "title": "Sorcerer Metamagic Save Options"
+          },
+          {
+            "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-PROPERTY-OPTIONS",
+            "mechanic": "Promote Distant, Extended, and Subtle Spell for supported spell procedures by rewriting range, duration, Concentration-save roll mode, and component requirements from typed spell facts and caller-supplied component/material witnesses.",
+            "owner": "battle-runtime spell invocation profile projection plus concentration and component witness boundaries",
+            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim with focused tests for Distant range changes, Extended duration and Concentration-save Advantage, and Subtle component suppression while preserving consumed or priced Material components.",
+            "title": "Sorcerer Metamagic Cast Property Options"
+          },
+          {
+            "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-DAMAGE-SHAPE-OPTIONS",
+            "mechanic": "Promote Transmuted Spell and Twinned Spell for supported spell procedures by substituting only Acid, Cold, Fire, Lightning, Poison, or Thunder damage types and increasing effective spell level by 1 only for spells whose higher-slot profile targets one additional creature.",
+            "owner": "battle-runtime spell damage profile and upcast targeting projection",
+            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim with focused runtime tests and promoted Quint/runtime parity for typed damage-type substitution and higher-slot target-count projection without duplicating spell slot state.",
+            "title": "Sorcerer Metamagic Damage Shape Options"
+          },
+          {
+            "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-REROLL-OPTIONS",
+            "mechanic": "Promote Empowered Spell and Seeking Spell rerolls after damage rolls or missed spell attacks, consuming typed reroll fills, enforcing Charisma-modifier dice limits where applicable, and using the new rolls.",
+            "owner": "battle-runtime damage-roll and spell-attack miss lifecycle",
+            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim with focused runtime tests and promoted Quint/runtime parity for post-roll damage dice rerolls and missed spell attack d20 rerolls while preserving the options' different-Metamagic stacking exception.",
+            "title": "Sorcerer Metamagic Reroll Options"
           }
         ],
         "profileIds": [

@@ -61,23 +61,59 @@
     {
       "number": 10,
       "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Sorcerer Metamagic Cast-Time Option Execution"
     },
     {
       "number": 11,
+      "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-BATTLE-RESOURCE-BRIDGE",
+      "status": "ready-for-research",
+      "title": "Sorcerer Metamagic Battle Resource Bridge"
+    },
+    {
+      "number": 12,
+      "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED",
+      "status": "blocked",
+      "title": "Sorcerer Metamagic Cast Governor And Quickened"
+    },
+    {
+      "number": 13,
+      "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-SAVE-OPTIONS",
+      "status": "blocked",
+      "title": "Sorcerer Metamagic Save Options"
+    },
+    {
+      "number": 14,
+      "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-PROPERTY-OPTIONS",
+      "status": "blocked",
+      "title": "Sorcerer Metamagic Cast Property Options"
+    },
+    {
+      "number": 15,
+      "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-DAMAGE-SHAPE-OPTIONS",
+      "status": "blocked",
+      "title": "Sorcerer Metamagic Damage Shape Options"
+    },
+    {
+      "number": 16,
+      "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-REROLL-OPTIONS",
+      "status": "blocked",
+      "title": "Sorcerer Metamagic Reroll Options"
+    },
+    {
+      "number": 17,
       "id": "L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME",
       "status": "ready-for-research",
       "title": "Monk Step of the Wind Jump Distance Runtime"
     },
     {
-      "number": 12,
+      "number": 18,
       "id": "L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE",
-      "status": "ready-for-research",
+      "status": "blocked",
       "title": "Sorcerer Font Of Magic Bonus Action And Battle Slot Source"
     },
     {
-      "number": 13,
+      "number": 19,
       "id": "L12G-RECURSIVE-TAIL-LOOP-C",
       "status": "blocked",
       "title": "LOOP-C Recursive Next-Batch Planning Tail"
@@ -88,7 +124,7 @@
 
 This is a runnable overnight Ralph plan split out of the stale monolithic A plan and the current level-1/2 strict frontier. It owns Monk level-2 Focus and Uncanny Metabolism resource/runtime tasks plus Sorcerer Font of Magic and Metamagic resource/runtime tasks.
 
-Preplanned load: 12 real atomic implementation/planning tasks plus one recursive planning tail. The recursive tail is a fallback only; ordinary `blocked` tasks already auto-unblock when their same-plan dependencies are marked `done`.
+Preplanned load: 18 real atomic implementation/planning tasks plus one recursive planning tail. The recursive tail is a fallback only; ordinary `blocked` tasks already auto-unblock when their same-plan dependencies are marked `done`.
 
 ## Worktree Safety Prefix
 
@@ -170,10 +206,16 @@ The final task is intentionally blocked on every real task in this plan and plac
 | 7 | L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS - Sorcerer Font Of Magic Sorcery Points To Spell Slot | done | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS | C lane; Unit `sorcerer_font_of_magic`. |
 | 8 | L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS - Sorcerer Metamagic Character Facts And Option Projection | done | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS | C lane; Unit `sorcerer_metamagic`. |
 | 9 | L12G-FOLLOWUP-SORCERER-METAMAGIC-ADVANCEMENT-REPLACEMENT - Sorcerer Metamagic Advancement Replacement | done | L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS | C lane; Unit `sorcerer_metamagic`. |
-| 10 | L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION - Sorcerer Metamagic Cast-Time Option Execution | ready-for-research | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-ADVANCEMENT-REPLACEMENT | C lane; Unit `sorcerer_metamagic`. |
-| 11 | L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME - Monk Step of the Wind Jump Distance Runtime | ready-for-research | L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS | C lane; Unit `monk_monks_focus`. |
-| 12 | L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE - Sorcerer Font Of Magic Bonus Action And Battle Slot Source | ready-for-research | L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS | C lane; Unit `sorcerer_font_of_magic`. |
-| 13 | L12G-RECURSIVE-TAIL-LOOP-C - LOOP-C Recursive Next-Batch Planning Tail | blocked | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME, L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS, L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS, L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-ADVANCEMENT-REPLACEMENT, L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION, L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME, L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE | Last-resort next-batch planning safety net; auto-unblocks only after every real task in this plan is `done`. |
+| 10 | L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION - Sorcerer Metamagic Cast-Time Option Execution | done | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-ADVANCEMENT-REPLACEMENT | C lane; Unit `sorcerer_metamagic`; closed as executable follow-up split. |
+| 11 | L12G-FOLLOWUP-SORCERER-METAMAGIC-BATTLE-RESOURCE-BRIDGE - Sorcerer Metamagic Battle Resource Bridge | ready-for-research | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-ADVANCEMENT-REPLACEMENT | C lane; Unit `sorcerer_metamagic`. |
+| 12 | L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED - Sorcerer Metamagic Cast Governor And Quickened | blocked | L12G-FOLLOWUP-SORCERER-METAMAGIC-BATTLE-RESOURCE-BRIDGE | C lane; Unit `sorcerer_metamagic`. |
+| 13 | L12G-FOLLOWUP-SORCERER-METAMAGIC-SAVE-OPTIONS - Sorcerer Metamagic Save Options | blocked | L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED | C lane; Unit `sorcerer_metamagic`. |
+| 14 | L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-PROPERTY-OPTIONS - Sorcerer Metamagic Cast Property Options | blocked | L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED | C lane; Unit `sorcerer_metamagic`. |
+| 15 | L12G-FOLLOWUP-SORCERER-METAMAGIC-DAMAGE-SHAPE-OPTIONS - Sorcerer Metamagic Damage Shape Options | blocked | L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED | C lane; Unit `sorcerer_metamagic`. |
+| 16 | L12G-FOLLOWUP-SORCERER-METAMAGIC-REROLL-OPTIONS - Sorcerer Metamagic Reroll Options | blocked | L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED | C lane; Unit `sorcerer_metamagic`. |
+| 17 | L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME - Monk Step of the Wind Jump Distance Runtime | ready-for-research | L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS | C lane; Unit `monk_monks_focus`. |
+| 18 | L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE - Sorcerer Font Of Magic Bonus Action And Battle Slot Source | blocked | L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-BATTLE-RESOURCE-BRIDGE | C lane; Unit `sorcerer_font_of_magic`; coordinates shared Sorcery Point battle state with Metamagic bridge. |
+| 19 | L12G-RECURSIVE-TAIL-LOOP-C - LOOP-C Recursive Next-Batch Planning Tail | blocked | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME, L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS, L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS, L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-ADVANCEMENT-REPLACEMENT, L12G-FOLLOWUP-SORCERER-METAMAGIC-BATTLE-RESOURCE-BRIDGE, L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED, L12G-FOLLOWUP-SORCERER-METAMAGIC-SAVE-OPTIONS, L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-PROPERTY-OPTIONS, L12G-FOLLOWUP-SORCERER-METAMAGIC-DAMAGE-SHAPE-OPTIONS, L12G-FOLLOWUP-SORCERER-METAMAGIC-REROLL-OPTIONS, L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME, L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE | Last-resort next-batch planning safety net; auto-unblocks only after every real task in this plan is `done`. |
 
 ## Task Details
 
@@ -551,7 +593,7 @@ Acceptance:
 
 ### Task 10 - L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION - Sorcerer Metamagic Cast-Time Option Execution
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `sorcerer_metamagic`.
 Origin: Original backlog task 87.
@@ -559,7 +601,9 @@ Dependencies: L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS, L12G-FOLLOWUP-SORCERER
 
 Pre-researched scope:
 
-- Execute character-selected Metamagic options at Spell Invocation time, enforcing Sorcery Point spend, one-option-per-Spell-Invocation plus RAW exceptions, Quickened limits, and option-specific modifications. Runtime execution must dispatch on typed option facts/procedure shapes, not option name, slug, unit id, or provenance text.
+- Evaluated the monolithic Metamagic cast-time execution task against existing Font of Magic point-pool ownership, CharacterBuild selected-option facts, Character Battle handoff, and battle-runtime Spell Invocation lifecycle owners.
+- Closed this task as a precise executable split: the remaining runtime work is represented by the six smaller same-plan follow-ups below, each owning one resource, admission, or spell-lifecycle slice.
+- No runtime behavior is promoted by this task; production execution must still dispatch on typed option facts/procedure shapes, not option name, slug, Unit id, or provenance text.
 
 Inputs:
 
@@ -575,22 +619,235 @@ Inputs:
 
 Outputs:
 
-- satisfy the output contract from Original backlog task 87.
-- leave `sorcerer_metamagic` supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- update only the owner files required by the task;
-- regenerate coverage artifacts.
+- satisfy the output contract from Original backlog task 87 by converting it into executable smaller follow-up tasks;
+- leave `sorcerer_metamagic` profile-subset-supported and precisely blocked by the synchronized follow-up split;
+- add current-task closure evidence for `L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION`;
+- regenerate coverage artifacts and synchronize this runnable plan's index, DAG, and task details.
 
 Acceptance:
 
 - RAW and ubiquitous-language checks are performed before modeling;
-- focused package tests cover the owner boundary touched by the task;
-- package typecheck is run for touched packages when dependencies are available;
+- the Unit claim, task-claim closure, generated coverage artifacts, and runnable plan all name the same six follow-up IDs;
+- no package runtime tests, typecheck, Quint, or MBT are required because this task changes only planning/coverage artifacts;
 - `pnpm unit-profile-coverage:check --write` and `pnpm unit-profile-coverage:check` are run;
 - `git diff --check` passes;
 - reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
 - battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
 
-### Task 11 - L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME - Monk Step of the Wind Jump Distance Runtime
+### Task 11 - L12G-FOLLOWUP-SORCERER-METAMAGIC-BATTLE-RESOURCE-BRIDGE - Sorcerer Metamagic Battle Resource Bridge
+
+Status: `ready-for-research`
+
+Unit: `sorcerer_metamagic`.
+Origin: Split from L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION.
+Dependencies: L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-ADVANCEMENT-REPLACEMENT.
+
+Pre-researched scope:
+
+- Project the existing Font of Magic Sorcery Point point-pool and selected Metamagic option facts into Character Battle and battle-runtime state.
+- Persist point-pool spending back through Character Sheet handoff without creating a Metamagic-local pool.
+- Expose known Metamagic options as typed `effectKind`, `stackingMode`, and cost facts rather than option authored identity.
+
+Inputs:
+
+- `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/UNIT_REPORT.md`;
+- local RAW under `.references/srd-5.2.1/Classes/Sorcerer.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Font of Magic point-pool facts, selected Metamagic CharacterBuild facts, Character Battle handoff, and battle-runtime resource state.
+
+Outputs:
+
+- Character Battle and battle-runtime state can carry and spend the shared Sorcery Point point-pool;
+- Character Sheet handoff preserves the shared point-pool expenditure;
+- known Metamagic options are exposed through typed runtime facts with focused tests and coverage evidence.
+
+Acceptance:
+
+- RAW and ubiquitous-language checks are performed before modeling;
+- no duplicate Sorcery Point state is introduced;
+- focused Character Sheet, Character Battle, and battle-runtime tests cover resource projection and handoff;
+- package typecheck is run for touched packages when dependencies are available;
+- `pnpm unit-profile-coverage:check --write` and `pnpm unit-profile-coverage:check` are run;
+- `git diff --check` passes;
+- if promoted battle-runtime state changes, update package-local Quint parity and run battle-runtime MBT under the repository scarcity protocol.
+
+### Task 12 - L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED - Sorcerer Metamagic Cast Governor And Quickened
+
+Status: `blocked`
+
+Unit: `sorcerer_metamagic`.
+Origin: Split from L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION.
+Dependencies: L12G-FOLLOWUP-SORCERER-METAMAGIC-BATTLE-RESOURCE-BRIDGE.
+
+Pre-researched scope:
+
+- Apply Metamagic use admission at the Spell Invocation boundary: known-option selection, Sorcery Point affordability, one option per spell, and Empowered/Seeking stacking exceptions.
+- Promote Quickened Spell's action-cost rewrite and current-turn level-1-plus spell prohibition.
+- Do not claim Sorcery Incarnate or Arcane Apotheosis feature modifiers in this task.
+
+Inputs:
+
+- `plans/unit-profile-coverage/unit-claims.jsonl`;
+- local RAW under `.references/srd-5.2.1/Classes/Sorcerer.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- battle-runtime Spell Invocation discovery, action-economy, and resource-spending owners from the Metamagic battle resource bridge.
+
+Outputs:
+
+- profile-subset-supported or supported Unit claim with runtime evidence for Metamagic use admission, Sorcery Point spending, stacking limits, Quickened Bonus Action casting, and the same-turn level-1-plus prohibition.
+
+Acceptance:
+
+- RAW and ubiquitous-language checks are performed before modeling;
+- runtime execution dispatches on typed Metamagic facts and Spell Invocation shape, not option identity;
+- focused runtime tests cover affordability, stacking, Quickened action cost, and same-turn spell limits;
+- package typecheck is run for touched packages when dependencies are available;
+- `pnpm unit-profile-coverage:check --write` and `pnpm unit-profile-coverage:check` are run;
+- `git diff --check` passes;
+- if promoted battle-runtime spell invocation state changes, update package-local Quint parity and run battle-runtime MBT under the repository scarcity protocol.
+
+### Task 13 - L12G-FOLLOWUP-SORCERER-METAMAGIC-SAVE-OPTIONS - Sorcerer Metamagic Save Options
+
+Status: `blocked`
+
+Unit: `sorcerer_metamagic`.
+Origin: Split from L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION.
+Dependencies: L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED.
+
+Pre-researched scope:
+
+- Promote Careful Spell and Heightened Spell against supported save-for-half and save-gated spell procedures.
+- Careful protects a Charisma-modifier-limited chosen creature set with automatic Saving Throw success and no half-damage-on-success.
+- Heightened gives one target Disadvantage on Saving Throws against the spell.
+
+Inputs:
+
+- `plans/unit-profile-coverage/unit-claims.jsonl`;
+- local RAW under `.references/srd-5.2.1/Classes/Sorcerer.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- battle-runtime Saving Throw spell resolution hooks and Metamagic cast governor facts.
+
+Outputs:
+
+- supported-profile or profile-subset-supported Unit claim with typed holes/fills, focused runtime tests, and promoted Quint/runtime parity for Careful and Heightened without option identity dispatch.
+
+Acceptance:
+
+- RAW and ubiquitous-language checks are performed before modeling;
+- the protected-target and disadvantaged-target facts are typed at the Spell Invocation boundary;
+- focused runtime tests cover automatic success, no successful-save damage, and target Disadvantage;
+- package typecheck is run for touched packages when dependencies are available;
+- `pnpm unit-profile-coverage:check --write` and `pnpm unit-profile-coverage:check` are run;
+- `git diff --check` passes;
+- if promoted battle-runtime spell invocation state changes, update package-local Quint parity and run battle-runtime MBT under the repository scarcity protocol.
+
+### Task 14 - L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-PROPERTY-OPTIONS - Sorcerer Metamagic Cast Property Options
+
+Status: `blocked`
+
+Unit: `sorcerer_metamagic`.
+Origin: Split from L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION.
+Dependencies: L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED.
+
+Pre-researched scope:
+
+- Promote Distant, Extended, and Subtle Spell for supported spell procedures.
+- Distant doubles range only for spells with a range of at least 5 feet, or makes Touch range 30 feet.
+- Extended doubles eligible duration to a 24-hour cap and grants Advantage on Concentration Saving Throws for the spell.
+- Subtle suppresses eligible spell components while preserving consumed or priced Material components.
+
+Inputs:
+
+- `plans/unit-profile-coverage/unit-claims.jsonl`;
+- local RAW under `.references/srd-5.2.1/Classes/Sorcerer.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- battle-runtime spell profile projection, Concentration save, and component/material witness boundaries.
+
+Outputs:
+
+- supported-profile or profile-subset-supported Unit claim with focused tests for Distant range changes, Extended duration and Concentration-save Advantage, and Subtle component suppression.
+
+Acceptance:
+
+- RAW and ubiquitous-language checks are performed before modeling;
+- Self and other non-Touch/non-numeric ranges are not admitted to Distant's doubling branch;
+- component suppression preserves consumed or priced Material component requirements;
+- package typecheck is run for touched packages when dependencies are available;
+- `pnpm unit-profile-coverage:check --write` and `pnpm unit-profile-coverage:check` are run;
+- `git diff --check` passes;
+- if promoted battle-runtime spell invocation state changes, update package-local Quint parity and run battle-runtime MBT under the repository scarcity protocol.
+
+### Task 15 - L12G-FOLLOWUP-SORCERER-METAMAGIC-DAMAGE-SHAPE-OPTIONS - Sorcerer Metamagic Damage Shape Options
+
+Status: `blocked`
+
+Unit: `sorcerer_metamagic`.
+Origin: Split from L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION.
+Dependencies: L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED.
+
+Pre-researched scope:
+
+- Promote Transmuted Spell and Twinned Spell for supported spell procedures.
+- Transmuted substitutes only Acid, Cold, Fire, Lightning, Poison, or Thunder spell damage among that closed set.
+- Twinned increases effective spell level by 1 only for spells whose higher-slot profile targets one additional creature.
+
+Inputs:
+
+- `plans/unit-profile-coverage/unit-claims.jsonl`;
+- local RAW under `.references/srd-5.2.1/Classes/Sorcerer.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- battle-runtime spell damage profile and upcast targeting projection.
+
+Outputs:
+
+- supported-profile or profile-subset-supported Unit claim with focused runtime tests and promoted Quint/runtime parity for typed damage-type substitution and higher-slot target-count projection without duplicating Spell Slot state.
+
+Acceptance:
+
+- RAW and ubiquitous-language checks are performed before modeling;
+- damage-type substitution and Twinned eligibility are derived from typed spell facts, not spell identity;
+- focused runtime tests cover the closed damage-type set and higher-slot one-additional-creature gate;
+- package typecheck is run for touched packages when dependencies are available;
+- `pnpm unit-profile-coverage:check --write` and `pnpm unit-profile-coverage:check` are run;
+- `git diff --check` passes;
+- if promoted battle-runtime spell invocation state changes, update package-local Quint parity and run battle-runtime MBT under the repository scarcity protocol.
+
+### Task 16 - L12G-FOLLOWUP-SORCERER-METAMAGIC-REROLL-OPTIONS - Sorcerer Metamagic Reroll Options
+
+Status: `blocked`
+
+Unit: `sorcerer_metamagic`.
+Origin: Split from L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION.
+Dependencies: L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED.
+
+Pre-researched scope:
+
+- Promote Empowered Spell and Seeking Spell rerolls after damage rolls or missed spell attacks.
+- Consume typed reroll fills, enforce Charisma-modifier damage-die limits where applicable, use the new rolls, and preserve the options' different-Metamagic stacking exception.
+
+Inputs:
+
+- `plans/unit-profile-coverage/unit-claims.jsonl`;
+- local RAW under `.references/srd-5.2.1/Classes/Sorcerer.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- battle-runtime damage-roll and spell-attack miss lifecycle.
+
+Outputs:
+
+- supported-profile or profile-subset-supported Unit claim with focused runtime tests and promoted Quint/runtime parity for post-roll damage dice rerolls and missed spell attack d20 rerolls.
+
+Acceptance:
+
+- RAW and ubiquitous-language checks are performed before modeling;
+- reroll choices and new roll values are typed fills at the roll lifecycle boundary;
+- focused runtime tests cover damage dice reroll limits, missed spell attack rerolls, new-roll replacement, and stacking exceptions;
+- package typecheck is run for touched packages when dependencies are available;
+- `pnpm unit-profile-coverage:check --write` and `pnpm unit-profile-coverage:check` are run;
+- `git diff --check` passes;
+- if promoted battle-runtime spell invocation state changes, update package-local Quint parity and run battle-runtime MBT under the repository scarcity protocol.
+
+### Task 17 - L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME - Monk Step of the Wind Jump Distance Runtime
 
 Status: `ready-for-research`
 
@@ -632,19 +889,20 @@ Acceptance:
 - reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
 - battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
 
-### Task 12 - L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE - Sorcerer Font Of Magic Bonus Action And Battle Slot Source
+### Task 18 - L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE - Sorcerer Font Of Magic Bonus Action And Battle Slot Source
 
-Status: `ready-for-research`
+Status: `blocked`
 
 Unit: `sorcerer_font_of_magic`.
 Origin: Split from L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS after Task 7 promoted Character Sheet created-slot state but left battle action-economy and slot-source preservation unresolved.
-Dependencies: L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS.
+Dependencies: L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-BATTLE-RESOURCE-BRIDGE.
 
 Pre-researched scope:
 
 - Execute Font of Magic Creating Spell Slots at a boundary that spends the Bonus Action.
 - Preserve ordinary-versus-created Spell Slot source through battle spell casting and Character Sheet handoff when ordinary and created slots of the same level coexist.
 - Keep created Spell Slot state owned by the Character Sheet delta state introduced by L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS; do not add a parallel battle-only created-slot pool.
+- Coordinate with the Metamagic battle resource bridge so Sorcery Point battle state has one owner across Font of Magic and Metamagic execution.
 
 Inputs:
 
@@ -676,13 +934,13 @@ Acceptance:
 - reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
 - if promoted battle-runtime spell invocation state changes, update package-local Quint parity and run battle-runtime MBT under the repository scarcity protocol.
 
-### Task 13 - L12G-RECURSIVE-TAIL-LOOP-C - LOOP-C Recursive Next-Batch Planning Tail
+### Task 19 - L12G-RECURSIVE-TAIL-LOOP-C - LOOP-C Recursive Next-Batch Planning Tail
 
 Status: `blocked`
 
 Unit: `level1_2_frontier`.
 Origin: Safety-net planning task for when this plan has no earlier runnable implementation tasks.
-Dependencies: L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME, L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS, L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS, L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-ADVANCEMENT-REPLACEMENT, L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION, L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME, L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE.
+Dependencies: L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME, L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS, L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS, L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-ADVANCEMENT-REPLACEMENT, L12G-FOLLOWUP-SORCERER-METAMAGIC-BATTLE-RESOURCE-BRIDGE, L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED, L12G-FOLLOWUP-SORCERER-METAMAGIC-SAVE-OPTIONS, L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-PROPERTY-OPTIONS, L12G-FOLLOWUP-SORCERER-METAMAGIC-DAMAGE-SHAPE-OPTIONS, L12G-FOLLOWUP-SORCERER-METAMAGIC-REROLL-OPTIONS, L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME, L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE.
 
 Pre-researched scope:
 
