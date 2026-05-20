@@ -2,7 +2,7 @@
 // battle-reducer.ts. Cluster T (attack_roll). Mechanical extraction — no
 // behavior change. Cycle #20 resolved by importing the shared ongoing-feature
 // helpers from ./ongoing-feature-helpers.ts instead of cycling through J.
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.invocation-object-contact-damage
 
 import {
   applyCondition,
@@ -630,7 +630,9 @@ export function activeEffectGrantsAttackRollMode(
   return (
     attacker?.activeEffects.some(
       (effect) =>
-        effect.kind === "nextAttackRollBySelf" && effect.mode === mode,
+        (effect.kind === "nextAttackRollBySelf" ||
+          effect.kind === "selfAttackRollAndAbilityCheckRollMode") &&
+        effect.mode === mode,
     ) === true ||
     target?.activeEffects.some(
       (effect) =>
@@ -638,12 +640,13 @@ export function activeEffectGrantsAttackRollMode(
         (effect.kind === "faerieFireOutline" &&
           mode === "advantage" &&
           attackerCanSeeTarget) ||
-        (effect.kind === "shiningSmiteIllumination" &&
-          mode === "advantage") ||
+        (effect.kind === "shiningSmiteIllumination" && mode === "advantage") ||
         (effect.kind === "creatureTypeProtection" &&
           effect.attackRollMode === mode &&
           attackerCreatureType !== null &&
-          effect.protectedAgainstCreatureTypes.includes(attackerCreatureType)) ||
+          effect.protectedAgainstCreatureTypes.includes(
+            attackerCreatureType,
+          )) ||
         (effect.kind === "blurred" &&
           mode === "disadvantage" &&
           attacker !== undefined &&

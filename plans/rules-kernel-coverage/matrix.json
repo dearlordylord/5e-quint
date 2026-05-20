@@ -24,13 +24,13 @@
     "obligations[].profiles": "Derived from profileObligations by obligation id; authored obligations.jsonl rows must not contain profiles."
   },
   "battleHoleFrontierSummary": {
-    "total": 85,
+    "total": 88,
     "bySubject": {
-      "battle-hole-family": 52,
-      "battle-fill-kind": 33
+      "battle-hole-family": 54,
+      "battle-fill-kind": 34
     },
     "byClassification": {
-      "semantic-frontier": 64,
+      "semantic-frontier": 67,
       "deterministic-boundary-projection": 0,
       "table-owned-fact": 21,
       "unsupported-dead-branch": 0
@@ -2643,6 +2643,39 @@
       "id": "objectContactTargets",
       "reason": "Object-contact target fills supply selected contact creatures plus table-witnessed physical-contact and object-within-range facts for Heat Metal. Contact and range derivation stay at the caller/table boundary while reducer damage semantics are handled by the spell invocation profile.",
       "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "savingThrowOutcome",
+      "id": "BattleObjectContactSavingThrowOutcomeHole",
+      "reason": "Heat Metal holding-or-wearing Saving Throw outcomes decide whether the object-contact target proceeds to the drop-or-penalty branch after taking damage; table-owned holding/wearing facts remain separate object-contact witnesses.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "objectDropResolution",
+      "id": "BattleObjectDropResolutionHole",
+      "reason": "Heat Metal drop resolution combines caller/table drop capability evidence with the reducer-visible choice between a dropped heated object outcome and the fallback attack-roll and Ability Check Disadvantage effect.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "fillKind": "objectDropResolution",
+      "followUpTaskIds": [],
+      "id": "objectDropResolution",
+      "reason": "Object drop resolution fills select the RAW Heat Metal branch after a failed holding-or-wearing save: drop the object when possible, or retain it and apply the caster-turn-start-limited fallback penalty.",
+      "subject": "battle-fill-kind"
     }
   ],
   "profileObligations": [
@@ -3248,6 +3281,7 @@
     "character-sheet.class-feature-point-pool-resource",
     "character-sheet.class-feature-use-count-resource",
     "character-sheet.font-of-magic-slot-to-sorcery-points",
+    "character-sheet.font-of-magic-sorcery-points-to-spell-slot",
     "character-sheet.healing-resource-action",
     "character-sheet.monk-uncanny-metabolism-initiative-recovery",
     "character-sheet.pact-slot-recovery",

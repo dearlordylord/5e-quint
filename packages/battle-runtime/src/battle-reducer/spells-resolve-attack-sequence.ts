@@ -216,6 +216,7 @@ export function resolveSpellAttackSequenceAct(input: {
     events: afterDamageEvents,
     objectDamages,
     objectIgnitions: [],
+    droppedObjects: [],
     suppressedReactionTrigger: input.input.suppressedReactionTrigger,
   });
   if (afterDamageReactionWindow.tag !== "resolved") {

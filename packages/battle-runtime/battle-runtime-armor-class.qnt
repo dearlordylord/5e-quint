@@ -100,6 +100,7 @@ module battleRuntimeArmorClass {
         | FogCloudObscurement(_) => false
         | FlamingSphere(_) => false
         | HeatMetalObjectContactDamage(_) => false
+        | HeatMetalHoldingWearingPenalty(_) => false
         | CommandPending(_) => false
         | SelfTransformationModeEffect(_) => false
       })) 13 + dexMod else baseAc

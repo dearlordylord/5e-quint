@@ -189,12 +189,12 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 499,
-      "percent": "89.7%",
+      "numerator": 501,
+      "percent": "90.1%",
       "rowsByStatus": {
-        "accepted": 362,
+        "accepted": 364,
         "accepted-no-battle-effect": 137,
-        "partial-battle-runtime": 13,
+        "partial-battle-runtime": 11,
         "battle-runtime-required": 44
       }
     },
@@ -6480,7 +6480,7 @@
         "state": "installed",
         "unitId": "heat_metal"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -6490,12 +6490,12 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME at packages/battle-runtime/src/unit-profile-admission-heat-metal.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY at packages/battle-runtime/src/unit-profile-admission-heat-metal.test.ts",
           "status": "owner evidence present"
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_hold_person",
@@ -11880,7 +11880,7 @@
         "state": "installed",
         "unitId": "heat_metal"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -11890,12 +11890,12 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME at packages/battle-runtime/src/unit-profile-admission-heat-metal.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY at packages/battle-runtime/src/unit-profile-admission-heat-metal.test.ts",
           "status": "owner evidence present"
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_hold_person",

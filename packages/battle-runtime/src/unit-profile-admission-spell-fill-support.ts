@@ -272,12 +272,7 @@ export function wardingBondSpellTargetFill(
   casterId: CombatantId,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
-  const base = knownWillingSpellTargetFill(
-    hole,
-    spellId,
-    casterId,
-    targetId,
-  );
+  const base = knownWillingSpellTargetFill(hole, spellId, casterId, targetId);
   return {
     ...base,
     spatialFacts: [
@@ -403,6 +398,7 @@ export function spellManufacturedMetalObjectTargetFill(input: {
 export function spellObjectContactTargetsFill(input: {
   readonly hole: Extract<BattleHole, { readonly kind: "objectContactTargets" }>;
   readonly targetIds: readonly CombatantId[];
+  readonly holdingOrWearing?: ReadonlyMap<CombatantId, "holding" | "wearing">;
 }): Extract<BattleFill, { readonly kind: "objectContactTargets" }> {
   return {
     kind: "objectContactTargets",
@@ -427,7 +423,36 @@ export function spellObjectContactTargetsFill(input: {
         objectId: input.hole.objectContact.objectId,
         targetId,
       })),
+      ...input.targetIds.flatMap((targetId) => {
+        const relation = input.holdingOrWearing?.get(targetId);
+        return relation === undefined
+          ? []
+          : [
+              {
+                kind: "spellObjectHoldingOrWearing" as const,
+                sourceCombatantId: input.hole.objectContact.sourceCombatantId,
+                sourceSpellId: input.hole.objectContact.sourceSpellId,
+                objectId: input.hole.objectContact.objectId,
+                targetId,
+                relation,
+              },
+            ];
+      }),
     ],
+  };
+}
+
+export function objectDropResolutionFill(
+  hole: Extract<BattleHole, { readonly kind: "objectDropResolution" }>,
+  outcomes: Extract<
+    BattleFill,
+    { readonly kind: "objectDropResolution" }
+  >["value"]["outcomes"],
+): Extract<BattleFill, { readonly kind: "objectDropResolution" }> {
+  return {
+    kind: "objectDropResolution",
+    holeId: hole.holeId,
+    value: { outcomes },
   };
 }
 
@@ -723,15 +748,9 @@ export function flamingSphereRamMovementFill(
 }
 
 export function flamingSphereRepositionMovementFill(
-  hole: Extract<
-    BattleHole,
-    { readonly kind: "movableZoneRepositionMovement" }
-  >,
+  hole: Extract<BattleHole, { readonly kind: "movableZoneRepositionMovement" }>,
   moveFeet = 30,
-): Extract<
-  BattleFill,
-  { readonly kind: "movableZoneRepositionMovement" }
-> {
+): Extract<BattleFill, { readonly kind: "movableZoneRepositionMovement" }> {
   return {
     kind: "movableZoneRepositionMovement",
     holeId: hole.holeId,

@@ -12,6 +12,7 @@ export const BATTLE_TRACE_HOLE_KINDS = [
   "targetSpatialFacts",
   "objectTargetChoice",
   "objectContactTargets",
+  "objectDropResolution",
   "heldObjectFacts",
   "damageTypeChoice",
   "spellTargetAllocation",

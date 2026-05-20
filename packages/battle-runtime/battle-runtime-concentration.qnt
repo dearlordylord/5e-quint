@@ -39,6 +39,7 @@ module battleRuntimeConcentration {
         | FogCloudObscurement(_) => false
         | FlamingSphere(_) => false
         | HeatMetalObjectContactDamage(_) => false
+        | HeatMetalHoldingWearingPenalty(_) => false
         | ResistanceDamageReduction(_) => false
         | SleepPendingRepeatSave(_) => false
         | SleepUnconscious(_) => false

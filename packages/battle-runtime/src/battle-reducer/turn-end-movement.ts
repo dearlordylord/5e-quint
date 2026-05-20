@@ -3,6 +3,7 @@
 // intended.
 
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram spell.invocation-moonbeam-movable-zone
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE BATTLE.COMMAND.OPTION_AND_NEXT_TURN BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE
@@ -2051,10 +2052,7 @@ function validateFlamingSphereRamMovement(
 }
 
 function validateFlamingSphereRepositionMovement(
-  fill: Extract<
-    BattleFill,
-    { readonly kind: "movableZoneRepositionMovement" }
-  >,
+  fill: Extract<BattleFill, { readonly kind: "movableZoneRepositionMovement" }>,
   hole: BattleMovableZoneRepositionMovementHole,
 ): string | null {
   if (fill.holeId !== hole.holeId) {
@@ -2156,8 +2154,8 @@ export function resolveFlamingSphereSaveCommand(
     );
   }
   // Dispatcher only routes here when trigger === "endsTurnWithinFiveFeetOfSphere".
-  const flamingSphereTrigger =
-    input.subject.trigger as BattleFlamingSphereTrigger;
+  const flamingSphereTrigger = input.subject
+    .trigger as BattleFlamingSphereTrigger;
   const saveHole = flamingSphereSavingThrowOutcomeHole(
     input.state,
     input.subject.actorId,
@@ -2669,7 +2667,11 @@ function moonbeamEffectFor(
 
 function moonbeamTriggerLabel(
   trigger: BattleMoonbeamSaveTrigger,
-): "appears-in-area" | "area-moves-into-space" | "enters-area" | "ends-turn-in-area" {
+):
+  | "appears-in-area"
+  | "area-moves-into-space"
+  | "enters-area"
+  | "ends-turn-in-area" {
   if (trigger === "appearsInArea") {
     return "appears-in-area";
   }
@@ -2780,7 +2782,10 @@ function validateMoonbeamDamageRoll(
   if (fill.holeId !== hole.holeId) {
     return "Movable zone save damage must use the selected damage hole.";
   }
-  const validation = validateRolledDiceForDiceExpr(fill.value, hole.movableZone.damage.expr);
+  const validation = validateRolledDiceForDiceExpr(
+    fill.value,
+    hole.movableZone.damage.expr,
+  );
   return validation === null ? null : validation.reason;
 }
 
@@ -2791,7 +2796,10 @@ function validateMoonbeamRepositionMovement(
   if (fill.holeId !== hole.holeId) {
     return "Movable zone reposition movement must use the selected movement hole.";
   }
-  if (Number(fill.value.moveFeet) <= 0 || !Number.isInteger(fill.value.moveFeet)) {
+  if (
+    Number(fill.value.moveFeet) <= 0 ||
+    !Number.isInteger(fill.value.moveFeet)
+  ) {
     return "Movable zone reposition movement distance must be a positive integer.";
   }
   return Number(fill.value.moveFeet) <= Number(hole.movableZone.maxMoveFeet)
@@ -2806,7 +2814,8 @@ function moonbeamAdjustedDamage(input: {
   readonly saveSucceeded: boolean;
 }): number {
   const rolledDamage =
-    rolledDiceTotal(input.damageFill.value) + (input.effect.damage.expr.flat ?? 0);
+    rolledDiceTotal(input.damageFill.value) +
+    (input.effect.damage.expr.flat ?? 0);
   const saveAdjustedDamage = input.saveSucceeded
     ? Math.floor(rolledDamage / 2)
     : rolledDamage;
@@ -2920,7 +2929,9 @@ export function resolveMoonbeamSaveCommand(
     moonbeamTrigger,
   );
   const saveFills = input.fills.filter(
-    (fill): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
+    (
+      fill,
+    ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
       fill.kind === "savingThrowOutcome" && fill.holeId === saveHole.holeId,
   );
   const damageFills = input.fills.filter(
@@ -3007,12 +3018,17 @@ export function resolveMoonbeamSaveCommand(
     damageFill,
     saveSucceeded: saveOutcome.succeeded,
   });
-  const concentrationHole = concentrationSavingThrowHole(target, adjustedDamage);
+  const concentrationHole = concentrationSavingThrowHole(
+    target,
+    adjustedDamage,
+  );
   const concentrationFills =
     concentrationHole === null
       ? []
       : input.fills.filter(
-          (fill): fill is Extract<
+          (
+            fill,
+          ): fill is Extract<
             BattleFill,
             { readonly kind: "concentrationSavingThrow" }
           > =>
@@ -3053,7 +3069,11 @@ export function resolveMoonbeamSaveCommand(
     saveSucceeded: saveOutcome.succeeded,
     concentrationSavingThrow: concentrationFill,
   });
-  const afterMark = markMoonbeamSavedThisTurn(afterDamage, input.subject.actorId, effect);
+  const afterMark = markMoonbeamSavedThisTurn(
+    afterDamage,
+    input.subject.actorId,
+    effect,
+  );
   if (isEndTurn) {
     const endTurnResult = resolveEndTurnCommand({
       state: afterMark,
@@ -3082,7 +3102,9 @@ export function resolveMoonbeamRepositionCommand(
     >;
   },
 ): BattleResolutionResult {
-  if (input.fills.some((fill) => fill.kind !== "movableZoneRepositionMovement")) {
+  if (
+    input.fills.some((fill) => fill.kind !== "movableZoneRepositionMovement")
+  ) {
     return invalidResult(
       input.state,
       "invalidFill",
@@ -3103,7 +3125,9 @@ export function resolveMoonbeamRepositionCommand(
   }
   const movementHole = moonbeamRepositionMovementHole(effect);
   const movementFills = input.fills.filter(
-    (fill): fill is Extract<
+    (
+      fill,
+    ): fill is Extract<
       BattleFill,
       { readonly kind: "movableZoneRepositionMovement" }
     > => fill.kind === "movableZoneRepositionMovement",
@@ -3668,13 +3692,8 @@ function expireConcentrationDurationSource(
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
   return new Map(
     [...combatants].map(([id, combatant]) => {
-      const expiring = combatant.activeEffects.filter(
-        (effect) =>
-          effect.sourceCombatantId === source.combatantId &&
-          "sourceSpellId" in effect &&
-          effect.sourceSpellId === source.sourceSpellId &&
-          "expiresAt" in effect &&
-          effect.expiresAt.kind === "concentration",
+      const expiring = combatant.activeEffects.filter((effect) =>
+        activeEffectExpiresWithConcentrationSource(effect, source),
       );
       const activeEffects = combatant.activeEffects.filter(
         (effect) => !expiring.includes(effect),
@@ -3712,6 +3731,23 @@ function expireConcentrationDurationSource(
       );
       return [id, nextCombatant];
     }),
+  );
+}
+
+function activeEffectExpiresWithConcentrationSource(
+  effect: BattleActiveEffect,
+  source: ConcentrationEffectSource,
+): boolean {
+  if (
+    effect.sourceCombatantId !== source.combatantId ||
+    !("sourceSpellId" in effect) ||
+    effect.sourceSpellId !== source.sourceSpellId
+  ) {
+    return false;
+  }
+  return (
+    ("expiresAt" in effect && effect.expiresAt.kind === "concentration") ||
+    effect.kind === "selfAttackRollAndAbilityCheckRollMode"
   );
 }
 

@@ -129,6 +129,12 @@ export type SpellFillSet =
             readonly spatialFacts: readonly BattleObjectContactTargetSpatialFact[];
           }
         | undefined;
+      readonly objectContactSavingThrowOutcome:
+        | Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>
+        | undefined;
+      readonly objectDropResolution:
+        | Extract<BattleFill, { readonly kind: "objectDropResolution" }>
+        | undefined;
       readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
       readonly reactionSpellTargetFacts: readonly SpellCastReactionFact[];
       readonly targetAllocation:
@@ -233,6 +239,12 @@ export function spellFillSet(
         readonly targetIds: readonly CombatantId[];
         readonly spatialFacts: readonly BattleObjectContactTargetSpatialFact[];
       }
+    | undefined;
+  let objectContactSavingThrowOutcome:
+    | Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>
+    | undefined;
+  let objectDropResolution:
+    | Extract<BattleFill, { readonly kind: "objectDropResolution" }>
     | undefined;
   let targetSpatialFacts: readonly BattleTargetSpatialFact[] = [];
   let reactionSpellTargetFacts: readonly SpellCastReactionFact[] = [];
@@ -502,6 +514,26 @@ export function spellFillSet(
       continue;
     }
 
+    if (fill.kind === "objectDropResolution") {
+      if (
+        invocation.procedure !== "objectContactDamage" &&
+        invocation.procedure !== "objectContactDamageRepeat"
+      ) {
+        return {
+          tag: "invalid",
+          message: "Object drop resolution does not match this spell act.",
+        };
+      }
+      if (objectDropResolution !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Object drop resolution was filled twice.",
+        };
+      }
+      objectDropResolution = fill;
+      continue;
+    }
+
     if (fill.kind === "spellAreaChoice") {
       if (
         invocation.procedure !== "fogCloudObscurement" &&
@@ -718,6 +750,19 @@ export function spellFillSet(
           };
         }
         hideousLaughterDamageRepeatSaves.push(fill);
+        continue;
+      }
+      if (
+        invocation.procedure === "objectContactDamage" ||
+        invocation.procedure === "objectContactDamageRepeat"
+      ) {
+        if (objectContactSavingThrowOutcome !== undefined) {
+          return {
+            tag: "invalid",
+            message: "Object-contact saving throw outcome was filled twice.",
+          };
+        }
+        objectContactSavingThrowOutcome = fill;
         continue;
       }
       if (
@@ -1225,6 +1270,8 @@ export function spellFillSet(
     targetId,
     objectTarget,
     objectContactTargets,
+    objectContactSavingThrowOutcome,
+    objectDropResolution,
     targetSpatialFacts,
     reactionSpellTargetFacts,
     targetAllocation,
@@ -1262,6 +1309,8 @@ export function spellFillSetContainsOnlySpellCastReactionFacts(
     fillSet.targetId === undefined &&
     fillSet.objectTarget === undefined &&
     fillSet.objectContactTargets === undefined &&
+    fillSet.objectContactSavingThrowOutcome === undefined &&
+    fillSet.objectDropResolution === undefined &&
     fillSet.targetSpatialFacts.length === 0 &&
     fillSet.targetAllocation === undefined &&
     fillSet.targetList === undefined &&

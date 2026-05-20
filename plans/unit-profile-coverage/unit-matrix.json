@@ -62,8 +62,8 @@
       "value": 220
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 132,
-      "numerator": 132,
+      "denominator": 133,
+      "numerator": 133,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -92,9 +92,9 @@
       "percent": "81.7%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 132,
+      "denominator": 133,
       "numerator": 75,
-      "percent": "56.8%"
+      "percent": "56.4%"
     },
     "runtimeMappingCoverage": {
       "denominator": 80,
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 132,
+      "denominator": 133,
       "numerator": 105,
-      "percent": "79.5%"
+      "percent": "78.9%"
     },
     "supportedProfileCoverage": {
       "denominator": 188,
-      "numerator": 132,
-      "percent": "70.2%"
+      "numerator": 133,
+      "percent": "70.7%"
     }
   },
   "metricSemantics": [
@@ -3140,15 +3140,22 @@
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/hole-helpers.ts",
         "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
         "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-object-contact-damage.ts"
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-object-contact-damage.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
       ],
-      "sourceBoundary": "The runtime consumes the authored Heat Metal object-contact Surface shape plus caller-supplied visible manufactured-metal object identity, physical-contact creature witnesses, and later-turn object-within-range witnesses. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration up to 1 minute, durable spell-object contact occurrence identity, immediate Fire damage to selected contact creatures, later-turn Bonus Action repeat damage, slot-scaled damage dice, damage lifecycle integration for Concentration saves and zero-HP dispositions, and cleanup through existing Concentration and duration mechanisms. Holding/wearing Constitution save, drop outcome, and fallback Attack Roll or Ability Check Disadvantage remain split to the object holding/wearing penalty owner.",
+      "sourceBoundary": "The runtime consumes the authored Heat Metal object-contact Surface shape plus caller-supplied visible manufactured-metal object identity, physical-contact creature witnesses, holding-or-wearing spell-object witnesses, later-turn object-within-range witnesses, Saving Throw outcomes, and typed object-drop resolution fills. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration up to 1 minute, durable spell-object contact occurrence identity, immediate Fire damage to selected contact creatures, later-turn Bonus Action repeat damage, slot-scaled damage dice, damage lifecycle integration for Concentration saves and zero-HP dispositions, Constitution saves for damaged holding-or-wearing targets against the caster Spell Save DC, drop-if-possible outcomes without inventory simulation, fallback self Attack Roll and Ability Check Disadvantage until the start of the caster's next turn when the object is not dropped, same-occurrence fallback penalty replacement, and cleanup through Concentration, duration, and caster-turn-start mechanisms.",
       "taskRefs": [
-        "L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME"
+        "L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME",
+        "L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY"
       ],
       "title": "Spell invocation attaches damage to a table-witnessed object contact boundary",
       "verificationOwners": [
@@ -4610,9 +4617,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 132,
+          "denominator": 133,
           "numerator": 75,
-          "percent": "56.8%"
+          "percent": "56.4%"
         }
       },
       "units": [
@@ -5938,6 +5945,18 @@
             }
           ],
           "unitId": "healing_word"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-object-contact-damage",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "heat_metal"
         },
         {
           "joinStatus": "mapped-open",
@@ -9698,7 +9717,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests and package-local QNT self-tests cover Heat Metal catalog admission, manufactured metal object target fill validation, contact-creature witness fill validation, Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration, durable object-contact spell occurrence state, immediate Fire damage with slot scaling, later-turn Bonus Action repeat damage requiring object-within-range and contact witnesses, no same-turn repeat discovery, Concentration cleanup, and no-contact casts without damage-roll holes. Holding/wearing saves, drop outcomes, and fallback Disadvantage remain split to L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY.",
+      "note": "Focused battle-runtime tests and package-local QNT self-tests cover the Heat Metal contact-damage slice: catalog admission, manufactured metal object target fill validation, contact-creature witness fill validation, Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration, durable object-contact spell occurrence state, immediate Fire damage with slot scaling, later-turn Bonus Action repeat damage requiring object-within-range and contact witnesses, no same-turn repeat discovery, Concentration cleanup, and no-contact casts without damage-roll holes.",
       "profileIds": [
         "spell.invocation-object-contact-damage"
       ],
@@ -9711,6 +9730,22 @@
         "spell.invocation-object-contact-damage"
       ],
       "taskId": "L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests cover Heat Metal holding-or-wearing support-profile admission, caller-supplied spell-object holding/wearing witnesses, Constitution Saving Throw holes against the caster Spell Save DC, successful saves with no drop or penalty, failed-save typed drop resolution, dropped-object outcomes without inventory simulation, fallback Attack Roll and Ability Check Disadvantage when the object is not dropped, same-occurrence penalty replacement, caster-turn-start expiry, and Concentration cleanup.",
+      "profileIds": [
+        "spell.invocation-object-contact-damage"
+      ],
+      "taskId": "L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Package-local battle-runtime Quint self-tests model Heat Metal failed holding/wearing saves with not-dropped fallback penalties, Attack Roll and Ability Check Disadvantage projections, target-turn persistence, caster-turn-start expiry, Concentration cleanup, dropped-object outcomes with no fallback penalty, and successful saves with no drop or penalty.",
+      "profileIds": [
+        "spell.invocation-object-contact-damage"
+      ],
+      "taskId": "L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY"
     }
   ],
   "units": [
@@ -18122,22 +18157,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "followUpTaskId": "L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY",
-            "mechanic": "holding/wearing Constitution save, drop-if-possible outcome, and fallback Attack Roll or Ability Check Disadvantage until the caster's next turn after a creature takes Heat Metal damage from a held or worn spell object"
-          }
-        ],
-        "followUpTasks": [
-          {
-            "id": "L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY",
-            "mechanic": "Promote the holding/wearing penalty for creatures that take Heat Metal damage from the object: caller-supplied held-or-worn object facts, Constitution Saving Throw against caster Spell Save DC, drop-if-possible through the existing dropped-object outcome boundary without introducing inventory simulation, fallback Disadvantage on Attack Rolls and Ability Checks until the start of the caster's next turn when the object is not dropped, and cleanup/replacement behavior tied to the same Heat Metal spell occurrence.",
-            "owner": "battle-runtime object holding/wearing drop boundary plus D20 roll-mode projection",
-            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the save, drop outcome, fallback roll-mode projection, caster-turn-start expiry, and Concentration cleanup.",
-            "title": "Heat Metal Holding Wearing Penalty Runtime"
-          }
-        ],
-        "futureProfileOwner": "battle-runtime object holding/wearing drop boundary plus D20 roll-mode projection",
         "profileIds": [
           "spell.invocation-object-contact-damage"
         ],
@@ -18150,16 +18169,20 @@
           "caller-supplied physical-contact creature witnesses for cast-time Fire damage and later-turn repeat damage",
           "immediate 2d8 Fire damage to selected contact creatures, scaling by +1d8 per slot level above 2",
           "later-turn Bonus Action repeat damage on the caster turn when the caller supplies the selected object-within-range witness and contact-creature witnesses",
-          "damage lifecycle integration for Concentration saves and zero-HP damage dispositions while preserving no-contact casts without damage-roll holes"
+          "damage lifecycle integration for Concentration saves and zero-HP damage dispositions while preserving no-contact casts without damage-roll holes",
+          "caller-supplied holding-or-wearing spell-object witnesses for damaged contact creatures, followed by Constitution Saving Throws against the caster Spell Save DC",
+          "failed holding-or-wearing saves require typed drop-capability/drop-result witnesses, emit the existing held-object dropped outcome when the object can be dropped, and do not introduce inventory simulation state",
+          "failed saves where the object is not dropped apply Disadvantage on the damaged creature's Attack Rolls and Ability Checks until the start of the caster's next turn",
+          "holding/wearing fallback penalties are replaced for the same Heat Metal spell-object occurrence and are removed when that occurrence ends through Concentration cleanup"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-heat-metal.test.ts",
           "tag": "deterministic-admission-projection",
-          "taskId": "L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME"
+          "taskId": "L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY"
         }
       ],
       "executableMechanics": true,
@@ -18173,15 +18196,22 @@
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+            "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+            "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+            "packages/battle-runtime/src/battle-reducer/hole-helpers.ts",
             "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
             "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
             "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
-            "packages/battle-runtime/src/battle-reducer/spells-resolve-object-contact-damage.ts"
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-object-contact-damage.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
           ],
-          "sourceBoundary": "The runtime consumes the authored Heat Metal object-contact Surface shape plus caller-supplied visible manufactured-metal object identity, physical-contact creature witnesses, and later-turn object-within-range witnesses. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration up to 1 minute, durable spell-object contact occurrence identity, immediate Fire damage to selected contact creatures, later-turn Bonus Action repeat damage, slot-scaled damage dice, damage lifecycle integration for Concentration saves and zero-HP dispositions, and cleanup through existing Concentration and duration mechanisms. Holding/wearing Constitution save, drop outcome, and fallback Attack Roll or Ability Check Disadvantage remain split to the object holding/wearing penalty owner.",
+          "sourceBoundary": "The runtime consumes the authored Heat Metal object-contact Surface shape plus caller-supplied visible manufactured-metal object identity, physical-contact creature witnesses, holding-or-wearing spell-object witnesses, later-turn object-within-range witnesses, Saving Throw outcomes, and typed object-drop resolution fills. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration up to 1 minute, durable spell-object contact occurrence identity, immediate Fire damage to selected contact creatures, later-turn Bonus Action repeat damage, slot-scaled damage dice, damage lifecycle integration for Concentration saves and zero-HP dispositions, Constitution saves for damaged holding-or-wearing targets against the caster Spell Save DC, drop-if-possible outcomes without inventory simulation, fallback self Attack Roll and Ability Check Disadvantage until the start of the caster's next turn when the object is not dropped, same-occurrence fallback penalty replacement, and cleanup through Concentration, duration, and caster-turn-start mechanisms.",
           "taskRefs": [
-            "L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME"
+            "L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME",
+            "L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY"
           ],
           "title": "Spell invocation attaches damage to a table-witnessed object contact boundary",
           "verificationOwners": [

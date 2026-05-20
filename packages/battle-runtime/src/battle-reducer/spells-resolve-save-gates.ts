@@ -1066,6 +1066,7 @@ export function resolveSaveGateDamageSpellAct(input: {
     events: afterDamageEvents,
     objectDamages,
     objectIgnitions,
+    droppedObjects: [],
     suppressedReactionTrigger: input.input.suppressedReactionTrigger,
   });
 }
@@ -1222,6 +1223,7 @@ function resolveFailedSaveForcedReactionMovement(input: {
       events: input.afterDamageEvents,
       objectDamages: input.objectDamages,
       objectIgnitions: input.objectIgnitions,
+      droppedObjects: [],
       suppressedReactionTrigger: input.suppressedReactionTrigger,
     });
   }
@@ -1260,6 +1262,7 @@ function resolveFailedSaveForcedReactionMovement(input: {
           events: input.afterDamageEvents,
           objectDamages: input.objectDamages,
           objectIgnitions: input.objectIgnitions,
+          droppedObjects: [],
         },
       },
       input.suppressedReactionTrigger,
@@ -1277,6 +1280,7 @@ function resolveFailedSaveForcedReactionMovement(input: {
     events: input.afterDamageEvents,
     objectDamages: input.objectDamages,
     objectIgnitions: input.objectIgnitions,
+    droppedObjects: [],
     suppressedReactionTrigger: input.suppressedReactionTrigger,
   });
 }

@@ -3,6 +3,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // Owns subject resolution, reaction windows, interrupted-procedure replay,
 // turn snapshots, and reaction-choice orchestration.
 
@@ -209,6 +210,7 @@ import type {
   BattleAttackHitTriggerKind,
   BattleConcentrationSavingThrowHole,
   BattleCreatureState,
+  BattleDroppedObjectOutcome,
   BattleFill,
   BattleFeatherFallLandingResult,
   BattleInterruptFrame,
@@ -2724,6 +2726,7 @@ function resolveHellishRebukeReactionSpellCommand(
     ],
     objectDamages: [],
     objectIgnitions: [],
+    droppedObjects: [],
     suppressedReactionTrigger: undefined,
   });
 }
@@ -3585,6 +3588,7 @@ export function resumeInterruptedProcedure(
       events: continuation.events,
       objectDamages: continuation.objectDamages,
       objectIgnitions: continuation.objectIgnitions,
+      droppedObjects: continuation.droppedObjects,
       suppressedReactionTrigger:
         suppressedReactionTrigger === "afterDamage"
           ? undefined
@@ -3619,6 +3623,7 @@ export function resumeInterruptedProcedure(
       events: continuation.events,
       objectDamages: continuation.objectDamages,
       objectIgnitions: continuation.objectIgnitions,
+      droppedObjects: continuation.droppedObjects,
       suppressedReactionTrigger:
         suppressedReactionTrigger === "afterDamage"
           ? undefined
@@ -3702,6 +3707,7 @@ export function resumeInterruptedProcedure(
       ],
       objectDamages: [],
       objectIgnitions: [],
+      droppedObjects: [],
       suppressedReactionTrigger,
     });
   }
@@ -3720,6 +3726,7 @@ export function openAfterDamageSequenceReactionWindow(input: {
   readonly events: readonly BattleAfterDamageEvent[];
   readonly objectDamages: readonly BattleObjectDamageOutcome[];
   readonly objectIgnitions: readonly BattleObjectIgnitionOutcome[];
+  readonly droppedObjects: readonly BattleDroppedObjectOutcome[];
   readonly suppressedReactionTrigger: BattleReactionTrigger | undefined;
 }): BattleResolutionResult {
   const [event, ...remainingEvents] = input.events;
@@ -3734,6 +3741,9 @@ export function openAfterDamageSequenceReactionWindow(input: {
       ...(input.objectIgnitions.length === 0
         ? {}
         : { objectIgnitions: input.objectIgnitions }),
+      ...(input.droppedObjects.length === 0
+        ? {}
+        : { droppedObjects: input.droppedObjects }),
     };
   }
   const reactionWindow = maybeOpenReactionWindow(
@@ -3750,6 +3760,7 @@ export function openAfterDamageSequenceReactionWindow(input: {
         events: remainingEvents,
         objectDamages: input.objectDamages,
         objectIgnitions: input.objectIgnitions,
+        droppedObjects: input.droppedObjects,
       },
     },
     input.suppressedReactionTrigger,
