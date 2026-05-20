@@ -1,20 +1,20 @@
 {
   "summary": {
-    "total": 25,
-    "covered": 17,
-    "open": 4,
+    "total": 37,
+    "covered": 19,
+    "open": 14,
     "nonSemantic": 4,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 19,
+      "battle": 31,
       "character-creation": 2,
       "character-sheet": 2,
       "character-battle": 1
     },
     "byStatus": {
-      "covered": 17,
+      "covered": 19,
       "needs-qnt-owner": 3,
-      "needs-parity-witness": 0,
+      "needs-parity-witness": 10,
       "needs-surface-evidence": 1,
       "boundary-only": 3,
       "unsupported-by-admission": 1
@@ -185,9 +185,7 @@
         }
       ],
       "profiles": [
-        "spell.hit-point-restoration",
         "spell.invocation-damage-save-or-attack",
-        "spell.invocation-direct-condition",
         "spell.reaction-shield",
         "spell.readied-action-time-spell"
       ],
@@ -200,7 +198,260 @@
       ],
       "status": "covered",
       "surfaceEvidence": [],
-      "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+      "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+    },
+    {
+      "id": "BATTLE.SPELL.HIT_POINT_RESTORATION",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "spell.hit-point-restoration"
+      ],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [],
+      "title": "Battle spell Hit Point restoration target selection, healing-roll holes, zero-Hit-Point recovery, and multi-target healing projection"
+    },
+    {
+      "id": "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [],
+      "profiles": [
+        "spell.invocation-direct-condition"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt",
+        "packages/battle-runtime/battle-runtime-sanctuary.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/sanctuary-targeting-interdiction.ts"
+      ],
+      "status": "needs-parity-witness",
+      "surfaceEvidence": [],
+      "title": "Battle direct spell-owned condition application, concentration cleanup, duration cleanup, and target-action early end"
+    },
+    {
+      "id": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [],
+      "profiles": [
+        "spell.invocation-condition-save",
+        "spell.invocation-hideous-laughter-repeat-save-lifecycle"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
+        "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-apply.ts"
+      ],
+      "status": "needs-parity-witness",
+      "surfaceEvidence": [],
+      "title": "Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup"
+    },
+    {
+      "id": "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [],
+      "profiles": [
+        "spell.invocation-attack-roll-advantage-save"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-roll.ts"
+      ],
+      "status": "needs-parity-witness",
+      "surfaceEvidence": [],
+      "title": "Battle failed-save spell attack-roll Advantage effects from saving throw holes through active-effect application"
+    },
+    {
+      "id": "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-sleep-repeat-save-lifecycle"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [],
+      "title": "Battle Sleep initial save, pending repeat-save, failed-repeat Unconscious transition, successful-repeat cleanup, and concentration-break cleanup"
+    },
+    {
+      "id": "BATTLE.SPELL.MAKE_STABLE_LIFECYCLE",
+      "kind": "state-transition",
+      "parityWitnesses": [],
+      "profiles": [
+        "spell.invocation-make-stable"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-hit-points.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts"
+      ],
+      "status": "needs-parity-witness",
+      "surfaceEvidence": [],
+      "title": "Battle Spare the Dying target admission and zero-Hit-Point non-dead Stable lifecycle mutation"
+    },
+    {
+      "id": "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [],
+      "profiles": [
+        "spell.invocation-roll-modifier",
+        "spell.invocation-self-ability-check-advantage"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt",
+        "packages/battle-runtime/battle-runtime-thaumaturgy.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-target-selection.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-roll.ts"
+      ],
+      "status": "needs-parity-witness",
+      "surfaceEvidence": [],
+      "title": "Battle spell d20 roll modifiers for attack rolls, Saving Throws, Ability Checks, skill checks, and selected witness projections"
+    },
+    {
+      "id": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [],
+      "profiles": [
+        "spell.scalar-buff"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/movement-speed.ts"
+      ],
+      "status": "needs-parity-witness",
+      "surfaceEvidence": [],
+      "title": "Battle spell scalar buffs for Armor Class, Speed, special speeds, Hit Point maximum, and Temporary Hit Point effects"
+    },
+    {
+      "id": "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [],
+      "profiles": [
+        "spell.creature-type-protection-and-charm"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-creature-type-protection.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-condition-effects-helpers.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-roll.ts"
+      ],
+      "status": "needs-parity-witness",
+      "surfaceEvidence": [],
+      "title": "Battle creature-type protection, Charmed/Frightened/possession prevention, and relevant-effect Saving Throw Advantage"
+    },
+    {
+      "id": "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [],
+      "profiles": [
+        "spell.invocation-condition-immunity-turn-start-temporary-hit-points"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+      ],
+      "status": "needs-parity-witness",
+      "surfaceEvidence": [],
+      "title": "Battle spell condition immunity with start-turn Temporary Hit Point refresh and concentration cleanup"
+    },
+    {
+      "id": "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [],
+      "profiles": [
+        "spell.invocation-condition-removal-protection",
+        "spell.invocation-direct-condition-removal"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-direct-condition-removal.qnt",
+        "packages/battle-runtime/battle-runtime-protection-from-poison.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-condition-effects-helpers.ts"
+      ],
+      "status": "needs-parity-witness",
+      "surfaceEvidence": [],
+      "title": "Battle direct condition removal, poison protection condition removal, poison resistance, and poison Saving Throw Advantage"
+    },
+    {
+      "id": "BATTLE.SPELL.SELF_TRANSFORMATION_MODE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [],
+      "profiles": [
+        "spell.invocation-self-transformation-mode"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-self-transformation.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/movement-speed.ts"
+      ],
+      "status": "needs-parity-witness",
+      "surfaceEvidence": [],
+      "title": "Battle self-transformation mode choice, Magic Action mode replacement, natural-weapon override, and Aquatic projections"
     },
     {
       "id": "BATTLE.SANCTUARY.TARGETING_INTERDICTION",
@@ -364,7 +615,9 @@
           "stepAction": "step"
         }
       ],
-      "profiles": [],
+      "profiles": [
+        "spell.invocation-damage-save-or-attack"
+      ],
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
@@ -841,12 +1094,11 @@
         "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP"
       ],
       "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION",
         "RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION"
       ],
       "holeKind": "rolledDice",
       "id": "BattleSpellDamageRollHole",
-      "reason": "Spell damage rolls feed attack, save, repeated, chained, and marked damage procedures. Generic spell damage branches, by-type reduction, disposition, and shared HP damage are covered; spell-family lifecycle joins remain split follow-up work.",
+      "reason": "Spell damage rolls feed attack, save, chained, after-hit, and marked damage procedures. Generic spell damage branches, by-type reduction, disposition, and shared HP damage are covered; after-hit, chained, and marked spell damage joins remain split follow-up work.",
       "subject": "battle-hole-family"
     },
     {
@@ -855,12 +1107,10 @@
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION"
       ],
-      "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
-      ],
+      "followUpTaskIds": [],
       "holeKind": "rolledDice",
       "id": "BattleSpellDamageReductionRollHole",
-      "reason": "A damage-reduction roll changes effective by-type damage and consumes matching Resistance spell reduction state; downstream spell-condition lifecycle remains separate follow-up work.",
+      "reason": "A damage-reduction roll changes effective by-type damage and consumes matching Resistance spell reduction state; by-type adjustment and reduction are covered by the damage type choice and reduction obligation.",
       "subject": "battle-hole-family"
     },
     {
@@ -881,11 +1131,11 @@
         "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP"
       ],
       "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+        "RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION"
       ],
       "holeKind": "rolledDice",
       "id": "BattleSpellTurnStartDamageRollHole",
-      "reason": "Turn-start spell damage rolls reuse shared HP damage and the generic damage-disposition split; active-effect spell damage/condition lifecycle remains dedicated follow-up work.",
+      "reason": "Turn-start spell damage rolls reuse shared HP damage and the generic damage-disposition split; after-hit and timed active-effect spell damage lifecycle remains dedicated follow-up work.",
       "subject": "battle-hole-family"
     },
     {
@@ -905,14 +1155,12 @@
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
-        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+        "BATTLE.SPELL.HIT_POINT_RESTORATION"
       ],
-      "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
-      ],
+      "followUpTaskIds": [],
       "holeKind": "rolledDice",
       "id": "BattleSpellHealingRollHole",
-      "reason": "Healing rolls restore Hit Points and may clear zero-Hit-Point lifecycle state; the existing spell profile coverage owns the established healing subset.",
+      "reason": "Healing rolls restore Hit Points and may clear zero-Hit-Point lifecycle state; the dedicated spell Hit Point restoration obligation owns the established healing subset.",
       "subject": "battle-hole-family"
     },
     {
@@ -921,11 +1169,11 @@
         "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES"
       ],
       "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+        "RKBC-SPELL-ROLL-SCALAR-PARITY"
       ],
       "holeKind": "skillChoice",
       "id": "BattleSpellSkillChoiceHole",
-      "reason": "Skill choice changes which Ability Check specialization an effect modifies or grants, so it is reducer-visible state; profile joins for the remaining spell damage/condition tranche stay in their follow-up task.",
+      "reason": "Skill choice changes which Ability Check specialization an effect modifies or grants, so it is reducer-visible state; roll-modifier spell profiles remain split parity follow-up work.",
       "subject": "battle-hole-family"
     },
     {
@@ -934,22 +1182,23 @@
         "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES"
       ],
       "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+        "RKBC-SPELL-ROLL-SCALAR-PARITY",
+        "RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION"
       ],
       "holeKind": "abilityChoice",
       "id": "BattleSpellAbilityChoiceHole",
-      "reason": "Ability choice changes roll modifiers, marked-damage riders, or later checks and must be owned by a semantic obligation; marked-damage spell profile joins remain in the spell damage/condition follow-up.",
+      "reason": "Ability choice changes roll modifiers, marked-damage riders, or later checks and must be owned by a semantic obligation; roll-modifier and marked-damage spell joins remain split follow-up work.",
       "subject": "battle-hole-family"
     },
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [],
       "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+        "RKBC-SPELL-SAVE-GATED-CONDITION-PARITY"
       ],
       "holeKind": "conditionChoice",
       "id": "BattleSpellConditionChoiceHole",
-      "reason": "Condition choice selects which condition a save-gated spell can apply, making it a spell-condition semantic frontier that the current battle-hole task split does not yet name directly.",
+      "reason": "Condition choice selects which condition a save-gated spell can apply, making it a spell-condition semantic frontier that the save-gated condition parity task owns.",
       "subject": "battle-hole-family"
     },
     {
@@ -997,40 +1246,43 @@
         "BATTLE.COMMAND.OPTION_AND_NEXT_TURN"
       ],
       "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+        "RKBC-SPELL-SAVE-GATED-CONDITION-PARITY",
+        "RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION",
+        "RKBC-PROFILE-JOIN-TABLE-CALLER"
       ],
       "holeKind": "savingThrowOutcome",
       "id": "BattleSpellSavingThrowOutcomeHole",
-      "reason": "Spell Saving Throw outcomes determine damage, conditions, Command consequences, Counterspell, and area results. Generic spell save damage branches and Command consequences are covered; spell-condition profile joins remain follow-up work.",
+      "reason": "Spell Saving Throw outcomes determine damage, conditions, Command consequences, Counterspell, and area results. Generic spell save damage branches and Command consequences are covered; save-gated condition, reaction/after-hit, and table-caller area joins remain follow-up work.",
       "subject": "battle-hole-family"
     },
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [],
       "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+        "RKBC-SPELL-SAVE-GATED-CONDITION-PARITY",
+        "RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION"
       ],
       "holeKind": "savingThrowOutcome",
       "id": "BattleSpellTurnStartSavingThrowOutcomeHole",
-      "reason": "Turn-start active-effect Saving Throw outcomes can end or continue damage/effect state and still need dedicated QNT/parity ownership.",
+      "reason": "Turn-start active-effect Saving Throw outcomes can end or continue damage/effect state and still need dedicated condition or timed-damage QNT/parity ownership.",
       "subject": "battle-hole-family"
     },
     {
       "classification": "semantic-frontier",
-      "coveredByObligationIds": [],
-      "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE"
       ],
+      "followUpTaskIds": [],
       "holeKind": "savingThrowOutcome",
       "id": "BattleSleepRepeatSavingThrowOutcomeHole",
-      "reason": "Sleep repeat Saving Throw outcomes control condition cleanup for an active spell effect and are not covered by the current rule-core spell subset.",
+      "reason": "Sleep repeat Saving Throw outcomes control pending repeat-save cleanup and the Unconscious transition for an active spell effect, covered by the Sleep repeat-save lifecycle obligation.",
       "subject": "battle-hole-family"
     },
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [],
       "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+        "RKBC-SPELL-SAVE-GATED-CONDITION-PARITY"
       ],
       "holeKind": "savingThrowOutcome",
       "id": "BattleHideousLaughterRepeatSavingThrowOutcomeHole",
@@ -1052,7 +1304,7 @@
       "classification": "semantic-frontier",
       "coveredByObligationIds": [],
       "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+        "RKBC-SPELL-SAVE-GATED-CONDITION-PARITY"
       ],
       "holeKind": "savingThrowOutcome",
       "id": "BattleSpellConditionEndTurnSavingThrowOutcomeHole",
@@ -1102,7 +1354,7 @@
       "classification": "semantic-frontier",
       "coveredByObligationIds": [],
       "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+        "RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY"
       ],
       "holeKind": "savingThrowOutcome",
       "id": "BattleProtectionRelevantEffectSavingThrowOutcomeHole",
@@ -1193,12 +1445,11 @@
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
       ],
       "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION",
         "RKBC-PROFILE-JOIN-TABLE-CALLER"
       ],
       "holeKind": "movement",
       "id": "BattleMovementHole",
-      "reason": "Reducer-owned movement budget spend, Stand/Drop Prone, Grapple movement constraints, and Opportunity Attack frontier facts are covered by the movement obligation. Grease terrain distance, Command approach/flee route witnesses, forced-movement geometry, and Jump route/landing witnesses are table facts covered by the boundary obligation rather than stored path or map state. Jump failed-landing Prone remains a spell condition profile follow-up, and route/profile joins remain table-caller follow-up work.",
+      "reason": "Reducer-owned movement budget spend, Stand/Drop Prone, Grapple movement constraints, and Opportunity Attack frontier facts are covered by the movement obligation. Grease terrain distance, Command approach/flee route witnesses, forced-movement geometry, and Jump route/landing witnesses are table facts covered by the boundary obligation rather than stored path or map state. Jump failed-landing Prone stays coupled to the route/landing witness, and route/profile joins remain table-caller follow-up work.",
       "subject": "battle-hole-family"
     },
     {
@@ -1279,6 +1530,7 @@
       "coveredByObligationIds": [
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.SPELL.HIT_POINT_RESTORATION",
         "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
         "BATTLE.DAMAGE.ATTACK_BRANCHES",
         "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
@@ -1287,10 +1539,10 @@
       ],
       "fillKind": "rolledDice",
       "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+        "RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION"
       ],
       "id": "rolledDice",
-      "reason": "Rolled Dice fills are shared by damage, healing, mitigation, duplicate interception, and feature-roll procedures. Generic damage branch, type/reduction, disposition, and shared HP obligations cover the damage core while spell-condition lifecycle joins remain split follow-up work.",
+      "reason": "Rolled Dice fills are shared by damage, healing, mitigation, duplicate interception, and feature-roll procedures. Generic damage branch, healing, type/reduction, disposition, and shared HP obligations cover the core while after-hit spell roll joins remain split follow-up work.",
       "subject": "battle-fill-kind"
     },
     {
@@ -1315,10 +1567,12 @@
       ],
       "fillKind": "savingThrowOutcome",
       "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+        "RKBC-SPELL-SAVE-GATED-CONDITION-PARITY",
+        "RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION",
+        "RKBC-PROFILE-JOIN-TABLE-CALLER"
       ],
       "id": "savingThrowOutcome",
-      "reason": "Saving Throw outcomes drive damage, condition, Command, protection, feature, and active-effect lifecycle branches. Generic spell/feature damage save branching and Command are covered while spell-condition joins remain follow-up work.",
+      "reason": "Saving Throw outcomes drive damage, condition, Command, protection, feature, and active-effect lifecycle branches. Generic spell/feature damage save branching and Command are covered while condition, after-hit, and table-caller joins remain follow-up work.",
       "subject": "battle-fill-kind"
     },
     {
@@ -1326,7 +1580,7 @@
       "coveredByObligationIds": [],
       "fillKind": "conditionChoice",
       "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+        "RKBC-SPELL-SAVE-GATED-CONDITION-PARITY"
       ],
       "id": "conditionChoice",
       "reason": "Condition choices select reducer-visible condition application, not display metadata.",
@@ -1350,10 +1604,11 @@
       ],
       "fillKind": "abilityChoice",
       "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+        "RKBC-SPELL-ROLL-SCALAR-PARITY",
+        "RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION"
       ],
       "id": "abilityChoice",
-      "reason": "Ability choices determine later roll modifiers, checks, or marked-damage semantics; marked-damage spell profile joins remain in the spell damage/condition follow-up.",
+      "reason": "Ability choices determine later roll modifiers, checks, or marked-damage semantics; roll-modifier and marked-damage spell profile joins remain split follow-up work.",
       "subject": "battle-fill-kind"
     },
     {
@@ -1609,11 +1864,10 @@
       ],
       "fillKind": "movement",
       "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION",
         "RKBC-PROFILE-JOIN-TABLE-CALLER"
       ],
       "id": "movement",
-      "reason": "Movement fills spend movement budget and carry Opportunity Attack frontier facts covered by the movement obligation. The greaseGroundDifficultTerrain, jumpMovementReplacement route/landing witness, commandApproach, commandFlee, forced-movement route, terrain, and placement facts are caller/table evidence covered by the boundary obligation; route selection and geometry stay out of rules-kernel state. Jump failed-landing Prone is reducer-owned spell condition semantics left to the spell damage/condition profile follow-up, and route/profile joins remain table-caller follow-up work.",
+      "reason": "Movement fills spend movement budget and carry Opportunity Attack frontier facts covered by the movement obligation. The greaseGroundDifficultTerrain, jumpMovementReplacement route/landing witness, commandApproach, commandFlee, forced-movement route, terrain, and placement facts are caller/table evidence covered by the boundary obligation; route selection and geometry stay out of rules-kernel state. Jump failed-landing Prone stays coupled to the route/landing witness, and route/profile joins remain table-caller follow-up work.",
       "subject": "battle-fill-kind"
     },
     {
@@ -1657,11 +1911,11 @@
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+        "RKBC-SPELL-SELF-TRANSFORMATION-PARITY"
       ],
       "holeKind": "selfTransformationModeChoice",
       "id": "BattleSelfTransformationModeChoiceHole",
-      "reason": "Self-transformation mode choice selects the reducer-visible Alter Self mode and changes later spell effect projections; the spell procedure profile owns the executable branch while broader spell profile joins remain split follow-up work.",
+      "reason": "Self-transformation mode choice selects the reducer-visible Alter Self mode and changes later spell effect projections; the spell procedure profile owns the executable branch while self-transformation parity remains split follow-up work.",
       "subject": "battle-hole-family"
     },
     {
@@ -1698,10 +1952,10 @@
       ],
       "fillKind": "selfTransformationModeChoice",
       "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+        "RKBC-SPELL-SELF-TRANSFORMATION-PARITY"
       ],
       "id": "selfTransformationModeChoice",
-      "reason": "Self-transformation mode fills choose the reducer-visible spell mode rather than presentation metadata; remaining spell profile joins stay in their follow-up task.",
+      "reason": "Self-transformation mode fills choose the reducer-visible spell mode rather than presentation metadata; self-transformation parity remains split follow-up work.",
       "subject": "battle-fill-kind"
     }
   ],
@@ -1884,7 +2138,8 @@
     },
     {
       "obligationIds": [
-        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES"
       ],
       "profileId": "spell.invocation-damage-save-or-attack"
     },
@@ -1896,7 +2151,7 @@
     },
     {
       "obligationIds": [
-        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+        "BATTLE.SPELL.HIT_POINT_RESTORATION"
       ],
       "profileId": "spell.hit-point-restoration"
     },
@@ -1916,9 +2171,87 @@
     },
     {
       "obligationIds": [
-        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+        "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE"
       ],
       "profileId": "spell.invocation-direct-condition"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE"
+      ],
+      "profileId": "spell.invocation-condition-save"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE"
+      ],
+      "profileId": "spell.invocation-sleep-repeat-save-lifecycle"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.MAKE_STABLE_LIFECYCLE"
+      ],
+      "profileId": "spell.invocation-make-stable"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS"
+      ],
+      "profileId": "spell.invocation-roll-modifier"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION"
+      ],
+      "profileId": "spell.creature-type-protection-and-charm"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE"
+      ],
+      "profileId": "spell.invocation-attack-roll-advantage-save"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS"
+      ],
+      "profileId": "spell.invocation-condition-immunity-turn-start-temporary-hit-points"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS"
+      ],
+      "profileId": "spell.scalar-buff"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE"
+      ],
+      "profileId": "spell.invocation-hideous-laughter-repeat-save-lifecycle"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS"
+      ],
+      "profileId": "spell.invocation-self-ability-check-advantage"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION"
+      ],
+      "profileId": "spell.invocation-condition-removal-protection"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION"
+      ],
+      "profileId": "spell.invocation-direct-condition-removal"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.SELF_TRANSFORMATION_MODE"
+      ],
+      "profileId": "spell.invocation-self-transformation-mode"
     },
     {
       "obligationIds": [

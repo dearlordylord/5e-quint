@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Spell Damage Condition And Scalar Profile Join"
     },
     {
@@ -147,6 +147,36 @@
       "id": "RKBC-FINAL-B-CLOSURE-GATE",
       "status": "blocked",
       "title": "Final Rules Kernel B Closure Gate"
+    },
+    {
+      "number": 25,
+      "id": "RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY",
+      "status": "ready-for-research",
+      "title": "Spell Direct Condition Removal And Protection Parity Witnesses"
+    },
+    {
+      "number": 26,
+      "id": "RKBC-SPELL-SAVE-GATED-CONDITION-PARITY",
+      "status": "ready-for-research",
+      "title": "Spell Save-Gated Condition Parity Witnesses"
+    },
+    {
+      "number": 27,
+      "id": "RKBC-SPELL-ROLL-SCALAR-PARITY",
+      "status": "ready-for-research",
+      "title": "Spell Roll Modifier And Scalar Buff Parity Witnesses"
+    },
+    {
+      "number": 28,
+      "id": "RKBC-SPELL-MAKE-STABLE-PARITY",
+      "status": "ready-for-research",
+      "title": "Spell Make Stable Parity Witness"
+    },
+    {
+      "number": 29,
+      "id": "RKBC-SPELL-SELF-TRANSFORMATION-PARITY",
+      "status": "ready-for-research",
+      "title": "Spell Self Transformation Mode Parity Witness"
     }
   ]
 }
@@ -325,7 +355,7 @@ Reviewers should reject:
 | 6 | RKBC-BATTLE-HOLE-REACTION-CONCENTRATION - Battle Reaction And Concentration Hole Obligations | done | RKBC-BATTLE-HOLE-INVENTORY | Reaction-decision, continuation-resume, spell-cast reaction-fact, and Concentration Saving Throw holes reuse the covered reaction obligation or table-fact boundary rows; Task 6 has no remaining follow-up. |
 | 7 | RKBC-PROFILE-JOIN-FEATURE-PASSIVE-RESOURCE - Feature Passive Resource And Persistent Profile Join | done | baseline | Passive, persistent-effect, attack-scaling, mastery, and activation feature profiles are joined to covered feature procedure obligations; reaction/bonus and failed-roll resource profiles remain Task 8. |
 | 8 | RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS - Feature Reaction Bonus Action And Resource Profile Join | done | baseline | Feature reaction, bonus-action, and failed-roll resource profiles are joined to covered feature procedure obligations, with zero-damage redirect also joined to reaction continuation. |
-| 9 | RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION - Spell Damage Condition And Scalar Profile Join | ready-for-research | baseline | Map Spell Definition profiles for damage, condition, scalar, and roll modifiers to covered Spell Effect/Invocation obligations or create missing obligations. |
+| 9 | RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION - Spell Damage Condition And Scalar Profile Join | done | baseline | Spell damage, restoration, condition, scalar, roll-modifier, protection, removal, and self-transformation profiles are joined to covered obligations or precise mapped-open spell parity obligations. |
 | 10 | RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION - Spell After Hit Reaction And Marked Effect Profile Join | ready-for-research | baseline | Map after-hit, reaction-casting-time Spell Invocation, Readied Spell Response, marked-effect, and chained spell profiles to covered obligations or create missing obligations. |
 | 11 | RKBC-PROFILE-JOIN-TABLE-CALLER - Table Caller Profile Join And Boundary Classification | ready-for-research | RKBC-BATTLE-HOLE-INVENTORY, RKBC-BATTLE-HOLE-TARGETS-AREAS, RKBC-BATTLE-HOLE-MOVEMENT-ROUTE | Map table-caller profiles to reducer-semantic obligations or boundary rows without MBT state-space explosion. |
 | 12 | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY - Character Creation Choice Discovery And Cardinality | ready-for-research | baseline | Split current creation choice discovery/cardinality semantics out of the broad creation audit. |
@@ -340,7 +370,12 @@ Reviewers should reject:
 | 21 | RKBC-HANDOFF-BATTLE-INIT - Character Battle Initialization Projection | ready-for-research | baseline | Cover Character Sheet/build projection into battle initialization. |
 | 22 | RKBC-HANDOFF-BATTLE-SETTLEMENT - Character Battle Settlement Back To Sheet | blocked | RKBC-SHEET-HP-REST-HIT-DICE, RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS, RKBC-HANDOFF-BATTLE-INIT | Cover HP, condition, spell-slot, and resource settlement from battle back to sheet. |
 | 23 | RKBC-HANDOFF-IDENTITY-CONFLICTS - Character Battle Identity And Max HP Conflict Handling | blocked | RKBC-SHEET-HP-REST-HIT-DICE, RKBC-HANDOFF-BATTLE-INIT | Cover identity checks, max-HP conflicts, and zero-HP lifecycle handoff. |
-| 24 | RKBC-FINAL-B-CLOSURE-GATE - Final Rules Kernel B Closure Gate | blocked | RKBC-BATTLE-HOLE-INVENTORY, RKBC-BATTLE-HOLE-TARGETS-AREAS, RKBC-BATTLE-HOLE-MOVEMENT-ROUTE, RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION, RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND, RKBC-BATTLE-HOLE-REACTION-CONCENTRATION, RKBC-PROFILE-JOIN-FEATURE-PASSIVE-RESOURCE, RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS, RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION, RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION, RKBC-PROFILE-JOIN-TABLE-CALLER, RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH, RKBC-CREATION-ADVANCEMENT-REPLACEMENT, RKBC-CREATION-SPELLCASTING-PROGRESSION, RKBC-CREATION-WEAPON-MASTERY-FEAT, RKBC-SHEET-HP-REST-HIT-DICE, RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS, RKBC-SHEET-FEATURE-RESOURCES, RKBC-SHEET-WEAPON-MASTERY-RITUAL, RKBC-HANDOFF-BATTLE-INIT, RKBC-HANDOFF-BATTLE-SETTLEMENT, RKBC-HANDOFF-IDENTITY-CONFLICTS | Remove merge-acceptable `needs-*` statuses, wire quality gate, and prove reports show B closure. |
+| 24 | RKBC-FINAL-B-CLOSURE-GATE - Final Rules Kernel B Closure Gate | blocked | RKBC-BATTLE-HOLE-INVENTORY, RKBC-BATTLE-HOLE-TARGETS-AREAS, RKBC-BATTLE-HOLE-MOVEMENT-ROUTE, RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION, RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND, RKBC-BATTLE-HOLE-REACTION-CONCENTRATION, RKBC-PROFILE-JOIN-FEATURE-PASSIVE-RESOURCE, RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS, RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION, RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION, RKBC-PROFILE-JOIN-TABLE-CALLER, RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH, RKBC-CREATION-ADVANCEMENT-REPLACEMENT, RKBC-CREATION-SPELLCASTING-PROGRESSION, RKBC-CREATION-WEAPON-MASTERY-FEAT, RKBC-SHEET-HP-REST-HIT-DICE, RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS, RKBC-SHEET-FEATURE-RESOURCES, RKBC-SHEET-WEAPON-MASTERY-RITUAL, RKBC-HANDOFF-BATTLE-INIT, RKBC-HANDOFF-BATTLE-SETTLEMENT, RKBC-HANDOFF-IDENTITY-CONFLICTS, RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY, RKBC-SPELL-SAVE-GATED-CONDITION-PARITY, RKBC-SPELL-ROLL-SCALAR-PARITY, RKBC-SPELL-MAKE-STABLE-PARITY, RKBC-SPELL-SELF-TRANSFORMATION-PARITY | Remove merge-acceptable `needs-*` statuses, wire quality gate, and prove reports show B closure. |
+| 25 | RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY - Spell Direct Condition Removal And Protection Parity Witnesses | ready-for-research | RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION | Add focused parity witnesses for direct spell condition application, creature-type protection/charm prevention, condition-immunity Temporary Hit Point refresh, and condition removal/protection obligations. |
+| 26 | RKBC-SPELL-SAVE-GATED-CONDITION-PARITY - Spell Save-Gated Condition Parity Witnesses | ready-for-research | RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION | Add focused parity witnesses for save-gated condition lifecycle, condition-choice holes, non-Sleep repeat saves, and save-gated attack-roll Advantage effects. |
+| 27 | RKBC-SPELL-ROLL-SCALAR-PARITY - Spell Roll Modifier And Scalar Buff Parity Witnesses | ready-for-research | RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION | Add focused parity witnesses for spell d20 roll modifiers and scalar buff active effects. |
+| 28 | RKBC-SPELL-MAKE-STABLE-PARITY - Spell Make Stable Parity Witness | ready-for-research | RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION | Add focused parity witness coverage for Spare the Dying target admission and Stable zero-Hit-Point lifecycle mutation. |
+| 29 | RKBC-SPELL-SELF-TRANSFORMATION-PARITY - Spell Self Transformation Mode Parity Witness | ready-for-research | RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION | Add focused parity witness coverage for self-transformation mode choice, natural weapon override, and mode-derived projections. |
 
 ## Task Details
 
@@ -529,12 +564,20 @@ Acceptance:
 
 ### Task 9 - RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION - Spell Damage Condition And Scalar Profile Join
 
-Status: `ready-for-research`
+Status: `done`
 
 Scope: close unmapped Spell Definition support profiles for Saving
 Throw/Attack Roll damage, direct conditions, repeated Saving Throws, scalar
 modifiers, roll modifiers, condition immunity, condition removal, and
 make-stable/restoration semantics.
+
+Result: Spell damage save-or-attack now joins both core spell procedure and
+spell damage branch obligations. Hit Point restoration and Sleep repeat-save
+lifecycle have covered spell obligations with existing QNT/runtime/parity
+markers. Direct/save-gated condition, make-stable, roll modifier, scalar,
+condition-immunity/removal, creature-type protection, and self-transformation
+profiles are mapped-open to precise `BATTLE.SPELL.*` parity-witness
+obligations, with Tasks 25-29 retaining that work as executable follow-up.
 
 Acceptance:
 
@@ -805,6 +848,99 @@ Acceptance:
   `git diff --check` pass after generated artifacts are refreshed.
 - `pnpm rules-kernel-coverage:check:self-test` and
   `pnpm unit-profile-coverage:check:self-test` pass after checker/gate changes.
+
+### Task 25 - RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY - Spell Direct Condition Removal And Protection Parity Witnesses
+
+Status: `ready-for-research`
+
+Depends on: `RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION`.
+
+Scope: cover direct spell condition application, creature-type
+protection/charm prevention, condition-immunity Temporary Hit Point refresh,
+and condition removal/protection profiles mapped by Task 9.
+
+Acceptance:
+
+- `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE`,
+  `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION`,
+  `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS`, and
+  `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` have parity witnesses.
+- Condition application, prevention, immunity, removal, and cleanup semantics
+  stay typed as reducer state rather than authored identity dispatch.
+- Existing Surface admission evidence remains separate from reducer-semantic
+  parity.
+
+### Task 26 - RKBC-SPELL-SAVE-GATED-CONDITION-PARITY - Spell Save-Gated Condition Parity Witnesses
+
+Status: `ready-for-research`
+
+Depends on: `RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION`.
+
+Scope: cover save-gated condition lifecycle, condition-choice holes, non-Sleep
+repeat saves, and save-gated attack-roll Advantage effects mapped by Task 9.
+
+Acceptance:
+
+- `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` and
+  `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE` have parity witnesses.
+- Sleep repeat-save lifecycle remains owned by
+  `BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE`; this task does not duplicate it.
+- Repeat-save, condition-choice, and active-effect cleanup state are modeled by
+  typed runtime facts and the authoritative package-local QNT specs.
+
+### Task 27 - RKBC-SPELL-ROLL-SCALAR-PARITY - Spell Roll Modifier And Scalar Buff Parity Witnesses
+
+Status: `ready-for-research`
+
+Depends on: `RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION`.
+
+Scope: cover spell d20 roll modifiers and scalar buff active effects mapped by
+Task 9, including Ability Check/skill/Saving Throw/attack-roll modifier
+selection and Armor Class, Speed, special Speed, Hit Point maximum, and
+Temporary Hit Point projections.
+
+Acceptance:
+
+- `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS` and
+  `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` have parity witnesses.
+- Scalar projections are derived from active-effect facts at the runtime
+  boundary that consumes them, without duplicating mutable state.
+- Roll-modifier selection holes remain domain facts; no authored spell identity
+  branch is introduced.
+
+### Task 28 - RKBC-SPELL-MAKE-STABLE-PARITY - Spell Make Stable Parity Witness
+
+Status: `ready-for-research`
+
+Depends on: `RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION`.
+
+Scope: cover make-stable spell semantics mapped by Task 9, including target
+admission and zero-Hit-Point non-dead Stable lifecycle mutation.
+
+Acceptance:
+
+- `BATTLE.SPELL.MAKE_STABLE_LIFECYCLE` has a parity witness.
+- Target admission and Stable state mutation trace to local SRD text and
+  `UBIQUITOUS_LANGUAGE.md`.
+- Make-stable semantics reuse the existing Hit Point and death-save algebra
+  instead of duplicating zero-Hit-Point lifecycle rules.
+
+### Task 29 - RKBC-SPELL-SELF-TRANSFORMATION-PARITY - Spell Self Transformation Mode Parity Witness
+
+Status: `ready-for-research`
+
+Depends on: `RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION`.
+
+Scope: cover self-transformation mode choice mapped by Task 9, including Magic
+Action mode replacement, natural-weapon override, and mode-derived projections.
+
+Acceptance:
+
+- `BATTLE.SPELL.SELF_TRANSFORMATION_MODE` has a parity witness.
+- The selected mode is represented as explicit runtime state, not authored
+  spell identity.
+- Natural weapon, movement, and mode-specific projections derive from the mode
+  fact without storing contradictory duplicate projection facts.
 
 ## Verification
 
