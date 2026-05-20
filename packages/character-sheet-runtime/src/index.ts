@@ -18,6 +18,7 @@ import {
   DRUID_WILD_SHAPE_UNIT_ID,
   MONK_MONKS_FOCUS_UNIT_ID,
   SORCERER_FONT_OF_MAGIC_UNIT_ID,
+  characterBuildSorcererFontOfMagicFacts,
   characterBuildDruidWildShapeFacts,
   characterBuildMonkUncannyMetabolismFacts,
   characterBuildMonksFocusFacts,
@@ -150,6 +151,7 @@ import { Brand, Either, Match, Option } from "effect";
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-long-rest-use-state
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-point-pool-resource
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.font-of-magic-slot-to-sorcery-points
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.monk-uncanny-metabolism-initiative-recovery
 
 const WEAPON_PROFICIENCY_CATEGORY_VALUES = ["simple", "martial"] as const;
@@ -382,6 +384,13 @@ export type CharacterSheetResourceState =
       readonly expended: ResourceCount;
     });
 
+type CharacterSheetSorceryPointPoolResourceState = Extract<
+  CharacterSheetResourceState,
+  { readonly tag: "pointPoolResource" }
+> & {
+  readonly unitId: typeof SORCERER_FONT_OF_MAGIC_UNIT_ID;
+};
+
 export type CharacterSheetMonksFocusSaveDc = {
   readonly unitId: typeof MONK_MONKS_FOCUS_UNIT_ID;
   readonly dc: DifficultyClass;
@@ -404,6 +413,12 @@ export type CharacterSheetMonkUncannyMetabolismInitiativeInput = {
 export type CharacterSheetArcaneRecoverySlotRefund = {
   readonly spellLevel: SpellSlotLevel;
   readonly count: ResourceCount;
+};
+
+export type CharacterSheetFontOfMagicSlotToSorceryPointsInput = {
+  readonly sheet: CharacterSheet;
+  readonly unitLibrary: UnitCatalog;
+  readonly spellLevel: SpellSlotLevel;
 };
 
 export type CharacterSheetShortRestInput = {
@@ -1358,6 +1373,78 @@ export function useMonkUncannyMetabolismWhenRollingInitiative(
       expenditures: input.sheet.resourceExpenditures,
       unitId: useState.right.focusRecovery.resourceUnitId,
       expended: resourceCount(0),
+    }),
+  });
+}
+
+export function convertFontOfMagicSpellSlotToSorceryPoints(
+  input: CharacterSheetFontOfMagicSlotToSorceryPointsInput,
+): Either.Either<CharacterSheet, CharacterSheetIssue> {
+  const fontOfMagicFacts = characterBuildSorcererFontOfMagicFacts({
+    build: input.sheet.build,
+    unitLibrary: input.unitLibrary,
+  });
+  if (Either.isLeft(fontOfMagicFacts)) {
+    return characterSheetIssue(fontOfMagicFacts.left.message);
+  }
+  if (fontOfMagicFacts.right === undefined) {
+    return characterSheetIssue(
+      "Font of Magic conversion requires the Sorcerer Font of Magic feature.",
+    );
+  }
+  const fontOfMagic = fontOfMagicFacts.right;
+  if (!isCharacterSheetWithSpellSlots(input.sheet)) {
+    return characterSheetIssue(
+      "Font of Magic conversion requires ordinary Spell Slot state.",
+    );
+  }
+
+  const spellSlots = characterSheetSpellSlots(input.sheet);
+  const spellSlot = spellSlots?.find(
+    (slot) => slot.spellLevel === input.spellLevel,
+  );
+  if (spellSlot === undefined) {
+    return characterSheetIssue(
+      "Font of Magic conversion requires an existing ordinary Spell Slot level.",
+    );
+  }
+  if (spellSlot.expended >= spellSlot.count) {
+    return characterSheetIssue(
+      "Font of Magic conversion requires an unexpended ordinary Spell Slot.",
+    );
+  }
+
+  const resources = characterSheetResources(input.sheet, input.unitLibrary);
+  if (Either.isLeft(resources)) return Either.left(resources.left);
+  const sorceryPoints = resources.right.find(
+    (resource): resource is CharacterSheetSorceryPointPoolResourceState =>
+      resource.tag === "pointPoolResource" &&
+      resource.unitId === fontOfMagic.unitId,
+  );
+  if (sorceryPoints === undefined) {
+    return characterSheetIssue(
+      "Font of Magic conversion requires the shared Sorcery Point resource.",
+    );
+  }
+
+  const pointGain = resourceCount(input.spellLevel);
+  if (sorceryPoints.expended < pointGain) {
+    return characterSheetIssue(
+      "Font of Magic conversion would exceed the Sorcery Point maximum.",
+    );
+  }
+
+  return Either.right({
+    ...input.sheet,
+    spellSlotExpenditures: input.sheet.spellSlotExpenditures.map((slot) =>
+      slot.spellLevel === input.spellLevel
+        ? { ...slot, expended: resourceCount(slot.expended + 1) }
+        : slot,
+    ),
+    resourceExpenditures: replacePointPoolResourceExpenditure({
+      expenditures: input.sheet.resourceExpenditures,
+      unitId: sorceryPoints.unitId,
+      expended: resourceCount(sorceryPoints.expended - pointGain),
     }),
   });
 }
@@ -3189,6 +3276,26 @@ function replaceUseCountResourceExpenditure(input: {
   if (input.expended > resourceCount(0)) {
     next.push({
       tag: "useCountResource",
+      unitId: input.unitId,
+      expended: input.expended,
+    });
+  }
+  return next;
+}
+
+function replacePointPoolResourceExpenditure(input: {
+  readonly expenditures: readonly CharacterSheetResourceExpenditure[];
+  readonly unitId: CharacterSheetPointPoolResourceUnitId;
+  readonly expended: ResourceCount;
+}): CharacterSheetResourceExpenditure[] {
+  const next = input.expenditures.filter(
+    (expenditure) =>
+      expenditure.tag !== "pointPoolResource" ||
+      expenditure.unitId !== input.unitId,
+  );
+  if (input.expended > resourceCount(0)) {
+    next.push({
+      tag: "pointPoolResource",
       unitId: input.unitId,
       expended: input.expended,
     });

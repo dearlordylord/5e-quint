@@ -18718,7 +18718,7 @@
         },
         {
           "owner": "character-sheet-runtime",
-          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS Character Sheet class-feature point-pool resource runtime; Font of Magic is read from CharacterBuild resources and the installed Surface feature record, then projected as Character Sheet Sorcery Point point-pool state. The runtime derives capacity from Sorcerer class level, stores only expended Sorcery Points, and restores all expended points on Long Rest without storing duplicate class progression, Spell Slot conversion, or Metamagic option state.",
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS Character Sheet class-feature point-pool resource and Spell Slot conversion runtime; Font of Magic is read from CharacterBuild resources and the installed Surface feature record, then projected as Character Sheet Sorcery Point point-pool state. The runtime derives capacity from Sorcerer class level, stores only expended Sorcery Points, restores all expended points on Long Rest, and executes the no-action ordinary Spell Slot to Sorcery Point conversion by spending one existing ordinary Spell Slot and reducing the shared point-pool expenditure by exactly the slot level only when the full gain fits under the cap. It does not store duplicate class progression, temporary Spell Slot creation, or Metamagic option state.",
           "status": "owner evidence present"
         }
       ],

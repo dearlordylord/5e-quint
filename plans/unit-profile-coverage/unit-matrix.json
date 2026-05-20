@@ -82,14 +82,14 @@
       "percent": "98.7%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 103,
+      "denominator": 104,
       "numerator": 26,
-      "percent": "25.2%"
+      "percent": "25%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 103,
+      "denominator": 104,
       "numerator": 31,
-      "percent": "30.1%"
+      "percent": "29.8%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 131,
@@ -2701,6 +2701,25 @@
       ]
     },
     {
+      "id": "character-sheet.font-of-magic-slot-to-sorcery-points",
+      "profileKind": "character-sheet",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "Character Sheet consumes retained Font of Magic source facts, existing ordinary Spell Slot expenditure state, and the shared Sorcery Point point-pool expenditure. The conversion spends one unexpended ordinary Spell Slot and restores expended Sorcery Points equal to the slot level only when the full gain fits under the Sorcerer-level cap; Pact Slots, temporary slot creation, and Metamagic execution remain outside this profile.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS"
+      ],
+      "title": "Character Sheet converts ordinary Spell Slots into Font of Magic Sorcery Points",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
       "id": "character-sheet.class-feature-long-rest-use-state",
       "profileKind": "character-sheet",
       "qntOwners": [],
@@ -2989,14 +3008,14 @@
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 103,
+        "denominator": 104,
         "numerator": 26,
-        "percent": "25.2%"
+        "percent": "25%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 103,
+        "denominator": 104,
         "numerator": 31,
-        "percent": "30.1%"
+        "percent": "29.8%"
       }
     },
     "profileKinds": [
@@ -3792,6 +3811,12 @@
         "joinStatus": "unmapped",
         "obligations": [],
         "profileId": "character-sheet.class-feature-point-pool-resource",
+        "profileKind": "character-sheet"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "character-sheet.font-of-magic-slot-to-sorcery-points",
         "profileKind": "character-sheet"
       },
       {
@@ -7968,6 +7993,14 @@
     },
     {
       "claimKind": "completed-runtime-parity",
+      "note": "Focused Character Sheet tests cover Font of Magic ownership from the installed Surface resource-pool operation, ordinary Spell Slot expenditure, Sorcery Point gain equal to the expended slot level, shared Sorcery Point cap rejection, unexpended-slot gating, and non-owner rejection. The Sorcery Point to temporary Spell Slot direction remains split to L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS.",
+      "profileIds": [
+        "character-sheet.font-of-magic-slot-to-sorcery-points"
+      ],
+      "taskId": "L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
       "note": "Focused Character Creation and Character Sheet tests cover Monk level 2 Uncanny Metabolism retained feature ownership, optional Initiative trigger source facts, Long Rest reset source facts, shared Monk's Focus resource link, Martial Arts die source link, Monk-level healing bonus projection, typed rejection of unowned use state, Short Rest preservation, and Long Rest clearing. Initiative-window execution, healing, and Focus Point recovery remain split to L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME.",
       "profileIds": [
         "character-creation.class-feature-source-fact-projection",
@@ -11255,22 +11288,11 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS",
-            "mechanic": "Spell Slot to Sorcery Point conversion execution: expend one Spell Slot with no action and grant Sorcery Points equal to the slot level, bounded by the shared Sorcery Point cap."
-          },
-          {
             "followUpTaskId": "L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS",
             "mechanic": "Sorcery Point to temporary Spell Slot conversion execution: spend Sorcery Points as a Bonus Action by the Creating Spell Slots table, enforce minimum Sorcerer level and level-5 maximum, and expire created slots on Long Rest."
           }
         ],
         "followUpTasks": [
-          {
-            "id": "L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS",
-            "mechanic": "Execute the no-action conversion that expends one Spell Slot and grants Sorcery Points equal to the expended slot's level, bounded by the shared Sorcery Point cap.",
-            "owner": "character-battle-runtime plus spellcasting resource owner",
-            "requiredOutput": "Supported runtime profile and owner evidence for Spell Slot to Sorcery Point conversion using the shared Sorcery Point resource and existing Spell Slot state.",
-            "title": "Sorcerer Font Of Magic Spell Slot To Sorcery Points"
-          },
           {
             "id": "L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS",
             "mechanic": "Execute the Bonus Action conversion that spends Sorcery Points by the Creating Spell Slots table, enforces the minimum Sorcerer level for the target slot, creates one Spell Slot no higher than level 5, and expires created slots on Long Rest.",
@@ -11282,12 +11304,14 @@
         "futureProfileOwner": "character-battle-runtime plus spellcasting resource owner",
         "profileIds": [
           "character-creation.class-feature-resource-projection",
-          "character-sheet.class-feature-point-pool-resource"
+          "character-sheet.class-feature-point-pool-resource",
+          "character-sheet.font-of-magic-slot-to-sorcery-points"
         ],
         "supportedMechanics": [
           "Sorcerer level 2 Character Creation retains Font of Magic and the sibling Metamagic feature refs from the Surface Sorcerer class progression without projecting Metamagic option state.",
           "Character Creation reads the installed Font of Magic resource-pool record and Sorcerer class level to project the shared sorcery_points point pool, Sorcerer-level cap, and Long Rest reset facts without duplicating the class progression table.",
-          "Character Sheet stores only expended Sorcery Point state for the shared Font of Magic point pool, derives capacity from CharacterBuild resource facts and the Surface feature, and clears expended points on Long Rest."
+          "Character Sheet stores only expended Sorcery Point state for the shared Font of Magic point pool, derives capacity from CharacterBuild resource facts and the Surface feature, and clears expended points on Long Rest.",
+          "Character Sheet executes Font of Magic's no-action ordinary Spell Slot to Sorcery Point conversion by reading the installed Surface operation through CharacterBuild Font of Magic facts, expending one existing ordinary Spell Slot, and reducing the shared sorcery_points point-pool expenditure by exactly the expended slot level only when the full gain fits under the Sorcerer-level cap."
         ],
         "tag": "profile-subset-supported"
       },
@@ -11341,6 +11365,25 @@
             "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS"
           ],
           "title": "Character Sheet tracks rest-reset class-feature point-pool resources",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-sheet.font-of-magic-slot-to-sorcery-points",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Character Sheet consumes retained Font of Magic source facts, existing ordinary Spell Slot expenditure state, and the shared Sorcery Point point-pool expenditure. The conversion spends one unexpended ordinary Spell Slot and restores expended Sorcery Points equal to the slot level only when the full gain fits under the Sorcerer-level cap; Pact Slots, temporary slot creation, and Metamagic execution remain outside this profile.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS"
+          ],
+          "title": "Character Sheet converts ordinary Spell Slots into Font of Magic Sorcery Points",
           "verificationOwners": [
             {
               "kind": "runtime-test",
