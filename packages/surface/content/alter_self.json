@@ -54,9 +54,38 @@
               "displayName": "Natural Weapons",
               "effects": [
                 {
+                  "attackRollAbility": "spellcasting",
                   "damageDie": 6,
-                  "damageType": "slashing",
-                  "kind": "natural_weapons"
+                  "damageRollAbility": "spellcasting",
+                  "damageType": {
+                    "holeId": "alter_self_natural_weapon_growth",
+                    "kind": "choice_table",
+                    "label": "natural weapon growth",
+                    "options": [
+                      {
+                        "damageType": "slashing",
+                        "displayName": "claws",
+                        "id": "claws"
+                      },
+                      {
+                        "damageType": "piercing",
+                        "displayName": "fangs",
+                        "id": "fangs"
+                      },
+                      {
+                        "damageType": "piercing",
+                        "displayName": "horns",
+                        "id": "horns"
+                      },
+                      {
+                        "damageType": "bludgeoning",
+                        "displayName": "hooves",
+                        "id": "hooves"
+                      }
+                    ]
+                  },
+                  "kind": "natural_weapons",
+                  "replacesAbility": "str"
                 }
               ],
               "id": "natural_weapons"

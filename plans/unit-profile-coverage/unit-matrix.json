@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 389,
-      "numerator": 174,
-      "percent": "44.7%"
+      "numerator": 175,
+      "percent": "45%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 461,
-      "numerator": 206,
-      "percent": "44.7%"
+      "numerator": 207,
+      "percent": "44.9%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 207
+      "value": 208
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 128,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 207,
-      "numerator": 207,
+      "denominator": 208,
+      "numerator": 208,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "82%"
     },
     "supportedProfileCoverage": {
-      "denominator": 175,
+      "denominator": 176,
       "numerator": 128,
-      "percent": "73.1%"
+      "percent": "72.7%"
     }
   },
   "metricSemantics": [
@@ -12555,6 +12555,41 @@
         "status": "installed"
       },
       "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME",
+            "mechanic": "Promote the spell-owned Alter Self option state, Magic-action mode replacement, Concentration cleanup, Aquatic Adaptation water breathing, and linked Swim Speed equal to Speed without copying creature Speed into parallel spell state; keep Change Appearance as runtime-detached presentation facts with no statistic mutation.",
+            "owner": "battle-runtime self-transformation spell invocation/effect lifecycle",
+            "requiredOutput": "Profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Alter Self casting, mode replacement, water breathing, linked Swim Speed projection, Concentration cleanup, Change Appearance closure, and a separate Natural Weapons runtime task.",
+            "title": "Alter Self Mode Lifecycle And Aquatic Runtime"
+          },
+          {
+            "id": "L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME",
+            "mechanic": "After the Surface option shape and shared mode-replacement runtime are present, promote Natural Weapons as a spell-owned Unarmed Strike override that uses the chosen damage type, deals 1d6 damage instead of the normal Unarmed Strike damage, uses the caster's spellcasting ability for attack and damage rolls, and cleans up on Concentration end.",
+            "owner": "battle-runtime self-transformation spell invocation/effect lifecycle plus character-battle-runtime Unarmed Strike projection",
+            "requiredOutput": "Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Natural Weapons Unarmed Strike attack and damage projection, damage-type choice, spellcasting-ability replacement, mode replacement, and cleanup.",
+            "title": "Alter Self Natural Weapons Runtime"
+          }
+        ],
+        "futureProfileOwner": "battle-runtime self-transformation spell invocation/effect lifecycle plus character-battle-runtime Unarmed Strike projection",
+        "reason": "Alter Self is authored and installed as an SRD Surface Spell Definition with self-targeted Aquatic Adaptation, Change Appearance, and lossless Natural Weapons option facts: water breathing, Swim Speed equal to Speed, no-statistics Change Appearance presentation, Natural Weapons growth-to-damage choice, 1d6 damage die, and spellcasting-ability attack and damage replacement. Task 4 claims only the Surface option-shape repair; no battle-runtime profile is promoted because Aquatic Adaptation and Natural Weapons still require spell-owned option state, Magic Action replacement, Concentration cleanup, linked Swim Speed projection, and Unarmed Strike override execution. Change Appearance changes presentation without changing statistics and remains runtime-detached table/appearance adjudication; Aquatic Adaptation and Natural Weapons remain blocked by the concrete runtime follow-up tasks listed on this claim.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/alter_self.json",
+      "unitId": "alter_self"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "profileIds": [
           "spell.creature-type-protection-and-charm"
         ],
@@ -19928,53 +19963,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/alert.json",
       "unitId": "alert"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "followUpTasks": [
-          {
-            "id": "L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE",
-            "mechanic": "Replace the lossy Natural Weapons placeholder with a lossless SRD Surface shape for claws, fangs, horns, and hooves, preserving the Slashing, Piercing, and Bludgeoning cast-time damage-type choice and the spellcasting-ability attack and damage replacement facts without duplicating Unarmed Strike state.",
-            "owner": "surface Spell Definition authoring",
-            "requiredOutput": "Alter Self Dhall/JSON content, and schema/tracer support if needed, represent Aquatic Adaptation, Change Appearance, and Natural Weapons as executable option facts, with Natural Weapons carrying the chosen natural growth, damage type, d6 damage die, and spellcasting-ability replacement facts.",
-            "title": "Alter Self Surface Option Shape"
-          },
-          {
-            "id": "L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME",
-            "mechanic": "Promote the spell-owned Alter Self option state, Magic-action mode replacement, Concentration cleanup, Aquatic Adaptation water breathing, and linked Swim Speed equal to Speed without copying creature Speed into parallel spell state; keep Change Appearance as runtime-detached presentation facts with no statistic mutation.",
-            "owner": "battle-runtime self-transformation spell invocation/effect lifecycle",
-            "requiredOutput": "Profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Alter Self casting, mode replacement, water breathing, linked Swim Speed projection, Concentration cleanup, Change Appearance closure, and a separate Natural Weapons runtime task.",
-            "title": "Alter Self Aquatic Adaptation Runtime"
-          },
-          {
-            "id": "L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME",
-            "mechanic": "After the Surface option shape and shared mode-replacement runtime are present, promote Natural Weapons as a spell-owned Unarmed Strike override that uses the chosen damage type, deals 1d6 damage instead of the normal Unarmed Strike damage, uses the caster's spellcasting ability for attack and damage rolls, and cleans up on Concentration end.",
-            "owner": "battle-runtime self-transformation spell invocation/effect lifecycle plus character-battle-runtime Unarmed Strike projection",
-            "requiredOutput": "Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Natural Weapons Unarmed Strike attack and damage projection, damage-type choice, spellcasting-ability replacement, mode replacement, and cleanup.",
-            "title": "Alter Self Natural Weapons Runtime"
-          }
-        ],
-        "futureProfileOwner": "surface Spell Definition authoring plus battle-runtime self-transformation spell invocation/effect lifecycle plus character-battle-runtime Unarmed Strike projection",
-        "reason": "Alter Self is authored as an SRD Surface Spell Definition with self-targeted Aquatic Adaptation, Change Appearance, and Natural Weapons modes, but Task 23 claims no battle-runtime support because the executable modes require spell-owned option state and the Natural Weapons authored shape is not lossless. Change Appearance changes presentation without changing statistics and remains runtime-detached table/appearance adjudication; Aquatic Adaptation and Natural Weapons remain blocked by the concrete follow-up tasks listed on this claim.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/alter_self.json",
-      "unitId": "alter_self"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

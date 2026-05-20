@@ -25,13 +25,13 @@
     {
       "number": 4,
       "id": "L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Alter Self Surface Option Shape"
     },
     {
       "number": 5,
       "id": "L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Alter Self Mode Lifecycle And Aquatic Runtime"
     },
     {
@@ -164,8 +164,8 @@ The final task is intentionally blocked on every real task in this plan and plac
 | 1 | L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION - Acid Arrow RAW Corpus Reconciliation | blocked | owner RAW-corpus decision | B lane; Unit `acid_arrow`; local SRD 5.2.1 line 14 omits initial hit damage while line 16 refers to both initial and later damage. |
 | 2 | L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE - Acid Arrow Surface Damage Shape | blocked | L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION | B lane; Unit `acid_arrow`. |
 | 3 | L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT - Acid Arrow Delayed Runtime Support | blocked | L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE | B lane; Unit `acid_arrow`. |
-| 4 | L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE - Alter Self Surface Option Shape | ready-for-research | completed baseline | B lane; Unit `alter_self`. |
-| 5 | L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME - Alter Self Mode Lifecycle And Aquatic Runtime | blocked | L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE | B lane; Unit `alter_self`. |
+| 4 | L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE - Alter Self Surface Option Shape | done | completed baseline | B lane; Unit `alter_self`. |
+| 5 | L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME - Alter Self Mode Lifecycle And Aquatic Runtime | ready-for-research | L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE | B lane; Unit `alter_self`. |
 | 6 | L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME - Alter Self Natural Weapons Runtime | blocked | L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE, L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME | B lane; Unit `alter_self`. |
 | 7 | L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL - Continual Flame Dispel And Suppression Removal | ready-for-research | completed baseline | B lane; Unit `continual_flame`. |
 | 8 | L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE - Flame Blade Surface Lifecycle Shape | ready-for-research | completed baseline | B lane; Unit `flame_blade`. |
@@ -293,7 +293,7 @@ Acceptance:
 
 ### Task 4 - L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE - Alter Self Surface Option Shape
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `alter_self`.
 Origin: Original backlog task 90.
@@ -334,7 +334,7 @@ Acceptance:
 
 ### Task 5 - L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME - Alter Self Mode Lifecycle And Aquatic Runtime
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Unit: `alter_self`.
 Origin: Original backlog task 91.

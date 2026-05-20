@@ -201,6 +201,34 @@ export const DamageTypeRefSchema = Schema.Union(
   makeHoleSchema(DamageTypeRefBaseSchema),
 );
 
+const AlterSelfNaturalWeaponGrowthDamageTypeChoiceSchema = strictStruct({
+  kind: Schema.Literal("choice_table"),
+  holeId: Schema.Literal("alter_self_natural_weapon_growth"),
+  label: Schema.Literal("natural weapon growth"),
+  options: Schema.Tuple(
+    strictStruct({
+      id: Schema.Literal("claws"),
+      displayName: Schema.Literal("claws"),
+      damageType: Schema.Literal("slashing"),
+    }),
+    strictStruct({
+      id: Schema.Literal("fangs"),
+      displayName: Schema.Literal("fangs"),
+      damageType: Schema.Literal("piercing"),
+    }),
+    strictStruct({
+      id: Schema.Literal("horns"),
+      displayName: Schema.Literal("horns"),
+      damageType: Schema.Literal("piercing"),
+    }),
+    strictStruct({
+      id: Schema.Literal("hooves"),
+      displayName: Schema.Literal("hooves"),
+      damageType: Schema.Literal("bludgeoning"),
+    }),
+  ),
+});
+
 export const ActionRestrictionSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("none"),
@@ -331,6 +359,9 @@ type ClassLevelChoiceCount = Schema.Schema.Type<
   typeof ClassLevelChoiceCountSchema
 >;
 type ClassSpellListName = (typeof CLASS_SPELLCASTING_CLASS_NAMES)[number];
+type AlterSelfNaturalWeaponGrowthDamageTypeChoice = Schema.Schema.Type<
+  typeof AlterSelfNaturalWeaponGrowthDamageTypeChoiceSchema
+>;
 
 function distinctSkills(skills: readonly Skill[]): boolean {
   return new Set(skills).size === skills.length;
@@ -936,8 +967,11 @@ type EffectAtom =
   | { readonly kind: "alter_item_kind"; readonly newKind: string }
   | {
       readonly kind: "natural_weapons";
-      readonly damageType: Schema.Schema.Type<typeof DamageTypeSchema>;
-      readonly damageDie: number;
+      readonly damageType: AlterSelfNaturalWeaponGrowthDamageTypeChoice;
+      readonly damageDie: 6;
+      readonly replacesAbility: "str";
+      readonly attackRollAbility: "spellcasting";
+      readonly damageRollAbility: "spellcasting";
     }
   | { readonly kind: "water_breathing" }
   | {
@@ -2753,8 +2787,11 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       }),
       Schema.Struct({
         kind: Schema.Literal("natural_weapons"),
-        damageType: DamageTypeSchema,
-        damageDie: Schema.Number,
+        damageType: AlterSelfNaturalWeaponGrowthDamageTypeChoiceSchema,
+        damageDie: Schema.Literal(6),
+        replacesAbility: Schema.Literal("str"),
+        attackRollAbility: Schema.Literal("spellcasting"),
+        damageRollAbility: Schema.Literal("spellcasting"),
       }),
       Schema.Struct({ kind: Schema.Literal("water_breathing") }),
       Schema.Struct({

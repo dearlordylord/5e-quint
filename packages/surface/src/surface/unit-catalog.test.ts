@@ -48,6 +48,18 @@ const task184WeaponMasteryUnitIds = [
   "rogue_weapon_mastery",
 ] as const;
 
+const alterSelfNaturalWeaponGrowthDamageType = {
+  kind: "choice_table",
+  holeId: "alter_self_natural_weapon_growth",
+  label: "natural weapon growth",
+  options: [
+    { id: "claws", displayName: "claws", damageType: "slashing" },
+    { id: "fangs", displayName: "fangs", damageType: "piercing" },
+    { id: "horns", displayName: "horns", damageType: "piercing" },
+    { id: "hooves", displayName: "hooves", damageType: "bludgeoning" },
+  ],
+} as const;
+
 const requiredFirstVerticalUnitIds = [
   "class_barbarian",
   "class_bard",
@@ -243,6 +255,120 @@ describe("SRD Unit catalog boundary", () => {
     if (result.tag === "ok") {
       expect(Option.isNone(result.catalog.getUnit("acid_arrow"))).toBe(true);
     }
+  });
+
+  test("decodes Alter Self as a self option mode with lossless natural weapon growth facts", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const alterSelf = result.catalog.requireUnit("alter_self");
+
+    expect(alterSelf.kind).toBe("spell");
+    if (alterSelf.kind !== "spell") return;
+    expect(alterSelf.mechanics.family).toBe("activation");
+    if (alterSelf.mechanics.family !== "activation") return;
+
+    expect(alterSelf.mechanics).toMatchObject({
+      level: 2,
+      school: "transmutation",
+      castingTime: { kind: "action" },
+      range: { kind: "self" },
+      components: { v: true, s: true, m: false },
+      duration: { kind: "concentration", upTo: { unit: "hour", amount: 1 } },
+    });
+
+    expect(alterSelf.mechanics.phases).toEqual([
+      {
+        kind: "direct",
+        attachment: { kind: "self" },
+        mode: {
+          label: "Choose an alteration",
+          allowsMidDurationSwitchAs: "magic_action",
+          options: [
+            {
+              id: "aquatic_adaptation",
+              displayName: "Aquatic Adaptation",
+              effects: [
+                { kind: "water_breathing" },
+                {
+                  kind: "grant_speed",
+                  speedKind: "swim",
+                  feet: { kind: "walk_speed" },
+                },
+              ],
+            },
+            {
+              id: "change_appearance",
+              displayName: "Change Appearance",
+            },
+            {
+              id: "natural_weapons",
+              displayName: "Natural Weapons",
+              effects: [
+                {
+                  kind: "natural_weapons",
+                  damageType: alterSelfNaturalWeaponGrowthDamageType,
+                  damageDie: 6,
+                  replacesAbility: "str",
+                  attackRollAbility: "spellcasting",
+                  damageRollAbility: "spellcasting",
+                },
+              ],
+            },
+          ],
+        },
+      },
+    ]);
+  });
+
+  test("rejects lossy Alter Self Natural Weapons placeholders", () => {
+    const decode = Schema.decodeUnknownEither(EffectAtomSchema);
+    const completeNaturalWeapons = {
+      kind: "natural_weapons",
+      damageType: alterSelfNaturalWeaponGrowthDamageType,
+      damageDie: 6,
+      replacesAbility: "str",
+      attackRollAbility: "spellcasting",
+      damageRollAbility: "spellcasting",
+    };
+
+    expect(
+      Either.isLeft(
+        decode({
+          ...completeNaturalWeapons,
+          damageType: "slashing",
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          ...completeNaturalWeapons,
+          damageDie: 8,
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          ...completeNaturalWeapons,
+          damageType: {
+            ...alterSelfNaturalWeaponGrowthDamageType,
+            holeId: "natural_weapon_damage_type",
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          kind: "natural_weapons",
+          damageType: alterSelfNaturalWeaponGrowthDamageType,
+          damageDie: 6,
+        }),
+      ),
+    ).toBe(true);
   });
 
   test("keeps Prayer of Healing's SRD 5.2.1 rest-healing shell in the catalog projection", () => {
