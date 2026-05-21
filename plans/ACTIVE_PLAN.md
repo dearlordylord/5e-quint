@@ -40,6 +40,28 @@ only the current frontier context.
 - `deferred`: owner explicitly parked the work.
 - `done`: work completed and verification recorded.
 
+## Known Pre-Existing Failures (untriaged)
+
+- **Battle-runtime ability-modifier resource-cap init throw.** In a clean
+  frozen-lockfile checkout, 9 deterministic `@dnd/battle-runtime` tests fail during
+  `startBattle` → `battleCreatureStateFromInit` → `characterResourceState` with
+  `Error: Ability-modifier resource cap requires the projected ability modifier`
+  (`character-battle-resources.ts` `supportedUseCountCapForLevel`, thrown when
+  `capAbilityModifier` is undefined). Affected files:
+  `battle-runtime-bardic-inspiration.test.ts`,
+  `battle-runtime-cutting-words.test.ts`,
+  `battle-runtime-opportunity-and-light-attacks.test.ts`,
+  `battle-runtime-uncanny-dodge-and-damage-reductions.test.ts`. Found 2026-05-21
+  while verifying the active-effect deep-module refactor; confirmed **independent**
+  of that refactor (reproduces at the pre-refactor base state). Needs triage: real
+  regression vs. expected.
+- **Fresh-worktree battle MBT can't resolve quint modules.** In a worktree without
+  a primed `.quint-cache`, `battle-runtime.mbt.test.ts` fails with quint `QNT404`
+  name-resolution errors (`damageAfterAdjustments`, etc.) even though those names
+  exist in the `.qnt` corpus. quint-connect version matches the main repo. Likely a
+  missing cache-priming step in worktree setup; blocks MBT verification outside the
+  main checkout.
+
 ## Ralph Task Index
 
 The Ralph harness reads this machine-readable index for task order and status.
