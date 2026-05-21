@@ -580,6 +580,7 @@ export function spellFillSet(
     if (fill.kind === "spellAreaChoice") {
       if (
         invocation.procedure !== "fogCloudObscurement" &&
+        invocation.procedure !== "magicalDarknessPointOrigin" &&
         invocation.procedure !== "flamingSphere" &&
         invocation.procedure !== "moonbeam" &&
         invocation.procedure !== "webRestraintHazard"

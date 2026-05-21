@@ -14,7 +14,9 @@
 --
 -- Family: ongoing_effect (Concentration, up to 10 minutes).
 -- Attachment: area (sphere r=15, point_within_range) — primary mode.
--- Operation: passive → area_is_heavily_obscured.
+-- Operation: passive → area_is_magical_darkness.
+-- This atom carries the stronger SRD fact: magical Darkness fills the area,
+-- Darkvision cannot see through it, and nonmagical light cannot illuminate it.
 --
 -- OMITTED (separate owner/follow-up work):
 --   1. Object-attachment mode and opaque-cover blocking require a cast-time
@@ -61,7 +63,7 @@ let darkness =
               }
           , operations =
               [ { trigger = { kind = "passive" }
-                , effect = { kind = "area_is_heavily_obscured" }
+                , effect = { kind = "area_is_magical_darkness" }
                 }
               ]
           }

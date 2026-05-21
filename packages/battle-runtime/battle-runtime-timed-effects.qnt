@@ -290,6 +290,11 @@ module battleRuntimeTimedEffects {
             radiusFeet: data.radiusFeet,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
+        | MagicalDarknessPointOrigin(data) => MagicalDarknessPointOrigin({
+            areaId: data.areaId,
+            radiusFeet: data.radiusFeet,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
         | FlamingSphere(data) => FlamingSphere({
             areaId: data.areaId,
             damageDice: data.damageDice,
@@ -353,6 +358,7 @@ module battleRuntimeTimedEffects {
         | HideousLaughterEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | GreaseGroundHazard(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | FogCloudObscurement(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | MagicalDarknessPointOrigin(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | FlamingSphere(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | WebRestraintHazard(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | WebRestrained(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)

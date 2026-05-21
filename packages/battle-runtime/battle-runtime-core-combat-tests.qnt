@@ -1039,6 +1039,7 @@ module battleRuntimeCoreCombatTests {
       assert(expendedSlotsAfterInvocation(Guidance, 0) == 0),
       assert(expendedSlotsAfterInvocation(Grease, 0) == 1),
       assert(expendedSlotsAfterInvocation(FogCloud, 0) == 1),
+      assert(expendedSlotsAfterInvocation(Darkness, 0) == 1),
       assert(expendedSlotsAfterInvocation(Command, 0) == 1),
     }
   }

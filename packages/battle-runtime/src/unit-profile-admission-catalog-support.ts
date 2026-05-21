@@ -223,6 +223,8 @@ export const inflictWoundsUnitId = "inflict_wounds";
 
 export const lightUnitId = "light";
 
+export const darknessUnitId = "darkness";
+
 export const longstriderUnitId = "longstrider";
 
 export const mageArmorUnitId = "mage_armor";

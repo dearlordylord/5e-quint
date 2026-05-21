@@ -1668,6 +1668,18 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("magicalDarknessPointOrigin"),
+      spell: BattleRuntimeObjectSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("pointOriginSphere"),
+        radiusFeet: MovementFeet,
+      }),
+      durationTicks: BattleRuntimeObjectSchema,
+      rangeFeet: MovementFeet,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("flamingSphere"),
       spell: BattleRuntimeObjectSchema,
       ability: Schema.Literal("dex"),
@@ -3125,6 +3137,10 @@ type BattleFillEncoded =
             readonly areaId: string;
           }
         | {
+            readonly kind: "magicalDarknessArea";
+            readonly areaId: string;
+          }
+        | {
             readonly kind: "webCubeArea";
             readonly areaId: string;
           }
@@ -3809,6 +3825,10 @@ export const BattleFillSchema: Schema.Schema<
       value: Schema.Union(
         Schema.Struct({
           kind: Schema.Literal("fogCloudArea"),
+          areaId: BattleAreaId,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("magicalDarknessArea"),
           areaId: BattleAreaId,
         }),
         Schema.Struct({
@@ -4602,29 +4622,42 @@ const BattleLightEmitterSchema = Schema.Union(
   }),
 );
 
-const BattleObscurementZoneSchema = Schema.Struct({
-  kind: Schema.Literal("spellObscurementZone"),
-  sourceSpellId: Schema.String,
-  sourceCombatantId: CombatantId,
-  obscurement: Schema.Literal("lightlyObscured", "heavilyObscured"),
-  area: Schema.Union(
-    Schema.Struct({
-      kind: Schema.Literal("pointOriginSphere"),
-      areaId: BattleAreaId,
-      radiusFeet: MovementFeet,
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("pointOriginCube"),
-      areaId: BattleAreaId,
-      sideFeet: MovementFeet,
-    }),
-  ),
-  expiresAt: Schema.Struct({
-    kind: Schema.Literal("concentration"),
-    combatantId: CombatantId,
-    durationTicks: Schema.optionalWith(Schema.Number, { exact: true }),
-  }),
+const BattlePointOriginSphereAreaSchema = Schema.Struct({
+  kind: Schema.Literal("pointOriginSphere"),
+  areaId: BattleAreaId,
+  radiusFeet: MovementFeet,
 });
+
+const BattleConcentrationExpirationSchema = Schema.Struct({
+  kind: Schema.Literal("concentration"),
+  combatantId: CombatantId,
+  durationTicks: Schema.optionalWith(Schema.Number, { exact: true }),
+});
+
+const BattleObscurementZoneSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("spellObscurementZone"),
+    sourceSpellId: Schema.String,
+    sourceCombatantId: CombatantId,
+    obscurement: Schema.Literal("lightlyObscured", "heavilyObscured"),
+    area: Schema.Union(
+      BattlePointOriginSphereAreaSchema,
+      Schema.Struct({
+        kind: Schema.Literal("pointOriginCube"),
+        areaId: BattleAreaId,
+        sideFeet: MovementFeet,
+      }),
+    ),
+    expiresAt: BattleConcentrationExpirationSchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("spellMagicalDarknessZone"),
+    sourceSpellId: Schema.String,
+    sourceCombatantId: CombatantId,
+    area: BattlePointOriginSphereAreaSchema,
+    expiresAt: BattleConcentrationExpirationSchema,
+  }),
+);
 
 const FindFamiliarSnapshotSchema = Schema.Union(
   Schema.Struct({

@@ -1341,6 +1341,7 @@ type EffectAtom =
   | { readonly kind: "area_emits_dim_light" }
   | { readonly kind: "area_is_lightly_obscured" }
   | { readonly kind: "area_is_heavily_obscured" }
+  | { readonly kind: "area_is_magical_darkness" }
   | {
       readonly kind: "area_anchor_or_layering_requirement";
       readonly anchor: {
@@ -3324,6 +3325,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       Schema.Struct({ kind: Schema.Literal("area_emits_dim_light") }),
       Schema.Struct({ kind: Schema.Literal("area_is_lightly_obscured") }),
       Schema.Struct({ kind: Schema.Literal("area_is_heavily_obscured") }),
+      Schema.Struct({ kind: Schema.Literal("area_is_magical_darkness") }),
       strictStruct({
         kind: Schema.Literal("area_anchor_or_layering_requirement"),
         anchor: strictStruct({

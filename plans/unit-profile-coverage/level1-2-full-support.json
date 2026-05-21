@@ -550,14 +550,14 @@
     },
     {
       "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
+      "claimTag": "profile-subset-supported",
       "closureKinds": [
         "follow-up-split"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME: Promote Darkness's point-origin Sphere branch: Magic Action and level-2-or-higher Spell Slot spend, caster-owned Concentration up to 10 minutes, caller-supplied 15-foot point-origin Sphere area identity, active magical Darkness/Heavily Obscured zone projection that ordinary sight and Darkvision cannot see through, nonmagical light denial as a light/obscurement witness consequence rather than deletion of existing light emitters, and cleanup when Concentration or duration ends. Owner: battle-runtime spell invocation/effect lifecycle plus table/spatial visibility witness boundary. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for point-origin magical Darkness without object-origin or spell-created-light-dispel behavior.; L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH: Represent and promote or close Darkness's object branch: target object not worn or carried, 15-foot Emanation originating from that object, object-origin area identity, and opaque-cover blocking, consuming existing object and opaque-cover witness facts without adding duplicate map or cover state. Owner: Surface Spell Definition authoring plus battle-runtime object-origin spell-area and opaque-cover witness boundary. Required output: Darkness Surface content and runtime owner decision with focused tests for the object-origin branch, or accepted closure if object attachment, movement, and opaque-cover blocking stay outside promoted runtime.; L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL: Promote or close the overlap rule that dispels another level-2-or-lower spell when Darkness overlaps Bright Light or Dim Light created by that spell, consuming generic spell-created light facts such as Continual Flame rather than spell identity. Owner: Darkness Surface definition plus battle-runtime Darkness area and spell-created light overlap owner. Required output: Focused tests and promoted Quint/runtime parity or accepted closure for overlap-triggered dispel of spell-created light; Continual Flame cleanup must remain represented through generic spell-created light facts.",
+      "reason": "L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH: Represent and promote or close Darkness's object branch: target object not worn or carried, 15-foot Emanation originating from that object, object-origin area identity, and opaque-cover blocking, consuming existing object and opaque-cover witness facts without adding duplicate map or cover state. Owner: Surface Spell Definition authoring plus battle-runtime object-origin spell-area and opaque-cover witness boundary. Required output: Darkness Surface content and runtime owner decision with focused tests for the object-origin branch, or accepted closure if object attachment, movement, and opaque-cover blocking stay outside promoted runtime.; L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL: Promote or close the overlap rule that dispels another level-2-or-lower spell when Darkness overlaps Bright Light or Dim Light created by that spell, consuming generic spell-created light facts such as Continual Flame rather than spell identity. Owner: Darkness Surface definition plus battle-runtime Darkness area and spell-created light overlap owner. Required output: Focused tests and promoted Quint/runtime parity or accepted closure for overlap-triggered dispel of spell-created light; Continual Flame cleanup must remain represented through generic spell-created light facts.",
       "sourceRecordPath": "packages/surface/content/darkness.json",
       "sourceRows": [
         {
@@ -2839,9 +2839,9 @@
       "rowsByStatus": {
         "accepted": 373,
         "accepted-no-battle-effect": 137,
-        "battle-runtime-required": 34,
+        "battle-runtime-required": 31,
         "owner-evidence-required": 1,
-        "partial-battle-runtime": 11
+        "partial-battle-runtime": 14
       }
     },
     "rulesKernelCoveredProfileJoin": {
@@ -8128,9 +8128,9 @@
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
       "missing": 1,
-      "profile-subset-supported": 20,
+      "profile-subset-supported": 21,
       "supported-profile": 112,
-      "unsupported-profile": 35
+      "unsupported-profile": 34
     },
     "groupsByStatus": {
       "blocked-follow-up-split": 18,

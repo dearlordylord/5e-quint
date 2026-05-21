@@ -13,6 +13,8 @@
 
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
 
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import {
@@ -330,6 +332,12 @@ export function supportedSpellActs(
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedFogCloudObscurementProfile(
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      supportedPreparedMagicalDarknessPointOriginProfile(
         spell,
         spellcasting.spellSlots,
       ),
@@ -1026,6 +1034,72 @@ export function supportedPreparedFogCloudObscurementProfile(
   });
 }
 
+export function supportedPreparedMagicalDarknessPointOriginProfile(
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  if (spell.mechanics.family !== "ongoing_effect") {
+    return [];
+  }
+  const attachment = spell.mechanics.attachment;
+  const operation = spell.mechanics.operations[0];
+  const durationTicks =
+    spell.mechanics.duration.kind === "concentration"
+      ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.upTo)
+      : null;
+  const earlyEnd =
+    spell.mechanics.duration.kind === "concentration"
+      ? (spell.mechanics.duration.earlyEnd ?? [])
+      : [];
+  const rangeFeet =
+    spell.mechanics.range.kind === "point" ? spell.mechanics.range.feet : null;
+  const area =
+    attachment.kind === "hole" &&
+    attachment.value.kind === "area" &&
+    "shape" in attachment.value
+      ? attachment.value
+      : null;
+  const radius = area?.shape.kind === "sphere" ? area.shape.radiusFeet : null;
+  if (
+    spell.mechanics.level !== 2 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    rangeFeet !== 60 ||
+    spell.mechanics.duration.kind !== "concentration" ||
+    spell.mechanics.duration.upTo.unit !== "minute" ||
+    spell.mechanics.duration.upTo.amount !== 10 ||
+    earlyEnd.length !== 0 ||
+    spell.mechanics.operations.length !== 1 ||
+    operation?.trigger.kind !== "passive" ||
+    operation.effect.kind !== "area_is_magical_darkness" ||
+    area?.origin.kind !== "point_within_range" ||
+    radius !== 15 ||
+    durationTicks === null ||
+    Either.isLeft(durationTicks)
+  ) {
+    return [];
+  }
+
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+    if (Number(slot.spellLevel) < spell.mechanics.level) {
+      return [];
+    }
+    return [
+      {
+        access: { tag: "prepared" },
+        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+        procedure: "magicalDarknessPointOrigin",
+        spell,
+        targeting: {
+          kind: "pointOriginSphere",
+          radiusFeet: movementFeet(radius),
+        },
+        durationTicks: durationTicks.right,
+        rangeFeet: movementFeet(rangeFeet),
+      },
+    ];
+  });
+}
+
 export function supportedPreparedGustOfWindLineProfile(
   spell: SpellRecord,
   spellSlots: CharacterBattleSpellcastingState["spellSlots"],
@@ -1510,8 +1584,7 @@ function webRestraintHazardSpell(spell: SpellRecord): {
     (operation) => operation.trigger.kind === "on_creature_enters_area",
   );
   const startTurnOperation = spell.mechanics.operations.find(
-    (operation) =>
-      operation.trigger.kind === "on_creature_starts_turn_in_area",
+    (operation) => operation.trigger.kind === "on_creature_starts_turn_in_area",
   );
   const escapeOperation = spell.mechanics.operations.find(
     (operation) =>

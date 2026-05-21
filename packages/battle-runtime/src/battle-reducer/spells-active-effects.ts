@@ -1,8 +1,10 @@
 // Spell active-effect application extracted from spells-holes-fills.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
 
 // KERNEL-COVERAGE: runtime-owner BATTLE.COMMAND.OPTION_AND_NEXT_TURN
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
 import { Match } from "effect";
 import {
   applyCondition,
@@ -57,6 +59,9 @@ import {
   type BattleLightEmitterProjection,
   type BattleLightEmitterProjectionFact,
   type BattleLightlyObscuredPerceptionRollMode,
+  type BattleMagicalDarknessNonmagicalLightProjectionFact,
+  type BattleMagicalDarknessSightProjectionFact,
+  type BattleMagicalDarknessZone,
   type BattleObscurementZone,
   type BattleObjectOutline,
   type BattleSightObserver,
@@ -427,6 +432,28 @@ export function battleSightObscurement(
   );
 }
 
+export function battleMagicalDarknessSightObscurement(
+  zone: BattleMagicalDarknessZone,
+  fact: BattleMagicalDarknessSightProjectionFact,
+  observer: BattleSightObserver = { kind: "ordinarySight" },
+): Extract<BattleSightObscurement, "heavilyObscured"> | null {
+  if (zone.area.areaId !== fact.areaId) {
+    return null;
+  }
+  return Match.value(observer).pipe(
+    Match.when({ kind: "ordinarySight" }, () => "heavilyObscured" as const),
+    Match.when({ kind: "darkvision" }, () => "heavilyObscured" as const),
+    Match.exhaustive,
+  );
+}
+
+export function battleMagicalDarknessNonmagicalLightIllumination(
+  zone: BattleMagicalDarknessZone,
+  fact: BattleMagicalDarknessNonmagicalLightProjectionFact,
+): Extract<BattleIllumination, "darkness"> | null {
+  return zone.area.areaId === fact.areaId ? "darkness" : null;
+}
+
 export function battlePerceptionRollModeForSight(
   illumination: BattleIllumination,
   observer: BattleSightObserver = { kind: "ordinarySight" },
@@ -774,22 +801,36 @@ export function battleObscurementZones(
                   expiresAt: effect.expiresAt,
                 },
               ]
-            : effect.kind === "webRestraintHazard"
+            : effect.kind === "magicalDarknessPointOrigin"
               ? [
                   {
-                    kind: "spellObscurementZone",
+                    kind: "spellMagicalDarknessZone",
                     sourceSpellId: effect.sourceSpellId,
                     sourceCombatantId: effect.sourceCombatantId,
-                    obscurement: "lightlyObscured",
                     area: {
-                      kind: "pointOriginCube",
+                      kind: "pointOriginSphere",
                       areaId: effect.areaId,
-                      sideFeet: effect.sideFeet,
+                      radiusFeet: effect.radiusFeet,
                     },
                     expiresAt: effect.expiresAt,
                   },
                 ]
-              : [],
+              : effect.kind === "webRestraintHazard"
+                ? [
+                    {
+                      kind: "spellObscurementZone",
+                      sourceSpellId: effect.sourceSpellId,
+                      sourceCombatantId: effect.sourceCombatantId,
+                      obscurement: "lightlyObscured",
+                      area: {
+                        kind: "pointOriginCube",
+                        areaId: effect.areaId,
+                        sideFeet: effect.sideFeet,
+                      },
+                      expiresAt: effect.expiresAt,
+                    },
+                  ]
+                : [],
       ),
   );
 }
@@ -1715,6 +1756,46 @@ export function applyFogCloudObscurementCastEffect(input: {
     ...caster.activeEffects.filter((effect) => !replacing.includes(effect)),
     {
       kind: "fogCloudObscurement" as const,
+      sourceSpellId: input.invocation.spell.id,
+      sourceCombatantId: input.actorId,
+      areaId: input.areaId,
+      radiusFeet: input.invocation.targeting.radiusFeet,
+      expiresAt: {
+        kind: "concentration" as const,
+        combatantId: input.actorId,
+        durationTicks: input.invocation.durationTicks,
+      },
+    },
+  ];
+  combatants.set(input.actorId, { ...caster, activeEffects });
+  return { ...input.state, combatants };
+}
+
+export function applyMagicalDarknessPointOriginCastEffect(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly areaId: BattleAreaId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "magicalDarknessPointOrigin" }
+  >;
+}): BattleState {
+  const combatants = new Map(input.state.combatants);
+  const caster = combatants.get(input.actorId);
+  if (caster === undefined) {
+    return input.state;
+  }
+  const replacing = caster.activeEffects.filter(
+    (effect) =>
+      effect.kind === "magicalDarknessPointOrigin" &&
+      effect.sourceSpellId === input.invocation.spell.id &&
+      effect.sourceCombatantId === input.actorId &&
+      effect.areaId === input.areaId,
+  );
+  const activeEffects = [
+    ...caster.activeEffects.filter((effect) => !replacing.includes(effect)),
+    {
+      kind: "magicalDarknessPointOrigin" as const,
       sourceSpellId: input.invocation.spell.id,
       sourceCombatantId: input.actorId,
       areaId: input.areaId,

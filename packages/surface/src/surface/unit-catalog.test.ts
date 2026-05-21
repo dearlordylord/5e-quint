@@ -1071,7 +1071,7 @@ describe("SRD Unit catalog boundary", () => {
     ]);
   });
 
-  test("decodes Darkness as a Concentration point-origin heavily obscuring Sphere", () => {
+  test("decodes Darkness as a Concentration point-origin magical Darkness Sphere", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 
     expect(result.tag).toBe("ok");
@@ -1110,7 +1110,7 @@ describe("SRD Unit catalog boundary", () => {
       expect(darkness.mechanics.operations).toEqual([
         {
           trigger: { kind: "passive" },
-          effect: { kind: "area_is_heavily_obscured" },
+          effect: { kind: "area_is_magical_darkness" },
         },
       ]);
     }

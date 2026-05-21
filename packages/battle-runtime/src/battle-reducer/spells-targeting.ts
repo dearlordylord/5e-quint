@@ -471,6 +471,7 @@ export function spellAreaChoiceHole(
     {
       readonly procedure:
         | "fogCloudObscurement"
+        | "magicalDarknessPointOrigin"
         | "flamingSphere"
         | "moonbeam"
         | "webRestraintHazard";
@@ -494,6 +495,7 @@ export function spellAreaChoiceHoleId(
     {
       readonly procedure:
         | "fogCloudObscurement"
+        | "magicalDarknessPointOrigin"
         | "flamingSphere"
         | "moonbeam"
         | "webRestraintHazard";

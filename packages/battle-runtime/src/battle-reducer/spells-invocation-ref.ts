@@ -118,6 +118,14 @@ export function supportedSpellInvocationRef(
       procedure: "fogCloudObscurement",
     };
   }
+  if (invocation.procedure === "magicalDarknessPointOrigin") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "magicalDarknessPointOrigin",
+    };
+  }
   if (invocation.procedure === "webRestraintHazard") {
     return {
       tag: "spellSlot",

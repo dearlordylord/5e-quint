@@ -189,6 +189,7 @@ export function traceEffectAtom(
     case "area_emits_dim_light":
     case "area_is_lightly_obscured":
     case "area_is_heavily_obscured":
+    case "area_is_magical_darkness":
     case "area_anchor_or_layering_requirement":
     case "area_section_burns_away":
     case "area_has_strong_wind":

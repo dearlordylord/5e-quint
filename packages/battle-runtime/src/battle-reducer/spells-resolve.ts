@@ -130,6 +130,7 @@ import {
   resolveFlamingSphereSpellAct,
   resolveFogCloudObscurementSpellAct,
   resolveGustOfWindLineSpellAct,
+  resolveMagicalDarknessPointOriginSpellAct,
   resolveMoonbeamSpellAct,
   resolveWebRestraintHazardSpellAct,
 } from "./spells-resolve-area-effects.ts";
@@ -143,6 +144,7 @@ export {
   resolveFlamingSphereSpellAct,
   resolveFogCloudObscurementSpellAct,
   resolveGustOfWindLineSpellAct,
+  resolveMagicalDarknessPointOriginSpellAct,
   resolveMoonbeamSpellAct,
   resolveWebRestraintHazardSpellAct,
 } from "./spells-resolve-area-effects.ts";
@@ -453,6 +455,7 @@ export function resolveSpellAct(
       invocation.procedure === "hideousLaughter" ||
       invocation.procedure === "command" ||
       invocation.procedure === "fogCloudObscurement" ||
+      invocation.procedure === "magicalDarknessPointOrigin" ||
       invocation.procedure === "webRestraintHazard" ||
       invocation.procedure === "gustOfWindLine" ||
       invocation.procedure === "flamingSphere" ||
@@ -654,6 +657,14 @@ export function resolveSpellAct(
   }
   if (invocation.procedure === "fogCloudObscurement") {
     return resolveFogCloudObscurementSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "magicalDarknessPointOrigin") {
+    return resolveMagicalDarknessPointOriginSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

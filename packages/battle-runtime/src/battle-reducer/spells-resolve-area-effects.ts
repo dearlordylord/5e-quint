@@ -1,7 +1,9 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-fog-cloud-obscurement spell.invocation-flaming-sphere-hazard-ram spell.invocation-moonbeam-movable-zone
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
 import type {
   ActionSpellBattleResolutionInput,
   BattleSpellAreaChoice,
@@ -15,6 +17,7 @@ import {
   applyFlamingSphereCastEffect,
   applyFogCloudObscurementCastEffect,
   applyGustOfWindLineCastEffect,
+  applyMagicalDarknessPointOriginCastEffect,
   applyMoonbeamCastEffect,
   applyWebRestraintHazardCastEffect,
 } from "./spells-active-effects.ts";
@@ -88,6 +91,78 @@ export function resolveFogCloudObscurementSpellAct(input: {
     return resourced;
   }
   const nextState = applyFogCloudObscurementCastEffect({
+    state: resourced.state,
+    actorId: input.actorId,
+    areaId: input.fillSet.areaChoice.areaId,
+    invocation: input.invocation,
+  });
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+export function resolveMagicalDarknessPointOriginSpellAct(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "magicalDarknessPointOrigin" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  if (
+    input.fillSet.targetId !== undefined ||
+    input.fillSet.objectTarget !== undefined ||
+    input.fillSet.targetAllocation !== undefined ||
+    input.fillSet.targetList !== undefined ||
+    input.fillSet.attackRoll !== undefined ||
+    input.fillSet.savingThrowOutcomes !== undefined ||
+    input.fillSet.skillChoice !== undefined ||
+    input.fillSet.abilityChoice !== undefined ||
+    input.fillSet.commandOptionChoice !== undefined ||
+    input.fillSet.damageTypeChoice !== undefined ||
+    input.fillSet.concentrationSavingThrows.length > 0 ||
+    input.fillSet.damageDispositions.length > 0 ||
+    input.fillSet.damageRoll !== undefined ||
+    input.fillSet.movement !== undefined ||
+    input.fillSet.spellDamageReductionRolls.length > 0 ||
+    input.fillSet.attackBurstDamageRoll !== undefined ||
+    input.fillSet.healingRoll !== undefined
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Darkness uses one table-supplied magical Darkness area fill.",
+    );
+  }
+  if (input.fillSet.areaChoice === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      spellAreaChoiceHole(input.invocation),
+    ]);
+  }
+  if (
+    input.fillSet.areaChoice.kind !== "magicalDarknessArea" ||
+    input.fillSet.areaChoice.areaId.length === 0
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Darkness area id must be a non-empty magical Darkness area.",
+    );
+  }
+
+  const resourced = spendSpellCastResources({
+    state: input.input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+  });
+  if (resourced.tag === "invalid") {
+    return resourced;
+  }
+  const nextState = applyMagicalDarknessPointOriginCastEffect({
     state: resourced.state,
     actorId: input.actorId,
     areaId: input.fillSet.areaChoice.areaId,

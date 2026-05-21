@@ -82,14 +82,14 @@
       "percent": "98.8%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 114,
-      "numerator": 62,
-      "percent": "54.4%"
+      "denominator": 115,
+      "numerator": 63,
+      "percent": "54.8%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 114,
-      "numerator": 91,
-      "percent": "79.8%"
+      "denominator": 115,
+      "numerator": 92,
+      "percent": "80%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 135,
@@ -1398,6 +1398,34 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.invocation-magical-darkness-point-origin",
+      "profileKind": "table-caller",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
+      ],
+      "sourceBoundary": "The runtime consumes a typed table-supplied point-origin magical Darkness area identity and exposes magical Darkness visibility/light witness consequences for that area. Runtime owns Magic Action and level-2-or-higher Spell Slot spend, 15-foot Sphere radius, caster-owned Concentration up to 10 minutes, active zone projection, ordinary-sight and Darkvision Heavily Obscured consequence, nonmagical-light denial as a witness consequence, and cleanup. Object-origin Emanation, opaque-cover blocking, automatic area membership, line-of-sight drawing, map illumination, and spell-created-light overlap dispel remain outside this profile.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME"
+      ],
+      "title": "Spell invocation creates a Concentration-owned magical Darkness point-origin Sphere",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-darkness.test.ts"
         }
       ]
     },
@@ -3313,14 +3341,14 @@
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 114,
-        "numerator": 62,
-        "percent": "54.4%"
+        "denominator": 115,
+        "numerator": 63,
+        "percent": "54.8%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 114,
-        "numerator": 91,
-        "percent": "79.8%"
+        "denominator": 115,
+        "numerator": 92,
+        "percent": "80%"
       }
     },
     "profileKinds": [
@@ -3865,6 +3893,19 @@
           }
         ],
         "profileId": "spell.invocation-fog-cloud-obscurement",
+        "profileKind": "table-caller"
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Darkness point-origin magical Darkness area identity, visibility/light witness consequences, Concentration ownership, and cleanup"
+          }
+        ],
+        "profileId": "spell.invocation-magical-darkness-point-origin",
         "profileKind": "table-caller"
       },
       {
@@ -10046,6 +10087,22 @@
         "spell.invocation-web-restraint-hazard"
       ],
       "taskId": "L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Package-local promoted Quint facts cover Darkness's Magic Action and level-2-or-higher Spell Slot spend, caller-supplied 15-foot point-origin Sphere identity, caster-owned Concentration up to 10 minutes, magical Darkness area projection that blocks ordinary sight and Darkvision, nonmagical-light denial as a witness consequence, and Concentration plus duration cleanup.",
+      "profileIds": [
+        "spell.invocation-magical-darkness-point-origin"
+      ],
+      "taskId": "L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Darkness Surface-profile admission, level-2-or-higher Spell Slot filtering, spell-area fill validation, Magic Action and Spell Slot spending, active caster-owned magical Darkness zone projection, ordinary-sight and Darkvision Heavily Obscured consequences, nonmagical-light denial through caller-supplied area facts, and Concentration plus duration cleanup. Object-origin and spell-created-light overlap dispel behavior remain deferred follow-ups.",
+      "profileIds": [
+        "spell.invocation-magical-darkness-point-origin"
+      ],
+      "taskId": "L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME"
     }
   ],
   "units": [
@@ -16906,14 +16963,17 @@
         "status": "installed"
       },
       "claim": {
-        "followUpTasks": [
+        "deferredMechanics": [
           {
-            "id": "L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME",
-            "mechanic": "Promote Darkness's point-origin Sphere branch: Magic Action and level-2-or-higher Spell Slot spend, caster-owned Concentration up to 10 minutes, caller-supplied 15-foot point-origin Sphere area identity, active magical Darkness/Heavily Obscured zone projection that ordinary sight and Darkvision cannot see through, nonmagical light denial as a light/obscurement witness consequence rather than deletion of existing light emitters, and cleanup when Concentration or duration ends.",
-            "owner": "battle-runtime spell invocation/effect lifecycle plus table/spatial visibility witness boundary",
-            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for point-origin magical Darkness without object-origin or spell-created-light-dispel behavior.",
-            "title": "Darkness Point-Origin Area Runtime Support"
+            "followUpTaskId": "L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH",
+            "mechanic": "Object-origin branch: target object not worn or carried, 15-foot Emanation originating from that object, movement with the object, and opaque-cover blocking remain blocked on the object-origin spell-area and opaque-cover witness owner."
           },
+          {
+            "followUpTaskId": "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL",
+            "mechanic": "Overlap-triggered dispel of level-2-or-lower spell-created Bright Light or Dim Light remains blocked on a generic spell-created light overlap owner; this point-origin profile does not dispatch on spell identity or delete light emitters."
+          }
+        ],
+        "followUpTasks": [
           {
             "id": "L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH",
             "mechanic": "Represent and promote or close Darkness's object branch: target object not worn or carried, 15-foot Emanation originating from that object, object-origin area identity, and opaque-cover blocking, consuming existing object and opaque-cover witness facts without adding duplicate map or cover state.",
@@ -16929,15 +16989,63 @@
             "title": "Darkness Spell-Created Light Dispel"
           }
         ],
-        "futureProfileOwner": "battle-runtime spell-area obscurement owner plus light/visibility witness boundary and spell-created light overlap owner",
-        "reason": "Darkness is authored as an SRD Surface Spell Definition for the point-origin branch, including Magic Action level-2 Spell Slot casting, Concentration up to 10 minutes, 60-foot range, a 15-foot-radius magical Darkness Sphere, and an executable Heavily Obscured area source fact. Task 9 claims no promoted battle-runtime profile yet because runtime has no Darkness-owned active spell-area admission that distinguishes magical Darkness from ordinary Heavy Obscurement for nonmagical-light denial, no object-origin Emanation and opaque-cover witness branch, and no overlap dispel owner for spell-created Bright Light or Dim Light without dispatching on spell identity.",
-        "tag": "unsupported-profile"
+        "futureProfileOwner": "battle-runtime object-origin spell-area and opaque-cover witness boundary plus spell-created light overlap owner",
+        "profileIds": [
+          "spell.invocation-magical-darkness-point-origin"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action prepared spell cast with a level-2-or-higher Spell Slot",
+          "caller-supplied point-origin 15-foot-radius Sphere area identity",
+          "caster-owned Concentration up to 10 minutes",
+          "active magical Darkness zone projection whose sight consequence is Heavily Obscured for ordinary sight and Darkvision",
+          "nonmagical light denial exposed as a magical-Darkness area witness consequence without deleting existing light emitters",
+          "Concentration and duration cleanup remove the active magical Darkness zone"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-darkness.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-magical-darkness-point-origin",
+          "profileKind": "table-caller",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
+          ],
+          "sourceBoundary": "The runtime consumes a typed table-supplied point-origin magical Darkness area identity and exposes magical Darkness visibility/light witness consequences for that area. Runtime owns Magic Action and level-2-or-higher Spell Slot spend, 15-foot Sphere radius, caster-owned Concentration up to 10 minutes, active zone projection, ordinary-sight and Darkvision Heavily Obscured consequence, nonmagical-light denial as a witness consequence, and cleanup. Object-origin Emanation, opaque-cover blocking, automatic area membership, line-of-sight drawing, map illumination, and spell-created-light overlap dispel remain outside this profile.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME"
+          ],
+          "title": "Spell invocation creates a Concentration-owned magical Darkness point-origin Sphere",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-darkness.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/darkness.json",
       "unitId": "darkness"
     },

@@ -38,7 +38,7 @@
     "operations": [
       {
         "effect": {
-          "kind": "area_is_heavily_obscured"
+          "kind": "area_is_magical_darkness"
         },
         "trigger": {
           "kind": "passive"

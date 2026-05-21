@@ -115,6 +115,7 @@ module battleRuntimeSpellInvocation {
       | TrueStrike => false
       | Grease => true
       | FogCloud => true
+      | Darkness => true
       | Web => true
       | Command => true
       | DissonantWhispers => true

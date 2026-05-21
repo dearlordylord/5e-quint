@@ -375,6 +375,7 @@ module battleRuntimeSpellFactsTests {
       assert(spellInvocationSpendsSpellSlot(Hex)),
       assert(spellInvocationSpendsSpellSlot(EnhanceAbility)),
       assert(spellInvocationSpendsSpellSlot(FogCloud)),
+      assert(spellInvocationSpendsSpellSlot(Darkness)),
       assert(spellInvocationSpendsSpellSlot(ScorchingRay)),
       assert(spellInvocationSpendsSpellSlot(ContinualFlame)),
       assert(spellInvocationSpendsSpellSlot(SpiderClimb)),

@@ -165,6 +165,21 @@ export function discoverSupportedSpellInvocations(
           },
         ];
       }
+      if (invocation.procedure === "magicalDarknessPointOrigin") {
+        return [
+          {
+            subject: {
+              tag: "actionSpell" as const,
+              actorId,
+              invocation: supportedSpellInvocationRef(invocation),
+              mode: { tag: "cast" as const },
+            },
+            label: invocation.spell.name,
+            summary: `${spellActivationInvocationCastSummary(invocation)} The table supplies the magical Darkness area identity.`,
+            initialHoles: [spellAreaChoiceHole(invocation)],
+          },
+        ];
+      }
       if (invocation.procedure === "webRestraintHazard") {
         return [
           {
@@ -1192,6 +1207,7 @@ export function spellActivationInvocationCastSummary(
         | "webRestraintHazard"
         | "gustOfWindLine"
         | "fogCloudObscurement"
+        | "magicalDarknessPointOrigin"
         | "flamingSphere"
         | "moonbeam"
         | "objectContactDamage"
@@ -1391,6 +1407,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "webRestraintHazard" &&
     invocation.procedure !== "gustOfWindLine" &&
     invocation.procedure !== "fogCloudObscurement" &&
+    invocation.procedure !== "magicalDarknessPointOrigin" &&
     invocation.procedure !== "flamingSphere" &&
     invocation.procedure !== "spellAttackSequence" &&
     invocation.procedure !== "shieldReaction"
@@ -1448,6 +1465,7 @@ export function readiedSpellAct(
     invocation.procedure === "webRestraintHazard" ||
     invocation.procedure === "gustOfWindLine" ||
     invocation.procedure === "fogCloudObscurement" ||
+    invocation.procedure === "magicalDarknessPointOrigin" ||
     invocation.procedure === "flamingSphere" ||
     invocation.procedure === "shieldReaction" ||
     (invocation.procedure === "spellAttackDamage" &&

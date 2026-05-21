@@ -99,6 +99,7 @@ module battleRuntimeArmorClass {
         | HideousLaughterEffect(_) => false
         | GreaseGroundHazard(_) => false
         | FogCloudObscurement(_) => false
+        | MagicalDarknessPointOrigin(_) => false
         | FlamingSphere(_) => false
         | WebRestraintHazard(_) => false
         | WebRestrained(_) => false

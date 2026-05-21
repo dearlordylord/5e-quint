@@ -136,6 +136,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "webRestraintHazard",
   "gustOfWindLine",
   "fogCloudObscurement",
+  "magicalDarknessPointOrigin",
   "flamingSphere",
   "moonbeam",
   "objectContactDamage",

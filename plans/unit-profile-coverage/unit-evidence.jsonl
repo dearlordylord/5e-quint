@@ -277,3 +277,4 @@
 {"unitId":"gust_of_wind","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME","ownerPath":"packages/battle-runtime/src/unit-profile-admission-gust-of-wind.test.ts"}}
 {"unitId":"magic_weapon","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME","ownerPath":"packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts"}}
 {"unitId":"web","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE","ownerPath":"packages/battle-runtime/src/unit-profile-admission-web-restraint-hazard.test.ts"}}
+{"unitId":"darkness","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME","ownerPath":"packages/battle-runtime/src/unit-profile-admission-darkness.test.ts"}}

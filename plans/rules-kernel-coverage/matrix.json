@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 65,
-    "covered": 38,
+    "total": 66,
+    "covered": 39,
     "open": 22,
     "nonSemantic": 5,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 53,
+      "battle": 54,
       "character-creation": 8,
       "character-sheet": 2,
       "character-battle": 1
     },
     "byStatus": {
-      "covered": 38,
+      "covered": 39,
       "needs-qnt-owner": 2,
       "needs-parity-witness": 19,
       "needs-surface-evidence": 1,
@@ -389,6 +389,34 @@
         ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Fog Cloud"
       ],
       "title": "Battle Fog Cloud area identity, slot-scaled Heavily Obscured projection, Concentration ownership, strong-wind cleanup, and table-spatial boundary"
+    },
+    {
+      "id": "BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-darkness.test.ts"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-magical-darkness-point-origin"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Darkness"
+      ],
+      "title": "Battle Darkness point-origin magical Darkness area identity, visibility/light witness consequences, Concentration ownership, and cleanup"
     },
     {
       "id": "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
@@ -3130,6 +3158,12 @@
     },
     {
       "obligationIds": [
+        "BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE"
+      ],
+      "profileId": "spell.invocation-magical-darkness-point-origin"
+    },
+    {
+      "obligationIds": [
         "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE"
       ],
       "profileId": "spell.invocation-object-light"
@@ -3557,6 +3591,7 @@
     "spell.invocation-independent-attack-sequence",
     "spell.invocation-jump-movement-replacement",
     "spell.invocation-magic-weapon-enhancement",
+    "spell.invocation-magical-darkness-point-origin",
     "spell.invocation-make-stable",
     "spell.invocation-marked-damage-rider",
     "spell.invocation-mirror-image-hit-interception",

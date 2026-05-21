@@ -9,6 +9,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-weapon-enhancement
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.creature-type-protection-and-charm spell.hit-point-restoration spell.invocation-after-hit-damage spell.invocation-after-hit-damage-illumination spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-blur-attack-roll-defense spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-removal-protection spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-dancing-lights-movable-dim-light spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-independent-attack-sequence spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-save-gated-condition-immunity spell.invocation-self-ability-check-advantage spell.invocation-self-teleport spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-failed-d20-test unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.zero-hit-point-replacement
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
@@ -17,6 +18,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS BATTLE.STAT_BLOCK.ATTACK_CONTROL
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
 import type {
   ActionEconomyState,
   RuntimeActionResource,
@@ -461,6 +463,8 @@ export {
   activeFeatherFallDescentRateCapFeetPerRound,
   activeSelfTransformationModeEffect,
   battleIlluminationFromLightEmitters,
+  battleMagicalDarknessNonmagicalLightIllumination,
+  battleMagicalDarknessSightObscurement,
   battleCreatureCanBreatheUnderwater,
   battleLightEmitterProjection,
   battleLightEmitters,
@@ -928,6 +932,15 @@ export type BattleActiveEffect =
       >;
     })
   | (BattleSpellEffectBase & {
+      readonly kind: "magicalDarknessPointOrigin";
+      readonly areaId: BattleAreaId;
+      readonly radiusFeet: MovementFeet;
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "concentration" }
+      >;
+    })
+  | (BattleSpellEffectBase & {
       readonly kind: "commandPending";
       readonly option: BattleCommandOption;
       readonly expiresAt: Extract<
@@ -1240,7 +1253,7 @@ export type BattleObjectInvisibleRevealLightEmitter = BattleSpellEffectBase & {
 export type BattleLightEmitter =
   | BattleSpellLightEmitter
   | BattleObjectInvisibleRevealLightEmitter;
-export type BattleObscurementZone = {
+export type BattleSpellObscurementZone = {
   readonly kind: "spellObscurementZone";
   readonly sourceSpellId: SpellRecord["id"];
   readonly sourceCombatantId: CombatantId;
@@ -1264,6 +1277,23 @@ export type BattleObscurementZone = {
     { readonly kind: "concentration" }
   >;
 };
+export type BattleMagicalDarknessZone = {
+  readonly kind: "spellMagicalDarknessZone";
+  readonly sourceSpellId: SpellRecord["id"];
+  readonly sourceCombatantId: CombatantId;
+  readonly area: {
+    readonly kind: "pointOriginSphere";
+    readonly areaId: BattleAreaId;
+    readonly radiusFeet: MovementFeet;
+  };
+  readonly expiresAt: Extract<
+    BattleActiveEffectExpiration,
+    { readonly kind: "concentration" }
+  >;
+};
+export type BattleObscurementZone =
+  | BattleSpellObscurementZone
+  | BattleMagicalDarknessZone;
 export type BattleDancingLightsForm = "separateLights" | "combinedMediumForm";
 export type BattleDancingLight = {
   readonly lightId: BattleDancingLightId;
@@ -1296,6 +1326,14 @@ export type BattleLightEmitterProjectionFact =
 export type BattleLightEmitterProjection = {
   readonly emitter: BattleLightEmitter;
   readonly illumination: Exclude<BattleIllumination, "darkness">;
+};
+export type BattleMagicalDarknessSightProjectionFact = {
+  readonly kind: "sightThroughArea";
+  readonly areaId: BattleAreaId;
+};
+export type BattleMagicalDarknessNonmagicalLightProjectionFact = {
+  readonly kind: "nonmagicalLightInArea";
+  readonly areaId: BattleAreaId;
 };
 export type BattleLightlyObscuredPerceptionRollMode = "disadvantage";
 export type BattleSightObserver =
@@ -2274,6 +2312,10 @@ export type BattleFogCloudAreaChoice = Extract<
   BattleSpellAreaIdentityChoice,
   { readonly kind: "fogCloudArea" }
 >;
+export type BattleMagicalDarknessAreaChoice = Extract<
+  BattleSpellAreaIdentityChoice,
+  { readonly kind: "magicalDarknessArea" }
+>;
 export type BattleWebCubeAreaChoice = Extract<
   BattleSpellAreaIdentityChoice,
   { readonly kind: "webCubeArea" }
@@ -2293,6 +2335,10 @@ export type BattleGustOfWindLineAreaChoice = Extract<
 export type BattleSpellAreaIdentityChoice =
   | {
       readonly kind: "fogCloudArea";
+      readonly areaId: BattleAreaId;
+    }
+  | {
+      readonly kind: "magicalDarknessArea";
       readonly areaId: BattleAreaId;
     }
   | {
@@ -3461,6 +3507,18 @@ export type SupportedSpellInvocation =
   | {
       readonly access: PreparedSpellAccess;
       readonly resource: SpellSlotInvocationResource;
+      readonly procedure: "magicalDarknessPointOrigin";
+      readonly spell: SpellRecord;
+      readonly targeting: Extract<
+        SpellTargeting,
+        { readonly kind: "pointOriginSphere" }
+      >;
+      readonly durationTicks: ElapsedTimeTicks;
+      readonly rangeFeet: MovementFeet;
+    }
+  | {
+      readonly access: PreparedSpellAccess;
+      readonly resource: SpellSlotInvocationResource;
       readonly procedure: "flamingSphere";
       readonly spell: SpellRecord;
       readonly ability: Extract<Ability, "dex">;
@@ -3668,6 +3726,7 @@ type AnySupportedDamageSpellInvocation = Exclude<
       | "webRestraintHazard"
       | "gustOfWindLine"
       | "fogCloudObscurement"
+      | "magicalDarknessPointOrigin"
       | "flamingSphere"
       | "moonbeam"
       | "chainedSpellAttackDamage";
@@ -4247,6 +4306,7 @@ export type BattleSpellAreaChoiceHole = {
     {
       readonly procedure:
         | "fogCloudObscurement"
+        | "magicalDarknessPointOrigin"
         | "flamingSphere"
         | "moonbeam"
         | "webRestraintHazard";

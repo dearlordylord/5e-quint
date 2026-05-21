@@ -48,6 +48,7 @@ export type AttachmentAndAreaEffectAtom = Extract<
       | "area_emits_dim_light"
       | "area_is_lightly_obscured"
       | "area_is_heavily_obscured"
+      | "area_is_magical_darkness"
       | "area_anchor_or_layering_requirement"
       | "area_section_burns_away"
       | "area_has_strong_wind"
@@ -430,6 +431,16 @@ export function traceAttachmentAndAreaEffectAtom(
         category: "effect",
         atomKind: "area_is_heavily_obscured",
         label: "area_is_heavily_obscured",
+      });
+      return id;
+    }
+    case "area_is_magical_darkness": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "area_is_magical_darkness",
+        label: "area_is_magical_darkness",
       });
       return id;
     }

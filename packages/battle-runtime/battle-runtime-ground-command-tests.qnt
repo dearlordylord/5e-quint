@@ -138,6 +138,66 @@ module battleRuntimeGroundCommandTests {
     }
   }
 
+  run test_darkness_records_magical_darkness_area_and_concentration = {
+    val resolved = resolveDarknessPointOrigin(initialState, darknessAreaId, 2)
+    all {
+      assert(resolved.fighter.activeEffects.contains(MagicalDarknessPointOrigin({
+        areaId: darknessAreaId,
+        radiusFeet: darknessRadiusFeet,
+        durationTicks: darknessDurationTicks,
+      }))),
+      assert(resolved.fighter.concentrating),
+      assert(not(resolved.actionAvailable)),
+      assert(battleActorHasCommittedSpellSlotUse(resolved, Fighter)),
+    }
+  }
+
+  run test_darkness_rejects_level_one_slot = {
+    val resolved = resolveDarknessPointOrigin(initialState, darknessAreaId, 1)
+    all {
+      assert(not(magicalDarknessPointOriginActive(resolved, darknessAreaId))),
+      assert(not(battleActorHasCommittedSpellSlotUse(resolved, Fighter))),
+    }
+  }
+
+  run test_darkness_projection_blocks_darkvision_and_nonmagical_light = {
+    val resolved = resolveDarknessPointOrigin(initialState, darknessAreaId, 2)
+    all {
+      assert(magicalDarknessPointOriginSightObscurement(resolved, darknessAreaId, OrdinarySight) == HeavilyObscuredSight),
+      assert(magicalDarknessPointOriginSightObscurement(resolved, darknessAreaId, DarkvisionSight({ rangeFeet: 60, distanceFeet: 30 })) == HeavilyObscuredSight),
+      assert(magicalDarknessPointOriginNonmagicalLightIllumination(resolved, darknessAreaId, BrightLightIllumination) == DarknessIllumination),
+    }
+  }
+
+  run test_darkness_concentration_break_removes_area = {
+    val resolved = resolveDarknessPointOrigin(initialState, darknessAreaId, 2)
+    val broken = breakConcentrationSpellEffects(resolved, Fighter)
+    all {
+      assert(not(magicalDarknessPointOriginActive(broken, darknessAreaId))),
+      assert(not(broken.fighter.concentrating)),
+    }
+  }
+
+  run test_darkness_duration_expiration_removes_area_and_concentration = {
+    val expiring = {
+      ...initialState,
+      fighter: {
+        ...initialState.fighter,
+        concentrating: true,
+        activeEffects: Set(MagicalDarknessPointOrigin({
+          areaId: darknessAreaId,
+          radiusFeet: darknessRadiusFeet,
+          durationTicks: 1,
+        })),
+      },
+    }
+    val ticked = tickRoundDurationSpellEffects(expiring)
+    all {
+      assert(not(magicalDarknessPointOriginActive(ticked, darknessAreaId))),
+      assert(not(ticked.fighter.concentrating)),
+    }
+  }
+
   run test_flaming_sphere_records_movable_fire_hazard = {
     val resolved = resolveFlamingSphere(initialState, flamingSphereAreaId, 2)
     all {
