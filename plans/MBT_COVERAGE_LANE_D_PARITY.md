@@ -37,6 +37,7 @@ This lane must not implement level-2 feature behavior from lanes A-C. It may add
 Every task must include:
 
 - Read relevant promoted package-local Quint specs before changing MBT or coverage.
+- When moving a rules-kernel obligation from `needs-parity-witness` to `covered`, update the obligation artifacts and add matching `KERNEL-COVERAGE` owner markers to every listed QNT and runtime owner file; the checker does not infer owner coverage from parity-witness comments alone.
 - If MBT is run, follow AGENTS.md MBT protocol exactly: one MBT run at a time, background timing wrapper, no exploratory MBT.
 - `pnpm rules-kernel-coverage:check -- --write`, then `pnpm rules-kernel-coverage:check` when rules-kernel reports change.
 - `pnpm unit-profile-coverage:check -- --write`, then `pnpm unit-profile-coverage:check` when profile reports change.
