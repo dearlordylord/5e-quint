@@ -49,11 +49,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     expect(act.subject).toEqual({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(
-        gustOfWindUnitId,
-        2,
-        "gustOfWindLine",
-      ),
+      invocation: spellSlotInvocationRef(gustOfWindUnitId, 2, "gustOfWindLine"),
       mode: { tag: "cast" },
     });
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
@@ -92,8 +88,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
       throw new Error("Expected Gust of Wind ongoing effect mechanics.");
     }
     const operations = base.mechanics.operations.filter(
-      (operation) =>
-        operation.trigger.kind !== "on_creature_ends_turn_in_area",
+      (operation) => operation.trigger.kind !== "on_creature_ends_turn_in_area",
     );
     if (operations.length === 0) {
       throw new Error("Expected retained Gust of Wind operations.");
@@ -341,13 +336,18 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
         movementFill(movement, {
           movementCostFeet: 15,
           provokedOpportunityAttacks: [],
-          greaseGroundDifficultTerrain: {
-            kind: "greaseGroundDifficultTerrain",
-            sourceCombatantId: spellCasterId,
-            sourceSpellId: greaseUnitId,
-            areaId: greaseAreaId,
+          areaDifficultTerrain: {
+            kind: "areaDifficultTerrain",
+            sources: [
+              {
+                kind: "greaseGroundHazard",
+                sourceCombatantId: spellCasterId,
+                sourceSpellId: greaseUnitId,
+                areaId: greaseAreaId,
+              },
+            ],
             totalDistanceFeet: movementFeet(5),
-            greaseDistanceFeet: movementFeet(5),
+            difficultTerrainDistanceFeet: movementFeet(5),
           },
           gustOfWindLineMovement: {
             kind: "gustOfWindLineMovement",

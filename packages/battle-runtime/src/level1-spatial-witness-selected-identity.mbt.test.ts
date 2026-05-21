@@ -2819,13 +2819,18 @@ function greaseMovementFill(
       speedKind: "walk",
       movementCostFeet: input.movementCostFeet,
       provokedOpportunityAttacks: [],
-      greaseGroundDifficultTerrain: {
-        kind: "greaseGroundDifficultTerrain",
-        sourceCombatantId: casterId,
-        sourceSpellId: spellRecord(greaseUnitId).id,
-        areaId: input.areaId,
+      areaDifficultTerrain: {
+        kind: "areaDifficultTerrain",
+        sources: [
+          {
+            kind: "greaseGroundHazard",
+            sourceCombatantId: casterId,
+            sourceSpellId: spellRecord(greaseUnitId).id,
+            areaId: input.areaId,
+          },
+        ],
         totalDistanceFeet: greaseTotalMovementDistanceFeet,
-        greaseDistanceFeet: greaseDifficultTerrainDistanceFeet,
+        difficultTerrainDistanceFeet: greaseDifficultTerrainDistanceFeet,
       },
     },
   };
@@ -3296,13 +3301,15 @@ function projectFogCloudReplay(
 ): FogCloudProjection {
   const activeEffect = fogCloudActiveEffect(activeState);
   const activeZone = fogCloudObscurementZone(activeState);
+  const activeZoneArea =
+    activeZone?.area.kind === "pointOriginSphere" ? activeZone.area : undefined;
   const radiusMatches =
     activeEffect?.radiusFeet === fogCloudLevelOneRadiusFeet &&
-    activeZone?.area.radiusFeet === fogCloudLevelOneRadiusFeet;
+    activeZoneArea?.radiusFeet === fogCloudLevelOneRadiusFeet;
   return {
     areaIdentityRetained:
       activeEffect?.areaId === fogCloudAreaId &&
-      activeZone?.area.areaId === fogCloudAreaId,
+      activeZoneArea?.areaId === fogCloudAreaId,
     heavilyObscuredZoneCount: fogCloudHeavilyObscuredZoneCount(activeState),
     radiusFeet: radiusMatches ? Number(fogCloudLevelOneRadiusFeet) : 0,
     durationTicks: fogCloudMatchingDurationTicks(activeEffect, activeZone),

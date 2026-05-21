@@ -3471,13 +3471,16 @@ type BattleFillEncoded =
           readonly reactorId: string;
           readonly attackName: string;
         }[];
-        readonly greaseGroundDifficultTerrain?: {
-          readonly kind: "greaseGroundDifficultTerrain";
-          readonly sourceCombatantId: string;
-          readonly sourceSpellId: string;
-          readonly areaId: string;
+        readonly areaDifficultTerrain?: {
+          readonly kind: "areaDifficultTerrain";
+          readonly sources: readonly {
+            readonly kind: "greaseGroundHazard" | "webAreaHazard";
+            readonly sourceCombatantId: string;
+            readonly sourceSpellId: string;
+            readonly areaId: string;
+          }[];
           readonly totalDistanceFeet: number;
-          readonly greaseDistanceFeet: number;
+          readonly difficultTerrainDistanceFeet: number;
         };
         readonly gustOfWindLineMovement?: {
           readonly kind: "gustOfWindLineMovement";
@@ -4056,14 +4059,19 @@ export const BattleFillSchema: Schema.Schema<
             attackName: Schema.String,
           }),
         ),
-        greaseGroundDifficultTerrain: Schema.optionalWith(
+        areaDifficultTerrain: Schema.optionalWith(
           Schema.Struct({
-            kind: Schema.Literal("greaseGroundDifficultTerrain"),
-            sourceCombatantId: CombatantId,
-            sourceSpellId: Schema.String,
-            areaId: BattleAreaId,
+            kind: Schema.Literal("areaDifficultTerrain"),
+            sources: Schema.Array(
+              Schema.Struct({
+                kind: Schema.Literal("greaseGroundHazard", "webAreaHazard"),
+                sourceCombatantId: CombatantId,
+                sourceSpellId: Schema.String,
+                areaId: BattleAreaId,
+              }),
+            ),
             totalDistanceFeet: MovementFeet,
-            greaseDistanceFeet: MovementFeet,
+            difficultTerrainDistanceFeet: MovementFeet,
           }),
           { exact: true },
         ),
@@ -4598,12 +4606,19 @@ const BattleObscurementZoneSchema = Schema.Struct({
   kind: Schema.Literal("spellObscurementZone"),
   sourceSpellId: Schema.String,
   sourceCombatantId: CombatantId,
-  obscurement: Schema.Literal("heavilyObscured"),
-  area: Schema.Struct({
-    kind: Schema.Literal("pointOriginSphere"),
-    areaId: BattleAreaId,
-    radiusFeet: MovementFeet,
-  }),
+  obscurement: Schema.Literal("lightlyObscured", "heavilyObscured"),
+  area: Schema.Union(
+    Schema.Struct({
+      kind: Schema.Literal("pointOriginSphere"),
+      areaId: BattleAreaId,
+      radiusFeet: MovementFeet,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("pointOriginCube"),
+      areaId: BattleAreaId,
+      sideFeet: MovementFeet,
+    }),
+  ),
   expiresAt: Schema.Struct({
     kind: Schema.Literal("concentration"),
     combatantId: CombatantId,

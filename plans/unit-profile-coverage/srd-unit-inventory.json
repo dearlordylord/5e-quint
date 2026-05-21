@@ -21607,13 +21607,13 @@
         "state": "installed",
         "unitId": "web"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "battle-runtime spell area projection plus table/spatial/environment owner",
-        "reason": "Task 18 owns the remaining Web area-projection and environmental clauses so this restraint-hazard subset does not duplicate table spatial or environmental state."
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial/environment owner",
+        "reason": "Automatic Web area membership, path geometry, first-entry detection, start-turn area membership, no-longer-in-webs facts, per-path distance through Difficult Terrain, anchoring or layering collapse, flat-surface 5-foot depth presentation, and fire-exposed 5-foot section burn-away with creature-in-fire damage remain caller-supplied table/spatial/environment witnesses. Battle runtime consumes typed movement/area/removal witnesses, owns the active area effect, movement-cost validation, obscurement projection, Restrained lifecycle, and cleanup, and does not store independent Web map sections or burning squares."
       },
       "ownerEvidence": [
         {
@@ -21623,7 +21623,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME at packages/battle-runtime/src/unit-profile-admission-web-restraint-hazard.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE at packages/battle-runtime/src/unit-profile-admission-web-restraint-hazard.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -27505,13 +27505,13 @@
         "state": "installed",
         "unitId": "web"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "battle-runtime spell area projection plus table/spatial/environment owner",
-        "reason": "Task 18 owns the remaining Web area-projection and environmental clauses so this restraint-hazard subset does not duplicate table spatial or environmental state."
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial/environment owner",
+        "reason": "Automatic Web area membership, path geometry, first-entry detection, start-turn area membership, no-longer-in-webs facts, per-path distance through Difficult Terrain, anchoring or layering collapse, flat-surface 5-foot depth presentation, and fire-exposed 5-foot section burn-away with creature-in-fire damage remain caller-supplied table/spatial/environment witnesses. Battle runtime consumes typed movement/area/removal witnesses, owns the active area effect, movement-cost validation, obscurement projection, Restrained lifecycle, and cleanup, and does not store independent Web map sections or burning squares."
       },
       "ownerEvidence": [
         {
@@ -27521,7 +27521,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME at packages/battle-runtime/src/unit-profile-admission-web-restraint-hazard.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE at packages/battle-runtime/src/unit-profile-admission-web-restraint-hazard.test.ts",
           "status": "owner evidence present"
         }
       ],

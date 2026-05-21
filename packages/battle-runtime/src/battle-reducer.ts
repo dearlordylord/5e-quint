@@ -465,6 +465,7 @@ export {
   battleLightEmitterProjection,
   battleLightEmitters,
   battleObscurementZones,
+  battlePerceptionRollModeForObscurement,
   battlePerceptionRollModeForSight,
   battleSightObscurement,
   FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
@@ -847,6 +848,7 @@ export type BattleActiveEffect =
   | (BattleSpellEffectBase & {
       readonly kind: "webRestraintHazard";
       readonly areaId: BattleAreaId;
+      readonly sideFeet: MovementFeet;
       readonly save: {
         readonly ability: Extract<Ability, "dex">;
         readonly dc: DcSource;
@@ -1242,12 +1244,21 @@ export type BattleObscurementZone = {
   readonly kind: "spellObscurementZone";
   readonly sourceSpellId: SpellRecord["id"];
   readonly sourceCombatantId: CombatantId;
-  readonly obscurement: "heavilyObscured";
-  readonly area: {
-    readonly kind: "pointOriginSphere";
-    readonly areaId: BattleAreaId;
-    readonly radiusFeet: MovementFeet;
-  };
+  readonly obscurement: Extract<
+    BattleSightObscurement,
+    "lightlyObscured" | "heavilyObscured"
+  >;
+  readonly area:
+    | {
+        readonly kind: "pointOriginSphere";
+        readonly areaId: BattleAreaId;
+        readonly radiusFeet: MovementFeet;
+      }
+    | {
+        readonly kind: "pointOriginCube";
+        readonly areaId: BattleAreaId;
+        readonly sideFeet: MovementFeet;
+      };
   readonly expiresAt: Extract<
     BattleActiveEffectExpiration,
     { readonly kind: "concentration" }
@@ -1762,19 +1773,30 @@ export type BattleMovementFillValue = {
   readonly speedKind: BattleMovementSpeedKind;
   readonly movementCostFeet: MovementFeet;
   readonly provokedOpportunityAttacks: readonly BattleOpportunityAttackThreat[];
-  readonly greaseGroundDifficultTerrain?: BattleGreaseGroundDifficultTerrainMovementFact;
+  readonly areaDifficultTerrain?: BattleAreaDifficultTerrainMovementFact;
   readonly gustOfWindLineMovement?: BattleGustOfWindLineMovementFact;
   readonly jumpMovementReplacement?: BattleJumpMovementReplacementFact;
   readonly commandApproach?: BattleCommandApproachMovementFact;
   readonly commandFlee?: BattleCommandFleeMovementFact;
 };
-export type BattleGreaseGroundDifficultTerrainMovementFact = {
-  readonly kind: "greaseGroundDifficultTerrain";
-  readonly sourceCombatantId: CombatantId;
-  readonly sourceSpellId: SpellRecord["id"];
-  readonly areaId: BattleAreaId;
+export type BattleAreaDifficultTerrainSource =
+  | {
+      readonly kind: "greaseGroundHazard";
+      readonly sourceCombatantId: CombatantId;
+      readonly sourceSpellId: SpellRecord["id"];
+      readonly areaId: BattleAreaId;
+    }
+  | {
+      readonly kind: "webAreaHazard";
+      readonly sourceCombatantId: CombatantId;
+      readonly sourceSpellId: SpellRecord["id"];
+      readonly areaId: BattleAreaId;
+    };
+export type BattleAreaDifficultTerrainMovementFact = {
+  readonly kind: "areaDifficultTerrain";
+  readonly sources: readonly BattleAreaDifficultTerrainSource[];
   readonly totalDistanceFeet: MovementFeet;
-  readonly greaseDistanceFeet: MovementFeet;
+  readonly difficultTerrainDistanceFeet: MovementFeet;
 };
 export type BattleGustOfWindLineMovementFact = {
   readonly kind: "gustOfWindLineMovement";

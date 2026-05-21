@@ -77,9 +77,9 @@ module battleRuntimeGroundCommandTests {
     val moved = moveFighterThroughGreaseGroundDifficultTerrain(resolved, greaseAreaId, 10, 5, false)
     val expired = { ...resolved, fighter: { ...resolved.fighter, activeEffects: Set() } }
     all {
-      assert(greaseGroundDifficultTerrainMovementCost(resolved, greaseAreaId, 10, 5) == 15),
+      assert(areaDifficultTerrainMovementCost(resolved, greaseAreaId, 10, 5) == 15),
       assert(moved.fighter.movementSpent == 15),
-      assert(greaseGroundDifficultTerrainMovementCost(expired, greaseAreaId, 10, 5) == 0),
+      assert(areaDifficultTerrainMovementCost(expired, greaseAreaId, 10, 5) == 0),
     }
   }
 
@@ -202,6 +202,7 @@ module battleRuntimeGroundCommandTests {
     all {
       assert(resolved.fighter.activeEffects.contains(WebRestraintHazard({
         areaId: webAreaId,
+        sideFeet: webSideFeet,
         durationTicks: webDurationTicks,
         entrySavedThisTurn: Set(),
         startTurnSavedThisTurn: Set(),
@@ -209,6 +210,15 @@ module battleRuntimeGroundCommandTests {
       assert(resolved.fighter.concentrating),
       assert(not(resolved.actionAvailable)),
       assert(battleActorHasCommittedSpellSlotUse(resolved, Fighter)),
+    }
+  }
+
+  run test_web_area_difficult_terrain_movement_cost_uses_active_web_area = {
+    val resolved = resolveWeb(initialState, webAreaId, 2)
+    val removedArea = removeWebArea(resolved, webAreaId)
+    all {
+      assert(areaDifficultTerrainMovementCost(resolved, webAreaId, 10, 5) == 15),
+      assert(areaDifficultTerrainMovementCost(removedArea, webAreaId, 10, 5) == 0),
     }
   }
 
@@ -265,6 +275,7 @@ module battleRuntimeGroundCommandTests {
         concentrating: true,
         activeEffects: Set(WebRestraintHazard({
           areaId: webAreaId,
+          sideFeet: webSideFeet,
           durationTicks: 1,
           entrySavedThisTurn: Set(Goblin),
           startTurnSavedThisTurn: Set(Goblin),

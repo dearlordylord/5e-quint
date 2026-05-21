@@ -2680,7 +2680,7 @@
       "fillKind": "movement",
       "followUpTaskIds": [],
       "id": "movement",
-      "reason": "Movement fills spend movement budget and carry Opportunity Attack frontier facts covered by the movement obligation. The greaseGroundDifficultTerrain, jumpMovementReplacement route/landing witness, commandApproach, commandFlee, forced-movement route, terrain, and placement facts are caller/table evidence covered by the boundary obligation; route selection and geometry stay out of rules-kernel state. Jump failed-landing Prone stays coupled to the route/landing witness, and profile joins are recorded in profile-obligations.jsonl.",
+      "reason": "Movement fills spend movement budget and carry Opportunity Attack frontier facts covered by the movement obligation. The areaDifficultTerrain, jumpMovementReplacement route/landing witness, commandApproach, commandFlee, forced-movement route, terrain, and placement facts are caller/table evidence covered by the boundary obligation; route selection and geometry stay out of rules-kernel state. Jump failed-landing Prone stays coupled to the route/landing witness, and profile joins are recorded in profile-obligations.jsonl.",
       "subject": "battle-fill-kind"
     },
     {

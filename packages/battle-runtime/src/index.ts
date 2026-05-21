@@ -218,6 +218,7 @@ export {
   battleLightEmitterProjection,
   battleLightEmitters,
   battleObscurementZones,
+  battlePerceptionRollModeForObscurement,
   battlePerceptionRollModeForSight,
   battleSightObscurement,
   battleCreatureInitFromStatBlock,

@@ -1,10 +1,12 @@
-// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME web
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE web
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-web-restraint-hazard
 import { describe, expect, test } from "vitest";
 import {
   requireCombatant,
   requireHole,
+  requireResultHole,
   abilityCheckFill,
+  movementFill,
 } from "./unit-profile-admission-creature-fixture-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
@@ -19,12 +21,15 @@ import {
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import { spellId, type CombatantId } from "./identity.ts";
 import {
+  battleObscurementZones,
+  battlePerceptionRollModeForObscurement,
   elapsedTimeTicks,
   endTurn,
   movementFeet,
   resolveBattleSubject,
   spellSlotInvocationRef,
 } from "./unit-profile-admission-test-support.ts";
+import type { BattleSubject } from "./unit-profile-admission-test-support.ts";
 import {
   ensnaringStrikeHelperId,
   spellCasterId,
@@ -145,6 +150,7 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
           sourceSpellId: webUnitId,
           sourceCombatantId: spellCasterId,
           areaId: webAreaId,
+          sideFeet: movementFeet(20),
           save: { ability: "dex", dc: { kind: "caster_spell_save_dc" } },
           entrySavedThisTurn: [],
           startTurnSavedThisTurn: [],
@@ -156,6 +162,89 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
         }),
       ],
     });
+  });
+
+  test("active Web area projects Difficult Terrain movement cost and Lightly Obscured sight", () => {
+    const { spell, targetTurn } = castWeb();
+    const moveSubject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: spellTargetId,
+      command: "move",
+    };
+    const moveHole = requireResultHole(
+      resolveBattleSubject({
+        state: targetTurn,
+        subject: moveSubject,
+        fills: [],
+      }),
+      "movement",
+    );
+    const webDifficultTerrain = {
+      kind: "areaDifficultTerrain" as const,
+      sources: [
+        {
+          kind: "webAreaHazard" as const,
+          sourceCombatantId: spellCasterId,
+          sourceSpellId: spell.id,
+          areaId: webAreaId,
+        },
+      ],
+      totalDistanceFeet: movementFeet(10),
+      difficultTerrainDistanceFeet: movementFeet(5),
+    };
+
+    expect(
+      resolveBattleSubject({
+        state: targetTurn,
+        subject: moveSubject,
+        fills: [
+          movementFill(moveHole, {
+            movementCostFeet: 10,
+            provokedOpportunityAttacks: [],
+            areaDifficultTerrain: webDifficultTerrain,
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Area Difficult Terrain movement must spend total distance plus 1 extra foot for every foot moved through Difficult Terrain.",
+    });
+
+    const moved = resolveBattleSubject({
+      state: targetTurn,
+      subject: moveSubject,
+      fills: [
+        movementFill(moveHole, {
+          movementCostFeet: 15,
+          provokedOpportunityAttacks: [],
+          areaDifficultTerrain: webDifficultTerrain,
+        }),
+      ],
+    });
+    if (moved.tag !== "resolved") {
+      throw new Error("Expected Web Difficult Terrain movement to resolve.");
+    }
+
+    expect(requireCombatant(moved.state, spellTargetId)).toMatchObject({
+      movementSpentFeet: movementFeet(15),
+    });
+    expect(battleObscurementZones(targetTurn)).toEqual([
+      expect.objectContaining({
+        kind: "spellObscurementZone",
+        sourceSpellId: spell.id,
+        sourceCombatantId: spellCasterId,
+        obscurement: "lightlyObscured",
+        area: {
+          kind: "pointOriginCube",
+          areaId: webAreaId,
+          sideFeet: movementFeet(20),
+        },
+      }),
+    ]);
+    expect(battlePerceptionRollModeForObscurement("lightlyObscured")).toBe(
+      "disadvantage",
+    );
   });
 
   test("entry save failure restrains and records first-entry resolution for the turn", () => {

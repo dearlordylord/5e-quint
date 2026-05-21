@@ -298,6 +298,7 @@ module battleRuntimeTimedEffects {
           })
         | WebRestraintHazard(data) => WebRestraintHazard({
             areaId: data.areaId,
+            sideFeet: data.sideFeet,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
             entrySavedThisTurn: data.entrySavedThisTurn,
             startTurnSavedThisTurn: data.startTurnSavedThisTurn,

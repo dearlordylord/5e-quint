@@ -394,17 +394,20 @@ module battleRuntime {
   //   area membership, object ignition, and light-rendering witnesses remain
   //   table/presentation facts outside this promoted hazard/ram subset.
   //   Spells/Descriptions-S-Z.md lines 1264-1279, Rules-Glossary.md lines
-  //   832-840, Playing-the-Game.md lines 533-551, and
+  //   395-397, 656-658, and 832-840, Playing-the-Game.md lines 374-376
+  //   and 533-551, and
   //   UBIQUITOUS_LANGUAGE.md: Web is a level-2 Action spell that creates a
   //   caller-supplied 20-foot Cube for up to 1 hour of Concentration, forces
   //   Dexterity Saving Throws when a creature first enters on a turn or starts
   //   a turn there, applies Restrained on failure, and lets the restrained
   //   creature spend an action on a Strength (Athletics) check to escape. This
   //   subset models active area identity, table-triggered save witnesses,
-  //   spell-owned Restrained, escape, no-longer-in-area cleanup, and area
-  //   removal/concentration cleanup; Difficult Terrain, Lightly Obscured,
-  //   anchoring/layering, and burning-cube clauses stay with the later area
-  //   projection task.
+  //   spell-owned Restrained, escape, no-longer-in-area cleanup, active-area
+  //   Difficult Terrain movement-cost witnesses, Lightly Obscured Cube
+  //   projection, and area removal/concentration cleanup. Anchoring/layering
+  //   collapse, flat-surface depth, and fire-exposed 5-foot Cube burn-away and
+  //   damage remain table/spatial/environment witnesses instead of duplicated
+  //   runtime map-section state.
   //   Spells/Descriptions-A-D.md lines 820-835, Playing-the-Game.md lines
   //   533-551 and 634-640, Rules-Glossary.md lines 738-740 and 904-910,
   //   and UBIQUITOUS_LANGUAGE.md: Command is a level-1 Action spell whose

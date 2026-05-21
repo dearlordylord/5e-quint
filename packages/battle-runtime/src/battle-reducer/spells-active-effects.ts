@@ -431,9 +431,20 @@ export function battlePerceptionRollModeForSight(
   illumination: BattleIllumination,
   observer: BattleSightObserver = { kind: "ordinarySight" },
 ): BattleLightlyObscuredPerceptionRollMode | undefined {
-  return battleSightObscurement(illumination, observer) === "lightlyObscured"
-    ? PERCEPTION_LIGHTLY_OBSCURED_ROLL_MODE
-    : undefined;
+  return battlePerceptionRollModeForObscurement(
+    battleSightObscurement(illumination, observer),
+  );
+}
+
+export function battlePerceptionRollModeForObscurement(
+  obscurement: BattleSightObscurement,
+): BattleLightlyObscuredPerceptionRollMode | undefined {
+  return Match.value(obscurement).pipe(
+    Match.when("unobscured", () => undefined),
+    Match.when("lightlyObscured", () => PERCEPTION_LIGHTLY_OBSCURED_ROLL_MODE),
+    Match.when("heavilyObscured", () => undefined),
+    Match.exhaustive,
+  );
 }
 
 export function spellCreatedHeldObjectEffectForSource(
@@ -763,7 +774,22 @@ export function battleObscurementZones(
                   expiresAt: effect.expiresAt,
                 },
               ]
-            : [],
+            : effect.kind === "webRestraintHazard"
+              ? [
+                  {
+                    kind: "spellObscurementZone",
+                    sourceSpellId: effect.sourceSpellId,
+                    sourceCombatantId: effect.sourceCombatantId,
+                    obscurement: "lightlyObscured",
+                    area: {
+                      kind: "pointOriginCube",
+                      areaId: effect.areaId,
+                      sideFeet: effect.sideFeet,
+                    },
+                    expiresAt: effect.expiresAt,
+                  },
+                ]
+              : [],
       ),
   );
 }
@@ -1823,6 +1849,7 @@ export function applyWebRestraintHazardCastEffect(input: {
       sourceSpellId: input.invocation.spell.id,
       sourceCombatantId: input.actorId,
       areaId: input.areaId,
+      sideFeet: input.invocation.targeting.sideFeet,
       save: {
         ability: input.invocation.ability,
         dc: input.invocation.dc,

@@ -1622,10 +1622,10 @@ export function movementFill(
       readonly reactorId: CombatantId;
       readonly attackName: string;
     }[];
-    readonly greaseGroundDifficultTerrain?: Extract<
+    readonly areaDifficultTerrain?: Extract<
       BattleFill,
       { readonly kind: "movement" }
-    >["value"]["greaseGroundDifficultTerrain"];
+    >["value"]["areaDifficultTerrain"];
   },
 ): Extract<BattleFill, { readonly kind: "movement" }> {
   if (hole.kind !== "movement") {
@@ -1638,9 +1638,9 @@ export function movementFill(
       speedKind: value.speedKind ?? "walk",
       movementCostFeet: movementFeet(value.movementCostFeet),
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
-      ...(value.greaseGroundDifficultTerrain === undefined
+      ...(value.areaDifficultTerrain === undefined
         ? {}
-        : { greaseGroundDifficultTerrain: value.greaseGroundDifficultTerrain }),
+        : { areaDifficultTerrain: value.areaDifficultTerrain }),
     },
   };
 }

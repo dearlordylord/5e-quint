@@ -168,13 +168,18 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       resolveBattleSubject({ state: greased, subject, fills: [] }),
       "movement",
     );
-    const greaseGroundDifficultTerrain = {
-      kind: "greaseGroundDifficultTerrain" as const,
-      sourceCombatantId: wizardId,
-      sourceSpellId: spellRecord("grease").id,
-      areaId,
+    const areaDifficultTerrain = {
+      kind: "areaDifficultTerrain" as const,
+      sources: [
+        {
+          kind: "greaseGroundHazard" as const,
+          sourceCombatantId: wizardId,
+          sourceSpellId: spellRecord("grease").id,
+          areaId,
+        },
+      ],
       totalDistanceFeet: movementFeet(10),
-      greaseDistanceFeet: movementFeet(5),
+      difficultTerrainDistanceFeet: movementFeet(5),
     };
 
     expect(
@@ -185,14 +190,14 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           movementFill(hole, {
             movementCostFeet: 10,
             provokedOpportunityAttacks: [],
-            greaseGroundDifficultTerrain,
+            areaDifficultTerrain,
           }),
         ],
       }),
     ).toMatchObject({
       tag: "invalid",
       message:
-        "Grease Difficult Terrain movement must spend total distance plus 1 extra foot for every foot moved through the area.",
+        "Area Difficult Terrain movement must spend total distance plus 1 extra foot for every foot moved through Difficult Terrain.",
     });
 
     const moved = requireResolved(
@@ -203,7 +208,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           movementFill(hole, {
             movementCostFeet: 15,
             provokedOpportunityAttacks: [],
-            greaseGroundDifficultTerrain,
+            areaDifficultTerrain,
           }),
         ],
       }),
@@ -263,13 +268,18 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           movementFill(hole, {
             movementCostFeet: 10,
             provokedOpportunityAttacks: [],
-            greaseGroundDifficultTerrain: {
-              kind: "greaseGroundDifficultTerrain",
-              sourceCombatantId: wizardId,
-              sourceSpellId: spellRecord("grease").id,
-              areaId,
+            areaDifficultTerrain: {
+              kind: "areaDifficultTerrain",
+              sources: [
+                {
+                  kind: "greaseGroundHazard",
+                  sourceCombatantId: wizardId,
+                  sourceSpellId: spellRecord("grease").id,
+                  areaId,
+                },
+              ],
               totalDistanceFeet: movementFeet(10),
-              greaseDistanceFeet: movementFeet(5),
+              difficultTerrainDistanceFeet: movementFeet(5),
             },
           }),
         ],
@@ -277,7 +287,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     ).toMatchObject({
       tag: "invalid",
       message:
-        "Grease Difficult Terrain movement fact does not match an active Grease ground hazard.",
+        "Area Difficult Terrain movement fact does not match an active Difficult Terrain area.",
     });
   });
 

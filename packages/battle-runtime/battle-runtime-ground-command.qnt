@@ -27,6 +27,7 @@ module battleRuntimeGroundCommand {
   pure val flamingSphereRamMaxMoveFeet = 30
   pure val webDurationTicks = 600
   pure val webAreaId = 4
+  pure val webSideFeet = 20
 
   pure def activeEffectsWithoutGreaseGroundHazard(effects: Set[ActiveEffect], areaId: int): Set[ActiveEffect] =
     effects.filter(effect => match effect {
@@ -65,14 +66,23 @@ module battleRuntimeGroundCommand {
       | _ => false
     })
 
-  pure def greaseGroundDifficultTerrainMovementCost(state: BattleState, areaId: int, totalDistanceFeet: int, greaseDistanceFeet: int): int =
-    if (greaseGroundHazardActive(state, areaId) and totalDistanceFeet > 0 and greaseDistanceFeet > 0 and greaseDistanceFeet <= totalDistanceFeet)
-      totalDistanceFeet + greaseDistanceFeet
+  pure def webAreaHazardActiveForTerrain(state: BattleState, areaId: int): bool =
+    state.fighter.activeEffects.exists(effect => match effect {
+      | WebRestraintHazard(data) => data.areaId == areaId
+      | _ => false
+    })
+
+  pure def areaDifficultTerrainActive(state: BattleState, areaId: int): bool =
+    greaseGroundHazardActive(state, areaId) or webAreaHazardActiveForTerrain(state, areaId)
+
+  pure def areaDifficultTerrainMovementCost(state: BattleState, areaId: int, totalDistanceFeet: int, difficultTerrainDistanceFeet: int): int =
+    if (areaDifficultTerrainActive(state, areaId) and totalDistanceFeet > 0 and difficultTerrainDistanceFeet > 0 and difficultTerrainDistanceFeet <= totalDistanceFeet)
+      totalDistanceFeet + difficultTerrainDistanceFeet
     else
       0
 
   pure def moveFighterThroughGreaseGroundDifficultTerrain(state: BattleState, areaId: int, totalDistanceFeet: int, greaseDistanceFeet: int, provokedByTable: bool): BattleState = {
-    val movementCost = greaseGroundDifficultTerrainMovementCost(state, areaId, totalDistanceFeet, greaseDistanceFeet)
+    val movementCost = areaDifficultTerrainMovementCost(state, areaId, totalDistanceFeet, greaseDistanceFeet)
     if (movementCost == 0)
       state
     else
@@ -309,10 +319,7 @@ module battleRuntimeGroundCommand {
     })
 
   pure def webRestraintHazardActive(state: BattleState, areaId: int): bool =
-    state.fighter.activeEffects.exists(effect => match effect {
-      | WebRestraintHazard(data) => data.areaId == areaId
-      | _ => false
-    })
+    webAreaHazardActiveForTerrain(state, areaId)
 
   pure def webRestraintHazardDurationTicks(state: BattleState, areaId: int): int =
     state.fighter.activeEffects
@@ -376,6 +383,7 @@ module battleRuntimeGroundCommand {
           activeEffects: activeEffectsWithoutWebRestraintHazard(withoutPrior.fighter.activeEffects, areaId)
             .union(Set(WebRestraintHazard({
               areaId: areaId,
+              sideFeet: webSideFeet,
               durationTicks: webDurationTicks,
               entrySavedThisTurn: Set(),
               startTurnSavedThisTurn: Set(),

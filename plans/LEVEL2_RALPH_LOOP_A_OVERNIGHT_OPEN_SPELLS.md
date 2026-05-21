@@ -109,7 +109,7 @@
     {
       "number": 18,
       "id": "L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Web Terrain Obscurement Fire Boundary"
     },
     {
@@ -232,7 +232,7 @@ The final task is intentionally blocked on every real task in this plan and plac
 | 15 | L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME - Magic Weapon Item Enhancement Runtime | done | L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE | A lane; Unit `magic_weapon`. |
 | 16 | L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE - Web Surface Area Hazard Shape | done | completed baseline | A lane; Unit `web`. |
 | 17 | L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME - Web Restraint Hazard Runtime | done | L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE | A lane; Unit `web`. |
-| 18 | L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE - Web Terrain Obscurement Fire Boundary | ready-for-research | L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE, L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME | A lane; Unit `web`. |
+| 18 | L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE - Web Terrain Obscurement Fire Boundary | done | L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE, L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME | A lane; Unit `web`. |
 | 19 | L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME - Darkness Point-Origin Area Runtime Support | ready-for-research | L12G-MISSING-DARKNESS | A lane; Unit `darkness`. |
 | 20 | L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH - Darkness Object-Origin Branch | ready-for-research | L12G-MISSING-DARKNESS | A lane; Unit `darkness`. |
 | 21 | L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL - Darkness Spell-Created Light Dispel | blocked | L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME, L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH | A lane; Unit `darkness`. |
@@ -933,7 +933,7 @@ Acceptance:
 
 ### Task 18 - L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE - Web Terrain Obscurement Fire Boundary
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `web`.
 Origin: Follow-up split from `web` unit claim and `L12G-SPELL-WEB`.

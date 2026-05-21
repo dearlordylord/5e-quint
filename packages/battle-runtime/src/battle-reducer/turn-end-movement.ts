@@ -11,7 +11,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
-import { Either } from "effect";
+import { Either, Match } from "effect";
 
 import {
   resetTurnActionEconomy,
@@ -187,6 +187,8 @@ import type {
   BattleFlamingSphereRamMovementHole,
   BattleFlamingSphereSavingThrowOutcomeHole,
   BattleFlamingSphereTrigger,
+  BattleAreaDifficultTerrainMovementFact,
+  BattleAreaDifficultTerrainSource,
   BattleGustOfWindLineDirectionChoiceHole,
   BattleGustOfWindLineMovementFact,
   BattleGustOfWindLineSavingThrowOutcomeHole,
@@ -194,7 +196,6 @@ import type {
   BattleMoonbeamSaveTrigger,
   BattleMoonbeamSavingThrowOutcomeHole,
   BattleMovableZoneRepositionMovementHole,
-  BattleGreaseGroundDifficultTerrainMovementFact,
   BattleGrappleLink,
   BattleGreaseGroundHazardSavingThrowOutcomeHole,
   BattleWebRestraintSavingThrowOutcomeHole,
@@ -5608,17 +5609,63 @@ export function parseBattleMovement(
   };
 }
 
-function validateGreaseGroundDifficultTerrainMovementFact(
+const byAreaDifficultTerrainSourceKind = Match.discriminator("kind");
+
+function activeAreaDifficultTerrainSourceMatches(
   state: BattleState,
-  fact: BattleGreaseGroundDifficultTerrainMovementFact | undefined,
+  source: BattleAreaDifficultTerrainSource,
+): boolean {
+  const sourceCombatant = state.combatants.get(source.sourceCombatantId);
+  return Match.value(source).pipe(
+    byAreaDifficultTerrainSourceKind(
+      "greaseGroundHazard",
+      (terrainSource) =>
+        sourceCombatant?.activeEffects.some(
+          (effect) =>
+            effect.kind === "greaseGroundHazard" &&
+            effect.sourceCombatantId === terrainSource.sourceCombatantId &&
+            effect.sourceSpellId === terrainSource.sourceSpellId &&
+            effect.areaId === terrainSource.areaId,
+        ) === true,
+    ),
+    byAreaDifficultTerrainSourceKind(
+      "webAreaHazard",
+      (terrainSource) =>
+        sourceCombatant?.activeEffects.some(
+          (effect) =>
+            effect.kind === "webRestraintHazard" &&
+            effect.sourceCombatantId === terrainSource.sourceCombatantId &&
+            effect.sourceSpellId === terrainSource.sourceSpellId &&
+            effect.areaId === terrainSource.areaId,
+        ) === true,
+    ),
+    Match.exhaustive,
+  );
+}
+
+function areaDifficultTerrainSourceKey(
+  source: BattleAreaDifficultTerrainSource,
+): string {
+  return `${source.kind}\u0000${source.sourceCombatantId}\u0000${source.sourceSpellId}\u0000${source.areaId}`;
+}
+
+function validateAreaDifficultTerrainMovementFact(
+  state: BattleState,
+  fact: BattleAreaDifficultTerrainMovementFact | undefined,
 ): AreaMovementCostFactResult {
   if (fact === undefined) {
     return { tag: "notApplicable" };
   }
-  if (fact.kind !== "greaseGroundDifficultTerrain") {
+  if (fact.kind !== "areaDifficultTerrain") {
     return {
       tag: "invalid",
-      message: "Grease Difficult Terrain movement fact has the wrong kind.",
+      message: "Area Difficult Terrain movement fact has the wrong kind.",
+    };
+  }
+  if (fact.sources.length === 0) {
+    return {
+      tag: "invalid",
+      message: "Area Difficult Terrain movement fact requires a source.",
     };
   }
   if (
@@ -5628,44 +5675,49 @@ function validateGreaseGroundDifficultTerrainMovementFact(
     return {
       tag: "invalid",
       message:
-        "Grease Difficult Terrain total distance must be a positive integer.",
+        "Area Difficult Terrain total distance must be a positive integer.",
     };
   }
   if (
-    !Number.isInteger(fact.greaseDistanceFeet) ||
-    fact.greaseDistanceFeet <= 0
+    !Number.isInteger(fact.difficultTerrainDistanceFeet) ||
+    fact.difficultTerrainDistanceFeet <= 0
   ) {
     return {
       tag: "invalid",
-      message: "Grease Difficult Terrain distance must be a positive integer.",
+      message: "Area Difficult Terrain distance must be a positive integer.",
     };
   }
-  if (Number(fact.greaseDistanceFeet) > Number(fact.totalDistanceFeet)) {
+  if (
+    Number(fact.difficultTerrainDistanceFeet) > Number(fact.totalDistanceFeet)
+  ) {
     return {
       tag: "invalid",
       message:
-        "Grease Difficult Terrain distance cannot exceed total Movement distance.",
+        "Area Difficult Terrain distance cannot exceed total Movement distance.",
     };
   }
-  const source = state.combatants.get(fact.sourceCombatantId);
-  const activeGrease = source?.activeEffects.some(
-    (effect) =>
-      effect.kind === "greaseGroundHazard" &&
-      effect.sourceCombatantId === fact.sourceCombatantId &&
-      effect.sourceSpellId === fact.sourceSpellId &&
-      effect.areaId === fact.areaId,
-  );
-  if (activeGrease !== true) {
-    return {
-      tag: "invalid",
-      message:
-        "Grease Difficult Terrain movement fact does not match an active Grease ground hazard.",
-    };
+  const sourceKeys = new Set<string>();
+  for (const source of fact.sources) {
+    const key = areaDifficultTerrainSourceKey(source);
+    if (sourceKeys.has(key)) {
+      return {
+        tag: "invalid",
+        message: "Area Difficult Terrain movement fact repeats a source.",
+      };
+    }
+    sourceKeys.add(key);
+    if (!activeAreaDifficultTerrainSourceMatches(state, source)) {
+      return {
+        tag: "invalid",
+        message:
+          "Area Difficult Terrain movement fact does not match an active Difficult Terrain area.",
+      };
+    }
   }
   return {
     tag: "ok",
     totalDistanceFeet: fact.totalDistanceFeet,
-    extraCostFeet: fact.greaseDistanceFeet,
+    extraCostFeet: fact.difficultTerrainDistanceFeet,
   };
 }
 
@@ -5745,12 +5797,12 @@ function validateAreaMovementCostFacts(
   state: BattleState,
   value: BattleMovementFillValue,
 ): string | null {
-  const grease = validateGreaseGroundDifficultTerrainMovementFact(
+  const difficultTerrain = validateAreaDifficultTerrainMovementFact(
     state,
-    value.greaseGroundDifficultTerrain,
+    value.areaDifficultTerrain,
   );
-  if (grease.tag === "invalid") {
-    return grease.message;
+  if (difficultTerrain.tag === "invalid") {
+    return difficultTerrain.message;
   }
   const gust = validateGustOfWindLineMovementFact(
     state,
@@ -5759,7 +5811,7 @@ function validateAreaMovementCostFacts(
   if (gust.tag === "invalid") {
     return gust.message;
   }
-  const areaCosts = [grease, gust].filter(
+  const areaCosts = [difficultTerrain, gust].filter(
     (
       result,
     ): result is Extract<AreaMovementCostFactResult, { readonly tag: "ok" }> =>
@@ -5795,11 +5847,11 @@ function validateAreaMovementCostFacts(
   if (Number(value.movementCostFeet) === Number(expectedCostFeet)) {
     return null;
   }
-  if (grease.tag === "ok" && gust.tag === "ok") {
-    return "Combined Grease and Gust of Wind movement must spend total distance plus 1 extra foot for every foot moved through Grease and 1 extra foot for every foot moved closer to the caster through the Line.";
+  if (difficultTerrain.tag === "ok" && gust.tag === "ok") {
+    return "Combined area Difficult Terrain and Gust of Wind movement must spend total distance plus 1 extra foot for every foot moved through Difficult Terrain and 1 extra foot for every foot moved closer to the caster through the Line.";
   }
-  return grease.tag === "ok"
-    ? "Grease Difficult Terrain movement must spend total distance plus 1 extra foot for every foot moved through the area."
+  return difficultTerrain.tag === "ok"
+    ? "Area Difficult Terrain movement must spend total distance plus 1 extra foot for every foot moved through Difficult Terrain."
     : "Gust of Wind Line movement must spend total distance plus 1 extra foot for every foot moved closer to the caster through the Line.";
 }
 
