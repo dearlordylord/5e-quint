@@ -5,7 +5,7 @@
   "schema": "ralph-plan.v1",
   "tasks": [
     {"number":1,"id":"RKBC-HANDOFF-IDENTITY-CONFLICTS","status":"done","title":"Character Battle Identity And Max HP Conflict Handling"},
-    {"number":2,"id":"RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY","status":"ready-for-research","title":"Spell Direct Condition Removal And Protection Parity Witnesses"},
+    {"number":2,"id":"RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY","status":"done","title":"Spell Direct Condition Removal And Protection Parity Witnesses"},
     {"number":3,"id":"RKBC-SPELL-SAVE-GATED-CONDITION-PARITY","status":"ready-for-research","title":"Spell Save-Gated Condition Parity Witnesses"},
     {"number":4,"id":"RKBC-SPELL-ROLL-SCALAR-PARITY","status":"ready-for-research","title":"Spell Roll Modifier And Scalar Buff Parity Witnesses"},
     {"number":5,"id":"RKBC-SPELL-MAKE-STABLE-PARITY","status":"ready-for-research","title":"Spell Make Stable Parity Witness"},
@@ -57,7 +57,7 @@ Output:
 
 ### Task 2 - RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY - Spell Direct Condition Removal And Protection Parity Witnesses
 
-Status: `ready-for-research`
+Status: `done`
 
 Output:
 - Parity witnesses or focused tests for direct condition removal/protection profiles already supported in runtime.

@@ -108,8 +108,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 135,
-      "numerator": 105,
-      "percent": "77.8%"
+      "numerator": 107,
+      "percent": "79.3%"
     },
     "supportedProfileCoverage": {
       "denominator": 192,
@@ -19957,6 +19957,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-SPELL-LESSER-RESTORATION"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/condition-removal-protection-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY"
         }
       ],
       "executableMechanics": true,
@@ -20565,6 +20570,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-SPELL-PROTECTION-FROM-POISON"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/condition-removal-protection-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY"
         }
       ],
       "executableMechanics": true,
