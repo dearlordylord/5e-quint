@@ -4,15 +4,16 @@ Generated on 2026-05-18 while putting active level-2 Ralph lanes A-D into organi
 
 Do not treat this file as an active Ralph plan.
 
-As of the stashed-frontier restart, the stored leftovers were copied into
-active runnable plans:
+As of the post-B-continuation hygiene pass, active runnable work was reshuffled
+into four current plans:
 
-- `plans/LEVEL2_RALPH_LOOP_A_STASHED_FRONTIER.md`
-- `plans/LEVEL2_RALPH_LOOP_C_STASHED_FRONTIER.md`
-- `plans/LEVEL2_RALPH_LOOP_D_STASHED_FRONTIER.md`
+- `plans/LEVEL2_FEATURE_LANE_A_SPATIAL_VISIBILITY.md`
+- `plans/LEVEL2_FEATURE_LANE_B_ONGOING_EFFECTS.md`
+- `plans/LEVEL2_FEATURE_LANE_C_CLASS_AND_TRANSFORMS.md`
+- `plans/MBT_COVERAGE_LANE_D_PARITY.md`
 
-Keep this file as the archived pre-research source for those plans. Do not run
-Ralph directly against it.
+Keep this file as archived pre-research source material. Do not run Ralph
+directly against it.
 
 ## Active Tasks Left In Lanes
 
