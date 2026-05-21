@@ -17390,8 +17390,12 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH",
-            "mechanic": "Object-origin branch: target object not worn or carried, 15-foot Emanation originating from that object, movement with the object, and opaque-cover blocking remain blocked on the object-origin spell-area and opaque-cover witness owner."
+            "battleReadinessClosure": {
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "runtime-detached object-area identity and object-cover adjudication owner",
+              "reason": "The promoted Darkness profile owns point-origin area identity plus sight/light witness consequences. It does not yet own a durable object-attached magical Darkness zone, object-motion updates for that zone, or opaque-cover suppression for Darkness rather than a light emitter, so the alternative object-origin branch remains table/spatial/object adjudication outside the current runtime boundary."
+            },
+            "mechanic": "Object-origin branch: target object not worn or carried, 15-foot Emanation originating from that object, movement with the object, and opaque-cover blocking stay outside promoted runtime because the current owner consumes point-origin area ids and area witnesses, not a moving object-attached Darkness zone."
           },
           {
             "followUpTaskId": "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL",
@@ -17400,13 +17404,6 @@
         ],
         "followUpTasks": [
           {
-            "id": "L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH",
-            "mechanic": "Represent and promote or close Darkness's object branch: target object not worn or carried, 15-foot Emanation originating from that object, object-origin area identity, and opaque-cover blocking, consuming existing object and opaque-cover witness facts without adding duplicate map or cover state.",
-            "owner": "Surface Spell Definition authoring plus battle-runtime object-origin spell-area and opaque-cover witness boundary",
-            "requiredOutput": "Darkness Surface content and runtime owner decision with focused tests for the object-origin branch, or accepted closure if object attachment, movement, and opaque-cover blocking stay outside promoted runtime.",
-            "title": "Darkness Object-Origin Branch"
-          },
-          {
             "id": "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL",
             "mechanic": "Promote or close the overlap rule that dispels another level-2-or-lower spell when Darkness overlaps Bright Light or Dim Light created by that spell, consuming generic spell-created light facts such as Continual Flame rather than spell identity.",
             "owner": "Darkness Surface definition plus battle-runtime Darkness area and spell-created light overlap owner",
@@ -17414,7 +17411,7 @@
             "title": "Darkness Spell-Created Light Dispel"
           }
         ],
-        "futureProfileOwner": "battle-runtime object-origin spell-area and opaque-cover witness boundary plus spell-created light overlap owner",
+        "futureProfileOwner": "battle-runtime Darkness spell-created light overlap owner plus runtime-detached object-area identity and object-cover adjudication owner",
         "profileIds": [
           "spell.invocation-magical-darkness-point-origin"
         ],

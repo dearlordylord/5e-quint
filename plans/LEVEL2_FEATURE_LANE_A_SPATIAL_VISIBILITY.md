@@ -4,7 +4,7 @@
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    {"number":1,"id":"L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH","status":"ready-for-research","title":"Darkness Object-Origin Branch"},
+    {"number":1,"id":"L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH","status":"done","title":"Darkness Object-Origin Branch"},
     {"number":2,"id":"L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT","status":"ready-for-research","title":"See Invisibility Observer Sight Runtime Support"},
     {"number":3,"id":"L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME","status":"ready-for-research","title":"Spike Growth Movement Hazard Runtime"},
     {"number":4,"id":"L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION","status":"ready-for-research","title":"Spike Growth Hazard Recognition Boundary"},
@@ -41,16 +41,16 @@ Every task must include:
 
 ### Task 1 - L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH - Darkness Object-Origin Branch
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 - Current Darkness point-origin runtime support and the completed spell-created-light overlap subset on `master`.
 - SRD Darkness object-origin text.
 
 Output:
-- Surface/runtime support or accepted closure for object-origin Darkness: target object not worn or carried, object-origin 15-foot Emanation identity, object movement boundary, and opaque-cover blocking.
+- Accepted runtime-detached closure for object-origin Darkness: target object not worn or carried, object-origin 15-foot Emanation identity, object movement boundary, and opaque-cover blocking stay outside promoted runtime because the current owner model consumes point-origin area ids and sight/light witnesses, not a moving object-attached Darkness zone with opaque-cover suppression.
 - No duplicated map geometry or pathfinding state.
-- Updated `darkness` unit claim and focused tests.
+- Updated `darkness` unit claim narrows the remaining Darkness follow-up surface to `L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL`.
 
 ### Task 2 - L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT - See Invisibility Observer Sight Runtime Support
 
