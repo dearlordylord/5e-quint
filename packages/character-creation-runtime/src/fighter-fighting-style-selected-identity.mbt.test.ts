@@ -1,5 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1D2-FIGHTER-FIGHTING-STYLE fighter_fighting_style
 // UNIT-IDENTITY-MBT-REPLAY: L1D2-FIGHTER-FIGHTING-STYLE fighter_fighting_style doSelectDefenseFightingStyle doReplaceDefenseWithArcheryOnFighterLevelGain
+// KERNEL-COVERAGE: parity-witness CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION
 // KERNEL-COVERAGE: parity-witness CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt character-creation.fighter-fighting-style-advancement-replacement
 import * as path from "node:path";

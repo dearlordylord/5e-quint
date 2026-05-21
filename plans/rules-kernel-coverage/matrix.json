@@ -1,19 +1,19 @@
 {
   "summary": {
-    "total": 64,
-    "covered": 36,
-    "open": 23,
+    "total": 65,
+    "covered": 38,
+    "open": 22,
     "nonSemantic": 5,
     "byRuntime": {
       "shared-algebras": 1,
       "battle": 53,
-      "character-creation": 7,
+      "character-creation": 8,
       "character-sheet": 2,
       "character-battle": 1
     },
     "byStatus": {
-      "covered": 36,
-      "needs-qnt-owner": 3,
+      "covered": 38,
+      "needs-qnt-owner": 2,
       "needs-parity-witness": 19,
       "needs-surface-evidence": 1,
       "boundary-only": 4,
@@ -1575,24 +1575,68 @@
       "title": "Prove each currently admitted executable battle Surface profile points to a covered semantic obligation"
     },
     {
-      "followUpTaskIds": [
-        "RKBC-CREATION-WEAPON-MASTERY-FEAT"
+      "id": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/fighter-fighting-style-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
       ],
-      "id": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
-      "kind": "composition",
-      "parityWitnesses": [],
       "profiles": [
-        "character-creation.class-feature-feat-choice",
-        "character-creation.weapon-mastery-choice"
+        "character-creation.class-feature-feat-choice"
       ],
-      "qntOwners": [],
+      "qntOwners": [
+        "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt"
+      ],
       "runtime": "character-creation",
       "runtimeOwners": [
-        "packages/character-creation-runtime/src/index.ts"
+        "packages/character-creation-runtime/src/finalization.ts"
       ],
-      "status": "needs-qnt-owner",
-      "surfaceEvidence": [],
-      "title": "Audit remaining Character Creation finalization and selected-choice projection profiles into semantic obligations and parity witnesses"
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Character-Creation.md#Gaining a Level",
+        ".references/srd-5.2.1/Classes/Fighter.md#Level 1: Fighting Style",
+        ".references/srd-5.2.1/Classes/Paladin.md#Level 2: Fighting Style",
+        ".references/srd-5.2.1/Classes/Ranger.md#Level 2: Fighting Style",
+        ".references/srd-5.2.1/Feats.md#Fighting Style Feats"
+      ],
+      "title": "Character Creation finalizes class-feature feat choices as selected CharacterBuild class-choice refs without owning selected feat behavior"
+    },
+    {
+      "id": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "character-creation.weapon-mastery-choice"
+      ],
+      "qntOwners": [
+        "packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt"
+      ],
+      "runtime": "character-creation",
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/finalization.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Character-Creation.md#Gaining a Level",
+        ".references/srd-5.2.1/Classes/Fighter.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/Classes/Barbarian.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/Classes/Paladin.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/Classes/Ranger.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/Classes/Rogue.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/Equipment.md#Mastery Properties"
+      ],
+      "title": "Character Creation finalizes Weapon Mastery weapon choices as selected CharacterBuild class-choice refs without owning selected mastery-property behavior"
     },
     {
       "followUpTaskIds": [
@@ -3277,7 +3321,7 @@
     },
     {
       "obligationIds": [
-        "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT"
+        "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION"
       ],
       "profileId": "character-creation.class-feature-feat-choice"
     },
@@ -3295,7 +3339,7 @@
     },
     {
       "obligationIds": [
-        "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT"
+        "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION"
       ],
       "profileId": "character-creation.weapon-mastery-choice"
     },

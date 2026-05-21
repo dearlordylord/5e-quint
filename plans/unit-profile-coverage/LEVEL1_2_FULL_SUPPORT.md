@@ -12,8 +12,8 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | Strict target closure | 167/168 (99.4%) |
 | Product readiness | 499/556 (89.7%) |
 | Rules-kernel profile join | 69/81 (85.2%) |
-| Rules-kernel covered profile join | 42/81 (51.9%) |
-| Supported Unit rules-kernel chain | 54/109 (49.5%) |
+| Rules-kernel covered profile join | 44/81 (54.3%) |
+| Supported Unit rules-kernel chain | 55/109 (50.5%) |
 
 ## Scope
 
@@ -70,7 +70,6 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `entangle` | mapped-open | `spell.invocation-condition-save` (mapped-open: `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` (needs-parity-witness)) |
 | `faerie_fire` | mapped-open | `spell.invocation-attack-roll-advantage-save` (mapped-open: `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE` (needs-parity-witness)) |
 | `false_life` | mapped-open | `spell.scalar-buff` (mapped-open: `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` (needs-parity-witness)) |
-| `fighter_fighting_style` | mapped-open | `character-creation.class-feature-feat-choice` (mapped-open: `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner)) |
 | `guidance` | mapped-open | `spell.invocation-roll-modifier` (mapped-open: `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS` (needs-parity-witness)) |
 | `hellish_rebuke` | mapped-open | `spell.reaction-hellish-rebuke` (mapped-open: `BATTLE.REACTION.OFFER_DECLINE_RESUME` (covered), `BATTLE.SPELL.REACTION_CASTING_TIME` (needs-parity-witness)) |
 | `heroism` | mapped-open | `spell.invocation-condition-immunity-turn-start-temporary-hit-points` (mapped-open: `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS` (needs-parity-witness)) |
@@ -85,13 +84,13 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `monk_uncanny_metabolism` | unmapped | `character-creation.class-feature-source-fact-projection` (unmapped: no obligation mapping); `character-sheet.class-feature-long-rest-use-state` (unmapped: no obligation mapping); `character-sheet.monk-uncanny-metabolism-initiative-recovery` (unmapped: no obligation mapping) |
 | `paladin_lay_on_hands` | unmapped | `character-sheet.healing-resource-action` (unmapped: no obligation mapping) |
 | `paladin_paladins_smite` | mapped-open | `spell.invocation-after-hit-damage` (mapped-open: `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` (needs-parity-witness)) |
-| `paladin_weapon_mastery` | unmapped | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner)); `character-sheet.weapon-mastery-reselection` (unmapped: no obligation mapping) |
+| `paladin_weapon_mastery` | unmapped | `character-sheet.weapon-mastery-reselection` (unmapped: no obligation mapping) |
 | `protection_from_evil_and_good` | mapped-open | `spell.creature-type-protection-and-charm` (mapped-open: `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION` (needs-parity-witness)) |
 | `protection_from_poison` | mapped-open | `spell.invocation-condition-removal-protection` (mapped-open: `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` (needs-parity-witness)) |
 | `ranger_deft_explorer` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
-| `ranger_weapon_mastery` | unmapped | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner)); `character-sheet.weapon-mastery-reselection` (unmapped: no obligation mapping) |
+| `ranger_weapon_mastery` | unmapped | `character-sheet.weapon-mastery-reselection` (unmapped: no obligation mapping) |
 | `rogue_expertise` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
-| `rogue_weapon_mastery` | unmapped | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner)); `character-sheet.weapon-mastery-reselection` (unmapped: no obligation mapping) |
+| `rogue_weapon_mastery` | unmapped | `character-sheet.weapon-mastery-reselection` (unmapped: no obligation mapping) |
 | `scorching_ray` | mapped-open | `spell.invocation-independent-attack-sequence` (mapped-open: `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE` (needs-parity-witness)) |
 | `searing_smite` | mapped-open | `spell.invocation-after-hit-timed-damage-save` (mapped-open: `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` (needs-parity-witness)) |
 | `shield_of_faith` | mapped-open | `spell.scalar-buff` (mapped-open: `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` (needs-parity-witness)) |

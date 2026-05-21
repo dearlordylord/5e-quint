@@ -12,8 +12,8 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | Strict target closure | 94/94 (100%) |
 | Product readiness | 367/367 (100%) |
 | Rules-kernel profile join | 52/58 (89.7%) |
-| Rules-kernel covered profile join | 32/58 (55.2%) |
-| Supported Unit rules-kernel chain | 43/78 (55.1%) |
+| Rules-kernel covered profile join | 34/58 (58.6%) |
+| Supported Unit rules-kernel chain | 44/78 (56.4%) |
 
 ## Scope
 
@@ -61,7 +61,6 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | `entangle` | mapped-open | `spell.invocation-condition-save` (mapped-open: `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` (needs-parity-witness)) |
 | `faerie_fire` | mapped-open | `spell.invocation-attack-roll-advantage-save` (mapped-open: `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE` (needs-parity-witness)) |
 | `false_life` | mapped-open | `spell.scalar-buff` (mapped-open: `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` (needs-parity-witness)) |
-| `fighter_fighting_style` | mapped-open | `character-creation.class-feature-feat-choice` (mapped-open: `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner)) |
 | `guidance` | mapped-open | `spell.invocation-roll-modifier` (mapped-open: `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS` (needs-parity-witness)) |
 | `hellish_rebuke` | mapped-open | `spell.reaction-hellish-rebuke` (mapped-open: `BATTLE.REACTION.OFFER_DECLINE_RESUME` (covered), `BATTLE.SPELL.REACTION_CASTING_TIME` (needs-parity-witness)) |
 | `heroism` | mapped-open | `spell.invocation-condition-immunity-turn-start-temporary-hit-points` (mapped-open: `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS` (needs-parity-witness)) |
@@ -70,11 +69,11 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | `hunters_mark` | mapped-open | `spell.invocation-marked-damage-rider` (mapped-open: `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` (needs-parity-witness)) |
 | `longstrider` | mapped-open | `spell.scalar-buff` (mapped-open: `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` (needs-parity-witness)) |
 | `paladin_lay_on_hands` | unmapped | `character-sheet.healing-resource-action` (unmapped: no obligation mapping) |
-| `paladin_weapon_mastery` | unmapped | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner)); `character-sheet.weapon-mastery-reselection` (unmapped: no obligation mapping) |
+| `paladin_weapon_mastery` | unmapped | `character-sheet.weapon-mastery-reselection` (unmapped: no obligation mapping) |
 | `protection_from_evil_and_good` | mapped-open | `spell.creature-type-protection-and-charm` (mapped-open: `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION` (needs-parity-witness)) |
-| `ranger_weapon_mastery` | unmapped | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner)); `character-sheet.weapon-mastery-reselection` (unmapped: no obligation mapping) |
+| `ranger_weapon_mastery` | unmapped | `character-sheet.weapon-mastery-reselection` (unmapped: no obligation mapping) |
 | `rogue_expertise` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
-| `rogue_weapon_mastery` | unmapped | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner)); `character-sheet.weapon-mastery-reselection` (unmapped: no obligation mapping) |
+| `rogue_weapon_mastery` | unmapped | `character-sheet.weapon-mastery-reselection` (unmapped: no obligation mapping) |
 | `searing_smite` | mapped-open | `spell.invocation-after-hit-timed-damage-save` (mapped-open: `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` (needs-parity-witness)) |
 | `shield_of_faith` | mapped-open | `spell.scalar-buff` (mapped-open: `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` (needs-parity-witness)) |
 | `shillelagh` | mapped-open | `spell.invocation-weapon-attack-override` (mapped-open: `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` (needs-parity-witness)) |

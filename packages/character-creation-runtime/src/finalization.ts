@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: runtime-owner CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION
 // KERNEL-COVERAGE: runtime-owner CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE
 import { Either, Match, Option } from "effect";
 import { isValidAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";

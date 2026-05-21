@@ -1,4 +1,7 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1D2-WEAPON-MASTERY-CONTAINERS paladin_weapon_mastery ranger_weapon_mastery rogue_weapon_mastery
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1D2-WEAPON-MASTERY-CONTAINERS fighter_weapon_mastery barbarian_weapon_mastery paladin_weapon_mastery ranger_weapon_mastery rogue_weapon_mastery
+// KERNEL-COVERAGE: parity-witness CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION
+// UNIT-IDENTITY-MBT-REPLAY: L1D2-WEAPON-MASTERY-CONTAINERS fighter_weapon_mastery doFinalizeFighterWeaponMastery
+// UNIT-IDENTITY-MBT-REPLAY: L1D2-WEAPON-MASTERY-CONTAINERS barbarian_weapon_mastery doFinalizeBarbarianWeaponMastery
 // UNIT-IDENTITY-MBT-REPLAY: L1D2-WEAPON-MASTERY-CONTAINERS paladin_weapon_mastery doFinalizePaladinWeaponMastery
 // UNIT-IDENTITY-MBT-REPLAY: L1D2-WEAPON-MASTERY-CONTAINERS ranger_weapon_mastery doFinalizeRangerWeaponMastery
 // UNIT-IDENTITY-MBT-REPLAY: L1D2-WEAPON-MASTERY-CONTAINERS rogue_weapon_mastery doFinalizeRogueWeaponMastery
@@ -49,16 +52,22 @@ import { supportedHoleOptionIds } from "./support-gates.ts";
 const TASK_ID = "L1D2-WEAPON-MASTERY-CONTAINERS";
 const WEAPON_MASTERY_CONTAINER_RESULTS = [
   "init",
+  "fighterFinalized",
+  "barbarianFinalized",
   "paladinFinalized",
   "rangerFinalized",
   "rogueFinalized",
 ] as const;
 const WEAPON_MASTERY_CONTAINER_FEATURE_UNIT_IDS = [
+  "fighter_weapon_mastery",
+  "barbarian_weapon_mastery",
   "paladin_weapon_mastery",
   "ranger_weapon_mastery",
   "rogue_weapon_mastery",
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 const WEAPON_MASTERY_CONTAINER_CLASS_UNIT_IDS = [
+  "class_fighter",
+  "class_barbarian",
   "class_paladin",
   "class_ranger",
   "class_rogue",
@@ -70,7 +79,9 @@ type WeaponMasteryContainerFeatureUnitId =
   (typeof WEAPON_MASTERY_CONTAINER_FEATURE_UNIT_IDS)[number];
 type WeaponMasteryContainerClassUnitId =
   (typeof WEAPON_MASTERY_CONTAINER_CLASS_UNIT_IDS)[number];
-type WeaponMasteryWeaponPair = readonly [UnitRecord["id"], UnitRecord["id"]];
+type WeaponMasteryWeaponSelection =
+  | readonly [UnitRecord["id"], UnitRecord["id"]]
+  | readonly [UnitRecord["id"], UnitRecord["id"], UnitRecord["id"]];
 type ChoiceCreationHole = Extract<CreationHole, { readonly kind: "choice" }>;
 type AbilityScoreCreationHole = Extract<
   CreationHole,
@@ -80,7 +91,7 @@ type WeaponMasteryContainerProfile = {
   readonly classUnitId: WeaponMasteryContainerClassUnitId;
   readonly featureUnitId: WeaponMasteryContainerFeatureUnitId;
   readonly result: Exclude<WeaponMasteryContainerResult, "init">;
-  readonly selectedWeaponUnitIds: WeaponMasteryWeaponPair;
+  readonly selectedWeaponUnitIds: WeaponMasteryWeaponSelection;
 };
 type WeaponMasteryContainerFacts = {
   readonly selectedMasteryChoiceCount: number;
@@ -89,6 +100,7 @@ type WeaponMasteryContainerFacts = {
   readonly featureUnitRefPresent: boolean;
   readonly firstWeaponUnitRefPresent: boolean;
   readonly secondWeaponUnitRefPresent: boolean;
+  readonly thirdWeaponUnitRefPresent: boolean;
   readonly totalLevel: number;
 };
 type PreferredOptionIdsBySource = Readonly<
@@ -112,12 +124,16 @@ type SelectedUnitIdentityReplay = {
 
 const weaponMasteryContainerSelectedIdentityDriverSchema = {
   init: {},
+  doFinalizeFighterWeaponMastery: {},
+  doFinalizeBarbarianWeaponMastery: {},
   doFinalizePaladinWeaponMastery: {},
   doFinalizeRangerWeaponMastery: {},
   doFinalizeRogueWeaponMastery: {},
   step: {},
 } as const;
 const featureUnitIdByDriverAction = {
+  doFinalizeFighterWeaponMastery: "fighter_weapon_mastery",
+  doFinalizeBarbarianWeaponMastery: "barbarian_weapon_mastery",
   doFinalizePaladinWeaponMastery: "paladin_weapon_mastery",
   doFinalizeRangerWeaponMastery: "ranger_weapon_mastery",
   doFinalizeRogueWeaponMastery: "rogue_weapon_mastery",
@@ -126,6 +142,8 @@ const featureUnitIdByDriverAction = {
   WeaponMasteryContainerFeatureUnitId
 >;
 const qntStepByDriverAction = {
+  doFinalizeFighterWeaponMastery: "stepFighterWeaponMastery",
+  doFinalizeBarbarianWeaponMastery: "stepBarbarianWeaponMastery",
   doFinalizePaladinWeaponMastery: "stepPaladinWeaponMastery",
   doFinalizeRangerWeaponMastery: "stepRangerWeaponMastery",
   doFinalizeRogueWeaponMastery: "stepRogueWeaponMastery",
@@ -138,6 +156,13 @@ const refPresenceSchema = {
   featureUnitRefPresent: z.literal(true),
   firstWeaponUnitRefPresent: z.literal(true),
   secondWeaponUnitRefPresent: z.literal(true),
+  thirdWeaponUnitRefPresent: z.literal(false),
+} as const;
+const threeWeaponRefPresenceSchema = {
+  featureUnitRefPresent: z.literal(true),
+  firstWeaponUnitRefPresent: z.literal(true),
+  secondWeaponUnitRefPresent: z.literal(true),
+  thirdWeaponUnitRefPresent: z.literal(true),
 } as const;
 const weaponMasteryContainerSelectedIdentityProjectionSchema =
   z.discriminatedUnion("lastResult", [
@@ -147,12 +172,40 @@ const weaponMasteryContainerSelectedIdentityProjectionSchema =
       classUnitId: z.literal("none"),
       firstWeaponUnitId: z.literal("none"),
       secondWeaponUnitId: z.literal("none"),
+      thirdWeaponUnitId: z.literal("none"),
       selectedMasteryChoiceCount: z.literal(0),
       buildMasteryFeatureCount: z.literal(0),
       openHoleCount: z.literal(0),
       featureUnitRefPresent: z.literal(false),
       firstWeaponUnitRefPresent: z.literal(false),
       secondWeaponUnitRefPresent: z.literal(false),
+      thirdWeaponUnitRefPresent: z.literal(false),
+      totalLevel: z.literal(1),
+    }),
+    z.object({
+      lastResult: z.literal("fighterFinalized"),
+      featureUnitId: z.literal("fighter_weapon_mastery"),
+      classUnitId: z.literal("class_fighter"),
+      firstWeaponUnitId: z.literal("weapon_longsword"),
+      secondWeaponUnitId: z.literal("weapon_spear"),
+      thirdWeaponUnitId: z.literal("weapon_flail"),
+      selectedMasteryChoiceCount: z.literal(3),
+      buildMasteryFeatureCount: z.literal(3),
+      openHoleCount: z.literal(0),
+      ...threeWeaponRefPresenceSchema,
+      totalLevel: z.literal(1),
+    }),
+    z.object({
+      lastResult: z.literal("barbarianFinalized"),
+      featureUnitId: z.literal("barbarian_weapon_mastery"),
+      classUnitId: z.literal("class_barbarian"),
+      firstWeaponUnitId: z.literal("weapon_longsword"),
+      secondWeaponUnitId: z.literal("weapon_dagger"),
+      thirdWeaponUnitId: z.literal("none"),
+      selectedMasteryChoiceCount: z.literal(2),
+      buildMasteryFeatureCount: z.literal(2),
+      openHoleCount: z.literal(0),
+      ...refPresenceSchema,
       totalLevel: z.literal(1),
     }),
     z.object({
@@ -161,6 +214,7 @@ const weaponMasteryContainerSelectedIdentityProjectionSchema =
       classUnitId: z.literal("class_paladin"),
       firstWeaponUnitId: z.literal("weapon_longsword"),
       secondWeaponUnitId: z.literal("weapon_dagger"),
+      thirdWeaponUnitId: z.literal("none"),
       selectedMasteryChoiceCount: z.literal(2),
       buildMasteryFeatureCount: z.literal(2),
       openHoleCount: z.literal(0),
@@ -173,6 +227,7 @@ const weaponMasteryContainerSelectedIdentityProjectionSchema =
       classUnitId: z.literal("class_ranger"),
       firstWeaponUnitId: z.literal("weapon_longsword"),
       secondWeaponUnitId: z.literal("weapon_dagger"),
+      thirdWeaponUnitId: z.literal("none"),
       selectedMasteryChoiceCount: z.literal(2),
       buildMasteryFeatureCount: z.literal(2),
       openHoleCount: z.literal(0),
@@ -185,6 +240,7 @@ const weaponMasteryContainerSelectedIdentityProjectionSchema =
       classUnitId: z.literal("class_rogue"),
       firstWeaponUnitId: z.literal("weapon_dagger"),
       secondWeaponUnitId: z.literal("weapon_shortsword"),
+      thirdWeaponUnitId: z.literal("none"),
       selectedMasteryChoiceCount: z.literal(2),
       buildMasteryFeatureCount: z.literal(2),
       openHoleCount: z.literal(0),
@@ -208,6 +264,22 @@ const unitLibrary = unitCatalogResult.catalog;
 
 const weaponMasteryContainerProfiles = [
   {
+    classUnitId: "class_fighter",
+    featureUnitId: "fighter_weapon_mastery",
+    result: "fighterFinalized",
+    selectedWeaponUnitIds: [
+      "weapon_longsword",
+      "weapon_spear",
+      "weapon_flail",
+    ],
+  },
+  {
+    classUnitId: "class_barbarian",
+    featureUnitId: "barbarian_weapon_mastery",
+    result: "barbarianFinalized",
+    selectedWeaponUnitIds: ["weapon_longsword", "weapon_dagger"],
+  },
+  {
     classUnitId: "class_paladin",
     featureUnitId: "paladin_weapon_mastery",
     result: "paladinFinalized",
@@ -228,6 +300,34 @@ const weaponMasteryContainerProfiles = [
 ] as const satisfies ReadonlyArray<WeaponMasteryContainerProfile>;
 
 const selectedUnitIdentityReplays = [
+  {
+    taskId: "L1D2-WEAPON-MASTERY-CONTAINERS",
+    unitId: "fighter_weapon_mastery",
+    actions: ["doFinalizeFighterWeaponMastery"],
+    sequences: [
+      {
+        name: "fighter-finalizes-three-selected-weapon-mastery-refs",
+        actions: ["doFinalizeFighterWeaponMastery"],
+        expected: projectionForProfile(
+          weaponMasteryProfile("fighter_weapon_mastery"),
+        ),
+      },
+    ],
+  },
+  {
+    taskId: "L1D2-WEAPON-MASTERY-CONTAINERS",
+    unitId: "barbarian_weapon_mastery",
+    actions: ["doFinalizeBarbarianWeaponMastery"],
+    sequences: [
+      {
+        name: "barbarian-finalizes-two-selected-melee-weapon-mastery-refs",
+        actions: ["doFinalizeBarbarianWeaponMastery"],
+        expected: projectionForProfile(
+          weaponMasteryProfile("barbarian_weapon_mastery"),
+        ),
+      },
+    ],
+  },
   {
     taskId: "L1D2-WEAPON-MASTERY-CONTAINERS",
     unitId: "paladin_weapon_mastery",
@@ -278,18 +378,24 @@ const advertisedReplayActions = selectedUnitIdentityReplays.flatMap(
 const quintStateSchema = z.object({
   qLastResult: z.union([
     z.literal("init"),
+    z.literal("fighterFinalized"),
+    z.literal("barbarianFinalized"),
     z.literal("paladinFinalized"),
     z.literal("rangerFinalized"),
     z.literal("rogueFinalized"),
   ]),
   qFeatureUnitId: z.union([
     z.literal("none"),
+    z.literal("fighter_weapon_mastery"),
+    z.literal("barbarian_weapon_mastery"),
     z.literal("paladin_weapon_mastery"),
     z.literal("ranger_weapon_mastery"),
     z.literal("rogue_weapon_mastery"),
   ]),
   qClassUnitId: z.union([
     z.literal("none"),
+    z.literal("class_fighter"),
+    z.literal("class_barbarian"),
     z.literal("class_paladin"),
     z.literal("class_ranger"),
     z.literal("class_rogue"),
@@ -302,7 +408,12 @@ const quintStateSchema = z.object({
   qSecondWeaponUnitId: z.union([
     z.literal("none"),
     z.literal("weapon_dagger"),
+    z.literal("weapon_spear"),
     z.literal("weapon_shortsword"),
+  ]),
+  qThirdWeaponUnitId: z.union([
+    z.literal("none"),
+    z.literal("weapon_flail"),
   ]),
   qSelectedMasteryChoiceCount: z.bigint(),
   qBuildMasteryFeatureCount: z.bigint(),
@@ -310,6 +421,7 @@ const quintStateSchema = z.object({
   qFeatureUnitRefPresent: z.boolean(),
   qFirstWeaponUnitRefPresent: z.boolean(),
   qSecondWeaponUnitRefPresent: z.boolean(),
+  qThirdWeaponUnitRefPresent: z.boolean(),
   qTotalLevel: z.bigint(),
 });
 
@@ -396,6 +508,16 @@ function createWeaponMasteryContainerSelectedIdentityDriver() {
 
       return {
         init: reset,
+        doFinalizeFighterWeaponMastery: () => {
+          projection = projectionForDriverAction(
+            "doFinalizeFighterWeaponMastery",
+          );
+        },
+        doFinalizeBarbarianWeaponMastery: () => {
+          projection = projectionForDriverAction(
+            "doFinalizeBarbarianWeaponMastery",
+          );
+        },
         doFinalizePaladinWeaponMastery: () => {
           projection = projectionForDriverAction(
             "doFinalizePaladinWeaponMastery",
@@ -436,12 +558,14 @@ function initialProjection(): Extract<
     classUnitId: "none",
     firstWeaponUnitId: "none",
     secondWeaponUnitId: "none",
+    thirdWeaponUnitId: "none",
     selectedMasteryChoiceCount: 0,
     buildMasteryFeatureCount: 0,
     openHoleCount: 0,
     featureUnitRefPresent: false,
     firstWeaponUnitRefPresent: false,
     secondWeaponUnitRefPresent: false,
+    thirdWeaponUnitRefPresent: false,
     totalLevel: 1,
   };
 }
@@ -468,12 +592,14 @@ function projectionForProfile(
     classUnitId: profile.classUnitId,
     firstWeaponUnitId: profile.selectedWeaponUnitIds[0],
     secondWeaponUnitId: profile.selectedWeaponUnitIds[1],
+    thirdWeaponUnitId: profile.selectedWeaponUnitIds[2] ?? "none",
     selectedMasteryChoiceCount: facts.selectedMasteryChoiceCount,
     buildMasteryFeatureCount: facts.buildMasteryFeatureCount,
     openHoleCount: facts.openHoleCount,
     featureUnitRefPresent: facts.featureUnitRefPresent,
     firstWeaponUnitRefPresent: facts.firstWeaponUnitRefPresent,
     secondWeaponUnitRefPresent: facts.secondWeaponUnitRefPresent,
+    thirdWeaponUnitRefPresent: facts.thirdWeaponUnitRefPresent,
     totalLevel: facts.totalLevel,
   });
 }
@@ -675,6 +801,10 @@ function weaponMasteryContainerFacts(input: {
     secondWeaponUnitRefPresent: unitRefIds.includes(
       input.profile.selectedWeaponUnitIds[1],
     ),
+    thirdWeaponUnitRefPresent:
+      input.profile.selectedWeaponUnitIds[2] === undefined
+        ? false
+        : unitRefIds.includes(input.profile.selectedWeaponUnitIds[2]),
     totalLevel: computeTotalLevel(input.build.progression),
   };
 }
@@ -790,12 +920,14 @@ function normalizeQuintState(
     classUnitId: parsed.qClassUnitId,
     firstWeaponUnitId: parsed.qFirstWeaponUnitId,
     secondWeaponUnitId: parsed.qSecondWeaponUnitId,
+    thirdWeaponUnitId: parsed.qThirdWeaponUnitId,
     selectedMasteryChoiceCount: Number(parsed.qSelectedMasteryChoiceCount),
     buildMasteryFeatureCount: Number(parsed.qBuildMasteryFeatureCount),
     openHoleCount: Number(parsed.qOpenHoleCount),
     featureUnitRefPresent: parsed.qFeatureUnitRefPresent,
     firstWeaponUnitRefPresent: parsed.qFirstWeaponUnitRefPresent,
     secondWeaponUnitRefPresent: parsed.qSecondWeaponUnitRefPresent,
+    thirdWeaponUnitRefPresent: parsed.qThirdWeaponUnitRefPresent,
     totalLevel: Number(parsed.qTotalLevel),
   });
 }

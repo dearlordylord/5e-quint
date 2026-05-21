@@ -3002,8 +3002,8 @@
     },
     "rulesKernelCoveredProfileJoin": {
       "denominator": 81,
-      "numerator": 42,
-      "percent": "51.9%"
+      "numerator": 44,
+      "percent": "54.3%"
     },
     "rulesKernelProfileJoin": {
       "denominator": 81,
@@ -3012,8 +3012,8 @@
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 109,
-      "numerator": 54,
-      "percent": "49.5%"
+      "numerator": 55,
+      "percent": "50.5%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 168,
@@ -5576,8 +5576,8 @@
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
         "denominator": 109,
-        "numerator": 54,
-        "percent": "49.5%"
+        "numerator": 55,
+        "percent": "50.5%"
       }
     },
     "units": [
@@ -6427,16 +6427,16 @@
         "unitId": "fighter_action_surge"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                "obligationId": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
                 "runtime": "character-creation",
-                "status": "needs-qnt-owner",
-                "title": "Audit remaining Character Creation finalization and selected-choice projection profiles into semantic obligations and parity witnesses"
+                "status": "covered",
+                "title": "Character Creation finalizes class-feature feat choices as selected CharacterBuild class-choice refs without owning selected feat behavior"
               }
             ],
             "profileId": "character-creation.class-feature-feat-choice",
@@ -7272,13 +7272,13 @@
         "joinStatus": "unmapped",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
                 "runtime": "character-creation",
-                "status": "needs-qnt-owner",
-                "title": "Audit remaining Character Creation finalization and selected-choice projection profiles into semantic obligations and parity witnesses"
+                "status": "covered",
+                "title": "Character Creation finalizes Weapon Mastery weapon choices as selected CharacterBuild class-choice refs without owning selected mastery-property behavior"
               }
             ],
             "profileId": "character-creation.weapon-mastery-choice",
@@ -7429,13 +7429,13 @@
         "joinStatus": "unmapped",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
                 "runtime": "character-creation",
-                "status": "needs-qnt-owner",
-                "title": "Audit remaining Character Creation finalization and selected-choice projection profiles into semantic obligations and parity witnesses"
+                "status": "covered",
+                "title": "Character Creation finalizes Weapon Mastery weapon choices as selected CharacterBuild class-choice refs without owning selected mastery-property behavior"
               }
             ],
             "profileId": "character-creation.weapon-mastery-choice",
@@ -7611,13 +7611,13 @@
         "joinStatus": "unmapped",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
                 "runtime": "character-creation",
-                "status": "needs-qnt-owner",
-                "title": "Audit remaining Character Creation finalization and selected-choice projection profiles into semantic obligations and parity witnesses"
+                "status": "covered",
+                "title": "Character Creation finalizes Weapon Mastery weapon choices as selected CharacterBuild class-choice refs without owning selected mastery-property behavior"
               }
             ],
             "profileId": "character-creation.weapon-mastery-choice",
