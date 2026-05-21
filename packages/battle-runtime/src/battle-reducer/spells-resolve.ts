@@ -134,6 +134,7 @@ import { resolveChainedSpellAttackDamageAct } from "./spells-resolve-chained.ts"
 import {
   resolveFlamingSphereSpellAct,
   resolveFogCloudObscurementSpellAct,
+  resolveAntimagicFieldOngoingSpellSuppressionAct,
   resolveGustOfWindLineSpellAct,
   resolveMagicalDarknessPointOriginSpellAct,
   resolveMoonbeamSpellAct,
@@ -149,6 +150,7 @@ import { resolveOngoingSpellEndSpellAct } from "./spells-ongoing-spell-ending.ts
 export {
   resolveFlamingSphereSpellAct,
   resolveFogCloudObscurementSpellAct,
+  resolveAntimagicFieldOngoingSpellSuppressionAct,
   resolveGustOfWindLineSpellAct,
   resolveMagicalDarknessPointOriginSpellAct,
   resolveMoonbeamSpellAct,
@@ -478,6 +480,7 @@ export function resolveSpellAct(
       invocation.procedure === "command" ||
       invocation.procedure === "fogCloudObscurement" ||
       invocation.procedure === "magicalDarknessPointOrigin" ||
+      invocation.procedure === "antimagicFieldOngoingSpellSuppression" ||
       invocation.procedure === "webRestraintHazard" ||
       invocation.procedure === "gustOfWindLine" ||
       invocation.procedure === "flamingSphere" ||
@@ -695,6 +698,14 @@ export function resolveSpellAct(
   }
   if (invocation.procedure === "magicalDarknessPointOrigin") {
     return resolveMagicalDarknessPointOriginSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "antimagicFieldOngoingSpellSuppression") {
+    return resolveAntimagicFieldOngoingSpellSuppressionAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

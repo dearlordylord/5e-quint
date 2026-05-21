@@ -83,6 +83,7 @@ import type {
 } from "../find-familiar-forms.ts";
 import { PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS } from "../find-familiar-forms.ts";
 import {
+  BATTLE_ANTIMAGIC_FIELD_ONGOING_SPELL_LIGHT_SOURCE_KINDS,
   BATTLE_ATTACK_RANGE_BANDS,
   BLUR_ATTACK_ROLL_BYPASS_SENSES,
   COMMAND_OPTIONS,
@@ -1686,6 +1687,19 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       }),
       durationTicks: BattleRuntimeObjectSchema,
       rangeFeet: MovementFeet,
+      dispelledSpellCreatedLightMaxSpellLevel: BattleSpellEffectLevel,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("antimagicFieldOngoingSpellSuppression"),
+      spell: BattleRuntimeObjectSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("selfOriginEmanation"),
+        radiusFeet: MovementFeet,
+      }),
+      durationTicks: BattleRuntimeObjectSchema,
+      rangeFeet: MovementFeet,
     }),
     Schema.Struct({
       access: PreparedSpellAccessSchema,
@@ -2586,6 +2600,10 @@ export const BattleHoleSchema = Schema.Union(
         kind: Schema.Literal("pointOriginCube"),
         sideFeet: MovementFeet,
       }),
+      Schema.Struct({
+        kind: Schema.Literal("selfOriginEmanation"),
+        radiusFeet: MovementFeet,
+      }),
     ),
   }),
   Schema.Struct({
@@ -3259,6 +3277,19 @@ type BattleFillEncoded =
         | {
             readonly kind: "magicalDarknessArea";
             readonly areaId: string;
+            readonly spellCreatedLightOverlaps: readonly {
+              readonly kind: "spellCreatedLightOverlapsArea";
+              readonly sourceEffectId: string;
+            }[];
+          }
+        | {
+            readonly kind: "antimagicFieldSelfEmanation";
+            readonly areaId: string;
+            readonly affectedOngoingSpellLights: readonly {
+              readonly kind: "antimagicFieldAffectedOngoingSpellLight";
+              readonly sourceEffectId: string;
+              readonly sourceKind: "ordinarySpell" | "artifact" | "deity";
+            }[];
           }
         | {
             readonly kind: "webCubeArea";
@@ -3956,6 +3987,25 @@ export const BattleFillSchema: Schema.Schema<
         Schema.Struct({
           kind: Schema.Literal("magicalDarknessArea"),
           areaId: BattleAreaId,
+          spellCreatedLightOverlaps: Schema.Array(
+            Schema.Struct({
+              kind: Schema.Literal("spellCreatedLightOverlapsArea"),
+              sourceEffectId: BattleSpellEffectOccurrenceId,
+            }),
+          ),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("antimagicFieldSelfEmanation"),
+          areaId: BattleAreaId,
+          affectedOngoingSpellLights: Schema.Array(
+            Schema.Struct({
+              kind: Schema.Literal("antimagicFieldAffectedOngoingSpellLight"),
+              sourceEffectId: BattleSpellEffectOccurrenceId,
+              sourceKind: Schema.Literal(
+                ...BATTLE_ANTIMAGIC_FIELD_ONGOING_SPELL_LIGHT_SOURCE_KINDS,
+              ),
+            }),
+          ),
         }),
         Schema.Struct({
           kind: Schema.Literal("webCubeArea"),

@@ -24,6 +24,9 @@ module battleRuntimeGroundCommand {
   pure val darknessDurationTicks = 100
   pure val darknessAreaId = 5
   pure val darknessRadiusFeet = 15
+  pure val antimagicFieldDurationTicks = 600
+  pure val antimagicFieldAreaId = 6
+  pure val antimagicFieldRadiusFeet = 10
   pure val flamingSphereDurationTicks = 10
   pure val flamingSphereAreaId = 3
   pure val flamingSphereDiameterFeet = 5
@@ -167,6 +170,12 @@ module battleRuntimeGroundCommand {
       | _ => true
     })
 
+  pure def activeEffectsWithoutAntimagicFieldOngoingSpellSuppression(effects: Set[ActiveEffect], areaId: int): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | AntimagicFieldOngoingSpellSuppression(data) => data.areaId != areaId
+      | _ => true
+    })
+
   pure def resolveDarknessPointOrigin(
     state: BattleState,
     areaId: int,
@@ -209,6 +218,39 @@ module battleRuntimeGroundCommand {
       DarknessIllumination
     else
       baseIllumination
+
+  pure def resolveAntimagicFieldOngoingSpellSuppression(
+    state: BattleState,
+    areaId: int,
+    suppressedSourceEffectIds: Set[int],
+    slotLevel: int,
+  ): BattleState =
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)) or slotLevel < 8)
+      state
+    else {
+      val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
+      commitActorSpellSlotUse({
+        ...withoutPrior,
+        fighter: {
+          ...withoutPrior.fighter,
+          concentrating: true,
+          activeEffects: activeEffectsWithoutAntimagicFieldOngoingSpellSuppression(withoutPrior.fighter.activeEffects, areaId)
+            .union(Set(AntimagicFieldOngoingSpellSuppression({
+              areaId: areaId,
+              radiusFeet: antimagicFieldRadiusFeet,
+              suppressedSourceEffectIds: suppressedSourceEffectIds,
+              durationTicks: antimagicFieldDurationTicks,
+            }))),
+        },
+        actionAvailable: false,
+      }, Fighter)
+    }
+
+  pure def antimagicFieldOngoingSpellSuppressionActive(state: BattleState, areaId: int): bool =
+    state.fighter.activeEffects.exists(effect => match effect {
+      | AntimagicFieldOngoingSpellSuppression(data) => data.areaId == areaId
+      | _ => false
+    })
 
   pure def flamingSphereDamageDice(slotLevel: int): int =
     2 + (slotLevel - 2)

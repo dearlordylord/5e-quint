@@ -198,6 +198,67 @@ module battleRuntimeGroundCommandTests {
     }
   }
 
+  run test_darkness_dispels_overlapping_level_two_or_lower_spell_created_light = {
+    val levelTwo = continualFlameObjectEmitter(LightObjectTarget)
+    val levelThree =
+      spellLightEmitterWithOngoingSpellTracking(
+        continualFlameObjectEmitter(PriorLightObjectTarget),
+        alternateContinualFlameSourceEffectId,
+        3,
+      )
+    val emitters = Set(levelTwo, levelThree)
+    val resolved =
+      darknessAreaDispelledSpellCreatedLightEmitters(
+        emitters,
+        Set(continualFlameSourceEffectId, alternateContinualFlameSourceEffectId),
+        2,
+      )
+    all {
+      assert(resolved == Set(levelThree)),
+      assert(darknessAreaDispelledSpellCreatedLightEmitters(
+        emitters,
+        Set(),
+        2,
+      ) == emitters),
+    }
+  }
+
+  run test_antimagic_field_suppresses_tracked_spell_light_without_deleting_it = {
+    val initial = {
+      ...initialState,
+      lightEmitters: Set(continualFlameObjectEmitter(LightObjectTarget)),
+    }
+    val resolved =
+      resolveAntimagicFieldOngoingSpellSuppression(
+        initial,
+        antimagicFieldAreaId,
+        Set(continualFlameSourceEffectId),
+        8,
+      )
+    val broken = breakConcentrationSpellEffects(resolved, Fighter)
+    all {
+      assert(antimagicFieldOngoingSpellSuppressionActive(resolved, antimagicFieldAreaId)),
+      assert(resolved.lightEmitters == Set(continualFlameObjectEmitter(LightObjectTarget))),
+      assert(battleRuntimeLightEmitters(resolved) == Set()),
+      assert(battleRuntimeLightEmitters(broken) == Set(continualFlameObjectEmitter(LightObjectTarget))),
+      assert(battleActorHasCommittedSpellSlotUse(resolved, Fighter)),
+    }
+  }
+
+  run test_antimagic_field_rejects_below_level_eight_slot = {
+    val resolved =
+      resolveAntimagicFieldOngoingSpellSuppression(
+        initialState,
+        antimagicFieldAreaId,
+        Set(),
+        7,
+      )
+    all {
+      assert(not(antimagicFieldOngoingSpellSuppressionActive(resolved, antimagicFieldAreaId))),
+      assert(not(battleActorHasCommittedSpellSlotUse(resolved, Fighter))),
+    }
+  }
+
   run test_flaming_sphere_records_movable_fire_hazard = {
     val resolved = resolveFlamingSphere(initialState, flamingSphereAreaId, 2)
     all {

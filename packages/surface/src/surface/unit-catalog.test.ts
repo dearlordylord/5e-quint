@@ -1112,6 +1112,13 @@ describe("SRD Unit catalog boundary", () => {
           trigger: { kind: "passive" },
           effect: { kind: "area_is_magical_darkness" },
         },
+        {
+          trigger: { kind: "passive" },
+          effect: {
+            kind: "end_overlapping_spell_created_bright_or_dim_light",
+            maxSpellLevel: 2,
+          },
+        },
       ]);
     }
   });

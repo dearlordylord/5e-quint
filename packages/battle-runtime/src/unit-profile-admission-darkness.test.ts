@@ -12,10 +12,12 @@ import {
   type BattleHole,
   type BattleMagicalDarknessZone,
   type BattleObscurementZone,
+  type BattleTrackedOngoingSpellLightEmitter,
 } from "./index.ts";
 import {
   battleAreaId,
   battleId,
+  battleObjectId,
   battleObscurementZones,
   breakBattleConcentration,
   characterSeed,
@@ -35,6 +37,8 @@ import {
   wizardSpellcasting,
   type BattleState,
 } from "./battle-runtime-test-support.ts";
+import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
+import { battleSpellEffectOccurrenceId } from "./identity.ts";
 import { darknessUnitId } from "./unit-profile-admission-catalog-support.ts";
 
 const darknessDurationTicks = elapsedTimeTicks(100);
@@ -215,6 +219,63 @@ describe("battle runtime: Darkness", () => {
     expect(expired.combatants.get(wizardId)?.concentration).toBeNull();
     expect(battleObscurementZones(expired)).toEqual([]);
   });
+
+  test("Darkness dispels overlapping level-2-or-lower tracked spell-created light", () => {
+    const overlappingLevelTwoEffectId = battleSpellEffectOccurrenceId(
+      "darkness-overlap-level-two-light",
+    );
+    const overlappingLevelThreeEffectId = battleSpellEffectOccurrenceId(
+      "darkness-overlap-level-three-light",
+    );
+    const untrackedLevelTwo = trackedObjectSpellLightEmitter({
+      sourceEffectId: battleSpellEffectOccurrenceId(
+        "darkness-untracked-level-two-light",
+      ),
+      sourceSpellLevel: 2,
+      objectId: "darkness-untracked-level-two-object",
+    });
+    const state = {
+      ...darknessBattle("battle-darkness-light-overlap"),
+      lightEmitters: [
+        trackedObjectSpellLightEmitter({
+          sourceEffectId: overlappingLevelTwoEffectId,
+          sourceSpellLevel: 2,
+          objectId: "darkness-overlap-level-two-object",
+        }),
+        trackedObjectSpellLightEmitter({
+          sourceEffectId: overlappingLevelThreeEffectId,
+          sourceSpellLevel: 3,
+          objectId: "darkness-overlap-level-three-object",
+        }),
+        untrackedLevelTwo,
+      ],
+    };
+    const subject = magicSubject(darknessUnitId);
+    const area = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "spellAreaChoice",
+    );
+
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          magicalDarknessAreaFill(area, battleAreaId("darkness-overlap-area"), [
+            {
+              kind: "spellCreatedLightOverlapsArea",
+              sourceEffectId: overlappingLevelTwoEffectId,
+            },
+          ]),
+        ],
+      }),
+    );
+
+    expect(resolved.state.lightEmitters).toEqual([
+      expect.objectContaining({ sourceEffectId: overlappingLevelThreeEffectId }),
+      untrackedLevelTwo,
+    ]);
+  });
 });
 
 function darknessBattle(
@@ -266,6 +327,10 @@ function castDarkness(
 function magicalDarknessAreaFill(
   hole: BattleHole,
   areaId: BattleAreaId,
+  spellCreatedLightOverlaps: Extract<
+    Extract<BattleFill, { readonly kind: "spellAreaChoice" }>["value"],
+    { readonly kind: "magicalDarknessArea" }
+  >["spellCreatedLightOverlaps"] = [],
 ): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
   if (hole.kind !== "spellAreaChoice") {
     throw new Error("Expected spellAreaChoice hole.");
@@ -273,7 +338,36 @@ function magicalDarknessAreaFill(
   return {
     kind: "spellAreaChoice",
     holeId: hole.holeId,
-    value: { kind: "magicalDarknessArea", areaId },
+    value: { kind: "magicalDarknessArea", areaId, spellCreatedLightOverlaps },
+  };
+}
+
+function trackedObjectSpellLightEmitter(input: {
+  readonly sourceEffectId: ReturnType<typeof battleSpellEffectOccurrenceId>;
+  readonly sourceSpellLevel: number;
+  readonly objectId: string;
+}): BattleTrackedOngoingSpellLightEmitter {
+  const sourceSpellLevel = parseBattleSpellEffectLevel(input.sourceSpellLevel);
+  if (sourceSpellLevel === null) {
+    throw new Error(`Invalid spell effect level ${input.sourceSpellLevel}.`);
+  }
+  return {
+    kind: "spellLightEmitter",
+    sourceSpellId: "synthetic_spell_light",
+    sourceCombatantId: wizardId,
+    sourceEffectId: input.sourceEffectId,
+    sourceSpellLevel,
+    attachment: {
+      kind: "object",
+      objectId: battleObjectId(input.objectId),
+    },
+    emission: {
+      kind: "brightAndDim",
+      brightRadiusFeet: movementFeet(20),
+      dimAdditionalFeet: movementFeet(20),
+    },
+    opaqueCoverInteraction: { kind: "blocksEmission" },
+    expiresAt: { kind: "untilDispelled" },
   };
 }
 

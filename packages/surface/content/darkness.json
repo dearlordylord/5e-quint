@@ -43,6 +43,15 @@
         "trigger": {
           "kind": "passive"
         }
+      },
+      {
+        "effect": {
+          "kind": "end_overlapping_spell_created_bright_or_dim_light",
+          "maxSpellLevel": 2
+        },
+        "trigger": {
+          "kind": "passive"
+        }
       }
     ],
     "range": {

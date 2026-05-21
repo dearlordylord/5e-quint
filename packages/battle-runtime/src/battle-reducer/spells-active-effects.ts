@@ -2,6 +2,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-tracked-light-suppression
 
 // KERNEL-COVERAGE: runtime-owner BATTLE.COMMAND.OPTION_AND_NEXT_TURN
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
@@ -56,11 +57,13 @@ import {
   type BattleDancingLightList,
   type BattleDancingLightsPlacementValue,
   type BattleFill,
+  type BattleAntimagicFieldAffectedOngoingSpellLight,
   type BattleIllumination,
   type BattleLightEmitter,
   type BattleLightEmitterAttachment,
   type BattleLightEmitterProjection,
   type BattleLightEmitterProjectionFact,
+  type BattleMagicalDarknessAreaChoice,
   type BattleLightlyObscuredPerceptionRollMode,
   type BattleMagicalDarknessNonmagicalLightProjectionFact,
   type BattleMagicalDarknessSightProjectionFact,
@@ -71,6 +74,7 @@ import {
   type BattleSightObscurement,
   type BattleSpellAreaChoice,
   type BattleState,
+  type BattleTrackedOngoingSpellLightEmitter,
   type SpellCreatedHeldObjectActiveEffect,
   type SpellCreatedHeldObjectState,
   type BattleSpecialSpeedKind,
@@ -299,6 +303,8 @@ export function applySpellActiveEffects(
 export function battleLightEmitters(
   state: BattleState,
 ): readonly BattleLightEmitter[] {
+  const suppressedEffectIds =
+    antimagicFieldSuppressedSpellLightEffectIds(state);
   const outlineLightEmitters = [...state.combatants.values()].flatMap(
     (combatant): readonly BattleLightEmitter[] =>
       combatant.activeEffects.flatMap(
@@ -381,11 +387,44 @@ export function battleLightEmitters(
                     : [],
       ),
   );
-  return [
+  const emitters = [
     ...state.lightEmitters,
     ...outlineLightEmitters,
     ...state.objectOutlines.map(faerieFireObjectDimLightEmitter),
   ];
+  return suppressedEffectIds.size === 0
+    ? emitters
+    : emitters.filter(
+        (emitter) =>
+          !(
+            isTrackedOngoingSpellLightEmitter(emitter) &&
+            suppressedEffectIds.has(emitter.sourceEffectId)
+          ),
+      );
+}
+
+function antimagicFieldSuppressedSpellLightEffectIds(
+  state: BattleState,
+): ReadonlySet<BattleTrackedOngoingSpellLightEmitter["sourceEffectId"]> {
+  return new Set(
+    [...state.combatants.values()].flatMap((combatant) =>
+      combatant.activeEffects.flatMap((effect) =>
+        effect.kind === "antimagicFieldOngoingSpellSuppression"
+          ? effect.suppressedSpellLightEffectIds
+          : [],
+      ),
+    ),
+  );
+}
+
+function isTrackedOngoingSpellLightEmitter(
+  emitter: BattleLightEmitter,
+): emitter is BattleTrackedOngoingSpellLightEmitter {
+  return (
+    emitter.kind === "spellLightEmitter" &&
+    "sourceEffectId" in emitter &&
+    "sourceSpellLevel" in emitter
+  );
 }
 
 export function battleLightEmitterProjection(
@@ -1778,7 +1817,7 @@ export function applyFogCloudObscurementCastEffect(input: {
 export function applyMagicalDarknessPointOriginCastEffect(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
-  readonly areaId: BattleAreaId;
+  readonly areaChoice: BattleMagicalDarknessAreaChoice;
   readonly invocation: Extract<
     SupportedSpellInvocation,
     { readonly procedure: "magicalDarknessPointOrigin" }
@@ -1794,7 +1833,7 @@ export function applyMagicalDarknessPointOriginCastEffect(input: {
       effect.kind === "magicalDarknessPointOrigin" &&
       effect.sourceSpellId === input.invocation.spell.id &&
       effect.sourceCombatantId === input.actorId &&
-      effect.areaId === input.areaId,
+      effect.areaId === input.areaChoice.areaId,
   );
   const activeEffects = [
     ...caster.activeEffects.filter((effect) => !replacing.includes(effect)),
@@ -1802,8 +1841,71 @@ export function applyMagicalDarknessPointOriginCastEffect(input: {
       kind: "magicalDarknessPointOrigin" as const,
       sourceSpellId: input.invocation.spell.id,
       sourceCombatantId: input.actorId,
+      areaId: input.areaChoice.areaId,
+      radiusFeet: input.invocation.targeting.radiusFeet,
+      expiresAt: {
+        kind: "concentration" as const,
+        combatantId: input.actorId,
+        durationTicks: input.invocation.durationTicks,
+      },
+    },
+  ];
+  combatants.set(input.actorId, { ...caster, activeEffects });
+  const dispelledLightEffectIds = new Set(
+    input.areaChoice.spellCreatedLightOverlaps.map(
+      (overlap) => overlap.sourceEffectId,
+    ),
+  );
+  return {
+    ...input.state,
+    combatants,
+    lightEmitters: input.state.lightEmitters.filter(
+      (emitter) =>
+        !(
+          isTrackedOngoingSpellLightEmitter(emitter) &&
+          emitter.sourceSpellLevel <=
+            input.invocation.dispelledSpellCreatedLightMaxSpellLevel &&
+          dispelledLightEffectIds.has(emitter.sourceEffectId)
+        ),
+    ),
+  };
+}
+
+export function applyAntimagicFieldOngoingSpellSuppressionCastEffect(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly areaId: BattleAreaId;
+  readonly affectedOngoingSpellLights: readonly BattleAntimagicFieldAffectedOngoingSpellLight[];
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "antimagicFieldOngoingSpellSuppression" }
+  >;
+}): BattleState {
+  const combatants = new Map(input.state.combatants);
+  const caster = combatants.get(input.actorId);
+  if (caster === undefined) {
+    return input.state;
+  }
+  const replacing = caster.activeEffects.filter(
+    (effect) =>
+      effect.kind === "antimagicFieldOngoingSpellSuppression" &&
+      effect.sourceSpellId === input.invocation.spell.id &&
+      effect.sourceCombatantId === input.actorId &&
+      effect.areaId === input.areaId,
+  );
+  const suppressedSpellLightEffectIds = input.affectedOngoingSpellLights.flatMap(
+    (light) =>
+      light.sourceKind === "ordinarySpell" ? [light.sourceEffectId] : [],
+  );
+  const activeEffects = [
+    ...caster.activeEffects.filter((effect) => !replacing.includes(effect)),
+    {
+      kind: "antimagicFieldOngoingSpellSuppression" as const,
+      sourceSpellId: input.invocation.spell.id,
+      sourceCombatantId: input.actorId,
       areaId: input.areaId,
       radiusFeet: input.invocation.targeting.radiusFeet,
+      suppressedSpellLightEffectIds,
       expiresAt: {
         kind: "concentration" as const,
         combatantId: input.actorId,
