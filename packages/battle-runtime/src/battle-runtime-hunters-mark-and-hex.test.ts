@@ -1,3 +1,5 @@
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-marked-damage-rider
 import {
   startBattleRight,
   requireResolved,

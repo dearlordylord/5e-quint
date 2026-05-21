@@ -12,8 +12,8 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | Strict target closure | 94/94 (100%) |
 | Product readiness | 367/367 (100%) |
 | Rules-kernel profile join | 56/58 (96.6%) |
-| Rules-kernel covered profile join | 50/58 (86.2%) |
-| Supported Unit rules-kernel chain | 67/78 (85.9%) |
+| Rules-kernel covered profile join | 51/58 (87.9%) |
+| Supported Unit rules-kernel chain | 69/78 (88.5%) |
 
 ## Scope
 
@@ -54,8 +54,6 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | `eldritch_blast` | mapped-open | `spell.invocation-independent-attack-sequence` (mapped-open: `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE` (needs-parity-witness)) |
 | `faerie_fire` | mapped-open | `spell.invocation-attack-roll-advantage-save` (mapped-open: `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE` (needs-parity-witness)) |
 | `heroism` | mapped-open | `spell.invocation-condition-immunity-turn-start-temporary-hit-points` (mapped-open: `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS` (needs-parity-witness)) |
-| `hex` | mapped-open | `spell.invocation-marked-damage-rider` (mapped-open: `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` (needs-parity-witness)) |
-| `hunters_mark` | mapped-open | `spell.invocation-marked-damage-rider` (mapped-open: `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` (needs-parity-witness)) |
 | `protection_from_evil_and_good` | mapped-open | `spell.creature-type-protection-and-charm` (mapped-open: `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION` (needs-parity-witness)) |
 | `rogue_expertise` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
 

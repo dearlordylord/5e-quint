@@ -12,8 +12,8 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | Strict target closure | 167/168 (99.4%) |
 | Product readiness | 509/556 (91.5%) |
 | Rules-kernel profile join | 78/84 (92.9%) |
-| Rules-kernel covered profile join | 67/84 (79.8%) |
-| Supported Unit rules-kernel chain | 89/112 (79.5%) |
+| Rules-kernel covered profile join | 68/84 (81%) |
+| Supported Unit rules-kernel chain | 91/112 (81.3%) |
 
 ## Scope
 
@@ -60,8 +60,6 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `faerie_fire` | mapped-open | `spell.invocation-attack-roll-advantage-save` (mapped-open: `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE` (needs-parity-witness)) |
 | `heat_metal` | unmapped | `spell.invocation-object-contact-damage` (unmapped: no obligation mapping) |
 | `heroism` | mapped-open | `spell.invocation-condition-immunity-turn-start-temporary-hit-points` (mapped-open: `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS` (needs-parity-witness)) |
-| `hex` | mapped-open | `spell.invocation-marked-damage-rider` (mapped-open: `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` (needs-parity-witness)) |
-| `hunters_mark` | mapped-open | `spell.invocation-marked-damage-rider` (mapped-open: `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` (needs-parity-witness)) |
 | `invisibility` | mapped-open | `spell.invocation-direct-condition` (mapped-open: `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE` (needs-parity-witness)) |
 | `lesser_restoration` | mapped-open | `spell.invocation-direct-condition-removal` (mapped-open: `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` (needs-parity-witness)) |
 | `mirror_image` | mapped-open | `spell.invocation-mirror-image-hit-interception` (mapped-open: `BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION` (needs-parity-witness)) |

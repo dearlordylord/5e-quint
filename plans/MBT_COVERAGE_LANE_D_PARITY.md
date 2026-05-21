@@ -13,7 +13,7 @@
     {"number":7,"id":"RKBC-SPELL-REACTION-CASTING-PARITY","status":"done","title":"Spell Reaction Casting Parity Witnesses"},
     {"number":8,"id":"RKBC-SPELL-AFTER-HIT-RIDERS-PARITY","status":"done","title":"Spell After-Hit Rider Parity Witnesses"},
     {"number":9,"id":"RKBC-SPELL-WEAPON-HOSTED-PARITY","status":"done","title":"Spell Weapon-Hosted Attack And Rider Parity Witnesses"},
-    {"number":10,"id":"RKBC-SPELL-MARKED-RIDER-PARITY","status":"ready-for-research","title":"Spell Marked Damage Rider Parity Witnesses"},
+    {"number":10,"id":"RKBC-SPELL-MARKED-RIDER-PARITY","status":"done","title":"Spell Marked Damage Rider Parity Witnesses"},
     {"number":11,"id":"RKBC-SPELL-ATTACK-SEQUENCES-PARITY","status":"ready-for-research","title":"Spell Attack Sequence Parity Witnesses"},
     {"number":12,"id":"RKBC-SPELL-MIRROR-IMAGE-PARITY","status":"ready-for-research","title":"Mirror Image Hit Interception Parity Witness"},
     {"number":13,"id":"RKBC-SPELL-LINKED-EFFECT-PARITY","status":"ready-for-research","title":"Linked Spell Effect Damage Sharing Parity Witness"},
@@ -114,7 +114,7 @@ Output:
 
 ### Task 10 - RKBC-SPELL-MARKED-RIDER-PARITY - Spell Marked Damage Rider Parity Witnesses
 
-Status: `ready-for-research`
+Status: `done`
 
 Output:
 - Parity witnesses for supported marked damage rider behavior.

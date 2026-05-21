@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-DIVINE-FAVOR divine_favor
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-DIVINE-SMITE divine_smite
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-ENSNARING-STRIKE ensnaring_strike

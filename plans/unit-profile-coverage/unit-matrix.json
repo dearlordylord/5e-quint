@@ -83,8 +83,8 @@
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 118,
-      "numerator": 92,
-      "percent": "78%"
+      "numerator": 93,
+      "percent": "78.8%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 118,
@@ -93,8 +93,8 @@
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 135,
-      "numerator": 112,
-      "percent": "83%"
+      "numerator": 114,
+      "percent": "84.4%"
     },
     "runtimeMappingCoverage": {
       "denominator": 86,
@@ -2119,6 +2119,10 @@
         },
         {
           "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-hunters-mark-and-hex.test.ts"
+        },
+        {
+          "kind": "runtime-test",
           "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
         }
       ]
@@ -3430,8 +3434,8 @@
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 118,
-        "numerator": 92,
-        "percent": "78%"
+        "numerator": 93,
+        "percent": "78.8%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 118,
@@ -4415,12 +4419,12 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle marked-damage spell riders for attack-roll damage, Ability Check roll-mode projection, Concentration duration, and zero-Hit-Point transfer timing"
           }
         ],
@@ -5032,8 +5036,8 @@
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
           "denominator": 135,
-          "numerator": 112,
-          "percent": "83%"
+          "numerator": 114,
+          "percent": "84.4%"
         }
       },
       "units": [
@@ -6436,15 +6440,15 @@
           "unitId": "heroism"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle marked-damage spell riders for attack-roll damage, Ability Check roll-mode projection, Concentration duration, and zero-Hit-Point transfer timing"
                 }
               ],
@@ -6493,15 +6497,15 @@
           "unitId": "hold_person"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle marked-damage spell riders for attack-roll damage, Ability Check roll-mode projection, Concentration duration, and zero-Hit-Point transfer timing"
                 }
               ],
@@ -13045,6 +13049,10 @@
             },
             {
               "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-hunters-mark-and-hex.test.ts"
+            },
+            {
+              "kind": "runtime-test",
               "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
             }
           ]
@@ -19449,6 +19457,10 @@
             },
             {
               "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-hunters-mark-and-hex.test.ts"
+            },
+            {
+              "kind": "runtime-test",
               "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
             }
           ]
@@ -19526,6 +19538,10 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-candidate-narrowing-spells.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-hunters-mark-and-hex.test.ts"
             },
             {
               "kind": "runtime-test",

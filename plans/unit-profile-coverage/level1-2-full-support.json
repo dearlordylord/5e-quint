@@ -2846,8 +2846,8 @@
     },
     "rulesKernelCoveredProfileJoin": {
       "denominator": 84,
-      "numerator": 67,
-      "percent": "79.8%"
+      "numerator": 68,
+      "percent": "81%"
     },
     "rulesKernelProfileJoin": {
       "denominator": 84,
@@ -2856,8 +2856,8 @@
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 112,
-      "numerator": 89,
-      "percent": "79.5%"
+      "numerator": 91,
+      "percent": "81.3%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 168,
@@ -5420,8 +5420,8 @@
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
         "denominator": 112,
-        "numerator": 89,
-        "percent": "79.5%"
+        "numerator": 91,
+        "percent": "81.3%"
       }
     },
     "units": [
@@ -6641,15 +6641,15 @@
         "unitId": "heroism"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
                 "obligationId": "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
                 "runtime": "battle",
-                "status": "needs-parity-witness",
+                "status": "covered",
                 "title": "Battle marked-damage spell riders for attack-roll damage, Ability Check roll-mode projection, Concentration duration, and zero-Hit-Point transfer timing"
               }
             ],
@@ -6698,15 +6698,15 @@
         "unitId": "hold_person"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
                 "obligationId": "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
                 "runtime": "battle",
-                "status": "needs-parity-witness",
+                "status": "covered",
                 "title": "Battle marked-damage spell riders for attack-roll damage, Ability Check roll-mode projection, Concentration duration, and zero-Hit-Point transfer timing"
               }
             ],

@@ -1,8 +1,8 @@
 {
   "summary": {
     "total": 72,
-    "covered": 55,
-    "open": 12,
+    "covered": 56,
+    "open": 11,
     "nonSemantic": 5,
     "byRuntime": {
       "shared-algebras": 1,
@@ -12,9 +12,9 @@
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 55,
+      "covered": 56,
       "needs-qnt-owner": 0,
-      "needs-parity-witness": 11,
+      "needs-parity-witness": 10,
       "needs-surface-evidence": 1,
       "boundary-only": 4,
       "unsupported-by-admission": 1
@@ -1073,12 +1073,20 @@
       "title": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders"
     },
     {
-      "followUpTaskIds": [
-        "RKBC-SPELL-MARKED-RIDER-PARITY"
-      ],
       "id": "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
       "kind": "active-effect-lifecycle",
-      "parityWitnesses": [],
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-hunters-mark-and-hex.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-level1-buff-mark-smite-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
       "profiles": [
         "spell.invocation-marked-damage-rider"
       ],
@@ -1095,8 +1103,15 @@
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
         "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts"
       ],
-      "status": "needs-parity-witness",
-      "surfaceEvidence": [],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Hex",
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Hunter's Mark",
+        ".references/srd-5.2.1/Rules-Glossary.md#Ability Check",
+        ".references/srd-5.2.1/Rules-Glossary.md#Attack Roll",
+        ".references/srd-5.2.1/Rules-Glossary.md#Concentration",
+        ".references/srd-5.2.1/Rules-Glossary.md#Damage Roll"
+      ],
       "title": "Battle marked-damage spell riders for attack-roll damage, Ability Check roll-mode projection, Concentration duration, and zero-Hit-Point transfer timing"
     },
     {
