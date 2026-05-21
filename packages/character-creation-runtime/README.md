@@ -124,6 +124,8 @@ This package supports these character-creation profiles:
   progression facts;
 - level-1 Wizard spellcasting creation facts and non-Wizard list-prepared Spell
   Access facts;
+- level-1 Warlock Pact Magic Spell Access facts and Warlock Pact Magic
+  advancement facts for supported Warlock level gains;
 - retained SRD level-1 class-feature Unit refs, plus supported acquisition
   choices for Divine Order, Primal Order, Rogue Expertise, and Warlock
   Eldritch Invocations;
@@ -201,15 +203,16 @@ types.
 
 Eldritch Invocation choices are not Unit refs. The Warlock class feature Unit
 remains a retained class-feature ref derived from the Surface class record, while
-selected invocation options are character-creation option ownership facts from
-`src/eldritch-invocations.ts`. Invocation runtime behavior and spell execution
-remain outside this package.
+selected Eldritch Invocation options are character-creation option ownership
+facts from `src/eldritch-invocations.ts`. Eldritch Invocation runtime behavior
+and spell execution remain outside this package.
 
 Spellcasting on a build is source-scoped. Each source records the source Unit,
-spellcasting ability, cantrips, spellbook entries, prepared spells, and focus
-permissions for that source. Slot pools are explicit and rigid: ordinary
-`spellcasting` slots and optional `pactMagic` slots are separate pools. Battle
-and session projections decide which subset they can execute.
+spellcasting ability, cantrip Spell Access, spellbook Spell Access, prepared
+Spell Access, and focus permissions for that source. Slot pools are explicit
+and rigid: ordinary `spellcasting` slots and optional `pactMagic` slots are
+separate pools. Battle and session projections decide which subset they can
+execute.
 
 Equipment on a build is split into durable owned equipment and initial loadout.
 Loadout entries hold `CharacterEquipmentItemId`s for owned items instead of

@@ -3002,8 +3002,8 @@
     },
     "rulesKernelCoveredProfileJoin": {
       "denominator": 81,
-      "numerator": 40,
-      "percent": "49.4%"
+      "numerator": 42,
+      "percent": "51.9%"
     },
     "rulesKernelProfileJoin": {
       "denominator": 81,
@@ -3012,8 +3012,8 @@
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 109,
-      "numerator": 53,
-      "percent": "48.6%"
+      "numerator": 54,
+      "percent": "49.5%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 168,
@@ -5576,8 +5576,8 @@
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
         "denominator": 109,
-        "numerator": 53,
-        "percent": "48.6%"
+        "numerator": 54,
+        "percent": "49.5%"
       }
     },
     "units": [
@@ -6436,7 +6436,7 @@
                 "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
                 "runtime": "character-creation",
                 "status": "needs-qnt-owner",
-                "title": "Audit remaining Character Creation finalization, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+                "title": "Audit remaining Character Creation finalization and selected-choice projection profiles into semantic obligations and parity witnesses"
               }
             ],
             "profileId": "character-creation.class-feature-feat-choice",
@@ -7278,7 +7278,7 @@
                 "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
                 "runtime": "character-creation",
                 "status": "needs-qnt-owner",
-                "title": "Audit remaining Character Creation finalization, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+                "title": "Audit remaining Character Creation finalization and selected-choice projection profiles into semantic obligations and parity witnesses"
               }
             ],
             "profileId": "character-creation.weapon-mastery-choice",
@@ -7435,7 +7435,7 @@
                 "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
                 "runtime": "character-creation",
                 "status": "needs-qnt-owner",
-                "title": "Audit remaining Character Creation finalization, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+                "title": "Audit remaining Character Creation finalization and selected-choice projection profiles into semantic obligations and parity witnesses"
               }
             ],
             "profileId": "character-creation.weapon-mastery-choice",
@@ -7617,7 +7617,7 @@
                 "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
                 "runtime": "character-creation",
                 "status": "needs-qnt-owner",
-                "title": "Audit remaining Character Creation finalization, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+                "title": "Audit remaining Character Creation finalization and selected-choice projection profiles into semantic obligations and parity witnesses"
               }
             ],
             "profileId": "character-creation.weapon-mastery-choice",
@@ -8131,29 +8131,29 @@
         "unitId": "warding_bond"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                "obligationId": "CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE",
                 "runtime": "character-creation",
-                "status": "needs-qnt-owner",
-                "title": "Audit remaining Character Creation finalization, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+                "status": "covered",
+                "title": "Character Creation Warlock Eldritch Invocation selection, level-gain count, prerequisite, repeatable choice, replacement, and duplicate-selection lifecycle without owning selected Eldritch Invocation runtime behavior"
               }
             ],
             "profileId": "character-creation.eldritch-invocation-choice",
             "profileKind": "character-creation"
           },
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                "obligationId": "CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION",
                 "runtime": "character-creation",
-                "status": "needs-qnt-owner",
-                "title": "Audit remaining Character Creation finalization, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+                "status": "covered",
+                "title": "Character Creation Warlock Pact Magic Spell Access and Pact Slot progression from Surface class facts through build finalization and Warlock class-level gains"
               }
             ],
             "profileId": "character-creation.warlock-pact-magic-advancement",

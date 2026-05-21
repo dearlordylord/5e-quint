@@ -83,8 +83,8 @@
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 109,
-      "numerator": 57,
-      "percent": "52.3%"
+      "numerator": 59,
+      "percent": "54.1%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 109,
@@ -93,8 +93,8 @@
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 132,
-      "numerator": 75,
-      "percent": "56.8%"
+      "numerator": 76,
+      "percent": "57.6%"
     },
     "runtimeMappingCoverage": {
       "denominator": 80,
@@ -2513,7 +2513,7 @@
       "runtimeOwners": [
         "packages/character-creation-runtime/src/index.ts"
       ],
-      "sourceBoundary": "Surface Warlock Pact Magic progression rows and class spell list facts project into the CharacterBuild Warlock spellcasting source and Pact Magic slot pool during Warlock class-level gains; spell execution and selected invocation execution remain owned by selected spell and invocation profiles.",
+      "sourceBoundary": "Surface Warlock Pact Magic progression rows and class spell list facts project into the CharacterBuild Warlock spellcasting source and Pact Magic slot pool during Warlock class-level gains; selected Spell Definition behavior and selected Eldritch Invocation runtime behavior remain owned by their selected runtime profiles.",
       "taskRefs": [
         "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
       ],
@@ -2552,13 +2552,13 @@
       "runtimeOwners": [
         "packages/character-creation-runtime/src/index.ts"
       ],
-      "sourceBoundary": "Warlock Eldritch Invocations class-feature choice, Surface Warlock invocation count facts, current CharacterBuild Warlock Pact Magic cantrip facts, and the runtime SRD invocation option catalog; CharacterBuild stores selected invocation ownership plus Repeatable associated choice identity while selected invocation execution remains owned by selected invocation profiles.",
+      "sourceBoundary": "Warlock Eldritch Invocations class-feature choice, Surface Warlock Eldritch Invocation count facts, current CharacterBuild Warlock Pact Magic cantrip Spell Access facts, and the runtime SRD Eldritch Invocation option catalog; CharacterBuild stores selected Eldritch Invocation ownership plus Repeatable associated choice identity while selected Eldritch Invocation execution remains owned by selected Eldritch Invocation runtime profiles.",
       "taskRefs": [
         "AT-L1-03S",
         "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE",
         "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
       ],
-      "title": "Character Creation finalizes and advances Eldritch Invocation choices as selected invocation ownership",
+      "title": "Character Creation finalizes and advances Eldritch Invocation choices as selected Eldritch Invocation ownership",
       "verificationOwners": [
         {
           "kind": "runtime-test",
@@ -3167,8 +3167,8 @@
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 109,
-        "numerator": 57,
-        "percent": "52.3%"
+        "numerator": 59,
+        "percent": "54.1%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 109,
@@ -4310,7 +4310,7 @@
             "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
             "runtime": "character-creation",
             "status": "needs-qnt-owner",
-            "title": "Audit remaining Character Creation finalization, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+            "title": "Audit remaining Character Creation finalization and selected-choice projection profiles into semantic obligations and parity witnesses"
           }
         ],
         "profileId": "character-creation.class-feature-feat-choice",
@@ -4330,13 +4330,13 @@
         "profileKind": "character-creation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
-            "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+            "obligationId": "CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION",
             "runtime": "character-creation",
-            "status": "needs-qnt-owner",
-            "title": "Audit remaining Character Creation finalization, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+            "status": "covered",
+            "title": "Character Creation Warlock Pact Magic Spell Access and Pact Slot progression from Surface class facts through build finalization and Warlock class-level gains"
           }
         ],
         "profileId": "character-creation.warlock-pact-magic-advancement",
@@ -4349,20 +4349,20 @@
             "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
             "runtime": "character-creation",
             "status": "needs-qnt-owner",
-            "title": "Audit remaining Character Creation finalization, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+            "title": "Audit remaining Character Creation finalization and selected-choice projection profiles into semantic obligations and parity witnesses"
           }
         ],
         "profileId": "character-creation.weapon-mastery-choice",
         "profileKind": "character-creation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
-            "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+            "obligationId": "CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE",
             "runtime": "character-creation",
-            "status": "needs-qnt-owner",
-            "title": "Audit remaining Character Creation finalization, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+            "status": "covered",
+            "title": "Character Creation Warlock Eldritch Invocation selection, level-gain count, prerequisite, repeatable choice, replacement, and duplicate-selection lifecycle without owning selected Eldritch Invocation runtime behavior"
           }
         ],
         "profileId": "character-creation.eldritch-invocation-choice",
@@ -4610,8 +4610,8 @@
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
           "denominator": 132,
-          "numerator": 75,
-          "percent": "56.8%"
+          "numerator": 76,
+          "percent": "57.6%"
         }
       },
       "units": [
@@ -5634,7 +5634,7 @@
                   "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
                   "runtime": "character-creation",
                   "status": "needs-qnt-owner",
-                  "title": "Audit remaining Character Creation finalization, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+                  "title": "Audit remaining Character Creation finalization and selected-choice projection profiles into semantic obligations and parity witnesses"
                 }
               ],
               "profileId": "character-creation.class-feature-feat-choice",
@@ -6691,7 +6691,7 @@
                   "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
                   "runtime": "character-creation",
                   "status": "needs-qnt-owner",
-                  "title": "Audit remaining Character Creation finalization, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+                  "title": "Audit remaining Character Creation finalization and selected-choice projection profiles into semantic obligations and parity witnesses"
                 }
               ],
               "profileId": "character-creation.weapon-mastery-choice",
@@ -6886,7 +6886,7 @@
                   "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
                   "runtime": "character-creation",
                   "status": "needs-qnt-owner",
-                  "title": "Audit remaining Character Creation finalization, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+                  "title": "Audit remaining Character Creation finalization and selected-choice projection profiles into semantic obligations and parity witnesses"
                 }
               ],
               "profileId": "character-creation.weapon-mastery-choice",
@@ -7112,7 +7112,7 @@
                   "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
                   "runtime": "character-creation",
                   "status": "needs-qnt-owner",
-                  "title": "Audit remaining Character Creation finalization, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+                  "title": "Audit remaining Character Creation finalization and selected-choice projection profiles into semantic obligations and parity witnesses"
                 }
               ],
               "profileId": "character-creation.weapon-mastery-choice",
@@ -7626,29 +7626,29 @@
           "unitId": "warding_bond"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                  "obligationId": "CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE",
                   "runtime": "character-creation",
-                  "status": "needs-qnt-owner",
-                  "title": "Audit remaining Character Creation finalization, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+                  "status": "covered",
+                  "title": "Character Creation Warlock Eldritch Invocation selection, level-gain count, prerequisite, repeatable choice, replacement, and duplicate-selection lifecycle without owning selected Eldritch Invocation runtime behavior"
                 }
               ],
               "profileId": "character-creation.eldritch-invocation-choice",
               "profileKind": "character-creation"
             },
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                  "obligationId": "CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION",
                   "runtime": "character-creation",
-                  "status": "needs-qnt-owner",
-                  "title": "Audit remaining Character Creation finalization, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+                  "status": "covered",
+                  "title": "Character Creation Warlock Pact Magic Spell Access and Pact Slot progression from Surface class facts through build finalization and Warlock class-level gains"
                 }
               ],
               "profileId": "character-creation.warlock-pact-magic-advancement",
@@ -13134,13 +13134,13 @@
           "runtimeOwners": [
             "packages/character-creation-runtime/src/index.ts"
           ],
-          "sourceBoundary": "Warlock Eldritch Invocations class-feature choice, Surface Warlock invocation count facts, current CharacterBuild Warlock Pact Magic cantrip facts, and the runtime SRD invocation option catalog; CharacterBuild stores selected invocation ownership plus Repeatable associated choice identity while selected invocation execution remains owned by selected invocation profiles.",
+          "sourceBoundary": "Warlock Eldritch Invocations class-feature choice, Surface Warlock Eldritch Invocation count facts, current CharacterBuild Warlock Pact Magic cantrip Spell Access facts, and the runtime SRD Eldritch Invocation option catalog; CharacterBuild stores selected Eldritch Invocation ownership plus Repeatable associated choice identity while selected Eldritch Invocation execution remains owned by selected Eldritch Invocation runtime profiles.",
           "taskRefs": [
             "AT-L1-03S",
             "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE",
             "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
           ],
-          "title": "Character Creation finalizes and advances Eldritch Invocation choices as selected invocation ownership",
+          "title": "Character Creation finalizes and advances Eldritch Invocation choices as selected Eldritch Invocation ownership",
           "verificationOwners": [
             {
               "kind": "runtime-test",
@@ -13155,7 +13155,7 @@
           "runtimeOwners": [
             "packages/character-creation-runtime/src/index.ts"
           ],
-          "sourceBoundary": "Surface Warlock Pact Magic progression rows and class spell list facts project into the CharacterBuild Warlock spellcasting source and Pact Magic slot pool during Warlock class-level gains; spell execution and selected invocation execution remain owned by selected spell and invocation profiles.",
+          "sourceBoundary": "Surface Warlock Pact Magic progression rows and class spell list facts project into the CharacterBuild Warlock spellcasting source and Pact Magic slot pool during Warlock class-level gains; selected Spell Definition behavior and selected Eldritch Invocation runtime behavior remain owned by their selected runtime profiles.",
           "taskRefs": [
             "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
           ],

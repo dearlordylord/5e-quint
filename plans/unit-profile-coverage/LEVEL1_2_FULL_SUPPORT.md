@@ -12,8 +12,8 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | Strict target closure | 167/168 (99.4%) |
 | Product readiness | 499/556 (89.7%) |
 | Rules-kernel profile join | 69/81 (85.2%) |
-| Rules-kernel covered profile join | 40/81 (49.4%) |
-| Supported Unit rules-kernel chain | 53/109 (48.6%) |
+| Rules-kernel covered profile join | 42/81 (51.9%) |
+| Supported Unit rules-kernel chain | 54/109 (49.5%) |
 
 ## Scope
 
@@ -101,7 +101,6 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `spider_climb` | mapped-open | `spell.scalar-buff` (mapped-open: `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` (needs-parity-witness)) |
 | `true_strike` | mapped-open | `spell.invocation-spell-hosted-weapon-attack` (mapped-open: `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` (needs-parity-witness)) |
 | `warding_bond` | mapped-open | `spell.invocation-warding-bond-linked-effect` (mapped-open: `BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING` (needs-parity-witness)) |
-| `warlock_eldritch_invocations` | mapped-open | `character-creation.eldritch-invocation-choice` (mapped-open: `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner)); `character-creation.warlock-pact-magic-advancement` (mapped-open: `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner)) |
 | `warlock_magical_cunning` | unmapped | `character-sheet.pact-slot-recovery` (unmapped: no obligation mapping) |
 | `wizard_arcane_recovery` | unmapped | `character-sheet.short-rest-spell-slot-recovery` (unmapped: no obligation mapping) |
 | `wizard_ritual_adept` | unmapped | `character-sheet.spellbook-ritual-invocation` (unmapped: no obligation mapping) |

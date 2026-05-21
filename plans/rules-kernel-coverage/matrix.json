@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 62,
-    "covered": 34,
+    "total": 64,
+    "covered": 36,
     "open": 23,
     "nonSemantic": 5,
     "byRuntime": {
       "shared-algebras": 1,
       "battle": 53,
-      "character-creation": 5,
+      "character-creation": 7,
       "character-sheet": 2,
       "character-battle": 1
     },
     "byStatus": {
-      "covered": 34,
+      "covered": 36,
       "needs-qnt-owner": 3,
       "needs-parity-witness": 19,
       "needs-surface-evidence": 1,
@@ -1451,6 +1451,71 @@
       "title": "Character Creation Fighter class-level gain replacement rewrites durable CharacterBuild progression and selected Fighting Style ownership without draft state"
     },
     {
+      "id": "CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/warlock-eldritch-invocations-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "character-creation.warlock-pact-magic-advancement"
+      ],
+      "qntOwners": [
+        "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt"
+      ],
+      "runtime": "character-creation",
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/discovery.ts",
+        "packages/character-creation-runtime/src/finalization.ts",
+        "packages/character-creation-runtime/src/class-spellcasting.ts",
+        "packages/character-creation-runtime/src/character-build-advancement.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Character-Creation.md#Gaining a Level",
+        ".references/srd-5.2.1/Character-Creation.md#Spell Slots, Cantrips, and Prepared Spells",
+        ".references/srd-5.2.1/Classes/Warlock.md#Level 1: Pact Magic",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Gaining Spells"
+      ],
+      "title": "Character Creation Warlock Pact Magic Spell Access and Pact Slot progression from Surface class facts through build finalization and Warlock class-level gains"
+    },
+    {
+      "id": "CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/warlock-eldritch-invocations-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "character-creation.eldritch-invocation-choice"
+      ],
+      "qntOwners": [
+        "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt"
+      ],
+      "runtime": "character-creation",
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/discovery.ts",
+        "packages/character-creation-runtime/src/finalization.ts",
+        "packages/character-creation-runtime/src/eldritch-invocations.ts",
+        "packages/character-creation-runtime/src/character-build-advancement.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Character-Creation.md#Gaining a Level",
+        ".references/srd-5.2.1/Classes/Warlock.md#Level 1: Eldritch Invocations",
+        ".references/srd-5.2.1/Classes/Warlock.md#Eldritch Invocation Options"
+      ],
+      "title": "Character Creation Warlock Eldritch Invocation selection, level-gain count, prerequisite, repeatable choice, replacement, and duplicate-selection lifecycle without owning selected Eldritch Invocation runtime behavior"
+    },
+    {
       "id": "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
       "kind": "projection-scalar",
       "parityWitnesses": [
@@ -1511,7 +1576,6 @@
     },
     {
       "followUpTaskIds": [
-        "RKBC-CREATION-SPELLCASTING-PROGRESSION",
         "RKBC-CREATION-WEAPON-MASTERY-FEAT"
       ],
       "id": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
@@ -1519,8 +1583,6 @@
       "parityWitnesses": [],
       "profiles": [
         "character-creation.class-feature-feat-choice",
-        "character-creation.eldritch-invocation-choice",
-        "character-creation.warlock-pact-magic-advancement",
         "character-creation.weapon-mastery-choice"
       ],
       "qntOwners": [],
@@ -1530,7 +1592,7 @@
       ],
       "status": "needs-qnt-owner",
       "surfaceEvidence": [],
-      "title": "Audit remaining Character Creation finalization, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+      "title": "Audit remaining Character Creation finalization and selected-choice projection profiles into semantic obligations and parity witnesses"
     },
     {
       "followUpTaskIds": [
@@ -3227,7 +3289,7 @@
     },
     {
       "obligationIds": [
-        "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT"
+        "CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION"
       ],
       "profileId": "character-creation.warlock-pact-magic-advancement"
     },
@@ -3239,7 +3301,7 @@
     },
     {
       "obligationIds": [
-        "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT"
+        "CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE"
       ],
       "profileId": "character-creation.eldritch-invocation-choice"
     }
