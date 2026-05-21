@@ -1,5 +1,24 @@
 # Level 2 Feature Lane C - Class Resources, Metamagic, And Transformation Pressure
 
+<!-- ralph-task-index
+{
+  "schema": "ralph-plan.v1",
+  "tasks": [
+    {"number":1,"id":"L12G-FOLLOWUP-SORCERER-METAMAGIC-SAVE-OPTIONS","status":"ready-for-research","title":"Sorcerer Metamagic Save Options"},
+    {"number":2,"id":"L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-PROPERTY-OPTIONS","status":"ready-for-research","title":"Sorcerer Metamagic Cast Property Options"},
+    {"number":3,"id":"L12G-FOLLOWUP-SORCERER-METAMAGIC-DAMAGE-SHAPE-OPTIONS","status":"ready-for-research","title":"Sorcerer Metamagic Damage Shape Options"},
+    {"number":4,"id":"L12G-FOLLOWUP-SORCERER-METAMAGIC-REROLL-OPTIONS","status":"ready-for-research","title":"Sorcerer Metamagic Reroll Options"},
+    {"number":5,"id":"L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME","status":"ready-for-research","title":"Monk Step Of The Wind Jump Distance Runtime"},
+    {"number":6,"id":"L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE","status":"ready-for-research","title":"Sorcerer Font Of Magic Bonus Action And Battle Slot Source"},
+    {"number":7,"id":"L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS","status":"ready-for-research","title":"Sorcerer Metamagic Quickened All Action Spells"},
+    {"number":8,"id":"L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST","status":"ready-for-research","title":"Dragon's Breath Initial Cast And Effect State"},
+    {"number":9,"id":"L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION","status":"blocked","title":"Dragon's Breath Granted Magic Action"},
+    {"number":10,"id":"L12G-FOLLOWUP-ENHANCE-ABILITY-UPCAST-PER-TARGET-ABILITIES","status":"ready-for-research","title":"Enhance Ability Upcast Per-Target Ability Choices"},
+    {"number":11,"id":"L12G-RECURSIVE-TAIL-LANE-C","status":"blocked","title":"Lane C Recursive Planning Tail"}
+  ]
+}
+-->
+
 This is an active Ralph execution plan for level-2 feature/runtime coverage. It replaces the stale Loop C class-resource file.
 
 Every Ralph prompt for this lane must include:
@@ -23,7 +42,7 @@ Every task must include:
 
 ## Tasks
 
-### Task C1 - L12G-FOLLOWUP-SORCERER-METAMAGIC-SAVE-OPTIONS - Sorcerer Metamagic Save Options
+### Task 1 - L12G-FOLLOWUP-SORCERER-METAMAGIC-SAVE-OPTIONS - Sorcerer Metamagic Save Options
 
 Status: `ready-for-research`
 
@@ -34,7 +53,7 @@ Output:
 - Support or precise closure for save-affecting Metamagic options.
 - Reuse existing spell save holes/fills rather than adding parallel save state.
 
-### Task C2 - L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-PROPERTY-OPTIONS - Sorcerer Metamagic Cast Property Options
+### Task 2 - L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-PROPERTY-OPTIONS - Sorcerer Metamagic Cast Property Options
 
 Status: `ready-for-research`
 
@@ -45,7 +64,7 @@ Output:
 - Support or precise closure for cast-property options such as range, components, and targeting changes.
 - Do not dispatch on authored spell identity.
 
-### Task C3 - L12G-FOLLOWUP-SORCERER-METAMAGIC-DAMAGE-SHAPE-OPTIONS - Sorcerer Metamagic Damage Shape Options
+### Task 3 - L12G-FOLLOWUP-SORCERER-METAMAGIC-DAMAGE-SHAPE-OPTIONS - Sorcerer Metamagic Damage Shape Options
 
 Status: `ready-for-research`
 
@@ -56,7 +75,7 @@ Output:
 - Support or precise closure for damage-shape Metamagic options.
 - Keep damage type/dice ownership in the existing damage procedure facts.
 
-### Task C4 - L12G-FOLLOWUP-SORCERER-METAMAGIC-REROLL-OPTIONS - Sorcerer Metamagic Reroll Options
+### Task 4 - L12G-FOLLOWUP-SORCERER-METAMAGIC-REROLL-OPTIONS - Sorcerer Metamagic Reroll Options
 
 Status: `ready-for-research`
 
@@ -67,7 +86,7 @@ Output:
 - Support or precise closure for Metamagic reroll behavior.
 - Avoid storing reroll opportunity state when a typed fill boundary can carry it.
 
-### Task C5 - L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME - Monk Step Of The Wind Jump Distance Runtime
+### Task 5 - L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME - Monk Step Of The Wind Jump Distance Runtime
 
 Status: `ready-for-research`
 
@@ -78,7 +97,7 @@ Output:
 - Runtime support or closure for doubled jump distance from Step of the Wind.
 - Keep pathfinding and automatic jump-route legality table-owned.
 
-### Task C6 - L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE - Sorcerer Font Of Magic Bonus Action And Battle Slot Source
+### Task 6 - L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE - Sorcerer Font Of Magic Bonus Action And Battle Slot Source
 
 Status: `ready-for-research`
 
@@ -88,7 +107,7 @@ Input:
 Output:
 - Support or closure for Bonus Action battle use/source facts without duplicating spell slot pools across runtimes.
 
-### Task C7 - L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS - Sorcerer Metamagic Quickened All Action Spells
+### Task 7 - L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS - Sorcerer Metamagic Quickened All Action Spells
 
 Status: `ready-for-research`
 
@@ -99,7 +118,7 @@ Output:
 - Broaden Quickened to all supported action-casting spell procedures where the procedure type proves Bonus Action rewrite is safe.
 - Unsupported procedure classes must fail before Sorcery Point spending.
 
-### Task C8 - L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST - Dragon's Breath Initial Cast And Effect State
+### Task 8 - L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST - Dragon's Breath Initial Cast And Effect State
 
 Status: `ready-for-research`
 
@@ -110,7 +129,7 @@ Output:
 - Initial cast/effect-state support or split if the granted action makes the task too large.
 - Preserve caller/table ownership for cone placement and affected creatures.
 
-### Task C9 - L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION - Dragon's Breath Granted Magic Action
+### Task 9 - L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION - Dragon's Breath Granted Magic Action
 
 Status: `blocked`
 
@@ -120,7 +139,7 @@ Depends on:
 Output:
 - Runtime support for the granted breath action, damage type choice, save/damage resolution, and lifecycle cleanup.
 
-### Task C10 - L12G-FOLLOWUP-ENHANCE-ABILITY-UPCAST-PER-TARGET-ABILITIES - Enhance Ability Upcast Per-Target Ability Choices
+### Task 10 - L12G-FOLLOWUP-ENHANCE-ABILITY-UPCAST-PER-TARGET-ABILITIES - Enhance Ability Upcast Per-Target Ability Choices
 
 Status: `ready-for-research`
 
@@ -130,7 +149,7 @@ Input:
 Output:
 - Support per-target ability choices and upcast target scaling, or split if the current Surface shape cannot express it safely.
 
-### Task C11 - L12G-RECURSIVE-TAIL-LANE-C - Lane C Recursive Planning Tail
+### Task 11 - L12G-RECURSIVE-TAIL-LANE-C - Lane C Recursive Planning Tail
 
 Status: `blocked`
 

@@ -1,5 +1,24 @@
 # Level 2 Feature Lane B - Ongoing Spell Effects And Linked Runtime Lifecycles
 
+<!-- ralph-task-index
+{
+  "schema": "ralph-plan.v1",
+  "tasks": [
+    {"number":1,"id":"L12G-FOLLOWUP-GENERIC-ONGOING-SPELL-EFFECT-DISPEL","status":"ready-for-research","title":"Generic Ongoing Spell Effect Dispel Runtime"},
+    {"number":2,"id":"L12G-FOLLOWUP-ANTIMAGIC-FIELD-GENERIC-SUPPRESSION","status":"ready-for-research","title":"Antimagic Field Generic Suppression Runtime"},
+    {"number":3,"id":"L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST","status":"ready-for-research","title":"Prayer Of Healing Surface Rest Shape"},
+    {"number":4,"id":"L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST","status":"blocked","title":"Prayer Of Healing Character Sheet Rest Runtime"},
+    {"number":5,"id":"L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE","status":"ready-for-research","title":"Ray Of Enfeeblement D20 Lifecycle Runtime"},
+    {"number":6,"id":"L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY","status":"blocked","title":"Ray Of Enfeeblement Damage Roll Penalty Runtime"},
+    {"number":7,"id":"L12G-FOLLOWUP-SPIRITUAL-WEAPON-SURFACE-PROXY-SHAPE","status":"ready-for-research","title":"Spiritual Weapon Proxy Surface Shape"},
+    {"number":8,"id":"L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME","status":"blocked","title":"Spiritual Weapon Persistent Attack Runtime"},
+    {"number":9,"id":"L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME","status":"ready-for-research","title":"Enlarge Reduce Creature Runtime Support"},
+    {"number":10,"id":"L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME","status":"ready-for-research","title":"Enthrall Perception Penalty Runtime Support"},
+    {"number":11,"id":"L12G-RECURSIVE-TAIL-LANE-B","status":"blocked","title":"Lane B Recursive Planning Tail"}
+  ]
+}
+-->
+
 This is an active Ralph execution plan for level-2 feature/runtime coverage. It replaces stale Loop B continuation work; do not merge or replay old B worktree commits.
 
 Every Ralph prompt for this lane must include:
@@ -23,7 +42,7 @@ Every task must include:
 
 ## Tasks
 
-### Task B1 - L12G-FOLLOWUP-GENERIC-ONGOING-SPELL-EFFECT-DISPEL - Generic Ongoing Spell Effect Dispel Runtime
+### Task 1 - L12G-FOLLOWUP-GENERIC-ONGOING-SPELL-EFFECT-DISPEL - Generic Ongoing Spell Effect Dispel Runtime
 
 Status: `ready-for-research`
 
@@ -35,7 +54,7 @@ Output:
 - Promote Dispel Magic beyond tracked light emitters only where a generic ongoing Spell Effect occurrence can be represented without duplicating state.
 - Preserve spell-specific dispel exceptions as explicit follow-ups or typed closures.
 
-### Task B2 - L12G-FOLLOWUP-ANTIMAGIC-FIELD-GENERIC-SUPPRESSION - Antimagic Field Generic Suppression Runtime
+### Task 2 - L12G-FOLLOWUP-ANTIMAGIC-FIELD-GENERIC-SUPPRESSION - Antimagic Field Generic Suppression Runtime
 
 Status: `ready-for-research`
 
@@ -48,7 +67,7 @@ Output:
 - Do not delete suppressed occurrences; suppressed duration must keep ticking.
 - Spellcasting prevention, Magic Action prevention, magical targeting, magic item suppression, magical area clipping, teleport/planar travel blocking, portal closure, and aura Dispel Magic immunity must be modeled only if they have precise owners.
 
-### Task B3 - L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST - Prayer Of Healing Surface Rest Shape
+### Task 3 - L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST - Prayer Of Healing Surface Rest Shape
 
 Status: `ready-for-research`
 
@@ -59,7 +78,7 @@ Output:
 - Surface shape for 10-minute casting, up-to-five recipients, slot-scaled healing, Short Rest benefit, and per-recipient Long Rest lockout.
 - No runtime claim until the character-sheet rest owner consumes the shape.
 
-### Task B4 - L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST - Prayer Of Healing Character Sheet Rest Runtime
+### Task 4 - L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST - Prayer Of Healing Character Sheet Rest Runtime
 
 Status: `blocked`
 
@@ -70,7 +89,7 @@ Output:
 - Character Sheet rest-benefit application, healing, Spell Slot spend timing, and recipient Long Rest lockout.
 - Automatic range tracking and interruption remain caller/table facts.
 
-### Task B5 - L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE - Ray Of Enfeeblement D20 Lifecycle Runtime
+### Task 5 - L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE - Ray Of Enfeeblement D20 Lifecycle Runtime
 
 Status: `ready-for-research`
 
@@ -81,7 +100,7 @@ Output:
 - Cast/save/lifecycle profile subset: success-side next attack Disadvantage, failed-save Strength D20 Test Disadvantage, end-turn repeat saves, Concentration cleanup.
 - Damage-roll subtraction remains separate.
 
-### Task B6 - L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY - Ray Of Enfeeblement Damage Roll Penalty Runtime
+### Task 6 - L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY - Ray Of Enfeeblement Damage Roll Penalty Runtime
 
 Status: `blocked`
 
@@ -92,7 +111,7 @@ Output:
 - Generic damage-roll subtraction owner for Ray of Enfeeblement's failed-save effect.
 - It must compose with target-side Resistance/reductions and Concentration saves without duplicated damage state.
 
-### Task B7 - L12G-FOLLOWUP-SPIRITUAL-WEAPON-SURFACE-PROXY-SHAPE - Spiritual Weapon Proxy Surface Shape
+### Task 7 - L12G-FOLLOWUP-SPIRITUAL-WEAPON-SURFACE-PROXY-SHAPE - Spiritual Weapon Proxy Surface Shape
 
 Status: `ready-for-research`
 
@@ -103,7 +122,7 @@ Output:
 - Surface shape for spell-owned spectral force placement, immediate attack, later Bonus Action movement plus repeat attack, Concentration, and slot scaling.
 - Do not model it as a creature companion or ordinary object.
 
-### Task B8 - L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME - Spiritual Weapon Persistent Attack Runtime
+### Task 8 - L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME - Spiritual Weapon Persistent Attack Runtime
 
 Status: `blocked`
 
@@ -114,7 +133,7 @@ Output:
 - Runtime profile subset for proxy placement, immediate melee spell attack, later Bonus Action movement/repeat attack, slot scaling, and cleanup.
 - Automatic geometry and adjacency remain table-supplied facts.
 
-### Task B9 - L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME - Enlarge Reduce Creature Runtime Support
+### Task 9 - L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME - Enlarge Reduce Creature Runtime Support
 
 Status: `ready-for-research`
 
@@ -126,7 +145,7 @@ Output:
 - Creature-target profile subset for size change, Strength D20 roll mode, weapon damage adjustment, save gate, and cleanup.
 - Object branch stays separate unless it remains atomic after research.
 
-### Task B10 - L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME - Enthrall Perception Penalty Runtime Support
+### Task 10 - L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME - Enthrall Perception Penalty Runtime Support
 
 Status: `ready-for-research`
 
@@ -138,7 +157,7 @@ Output:
 - Supported profile or closure for the Perception check penalty subset.
 - Avoid storing conversation or attention state outside executable roll-mode needs.
 
-### Task B11 - L12G-RECURSIVE-TAIL-LANE-B - Lane B Recursive Planning Tail
+### Task 11 - L12G-RECURSIVE-TAIL-LANE-B - Lane B Recursive Planning Tail
 
 Status: `blocked`
 

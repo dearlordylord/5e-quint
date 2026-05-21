@@ -1,5 +1,21 @@
 # Level 2 Feature Lane A - Spatial, Visibility, And Table-Witnessed Areas
 
+<!-- ralph-task-index
+{
+  "schema": "ralph-plan.v1",
+  "tasks": [
+    {"number":1,"id":"L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH","status":"ready-for-research","title":"Darkness Object-Origin Branch"},
+    {"number":2,"id":"L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT","status":"ready-for-research","title":"See Invisibility Observer Sight Runtime Support"},
+    {"number":3,"id":"L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME","status":"ready-for-research","title":"Spike Growth Movement Hazard Runtime"},
+    {"number":4,"id":"L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION","status":"ready-for-research","title":"Spike Growth Hazard Recognition Boundary"},
+    {"number":5,"id":"L12G-MISSING-SILENCE","status":"ready-for-research","title":"Silence Definition And Support Or Closure"},
+    {"number":6,"id":"L12G-MISSING-SUGGESTION","status":"ready-for-research","title":"Suggestion Definition And Closure"},
+    {"number":7,"id":"L12G-MISSING-ZONE-OF-TRUTH","status":"ready-for-research","title":"Zone Of Truth Definition And Closure"},
+    {"number":8,"id":"L12G-RECURSIVE-TAIL-LANE-A","status":"blocked","title":"Lane A Recursive Planning Tail"}
+  ]
+}
+-->
+
 This is an active Ralph execution plan for level-2 feature/runtime coverage. It replaces the stale A/B/C/Claude level-2 loop files.
 
 Every Ralph prompt for this lane must include:
@@ -23,7 +39,7 @@ Every task must include:
 
 ## Tasks
 
-### Task A1 - L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH - Darkness Object-Origin Branch
+### Task 1 - L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH - Darkness Object-Origin Branch
 
 Status: `ready-for-research`
 
@@ -36,7 +52,7 @@ Output:
 - No duplicated map geometry or pathfinding state.
 - Updated `darkness` unit claim and focused tests.
 
-### Task A2 - L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT - See Invisibility Observer Sight Runtime Support
+### Task 2 - L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT - See Invisibility Observer Sight Runtime Support
 
 Status: `ready-for-research`
 
@@ -48,7 +64,7 @@ Output:
 - Supported profile or precise closure for observer-scoped See Invisibility runtime support.
 - Focused tests proving the observer effect does not mutate target condition state or duplicate visibility facts.
 
-### Task A3 - L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME - Spike Growth Movement Hazard Runtime
+### Task 3 - L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME - Spike Growth Movement Hazard Runtime
 
 Status: `ready-for-research`
 
@@ -60,7 +76,7 @@ Output:
 - Profile-subset support for active Spike Growth area, caller-supplied movement distance through the area, 2d4 Piercing per 5 feet, Concentration/duration cleanup, and movement-cost projection.
 - Automatic geometry/pathfinding remains table-owned.
 
-### Task A4 - L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION - Spike Growth Hazard Recognition Boundary
+### Task 4 - L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION - Spike Growth Hazard Recognition Boundary
 
 Status: `ready-for-research`
 
@@ -71,7 +87,7 @@ Output:
 - Surface support or accepted runtime-detached closure for the camouflaged terrain recognition rule.
 - If promoted, represent Search action spend and recognition witness without duplicating table perception state.
 
-### Task A5 - L12G-MISSING-SILENCE - Silence Definition And Support Or Closure
+### Task 5 - L12G-MISSING-SILENCE - Silence Definition And Support Or Closure
 
 Status: `ready-for-research`
 
@@ -82,7 +98,7 @@ Output:
 - Authored Surface definition plus supported profile, profile subset, or accepted runtime-detached closure.
 - Runtime must not infer audio geometry automatically; table-supplied area/membership facts remain the boundary.
 
-### Task A6 - L12G-MISSING-SUGGESTION - Suggestion Definition And Closure
+### Task 6 - L12G-MISSING-SUGGESTION - Suggestion Definition And Closure
 
 Status: `ready-for-research`
 
@@ -93,7 +109,7 @@ Output:
 - Authored Surface definition plus coverage disposition.
 - Prefer runtime-detached/table-choice closure unless a precise battle-owned executable subset exists.
 
-### Task A7 - L12G-MISSING-ZONE-OF-TRUTH - Zone Of Truth Definition And Closure
+### Task 7 - L12G-MISSING-ZONE-OF-TRUTH - Zone Of Truth Definition And Closure
 
 Status: `ready-for-research`
 
@@ -104,7 +120,7 @@ Output:
 - Authored Surface definition plus coverage disposition.
 - Do not add conversation-state or lie-detection runtime state unless it has a clear executable battle owner.
 
-### Task A8 - L12G-RECURSIVE-TAIL-LANE-A - Lane A Recursive Planning Tail
+### Task 8 - L12G-RECURSIVE-TAIL-LANE-A - Lane A Recursive Planning Tail
 
 Status: `blocked`
 
