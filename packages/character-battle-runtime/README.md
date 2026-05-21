@@ -19,10 +19,30 @@ Owned boundary functions:
 - `battleCreatureInitFromCharacterBuild` projects selected Eldritch Mind
   invocation ownership into the `eldritchMind` battle invocation feature, which
   battle-runtime uses only for Concentration maintenance Saving Throws.
-- `applyBattleHandoffToCharacterSheet` settles battle-owned HP, Knock Out,
-  zero-HP lifecycle, and Spell Slot expenditure state back onto the same
-  Character Sheet identity after confirming the battle combatant's max HP still
-  matches the sheet's HP capacity.
+- `applyBattleHandoffToCharacterSheet` settles battle-owned HP, Temporary Hit
+  Points, non-Unconscious conditions, ordinary Spell Slot expenditure, and
+  supported feature-resource expenditure back onto the same Character Sheet
+  identity. Pact Slot state is preserved from the sheet because promoted battle
+  state does not carry Pact Slot expenditure separately.
+
+Battle handoff settlement has a fixed order:
+
+1. Reject non-character combatants, character-identity mismatch, max-HP drift,
+   over-maximum HP, and active Wild Shape forms before writing sheet state.
+2. Derive zero-HP lifecycle and Knock Out state from the combatant.
+3. Derive battle-owned resource and Spell Slot deltas, rejecting slot-capacity
+   drift, lower-than-sheet expenditure, over-expenditure, and source-ambiguous
+   ordinary-vs-created Spell Slot spends.
+4. Recreate the Character Sheet from durable sheet/build facts plus battle-owned
+   HP, Temporary Hit Points, non-Unconscious conditions, and resource
+   expenditures.
+5. Replace Spell Slot source state only after the fresh sheet parse succeeds, so
+   ordinary and created Spell Slot accounting stays a Character Sheet concern.
+
+Runtime encounter state such as combatant ids, initiative, turns, reactions,
+active effects, and battle-local resources is not written to `CharacterBuild`;
+settlement preserves the durable build output and writes only Character Sheet
+play-state fields.
 
 MCP and app code should call this package instead of owning parallel
 Character Sheet/battle projection logic.

@@ -1,7 +1,7 @@
 {
   "summary": {
-    "total": 70,
-    "covered": 44,
+    "total": 71,
+    "covered": 45,
     "open": 21,
     "nonSemantic": 5,
     "byRuntime": {
@@ -9,10 +9,10 @@
       "battle": 54,
       "character-creation": 8,
       "character-sheet": 6,
-      "character-battle": 2
+      "character-battle": 3
     },
     "byStatus": {
-      "covered": 44,
+      "covered": 45,
       "needs-qnt-owner": 1,
       "needs-parity-witness": 19,
       "needs-surface-evidence": 1,
@@ -1745,11 +1745,42 @@
       "title": "Character Sheet and Character Build projection into Battle initialization for identity, HP, Armor Class, conditions, Spell Slots, and supported Unit profiles"
     },
     {
+      "id": "CHARACTER.BATTLE.HANDOFF.SETTLEMENT",
+      "kind": "composition",
+      "parityWitnesses": [
+        {
+          "deterministicReplayRationale": "Character Battle settlement replay is a fixed handoff-boundary fixture for battle-owned HP, Temporary Hit Points, conditions, ordinary Spell Slot expenditure, source-ambiguous created-slot rejection, preserved sheet-owned Pact Slot state, preserved rest-owned sheet state, feature-resource expenditure, and unchanged CharacterBuild output. The risk is deterministic settlement and conflict projection across runtime boundaries, not random battle action interleavings.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/character-battle-runtime/src/character-battle-settlement.mbt.test.ts",
+          "qntSpecPath": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/character-battle-runtime/character-battle-settlement.mbt.qnt"
+      ],
+      "runtime": "character-battle",
+      "runtimeOwners": [
+        "packages/character-battle-runtime/src/index.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Rules-Glossary.md#Character Sheet",
+        ".references/srd-5.2.1/Playing-the-Game.md#Hit Points",
+        ".references/srd-5.2.1/Playing-the-Game.md#Temporary Hit Points",
+        ".references/srd-5.2.1/Rules-Glossary.md#Condition",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Spell Slots",
+        ".references/srd-5.2.1/Classes/Warlock.md#Level 1: Pact Magic",
+        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Font of Magic"
+      ],
+      "title": "Character battle settlement back to Character Sheet for HP, Temporary Hit Points, conditions, ordinary Spell Slots, preserved Pact Slots, and feature resources"
+    },
+    {
       "followUpTaskIds": [
-        "RKBC-HANDOFF-BATTLE-SETTLEMENT",
         "RKBC-HANDOFF-IDENTITY-CONFLICTS"
       ],
-      "id": "CHARACTER.BATTLE.HANDOFF.SETTLEMENT",
+      "id": "CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS",
       "kind": "composition",
       "parityWitnesses": [],
       "profiles": [],
@@ -1759,8 +1790,12 @@
         "packages/character-battle-runtime/src/index.ts"
       ],
       "status": "needs-qnt-owner",
-      "surfaceEvidence": [],
-      "title": "Character battle settlement back to Character Sheet for HP, zero-HP lifecycle, conditions, Spell Slots, resources, and identity/max-HP conflicts"
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Rules-Glossary.md#Character Sheet",
+        ".references/srd-5.2.1/Playing-the-Game.md#Hit Points",
+        ".references/srd-5.2.1/Playing-the-Game.md#Dropping to 0 Hit Points"
+      ],
+      "title": "Character battle handoff identity, max-HP drift, active Wild Shape, and zero-HP lifecycle conflict handling"
     },
     {
       "id": "BATTLE.PROTOCOL.MALFORMED_PAYLOAD_REJECTION",
