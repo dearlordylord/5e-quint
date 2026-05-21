@@ -249,6 +249,17 @@ Connascence checks:
   explicit at the spell-resolution boundary instead of hidden inside the effect
   apply path.
 
+Circular-dependency tooling:
+- The step-1b back-imports form a **type-only** cycle. All cross-package cycle
+  detection must ignore type-only edges: ESLint via `import type`, and madge via
+  a root `.madgerc` with `detectiveOptions.ts/tsx.skipTypeImports = true` (the same
+  pattern used in sibling repos `hulymcp`/`quint-connect`). With it, madge no longer
+  reports `active-effect/types.ts ↔ battle-reducer.ts`, and the gated `circular`
+  scripts (`@dnd/surface`, `@dnd/mcp`, `@dnd/app`) still report zero cycles.
+- `@dnd/battle-runtime` has ~61 pre-existing **value** cycles in `battle-reducer/`
+  and intentionally has no `circular` gate; this refactor does not add one and
+  does not worsen that count (the type-only edge it adds is skipped).
+
 ## Out Of Scope
 
 - Character-sheet monolith (`LARGE_FILE_DOMAIN_SPLIT_PLAN.md` Tier 2 #7).
