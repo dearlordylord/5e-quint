@@ -4,17 +4,72 @@
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    {"number":1,"id":"L12G-FOLLOWUP-SORCERER-METAMAGIC-SAVE-OPTIONS","status":"ready-for-research","title":"Sorcerer Metamagic Save Options"},
-    {"number":2,"id":"L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-PROPERTY-OPTIONS","status":"ready-for-research","title":"Sorcerer Metamagic Cast Property Options"},
-    {"number":3,"id":"L12G-FOLLOWUP-SORCERER-METAMAGIC-DAMAGE-SHAPE-OPTIONS","status":"ready-for-research","title":"Sorcerer Metamagic Damage Shape Options"},
-    {"number":4,"id":"L12G-FOLLOWUP-SORCERER-METAMAGIC-REROLL-OPTIONS","status":"ready-for-research","title":"Sorcerer Metamagic Reroll Options"},
-    {"number":5,"id":"L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME","status":"ready-for-research","title":"Monk Step Of The Wind Jump Distance Runtime"},
-    {"number":6,"id":"L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE","status":"ready-for-research","title":"Sorcerer Font Of Magic Bonus Action And Battle Slot Source"},
-    {"number":7,"id":"L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS","status":"ready-for-research","title":"Sorcerer Metamagic Quickened All Action Spells"},
-    {"number":8,"id":"L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST","status":"ready-for-research","title":"Dragon's Breath Initial Cast And Effect State"},
-    {"number":9,"id":"L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION","status":"blocked","title":"Dragon's Breath Granted Magic Action"},
-    {"number":10,"id":"L12G-FOLLOWUP-ENHANCE-ABILITY-UPCAST-PER-TARGET-ABILITIES","status":"ready-for-research","title":"Enhance Ability Upcast Per-Target Ability Choices"},
-    {"number":11,"id":"L12G-RECURSIVE-TAIL-LANE-C","status":"blocked","title":"Lane C Recursive Planning Tail"}
+    {
+      "number": 1,
+      "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-SAVE-OPTIONS",
+      "status": "done",
+      "title": "Sorcerer Metamagic Save Options"
+    },
+    {
+      "number": 2,
+      "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-PROPERTY-OPTIONS",
+      "status": "ready-for-research",
+      "title": "Sorcerer Metamagic Cast Property Options"
+    },
+    {
+      "number": 3,
+      "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-DAMAGE-SHAPE-OPTIONS",
+      "status": "ready-for-research",
+      "title": "Sorcerer Metamagic Damage Shape Options"
+    },
+    {
+      "number": 4,
+      "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-REROLL-OPTIONS",
+      "status": "ready-for-research",
+      "title": "Sorcerer Metamagic Reroll Options"
+    },
+    {
+      "number": 5,
+      "id": "L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Monk Step Of The Wind Jump Distance Runtime"
+    },
+    {
+      "number": 6,
+      "id": "L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE",
+      "status": "ready-for-research",
+      "title": "Sorcerer Font Of Magic Bonus Action And Battle Slot Source"
+    },
+    {
+      "number": 7,
+      "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS",
+      "status": "ready-for-research",
+      "title": "Sorcerer Metamagic Quickened All Action Spells"
+    },
+    {
+      "number": 8,
+      "id": "L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST",
+      "status": "ready-for-research",
+      "title": "Dragon's Breath Initial Cast And Effect State"
+    },
+    {
+      "number": 9,
+      "id": "L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION",
+      "status": "blocked",
+      "title": "Dragon's Breath Granted Magic Action"
+    },
+    {
+      "number": 10,
+      "id": "L12G-FOLLOWUP-ENHANCE-ABILITY-UPCAST-PER-TARGET-ABILITIES",
+      "status": "ready-for-research",
+      "title": "Enhance Ability Upcast Per-Target Ability Choices"
+    },
+    {
+      "number": 11,
+      "id": "L12G-RECURSIVE-TAIL-LANE-C",
+      "status": "blocked",
+      "title": "Lane C Recursive Planning Tail"
+    }
   ]
 }
 -->
@@ -44,7 +99,7 @@ Every task must include:
 
 ### Task 1 - L12G-FOLLOWUP-SORCERER-METAMAGIC-SAVE-OPTIONS - Sorcerer Metamagic Save Options
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 - Current Metamagic character facts, battle resource bridge, and Quickened governor support.
