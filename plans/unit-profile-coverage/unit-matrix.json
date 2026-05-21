@@ -78,8 +78,8 @@
     },
     "qntProofCoverage": {
       "denominator": 85,
-      "numerator": 84,
-      "percent": "98.8%"
+      "numerator": 85,
+      "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 117,
@@ -3203,6 +3203,10 @@
       ],
       "title": "Spell invocation creates and moves a Moonbeam Cylinder with table-supplied area witnesses",
       "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-moonbeam.test.ts"
@@ -10202,6 +10206,14 @@
     {
       "claimKind": "completed-runtime-parity",
       "note": "Focused battle-runtime tests cover Moonbeam admission, caller-supplied Cylinder area fill, Spell Slot and Magic Action spending, source-owned area effect recording, end-turn Constitution save damage with half damage on success, once-per-turn save limiting, Magic-action beam reposition movement fill, and Concentration cleanup.",
+      "profileIds": [
+        "spell.invocation-moonbeam-movable-zone"
+      ],
+      "taskId": "L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted package-local Moonbeam Quint facts cover Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration, active movable Cylinder effect state with 5-foot radius and 40-foot height, slot-scaled Radiant damage with half damage on a successful Constitution save, once-per-creature-per-turn save limiting across area triggers with turn-bound reset, Magic-action reposition up to 60 feet, and Concentration/duration cleanup.",
       "profileIds": [
         "spell.invocation-moonbeam-movable-zone"
       ],
@@ -22420,6 +22432,10 @@
           ],
           "title": "Spell invocation creates and moves a Moonbeam Cylinder with table-supplied area witnesses",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-moonbeam.test.ts"

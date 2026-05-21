@@ -39,6 +39,7 @@ module battleRuntimeConcentration {
         | FogCloudObscurement(_) => false
         | MagicalDarknessPointOrigin(_) => false
         | FlamingSphere(_) => false
+        | MoonbeamMovableZone(_) => false
         | WebRestraintHazard(_) => false
         | WebRestrained(_) => false
         | HeatMetalObjectContactDamage(_) => false
