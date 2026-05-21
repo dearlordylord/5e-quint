@@ -318,6 +318,72 @@ module battleRuntimeGroundCommandTests {
     }
   }
 
+  run test_moonbeam_records_movable_zone_and_concentration = {
+    val resolved = resolveMoonbeam(initialState, moonbeamAreaId, 2)
+    all {
+      assert(resolved.fighter.activeEffects.contains(MoonbeamMovableZone({
+        areaId: moonbeamAreaId,
+        damageDice: 2,
+        durationTicks: moonbeamDurationTicks,
+        repositionMaxMoveFeet: moonbeamRepositionMaxMoveFeet,
+        savedThisTurn: Set(),
+      }))),
+      assert(moonbeamRadiusFeet == 5),
+      assert(moonbeamHeightFeet == 40),
+      assert(resolved.fighter.concentrating),
+      assert(not(resolved.actionAvailable)),
+      assert(battleActorHasCommittedSpellSlotUse(resolved, Fighter)),
+    }
+  }
+
+  run test_moonbeam_slot_scaling_and_save_damage = {
+    val resolved = resolveMoonbeam(initialState, moonbeamAreaId, 4)
+    val failed = resolveMoonbeamSave(resolved, Goblin, moonbeamAreaId, false, 8)
+    val succeeded = resolveMoonbeamSave(resolved, Goblin, moonbeamAreaId, true, 8)
+    all {
+      assert(moonbeamDamageDice(2) == 2),
+      assert(moonbeamDamageDice(4) == 4),
+      assert(moonbeamActiveDamageDice(resolved, moonbeamAreaId) == 4),
+      assert(failed.goblin.hp == 2),
+      assert(succeeded.goblin.hp == 6),
+    }
+  }
+
+  run test_moonbeam_save_limited_once_per_turn_and_resets_on_turn_advance = {
+    val resolved = resolveMoonbeam(initialState, moonbeamAreaId, 2)
+    val firstSave = resolveMoonbeamSave(resolved, Goblin, moonbeamAreaId, false, 4)
+    val duplicateSave = resolveMoonbeamSave(firstSave, Goblin, moonbeamAreaId, false, 4)
+    val nextTurn = endTurnWithMoonbeamSave(firstSave, Goblin, moonbeamAreaId, false, 4)
+    all {
+      assert(firstSave.goblin.hp == 6),
+      assert(duplicateSave.goblin.hp == 6),
+      assert(not(moonbeamSavedThisTurn(nextTurn, Goblin, moonbeamAreaId))),
+      assert(currentActor(nextTurn) == Goblin),
+    }
+  }
+
+  run test_moonbeam_reposition_spends_magic_action_without_damage = {
+    val resolved = resolveMoonbeam(initialState, moonbeamAreaId, 2)
+    val casterLaterTurn = endTurn(endTurn(resolved))
+    val moved = resolveMoonbeamReposition(casterLaterTurn, moonbeamAreaId, 60)
+    val tooFar = resolveMoonbeamReposition(casterLaterTurn, moonbeamAreaId, 61)
+    all {
+      assert(moved.goblin.hp == initialState.goblin.hp),
+      assert(not(moved.actionAvailable)),
+      assert(tooFar.goblin.hp == initialState.goblin.hp),
+      assert(tooFar.actionAvailable),
+    }
+  }
+
+  run test_moonbeam_concentration_break_removes_zone = {
+    val resolved = resolveMoonbeam(initialState, moonbeamAreaId, 2)
+    val broken = breakConcentrationSpellEffects(resolved, Fighter)
+    all {
+      assert(not(moonbeamActive(broken, moonbeamAreaId))),
+      assert(not(broken.fighter.concentrating)),
+    }
+  }
+
   run test_web_records_restraint_hazard_and_concentration = {
     val resolved = resolveWeb(initialState, webAreaId, 2)
     all {

@@ -19,7 +19,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Installed Unit profile classification coverage | 224/224 | 100% |
 | Supported executable Unit coverage | 135/192 | 70.3% |
 | QNT profile modeling coverage | 86/86 | 100% |
-| QNT proof coverage | 85/86 | 98.8% |
+| QNT proof coverage | 86/86 | 100% |
 | Runtime mapping coverage | 86/86 | 100% |
 | Runtime parity coverage | 86/86 | 100% |
 | Rules-kernel profile join coverage | 104/118 | 88.1% |
@@ -1558,6 +1558,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME | qnt-proof | `spell.invocation-self-transformation-mode` |
 | L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME | completed-runtime-parity | `spell.invocation-self-transformation-mode` |
 | L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME | completed-runtime-parity | `spell.invocation-moonbeam-movable-zone` |
+| L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME | qnt-proof | `spell.invocation-moonbeam-movable-zone` |
 | L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME | completed-runtime-parity | `spell.invocation-object-contact-damage` |
 | L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME | qnt-proof | `spell.invocation-object-contact-damage` |
 | L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME | qnt-proof | `spell.invocation-gust-of-wind-line` |

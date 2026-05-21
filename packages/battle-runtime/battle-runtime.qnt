@@ -64,6 +64,7 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-moonbeam-movable-zone
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-web-restraint-hazard
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-direct-condition-removal
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-moonbeam-movable-zone
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-self-transformation-mode
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.druid-wild-shape-known-form
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-web-restraint-hazard

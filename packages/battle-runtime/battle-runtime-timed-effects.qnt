@@ -307,6 +307,13 @@ module battleRuntimeTimedEffects {
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
             ramMaxMoveFeet: data.ramMaxMoveFeet,
           })
+        | MoonbeamMovableZone(data) => MoonbeamMovableZone({
+            areaId: data.areaId,
+            damageDice: data.damageDice,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+            repositionMaxMoveFeet: data.repositionMaxMoveFeet,
+            savedThisTurn: data.savedThisTurn,
+          })
         | WebRestraintHazard(data) => WebRestraintHazard({
             areaId: data.areaId,
             sideFeet: data.sideFeet,
@@ -367,6 +374,7 @@ module battleRuntimeTimedEffects {
         | MagicalDarknessPointOrigin(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | AntimagicFieldOngoingSpellSuppression(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | FlamingSphere(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | MoonbeamMovableZone(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | WebRestraintHazard(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | WebRestrained(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | HeatMetalObjectContactDamage(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
