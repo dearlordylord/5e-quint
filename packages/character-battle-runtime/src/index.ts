@@ -219,7 +219,9 @@ export function applyBattleHandoffToCharacterSheet(input: {
     ...(input.combatant.hp === 0 && zeroHpLifecycle !== undefined
       ? { zeroHpLifecycle: zeroHpLifecycle.right }
       : {}),
-    ...(pactSlots === undefined ? {} : { pactSlots }),
+    ...(pactSlots === undefined
+      ? {}
+      : { pactSlots: { expended: pactSlots.expended } }),
     ...(bookOfShadowsPresence === undefined ? {} : { bookOfShadowsPresence }),
     ...(druidWildShapeKnownForms === undefined
       ? {}

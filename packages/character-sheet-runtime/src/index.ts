@@ -1,5 +1,6 @@
 // KERNEL-COVERAGE: runtime-owner SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE
 // KERNEL-COVERAGE: runtime-owner SHEET.HP_REST_HIT_DICE.TRANSITIONS
+// KERNEL-COVERAGE: runtime-owner SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS
 import {
   ALIGNMENT_MORALITIES,
   ALIGNMENT_ORDERS,
@@ -324,8 +325,6 @@ export type CharacterSpellSlotExpenditure = {
 };
 
 export type CharacterPactSlotExpenditure = {
-  readonly slotLevel: SpellSlotLevel;
-  readonly count: ResourceCount;
   readonly expended: ResourceCount;
 };
 
@@ -357,7 +356,11 @@ export type CharacterSheetSpellSlotSourceState = {
   readonly createdSpellSlots: readonly CharacterSheetCreatedSpellSlotState[];
 };
 
-export type CharacterSheetPactSlotState = CharacterPactSlotExpenditure;
+export type CharacterSheetPactSlotState = {
+  readonly slotLevel: SpellSlotLevel;
+  readonly count: ResourceCount;
+  readonly expended: ResourceCount;
+};
 
 export type CharacterSheetSpentHitDiePool = {
   readonly classUnitId: UnitRecord["id"];
@@ -656,7 +659,7 @@ export type CharacterSheetInput = {
   readonly zeroHpLifecycle?: CharacterSheetZeroHpLifecycleInput;
   readonly spentHitDice?: readonly CharacterSheetSpentHitDiePool[];
   readonly spellSlots?: readonly CharacterSheetSpellSlotState[];
-  readonly pactSlots?: CharacterSheetPactSlotState;
+  readonly pactSlots?: CharacterPactSlotExpenditure;
   readonly bookOfShadowsPresence?: CharacterSheetBookOfShadowsPresence;
   readonly restFeatureUses?: readonly CharacterSheetRestFeatureUse[];
   readonly resourceExpenditures?: readonly CharacterSheetResourceExpenditure[];
@@ -1360,7 +1363,20 @@ export function replaceCharacterSheetSpellSlotSourceState(input: {
 export function characterSheetPactSlots(
   sheet: CharacterSheet,
 ): CharacterSheetPactSlotState | undefined {
-  return "pactSlotExpenditure" in sheet ? sheet.pactSlotExpenditure : undefined;
+  if (
+    !("pactSlotExpenditure" in sheet) ||
+    sheet.pactSlotExpenditure === undefined
+  ) {
+    return undefined;
+  }
+  const pactMagic = characterBuildPactSlotCapacity(sheet.build);
+  return pactMagic === undefined
+    ? undefined
+    : {
+        slotLevel: spellSlotLevel(pactMagic.slotLevel),
+        count: resourceCount(pactMagic.count),
+        expended: sheet.pactSlotExpenditure.expended,
+      };
 }
 
 export function characterSheetHitDice(
@@ -2100,7 +2116,7 @@ export function completeLongRest(
       pactSlotExpenditure:
         sheet.pactSlotExpenditure === undefined
           ? undefined
-          : { ...sheet.pactSlotExpenditure, expended: resourceCount(0) },
+          : { expended: resourceCount(0) },
     });
   }
   const build = characterSheetLongRestBuild(input, sheet.build);
@@ -2221,6 +2237,10 @@ export function completeMagicalCunningRite(
   ) {
     return characterSheetIssue("Magical Cunning requires Pact Slot state.");
   }
+  const pactSlots = characterSheetPactSlots(input.sheet);
+  if (pactSlots === undefined) {
+    return characterSheetIssue("Magical Cunning requires Pact Slot state.");
+  }
   const profile = pactSlotRecoveryProfileForBuild(
     input.sheet.build,
     input.unitLibrary,
@@ -2235,7 +2255,6 @@ export function completeMagicalCunningRite(
       "Magical Cunning cannot be used again until a Long Rest.",
     );
   }
-  const pactSlots = input.sheet.pactSlotExpenditure;
   if (pactSlots.expended < resourceCount(1)) {
     return characterSheetIssue(
       "Magical Cunning must recover expended Pact Slots.",
@@ -2248,7 +2267,6 @@ export function completeMagicalCunningRite(
   return Either.right({
     ...input.sheet,
     pactSlotExpenditure: {
-      ...pactSlots,
       expended: resourceCount(Math.max(0, pactSlots.expended - recovered)),
     },
     restFeatureUses: [
@@ -3343,13 +3361,9 @@ function pactSlotExpenditureFromInput(
   const pactSlots =
     input.pactSlots ??
     ({
-      slotLevel: spellSlotLevel(pactMagic.slotLevel),
-      count: resourceCount(pactMagic.count),
       expended: resourceCount(0),
-    } satisfies CharacterSheetPactSlotState);
+    } satisfies CharacterPactSlotExpenditure);
   if (
-    pactSlots.slotLevel !== spellSlotLevel(pactMagic.slotLevel) ||
-    pactSlots.count !== resourceCount(pactMagic.count) ||
     !Number.isInteger(pactSlots.expended) ||
     pactSlots.expended < 0 ||
     pactSlots.expended > pactMagic.count
@@ -3359,8 +3373,6 @@ function pactSlotExpenditureFromInput(
     );
   }
   return Either.right({
-    slotLevel: spellSlotLevel(pactMagic.slotLevel),
-    count: resourceCount(pactMagic.count),
     expended: resourceCount(pactSlots.expended),
   });
 }
@@ -3978,7 +3990,6 @@ function recoverPactSlots(sheet: CharacterSheet): CharacterSheet {
   return {
     ...sheet,
     pactSlotExpenditure: {
-      ...sheet.pactSlotExpenditure,
       expended: resourceCount(0),
     },
   };
@@ -4358,7 +4369,7 @@ function arcaneRecoverySpellSlotRefund(input: {
 }
 
 function magicalCunningRecoveredPactSlots(input: {
-  readonly pactSlots: CharacterPactSlotExpenditure;
+  readonly pactSlots: CharacterSheetPactSlotState;
   readonly profile: CharacterSheetPactSlotRecoveryProfile;
 }): ResourceCount {
   return Match.value(input.profile.feature.mechanics.recoveryCap.kind).pipe(
@@ -4780,7 +4791,10 @@ function parseStoredCreatedSpellSlots(
 function parseStoredPactSlots(
   build: CharacterBuild,
   value: Readonly<Record<string, unknown>>,
-): Either.Either<CharacterSheetPactSlotState | undefined, CharacterSheetIssue> {
+): Either.Either<
+  CharacterPactSlotExpenditure | undefined,
+  CharacterSheetIssue
+> {
   const pactMagic = characterBuildPactSlotCapacity(build);
   if (pactMagic === undefined) {
     return value.pactSlotExpenditure === undefined
@@ -4794,23 +4808,14 @@ function parseStoredPactSlots(
       "Pact Magic Character Sheet requires Pact Slot state.",
     );
   }
-  const slotLevel = parseSpellSlotLevel(value.pactSlotExpenditure.slotLevel);
-  const count = parseResourceCount(value.pactSlotExpenditure.count);
   const expended = parseResourceCount(value.pactSlotExpenditure.expended);
-  if (Either.isLeft(slotLevel)) return Either.left(slotLevel.left);
-  if (Either.isLeft(count)) return Either.left(count.left);
   if (Either.isLeft(expended)) return Either.left(expended.left);
-  if (
-    slotLevel.right !== spellSlotLevel(pactMagic.slotLevel) ||
-    count.right !== resourceCount(pactMagic.count)
-  ) {
+  if (expended.right > pactMagic.count) {
     return characterSheetIssue(
       "Pact Slot state must match Pact Magic build capacity.",
     );
   }
   return Either.right({
-    slotLevel: slotLevel.right,
-    count: count.right,
     expended: expended.right,
   });
 }

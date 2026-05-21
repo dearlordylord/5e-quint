@@ -32,9 +32,13 @@ Current executable state:
   resources are not representable here.
 - `spellSlotExpenditures` is present only for spellcasting builds and stores
   spent Spell Slots against build-derived capacity.
-- `pactSlotExpenditure` is stored separately from ordinary Spell Slots for
-  builds that have Pact Magic, preserving the SRD distinction between Spell
-  Slots and Pact Slots.
+- `createdSpellSlots` stores only temporary Spell Slot delta state created by
+  sheet features such as Font of Magic. Ordinary Spell Slot capacity still comes
+  from `CharacterBuild`, and created Spell Slots vanish on Long Rest.
+- `pactSlotExpenditure` stores only spent Pact Slot state for builds that have
+  Pact Magic. Pact Slot level and count remain derived from `CharacterBuild`,
+  preserving the SRD distinction between Spell Slots and Pact Slots without
+  duplicating Pact Magic capacity.
 - `completeShortRest` requires at least 1 current HP, can spend Hit Dice to
   restore HP, restores Pact Slots, and can apply one Wizard Arcane Recovery
   Spell Slot refund. Arcane Recovery uses Wizard level to enforce the

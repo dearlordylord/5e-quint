@@ -84,6 +84,8 @@
 {"profileId":"spell.invocation-command-flee-route","obligationIds":["BATTLE.COMMAND.OPTION_AND_NEXT_TURN"]}
 {"profileId":"stat-block.attack-control","obligationIds":["BATTLE.STAT_BLOCK.ATTACK_CONTROL"]}
 {"profileId":"character-sheet.armor-class-base-formula","obligationIds":["SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE"]}
+{"profileId":"character-sheet.short-rest-spell-slot-recovery","obligationIds":["SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS"]}
+{"profileId":"character-sheet.pact-slot-recovery","obligationIds":["SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS"]}
 {"profileId":"character-creation.class-feature-feat-choice","obligationIds":["CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION"]}
 {"profileId":"character-creation.fighter-fighting-style-advancement-replacement","obligationIds":["CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT"]}
 {"profileId":"character-creation.warlock-pact-magic-advancement","obligationIds":["CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION"]}

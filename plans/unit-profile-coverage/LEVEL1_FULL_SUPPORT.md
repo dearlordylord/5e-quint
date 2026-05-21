@@ -11,9 +11,9 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | Strict runtime/profile support | 78/94 (83%) |
 | Strict target closure | 94/94 (100%) |
 | Product readiness | 367/367 (100%) |
-| Rules-kernel profile join | 52/58 (89.7%) |
-| Rules-kernel covered profile join | 34/58 (58.6%) |
-| Supported Unit rules-kernel chain | 44/78 (56.4%) |
+| Rules-kernel profile join | 53/58 (91.4%) |
+| Rules-kernel covered profile join | 35/58 (60.3%) |
+| Supported Unit rules-kernel chain | 45/78 (57.7%) |
 
 ## Scope
 
@@ -79,7 +79,6 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | `shillelagh` | mapped-open | `spell.invocation-weapon-attack-override` (mapped-open: `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` (needs-parity-witness)) |
 | `spare_the_dying` | mapped-open | `spell.invocation-make-stable` (mapped-open: `BATTLE.SPELL.MAKE_STABLE_LIFECYCLE` (needs-parity-witness)) |
 | `true_strike` | mapped-open | `spell.invocation-spell-hosted-weapon-attack` (mapped-open: `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` (needs-parity-witness)) |
-| `wizard_arcane_recovery` | unmapped | `character-sheet.short-rest-spell-slot-recovery` (unmapped: no obligation mapping) |
 | `wizard_ritual_adept` | unmapped | `character-sheet.spellbook-ritual-invocation` (unmapped: no obligation mapping) |
 
 ## Non-Supported Frontier Detail

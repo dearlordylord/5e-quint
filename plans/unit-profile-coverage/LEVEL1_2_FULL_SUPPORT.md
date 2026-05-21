@@ -11,9 +11,9 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | Strict runtime/profile support | 112/168 (66.7%) |
 | Strict target closure | 167/168 (99.4%) |
 | Product readiness | 509/556 (91.5%) |
-| Rules-kernel profile join | 71/84 (84.5%) |
-| Rules-kernel covered profile join | 45/84 (53.6%) |
-| Supported Unit rules-kernel chain | 56/112 (50%) |
+| Rules-kernel profile join | 73/84 (86.9%) |
+| Rules-kernel covered profile join | 47/84 (56%) |
+| Supported Unit rules-kernel chain | 58/112 (51.8%) |
 
 ## Scope
 
@@ -102,8 +102,6 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `spider_climb` | mapped-open | `spell.scalar-buff` (mapped-open: `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` (needs-parity-witness)) |
 | `true_strike` | mapped-open | `spell.invocation-spell-hosted-weapon-attack` (mapped-open: `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` (needs-parity-witness)) |
 | `warding_bond` | mapped-open | `spell.invocation-warding-bond-linked-effect` (mapped-open: `BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING` (needs-parity-witness)) |
-| `warlock_magical_cunning` | unmapped | `character-sheet.pact-slot-recovery` (unmapped: no obligation mapping) |
-| `wizard_arcane_recovery` | unmapped | `character-sheet.short-rest-spell-slot-recovery` (unmapped: no obligation mapping) |
 | `wizard_ritual_adept` | unmapped | `character-sheet.spellbook-ritual-invocation` (unmapped: no obligation mapping) |
 | `wizard_scholar` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
 

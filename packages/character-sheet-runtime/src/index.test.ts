@@ -661,7 +661,7 @@ describe("Character Sheet runtime", () => {
           },
         }),
         spellSlotExpenditures: [],
-        pactSlotExpenditure: { slotLevel: 1, count: 1, expended: 0 },
+        pactSlotExpenditure: { expended: 0 },
       },
       unitLibrary,
     );
@@ -960,7 +960,7 @@ describe("Character Sheet runtime", () => {
         spentHitDice: [],
         resourceExpenditures: [],
         spellSlotExpenditures: [],
-        pactSlotExpenditure: { slotLevel: 1, count: 1, expended: 0 },
+        pactSlotExpenditure: { expended: 0 },
       },
       unitLibrary,
     );
@@ -1509,11 +1509,7 @@ describe("Character Sheet runtime", () => {
             expended: resourceCount(2),
           },
         ],
-        pactSlots: {
-          slotLevel: spellSlotLevel(1),
-          count: resourceCount(1),
-          expended: resourceCount(1),
-        },
+        pactSlots: { expended: resourceCount(1) },
         restFeatureUses: [
           {
             tag: "arcaneRecovery",
@@ -2910,11 +2906,7 @@ describe("Character Sheet runtime", () => {
             expended: resourceCount(1),
           },
         ],
-        pactSlots: {
-          slotLevel: spellSlotLevel(1),
-          count: resourceCount(1),
-          expended: resourceCount(1),
-        },
+        pactSlots: { expended: resourceCount(1) },
       }),
     );
 
@@ -3344,11 +3336,7 @@ describe("Character Sheet runtime", () => {
         currentHp: Hp(14),
         tempHp: Hp(0),
         unitLibrary,
-        pactSlots: {
-          slotLevel: spellSlotLevel(1),
-          count: resourceCount(2),
-          expended: resourceCount(2),
-        },
+        pactSlots: { expended: resourceCount(2) },
       }),
     );
 
@@ -3398,11 +3386,7 @@ describe("Character Sheet runtime", () => {
         currentHp: Hp(70),
         tempHp: Hp(0),
         unitLibrary,
-        pactSlots: {
-          slotLevel: spellSlotLevel(5),
-          count: resourceCount(3),
-          expended: resourceCount(3),
-        },
+        pactSlots: { expended: resourceCount(3) },
       }),
     );
 
@@ -3430,11 +3414,7 @@ describe("Character Sheet runtime", () => {
         currentHp: Hp(10),
         tempHp: Hp(0),
         unitLibrary,
-        pactSlots: {
-          slotLevel: spellSlotLevel(1),
-          count: resourceCount(1),
-          expended: resourceCount(1),
-        },
+        pactSlots: { expended: resourceCount(1) },
       }),
     );
 

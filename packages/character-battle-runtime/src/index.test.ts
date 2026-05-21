@@ -566,11 +566,7 @@ describe("Character Sheet battle handoff", () => {
           expended: resourceCount(1),
         },
       ],
-      pactSlots: {
-        slotLevel: spellSlotLevel(1),
-        count: resourceCount(1),
-        expended: resourceCount(1),
-      },
+      pactSlots: { expended: resourceCount(1) },
       restFeatureUses: [{ tag: "arcaneRecovery", usedSinceLongRest: true }],
     });
     expect(Either.isRight(sheet)).toBe(true);

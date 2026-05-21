@@ -109,7 +109,7 @@
     {
       "number": 18,
       "id": "RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Character Sheet Spell Slot And Pact Slot Transitions"
     },
     {
@@ -412,8 +412,8 @@ Reviewers should reject:
 | 15 | RKBC-CREATION-SPELLCASTING-PROGRESSION - Character Creation Spell Access Progression And Eldritch Invocation Choices | done | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH | Covered Warlock Pact Magic Spell Access/Pact Slot progression and Eldritch Invocation choice lifecycle as split obligations. |
 | 16 | RKBC-CREATION-WEAPON-MASTERY-FEAT - Character Creation Weapon Mastery And Feat Choice | done | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH | Covered class-feature feat finalization and Weapon Mastery choice finalization as split character-creation obligations; selected feat/mastery behavior remains owned by selected Unit runtime profiles, and sheet Weapon Mastery reselection remains Task 20. |
 | 17 | RKBC-SHEET-HP-REST-HIT-DICE - Character Sheet HP Rest And Hit Dice Transitions | done | baseline | Covered HP healing, Short Rest, Long Rest, interruption, Hit Point Dice spend/restore, and max-HP reduction reset as `SHEET.HP_REST_HIT_DICE.TRANSITIONS`. |
-| 18 | RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS - Character Sheet Spell Slot And Pact Slot Transitions | ready-for-research | RKBC-SHEET-HP-REST-HIT-DICE | Cover spell-slot and pact-slot spend/recovery transitions while reusing `RKBC-SHEET-HP-REST-HIT-DICE` rest timing/benefit semantics. |
-| 19 | RKBC-SHEET-FEATURE-RESOURCES - Character Sheet Feature Resource Transitions | ready-for-research | RKBC-SHEET-HP-REST-HIT-DICE | Cover Lay On Hands, Arcane Recovery, class feature use counts, and similar sheet-owned resources while reusing `RKBC-SHEET-HP-REST-HIT-DICE` HP/rest algebra. |
+| 18 | RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS - Character Sheet Spell Slot And Pact Slot Transitions | done | RKBC-SHEET-HP-REST-HIT-DICE | Covered Spell Slot, created Spell Slot, Pact Slot, Arcane Recovery, and Magical Cunning transitions as `SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS`. |
+| 19 | RKBC-SHEET-FEATURE-RESOURCES - Character Sheet Feature Resource Transitions | ready-for-research | RKBC-SHEET-HP-REST-HIT-DICE | Cover remaining non-slot sheet feature resources, including Lay On Hands, healing-resource actions, class feature use counts/point pools, Font of Magic conversions, Metamagic battle resource bridge, class-feature Long Rest use state, and Monk Uncanny Metabolism initiative recovery. |
 | 20 | RKBC-SHEET-WEAPON-MASTERY-RITUAL - Character Sheet Weapon Mastery And Ritual Projection | ready-for-research | baseline | Cover weapon mastery reselection and spellbook/ritual projection semantics. |
 | 21 | RKBC-HANDOFF-BATTLE-INIT - Character Battle Initialization Projection | ready-for-research | baseline | Cover Character Sheet/build projection into battle initialization. |
 | 22 | RKBC-HANDOFF-BATTLE-SETTLEMENT - Character Battle Settlement Back To Sheet | blocked | RKBC-SHEET-HP-REST-HIT-DICE, RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS, RKBC-HANDOFF-BATTLE-INIT | Cover HP, condition, spell-slot, and resource settlement from battle back to sheet. |
@@ -823,7 +823,7 @@ re-modeling rest procedure logic.
 
 ### Task 18 - RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS - Character Sheet Spell Slot And Pact Slot Transitions
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: `RKBC-SHEET-HP-REST-HIT-DICE`.
 
@@ -840,14 +840,26 @@ Acceptance:
   outcomes rather than re-modeling rest procedure logic.
 - Covered obligations connect QNT to production sheet runtime behavior.
 
+Result: `SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS` covers ordinary Spell Slot
+capacity/current expenditure, created Spell Slot expiry, Pact Slot expenditure
+derived from Pact Magic capacity, Short Rest Pact Slot recovery, Long Rest
+ordinary/Pact Slot recovery, Arcane Recovery ordinary Spell Slot refund, and
+Magical Cunning Pact Slot recovery. The deterministic QNT replay reuses the
+Task 17 rest completion/interruption API for slot benefit timing, and the
+remaining `SHEET.REST_AND_RESOURCE.TRANSITIONS` aggregate now names only Task
+19's non-slot feature-resource follow-up.
+
 ### Task 19 - RKBC-SHEET-FEATURE-RESOURCES - Character Sheet Feature Resource Transitions
 
 Status: `ready-for-research`
 
 Depends on: `RKBC-SHEET-HP-REST-HIT-DICE`.
 
-Scope: cover Lay On Hands, Arcane Recovery, class feature use-count resources,
-healing-resource actions, and related sheet-owned resources. Reuse
+Scope: cover remaining non-slot sheet feature resources: Lay On Hands,
+healing-resource actions, class feature use-count resources, class feature
+point-pool resources, Font of Magic slot/sorcery point conversions, Metamagic
+battle resource bridge, class-feature Long Rest use state, Monk Uncanny
+Metabolism initiative recovery, and related sheet-owned resources. Reuse
 `RKBC-SHEET-HP-REST-HIT-DICE` for HP mutation and rest eligibility/benefit
 timing; this task owns feature-resource spend, recovery, and reset semantics.
 

@@ -387,11 +387,7 @@ function arcaneRecoverySheet(input: {
           expended: resourceCount(input.secondLevelSpellSlotsExpended),
         },
       ],
-      pactSlots: {
-        slotLevel: spellSlotLevel(1),
-        count: resourceCount(1),
-        expended: resourceCount(input.pactSlotsExpended),
-      },
+      pactSlots: { expended: resourceCount(input.pactSlotsExpended) },
       restFeatureUses: input.arcaneRecoveryUsedSinceLongRest
         ? [{ tag: "arcaneRecovery", usedSinceLongRest: true }]
         : [],

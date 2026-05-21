@@ -963,18 +963,18 @@
     },
     "rulesKernelCoveredProfileJoin": {
       "denominator": 58,
-      "numerator": 34,
-      "percent": "58.6%"
+      "numerator": 35,
+      "percent": "60.3%"
     },
     "rulesKernelProfileJoin": {
       "denominator": 58,
-      "numerator": 52,
-      "percent": "89.7%"
+      "numerator": 53,
+      "percent": "91.4%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 78,
-      "numerator": 44,
-      "percent": "56.4%"
+      "numerator": 45,
+      "percent": "57.7%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 94,
@@ -3246,8 +3246,8 @@
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
         "denominator": 78,
-        "numerator": 44,
-        "percent": "56.4%"
+        "numerator": 45,
+        "percent": "57.7%"
       }
     },
     "units": [
@@ -5256,11 +5256,18 @@
         "unitId": "warlock_eldritch_invocations"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS",
+                "runtime": "character-sheet",
+                "status": "covered",
+                "title": "Character Sheet Spell Slot, created Spell Slot, Pact Slot, Arcane Recovery, and Magical Cunning transitions"
+              }
+            ],
             "profileId": "character-sheet.short-rest-spell-slot-recovery",
             "profileKind": "character-sheet"
           }

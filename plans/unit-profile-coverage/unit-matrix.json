@@ -83,18 +83,18 @@
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 117,
-      "numerator": 63,
-      "percent": "53.8%"
+      "numerator": 65,
+      "percent": "55.6%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 117,
-      "numerator": 92,
-      "percent": "78.6%"
+      "numerator": 94,
+      "percent": "80.3%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 135,
-      "numerator": 78,
-      "percent": "57.8%"
+      "numerator": 80,
+      "percent": "59.3%"
     },
     "runtimeMappingCoverage": {
       "denominator": 85,
@@ -3398,13 +3398,13 @@
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 117,
-        "numerator": 63,
-        "percent": "53.8%"
+        "numerator": 65,
+        "percent": "55.6%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 117,
-        "numerator": 92,
-        "percent": "78.6%"
+        "numerator": 94,
+        "percent": "80.3%"
       }
     },
     "profileKinds": [
@@ -3805,8 +3805,15 @@
         "profileKind": "character-sheet"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS",
+            "runtime": "character-sheet",
+            "status": "covered",
+            "title": "Character Sheet Spell Slot, created Spell Slot, Pact Slot, Arcane Recovery, and Magical Cunning transitions"
+          }
+        ],
         "profileId": "character-sheet.short-rest-spell-slot-recovery",
         "profileKind": "character-sheet"
       },
@@ -4662,8 +4669,15 @@
         "profileKind": "character-sheet"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS",
+            "runtime": "character-sheet",
+            "status": "covered",
+            "title": "Character Sheet Spell Slot, created Spell Slot, Pact Slot, Arcane Recovery, and Magical Cunning transitions"
+          }
+        ],
         "profileId": "character-sheet.pact-slot-recovery",
         "profileKind": "character-sheet"
       },
@@ -4910,8 +4924,8 @@
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
           "denominator": 135,
-          "numerator": 78,
-          "percent": "57.8%"
+          "numerator": 80,
+          "percent": "59.3%"
         }
       },
       "units": [
@@ -7989,11 +8003,18 @@
           "unitId": "warlock_eldritch_invocations"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS",
+                  "runtime": "character-sheet",
+                  "status": "covered",
+                  "title": "Character Sheet Spell Slot, created Spell Slot, Pact Slot, Arcane Recovery, and Magical Cunning transitions"
+                }
+              ],
               "profileId": "character-sheet.pact-slot-recovery",
               "profileKind": "character-sheet"
             }
@@ -8020,11 +8041,18 @@
           "unitId": "web"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS",
+                  "runtime": "character-sheet",
+                  "status": "covered",
+                  "title": "Character Sheet Spell Slot, created Spell Slot, Pact Slot, Arcane Recovery, and Magical Cunning transitions"
+                }
+              ],
               "profileId": "character-sheet.short-rest-spell-slot-recovery",
               "profileKind": "character-sheet"
             }
