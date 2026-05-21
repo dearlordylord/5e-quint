@@ -2,6 +2,7 @@
 // UNIT-IDENTITY-MBT-REPLAY: L1D2-WEAPON-MASTERY-CONTAINERS paladin_weapon_mastery doSelectPaladinWeaponMastery doReselectPaladinWeaponMasteryOnLongRest
 // UNIT-IDENTITY-MBT-REPLAY: L1D2-WEAPON-MASTERY-CONTAINERS ranger_weapon_mastery doSelectRangerWeaponMastery doReselectRangerWeaponMasteryOnLongRest
 // UNIT-IDENTITY-MBT-REPLAY: L1D2-WEAPON-MASTERY-CONTAINERS rogue_weapon_mastery doSelectRogueWeaponMastery doReselectRogueWeaponMasteryOnLongRest
+// KERNEL-COVERAGE: parity-witness SHEET.WEAPON_MASTERY.RESELECTION
 import * as path from "node:path";
 
 import {

@@ -121,7 +121,7 @@
     {
       "number": 20,
       "id": "RKBC-SHEET-WEAPON-MASTERY-RITUAL",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Character Sheet Weapon Mastery And Ritual Projection"
     },
     {
@@ -413,7 +413,7 @@ Reviewers should reject:
 | 17 | RKBC-SHEET-HP-REST-HIT-DICE - Character Sheet HP Rest And Hit Dice Transitions | done | baseline | Covered HP healing, Short Rest, Long Rest, interruption, Hit Point Dice spend/restore, and max-HP reduction reset as `SHEET.HP_REST_HIT_DICE.TRANSITIONS`. |
 | 18 | RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS - Character Sheet Spell Slot And Pact Slot Transitions | done | RKBC-SHEET-HP-REST-HIT-DICE | Covered Spell Slot, created Spell Slot, Pact Slot, Arcane Recovery, and Magical Cunning transitions as `SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS`. |
 | 19 | RKBC-SHEET-FEATURE-RESOURCES - Character Sheet Feature Resource Transitions | done | RKBC-SHEET-HP-REST-HIT-DICE | Covered non-slot feature-resource spend, recovery, reset, conversion, and battle bridge transitions as `SHEET.FEATURE_RESOURCES.TRANSITIONS`. |
-| 20 | RKBC-SHEET-WEAPON-MASTERY-RITUAL - Character Sheet Weapon Mastery And Ritual Projection | ready-for-research | baseline | Cover weapon mastery reselection and spellbook/ritual projection semantics. |
+| 20 | RKBC-SHEET-WEAPON-MASTERY-RITUAL - Character Sheet Weapon Mastery And Ritual Projection | done | baseline | Covered Character Sheet Weapon Mastery reselection and spellbook Ritual Spell Access projection with deterministic selected-identity replays. |
 | 21 | RKBC-HANDOFF-BATTLE-INIT - Character Battle Initialization Projection | ready-for-research | baseline | Cover Character Sheet/build projection into battle initialization. |
 | 22 | RKBC-HANDOFF-BATTLE-SETTLEMENT - Character Battle Settlement Back To Sheet | blocked | RKBC-SHEET-HP-REST-HIT-DICE, RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS, RKBC-HANDOFF-BATTLE-INIT | Cover HP, condition, spell-slot, and resource settlement from battle back to sheet. |
 | 23 | RKBC-HANDOFF-IDENTITY-CONFLICTS - Character Battle Identity And Max HP Conflict Handling | blocked | RKBC-SHEET-HP-REST-HIT-DICE, RKBC-HANDOFF-BATTLE-INIT | Cover identity checks, max-HP conflicts, and zero-HP lifecycle handoff. |
@@ -880,7 +880,7 @@ resource ownership/projection, not random interleavings.
 
 ### Task 20 - RKBC-SHEET-WEAPON-MASTERY-RITUAL - Character Sheet Weapon Mastery And Ritual Projection
 
-Status: `ready-for-research`
+Status: `done`
 
 Scope: cover weapon mastery reselection and spellbook/ritual projection
 semantics currently supported by the sheet runtime.
@@ -891,6 +891,14 @@ Acceptance:
   obligations.
 - Creation-time choice state is not duplicated in durable sheet state.
 - Deterministic replay is used only for fixed projection fixtures.
+
+Result: `SHEET.WEAPON_MASTERY.RESELECTION` covers Character Sheet Long Rest
+Weapon Mastery reselection from Surface feature eligibility, rewriting selected
+CharacterBuild class-choice refs without adding durable sheet-local Weapon
+Mastery state. `SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION` covers Wizard
+Ritual Adept Spell Access projection for spellbook Ritual invocation and
+prepared-only rejection. Both use deterministic QNT replay fixtures because the
+covered risk is fixed projection behavior, not random interleavings.
 
 ### Task 21 - RKBC-HANDOFF-BATTLE-INIT - Character Battle Initialization Projection
 

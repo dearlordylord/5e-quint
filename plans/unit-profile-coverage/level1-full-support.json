@@ -963,18 +963,18 @@
     },
     "rulesKernelCoveredProfileJoin": {
       "denominator": 58,
-      "numerator": 36,
-      "percent": "62.1%"
+      "numerator": 38,
+      "percent": "65.5%"
     },
     "rulesKernelProfileJoin": {
       "denominator": 58,
-      "numerator": 54,
-      "percent": "93.1%"
+      "numerator": 56,
+      "percent": "96.6%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 78,
-      "numerator": 46,
-      "percent": "59%"
+      "numerator": 50,
+      "percent": "64.1%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 94,
@@ -3246,8 +3246,8 @@
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
         "denominator": 78,
-        "numerator": 46,
-        "percent": "59%"
+        "numerator": 50,
+        "percent": "64.1%"
       }
     },
     "units": [
@@ -4520,7 +4520,7 @@
         "unitId": "paladin_lay_on_hands"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "covered",
         "profiles": [
           {
             "joinStatus": "covered",
@@ -4536,8 +4536,15 @@
             "profileKind": "character-creation"
           },
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "SHEET.WEAPON_MASTERY.RESELECTION",
+                "runtime": "character-sheet",
+                "status": "covered",
+                "title": "Character Sheet Long Rest Weapon Mastery reselection replaces selected class-choice refs from Surface feature eligibility"
+              }
+            ],
             "profileId": "character-sheet.weapon-mastery-reselection",
             "profileKind": "character-sheet"
           }
@@ -4646,7 +4653,7 @@
         "unitId": "protection_from_evil_and_good"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "covered",
         "profiles": [
           {
             "joinStatus": "covered",
@@ -4662,8 +4669,15 @@
             "profileKind": "character-creation"
           },
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "SHEET.WEAPON_MASTERY.RESELECTION",
+                "runtime": "character-sheet",
+                "status": "covered",
+                "title": "Character Sheet Long Rest Weapon Mastery reselection replaces selected class-choice refs from Surface feature eligibility"
+              }
+            ],
             "profileId": "character-sheet.weapon-mastery-reselection",
             "profileKind": "character-sheet"
           }
@@ -4809,7 +4823,7 @@
         "unitId": "rogue_sneak_attack"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "covered",
         "profiles": [
           {
             "joinStatus": "covered",
@@ -4825,8 +4839,15 @@
             "profileKind": "character-creation"
           },
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "SHEET.WEAPON_MASTERY.RESELECTION",
+                "runtime": "character-sheet",
+                "status": "covered",
+                "title": "Character Sheet Long Rest Weapon Mastery reselection replaces selected class-choice refs from Surface feature eligibility"
+              }
+            ],
             "profileId": "character-sheet.weapon-mastery-reselection",
             "profileKind": "character-sheet"
           }
@@ -5282,11 +5303,18 @@
         "unitId": "wizard_arcane_recovery"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION",
+                "runtime": "character-sheet",
+                "status": "covered",
+                "title": "Character Sheet spellbook Ritual invocation projects from existing spellbook Spell Access and Ritual-tagged Spell Definitions"
+              }
+            ],
             "profileId": "character-sheet.spellbook-ritual-invocation",
             "profileKind": "character-sheet"
           }

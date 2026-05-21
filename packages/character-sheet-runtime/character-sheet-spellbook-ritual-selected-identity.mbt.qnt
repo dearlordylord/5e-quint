@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION
 
 module characterSheetSpellbookRitualSelectedIdentityMbt {
   var qFeatureUnitId: str
@@ -53,6 +54,14 @@ module characterSheetSpellbookRitualSelectedIdentityMbt {
   action doRejectPreparedOnlyRitual = all {
     qLastResult == "init",
     recordProjection("wizard_ritual_adept", "detect_magic", "class_wizard", false, true, false, "none", "none", "none", false, 0, "prepared_only_rejected"),
+  }
+
+  action stepInvokeSpellbookRitual = any {
+    doInvokeSpellbookRitual,
+  }
+
+  action stepRejectPreparedOnlyRitual = any {
+    doRejectPreparedOnlyRitual,
   }
 
   action step = any {

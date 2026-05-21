@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner SHEET.WEAPON_MASTERY.RESELECTION
 
 module characterSheetWeaponMasteryContainersSelectedIdentityMbt {
   var qLastResult: str

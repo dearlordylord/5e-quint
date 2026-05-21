@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 67,
-    "covered": 41,
+    "total": 69,
+    "covered": 43,
     "open": 21,
     "nonSemantic": 5,
     "byRuntime": {
       "shared-algebras": 1,
       "battle": 54,
       "character-creation": 8,
-      "character-sheet": 4,
+      "character-sheet": 6,
       "character-battle": 1
     },
     "byStatus": {
-      "covered": 41,
+      "covered": 43,
       "needs-qnt-owner": 1,
       "needs-parity-witness": 19,
       "needs-surface-evidence": 1,
@@ -1872,6 +1872,73 @@
         ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Font of Magic"
       ],
       "title": "Character Sheet Spell Slot, created Spell Slot, Pact Slot, Arcane Recovery, and Magical Cunning transitions"
+    },
+    {
+      "id": "SHEET.WEAPON_MASTERY.RESELECTION",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "deterministicReplayRationale": "Character Sheet Weapon Mastery replay is a closed selected-identity fixture for Paladin, Ranger, and Rogue two-choice projection plus Long Rest reselection. The runtime reads eligible weapon facts and Long Rest change counts from the installed Surface feature and rewrites CharacterBuild selected class-choice refs without adding durable sheet-local Weapon Mastery state; random branch interleavings are not the risk at this projection boundary.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/character-sheet-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "character-sheet.weapon-mastery-reselection"
+      ],
+      "qntOwners": [
+        "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt"
+      ],
+      "runtime": "character-sheet",
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/index.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Classes/Fighter.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/Classes/Barbarian.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/Classes/Paladin.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/Classes/Ranger.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/Classes/Rogue.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/Equipment.md#Mastery Properties",
+        ".references/srd-5.2.1/Rules-Glossary.md#Long Rest"
+      ],
+      "title": "Character Sheet Long Rest Weapon Mastery reselection replaces selected class-choice refs from Surface feature eligibility"
+    },
+    {
+      "id": "SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION",
+      "kind": "projection-scalar",
+      "parityWitnesses": [
+        {
+          "deterministicReplayRationale": "Character Sheet spellbook Ritual replay is a fixed projection fixture for the accepted spellbook Ritual case and the prepared-only rejection case. The runtime projects the invocation from existing CharacterBuild spellbook Spell Access, the installed spellbook Ritual Access feature, and the Surface Spell Definition Ritual tag; it records no separate Ritual list and spends no Spell Slot, so random branch interleavings are not the risk at this projection boundary.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/character-sheet-runtime/src/spellbook-ritual-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "character-sheet.spellbook-ritual-invocation"
+      ],
+      "qntOwners": [
+        "packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt"
+      ],
+      "runtime": "character-sheet",
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/index.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Classes/Wizard.md#Level 1: Spellcasting",
+        ".references/srd-5.2.1/Classes/Wizard.md#Level 1: Ritual Adept",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Gaining Spells",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Casting without Slots",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Longer Casting Times",
+        ".references/srd-5.2.1/Rules-Glossary.md#Ritual"
+      ],
+      "title": "Character Sheet spellbook Ritual invocation projects from existing spellbook Spell Access and Ritual-tagged Spell Definitions"
     }
   ],
   "battleHoleFrontier": [
@@ -3600,6 +3667,18 @@
         "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS"
       ],
       "profileId": "character-sheet.pact-slot-recovery"
+    },
+    {
+      "obligationIds": [
+        "SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION"
+      ],
+      "profileId": "character-sheet.spellbook-ritual-invocation"
+    },
+    {
+      "obligationIds": [
+        "SHEET.WEAPON_MASTERY.RESELECTION"
+      ],
+      "profileId": "character-sheet.weapon-mastery-reselection"
     },
     {
       "obligationIds": [

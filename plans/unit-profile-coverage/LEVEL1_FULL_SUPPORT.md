@@ -11,9 +11,9 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | Strict runtime/profile support | 78/94 (83%) |
 | Strict target closure | 94/94 (100%) |
 | Product readiness | 367/367 (100%) |
-| Rules-kernel profile join | 54/58 (93.1%) |
-| Rules-kernel covered profile join | 36/58 (62.1%) |
-| Supported Unit rules-kernel chain | 46/78 (59%) |
+| Rules-kernel profile join | 56/58 (96.6%) |
+| Rules-kernel covered profile join | 38/58 (65.5%) |
+| Supported Unit rules-kernel chain | 50/78 (64.1%) |
 
 ## Scope
 
@@ -68,17 +68,13 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | `hideous_laughter` | mapped-open | `spell.invocation-hideous-laughter-repeat-save-lifecycle` (mapped-open: `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` (needs-parity-witness)) |
 | `hunters_mark` | mapped-open | `spell.invocation-marked-damage-rider` (mapped-open: `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` (needs-parity-witness)) |
 | `longstrider` | mapped-open | `spell.scalar-buff` (mapped-open: `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` (needs-parity-witness)) |
-| `paladin_weapon_mastery` | unmapped | `character-sheet.weapon-mastery-reselection` (unmapped: no obligation mapping) |
 | `protection_from_evil_and_good` | mapped-open | `spell.creature-type-protection-and-charm` (mapped-open: `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION` (needs-parity-witness)) |
-| `ranger_weapon_mastery` | unmapped | `character-sheet.weapon-mastery-reselection` (unmapped: no obligation mapping) |
 | `rogue_expertise` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
-| `rogue_weapon_mastery` | unmapped | `character-sheet.weapon-mastery-reselection` (unmapped: no obligation mapping) |
 | `searing_smite` | mapped-open | `spell.invocation-after-hit-timed-damage-save` (mapped-open: `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` (needs-parity-witness)) |
 | `shield_of_faith` | mapped-open | `spell.scalar-buff` (mapped-open: `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` (needs-parity-witness)) |
 | `shillelagh` | mapped-open | `spell.invocation-weapon-attack-override` (mapped-open: `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` (needs-parity-witness)) |
 | `spare_the_dying` | mapped-open | `spell.invocation-make-stable` (mapped-open: `BATTLE.SPELL.MAKE_STABLE_LIFECYCLE` (needs-parity-witness)) |
 | `true_strike` | mapped-open | `spell.invocation-spell-hosted-weapon-attack` (mapped-open: `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` (needs-parity-witness)) |
-| `wizard_ritual_adept` | unmapped | `character-sheet.spellbook-ritual-invocation` (unmapped: no obligation mapping) |
 
 ## Non-Supported Frontier Detail
 

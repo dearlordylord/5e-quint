@@ -4,14 +4,14 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Summary
 
-- Total obligations: 67
-- Covered obligations: 41
+- Total obligations: 69
+- Covered obligations: 43
 - Open transitional obligations: 21
 - Boundary or unsupported obligations: 5
 
 | Status | Count |
 | --- | ---: |
-| covered | 41 |
+| covered | 43 |
 | needs-qnt-owner | 1 |
 | needs-parity-witness | 19 |
 | needs-surface-evidence | 1 |
@@ -23,7 +23,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | shared-algebras | 1 |
 | battle | 54 |
 | character-creation | 8 |
-| character-sheet | 4 |
+| character-sheet | 6 |
 | character-battle | 1 |
 
 ## Obligations
@@ -98,6 +98,8 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `SHARED.HIT_POINTS.POSITIVE_DAMAGE` | shared-algebras | covered | `spell.invocation-flaming-sphere-hazard-ram`, `spell.invocation-moonbeam-movable-zone`, `spell.invocation-spell-created-held-object` |
 | `SHEET.HP_REST_HIT_DICE.TRANSITIONS` | character-sheet | covered | _direct reducer entrypoint_ |
 | `SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS` | character-sheet | covered | `character-sheet.pact-slot-recovery`, `character-sheet.short-rest-spell-slot-recovery` |
+| `SHEET.WEAPON_MASTERY.RESELECTION` | character-sheet | covered | `character-sheet.weapon-mastery-reselection` |
+| `SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION` | character-sheet | covered | `character-sheet.spellbook-ritual-invocation` |
 
 ## Battle Hole Frontier
 

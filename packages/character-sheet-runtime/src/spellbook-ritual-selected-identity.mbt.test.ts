@@ -1,5 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt spellbook-ritual-invocation wizard_ritual_adept
 // UNIT-IDENTITY-MBT-REPLAY: spellbook-ritual-invocation wizard_ritual_adept doInvokeSpellbookRitual doRejectPreparedOnlyRitual
+// KERNEL-COVERAGE: parity-witness SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -140,6 +141,16 @@ const selectedUnitIdentityReplays = [
     ],
   },
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
+const qntStepByDriverAction = {
+  doInvokeSpellbookRitual: "stepInvokeSpellbookRitual",
+  doRejectPreparedOnlyRitual: "stepRejectPreparedOnlyRitual",
+} as const satisfies Record<
+  SpellbookRitualSelectedIdentityDriverAction,
+  string
+>;
+const advertisedReplayActions = selectedUnitIdentityReplays.flatMap(
+  (replay) => replay.actions,
+);
 
 describe("Character Sheet spellbook ritual selected identity MBT", () => {
   it("replays selected Unit identities deterministically", async () => {
@@ -190,6 +201,24 @@ describe("Character Sheet spellbook ritual selected identity MBT", () => {
       maxSteps: Number(process.env["MBT_STEPS"] ?? 1),
       stateCheck: spellbookRitualSelectedIdentityStateCheck,
     });
+  }, 120_000);
+
+  it("replays every advertised Character Sheet spellbook ritual branch", async () => {
+    for (const actionName of advertisedReplayActions) {
+      await run({
+        spec: path.resolve(
+          import.meta.dirname,
+          "../character-sheet-spellbook-ritual-selected-identity.mbt.qnt",
+        ),
+        init: "init",
+        step: qntStepByDriverAction[actionName],
+        driver: createSpellbookRitualSelectedIdentityDriver(),
+        backend: "typescript",
+        nTraces: 1,
+        maxSteps: 1,
+        stateCheck: spellbookRitualSelectedIdentityStateCheck,
+      });
+    }
   }, 120_000);
 });
 

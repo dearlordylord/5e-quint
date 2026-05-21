@@ -86,6 +86,8 @@
 {"profileId":"character-sheet.armor-class-base-formula","obligationIds":["SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE"]}
 {"profileId":"character-sheet.short-rest-spell-slot-recovery","obligationIds":["SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS"]}
 {"profileId":"character-sheet.pact-slot-recovery","obligationIds":["SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS"]}
+{"profileId":"character-sheet.spellbook-ritual-invocation","obligationIds":["SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION"]}
+{"profileId":"character-sheet.weapon-mastery-reselection","obligationIds":["SHEET.WEAPON_MASTERY.RESELECTION"]}
 {"profileId":"character-sheet.healing-resource-action","obligationIds":["SHEET.FEATURE_RESOURCES.TRANSITIONS"]}
 {"profileId":"character-sheet.class-feature-use-count-resource","obligationIds":["SHEET.FEATURE_RESOURCES.TRANSITIONS"]}
 {"profileId":"character-sheet.class-feature-point-pool-resource","obligationIds":["SHEET.FEATURE_RESOURCES.TRANSITIONS"]}

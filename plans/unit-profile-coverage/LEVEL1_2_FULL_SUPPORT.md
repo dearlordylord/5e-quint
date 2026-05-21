@@ -11,9 +11,9 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | Strict runtime/profile support | 112/168 (66.7%) |
 | Strict target closure | 167/168 (99.4%) |
 | Product readiness | 509/556 (91.5%) |
-| Rules-kernel profile join | 76/84 (90.5%) |
-| Rules-kernel covered profile join | 50/84 (59.5%) |
-| Supported Unit rules-kernel chain | 59/112 (52.7%) |
+| Rules-kernel profile join | 78/84 (92.9%) |
+| Rules-kernel covered profile join | 52/84 (61.9%) |
+| Supported Unit rules-kernel chain | 63/112 (56.3%) |
 
 ## Scope
 
@@ -85,13 +85,10 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `mirror_image` | mapped-open | `spell.invocation-mirror-image-hit-interception` (mapped-open: `BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION` (needs-parity-witness)) |
 | `monk_uncanny_metabolism` | unmapped | `character-creation.class-feature-source-fact-projection` (unmapped: no obligation mapping) |
 | `paladin_paladins_smite` | mapped-open | `spell.invocation-after-hit-damage` (mapped-open: `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` (needs-parity-witness)) |
-| `paladin_weapon_mastery` | unmapped | `character-sheet.weapon-mastery-reselection` (unmapped: no obligation mapping) |
 | `protection_from_evil_and_good` | mapped-open | `spell.creature-type-protection-and-charm` (mapped-open: `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION` (needs-parity-witness)) |
 | `protection_from_poison` | mapped-open | `spell.invocation-condition-removal-protection` (mapped-open: `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` (needs-parity-witness)) |
 | `ranger_deft_explorer` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
-| `ranger_weapon_mastery` | unmapped | `character-sheet.weapon-mastery-reselection` (unmapped: no obligation mapping) |
 | `rogue_expertise` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
-| `rogue_weapon_mastery` | unmapped | `character-sheet.weapon-mastery-reselection` (unmapped: no obligation mapping) |
 | `scorching_ray` | mapped-open | `spell.invocation-independent-attack-sequence` (mapped-open: `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE` (needs-parity-witness)) |
 | `searing_smite` | mapped-open | `spell.invocation-after-hit-timed-damage-save` (mapped-open: `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` (needs-parity-witness)) |
 | `shield_of_faith` | mapped-open | `spell.scalar-buff` (mapped-open: `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` (needs-parity-witness)) |
@@ -101,7 +98,6 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `spider_climb` | mapped-open | `spell.scalar-buff` (mapped-open: `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` (needs-parity-witness)) |
 | `true_strike` | mapped-open | `spell.invocation-spell-hosted-weapon-attack` (mapped-open: `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` (needs-parity-witness)) |
 | `warding_bond` | mapped-open | `spell.invocation-warding-bond-linked-effect` (mapped-open: `BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING` (needs-parity-witness)) |
-| `wizard_ritual_adept` | unmapped | `character-sheet.spellbook-ritual-invocation` (unmapped: no obligation mapping) |
 | `wizard_scholar` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
 
 ## Non-Supported Frontier Detail
