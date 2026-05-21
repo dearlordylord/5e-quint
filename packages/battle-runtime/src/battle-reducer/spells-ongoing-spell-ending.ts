@@ -11,7 +11,6 @@ import {
   type ActionSpellBattleResolutionInput,
   type BattleActiveEffect,
   type BattleCreatureState,
-  type BattleLightEmitter,
   type BattleOngoingSpellEffectRef,
   type BattleOngoingSpellTarget,
   type BattleOngoingSpellTargetChoiceHole,
@@ -25,6 +24,13 @@ import {
 import type { CombatantId } from "../identity.ts";
 import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
+import {
+  isTrackedOngoingSpellLightEmitter,
+  ongoingSpellEffectRefEquals,
+  ongoingSpellEffectRefForActiveEffect,
+  ongoingSpellEffectRefForEmitter,
+  ongoingSpellEffectRefKey,
+} from "./antimagic-field-suppression.ts";
 import { combatantsAfterConcentrationSpellEffectsEndedIfNoEffects } from "./spell-condition-effects-helpers.ts";
 import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
 import type { BattleSpellEffectLevel } from "./spells-effective-level.ts";
@@ -71,25 +77,6 @@ export function ongoingSpellTargetChoiceHole(
     spellId: invocation.spell.id,
     rangeFeet: invocation.rangeFeet,
     choices: ongoingSpellTargetChoices(state),
-  };
-}
-
-export function ongoingSpellEffectRefForEmitter(
-  emitter: BattleTrackedOngoingSpellLightEmitter,
-): BattleOngoingSpellEffectRef {
-  return {
-    kind: "spellLightEmitter",
-    sourceEffectId: emitter.sourceEffectId,
-  };
-}
-
-function ongoingSpellEffectRefForActiveEffect(
-  effect: TrackedDispellableOngoingSpellActiveEffect,
-): BattleOngoingSpellEffectRef {
-  return {
-    kind: "spellActiveEffect",
-    activeEffectKind: effect.kind,
-    sourceEffectId: effect.effectId,
   };
 }
 
@@ -521,37 +508,6 @@ function pushUniqueOngoingSpellTarget(
   ) {
     targets.push(target);
   }
-}
-
-function ongoingSpellEffectRefEquals(
-  left: BattleOngoingSpellEffectRef,
-  right: BattleOngoingSpellEffectRef,
-): boolean {
-  if (left.kind !== right.kind) {
-    return false;
-  }
-  return (
-    left.sourceEffectId === right.sourceEffectId &&
-    (left.kind !== "spellActiveEffect" ||
-      right.kind !== "spellActiveEffect" ||
-      left.activeEffectKind === right.activeEffectKind)
-  );
-}
-
-function ongoingSpellEffectRefKey(ref: BattleOngoingSpellEffectRef): string {
-  return ref.kind === "spellLightEmitter"
-    ? `light:${ref.sourceEffectId}`
-    : `active:${ref.activeEffectKind}:${ref.sourceEffectId}`;
-}
-
-function isTrackedOngoingSpellLightEmitter(
-  emitter: BattleLightEmitter,
-): emitter is BattleTrackedOngoingSpellLightEmitter {
-  return (
-    emitter.kind === "spellLightEmitter" &&
-    "sourceEffectId" in emitter &&
-    "sourceSpellLevel" in emitter
-  );
 }
 
 function isTrackedDispellableOngoingSpellActiveEffect(

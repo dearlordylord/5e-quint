@@ -62,12 +62,21 @@ module battleRuntimeObjectContactDamage {
     })
 
   pure def heatMetalObjectContactDamageActive(state: BattleState, objectId: int): bool =
-    heatMetalObjectContactDamageActiveForCombatant(state.fighter, objectId)
+    state.fighter.activeEffects.exists(effect => match effect {
+      | HeatMetalObjectContactDamage(data) =>
+          data.objectId == objectId and
+            not(antimagicSuppressesOngoingSpellActiveEffect(state, data.effectId))
+      | _ => false
+    })
 
   pure def heatMetalObjectContactDamageActiveDamageDice(state: BattleState, objectId: int): int =
     state.fighter.activeEffects
       .map(effect => match effect {
-        | HeatMetalObjectContactDamage(data) => if (data.objectId == objectId) data.damageDice else 0
+        | HeatMetalObjectContactDamage(data) =>
+            if (data.objectId == objectId and not(antimagicSuppressesOngoingSpellActiveEffect(state, data.effectId)))
+              data.damageDice
+            else
+              0
         | _ => 0
       })
       .fold(0, (highest, damageDice) => if (highest > damageDice) highest else damageDice)
@@ -75,7 +84,11 @@ module battleRuntimeObjectContactDamage {
   pure def heatMetalObjectContactDamageStartedRound(state: BattleState, objectId: int): int =
     state.fighter.activeEffects
       .map(effect => match effect {
-        | HeatMetalObjectContactDamage(data) => if (data.objectId == objectId) data.startedRound else 0
+        | HeatMetalObjectContactDamage(data) =>
+            if (data.objectId == objectId and not(antimagicSuppressesOngoingSpellActiveEffect(state, data.effectId)))
+              data.startedRound
+            else
+              0
         | _ => 0
       })
       .fold(0, (highest, round) => if (highest > round) highest else round)

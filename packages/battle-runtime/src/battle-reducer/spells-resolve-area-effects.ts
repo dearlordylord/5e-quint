@@ -2,7 +2,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-tracked-light-suppression
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
 import type {
@@ -35,6 +35,12 @@ import {
   validateSavingThrowOutcomes,
 } from "./spells-resolve-save-gates.ts";
 import type { SpellFillSet } from "./spells-resolve-fill-set.ts";
+import {
+  isTrackedOngoingSpellLightEmitter,
+  ongoingSpellEffectRefForActiveEffect,
+  ongoingSpellEffectRefForEmitter,
+  ongoingSpellEffectRefKey,
+} from "./antimagic-field-suppression.ts";
 
 export function resolveFogCloudObscurementSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
@@ -262,8 +268,8 @@ export function resolveAntimagicFieldOngoingSpellSuppressionAct(input: {
     state: resourced.state,
     actorId: input.actorId,
     areaId: input.fillSet.areaChoice.areaId,
-    affectedOngoingSpellLights:
-      input.fillSet.areaChoice.affectedOngoingSpellLights,
+    affectedOngoingSpellEffects:
+      input.fillSet.areaChoice.affectedOngoingSpellEffects,
     invocation: input.invocation,
   });
   return {
@@ -301,13 +307,36 @@ function antimagicFieldAreaChoiceInvalidReason(
   state: ActionSpellBattleResolutionInput["state"],
   areaChoice: BattleAntimagicFieldAreaChoice,
 ): string | null {
-  const trackedEmitters = trackedOngoingSpellLightEmittersByEffectId(state);
-  for (const affected of areaChoice.affectedOngoingSpellLights) {
-    if (!trackedEmitters.has(affected.sourceEffectId)) {
-      return "Antimagic Field affected light must reference a tracked ongoing spell light.";
+  const trackedEffects = trackedOngoingSpellEffectKeys(state);
+  for (const affected of areaChoice.affectedOngoingSpellEffects) {
+    if (!trackedEffects.has(ongoingSpellEffectRefKey(affected.effect))) {
+      return "Antimagic Field affected effect must reference a tracked ongoing spell effect.";
     }
   }
   return null;
+}
+
+function trackedOngoingSpellEffectKeys(
+  state: ActionSpellBattleResolutionInput["state"],
+): ReadonlySet<string> {
+  return new Set([
+    ...state.lightEmitters.flatMap((emitter) =>
+      isTrackedOngoingSpellLightEmitter(emitter)
+        ? [ongoingSpellEffectRefKey(ongoingSpellEffectRefForEmitter(emitter))]
+        : [],
+    ),
+    ...[...state.combatants.values()].flatMap((combatant) =>
+      combatant.activeEffects.flatMap((effect) =>
+        effect.kind === "spellObjectContactDamage"
+          ? [
+              ongoingSpellEffectRefKey(
+                ongoingSpellEffectRefForActiveEffect(effect),
+              ),
+            ]
+          : [],
+      ),
+    ),
+  ]);
 }
 
 function trackedOngoingSpellLightEmittersByEffectId(
@@ -322,16 +351,6 @@ function trackedOngoingSpellLightEmittersByEffectId(
         ? [[emitter.sourceEffectId, emitter]]
         : [],
     ),
-  );
-}
-
-function isTrackedOngoingSpellLightEmitter(
-  emitter: ActionSpellBattleResolutionInput["state"]["lightEmitters"][number],
-): emitter is BattleTrackedOngoingSpellLightEmitter {
-  return (
-    emitter.kind === "spellLightEmitter" &&
-    "sourceEffectId" in emitter &&
-    "sourceSpellLevel" in emitter
   );
 }
 

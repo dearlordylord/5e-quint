@@ -298,7 +298,7 @@ module battleRuntimeTimedEffects {
         | AntimagicFieldOngoingSpellSuppression(data) => AntimagicFieldOngoingSpellSuppression({
             areaId: data.areaId,
             radiusFeet: data.radiusFeet,
-            suppressedSourceEffectIds: data.suppressedSourceEffectIds,
+            suppressedOngoingSpellEffects: data.suppressedOngoingSpellEffects,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
         | FlamingSphere(data) => FlamingSphere({

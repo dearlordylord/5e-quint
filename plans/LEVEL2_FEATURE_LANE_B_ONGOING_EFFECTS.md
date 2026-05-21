@@ -5,7 +5,7 @@
   "schema": "ralph-plan.v1",
   "tasks": [
     {"number":1,"id":"L12G-FOLLOWUP-GENERIC-ONGOING-SPELL-EFFECT-DISPEL","status":"done","title":"Generic Ongoing Spell Effect Dispel Runtime"},
-    {"number":2,"id":"L12G-FOLLOWUP-ANTIMAGIC-FIELD-GENERIC-SUPPRESSION","status":"ready-for-research","title":"Antimagic Field Generic Suppression Runtime"},
+    {"number":2,"id":"L12G-FOLLOWUP-ANTIMAGIC-FIELD-GENERIC-SUPPRESSION","status":"done","title":"Antimagic Field Generic Suppression Runtime"},
     {"number":3,"id":"L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST","status":"ready-for-research","title":"Prayer Of Healing Surface Rest Shape"},
     {"number":4,"id":"L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST","status":"blocked","title":"Prayer Of Healing Character Sheet Rest Runtime"},
     {"number":5,"id":"L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE","status":"ready-for-research","title":"Ray Of Enfeeblement D20 Lifecycle Runtime"},
@@ -15,7 +15,8 @@
     {"number":9,"id":"L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME","status":"ready-for-research","title":"Enlarge Reduce Creature Runtime Support"},
     {"number":10,"id":"L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME","status":"ready-for-research","title":"Enthrall Perception Penalty Runtime Support"},
     {"number":11,"id":"L12G-FOLLOWUP-BROADER-ONGOING-SPELL-EFFECT-DISPEL","status":"ready-for-research","title":"Broader Ongoing Spell Effect Dispel Runtime"},
-    {"number":12,"id":"L12G-RECURSIVE-TAIL-LANE-B","status":"blocked","title":"Lane B Recursive Planning Tail"}
+    {"number":12,"id":"L12G-FOLLOWUP-ANTIMAGIC-FIELD-PREVENTION-AND-BROADER-SUPPRESSION","status":"ready-for-research","title":"Antimagic Field Prevention And Broader Suppression Runtime"},
+    {"number":13,"id":"L12G-RECURSIVE-TAIL-LANE-B","status":"blocked","title":"Lane B Recursive Planning Tail"}
   ]
 }
 -->
@@ -57,16 +58,16 @@ Output:
 
 ### Task 2 - L12G-FOLLOWUP-ANTIMAGIC-FIELD-GENERIC-SUPPRESSION - Antimagic Field Generic Suppression Runtime
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 - Current Antimagic Field tracked-light suppression subset on `master`.
 - SRD Antimagic Field prevention/suppression clauses.
 
 Output:
-- Promote a safe generic suppression/prevention subset or split into smaller tasks.
-- Do not delete suppressed occurrences; suppressed duration must keep ticking.
-- Spellcasting prevention, Magic Action prevention, magical targeting, magic item suppression, magical area clipping, teleport/planar travel blocking, portal closure, and aura Dispel Magic immunity must be modeled only if they have precise owners.
+- Promoted a safe tracked ongoing Spell Effect suppression subset: tracked spell-created light emitters and tracked `spellObjectContactDamage` active-effect occurrences are suppressed without deleting their occurrences, and suppressed duration keeps ticking.
+- Artifact/deity spell-effect sources remain excluded from suppression.
+- Spellcasting prevention, Magic Action prevention, magical targeting, magic item suppression, magical area clipping, teleport/planar travel blocking, portal closure, aura Dispel Magic immunity, and broader ongoing Spell Effect suppression remain in Task B12.
 
 ### Task 3 - L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST - Prayer Of Healing Surface Rest Shape
 
@@ -170,7 +171,21 @@ Output:
 - Promote Dispel Magic beyond tracked spell-light emitters and tracked `spellObjectContactDamage` occurrences only where broader ongoing Spell Effect occurrences have stable identity, source spell level, target association, and cleanup semantics without duplicated state.
 - Keep spell-specific dispel exceptions or immunities as explicit typed closures instead of identity-dispatched special cases.
 
-### Task 12 - L12G-RECURSIVE-TAIL-LANE-B - Lane B Recursive Planning Tail
+### Task 12 - L12G-FOLLOWUP-ANTIMAGIC-FIELD-PREVENTION-AND-BROADER-SUPPRESSION - Antimagic Field Prevention And Broader Suppression Runtime
+
+Status: `ready-for-research`
+
+Input:
+- Task 2 Antimagic Field support for tracked spell-light emitters and tracked `spellObjectContactDamage` active-effect occurrences.
+- Existing active-effect, area-effect, spellcasting, targeting, item, teleportation, and portal ownership boundaries.
+- SRD Antimagic Field prevention/suppression clauses.
+
+Output:
+- Split and promote Antimagic Field clauses whose owners are still absent: spellcasting prevention, Magic Action prevention, magical targeting prevention, magic item suppression, magical area clipping, teleportation/planar travel blocking, portal closure, Dispel Magic immunity on the aura, and suppression of ongoing Spell Effects beyond tracked spell-light emitters and tracked `spellObjectContactDamage` occurrences.
+- Model only owner-specific executable subsets with focused tests and promoted Quint/runtime parity; close or split clauses that still lack precise owners.
+- Suppressed occurrences must keep ticking and must not be deleted while suppressed.
+
+### Task 13 - L12G-RECURSIVE-TAIL-LANE-B - Lane B Recursive Planning Tail
 
 Status: `blocked`
 

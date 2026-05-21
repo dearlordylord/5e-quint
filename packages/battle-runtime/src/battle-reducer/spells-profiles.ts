@@ -15,7 +15,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-tracked-light-suppression
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
 
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
@@ -61,6 +61,10 @@ import {
 } from "../character-battle-resources.ts";
 import type { CombatantId } from "../identity.ts";
 import { SHIELD_MAGIC_MISSILE_SPELL_ID } from "./domain-constants.ts";
+import {
+  ongoingSpellEffectRefForActiveEffect,
+  ongoingSpellEffectSuppressedByAntimagicField,
+} from "./antimagic-field-suppression.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import { parseBattleSpellEffectLevel } from "./spells-effective-level.ts";
 
@@ -1940,6 +1944,11 @@ export function supportedObjectContactDamageRepeatProfile(
         effect.kind !== "spellObjectContactDamage" ||
         effect.sourceCombatantId !== actor.combatantId ||
         effect.sourceSpellId !== spell.id ||
+        (state !== undefined &&
+          ongoingSpellEffectSuppressedByAntimagicField(
+            state,
+            ongoingSpellEffectRefForActiveEffect(effect),
+          )) ||
         !objectContactDamageRepeatIsDiscoverable(effect, state)
       ) {
         return [];

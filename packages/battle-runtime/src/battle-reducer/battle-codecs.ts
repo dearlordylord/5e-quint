@@ -83,7 +83,7 @@ import type {
 } from "../find-familiar-forms.ts";
 import { PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS } from "../find-familiar-forms.ts";
 import {
-  BATTLE_ANTIMAGIC_FIELD_ONGOING_SPELL_LIGHT_SOURCE_KINDS,
+  BATTLE_ANTIMAGIC_FIELD_ONGOING_SPELL_EFFECT_SOURCE_KINDS,
   BATTLE_ATTACK_RANGE_BANDS,
   BLUR_ATTACK_ROLL_BYPASS_SENSES,
   COMMAND_OPTIONS,
@@ -3304,9 +3304,18 @@ type BattleFillEncoded =
         | {
             readonly kind: "antimagicFieldSelfEmanation";
             readonly areaId: string;
-            readonly affectedOngoingSpellLights: readonly {
-              readonly kind: "antimagicFieldAffectedOngoingSpellLight";
-              readonly sourceEffectId: string;
+            readonly affectedOngoingSpellEffects: readonly {
+              readonly kind: "antimagicFieldAffectedOngoingSpellEffect";
+              readonly effect:
+                | {
+                    readonly kind: "spellLightEmitter";
+                    readonly sourceEffectId: string;
+                  }
+                | {
+                    readonly kind: "spellActiveEffect";
+                    readonly activeEffectKind: "spellObjectContactDamage";
+                    readonly sourceEffectId: string;
+                  };
               readonly sourceKind: "ordinarySpell" | "artifact" | "deity";
             }[];
           }
@@ -4016,12 +4025,12 @@ export const BattleFillSchema: Schema.Schema<
         Schema.Struct({
           kind: Schema.Literal("antimagicFieldSelfEmanation"),
           areaId: BattleAreaId,
-          affectedOngoingSpellLights: Schema.Array(
+          affectedOngoingSpellEffects: Schema.Array(
             Schema.Struct({
-              kind: Schema.Literal("antimagicFieldAffectedOngoingSpellLight"),
-              sourceEffectId: BattleSpellEffectOccurrenceId,
+              kind: Schema.Literal("antimagicFieldAffectedOngoingSpellEffect"),
+              effect: BattleOngoingSpellEffectRefSchema,
               sourceKind: Schema.Literal(
-                ...BATTLE_ANTIMAGIC_FIELD_ONGOING_SPELL_LIGHT_SOURCE_KINDS,
+                ...BATTLE_ANTIMAGIC_FIELD_ONGOING_SPELL_EFFECT_SOURCE_KINDS,
               ),
             }),
           ),

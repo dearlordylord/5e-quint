@@ -203,7 +203,7 @@ export function discoverSupportedSpellInvocations(
               mode: { tag: "cast" as const },
             },
             label: invocation.spell.name,
-            summary: `${spellActivationInvocationCastSummary(invocation)} The table supplies the antimagic Emanation area identity and affected ongoing spell lights.`,
+            summary: `${spellActivationInvocationCastSummary(invocation)} The table supplies the antimagic Emanation area identity and affected ongoing spell effects.`,
             initialHoles: [spellAreaChoiceHole(invocation)],
           },
         ];

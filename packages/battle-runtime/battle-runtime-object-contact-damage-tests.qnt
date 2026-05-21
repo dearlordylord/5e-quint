@@ -10,6 +10,7 @@ module battleRuntimeObjectContactDamageTests {
   import battleRuntimeMarkedRiders.* from "./battle-runtime-marked-riders"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeLight.* from "./battle-runtime-light"
+  import battleRuntimeGroundCommand.* from "./battle-runtime-ground-command"
   import battleRuntimeObjectContactDamage.* from "./battle-runtime-object-contact-damage"
 
   run test_heat_metal_records_object_contact_effect_and_immediate_damage = {
@@ -65,6 +66,33 @@ module battleRuntimeObjectContactDamageTests {
       assert(rangeBlocked.bonusActionAvailable),
       assert(repeated.goblin.hp == 3),
       assert(not(repeated.bonusActionAvailable)),
+    }
+  }
+
+  run test_antimagic_field_suppresses_heat_metal_without_deleting_it = {
+    val effectId = heatMetalObjectContactDamageEffectId(Fighter, heatMetalObjectId)
+    val active = {
+      ...endTurn(initialState),
+      fighter: {
+        ...initialState.fighter,
+        activeEffects: Set(heatMetalObjectContactDamageEffect(initialState, Fighter, heatMetalObjectId, 2)),
+      },
+      goblin: {
+        ...initialState.goblin,
+        activeEffects: Set(AntimagicFieldOngoingSpellSuppression({
+          areaId: antimagicFieldAreaId,
+          radiusFeet: antimagicFieldRadiusFeet,
+          suppressedOngoingSpellEffects: Set(OngoingSpellActiveEffectRef({ effectId: effectId })),
+          durationTicks: antimagicFieldDurationTicks,
+        })),
+      },
+    }
+    val ticked = endTurn(endTurn(active))
+    all {
+      assert(heatMetalObjectContactDamageActiveForCombatant(active.fighter, heatMetalObjectId)),
+      assert(not(heatMetalRepeatAvailable(active, heatMetalObjectId, true))),
+      assert(heatMetalObjectContactDamageActiveForCombatant(ticked.fighter, heatMetalObjectId)),
+      assert(not(heatMetalObjectContactDamageActive(ticked, heatMetalObjectId))),
     }
   }
 

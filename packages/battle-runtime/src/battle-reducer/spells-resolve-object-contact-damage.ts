@@ -68,6 +68,10 @@ import {
   spellObjectContactTargetsHoleId,
   spellObjectTargetHole,
 } from "./spells-targeting.ts";
+import {
+  ongoingSpellEffectRefForActiveEffect,
+  ongoingSpellEffectSuppressedByAntimagicField,
+} from "./antimagic-field-suppression.ts";
 import { wardingBondSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
 
 type ObjectContactDamageInvocation = Extract<
@@ -275,6 +279,18 @@ export function resolveObjectContactDamageRepeatSpellAct(input: {
   );
   if (unrelatedFills !== null) {
     return invalidResult(input.input.state, "invalidFill", unrelatedFills);
+  }
+  if (
+    ongoingSpellEffectSuppressedByAntimagicField(
+      input.input.state,
+      ongoingSpellEffectRefForActiveEffect(input.invocation.activeEffect),
+    )
+  ) {
+    return invalidResult(
+      input.input.state,
+      "staleSubject",
+      "Object-contact damage is suppressed by Antimagic Field.",
+    );
   }
   const contactSelection = validateObjectContactTargets({
     state: input.input.state,
