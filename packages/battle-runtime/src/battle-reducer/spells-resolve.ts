@@ -18,6 +18,7 @@
 // `snapshotBattle`, `discoverBattleActs`, etc.) round-trip through
 // `../battle-reducer.ts` until Pass 19 merges the dispatcher.
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE
 
 import {
   spendAction,

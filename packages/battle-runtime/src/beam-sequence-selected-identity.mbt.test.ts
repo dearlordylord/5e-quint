@@ -1,5 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1H-ELDRITCH-BLAST eldritch_blast
 // UNIT-IDENTITY-MBT-REPLAY: L1H-ELDRITCH-BLAST eldritch_blast doDiscoverLevelFiveBeamTargetHoles doResolveTwoCreatureBeamsSameTarget doResolveTwoCreatureBeamsSplitTargets doResolveCreatureAndObjectBeamTargets
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";

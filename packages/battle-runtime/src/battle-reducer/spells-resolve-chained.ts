@@ -1,5 +1,6 @@
 // Chained spell attack-damage resolution, currently Chromatic Orb.
 // Extracted from spells-resolve.ts as a procedure-local resolver slice.
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE
 
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import {

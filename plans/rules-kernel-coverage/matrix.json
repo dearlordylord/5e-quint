@@ -1,8 +1,8 @@
 {
   "summary": {
     "total": 72,
-    "covered": 56,
-    "open": 11,
+    "covered": 58,
+    "open": 9,
     "nonSemantic": 5,
     "byRuntime": {
       "shared-algebras": 1,
@@ -12,9 +12,9 @@
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 56,
+      "covered": 58,
       "needs-qnt-owner": 0,
-      "needs-parity-witness": 10,
+      "needs-parity-witness": 8,
       "needs-surface-evidence": 1,
       "boundary-only": 4,
       "unsupported-by-admission": 1
@@ -1115,12 +1115,14 @@
       "title": "Battle marked-damage spell riders for attack-roll damage, Ability Check roll-mode projection, Concentration duration, and zero-Hit-Point transfer timing"
     },
     {
-      "followUpTaskIds": [
-        "RKBC-SPELL-ATTACK-SEQUENCES-PARITY"
-      ],
       "id": "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
       "kind": "profile-procedure",
-      "parityWitnesses": [],
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/chromatic-orb-chained-spell.test.ts"
+        }
+      ],
       "profiles": [
         "spell.invocation-chained-attack-damage"
       ],
@@ -1135,17 +1137,32 @@
         "packages/battle-runtime/src/battle-reducer/spells-resolve-chained.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve.ts"
       ],
-      "status": "needs-parity-witness",
-      "surfaceEvidence": [],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Chromatic Orb",
+        ".references/srd-5.2.1/Rules-Glossary.md#Spell Attack"
+      ],
       "title": "Battle chained spell attack sequence for damage-type choice, duplicate-die leap admission, target history, per-step attack and damage rolls, and slot-level leap limits"
     },
     {
-      "followUpTaskIds": [
-        "RKBC-SPELL-ATTACK-SEQUENCES-PARITY"
-      ],
       "id": "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
       "kind": "profile-procedure",
-      "parityWitnesses": [],
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/beam-sequence-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-beam-sequence-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-eldritch-blast.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scorching-ray.test.ts"
+        }
+      ],
       "profiles": [
         "spell.invocation-independent-attack-sequence"
       ],
@@ -1159,8 +1176,13 @@
         "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-burst.ts",
         "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts"
       ],
-      "status": "needs-parity-witness",
-      "surfaceEvidence": [],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Eldritch Blast",
+        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Scorching Ray",
+        ".references/srd-5.2.1/Rules-Glossary.md#Spell Attack",
+        ".references/srd-5.2.1/Playing-the-Game.md#Making an Attack"
+      ],
       "title": "Battle independent spell attack sequences for beam and ray count, per-attack target choice, attack rolls, hit-gated damage rolls, object targets, and action or slot spend"
     },
     {
