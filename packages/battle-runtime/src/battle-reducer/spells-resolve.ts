@@ -203,6 +203,7 @@ export {
 } from "./spells-resolve-save-gates.ts";
 export {
   resolveBlurAttackRollDefenseSpellAct,
+  resolveSeeInvisibleObserverSightSpellAct,
   resolveConditionRemovalProtectionSpellAct,
   resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,
   resolveCreatureTypeProtectionSpellAct,
@@ -243,6 +244,7 @@ export {
 
 import {
   resolveBlurAttackRollDefenseSpellAct,
+  resolveSeeInvisibleObserverSightSpellAct,
   resolveConditionRemovalProtectionSpellAct,
   resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,
   resolveCreatureTypeProtectionSpellAct,
@@ -466,6 +468,7 @@ export function resolveSpellAct(
       invocation.procedure === "thaumaturgyBoomingVoice" ||
       invocation.procedure === "creatureTypeProtection" ||
       invocation.procedure === "blurAttackRollDefense" ||
+      invocation.procedure === "seeInvisibleObserverSight" ||
       invocation.procedure === "mirrorImageHitInterception" ||
       invocation.procedure ===
         "conditionImmunityAndTurnStartTemporaryHitPoints" ||
@@ -827,6 +830,14 @@ export function resolveSpellAct(
   }
   if (invocation.procedure === "blurAttackRollDefense") {
     return resolveBlurAttackRollDefenseSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "seeInvisibleObserverSight") {
+    return resolveSeeInvisibleObserverSightSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

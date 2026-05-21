@@ -196,6 +196,11 @@ export type BlurAttackRollDefenseInvocation = Extract<
   { readonly procedure: "blurAttackRollDefense" }
 >;
 
+export type SeeInvisibleObserverSightInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "seeInvisibleObserverSight" }
+>;
+
 export type MirrorImageHitInterceptionInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "mirrorImageHitInterception" }
@@ -3392,6 +3397,39 @@ export function applyBlurAttackRollDefenseSpellEffect(
       (effect) =>
         !(
           effect.kind === "blurred" &&
+          effect.sourceSpellId === invocation.spell.id &&
+          effect.sourceCombatantId === actorId
+        ),
+    ),
+    nextEffect,
+  ];
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(
+      actorId,
+      battleCreatureWithSpellActiveEffects(actor, activeEffects),
+    ),
+  };
+}
+
+export function applySeeInvisibleObserverSightSpellEffect(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: SeeInvisibleObserverSightInvocation,
+): BattleState {
+  const actor = state.combatants.get(actorId);
+  if (actor === undefined) {
+    return state;
+  }
+  const nextEffect = {
+    ...invocation.activeEffect,
+    sourceCombatantId: actorId,
+  };
+  const activeEffects = [
+    ...actor.activeEffects.filter(
+      (effect) =>
+        !(
+          effect.kind === "seeInvisibleAndEthereal" &&
           effect.sourceSpellId === invocation.spell.id &&
           effect.sourceCombatantId === actorId
         ),

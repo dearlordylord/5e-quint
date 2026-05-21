@@ -266,6 +266,10 @@ module battleRuntimeTimedEffects {
             source: data.source,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
+        | SeeInvisibleAndEthereal(data) => SeeInvisibleAndEthereal({
+            source: data.source,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
         | MindSpikeConcentrationDuration(data) => MindSpikeConcentrationDuration({
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
@@ -366,6 +370,7 @@ module battleRuntimeTimedEffects {
         | SanctuaryWard(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | MirrorImageDuplicates(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | InvisibilityCondition(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | SeeInvisibleAndEthereal(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | MindSpikeConcentrationDuration(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | SelfTransformationModeEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | HideousLaughterEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)

@@ -38,6 +38,12 @@ export {
 } from "./battle-trace-contract.ts";
 export { objectInvisibleBenefitDenied } from "./battle-reducer/attack-roll.ts";
 export {
+  combatantCanSee,
+  combatantHasSeeInvisibleAndEtherealEffect,
+  seeInvisibleRevealsEtherealWitness,
+  seeInvisibleRevealsInvisibleObject,
+} from "./battle-reducer/creature-state-leaves.ts";
+export {
   battleWeaponItemHasMagicWeaponEnhancement,
   battleWeaponItemMagicWeaponEnhancementBonus,
 } from "./battle-reducer/attack-damage-apply.ts";
@@ -288,6 +294,8 @@ export {
   type BattleInvalidReasonCode,
   type BattleIllumination,
   type BattleLightEmission,
+  type BattleSeeInvisibleEtherealWitness,
+  type BattleSeeInvisibleObjectWitness,
   type BattleLightEmitter,
   type BattleLightEmitterAttachment,
   type BattleLightEmitterProjection,

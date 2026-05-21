@@ -147,6 +147,10 @@ export const invisibilityUnitId = "invisibility";
 
 export const invisibilityDurationTicks = elapsedTimeTicks(600);
 
+export const seeInvisibilityUnitId = "see_invisibility";
+
+export const seeInvisibilityDurationTicks = elapsedTimeTicks(600);
+
 export const lesserRestorationUnitId = "lesser_restoration";
 
 export const thunderwaveUnitId = "thunderwave";

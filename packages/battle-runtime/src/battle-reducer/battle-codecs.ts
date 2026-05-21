@@ -1939,6 +1939,14 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("seeInvisibleObserverSight"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      activeEffect: BattleRuntimeObjectSchema,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("mirrorImageHitInterception"),
       spell: BattleRuntimeObjectSchema,
       actionCost: Schema.Literal("magicAction"),

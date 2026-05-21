@@ -62,8 +62,8 @@
       "value": 224
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 135,
-      "numerator": 135,
+      "denominator": 136,
+      "numerator": 136,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -72,49 +72,49 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 86,
-      "numerator": 86,
+      "denominator": 87,
+      "numerator": 87,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 86,
-      "numerator": 86,
+      "denominator": 87,
+      "numerator": 87,
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 118,
+      "denominator": 119,
       "numerator": 75,
-      "percent": "63.6%"
-    },
-    "rulesKernelProfileJoinCoverage": {
-      "denominator": 118,
-      "numerator": 104,
-      "percent": "88.1%"
-    },
-    "rulesKernelSupportedUnitCoverage": {
-      "denominator": 135,
-      "numerator": 85,
       "percent": "63%"
     },
+    "rulesKernelProfileJoinCoverage": {
+      "denominator": 119,
+      "numerator": 104,
+      "percent": "87.4%"
+    },
+    "rulesKernelSupportedUnitCoverage": {
+      "denominator": 136,
+      "numerator": 85,
+      "percent": "62.5%"
+    },
     "runtimeMappingCoverage": {
-      "denominator": 86,
-      "numerator": 86,
+      "denominator": 87,
+      "numerator": 87,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 86,
-      "numerator": 86,
+      "denominator": 87,
+      "numerator": 87,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 135,
+      "denominator": 136,
       "numerator": 105,
-      "percent": "77.8%"
+      "percent": "77.2%"
     },
     "supportedProfileCoverage": {
       "denominator": 192,
-      "numerator": 135,
-      "percent": "70.3%"
+      "numerator": 136,
+      "percent": "70.8%"
     }
   },
   "metricSemantics": [
@@ -3423,20 +3423,45 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-antimagic-field.test.ts"
         }
       ]
+    },
+    {
+      "id": "spell.invocation-see-invisible-observer-sight",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-see-invisibility.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "sourceBoundary": "The runtime consumes the authored See Invisibility spell and owns Magic Action and Spell Slot spend, the one-hour self effect, observer-scoped creature visibility over the Invisible condition, and duration cleanup. Object visibility and Ethereal visibility remain caller-witnessed observer facts rather than stored geometry, plane, cover, or duplicated condition state.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT"
+      ],
+      "title": "Spell invocation applies a timed self observer-sight effect that reveals Invisible creatures and caller-witnessed Invisible or Ethereal targets without mutating target state",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-see-invisibility.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-see-invisibility.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 118,
+        "denominator": 119,
         "numerator": 75,
-        "percent": "63.6%"
+        "percent": "63%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 118,
+        "denominator": 119,
         "numerator": 104,
-        "percent": "88.1%"
+        "percent": "87.4%"
       }
     },
     "profileKinds": [
@@ -5021,6 +5046,12 @@
         "obligations": [],
         "profileId": "spell.invocation-antimagic-field-tracked-light-suppression",
         "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-see-invisible-observer-sight",
+        "profileKind": "spell-invocation"
       }
     ],
     "sourceArtifacts": {
@@ -5031,9 +5062,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 135,
+          "denominator": 136,
           "numerator": 85,
-          "percent": "63%"
+          "percent": "62.5%"
         }
       },
       "units": [
@@ -7724,6 +7755,18 @@
           "unitId": "searing_smite"
         },
         {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-see-invisible-observer-sight",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "see_invisibility"
+        },
+        {
           "joinStatus": "covered",
           "profiles": [
             {
@@ -10412,6 +10455,22 @@
         "spell.invocation-antimagic-field-tracked-light-suppression"
       ],
       "taskId": "L12G-ANTIMAGIC-FIELD-TRACKED-LIGHT-SUPPRESSION"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Package-local See Invisibility Quint ownership covers the promoted observer-sight procedure lane: Magic Action and Spell Slot spend, one-hour self effect, observer-scoped Invisible visibility without target-state mutation, witness-gated Invisible object and Ethereal visibility, and duration cleanup.",
+      "profileIds": [
+        "spell.invocation-see-invisible-observer-sight"
+      ],
+      "taskId": "L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission tests and package-local QNT self-tests cover See Invisibility Magic Action level-2 Spell Slot casting, one-hour self effect projection, observer-scoped Invisible creature visibility, hidden-state non-bypass, caller-witnessed Invisible object and Ethereal visibility helpers, and duration cleanup.",
+      "profileIds": [
+        "spell.invocation-see-invisible-observer-sight"
+      ],
+      "taskId": "L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT"
     }
   ],
   "units": [
@@ -21289,24 +21348,65 @@
         "status": "installed"
       },
       "claim": {
-        "followUpTasks": [
-          {
-            "id": "L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT",
-            "mechanic": "Promote See Invisibility as a level-2 self spell that spends the Magic Action and Spell Slot, applies a one-hour self effect, and exposes observer-scoped sight facts that let only the caster see creatures and objects with the Invisible condition as visible and see Ethereal Plane facts through table-supplied plane, distance, cover, and sight-line witnesses, without granting full Truesight, Darkness, visual-illusion, or transformation behavior.",
-            "owner": "battle-runtime spell invocation/effect lifecycle plus observer-sight witness boundary",
-            "requiredOutput": "Supported-profile Unit claim, deterministic admission/projection evidence, focused battle-runtime tests, and promoted Quint/runtime parity for the self effect, duration cleanup, observer-scoped Invisible benefit denial, and Ethereal visibility witness facts without full Truesight behavior.",
-            "title": "See Invisibility Observer Sight Runtime Support"
-          }
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "table sight and plane witness provider",
+          "reason": "The battle runtime owns the spell invocation and self effect lifecycle, but object visibility, Ethereal targeting, cover, sight-line, and plane membership remain caller-supplied observer witnesses rather than stored battle geometry or duplicated target state."
+        },
+        "profileIds": [
+          "spell.invocation-see-invisible-observer-sight"
         ],
-        "futureProfileOwner": "battle-runtime spell invocation/effect lifecycle plus observer-sight witness boundary",
-        "reason": "See Invisibility is authored and installed as an SRD Surface Spell Definition with catalog-level self sight-override metadata only. Runtime support remains blocked on an observer-scoped sight witness; Task 44 claims no battle-runtime profile, Invisible interaction support, or Ethereal Plane visibility execution.",
-        "tag": "unsupported-profile"
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action level-2 Spell Slot casting",
+          "self timed Spell Effect for 1 hour without Concentration",
+          "observer-scoped creature visibility over the Invisible condition without removing or rewriting the target's condition state",
+          "Hidden state remains independently authoritative and is not duplicated as visibility state",
+          "caller-witnessed Invisible object visibility remains observer-scoped and requires Invisible, sight-line, and opaque-cover witness facts",
+          "caller-witnessed Ethereal visibility remains observer-scoped and requires plane, sight-line, and cover witness facts without granting Truesight behavior",
+          "duration cleanup removes the spell-owned observer effect"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-see-invisibility.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-see-invisible-observer-sight",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-see-invisibility.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the authored See Invisibility spell and owns Magic Action and Spell Slot spend, the one-hour self effect, observer-scoped creature visibility over the Invisible condition, and duration cleanup. Object visibility and Ethereal visibility remain caller-witnessed observer facts rather than stored geometry, plane, cover, or duplicated condition state.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT"
+          ],
+          "title": "Spell invocation applies a timed self observer-sight effect that reveals Invisible creatures and caller-witnessed Invisible or Ethereal targets without mutating target state",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-see-invisibility.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-see-invisibility.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/see_invisibility.json",
       "unitId": "see_invisibility"
     },

@@ -93,6 +93,7 @@ module battleRuntimeArmorClass {
         | FeatherFallMitigation(_) => false
         | SanctuaryWard(_) => false
         | InvisibilityCondition(_) => false
+        | SeeInvisibleAndEthereal(_) => false
         | MindSpikeConcentrationDuration(_) => false
         | SleepPendingRepeatSave(_) => false
         | SleepUnconscious(_) => false

@@ -230,6 +230,9 @@ flowchart TD
   and applies HP healing through the battle HP boundary.
 - Character-derived action-time spell acts come from retained Spell Records
   plus runtime Spell Slot, class-feature invocation, and active-effect state.
+  `see_invisibility` is the narrow observer-sight case: it stores only a timed
+  self effect on the caster, does not remove the target's Invisible condition,
+  and leaves object/Ethereal visibility at a table-witness boundary.
   Prepared spells normally spend the selected slot; cantrips do not. Favored
   Enemy adds Hunter's Mark as a feature-prepared spell and can invoke the same
   spell procedure through `classFeatureFreeCastSpellInvocationRef`, spending its

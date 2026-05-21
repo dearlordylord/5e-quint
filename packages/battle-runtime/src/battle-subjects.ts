@@ -157,6 +157,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "conditionImmunityAndTurnStartTemporaryHitPoints",
   "creatureTypeProtection",
   "blurAttackRollDefense",
+  "seeInvisibleObserverSight",
   "mirrorImageHitInterception",
   "conditionRemovalProtection",
   "directConditionRemoval",

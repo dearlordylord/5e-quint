@@ -145,6 +145,7 @@ module battleRuntimeSpellInvocation {
       | HideousLaughter => true
       | MistyStep => true
       | Blur => true
+      | SeeInvisibility => true
       | MirrorImage => true
       | MindSpike => true
       | AlterSelf => true

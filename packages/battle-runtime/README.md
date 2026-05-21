@@ -248,6 +248,11 @@ The support-profile parser surface should cover these profile families:
   self-targeted Dash spell profile. The cast immediately resolves Dash through
   the shared Dash movement-budget owner, starts Concentration, and stores only a
   concentration-owned permission that later projects Dash as a Bonus Action.
+- `SpellProfile.seeInvisibleObserverSight`: a Magic Action, slot-spent,
+  self-targeted observer-sight profile. The cast stores only a timed self
+  effect on the observer. Creature visibility stays observer-scoped, and object
+  or Ethereal visibility remains a caller-witness boundary rather than stored
+  geometry or duplicated condition state.
 - `SpellProfile.cantripSpellAttack`: an action-cast cantrip spell attack damage
   profile, with supported rider effects carried as profile data. Pure damage
   cantrips such as Poison Spray carry an empty rider list. Creature-or-object

@@ -356,6 +356,14 @@ export function supportedSpellInvocationRef(
       procedure: "blurAttackRollDefense",
     };
   }
+  if (invocation.procedure === "seeInvisibleObserverSight") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "seeInvisibleObserverSight",
+    };
+  }
   if (invocation.procedure === "mirrorImageHitInterception") {
     return {
       tag: "spellSlot",

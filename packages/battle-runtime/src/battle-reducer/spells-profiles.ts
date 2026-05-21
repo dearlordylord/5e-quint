@@ -160,6 +160,7 @@ import {
   supportedPreparedMirrorImageHitInterceptionSpellProfile,
   supportedPreparedRollModifierSpellProfile,
   supportedPreparedScalarBuffSpellProfile,
+  supportedPreparedSeeInvisibleObserverSightSpellProfile,
   supportedPreparedSelfTransformationModeSpellProfile,
   supportedPreparedSelfTeleportSpellProfile,
   supportedPreparedSpellCreatedHeldObjectProfile,
@@ -420,6 +421,13 @@ export function supportedSpellActs(
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedBlurAttackRollDefenseSpellProfile(
+        actor.combatantId,
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      supportedPreparedSeeInvisibleObserverSightSpellProfile(
         actor.combatantId,
         spell,
         spellcasting.spellSlots,

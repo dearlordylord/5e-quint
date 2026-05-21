@@ -280,3 +280,4 @@
 {"unitId":"darkness","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME","ownerPath":"packages/battle-runtime/src/unit-profile-admission-darkness.test.ts"}}
 {"unitId":"dispel_magic","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING","ownerPath":"packages/battle-runtime/src/unit-profile-admission-dispel-magic.test.ts"}}
 {"unitId":"antimagic_field","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-ANTIMAGIC-FIELD-TRACKED-LIGHT-SUPPRESSION","ownerPath":"packages/battle-runtime/src/unit-profile-admission-antimagic-field.test.ts"}}
+{"unitId":"see_invisibility","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT","ownerPath":"packages/battle-runtime/src/unit-profile-admission-see-invisibility.test.ts"}}
