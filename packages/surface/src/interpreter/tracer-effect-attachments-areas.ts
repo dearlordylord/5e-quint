@@ -48,6 +48,8 @@ export type AttachmentAndAreaEffectAtom = Extract<
       | "area_emits_dim_light"
       | "area_is_lightly_obscured"
       | "area_is_heavily_obscured"
+      | "area_anchor_or_layering_requirement"
+      | "area_section_burns_away"
       | "area_has_strong_wind"
       | "prevent_ranged_weapon_attacks"
       | "area_movement_cost_multiplier"
@@ -428,6 +430,39 @@ export function traceAttachmentAndAreaEffectAtom(
         category: "effect",
         atomKind: "area_is_heavily_obscured",
         label: "area_is_heavily_obscured",
+      });
+      return id;
+    }
+    case "area_anchor_or_layering_requirement": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "area_anchor_or_layering_requirement",
+        label: [
+          "area_anchor_or_layering_requirement",
+          `anchor: ${e.anchor.count} solid masses`,
+          `layering: ${e.layering.surfaces.join(", ")}`,
+          `flat depth: ${e.layering.flatSurfaceDepthFeet} ft`,
+          `unmet: ${e.unmetOutcome.kind} at ${e.unmetOutcome.timing}`,
+        ].join("\n"),
+      });
+      return id;
+    }
+    case "area_section_burns_away": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "area_section_burns_away",
+        label: [
+          "area_section_burns_away",
+          `${describeAreaShape(e.section)} exposed to ${e.exposure}`,
+          `after: ${describeDurationValue(e.burnsAwayAfter)}`,
+          `start-turn fire: ${describeDiceAmount(
+            e.creatureStartsTurnInFireDamage.amount,
+          )} ${e.creatureStartsTurnInFireDamage.damageType}`,
+        ].join("\n"),
       });
       return id;
     }

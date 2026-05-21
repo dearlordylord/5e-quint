@@ -6,6 +6,7 @@ import type {
 } from "../surface/types.ts";
 import type { TraceEdge, TraceNode } from "./tracer-model.ts";
 import {
+  describeAbilityCheck,
   describeDc,
   describeRandomTableOutcomeRange,
   describeRandomTableRoll,
@@ -265,7 +266,7 @@ export function tracePhase(
         id: resId,
         category: "resolution",
         atomKind: "ability_check",
-        label: `ability_check_gate [phase ${phaseNumber}]\n${phase.ability.toUpperCase()} check\nDC ${phase.dc}${autoLabel}`,
+        label: `ability_check_gate [phase ${phaseNumber}]\n${describeAbilityCheck(phase.ability, phase.skill)} check\nDC ${phase.dc}${autoLabel}`,
       });
       edges.push({ from: ctx.procId, to: resId, relation: "grants" });
       edges.push({ from: resId, to: attId, relation: "attaches_to" });

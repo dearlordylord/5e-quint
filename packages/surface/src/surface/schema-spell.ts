@@ -697,6 +697,10 @@ type EffectAtom =
         | "spell_duration";
     }
   | {
+      readonly kind: "apply_condition_while_in_area_or_until_escape";
+      readonly condition: "restrained";
+    }
+  | {
       readonly kind: "suppress_condition_self_end";
       readonly condition: "prone";
     }
@@ -1337,6 +1341,32 @@ type EffectAtom =
   | { readonly kind: "area_emits_dim_light" }
   | { readonly kind: "area_is_lightly_obscured" }
   | { readonly kind: "area_is_heavily_obscured" }
+  | {
+      readonly kind: "area_anchor_or_layering_requirement";
+      readonly anchor: {
+        readonly kind: "between_solid_masses";
+        readonly count: 2;
+      };
+      readonly layering: {
+        readonly kind: "across_surface";
+        readonly surfaces: readonly ["floor", "wall", "ceiling"];
+        readonly flatSurfaceDepthFeet: 5;
+      };
+      readonly unmetOutcome: {
+        readonly kind: "collapse_and_end_effect";
+        readonly timing: "start_of_caster_next_turn";
+      };
+    }
+  | {
+      readonly kind: "area_section_burns_away";
+      readonly section: { readonly kind: "cube"; readonly sideFeet: 5 };
+      readonly exposure: "fire";
+      readonly burnsAwayAfter: { readonly unit: "round"; readonly amount: 1 };
+      readonly creatureStartsTurnInFireDamage: {
+        readonly damageType: "fire";
+        readonly amount: DiceAmount;
+      };
+    }
   | { readonly kind: "area_has_strong_wind" }
   | { readonly kind: "prevent_ranged_weapon_attacks" }
   | {
@@ -1461,6 +1491,7 @@ type ActivationPhase =
       readonly kind: "ability_check_gate";
       readonly attachment: Attachment;
       readonly ability: Ability;
+      readonly skill?: Skill;
       readonly dc: number;
       readonly onPass: EffectAtom;
       readonly onFail?: EffectAtom;
@@ -1497,6 +1528,7 @@ type OngoingEffect =
   | {
       readonly kind: "ability_check_gate";
       readonly ability: Ability;
+      readonly skill?: Skill;
       readonly dc: DcSource;
       readonly onPass: EffectAtom;
       readonly onFail?: EffectAtom;
@@ -2096,6 +2128,7 @@ export const DcSourceSchema = Schema.Union(
 );
 
 export const OngoingActionCostSchema = Schema.Union(
+  Schema.Struct({ kind: Schema.Literal("action") }),
   Schema.Struct({ kind: Schema.Literal("bonus_action") }),
   Schema.Struct({
     kind: Schema.Literal("standard_action"),
@@ -2143,6 +2176,7 @@ export const OngoingTriggerSchema = Schema.Union(
     perFeet: optionalExact(Schema.Number),
   }),
   Schema.Struct({ kind: Schema.Literal("on_creature_enters_area") }),
+  Schema.Struct({ kind: Schema.Literal("on_creature_starts_turn_in_area") }),
   Schema.Struct({ kind: Schema.Literal("on_creature_ends_turn_in_area") }),
   Schema.Struct({
     kind: Schema.Literal("on_creature_ends_turn_within_distance_of_area"),
@@ -2178,6 +2212,10 @@ export const OngoingTriggerSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("on_attached_spends_action"),
+    cost: OngoingActionCostSchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("on_affected_creature_spends_action"),
     cost: OngoingActionCostSchema,
   }),
   Schema.Struct({ kind: Schema.Literal("on_creature_studies") }),
@@ -2478,6 +2516,10 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         duration: optionalExact(
           Schema.Literal("current_turn", "end_of_next_turn", "spell_duration"),
         ),
+      }),
+      strictStruct({
+        kind: Schema.Literal("apply_condition_while_in_area_or_until_escape"),
+        condition: Schema.Literal("restrained"),
       }),
       Schema.Struct({
         kind: Schema.Literal("suppress_condition_self_end"),
@@ -3282,6 +3324,42 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       Schema.Struct({ kind: Schema.Literal("area_emits_dim_light") }),
       Schema.Struct({ kind: Schema.Literal("area_is_lightly_obscured") }),
       Schema.Struct({ kind: Schema.Literal("area_is_heavily_obscured") }),
+      strictStruct({
+        kind: Schema.Literal("area_anchor_or_layering_requirement"),
+        anchor: strictStruct({
+          kind: Schema.Literal("between_solid_masses"),
+          count: Schema.Literal(2),
+        }),
+        layering: strictStruct({
+          kind: Schema.Literal("across_surface"),
+          surfaces: Schema.Tuple(
+            Schema.Literal("floor"),
+            Schema.Literal("wall"),
+            Schema.Literal("ceiling"),
+          ),
+          flatSurfaceDepthFeet: Schema.Literal(5),
+        }),
+        unmetOutcome: strictStruct({
+          kind: Schema.Literal("collapse_and_end_effect"),
+          timing: Schema.Literal("start_of_caster_next_turn"),
+        }),
+      }),
+      strictStruct({
+        kind: Schema.Literal("area_section_burns_away"),
+        section: strictStruct({
+          kind: Schema.Literal("cube"),
+          sideFeet: Schema.Literal(5),
+        }),
+        exposure: Schema.Literal("fire"),
+        burnsAwayAfter: strictStruct({
+          unit: Schema.Literal("round"),
+          amount: Schema.Literal(1),
+        }),
+        creatureStartsTurnInFireDamage: strictStruct({
+          damageType: Schema.Literal("fire"),
+          amount: DiceAmountSchema,
+        }),
+      }),
       Schema.Struct({ kind: Schema.Literal("area_has_strong_wind") }),
       Schema.Struct({ kind: Schema.Literal("prevent_ranged_weapon_attacks") }),
       Schema.Struct({
@@ -3458,6 +3536,7 @@ export const ActivationPhaseSchema: Schema.suspend<
       kind: Schema.Literal("ability_check_gate"),
       attachment: AttachmentSchema,
       ability: AbilitySchema,
+      skill: optionalExact(SkillSchema),
       dc: Schema.Number,
       onPass: EffectAtomSchema,
       onFail: optionalExact(EffectAtomSchema),
@@ -3503,6 +3582,7 @@ export const OngoingEffectSchema: Schema.suspend<
     Schema.Struct({
       kind: Schema.Literal("ability_check_gate"),
       ability: AbilitySchema,
+      skill: optionalExact(SkillSchema),
       dc: DcSourceSchema,
       onPass: EffectAtomSchema,
       onFail: optionalExact(EffectAtomSchema),

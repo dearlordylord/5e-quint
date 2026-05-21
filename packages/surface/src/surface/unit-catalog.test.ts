@@ -959,6 +959,118 @@ describe("SRD Unit catalog boundary", () => {
     }
   });
 
+  test("keeps Web's SRD area hazard shape as executable Surface facts", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const web = result.catalog.requireUnit("web");
+
+    expect(web.kind).toBe("spell");
+    if (web.kind !== "spell") return;
+    expect(web.mechanics.family).toBe("ongoing_effect");
+    if (web.mechanics.family !== "ongoing_effect") return;
+
+    expect(web.mechanics).toMatchObject({
+      level: 2,
+      school: "conjuration",
+      castingTime: { kind: "action" },
+      range: { kind: "point", feet: 60 },
+      components: { v: true, s: true, m: "a bit of spiderweb" },
+      duration: { kind: "concentration", upTo: { unit: "hour", amount: 1 } },
+      attachment: {
+        kind: "hole",
+        holeId: "web_point",
+        label: "spell origin point",
+        value: {
+          kind: "area",
+          shape: { kind: "cube", sideFeet: 20 },
+          origin: { kind: "point_within_range" },
+        },
+      },
+    });
+    expect(web.mechanics.operations).toEqual([
+      {
+        trigger: { kind: "passive" },
+        effect: { kind: "area_is_difficult_terrain" },
+      },
+      {
+        trigger: { kind: "passive" },
+        effect: { kind: "area_is_lightly_obscured" },
+      },
+      {
+        trigger: { kind: "passive" },
+        effect: {
+          kind: "area_anchor_or_layering_requirement",
+          anchor: { kind: "between_solid_masses", count: 2 },
+          layering: {
+            kind: "across_surface",
+            surfaces: ["floor", "wall", "ceiling"],
+            flatSurfaceDepthFeet: 5,
+          },
+          unmetOutcome: {
+            kind: "collapse_and_end_effect",
+            timing: "start_of_caster_next_turn",
+          },
+        },
+      },
+      {
+        trigger: { kind: "passive" },
+        effect: {
+          kind: "area_section_burns_away",
+          section: { kind: "cube", sideFeet: 5 },
+          exposure: "fire",
+          burnsAwayAfter: { unit: "round", amount: 1 },
+          creatureStartsTurnInFireDamage: {
+            damageType: "fire",
+            amount: { kind: "fixed", expr: { dice: 2, dieSize: 4 } },
+          },
+        },
+      },
+      {
+        trigger: { kind: "on_creature_enters_area" },
+        usageLimit: { kind: "once_per_turn" },
+        effect: {
+          kind: "save_gate",
+          ability: "dex",
+          dc: { kind: "caster_spell_save_dc" },
+          onFail: {
+            kind: "apply_condition_while_in_area_or_until_escape",
+            condition: "restrained",
+          },
+          onSuccess: { kind: "none" },
+        },
+      },
+      {
+        trigger: { kind: "on_creature_starts_turn_in_area" },
+        effect: {
+          kind: "save_gate",
+          ability: "dex",
+          dc: { kind: "caster_spell_save_dc" },
+          onFail: {
+            kind: "apply_condition_while_in_area_or_until_escape",
+            condition: "restrained",
+          },
+          onSuccess: { kind: "none" },
+        },
+      },
+      {
+        trigger: {
+          kind: "on_affected_creature_spends_action",
+          cost: { kind: "action" },
+        },
+        predicate: { kind: "has_condition", condition: "restrained" },
+        effect: {
+          kind: "ability_check_gate",
+          ability: "str",
+          skill: "athletics",
+          dc: { kind: "caster_spell_save_dc" },
+          onPass: { kind: "remove_condition", condition: "restrained" },
+        },
+      },
+    ]);
+  });
+
   test("decodes Darkness as a Concentration point-origin heavily obscuring Sphere", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 

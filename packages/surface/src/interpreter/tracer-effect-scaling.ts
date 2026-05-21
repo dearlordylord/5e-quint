@@ -75,6 +75,7 @@ export function traceEffectAtomScaling(
     case "modify_ac_set_base":
     case "modify_save_dc":
     case "apply_condition":
+    case "apply_condition_while_in_area_or_until_escape":
     case "suppress_condition_self_end":
     case "restrict_action_usage":
     case "command_target_next_turn":
@@ -207,6 +208,7 @@ export function traceEffectAtomScaling(
     case "area_emits_dim_light":
     case "area_is_lightly_obscured":
     case "area_is_heavily_obscured":
+    case "area_anchor_or_layering_requirement":
     case "area_has_strong_wind":
     case "prevent_ranged_weapon_attacks":
     case "area_movement_cost_multiplier":
@@ -286,6 +288,16 @@ export function traceEffectAtomScaling(
       return;
     case "damage_structure":
       traceDiceAmountScaling(e.amount, effectId, slotId, nodes, edges, ids);
+      return;
+    case "area_section_burns_away":
+      traceDiceAmountScaling(
+        e.creatureStartsTurnInFireDamage.amount,
+        effectId,
+        slotId,
+        nodes,
+        edges,
+        ids,
+      );
       return;
     case "composite":
       for (const child of e.effects) {

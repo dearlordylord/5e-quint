@@ -97,13 +97,13 @@
     {
       "number": 16,
       "id": "L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Web Surface Area Hazard Shape"
     },
     {
       "number": 17,
       "id": "L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Web Restraint Hazard Runtime"
     },
     {
@@ -230,8 +230,8 @@ The final task is intentionally blocked on every real task in this plan and plac
 | 13 | L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE - Gust of Wind Gas And Flame Presentation Closure | done | completed baseline | A lane; Unit `gust_of_wind`. |
 | 14 | L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE - Magic Weapon Surface Item Enhancement Shape | done | completed baseline | A lane; Unit `magic_weapon`. |
 | 15 | L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME - Magic Weapon Item Enhancement Runtime | done | L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE | A lane; Unit `magic_weapon`. |
-| 16 | L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE - Web Surface Area Hazard Shape | ready-for-research | completed baseline | A lane; Unit `web`. |
-| 17 | L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME - Web Restraint Hazard Runtime | blocked | L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE | A lane; Unit `web`. |
+| 16 | L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE - Web Surface Area Hazard Shape | done | completed baseline | A lane; Unit `web`. |
+| 17 | L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME - Web Restraint Hazard Runtime | ready-for-research | L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE | A lane; Unit `web`. |
 | 18 | L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE - Web Terrain Obscurement Fire Boundary | blocked | L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE, L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME | A lane; Unit `web`. |
 | 19 | L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME - Darkness Point-Origin Area Runtime Support | ready-for-research | L12G-MISSING-DARKNESS | A lane; Unit `darkness`. |
 | 20 | L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH - Darkness Object-Origin Branch | ready-for-research | L12G-MISSING-DARKNESS | A lane; Unit `darkness`. |
@@ -854,7 +854,7 @@ Acceptance:
 
 ### Task 16 - L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE - Web Surface Area Hazard Shape
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `web`.
 Origin: Follow-up split from `web` unit claim and `L12G-SPELL-WEB`.
@@ -893,7 +893,7 @@ Acceptance:
 
 ### Task 17 - L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME - Web Restraint Hazard Runtime
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Unit: `web`.
 Origin: Follow-up split from `web` unit claim and `L12G-SPELL-WEB`.

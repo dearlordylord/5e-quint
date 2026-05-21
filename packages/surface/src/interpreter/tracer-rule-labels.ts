@@ -14,6 +14,7 @@ import type {
   AreaShapeSpec,
   Attachment,
   AttachmentRangeOrigin,
+  Ability,
   CastingTime,
   ClassLevelChoiceCount,
   ClassFeatureMechanics,
@@ -37,6 +38,7 @@ import type {
   ReactionTrigger,
   ResistanceSourceFilter,
   SavingThrowSourceFilter,
+  Skill,
   SkillFilter,
   SlotScaling,
   SpellAccessMode,
@@ -1005,6 +1007,14 @@ export function describeSignedNumber(value: number): string {
 
 export function capitalizeWords(value: string): string {
   return value.replace(/\b[a-z]/g, (c) => c.toUpperCase());
+}
+
+export function describeAbilityCheck(
+  ability: Ability,
+  skill: Skill | undefined,
+): string {
+  const abilityLabel = ability.toUpperCase();
+  return skill === undefined ? abilityLabel : `${abilityLabel} (${skill})`;
 }
 
 export function describeAbilityScoreBounds(
