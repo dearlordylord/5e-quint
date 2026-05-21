@@ -1,12 +1,15 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING dispel_magic
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-ongoing-spell-ending
 import type { ActivationPhase, SpellRecord } from "@dnd/surface/surface/types";
+import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
+import { Round } from "@dnd/shared/types";
 import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 import {
   continualFlameUnitId,
   dispelMagicUnitId,
+  heatMetalUnitId,
   spellCasterId,
   spellTargetId,
 } from "./unit-profile-admission-catalog-support.ts";
@@ -35,6 +38,7 @@ import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-l
 import { battleSpellEffectOccurrenceId } from "./identity.ts";
 import { BattleHoleSchema, BattleSnapshotSchema } from "./index.ts";
 import type {
+  BattleActiveEffect,
   BattleLightEmitter,
   BattleTrackedOngoingSpellLightEmitter,
 } from "./index.ts";
@@ -394,6 +398,196 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     });
   });
 
+  test("object targeting ends tracked active-effect ongoing spells and clears concentration when no spell effects remain", () => {
+    const objectId = battleObjectId("dispel-heat-metal-object-target");
+    const state = stateWithActiveEffects([
+      heatMetalObjectContactDamageEffect({
+        objectId,
+        sourceSpellLevel: 2,
+      }),
+    ]);
+    const act = spellAct({
+      state,
+      spellId: dispelMagicUnitId,
+      slotLevel: 3,
+    });
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        ongoingSpellTargetFill({
+          hole: requireHole(act.initialHoles, "ongoingSpellTargetChoice"),
+          target: { kind: "object", objectId },
+        }),
+      ],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      state: {
+        combatants: expect.any(Map),
+      },
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Dispel Magic to resolve.");
+    }
+    const caster = resolved.state.combatants.get(spellCasterId);
+    expect(caster?.concentration).toBeNull();
+    expect(
+      caster?.activeEffects.filter(
+        (effect) => effect.kind === "spellObjectContactDamage",
+      ),
+    ).toEqual([]);
+  });
+
+  test("object targeting ends matching tracked active effects on the same object across multiple owners", () => {
+    const objectId = battleObjectId("dispel-shared-heat-metal-object-target");
+    const state = stateWithCombatantActiveEffects({
+      caster: {
+        concentration: {
+          sourceSpellId: heatMetalUnitId,
+          effectKind: "spellEffect",
+        },
+        activeEffects: [
+          heatMetalObjectContactDamageEffect({
+            objectId,
+            sourceSpellLevel: 2,
+          }),
+        ],
+      },
+      target: {
+        concentration: {
+          sourceSpellId: heatMetalUnitId,
+          effectKind: "spellEffect",
+        },
+        activeEffects: [
+          heatMetalObjectContactDamageEffect({
+            objectId,
+            sourceSpellLevel: 2,
+            sourceCombatantId: spellTargetId,
+            effectId: `${spellTargetId}:${heatMetalUnitId}:${objectId}`,
+          }),
+        ],
+      },
+    });
+    const act = spellAct({
+      state,
+      spellId: dispelMagicUnitId,
+      slotLevel: 3,
+    });
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        ongoingSpellTargetFill({
+          hole: requireHole(act.initialHoles, "ongoingSpellTargetChoice"),
+          target: { kind: "object", objectId },
+        }),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Dispel Magic to resolve.");
+    }
+    const caster = resolved.state.combatants.get(spellCasterId);
+    const target = resolved.state.combatants.get(spellTargetId);
+    expect(caster?.concentration).toBeNull();
+    expect(target?.concentration).toBeNull();
+    expect(
+      caster?.activeEffects.some(
+        (effect) => effect.kind === "spellObjectContactDamage",
+      ),
+    ).toBe(false);
+    expect(
+      target?.activeEffects.some(
+        (effect) => effect.kind === "spellObjectContactDamage",
+      ),
+    ).toBe(false);
+  });
+
+  test("higher-level tracked active-effect ongoing spells require a spellcasting ability check", () => {
+    const objectId = battleObjectId("dispel-heat-metal-higher-level-object");
+    const state = stateWithActiveEffects([
+      heatMetalObjectContactDamageEffect({
+        objectId,
+        sourceSpellLevel: 4,
+      }),
+    ]);
+    const act = spellAct({
+      state,
+      spellId: dispelMagicUnitId,
+      slotLevel: 3,
+    });
+    const targetFill = ongoingSpellTargetFill({
+      hole: requireHole(act.initialHoles, "ongoingSpellTargetChoice"),
+      target: { kind: "object", objectId },
+    });
+
+    const needsCheck = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill],
+    });
+    const checkHole = requireResultHole(needsCheck, "spellcastingAbilityCheck");
+
+    expect(checkHole).toEqual(
+      expect.objectContaining({
+        dc: 14,
+        spellcastingAbilityCheck: expect.objectContaining({
+          target: { kind: "object", objectId },
+          effect: expect.objectContaining({
+            kind: "spellActiveEffect",
+            activeEffectKind: "spellObjectContactDamage",
+          }),
+          contestedSpellLevel: 4,
+        }),
+      }),
+    );
+
+    const failed = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill, abilityCheckFill(checkHole, 13)],
+    });
+    expect(failed).toMatchObject({
+      tag: "resolved",
+    });
+    if (failed.tag !== "resolved") {
+      throw new Error("Expected failed higher-level Dispel Magic to resolve.");
+    }
+    expect(
+      failed.state.combatants
+        .get(spellCasterId)
+        ?.activeEffects.some(
+          (effect) => effect.kind === "spellObjectContactDamage",
+        ),
+    ).toBe(true);
+
+    const succeeded = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill, abilityCheckFill(checkHole, 14)],
+    });
+    expect(succeeded).toMatchObject({
+      tag: "resolved",
+    });
+    if (succeeded.tag !== "resolved") {
+      throw new Error(
+        "Expected successful higher-level Dispel Magic to resolve.",
+      );
+    }
+    expect(
+      succeeded.state.combatants
+        .get(spellCasterId)
+        ?.activeEffects.some(
+          (effect) => effect.kind === "spellObjectContactDamage",
+        ),
+    ).toBe(false);
+  });
+
   test("magical-effect targeting removes only the selected ongoing spell effect", () => {
     const objectId = battleObjectId("dispel-magical-effect-object");
     const selectedEmitter = objectSpellEmitter({
@@ -448,6 +642,89 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     expect(resolved.state.lightEmitters).toHaveLength(1);
   });
 
+  test("magical-effect targeting removes only the selected tracked active effect when multiple owners share the same object", () => {
+    const objectId = battleObjectId("dispel-shared-magical-effect-object");
+    const selectedEffect = heatMetalObjectContactDamageEffect({
+      objectId,
+      sourceSpellLevel: 2,
+      effectId: `${spellCasterId}:${heatMetalUnitId}:${objectId}`,
+    });
+    const retainedEffect = heatMetalObjectContactDamageEffect({
+      objectId,
+      sourceSpellLevel: 2,
+      sourceCombatantId: spellTargetId,
+      effectId: `${spellTargetId}:${heatMetalUnitId}:${objectId}`,
+    });
+    const state = stateWithCombatantActiveEffects({
+      caster: {
+        concentration: {
+          sourceSpellId: heatMetalUnitId,
+          effectKind: "spellEffect",
+        },
+        activeEffects: [selectedEffect],
+      },
+      target: {
+        concentration: {
+          sourceSpellId: heatMetalUnitId,
+          effectKind: "spellEffect",
+        },
+        activeEffects: [retainedEffect],
+      },
+    });
+    const act = spellAct({
+      state,
+      spellId: dispelMagicUnitId,
+      slotLevel: 3,
+    });
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        ongoingSpellTargetFill({
+          hole: requireHole(act.initialHoles, "ongoingSpellTargetChoice"),
+          target: {
+            kind: "magicalEffect",
+            effect: {
+              kind: "spellActiveEffect",
+              activeEffectKind: "spellObjectContactDamage",
+              sourceEffectId: battleSpellEffectOccurrenceId(
+                selectedEffect.effectId,
+              ),
+            },
+          },
+        }),
+      ],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Dispel Magic to resolve.");
+    }
+    const caster = resolved.state.combatants.get(spellCasterId);
+    const target = resolved.state.combatants.get(spellTargetId);
+    expect(caster?.concentration).toBeNull();
+    expect(target?.concentration).toEqual({
+      sourceSpellId: heatMetalUnitId,
+      effectKind: "spellEffect",
+    });
+    expect(
+      caster?.activeEffects.some(
+        (effect) => effect.kind === "spellObjectContactDamage",
+      ),
+    ).toBe(false);
+    const remaining = target?.activeEffects.filter(
+      (effect) => effect.kind === "spellObjectContactDamage",
+    );
+    expect(remaining).toHaveLength(1);
+    expect(remaining?.[0]).toMatchObject({
+      kind: "spellObjectContactDamage",
+      effectId: retainedEffect.effectId,
+    });
+  });
+
   test("snapshot codec rejects out-of-domain ongoing spell effect levels", () => {
     const objectId = battleObjectId("dispel-invalid-level-codec-object");
     const state = stateWithLightEmitters([
@@ -491,6 +768,78 @@ function stateWithLightEmitters(
   };
 }
 
+function stateWithActiveEffects(
+  activeEffects: readonly BattleActiveEffect[],
+  input: {
+    readonly concentration?: {
+      readonly sourceSpellId: string;
+      readonly effectKind: "spellEffect";
+    } | null;
+  } = {
+    concentration: {
+      sourceSpellId: heatMetalUnitId,
+      effectKind: "spellEffect",
+    },
+  },
+): BattleState {
+  const state = stateWithLightEmitters([]);
+  const caster = state.combatants.get(spellCasterId);
+  if (caster === undefined) {
+    throw new Error("Expected spell caster combatant.");
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(spellCasterId, {
+      ...caster,
+      concentration: input.concentration ?? null,
+      activeEffects: [...caster.activeEffects, ...activeEffects],
+    }),
+  };
+}
+
+function stateWithCombatantActiveEffects(input: {
+  readonly caster?: {
+    readonly activeEffects: readonly BattleActiveEffect[];
+    readonly concentration?: {
+      readonly sourceSpellId: string;
+      readonly effectKind: "spellEffect";
+    } | null;
+  };
+  readonly target?: {
+    readonly activeEffects: readonly BattleActiveEffect[];
+    readonly concentration?: {
+      readonly sourceSpellId: string;
+      readonly effectKind: "spellEffect";
+    } | null;
+  };
+}): BattleState {
+  const state = stateWithLightEmitters([]);
+  const combatants = new Map(state.combatants);
+  if (input.caster !== undefined) {
+    const caster = combatants.get(spellCasterId);
+    if (caster === undefined) {
+      throw new Error("Expected spell caster combatant.");
+    }
+    combatants.set(spellCasterId, {
+      ...caster,
+      concentration: input.caster.concentration ?? null,
+      activeEffects: [...caster.activeEffects, ...input.caster.activeEffects],
+    });
+  }
+  if (input.target !== undefined) {
+    const target = combatants.get(spellTargetId);
+    if (target === undefined) {
+      throw new Error("Expected spell target combatant.");
+    }
+    combatants.set(spellTargetId, {
+      ...target,
+      concentration: input.target.concentration ?? null,
+      activeEffects: [...target.activeEffects, ...input.target.activeEffects],
+    });
+  }
+  return { ...state, combatants };
+}
+
 function objectSpellEmitter(input: {
   readonly objectId: ReturnType<typeof battleObjectId>;
   readonly sourceSpellId: string;
@@ -514,6 +863,37 @@ function objectSpellEmitter(input: {
     },
     opaqueCoverInteraction: { kind: "blocksEmission" },
     expiresAt: { kind: "untilDispelled" },
+  };
+}
+
+function heatMetalObjectContactDamageEffect(input: {
+  readonly objectId: ReturnType<typeof battleObjectId>;
+  readonly sourceSpellLevel: number;
+  readonly sourceCombatantId?: typeof spellCasterId | typeof spellTargetId;
+  readonly effectId?: string;
+}): Extract<BattleActiveEffect, { readonly kind: "spellObjectContactDamage" }> {
+  const sourceCombatantId = input.sourceCombatantId ?? spellCasterId;
+  return {
+    kind: "spellObjectContactDamage",
+    effectId: battleSpellEffectOccurrenceId(
+      input.effectId ??
+        `${sourceCombatantId}:${heatMetalUnitId}:${input.objectId}`,
+    ),
+    sourceSpellId: heatMetalUnitId,
+    sourceCombatantId,
+    sourceSpellLevel: testBattleSpellEffectLevel(input.sourceSpellLevel),
+    objectId: input.objectId,
+    rangeFeet: movementFeet(60),
+    damage: {
+      expr: { dice: 2, dieSize: 8 },
+      damageType: "fire",
+    },
+    startedOn: { actorId: sourceCombatantId, round: Round(1) },
+    expiresAt: {
+      kind: "concentration",
+      combatantId: sourceCombatantId,
+      durationTicks: elapsedTimeTicks(10),
+    },
   };
 }
 

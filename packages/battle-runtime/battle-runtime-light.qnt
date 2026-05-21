@@ -471,6 +471,44 @@ module battleRuntimeLight {
       | ObjectInvisibleRevealLightEmitter(_) => true
     })
 
+  pure def dispelMagicObjectTargetActiveEffects(
+    effects: Set[ActiveEffect],
+    objectId: int,
+    slotLevel: int,
+    successfulCheckEffectIds: Set[int],
+  ): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | HeatMetalObjectContactDamage(data) =>
+          data.objectId != objectId
+          or not(dispelMagicEndsTrackedOngoingSpell(
+            slotLevel,
+            successfulCheckEffectIds,
+            data.effectId,
+            data.sourceSpellLevel,
+          ))
+      | _ => true
+    })
+
+  pure def dispelMagicMagicalEffectTargetActiveEffects(
+    effects: Set[ActiveEffect],
+    effectId: int,
+    slotLevel: int,
+    successfulCheckEffectIds: Set[int],
+  ): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | HeatMetalObjectContactDamage(data) =>
+          not(
+            data.effectId == effectId and
+            dispelMagicEndsTrackedOngoingSpell(
+              slotLevel,
+              successfulCheckEffectIds,
+              data.effectId,
+              data.sourceSpellLevel,
+            )
+          )
+      | _ => true
+    })
+
   pure def ongoingSpellTrackingSourceEffectIdIn(
     tracking: OngoingSpellTracking,
     sourceEffectIds: Set[int],

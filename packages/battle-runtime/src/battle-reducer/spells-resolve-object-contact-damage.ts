@@ -58,6 +58,7 @@ import {
   spellDamageHole,
   validateSpellDamageFill,
 } from "./spells-damage-fills.ts";
+import { spellInvocationEffectiveSpellLevel } from "./spells-effective-level.ts";
 import { type SpellFillSet } from "./spells-resolve-fill-set.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import { spendSpellCastResources } from "./spells-resolve-resources.ts";
@@ -1148,6 +1149,7 @@ function applyObjectContactDamageActiveEffect(input: {
     }),
     sourceSpellId: input.invocation.spell.id,
     sourceCombatantId: input.actorId,
+    sourceSpellLevel: spellInvocationEffectiveSpellLevel(input.invocation),
     objectId: input.objectId,
     rangeFeet: input.invocation.rangeFeet,
     damage: input.invocation.damage,

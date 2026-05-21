@@ -6,6 +6,7 @@ module battleRuntimeObjectContactDamage {
   import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
+  import battleRuntimeLight.* from "./battle-runtime-light"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
   import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
 
@@ -15,13 +16,22 @@ module battleRuntimeObjectContactDamage {
   pure def heatMetalDamageDice(slotLevel: int): int =
     2 + (slotLevel - 2)
 
+  pure def heatMetalObjectContactDamageEffectId(source: Actor, objectId: int): int =
+    objectId * 2 + match source {
+      | Fighter => 0
+      | Goblin => 1
+    }
+
   pure def heatMetalObjectContactDamageEffect(
     state: BattleState,
+    source: Actor,
     objectId: int,
     slotLevel: int,
   ): ActiveEffect =
     HeatMetalObjectContactDamage({
+      effectId: heatMetalObjectContactDamageEffectId(source, objectId),
       objectId: objectId,
+      sourceSpellLevel: slotLevel,
       damageDice: heatMetalDamageDice(slotLevel),
       durationTicks: heatMetalDurationTicks,
       startedRound: state.initiative.round,
@@ -33,6 +43,15 @@ module battleRuntimeObjectContactDamage {
   ): Set[ActiveEffect] =
     effects.filter(effect => match effect {
       | HeatMetalObjectContactDamage(data) => data.objectId != objectId
+      | _ => true
+    })
+
+  pure def activeEffectsWithoutHeatMetalObjectContactDamageEffectId(
+    effects: Set[ActiveEffect],
+    effectId: int,
+  ): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | HeatMetalObjectContactDamage(data) => data.effectId != effectId
       | _ => true
     })
 
@@ -60,6 +79,111 @@ module battleRuntimeObjectContactDamage {
         | _ => 0
       })
       .fold(0, (highest, round) => if (highest > round) highest else round)
+
+  pure def activeEffectsContainHeatMetalObjectContactDamage(
+    effects: Set[ActiveEffect],
+  ): bool =
+    effects.exists(effect => match effect {
+      | HeatMetalObjectContactDamage(_) => true
+      | _ => false
+    })
+
+  pure def stateWithHeatMetalSourceConcentrationClearedIfNoObjectContactDamage(
+    before: BattleState,
+    after: BattleState,
+    source: Actor,
+  ): BattleState =
+    match source {
+      | Fighter =>
+          if (
+            activeEffectsContainHeatMetalObjectContactDamage(before.fighter.activeEffects) and
+            not(activeEffectsContainHeatMetalObjectContactDamage(after.fighter.activeEffects))
+          )
+            { ...after, fighter: { ...after.fighter, concentrating: false } }
+          else
+            after
+      | Goblin =>
+          if (
+            activeEffectsContainHeatMetalObjectContactDamage(before.goblin.activeEffects) and
+            not(activeEffectsContainHeatMetalObjectContactDamage(after.goblin.activeEffects))
+          )
+            { ...after, goblin: { ...after.goblin, concentrating: false } }
+          else
+            after
+    }
+
+  pure def stateWithHeatMetalConcentrationClearedAfterDispel(
+    before: BattleState,
+    after: BattleState,
+  ): BattleState = {
+    val fighterCleared =
+      stateWithHeatMetalSourceConcentrationClearedIfNoObjectContactDamage(before, after, Fighter)
+    stateWithHeatMetalSourceConcentrationClearedIfNoObjectContactDamage(before, fighterCleared, Goblin)
+  }
+
+  pure def resolveDispelMagicAgainstHeatMetalObjectTarget(
+    state: BattleState,
+    caster: Actor,
+    objectId: int,
+    slotLevel: int,
+    successfulCheckEffectIds: Set[int],
+  ): BattleState = {
+    val dispelled =
+      {
+        ...state,
+        fighter: {
+          ...state.fighter,
+          activeEffects: dispelMagicObjectTargetActiveEffects(
+            state.fighter.activeEffects,
+            objectId,
+            slotLevel,
+            successfulCheckEffectIds,
+          ),
+        },
+        goblin: {
+          ...state.goblin,
+          activeEffects: dispelMagicObjectTargetActiveEffects(
+            state.goblin.activeEffects,
+            objectId,
+            slotLevel,
+            successfulCheckEffectIds,
+          ),
+        },
+      }
+    stateWithHeatMetalConcentrationClearedAfterDispel(state, dispelled)
+  }
+
+  pure def resolveDispelMagicAgainstHeatMetalMagicalEffectTarget(
+    state: BattleState,
+    caster: Actor,
+    effectId: int,
+    slotLevel: int,
+    successfulCheckEffectIds: Set[int],
+  ): BattleState = {
+    val dispelled =
+      {
+        ...state,
+        fighter: {
+          ...state.fighter,
+          activeEffects: dispelMagicMagicalEffectTargetActiveEffects(
+            state.fighter.activeEffects,
+            effectId,
+            slotLevel,
+            successfulCheckEffectIds,
+          ),
+        },
+        goblin: {
+          ...state.goblin,
+          activeEffects: dispelMagicMagicalEffectTargetActiveEffects(
+            state.goblin.activeEffects,
+            effectId,
+            slotLevel,
+            successfulCheckEffectIds,
+          ),
+        },
+      }
+    stateWithHeatMetalConcentrationClearedAfterDispel(state, dispelled)
+  }
 
   pure def heatMetalAdjustedDamage(rolledDamage: int): int =
     damageAfterAdjustments(
@@ -211,8 +335,11 @@ module battleRuntimeObjectContactDamage {
         fighter: {
           ...withoutPrior.fighter,
           concentrating: true,
-          activeEffects: activeEffectsWithoutHeatMetalObjectContactDamage(withoutPrior.fighter.activeEffects, objectId)
-            .union(Set(heatMetalObjectContactDamageEffect(withoutPrior, objectId, slotLevel))),
+          activeEffects: activeEffectsWithoutHeatMetalObjectContactDamageEffectId(
+            withoutPrior.fighter.activeEffects,
+            heatMetalObjectContactDamageEffectId(Fighter, objectId),
+          )
+            .union(Set(heatMetalObjectContactDamageEffect(withoutPrior, Fighter, objectId, slotLevel))),
         },
         actionAvailable: false,
       }, Fighter)

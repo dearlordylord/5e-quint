@@ -293,6 +293,7 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
           effectId: `${spellCasterId}:${heatMetalUnitId}:${objectId}`,
           sourceSpellId: heatMetalUnitId,
           sourceCombatantId: spellCasterId,
+          sourceSpellLevel: 2,
           objectId,
           rangeFeet: movementFeet(60),
           damage: {

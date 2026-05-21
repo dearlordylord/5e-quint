@@ -3350,9 +3350,10 @@
         "packages/battle-runtime/src/battle-reducer.ts",
         "packages/battle-runtime/src/battle-reducer/spells-ongoing-spell-ending.ts"
       ],
-      "sourceBoundary": "The runtime consumes the authored Dispel Magic ongoing-spell-ending Surface shape, caller-selected creature/object/magical-effect target identity, caller-supplied target-within-range facts, tracked ongoing Spell Effect facts carried by BattleSpellLightEmitter source spell level, and caller-supplied spellcasting ability check totals for higher-level contested spells. It owns Magic Action and Spell Slot spending, target-scoped removal of tracked spell-light emitters whose source spell level is at or below the Dispel Magic slot level, DC 10 plus source spell level check gating for higher-level tracked emitters, and generic object-attached Continual Flame cleanup without dispatching on Continual Flame identity. Broader non-light active spell effects, spell-specific dispel immunities, automatic geometry, and table selection of magical-effect identity remain outside this subset boundary.",
+      "sourceBoundary": "The runtime consumes the authored Dispel Magic ongoing-spell-ending Surface shape, caller-selected creature/object/magical-effect target identity, caller-supplied target-within-range facts, tracked ongoing Spell Effect facts carried by BattleSpellLightEmitter source spell level, tracked spellObjectContactDamage active-effect occurrences with stable occurrence identity and source spell level, and caller-supplied spellcasting ability check totals for higher-level contested spells. It owns Magic Action and Spell Slot spending, target-scoped removal of tracked spell-light emitters and tracked spellObjectContactDamage active-effect occurrences whose source spell level is at or below the Dispel Magic slot level, DC 10 plus source spell level check gating for higher-level tracked occurrences, same-object multi-owner cleanup keyed by magical-effect identity, and generic object-attached Continual Flame cleanup without dispatching on Continual Flame identity. Broader not-yet-tracked active spell effects, area effects, spell-specific dispel immunities, automatic geometry, and table selection of magical-effect identity remain outside this subset boundary.",
       "taskRefs": [
-        "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING"
+        "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING",
+        "L12G-FOLLOWUP-GENERIC-ONGOING-SPELL-EFFECT-DISPEL"
       ],
       "title": "Spell invocation ends tracked ongoing spell effects on a selected target",
       "verificationOwners": [
@@ -10380,6 +10381,22 @@
         "spell.invocation-ongoing-spell-ending"
       ],
       "taskId": "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests extend Dispel Magic beyond tracked spell-light emitters to tracked spellObjectContactDamage active-effect occurrences, including object targeting cleanup, higher-level spellcasting ability check gating, same-object multi-owner removal, and magical-effect targeting by stable occurrence identity while leaving broader not-yet-tracked active effects and area effects deferred.",
+      "profileIds": [
+        "spell.invocation-ongoing-spell-ending"
+      ],
+      "taskId": "L12G-FOLLOWUP-GENERIC-ONGOING-SPELL-EFFECT-DISPEL"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Focused package-local Quint proofs extend Dispel Magic beyond tracked spell-light emitters to tracked spellObjectContactDamage active-effect occurrences, covering slot-level automatic ending, failed and successful higher-level gating, same-object multi-owner object-target cleanup, and magical-effect targeting by stable occurrence identity while leaving broader generic ongoing spell occurrences deferred.",
+      "profileIds": [
+        "spell.invocation-ongoing-spell-ending"
+      ],
+      "taskId": "L12G-FOLLOWUP-GENERIC-ONGOING-SPELL-EFFECT-DISPEL"
     },
     {
       "claimKind": "qnt-proof",
@@ -17506,8 +17523,8 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "L12G-FOLLOWUP-GENERIC-ONGOING-SPELL-EFFECT-DISPEL",
-            "mechanic": "ongoing spell effects not yet represented as tracked BattleSpellLightEmitter occurrences, including broader creature active effects, area effects, and spell-specific dispel exceptions or immunities such as force barriers"
+            "followUpTaskId": "L12G-FOLLOWUP-BROADER-ONGOING-SPELL-EFFECT-DISPEL",
+            "mechanic": "ongoing spell effects not yet represented as tracked ongoing spell occurrences beyond tracked spell-light emitters and tracked spellObjectContactDamage active-effect occurrences, including broader creature active effects, area effects, and spell-specific dispel exceptions or immunities such as force barriers"
           },
           {
             "battleReadinessClosure": {
@@ -17520,14 +17537,14 @@
         ],
         "followUpTasks": [
           {
-            "id": "L12G-FOLLOWUP-GENERIC-ONGOING-SPELL-EFFECT-DISPEL",
-            "mechanic": "Promote Dispel Magic beyond tracked spell-light emitters by representing generic ongoing Spell Effect occurrences for creature active effects, area effects, object effects, and spell-specific dispel exceptions or immunities with stable occurrence identity, source spell level, target association, and cleanup semantics.",
+            "id": "L12G-FOLLOWUP-BROADER-ONGOING-SPELL-EFFECT-DISPEL",
+            "mechanic": "Promote Dispel Magic beyond tracked spell-light emitters and tracked spellObjectContactDamage active-effect occurrences by representing broader ongoing Spell Effect occurrences for additional creature active effects, area effects, object effects, and spell-specific dispel exceptions or immunities with stable occurrence identity, source spell level, target association, and cleanup semantics.",
             "owner": "battle-runtime Spell Effect occurrence model plus promoted Quint/runtime parity",
-            "requiredOutput": "Supported-profile or profile-subset-supported Dispel Magic claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for ending generic ongoing Spell Effect occurrences while preserving explicit closures for spell-specific exceptions and table-owned target identity/range derivation.",
-            "title": "Generic Ongoing Spell Effect Dispel Runtime"
+            "requiredOutput": "Supported-profile or profile-subset-supported Dispel Magic claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for ending broader generic ongoing Spell Effect occurrences while preserving explicit closures for spell-specific exceptions and table-owned target identity/range derivation.",
+            "title": "Broader Ongoing Spell Effect Dispel Runtime"
           }
         ],
-        "futureProfileOwner": "generic ongoing Spell Effect occurrence model plus spell-specific dispel exception owner",
+        "futureProfileOwner": "broader ongoing Spell Effect occurrence model plus spell-specific dispel exception owner",
         "profileIds": [
           "spell.invocation-ongoing-spell-ending"
         ],
@@ -17540,6 +17557,9 @@
           "target-scoped ending of tracked ongoing spell-light effects whose source spell level is at or below the Dispel Magic slot level",
           "higher-level tracked ongoing spell-light effects require a spellcasting ability check total against DC 10 plus the tracked source spell level",
           "higher-level slot gate automatically ends tracked ongoing spell-light effects whose source spell level is equal to or below the slot level used",
+          "target-scoped ending of tracked spellObjectContactDamage active-effect occurrences whose source spell level is at or below the Dispel Magic slot level",
+          "higher-level tracked spellObjectContactDamage active-effect occurrences require the same spellcasting ability check gate or a higher-level slot",
+          "same-object multi-owner tracked spellObjectContactDamage occurrences are removed by object target, while magical-effect targeting removes only the selected tracked occurrence by stable occurrence identity",
           "object-attached Continual Flame cleanup is handled through generic tracked spell-light emitter facts, not a Continual Flame-specific remover registry"
         ],
         "tag": "profile-subset-supported"
@@ -17565,9 +17585,10 @@
             "packages/battle-runtime/src/battle-reducer.ts",
             "packages/battle-runtime/src/battle-reducer/spells-ongoing-spell-ending.ts"
           ],
-          "sourceBoundary": "The runtime consumes the authored Dispel Magic ongoing-spell-ending Surface shape, caller-selected creature/object/magical-effect target identity, caller-supplied target-within-range facts, tracked ongoing Spell Effect facts carried by BattleSpellLightEmitter source spell level, and caller-supplied spellcasting ability check totals for higher-level contested spells. It owns Magic Action and Spell Slot spending, target-scoped removal of tracked spell-light emitters whose source spell level is at or below the Dispel Magic slot level, DC 10 plus source spell level check gating for higher-level tracked emitters, and generic object-attached Continual Flame cleanup without dispatching on Continual Flame identity. Broader non-light active spell effects, spell-specific dispel immunities, automatic geometry, and table selection of magical-effect identity remain outside this subset boundary.",
+          "sourceBoundary": "The runtime consumes the authored Dispel Magic ongoing-spell-ending Surface shape, caller-selected creature/object/magical-effect target identity, caller-supplied target-within-range facts, tracked ongoing Spell Effect facts carried by BattleSpellLightEmitter source spell level, tracked spellObjectContactDamage active-effect occurrences with stable occurrence identity and source spell level, and caller-supplied spellcasting ability check totals for higher-level contested spells. It owns Magic Action and Spell Slot spending, target-scoped removal of tracked spell-light emitters and tracked spellObjectContactDamage active-effect occurrences whose source spell level is at or below the Dispel Magic slot level, DC 10 plus source spell level check gating for higher-level tracked occurrences, same-object multi-owner cleanup keyed by magical-effect identity, and generic object-attached Continual Flame cleanup without dispatching on Continual Flame identity. Broader not-yet-tracked active spell effects, area effects, spell-specific dispel immunities, automatic geometry, and table selection of magical-effect identity remain outside this subset boundary.",
           "taskRefs": [
-            "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING"
+            "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING",
+            "L12G-FOLLOWUP-GENERIC-ONGOING-SPELL-EFFECT-DISPEL"
           ],
           "title": "Spell invocation ends tracked ongoing spell effects on a selected target",
           "verificationOwners": [

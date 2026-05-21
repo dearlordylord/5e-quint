@@ -2240,10 +2240,17 @@ const BattleLightEmitterAttachmentSchema = Schema.Union(
   }),
 );
 
-const BattleOngoingSpellEffectRefSchema = Schema.Struct({
-  kind: Schema.Literal("spellLightEmitter"),
-  sourceEffectId: BattleSpellEffectOccurrenceId,
-});
+const BattleOngoingSpellEffectRefSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("spellLightEmitter"),
+    sourceEffectId: BattleSpellEffectOccurrenceId,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("spellActiveEffect"),
+    activeEffectKind: Schema.Literal("spellObjectContactDamage"),
+    sourceEffectId: BattleSpellEffectOccurrenceId,
+  }),
+);
 
 const BattleOngoingSpellTargetSchema = Schema.Union(
   Schema.Struct({
@@ -3170,10 +3177,16 @@ type BattleFillEncoded =
           }
         | {
             readonly kind: "magicalEffect";
-            readonly effect: {
-              readonly kind: "spellLightEmitter";
-              readonly sourceEffectId: string;
-            };
+            readonly effect:
+              | {
+                  readonly kind: "spellLightEmitter";
+                  readonly sourceEffectId: string;
+                }
+              | {
+                  readonly kind: "spellActiveEffect";
+                  readonly activeEffectKind: "spellObjectContactDamage";
+                  readonly sourceEffectId: string;
+                };
           };
       readonly spatialFacts: readonly {
         readonly kind: "ongoingSpellTargetWithinRange";
@@ -3190,10 +3203,16 @@ type BattleFillEncoded =
             }
           | {
               readonly kind: "magicalEffect";
-              readonly effect: {
-                readonly kind: "spellLightEmitter";
-                readonly sourceEffectId: string;
-              };
+              readonly effect:
+                | {
+                    readonly kind: "spellLightEmitter";
+                    readonly sourceEffectId: string;
+                  }
+                | {
+                    readonly kind: "spellActiveEffect";
+                    readonly activeEffectKind: "spellObjectContactDamage";
+                    readonly sourceEffectId: string;
+                  };
             };
         readonly rangeFeet: number;
       }[];

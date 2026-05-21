@@ -326,7 +326,9 @@ module battleRuntimeTimedEffects {
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
         | HeatMetalObjectContactDamage(data) => HeatMetalObjectContactDamage({
+            effectId: data.effectId,
             objectId: data.objectId,
+            sourceSpellLevel: data.sourceSpellLevel,
             damageDice: data.damageDice,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
             startedRound: data.startedRound,

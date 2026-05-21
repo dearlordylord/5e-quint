@@ -675,6 +675,7 @@ export type SpellCreatedHeldObjectActiveEffect = BattleSpellEffectBase & {
 export type SpellObjectContactDamageActiveEffect = BattleSpellEffectBase & {
   readonly kind: "spellObjectContactDamage";
   readonly effectId: BattleSpellEffectOccurrenceId;
+  readonly sourceSpellLevel: BattleSpellEffectLevel;
   readonly objectId: BattleObjectId;
   readonly rangeFeet: MovementFeet;
   readonly damage: {
@@ -1279,10 +1280,16 @@ export type BattleObjectInvisibleRevealLightEmitter = BattleSpellEffectBase & {
 export type BattleLightEmitter =
   | BattleSpellLightEmitter
   | BattleObjectInvisibleRevealLightEmitter;
-export type BattleOngoingSpellEffectRef = {
-  readonly kind: "spellLightEmitter";
-  readonly sourceEffectId: BattleSpellEffectOccurrenceId;
-};
+export type BattleOngoingSpellEffectRef =
+  | {
+      readonly kind: "spellLightEmitter";
+      readonly sourceEffectId: BattleSpellEffectOccurrenceId;
+    }
+  | {
+      readonly kind: "spellActiveEffect";
+      readonly activeEffectKind: "spellObjectContactDamage";
+      readonly sourceEffectId: BattleSpellEffectOccurrenceId;
+    };
 export type BattleOngoingSpellTarget =
   | {
       readonly kind: "combatant";

@@ -4,7 +4,7 @@
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    {"number":1,"id":"L12G-FOLLOWUP-GENERIC-ONGOING-SPELL-EFFECT-DISPEL","status":"ready-for-research","title":"Generic Ongoing Spell Effect Dispel Runtime"},
+    {"number":1,"id":"L12G-FOLLOWUP-GENERIC-ONGOING-SPELL-EFFECT-DISPEL","status":"done","title":"Generic Ongoing Spell Effect Dispel Runtime"},
     {"number":2,"id":"L12G-FOLLOWUP-ANTIMAGIC-FIELD-GENERIC-SUPPRESSION","status":"ready-for-research","title":"Antimagic Field Generic Suppression Runtime"},
     {"number":3,"id":"L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST","status":"ready-for-research","title":"Prayer Of Healing Surface Rest Shape"},
     {"number":4,"id":"L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST","status":"blocked","title":"Prayer Of Healing Character Sheet Rest Runtime"},
@@ -14,7 +14,8 @@
     {"number":8,"id":"L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME","status":"blocked","title":"Spiritual Weapon Persistent Attack Runtime"},
     {"number":9,"id":"L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME","status":"ready-for-research","title":"Enlarge Reduce Creature Runtime Support"},
     {"number":10,"id":"L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME","status":"ready-for-research","title":"Enthrall Perception Penalty Runtime Support"},
-    {"number":11,"id":"L12G-RECURSIVE-TAIL-LANE-B","status":"blocked","title":"Lane B Recursive Planning Tail"}
+    {"number":11,"id":"L12G-FOLLOWUP-BROADER-ONGOING-SPELL-EFFECT-DISPEL","status":"ready-for-research","title":"Broader Ongoing Spell Effect Dispel Runtime"},
+    {"number":12,"id":"L12G-RECURSIVE-TAIL-LANE-B","status":"blocked","title":"Lane B Recursive Planning Tail"}
   ]
 }
 -->
@@ -44,7 +45,7 @@ Every task must include:
 
 ### Task 1 - L12G-FOLLOWUP-GENERIC-ONGOING-SPELL-EFFECT-DISPEL - Generic Ongoing Spell Effect Dispel Runtime
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 - Current Dispel Magic tracked spell-light ending support.
@@ -157,7 +158,19 @@ Output:
 - Supported profile or closure for the Perception check penalty subset.
 - Avoid storing conversation or attention state outside executable roll-mode needs.
 
-### Task 11 - L12G-RECURSIVE-TAIL-LANE-B - Lane B Recursive Planning Tail
+### Task 11 - L12G-FOLLOWUP-BROADER-ONGOING-SPELL-EFFECT-DISPEL - Broader Ongoing Spell Effect Dispel Runtime
+
+Status: `ready-for-research`
+
+Input:
+- Task 1 Dispel Magic support for tracked spell-light emitters and tracked `spellObjectContactDamage` active-effect occurrences.
+- Existing active-effect, area-effect, and concentration lifecycle models.
+
+Output:
+- Promote Dispel Magic beyond tracked spell-light emitters and tracked `spellObjectContactDamage` occurrences only where broader ongoing Spell Effect occurrences have stable identity, source spell level, target association, and cleanup semantics without duplicated state.
+- Keep spell-specific dispel exceptions or immunities as explicit typed closures instead of identity-dispatched special cases.
+
+### Task 12 - L12G-RECURSIVE-TAIL-LANE-B - Lane B Recursive Planning Tail
 
 Status: `blocked`
 
