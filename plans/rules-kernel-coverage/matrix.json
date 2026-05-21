@@ -1,8 +1,8 @@
 {
   "summary": {
     "total": 72,
-    "covered": 51,
-    "open": 16,
+    "covered": 52,
+    "open": 15,
     "nonSemantic": 5,
     "byRuntime": {
       "shared-algebras": 1,
@@ -12,9 +12,9 @@
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 51,
+      "covered": 52,
       "needs-qnt-owner": 0,
-      "needs-parity-witness": 15,
+      "needs-parity-witness": 14,
       "needs-surface-evidence": 1,
       "boundary-only": 4,
       "unsupported-by-admission": 1
@@ -916,12 +916,14 @@
       "title": "Battle direct condition removal, poison protection condition removal, poison resistance, and poison Saving Throw Advantage"
     },
     {
-      "followUpTaskIds": [
-        "RKBC-SPELL-SELF-TRANSFORMATION-PARITY"
-      ],
       "id": "BATTLE.SPELL.SELF_TRANSFORMATION_MODE",
       "kind": "active-effect-lifecycle",
-      "parityWitnesses": [],
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-alter-self.test.ts"
+        }
+      ],
       "profiles": [
         "spell.invocation-self-transformation-mode"
       ],
@@ -935,8 +937,10 @@
         "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
         "packages/battle-runtime/src/battle-reducer/movement-speed.ts"
       ],
-      "status": "needs-parity-witness",
-      "surfaceEvidence": [],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Alter Self"
+      ],
       "title": "Battle self-transformation mode choice, Magic Action mode replacement, natural-weapon override, and Aquatic projections"
     },
     {

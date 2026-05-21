@@ -83,8 +83,8 @@
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 118,
-      "numerator": 81,
-      "percent": "68.6%"
+      "numerator": 82,
+      "percent": "69.5%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 118,
@@ -93,8 +93,8 @@
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 135,
-      "numerator": 100,
-      "percent": "74.1%"
+      "numerator": 101,
+      "percent": "74.8%"
     },
     "runtimeMappingCoverage": {
       "denominator": 86,
@@ -3430,8 +3430,8 @@
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 118,
-        "numerator": 81,
-        "percent": "68.6%"
+        "numerator": 82,
+        "percent": "69.5%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 118,
@@ -4923,12 +4923,12 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.SELF_TRANSFORMATION_MODE",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle self-transformation mode choice, Magic Action mode replacement, natural-weapon override, and Aquatic projections"
           }
         ],
@@ -5032,8 +5032,8 @@
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
           "denominator": 135,
-          "numerator": 100,
-          "percent": "74.1%"
+          "numerator": 101,
+          "percent": "74.8%"
         }
       },
       "units": [
@@ -5101,15 +5101,15 @@
           "unitId": "aid"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.SELF_TRANSFORMATION_MODE",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle self-transformation mode choice, Magic Action mode replacement, natural-weapon override, and Aquatic projections"
                 }
               ],

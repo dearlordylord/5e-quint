@@ -9,7 +9,7 @@
     {"number":3,"id":"RKBC-SPELL-SAVE-GATED-CONDITION-PARITY","status":"done","title":"Spell Save-Gated Condition Parity Witnesses"},
     {"number":4,"id":"RKBC-SPELL-ROLL-SCALAR-PARITY","status":"done","title":"Spell Roll Modifier And Scalar Buff Parity Witnesses"},
     {"number":5,"id":"RKBC-SPELL-MAKE-STABLE-PARITY","status":"done","title":"Spell Make Stable Parity Witness"},
-    {"number":6,"id":"RKBC-SPELL-SELF-TRANSFORMATION-PARITY","status":"ready-for-research","title":"Spell Self Transformation Mode Parity Witness"},
+    {"number":6,"id":"RKBC-SPELL-SELF-TRANSFORMATION-PARITY","status":"done","title":"Spell Self Transformation Mode Parity Witness"},
     {"number":7,"id":"RKBC-SPELL-REACTION-CASTING-PARITY","status":"ready-for-research","title":"Spell Reaction Casting Parity Witnesses"},
     {"number":8,"id":"RKBC-SPELL-AFTER-HIT-RIDERS-PARITY","status":"ready-for-research","title":"Spell After-Hit Rider Parity Witnesses"},
     {"number":9,"id":"RKBC-SPELL-WEAPON-HOSTED-PARITY","status":"ready-for-research","title":"Spell Weapon-Hosted Attack And Rider Parity Witnesses"},
@@ -86,7 +86,7 @@ Output:
 
 ### Task 6 - RKBC-SPELL-SELF-TRANSFORMATION-PARITY - Spell Self Transformation Mode Parity Witness
 
-Status: `ready-for-research`
+Status: `done`
 
 Output:
 - Parity witness for Alter Self self-transformation behavior already supported in runtime.

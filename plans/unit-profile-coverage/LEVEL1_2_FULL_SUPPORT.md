@@ -12,8 +12,8 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | Strict target closure | 167/168 (99.4%) |
 | Product readiness | 509/556 (91.5%) |
 | Rules-kernel profile join | 78/84 (92.9%) |
-| Rules-kernel covered profile join | 57/84 (67.9%) |
-| Supported Unit rules-kernel chain | 78/112 (69.6%) |
+| Rules-kernel covered profile join | 58/84 (69%) |
+| Supported Unit rules-kernel chain | 79/112 (70.5%) |
 
 ## Scope
 
@@ -50,7 +50,6 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 
 | Unit | Status | Profiles Needing Attention |
 | --- | --- | --- |
-| `alter_self` | mapped-open | `spell.invocation-self-transformation-mode` (mapped-open: `BATTLE.SPELL.SELF_TRANSFORMATION_MODE` (needs-parity-witness)) |
 | `animal_friendship` | mapped-open | `spell.creature-type-protection-and-charm` (mapped-open: `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION` (needs-parity-witness)) |
 | `bard_jack_of_all_trades` | unmapped | `character-sheet.ability-check-proficiency-bonus` (unmapped: no obligation mapping) |
 | `chromatic_orb` | mapped-open | `spell.invocation-chained-attack-damage` (mapped-open: `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE` (needs-parity-witness)) |
