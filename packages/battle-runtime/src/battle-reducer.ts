@@ -104,6 +104,7 @@ import {
   type SpellInvocationRef,
 } from "./battle-subjects.ts";
 import {
+  type CharacterBattleMetamagicState,
   type CharacterBattleResourceState,
   type CharacterBattleSpellcastingState,
 } from "./character-battle-resources.ts";
@@ -3849,6 +3850,7 @@ type BattleCreatureStateCommon = {
         readonly unarmedStrike: CharacterUnarmedStrikeActionOption;
         readonly offHandAttack?: CharacterWeaponAttackActionOption;
         readonly resources: readonly CharacterBattleResourceState[];
+        readonly metamagic?: CharacterBattleMetamagicState;
         readonly ongoingFeatureProfiles: ReadonlyMap<
           OngoingFeatureSourceKey,
           Extract<
@@ -5710,6 +5712,11 @@ export type BattleCharacterResourceSnapshot =
       readonly usage: "limited";
       readonly usesRemaining: number;
       readonly usedThisTurn: boolean;
+    }
+  | {
+      readonly unitId: UnitRecord["id"];
+      readonly usage: "pointPool";
+      readonly pointsRemaining: number;
     };
 export type CharacterBattleCreatureState = BattleCreatureState & {
   readonly origin: Extract<

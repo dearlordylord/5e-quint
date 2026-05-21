@@ -89,6 +89,7 @@ import {
   type SpellInvocationRef,
 } from "./index.ts";
 import {
+  characterBattleResourceIsUseCount,
   characterBattleResourceIsUnlimited,
   parseCharacterBattleClassLevels,
 } from "./character-battle-resources.ts";
@@ -1641,7 +1642,9 @@ export function movementFill(
   };
 }
 
-export function castGroundHazardForMovementTest(areaId: BattleAreaId): BattleState {
+export function castGroundHazardForMovementTest(
+  areaId: BattleAreaId,
+): BattleState {
   const battleState = startBattleRight({
     battleId: battleId(`battle-grease-movement-${areaId}`),
     combatants: [
@@ -1950,6 +1953,10 @@ export function characterSeed(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["resources"];
+  readonly metamagic?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["metamagic"];
   readonly unitFeatures?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -2077,6 +2084,7 @@ export function characterSeed(input: {
         ? {}
         : { invocationFeatures: input.invocationFeatures }),
       ...(input.resources === undefined ? {} : { resources: input.resources }),
+      ...(input.metamagic === undefined ? {} : { metamagic: input.metamagic }),
       ...(parsedDruidWildShapeKnownForms === undefined
         ? {}
         : { druidWildShapeKnownForms: parsedDruidWildShapeKnownForms }),
@@ -4013,6 +4021,7 @@ export {
   battleUnitSupportProfilesForUnit,
   breakBattleConcentration,
   cantripSpellInvocationRef,
+  characterBattleResourceIsUseCount,
   characterBattleResourceIsUnlimited,
   characterBattleResourceSupportedForUnit,
   characterBattleResourceUsage,

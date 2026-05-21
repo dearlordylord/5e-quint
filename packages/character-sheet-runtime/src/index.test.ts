@@ -73,6 +73,7 @@ import {
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-point-pool-resource
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.font-of-magic-slot-to-sorcery-points
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.font-of-magic-sorcery-points-to-spell-slot
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.metamagic-battle-resource-bridge
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.monk-uncanny-metabolism-initiative-recovery
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B barbarian_unarmored_defense monk_unarmored_defense paladin_lay_on_hands wizard_arcane_recovery wizard_ritual_adept
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-04 fighter_weapon_mastery barbarian_weapon_mastery paladin_weapon_mastery ranger_weapon_mastery rogue_weapon_mastery
@@ -133,6 +134,10 @@ const sorcererFontOfMagicSlotCreationTestName =
   "Font of Magic creates Spell Slots from Sorcery Points";
 const sorcererFontOfMagicSlotCreationGateTestName =
   "Font of Magic Spell Slot creation enforces Sorcery Point and level gates";
+const sorcererMetamagicKnownOptionsSheetParsingTestName =
+  "round-trips stored Sorcerer Metamagic known options through sheet parsing";
+const sorcererMetamagicKnownOptionsGateTestName =
+  "rejects stored Sorcerer Metamagic selections that do not match Sorcerer level";
 const uncannyMetabolismLongRestUseStateTestName =
   "tracks Uncanny Metabolism Long Rest use state separately from Focus Points";
 const uncannyMetabolismInitiativeRecoveryTestName =
@@ -586,7 +591,7 @@ describe("Character Sheet runtime", () => {
     );
   });
 
-  test("round-trips stored Sorcerer Metamagic known options through sheet parsing", () => {
+  test(sorcererMetamagicKnownOptionsSheetParsingTestName, () => {
     const sheet = parseCharacterSheet(
       {
         ...storedAvailableSheetInput({
@@ -628,7 +633,7 @@ describe("Character Sheet runtime", () => {
     });
   });
 
-  test("rejects stored Sorcerer Metamagic selections that do not match Sorcerer level", () => {
+  test(sorcererMetamagicKnownOptionsGateTestName, () => {
     const build = sorcererFontOfMagicBuild();
     const sheet = parseCharacterSheet(
       storedAvailableSheetInput({

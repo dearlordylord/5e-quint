@@ -432,7 +432,8 @@ export function resolveDruidWildShapeUnitFeature(
     origin: {
       ...actor.origin,
       resources: actor.origin.resources.map((candidate) =>
-        candidate.unit.id === subject.unitId
+        candidate.unit.id === subject.unitId &&
+        resourceHasUsesRemaining(candidate)
           ? spendCharacterResourceUse(candidate)
           : candidate,
       ),
@@ -578,7 +579,8 @@ export function resolveBardicInspirationGrantUnitFeature(
     origin: {
       ...actor.origin,
       resources: actor.origin.resources.map((candidate) =>
-        candidate.unit.id === unitFeature.spends.resourceUnitId
+        candidate.unit.id === unitFeature.spends.resourceUnitId &&
+        resourceHasUsesRemaining(candidate)
           ? spendCharacterResourceUse(candidate)
           : candidate,
       ),
@@ -956,7 +958,8 @@ export function resolveFailedAbilityCheckResourceBoost(
       ...actor.origin,
       resources: actor.origin.resources.map((resource) =>
         boostedSucceeded &&
-        resource.unit.id === profile.abilityCheck.spends.resourceUnitId
+        resource.unit.id === profile.abilityCheck.spends.resourceUnitId &&
+        resourceHasUsesRemaining(resource)
           ? spendCharacterResourceUse(resource)
           : resource,
       ),
@@ -1155,7 +1158,8 @@ export function resolveExtraActionGrantUnitFeature(
     origin: {
       ...actor.origin,
       resources: actor.origin.resources.map((candidate) =>
-        candidate.unit.id === input.subject.unitId
+        candidate.unit.id === input.subject.unitId &&
+        resourceHasUsesRemaining(candidate)
           ? {
               ...spendCharacterResourceUse(candidate),
               usedThisTurn: true,
@@ -1226,7 +1230,8 @@ export function resolveSelfBonusActionHealingUnitFeature(
       origin: {
         ...actor.origin,
         resources: actor.origin.resources.map((candidate) =>
-          candidate.unit.id === input.subject.unitId
+          candidate.unit.id === input.subject.unitId &&
+          resourceHasUsesRemaining(candidate)
             ? spendCharacterResourceUse(candidate)
             : candidate,
         ),
@@ -1350,7 +1355,8 @@ export function resolveOngoingFeatureUnitFeature(
       resources: actor.origin.resources.map((candidate) =>
         activeOngoingFeature === undefined &&
         candidate.unit.id === input.subject.unitId &&
-        unitFeature.spendsUse
+        unitFeature.spendsUse &&
+        resourceHasUsesRemaining(candidate)
           ? spendCharacterResourceUse(candidate)
           : candidate,
       ),

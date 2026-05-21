@@ -405,7 +405,7 @@ export function spendAttackDamageReductionRedirectResource(
       origin: {
         ...reactor.origin,
         resources: reactor.origin.resources.map((candidate) =>
-          candidate === resource
+          candidate === resource && resourceHasUsesRemaining(candidate)
             ? spendCharacterResourceUse(candidate)
             : candidate,
         ),

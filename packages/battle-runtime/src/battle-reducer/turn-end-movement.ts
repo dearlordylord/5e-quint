@@ -53,6 +53,7 @@ import {
   type BattleMovementSpeedKind,
   type BattleSubject,
 } from "../battle-subjects.ts";
+import { characterBattleResourceIsUseCount } from "../character-battle-resources.ts";
 
 import { type BattleReactionTrigger } from "../battle-reaction-triggers.ts";
 
@@ -5636,10 +5637,11 @@ export function resetPerTurnCharacterResources(
     ...combatant,
     origin: {
       ...combatant.origin,
-      resources: combatant.origin.resources.map((resource) => ({
-        ...resource,
-        usedThisTurn: false,
-      })),
+      resources: combatant.origin.resources.map((resource) =>
+        characterBattleResourceIsUseCount(resource)
+          ? { ...resource, usedThisTurn: false }
+          : resource,
+      ),
     },
   };
 }

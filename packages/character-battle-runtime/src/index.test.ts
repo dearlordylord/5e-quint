@@ -2,6 +2,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-use-count-resource unit-feature.druid-wild-shape-known-form
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.monk-uncanny-metabolism-initiative-recovery
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.font-of-magic-sorcery-points-to-spell-slot
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.metamagic-battle-resource-bridge
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.monk-focus-battle-options
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B mastery_sap mastery_topple mastery_cleave
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME monk_uncanny_metabolism
@@ -18,12 +19,14 @@ import {
   battleCreatureInitFromStatBlock,
   battleCombatantSide,
   battleId,
+  characterBattleResourceIsPointPool,
   characterBattleResourceForUnit,
   characterId,
   combatantId,
   discoverBattleActs,
   initiativeScore,
   resolveBattleSubject,
+  spendCharacterPointPoolResource,
   startBattle,
 } from "@dnd/battle-runtime";
 import {
@@ -33,6 +36,7 @@ import {
   classUnitId,
   eldritchInvocationId,
   MONK_MONKS_FOCUS_UNIT_ID,
+  sorcererMetamagicOptionId,
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
 import {
@@ -60,6 +64,7 @@ import {
   proficiencyBonus,
   resourceCount,
   spellSlotLevel,
+  type ResourceCount,
 } from "@dnd/shared/types";
 import {
   buildUnitCatalog,
@@ -520,7 +525,7 @@ describe("Character Sheet battle handoff", () => {
     const sheet = expectRight(
       createFreshCharacterSheet({
         characterId: characterSheetId("character:sorcerer-font-battle"),
-        build: sorcererFontOfMagicBuild(),
+        build: sorcererMetamagicBuild(),
         maximumHp: Hp(24),
         currentHp: Hp(24),
         tempHp: Hp(0),
@@ -662,6 +667,134 @@ describe("Character Sheet battle handoff", () => {
           "Battle handoff Spell Slot expenditure is source-ambiguous for level 3.",
       }),
     );
+  });
+
+  test("bridges Metamagic facts through the shared Font of Magic point pool", () => {
+    const characterSheetIdValue = characterSheetId(
+      "character:sorcerer-metamagic-battle",
+    );
+    const sorcererCombatantId = combatantId("combatant:sorcerer-metamagic");
+    const sheet = expectRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetIdValue,
+        build: sorcererMetamagicBuild(),
+        maximumHp: Hp(24),
+        currentHp: Hp(24),
+        tempHp: Hp(0),
+        unitLibrary,
+        resourceExpenditures: [
+          {
+            tag: "pointPoolResource",
+            unitId: "sorcerer_font_of_magic",
+            expended: resourceCount(1),
+          },
+        ],
+      }),
+    );
+
+    const characterInit = expectRight(
+      characterSheetBattleInit({
+        sheet,
+        unitLibrary,
+        statBlockCatalog,
+        combatantId: sorcererCombatantId,
+        displayName: "Sorcerer",
+        initiative: initiativeScore(12),
+        side: battleCombatantSide("party"),
+      }),
+    );
+    if (characterInit.creatureInit.kind !== "character") {
+      throw new Error("Expected character battle creature init.");
+    }
+    expect(characterInit.creatureInit.resources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          unit: expect.objectContaining({ id: "sorcerer_font_of_magic" }),
+          pointsRemaining: resourceCount(4),
+        }),
+      ]),
+    );
+    expect(characterInit.creatureInit.resources).toEqual(
+      expect.not.arrayContaining([
+        expect.objectContaining({
+          unit: expect.objectContaining({ id: "sorcerer_metamagic" }),
+        }),
+      ]),
+    );
+    expect(characterInit.creatureInit.metamagic).toEqual({
+      sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+      spellUseLimit: "one_per_spell_unless_option_allows_stacking",
+      knownOptions: [
+        {
+          effectKind: "damage_dice_reroll",
+          stackingMode: "can_combine_with_different_metamagic",
+          sorceryPointCost: resourceCount(1),
+        },
+        {
+          effectKind: "saving_throw_disadvantage",
+          stackingMode: "one_per_spell",
+          sorceryPointCost: resourceCount(2),
+        },
+      ],
+    });
+
+    const battle = expectRight(
+      startBattle({
+        battleId: battleId("character-sheet-sorcerer-metamagic"),
+        combatants: [
+          characterInit,
+          battleCreatureInitFromStatBlock({
+            combatantId: combatantId("combatant:skeleton-metamagic"),
+            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            initiative: initiativeScore(10),
+            side: battleCombatantSide("monsters"),
+          }),
+        ],
+      }),
+    );
+    const sorcerer = battle.combatants.get(sorcererCombatantId);
+    if (sorcerer?.origin.kind !== "character") {
+      throw new Error("Expected Sorcerer character combatant.");
+    }
+    const sorceryPoints = sorcerer.origin.resources.find(
+      characterBattleResourceIsPointPool,
+    );
+    if (sorceryPoints === undefined) {
+      throw new Error("Expected shared Sorcery Point point-pool resource.");
+    }
+    const spentSorceryPoints = expectRight(
+      spendCharacterPointPoolResource({
+        resource: sorceryPoints,
+        points: resourceCount(2),
+      }),
+    );
+    const spentSorcerer = handoffBranchCombatant({
+      hp: characterSheetCurrentHp(sheet),
+      maxHp: sheet.maximumHp,
+      tempHp: characterSheetTempHp(sheet),
+      positiveHpUnconscious: null,
+      origin: {
+        ...sorcerer.origin,
+        resources: sorcerer.origin.resources.map((resource) =>
+          resource.unit.id === spentSorceryPoints.unit.id
+            ? spentSorceryPoints
+            : resource,
+        ),
+      },
+    });
+
+    const handoff = expectRight(
+      applyBattleHandoffToCharacterSheet({
+        sheet,
+        unitLibrary,
+        combatant: spentSorcerer,
+      }),
+    );
+    expect(handoff.resourceExpenditures).toContainEqual({
+      tag: "pointPoolResource",
+      unitId: "sorcerer_font_of_magic",
+      expended: resourceCount(3),
+    });
   });
 
   test("preserves sheet-owned healing resource expenditures", () => {
@@ -869,13 +1002,13 @@ describe("Character Sheet battle handoff", () => {
       throw new Error("Expected finite Monk Focus resource.");
     }
     const init = expectRight(
-	      characterSheetBattleInit({
-	        sheet: recovered,
-	        unitLibrary,
-	        statBlockCatalog,
-	        combatantId: combatantId("combatant:monk-uncanny-handoff"),
-	        displayName: "Monk",
-	        initiative: initiativeScore(16),
+      characterSheetBattleInit({
+        sheet: recovered,
+        unitLibrary,
+        statBlockCatalog,
+        combatantId: combatantId("combatant:monk-uncanny-handoff"),
+        displayName: "Monk",
+        initiative: initiativeScore(16),
         side: battleCombatantSide("party"),
       }),
     );
@@ -1004,6 +1137,10 @@ describe("Character Sheet battle handoff", () => {
 
     const favoredEnemy = unitLibrary.requireUnit("ranger_favored_enemy");
     const favoredEnemyResource = characterBattleResourceForUnit(favoredEnemy);
+    expect(hasLimitedCharacterBattleResourceCap(favoredEnemyResource)).toBe(
+      true,
+    );
+    if (!hasLimitedCharacterBattleResourceCap(favoredEnemyResource)) return;
     const handoff = applyBattleHandoffToCharacterSheet({
       sheet: sheet.right,
       unitLibrary,
@@ -3104,21 +3241,22 @@ function paladinsSmitePaladinBuild(): CharacterBuild {
 
 function hasFixedCharacterBattleResourceCap(
   resource: CharacterBattleResourceState["resource"],
-): resource is CharacterBattleResourceState["resource"] & {
+): resource is Extract<
+  CharacterBattleResourceState,
+  { readonly usesRemaining: ResourceCount }
+>["resource"] & {
   readonly cap: { readonly kind: "fixed" };
 } {
-  return resource.cap.kind === "fixed";
+  return resource.kind === "use_count" && resource.cap.kind === "fixed";
 }
 
 function hasLimitedCharacterBattleResourceCap(
   resource: CharacterBattleResourceState["resource"],
-): resource is CharacterBattleResourceState["resource"] & {
-  readonly cap: Exclude<
-    CharacterBattleResourceState["resource"]["cap"],
-    { readonly kind: "unlimited" }
-  >;
-} {
-  return resource.cap.kind !== "unlimited";
+): resource is Extract<
+  CharacterBattleResourceState,
+  { readonly usesRemaining: ResourceCount }
+>["resource"] {
+  return resource.kind === "use_count" && resource.cap.kind !== "unlimited";
 }
 
 function armorOfShadowsWarlockBuild(
@@ -3353,8 +3491,8 @@ function druidWildShapeBuildAtLevel(level: number): CharacterBuild {
     progression: {
       startingClass: classUnitId("class_druid"),
       advancements: Array.from({ length: level - 1 }, () => ({
-          classUnitId: classUnitId("class_druid"),
-          hitPointRule: { tag: "fixedHigherLevelGain" },
+        classUnitId: classUnitId("class_druid"),
+        hitPointRule: { tag: "fixedHigherLevelGain" },
       })),
     },
     spellcasting: {
@@ -3519,6 +3657,24 @@ function sorcererFontOfMagicBuild(): CharacterBuild {
   };
 }
 
+function sorcererMetamagicBuild(): CharacterBuild {
+  return {
+    ...sorcererFontOfMagicBuild(),
+    features: [
+      {
+        kind: "selectedSorcererMetamagicOption",
+        selectedFromUnitId: "sorcerer_metamagic",
+        optionId: testSorcererMetamagicOptionId("sorcerer_empowered_spell"),
+      },
+      {
+        kind: "selectedSorcererMetamagicOption",
+        selectedFromUnitId: "sorcerer_metamagic",
+        optionId: testSorcererMetamagicOptionId("sorcerer_heightened_spell"),
+      },
+    ],
+  };
+}
+
 function paladinBuild(): CharacterBuild {
   return {
     progression: {
@@ -3569,6 +3725,10 @@ function expectRight<T, E>(result: Either.Either<T, E>): T {
   }
   expect(Either.isRight(result)).toBe(true);
   return result.right;
+}
+
+function testSorcererMetamagicOptionId(optionId: string) {
+  return expectRight(sorcererMetamagicOptionId(optionId));
 }
 
 function handoffBranchCombatant(

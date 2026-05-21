@@ -161,6 +161,7 @@
         "srd521:classes/ranger:level-1:mastery-pressure:ranger_weapon_mastery",
         "srd521:classes/rogue:level-1:mastery-pressure:rogue_weapon_mastery",
         "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_font_of_magic",
+        "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_metamagic",
         "srd521:classes/warlock:level-2:class-feature-grant:warlock_magical_cunning",
         "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery",
         "srd521:classes/wizard:level-1:class-feature-grant:wizard_ritual_adept"
@@ -18909,7 +18910,12 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS character-creation.class-feature-option-projection and character-creation.class-feature-source-fact-projection support profiles; Metamagic is discovered from the level-2 Sorcerer class feature grant, filled from the installed SRD Metamagic option roster, finalized as selected CharacterBuild Metamagic option facts, and projected with Sorcerer-level known-option counts, option costs, stacking modes, spell-use limit, and the shared Font of Magic Sorcery Point resource link.",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS character-creation.class-feature-option-projection, character-creation.class-feature-source-fact-projection, and character-creation.class-feature-advancement-replacement support profiles; Metamagic is discovered from the level-2 Sorcerer class feature grant, filled from the installed SRD Metamagic option roster, finalized as selected CharacterBuild Metamagic option facts, projected with Sorcerer-level known-option counts, option costs, stacking modes, spell-use limit, and the shared Font of Magic Sorcery Point resource link, and advanced through Sorcerer level gains that replace one known option with one unknown option or add level-10 and level-17 options from the Surface choice-count thresholds.",
+          "status": "owner evidence present"
+        },
+        {
+          "owner": "character-sheet-runtime",
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L12G-FOLLOWUP-SORCERER-METAMAGIC-BATTLE-RESOURCE-BRIDGE Character Sheet Metamagic battle resource bridge runtime; Metamagic selected option facts are preserved through Character Sheet parsing only when they match the retained Sorcerer Metamagic feature and Sorcerer-level known-option count. Those parsed CharacterBuild facts provide the Character Battle bridge source for typed Metamagic effectKind, stackingMode, and cost facts while the shared Font of Magic Sorcery Point point-pool remains owned by the existing Character Sheet resource expenditure state.",
           "status": "owner evidence present"
         }
       ],

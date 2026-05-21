@@ -2,15 +2,15 @@ import {
   combatantKnockedOutUnconscious,
   combatantHasActiveDruidWildShape,
   classFeatureSpellFreeCastProfileForResource,
+  characterBattleResourceIsPointPool,
+  characterBattleResourceMaxPoints,
   characterBattleResourceMaxUses,
   KNOCKED_OUT_UNCONSCIOUS,
   parseSupportedUnitFeatureProfile,
   type BattleCreatureState,
   type CharacterZeroHpLifecycleInit,
 } from "@dnd/battle-runtime";
-import {
-  characterBuildDruidWildShapeFacts,
-} from "@dnd/character-creation-runtime";
+import { characterBuildDruidWildShapeFacts } from "@dnd/character-creation-runtime";
 import {
   CHARACTER_SHEET_KNOCKED_OUT_UNCONSCIOUS,
   characterSheetCurrentHp,
@@ -20,12 +20,14 @@ import {
   characterSheetSpellSlots,
   characterSheetTempHp,
   createFreshCharacterSheet,
+  isCharacterSheetPointPoolResourceUnitId,
   isCharacterSheetUseCountResourceUnitId,
   replaceCharacterSheetSpellSlotSourceState,
   type CharacterSheet,
   type CharacterSheetBookOfShadowsPresence,
   type CharacterSheetIssue,
   type CharacterSheetPositiveHpUnconscious,
+  type CharacterSheetPointPoolResourceUnitId,
   type CharacterSheetResourceExpenditure,
   type CharacterSheetSpellSlotSourceState,
   type CharacterSheetStableRecovery,
@@ -61,6 +63,7 @@ import {
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.monk-uncanny-metabolism-initiative-recovery
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.font-of-magic-sorcery-points-to-spell-slot
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.metamagic-battle-resource-bridge
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.monk-focus-battle-options
 export {
   battleCreatureInitFromCharacterBuild,
@@ -412,9 +415,20 @@ function characterResourceExpendituresFromBattle(input: {
   const battleResources = origin.resources;
   const battleUseCountResourceUnitIds =
     new Set<CharacterSheetUseCountResourceUnitId>();
+  const battlePointPoolResourceUnitIds =
+    new Set<CharacterSheetPointPoolResourceUnitId>();
   for (const resource of battleResources) {
-    const unitId = characterSheetUseCountResourceUnitIdForBattleResource(resource);
+    const unitId =
+      characterSheetUseCountResourceUnitIdForBattleResource(resource);
     if (unitId !== null) battleUseCountResourceUnitIds.add(unitId);
+    const pointPoolUnitId =
+      characterSheetPointPoolResourceUnitIdForBattleResource(resource);
+    if (
+      pointPoolUnitId !== null &&
+      characterBattleResourceIsPointPool(resource)
+    ) {
+      battlePointPoolResourceUnitIds.add(pointPoolUnitId);
+    }
   }
   if (wildShapeUnitId.right !== undefined) {
     battleUseCountResourceUnitIds.add(wildShapeUnitId.right);
@@ -424,18 +438,52 @@ function characterResourceExpendituresFromBattle(input: {
       !isSupportedClassFeatureSpellFreeCastResourceTag(expenditure.tag) &&
       (expenditure.tag !== "useCountResource" ||
         !isCharacterSheetUseCountResourceUnitId(expenditure.unitId) ||
-        !battleUseCountResourceUnitIds.has(expenditure.unitId)),
+        !battleUseCountResourceUnitIds.has(expenditure.unitId)) &&
+      (expenditure.tag !== "pointPoolResource" ||
+        !isCharacterSheetPointPoolResourceUnitId(expenditure.unitId) ||
+        !battlePointPoolResourceUnitIds.has(expenditure.unitId)),
   );
   const nextFreeCastExpenditures: CharacterSheetResourceExpenditure[] = [];
   const nextUseCountExpenditures: CharacterSheetResourceExpenditure[] = [];
+  const nextPointPoolExpenditures: CharacterSheetResourceExpenditure[] = [];
   const druidWildShapeExpenditure =
     druidWildShapeResourceExpenditureFromBattle(input);
   if (Either.isLeft(druidWildShapeExpenditure)) {
     return Either.left(druidWildShapeExpenditure.left);
   }
   for (const resource of battleResources) {
+    const pointPoolUnitId =
+      characterSheetPointPoolResourceUnitIdForBattleResource(resource);
+    if (
+      pointPoolUnitId !== null &&
+      characterBattleResourceIsPointPool(resource)
+    ) {
+      const maxPoints = characterBattleResourceMaxPoints({
+        unit: resource.unit,
+        classLevels: input.combatant.origin.classLevels,
+      });
+      if (maxPoints === undefined) {
+        return characterSheetBattleHandoffIssue(
+          "Class feature point-pool resources must carry finite remaining points during battle handoff.",
+        );
+      }
+      const expended = Number(maxPoints) - Number(resource.pointsRemaining);
+      if (expended < 0) {
+        return characterSheetBattleHandoffIssue(
+          "Class feature point-pool remaining points exceed the battle resource cap during battle handoff.",
+        );
+      }
+      if (expended > 0) {
+        nextPointPoolExpenditures.push({
+          tag: "pointPoolResource",
+          unitId: pointPoolUnitId,
+          expended: resourceCount(expended),
+        });
+      }
+      continue;
+    }
     const profile = classFeatureSpellFreeCastProfileForResource(resource);
-    if (profile !== null) {
+    if (profile !== null && !characterBattleResourceIsPointPool(resource)) {
       if (resource.resource.cap.kind !== "fixed") {
         return characterSheetBattleHandoffIssue(
           "Class feature spell free casts must use a fixed battle resource cap during battle handoff.",
@@ -468,7 +516,10 @@ function characterResourceExpendituresFromBattle(input: {
     }
     const useCountUnitId =
       characterSheetUseCountResourceUnitIdForBattleResource(resource);
-    if (useCountUnitId !== null) {
+    if (
+      useCountUnitId !== null &&
+      !characterBattleResourceIsPointPool(resource)
+    ) {
       const maxUses = characterBattleResourceMaxUses({
         unit: resource.unit,
         classLevels: input.combatant.origin.classLevels,
@@ -497,10 +548,25 @@ function characterResourceExpendituresFromBattle(input: {
     ...nextExpenditures,
     ...nextFreeCastExpenditures,
     ...nextUseCountExpenditures,
+    ...nextPointPoolExpenditures,
     ...(druidWildShapeExpenditure.right === undefined
       ? []
       : [druidWildShapeExpenditure.right]),
   ]);
+}
+
+function characterSheetPointPoolResourceUnitIdForBattleResource(
+  resource: NonNullable<
+    Extract<
+      BattleCreatureState["origin"],
+      { readonly kind: "character" }
+    >["resources"]
+  >[number],
+): CharacterSheetPointPoolResourceUnitId | null {
+  return characterBattleResourceIsPointPool(resource) &&
+    isCharacterSheetPointPoolResourceUnitId(resource.unit.id)
+    ? resource.unit.id
+    : null;
 }
 
 function characterSheetUseCountResourceUnitIdForBattleResource(
