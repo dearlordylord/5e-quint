@@ -237,7 +237,7 @@
     },
     {
       "followUpTaskIds": [
-        "RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY"
+        "RKBC-NONFEATURE-DIRECT-CONDITION-LIFECYCLE-WITNESS"
       ],
       "id": "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
       "kind": "active-effect-lifecycle",
@@ -289,7 +289,7 @@
     },
     {
       "followUpTaskIds": [
-        "RKBC-SPELL-SAVE-GATED-CONDITION-PARITY"
+        "RKBC-NONFEATURE-SAVE-GATED-ATTACK-ADVANTAGE-WITNESS"
       ],
       "id": "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
       "kind": "active-effect-lifecycle",
@@ -725,7 +725,7 @@
     },
     {
       "followUpTaskIds": [
-        "RKBC-SPELL-MOONBEAM-MOVABLE-ZONE-PARITY"
+        "RKBC-NONFEATURE-MOONBEAM-MOVABLE-ZONE-WITNESS"
       ],
       "id": "BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE",
       "kind": "active-effect-lifecycle",
@@ -848,7 +848,7 @@
     },
     {
       "followUpTaskIds": [
-        "RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY"
+        "RKBC-NONFEATURE-CREATURE-TYPE-PROTECTION-WITNESS"
       ],
       "id": "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION",
       "kind": "active-effect-lifecycle",
@@ -871,7 +871,7 @@
     },
     {
       "followUpTaskIds": [
-        "RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY"
+        "RKBC-NONFEATURE-CONDITION-IMMUNITY-THP-WITNESS"
       ],
       "id": "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
       "kind": "active-effect-lifecycle",
@@ -893,7 +893,7 @@
     },
     {
       "followUpTaskIds": [
-        "RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY"
+        "RKBC-NONFEATURE-CONDITION-REMOVAL-PROTECTION-WITNESS"
       ],
       "id": "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
       "kind": "active-effect-lifecycle",
@@ -1712,7 +1712,7 @@
     },
     {
       "followUpTaskIds": [
-        "RKBC-FINAL-B-CLOSURE-GATE"
+        "RKBC-NONFEATURE-SURFACE-PROFILE-JOIN-EVIDENCE"
       ],
       "id": "BATTLE.SURFACE.EXECUTABLE_PROFILE_JOIN",
       "kind": "composition",
@@ -2291,15 +2291,15 @@
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
-        "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES"
+        "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+        "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
+        "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
+        "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE"
       ],
-      "followUpTaskIds": [
-        "RKBC-SPELL-AFTER-HIT-RIDERS-PARITY",
-        "RKBC-SPELL-ATTACK-SEQUENCES-PARITY"
-      ],
+      "followUpTaskIds": [],
       "holeKind": "attackRoll",
       "id": "BattleSpellAttackRollHole",
-      "reason": "Spell Attack Roll results drive spell hit, miss, Critical Hit, and after-hit, beam/ray, or chained continuations. Generic spell attack damage branches are covered; specialized spell attack continuations now route to dedicated parity-witness obligations.",
+      "reason": "Spell Attack Roll results drive spell hit, miss, Critical Hit, after-hit, beam/ray, and chained continuations. Generic spell attack damage branches and specialized spell attack continuations are covered by the spell, damage, after-hit rider, and attack-sequence obligations.",
       "subject": "battle-hole-family"
     },
     {
@@ -2324,17 +2324,18 @@
         "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
         "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
         "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
-        "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP"
+        "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
+        "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
+        "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
+        "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
+        "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
+        "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
+        "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING"
       ],
-      "followUpTaskIds": [
-        "RKBC-SPELL-AFTER-HIT-RIDERS-PARITY",
-        "RKBC-SPELL-WEAPON-HOSTED-PARITY",
-        "RKBC-SPELL-MARKED-RIDER-PARITY",
-        "RKBC-SPELL-ATTACK-SEQUENCES-PARITY"
-      ],
+      "followUpTaskIds": [],
       "holeKind": "rolledDice",
       "id": "BattleSpellDamageRollHole",
-      "reason": "Spell damage rolls feed attack, save, chained, after-hit, weapon-hosted, linked, and marked damage procedures. Generic spell damage branches, by-type reduction, disposition, and shared HP damage are covered; remaining specialized spell damage joins route to dedicated parity-witness obligations.",
+      "reason": "Spell damage rolls feed attack, save, chained, after-hit, weapon-hosted, linked, and marked damage procedures. Generic spell damage branches, by-type reduction, disposition, shared HP damage, and specialized spell damage joins are covered by dedicated obligations.",
       "subject": "battle-hole-family"
     },
     {
@@ -2364,14 +2365,13 @@
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
         "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
-        "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP"
+        "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
+        "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS"
       ],
-      "followUpTaskIds": [
-        "RKBC-SPELL-AFTER-HIT-RIDERS-PARITY"
-      ],
+      "followUpTaskIds": [],
       "holeKind": "rolledDice",
       "id": "BattleSpellTurnStartDamageRollHole",
-      "reason": "Turn-start spell damage rolls reuse shared HP damage and the generic damage-disposition split; timed after-hit spell damage lifecycle now routes to the after-hit rider parity-witness obligation.",
+      "reason": "Turn-start spell damage rolls reuse shared HP damage and the generic damage-disposition split; timed after-hit spell damage lifecycle is covered by the after-hit rider obligation.",
       "subject": "battle-hole-family"
     },
     {
@@ -2401,39 +2401,37 @@
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
-        "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES"
+        "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES",
+        "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS"
       ],
-      "followUpTaskIds": [
-        "RKBC-SPELL-ROLL-SCALAR-PARITY"
-      ],
+      "followUpTaskIds": [],
       "holeKind": "skillChoice",
       "id": "BattleSpellSkillChoiceHole",
-      "reason": "Skill choice changes which Ability Check specialization an effect modifies or grants, so it is reducer-visible state; roll-modifier spell profiles remain split parity follow-up work.",
+      "reason": "Skill choice changes which Ability Check specialization an effect modifies or grants, so it is reducer-visible state covered by the Ability Check and spell roll-modifier obligations.",
       "subject": "battle-hole-family"
     },
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
-        "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES"
+        "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES",
+        "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
+        "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER"
       ],
-      "followUpTaskIds": [
-        "RKBC-SPELL-ROLL-SCALAR-PARITY",
-        "RKBC-SPELL-MARKED-RIDER-PARITY"
-      ],
+      "followUpTaskIds": [],
       "holeKind": "abilityChoice",
       "id": "BattleSpellAbilityChoiceHole",
-      "reason": "Ability choice changes roll modifiers, marked-damage riders, or later checks and must be owned by a semantic obligation; roll-modifier and marked-damage spell joins now route to their dedicated parity-witness obligations.",
+      "reason": "Ability choice changes roll modifiers, marked-damage riders, or later checks and is covered by Ability Check, spell roll-modifier, and marked-damage rider obligations.",
       "subject": "battle-hole-family"
     },
     {
       "classification": "semantic-frontier",
-      "coveredByObligationIds": [],
-      "followUpTaskIds": [
-        "RKBC-SPELL-SAVE-GATED-CONDITION-PARITY"
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE"
       ],
+      "followUpTaskIds": [],
       "holeKind": "conditionChoice",
       "id": "BattleSpellConditionChoiceHole",
-      "reason": "Condition choice selects which condition a save-gated spell can apply, making it a spell-condition semantic frontier that the save-gated condition parity task owns.",
+      "reason": "Condition choice selects which condition a save-gated spell can apply, making it a spell-condition semantic frontier covered by the save-gated condition lifecycle obligation.",
       "subject": "battle-hole-family"
     },
     {
@@ -2474,28 +2472,29 @@
       "coveredByObligationIds": [
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
-        "BATTLE.COMMAND.OPTION_AND_NEXT_TURN"
+        "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
+        "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
+        "BATTLE.SPELL.REACTION_CASTING_TIME",
+        "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS"
       ],
       "followUpTaskIds": [
-        "RKBC-SPELL-SAVE-GATED-CONDITION-PARITY",
-        "RKBC-SPELL-REACTION-CASTING-PARITY",
-        "RKBC-SPELL-AFTER-HIT-RIDERS-PARITY"
+        "RKBC-NONFEATURE-SAVE-GATED-ATTACK-ADVANTAGE-WITNESS"
       ],
       "holeKind": "savingThrowOutcome",
       "id": "BattleSpellSavingThrowOutcomeHole",
-      "reason": "Spell Saving Throw outcomes determine damage, conditions, Command consequences, Counterspell, timed after-hit continuations, and area results. Generic spell save damage branches and Command consequences are covered; condition, reaction-casting, and after-hit joins remain split parity work, while table-caller area facts remain boundary evidence.",
+      "reason": "Spell Saving Throw outcomes determine damage, conditions, Command consequences, Counterspell, timed after-hit continuations, area results, and failed-save attack-roll Advantage effects. Covered branches point to their semantic obligations; the attack-roll Advantage branch remains a nonfeature parity-witness follow-up.",
       "subject": "battle-hole-family"
     },
     {
       "classification": "semantic-frontier",
-      "coveredByObligationIds": [],
-      "followUpTaskIds": [
-        "RKBC-SPELL-SAVE-GATED-CONDITION-PARITY",
-        "RKBC-SPELL-AFTER-HIT-RIDERS-PARITY"
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
+        "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS"
       ],
+      "followUpTaskIds": [],
       "holeKind": "savingThrowOutcome",
       "id": "BattleSpellTurnStartSavingThrowOutcomeHole",
-      "reason": "Turn-start active-effect Saving Throw outcomes can end or continue condition or timed-damage state and still need dedicated condition or after-hit rider QNT/parity ownership.",
+      "reason": "Turn-start active-effect Saving Throw outcomes can end or continue condition or timed-damage state and are covered by save-gated condition and after-hit rider obligations.",
       "subject": "battle-hole-family"
     },
     {
@@ -2511,13 +2510,13 @@
     },
     {
       "classification": "semantic-frontier",
-      "coveredByObligationIds": [],
-      "followUpTaskIds": [
-        "RKBC-SPELL-SAVE-GATED-CONDITION-PARITY"
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE"
       ],
+      "followUpTaskIds": [],
       "holeKind": "savingThrowOutcome",
       "id": "BattleHideousLaughterRepeatSavingThrowOutcomeHole",
-      "reason": "Hideous Laughter repeat Saving Throw outcomes depend on end-turn or damage triggers and control effect lifecycle cleanup.",
+      "reason": "Hideous Laughter repeat Saving Throw outcomes depend on end-turn or damage triggers and control effect lifecycle cleanup through the save-gated condition lifecycle obligation.",
       "subject": "battle-hole-family"
     },
     {
@@ -2533,13 +2532,13 @@
     },
     {
       "classification": "semantic-frontier",
-      "coveredByObligationIds": [],
-      "followUpTaskIds": [
-        "RKBC-SPELL-SAVE-GATED-CONDITION-PARITY"
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE"
       ],
+      "followUpTaskIds": [],
       "holeKind": "savingThrowOutcome",
       "id": "BattleSpellConditionEndTurnSavingThrowOutcomeHole",
-      "reason": "End-turn condition Saving Throw outcomes decide whether a spell-owned condition persists or is removed.",
+      "reason": "End-turn condition Saving Throw outcomes decide whether a spell-owned condition persists or is removed through the save-gated condition lifecycle obligation.",
       "subject": "battle-hole-family"
     },
     {
@@ -2580,11 +2579,11 @@
       "classification": "semantic-frontier",
       "coveredByObligationIds": [],
       "followUpTaskIds": [
-        "RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY"
+        "RKBC-NONFEATURE-CREATURE-TYPE-PROTECTION-WITNESS"
       ],
       "holeKind": "savingThrowOutcome",
       "id": "BattleProtectionRelevantEffectSavingThrowOutcomeHole",
-      "reason": "Protection-related repeat saves decide whether relevant charmed, frightened, or possession effects persist.",
+      "reason": "Protection-related repeat saves decide whether relevant charmed, frightened, or possession effects persist; the semantic obligation remains open for a focused nonfeature parity witness.",
       "subject": "battle-hole-family"
     },
     {
@@ -2759,17 +2758,18 @@
         "BATTLE.DAMAGE.ATTACK_BRANCHES",
         "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
         "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
-        "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP"
+        "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
+        "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
+        "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
+        "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
+        "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
+        "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
+        "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING"
       ],
       "fillKind": "rolledDice",
-      "followUpTaskIds": [
-        "RKBC-SPELL-AFTER-HIT-RIDERS-PARITY",
-        "RKBC-SPELL-WEAPON-HOSTED-PARITY",
-        "RKBC-SPELL-MARKED-RIDER-PARITY",
-        "RKBC-SPELL-ATTACK-SEQUENCES-PARITY"
-      ],
+      "followUpTaskIds": [],
       "id": "rolledDice",
-      "reason": "Rolled Dice fills are shared by damage, healing, mitigation, linked effects, and feature-roll procedures. Generic damage branch, healing, type/reduction, disposition, shared HP, and linked-effect obligations cover the core while remaining specialized spell roll joins route to dedicated parity-witness obligations.",
+      "reason": "Rolled Dice fills are shared by damage, healing, mitigation, linked effects, and feature-roll procedures. Generic damage branch, healing, type/reduction, disposition, shared HP, linked-effect, and specialized spell roll joins are covered by dedicated obligations.",
       "subject": "battle-fill-kind"
     },
     {
@@ -2790,27 +2790,30 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
-        "BATTLE.COMMAND.OPTION_AND_NEXT_TURN"
+        "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
+        "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
+        "BATTLE.SPELL.REACTION_CASTING_TIME",
+        "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS"
       ],
       "fillKind": "savingThrowOutcome",
       "followUpTaskIds": [
-        "RKBC-SPELL-SAVE-GATED-CONDITION-PARITY",
-        "RKBC-SPELL-REACTION-CASTING-PARITY",
-        "RKBC-SPELL-AFTER-HIT-RIDERS-PARITY"
+        "RKBC-NONFEATURE-SAVE-GATED-ATTACK-ADVANTAGE-WITNESS",
+        "RKBC-NONFEATURE-CREATURE-TYPE-PROTECTION-WITNESS",
+        "RKBC-NONFEATURE-CONDITION-REMOVAL-PROTECTION-WITNESS"
       ],
       "id": "savingThrowOutcome",
-      "reason": "Saving Throw outcomes drive damage, condition, Command, protection, feature, reaction-casting, and active-effect lifecycle branches. Generic spell/feature damage save branching and Command are covered while condition, reaction-casting, and after-hit joins remain split parity work; table-caller joins are recorded in profile-obligations.jsonl.",
+      "reason": "Saving Throw outcomes drive damage, condition, Command, protection, feature, reaction-casting, and active-effect lifecycle branches. Covered branches point to semantic obligations; the remaining protection and failed-save attack-roll Advantage branches stay explicit nonfeature parity-witness follow-ups.",
       "subject": "battle-fill-kind"
     },
     {
       "classification": "semantic-frontier",
-      "coveredByObligationIds": [],
-      "fillKind": "conditionChoice",
-      "followUpTaskIds": [
-        "RKBC-SPELL-SAVE-GATED-CONDITION-PARITY"
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE"
       ],
+      "fillKind": "conditionChoice",
+      "followUpTaskIds": [],
       "id": "conditionChoice",
-      "reason": "Condition choices select reducer-visible condition application, not display metadata.",
+      "reason": "Condition choices select reducer-visible condition application, not display metadata, and are covered by the save-gated condition lifecycle obligation.",
       "subject": "battle-fill-kind"
     },
     {
@@ -2827,15 +2830,14 @@
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
-        "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES"
+        "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES",
+        "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
+        "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER"
       ],
       "fillKind": "abilityChoice",
-      "followUpTaskIds": [
-        "RKBC-SPELL-ROLL-SCALAR-PARITY",
-        "RKBC-SPELL-MARKED-RIDER-PARITY"
-      ],
+      "followUpTaskIds": [],
       "id": "abilityChoice",
-      "reason": "Ability choices determine later roll modifiers, checks, or marked-damage semantics; roll-modifier and marked-damage spell profile joins now route to their dedicated parity-witness obligations.",
+      "reason": "Ability choices determine later roll modifiers, checks, or marked-damage semantics covered by Ability Check, spell roll-modifier, and marked-damage rider obligations.",
       "subject": "battle-fill-kind"
     },
     {
@@ -3113,14 +3115,13 @@
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
-        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.SPELL.SELF_TRANSFORMATION_MODE"
       ],
-      "followUpTaskIds": [
-        "RKBC-SPELL-SELF-TRANSFORMATION-PARITY"
-      ],
+      "followUpTaskIds": [],
       "holeKind": "selfTransformationModeChoice",
       "id": "BattleSelfTransformationModeChoiceHole",
-      "reason": "Self-transformation mode choice selects the reducer-visible Alter Self mode and changes later spell effect projections; the spell procedure profile owns the executable branch while self-transformation parity remains split follow-up work.",
+      "reason": "Self-transformation mode choice selects the reducer-visible Alter Self mode and changes later spell effect projections; the spell procedure and self-transformation mode obligations own the executable branch.",
       "subject": "battle-hole-family"
     },
     {
@@ -3149,14 +3150,13 @@
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
-        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.SPELL.SELF_TRANSFORMATION_MODE"
       ],
       "fillKind": "selfTransformationModeChoice",
-      "followUpTaskIds": [
-        "RKBC-SPELL-SELF-TRANSFORMATION-PARITY"
-      ],
+      "followUpTaskIds": [],
       "id": "selfTransformationModeChoice",
-      "reason": "Self-transformation mode fills choose the reducer-visible spell mode rather than presentation metadata; self-transformation parity remains split follow-up work.",
+      "reason": "Self-transformation mode fills choose the reducer-visible spell mode rather than presentation metadata and are covered by the self-transformation mode obligation.",
       "subject": "battle-fill-kind"
     },
     {
@@ -3165,11 +3165,11 @@
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
       ],
       "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-TABLE-CALLER"
+        "RKBC-NONFEATURE-SURFACE-PROFILE-JOIN-EVIDENCE"
       ],
       "holeKind": "objectContactTargets",
       "id": "BattleObjectContactTargetsHole",
-      "reason": "Heat Metal object-contact target identity, physical-contact witnesses, and later-turn object-within-range witness are caller/table facts. The reducer consumes selected combatant ids and object-contact witness facts without deriving inventory, map geometry, or object position state; spell damage lifecycle remains owned by the object-contact spell profile.",
+      "reason": "Heat Metal object-contact target identity, physical-contact witnesses, and later-turn object-within-range witness are caller/table facts. The reducer consumes selected combatant ids and object-contact witness facts without deriving inventory, map geometry, or object position state; the remaining work is Surface/profile join evidence, not runtime feature widening.",
       "subject": "battle-hole-family"
     },
     {
@@ -3179,10 +3179,10 @@
       ],
       "fillKind": "objectContactTargets",
       "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-TABLE-CALLER"
+        "RKBC-NONFEATURE-SURFACE-PROFILE-JOIN-EVIDENCE"
       ],
       "id": "objectContactTargets",
-      "reason": "Object-contact target fills supply selected contact creatures plus table-witnessed physical-contact and object-within-range facts for Heat Metal. Contact and range derivation stay at the caller/table boundary while reducer damage semantics are handled by the spell invocation profile.",
+      "reason": "Object-contact target fills supply selected contact creatures plus table-witnessed physical-contact and object-within-range facts for Heat Metal. Contact and range derivation stay at the caller/table boundary; the remaining work is Surface/profile join evidence, not runtime feature widening.",
       "subject": "battle-fill-kind"
     },
     {

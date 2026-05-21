@@ -17,7 +17,14 @@
     {"number":11,"id":"RKBC-SPELL-ATTACK-SEQUENCES-PARITY","status":"done","title":"Spell Attack Sequence Parity Witnesses"},
     {"number":12,"id":"RKBC-SPELL-MIRROR-IMAGE-PARITY","status":"done","title":"Mirror Image Hit Interception Parity Witness"},
     {"number":13,"id":"RKBC-SPELL-LINKED-EFFECT-PARITY","status":"done","title":"Linked Spell Effect Damage Sharing Parity Witness"},
-    {"number":14,"id":"RKBC-FINAL-COVERAGE-CLOSURE-GATE","status":"ready-for-research","title":"Final MBT Coverage Closure Gate"}
+    {"number":14,"id":"RKBC-FINAL-COVERAGE-CLOSURE-GATE","status":"done","title":"Final MBT Coverage Closure Gate"},
+    {"number":15,"id":"RKBC-NONFEATURE-DIRECT-CONDITION-LIFECYCLE-WITNESS","status":"ready-for-research","title":"Direct Condition Lifecycle Coverage Witness"},
+    {"number":16,"id":"RKBC-NONFEATURE-SAVE-GATED-ATTACK-ADVANTAGE-WITNESS","status":"ready-for-research","title":"Save-Gated Attack Advantage Coverage Witness"},
+    {"number":17,"id":"RKBC-NONFEATURE-MOONBEAM-MOVABLE-ZONE-WITNESS","status":"ready-for-research","title":"Moonbeam Movable Zone Coverage Witness"},
+    {"number":18,"id":"RKBC-NONFEATURE-CREATURE-TYPE-PROTECTION-WITNESS","status":"ready-for-research","title":"Creature-Type Protection Coverage Witness"},
+    {"number":19,"id":"RKBC-NONFEATURE-CONDITION-IMMUNITY-THP-WITNESS","status":"ready-for-research","title":"Condition Immunity Temporary Hit Point Coverage Witness"},
+    {"number":20,"id":"RKBC-NONFEATURE-CONDITION-REMOVAL-PROTECTION-WITNESS","status":"ready-for-research","title":"Condition Removal And Protection Coverage Witness"},
+    {"number":21,"id":"RKBC-NONFEATURE-SURFACE-PROFILE-JOIN-EVIDENCE","status":"ready-for-research","title":"Surface Profile Join Evidence Closure"}
   ]
 }
 -->
@@ -142,7 +149,7 @@ Output:
 
 ### Task 14 - RKBC-FINAL-COVERAGE-CLOSURE-GATE - Final MBT Coverage Closure Gate
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 - Tasks D1-D13.
@@ -150,3 +157,73 @@ Depends on:
 Output:
 - Refresh rules-kernel and unit-profile coverage reports.
 - Record remaining gaps as explicit nonfeature follow-ups or close the lane.
+
+### Task 15 - RKBC-NONFEATURE-DIRECT-CONDITION-LIFECYCLE-WITNESS - Direct Condition Lifecycle Coverage Witness
+
+Status: `ready-for-research`
+
+Depends on:
+- Task 14.
+
+Output:
+- Add focused parity witness ownership for `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE`, covering direct spell-owned condition application, cleanup, duration expiry, and target-action early ending, or split unsupported branches into explicit boundary rows.
+
+### Task 16 - RKBC-NONFEATURE-SAVE-GATED-ATTACK-ADVANTAGE-WITNESS - Save-Gated Attack Advantage Coverage Witness
+
+Status: `ready-for-research`
+
+Depends on:
+- Task 14.
+
+Output:
+- Add focused parity witness ownership for `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE`, covering failed-save attack-roll Advantage active effects from save outcome through attack-roll projection.
+
+### Task 17 - RKBC-NONFEATURE-MOONBEAM-MOVABLE-ZONE-WITNESS - Moonbeam Movable Zone Coverage Witness
+
+Status: `ready-for-research`
+
+Depends on:
+- Task 14.
+
+Output:
+- Add focused parity witness ownership for `BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE`, covering current Moonbeam movable-zone lifecycle semantics, or split any shapechanging rider that is outside current runtime support.
+
+### Task 18 - RKBC-NONFEATURE-CREATURE-TYPE-PROTECTION-WITNESS - Creature-Type Protection Coverage Witness
+
+Status: `ready-for-research`
+
+Depends on:
+- Task 14.
+
+Output:
+- Add focused parity witness ownership for `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION`, covering creature-type protection, prevention, and relevant-effect Saving Throw Advantage.
+
+### Task 19 - RKBC-NONFEATURE-CONDITION-IMMUNITY-THP-WITNESS - Condition Immunity Temporary Hit Point Coverage Witness
+
+Status: `ready-for-research`
+
+Depends on:
+- Task 14.
+
+Output:
+- Add focused parity witness ownership for `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS`, covering condition immunity with start-turn Temporary Hit Point refresh and cleanup.
+
+### Task 20 - RKBC-NONFEATURE-CONDITION-REMOVAL-PROTECTION-WITNESS - Condition Removal And Protection Coverage Witness
+
+Status: `ready-for-research`
+
+Depends on:
+- Task 14.
+
+Output:
+- Add focused parity witness ownership for `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION`, covering direct condition removal and poison protection semantics beyond the selected-identity evidence already recorded for Unit replay.
+
+### Task 21 - RKBC-NONFEATURE-SURFACE-PROFILE-JOIN-EVIDENCE - Surface Profile Join Evidence Closure
+
+Status: `ready-for-research`
+
+Depends on:
+- Task 14.
+
+Output:
+- Prove every currently admitted executable battle Surface profile points to a covered rules-kernel semantic obligation, or record explicit non-runtime or boundary dispositions.
