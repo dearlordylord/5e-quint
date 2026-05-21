@@ -102,6 +102,7 @@ module battleRuntimeSpellInvocation {
       | DivineSmite => true
       | HuntersMark => true
       | Hex => true
+      | MagicWeapon => true
       | ShockingGrasp => false
       | GuidingBolt => true
       | RayOfSickness => true

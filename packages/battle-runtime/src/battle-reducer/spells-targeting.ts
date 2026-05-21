@@ -25,19 +25,17 @@ import {
   type BattleSpellTargetListSpatialFact,
   type BattleState,
   type BattleTeleportDestinationHole,
+  type BattleMagicWeaponTargetItemHole,
   type BattleObjectTargetChoiceHole,
   type BattleCreatureState,
   type BattleTargetChoiceHole,
   type BattleTargetSpatialFact,
+  type MagicWeaponEnhancementSpellInvocation,
   type SupportedSpellInvocation,
   type TargetListSpellInvocation,
 } from "../battle-reducer.ts";
 import { COMMAND_OPTIONS } from "./domain-constants.ts";
-import {
-  spellId,
-  type BattleObjectId,
-  type CombatantId,
-} from "../identity.ts";
+import { spellId, type BattleObjectId, type CombatantId } from "../identity.ts";
 import { combatantWearingArmor } from "./creature-state-leaves.ts";
 import { spellAttackSequencePartName } from "./spells-profile-shared.ts";
 
@@ -222,6 +220,26 @@ export function spellObjectTargetHoleId(
   invocation: SingleObjectSpellInvocation,
 ): BattleHoleId {
   return holeId(`battle:spell:object-target:${invocation.spell.id}`);
+}
+
+export function magicWeaponTargetItemHole(
+  invocation: MagicWeaponEnhancementSpellInvocation,
+): BattleMagicWeaponTargetItemHole {
+  const holeKey = `battle:spell:magic-weapon-target-item:${invocation.spell.id}`;
+  return {
+    kind: "magicWeaponTargetItem",
+    holeId: holeId(holeKey),
+    holeInstanceKey: holeInstanceKey(holeKey),
+    label: `${invocation.spell.name} target item`,
+    spell: invocation,
+    requiresTableItemFact: true,
+  };
+}
+
+export function magicWeaponTargetItemHoleId(
+  invocation: MagicWeaponEnhancementSpellInvocation,
+): BattleHoleId {
+  return holeId(`battle:spell:magic-weapon-target-item:${invocation.spell.id}`);
 }
 
 export function spellObjectContactTargetsHole(input: {
@@ -451,10 +469,7 @@ export function spellAreaChoiceHole(
   invocation: Extract<
     SupportedSpellInvocation,
     {
-      readonly procedure:
-        | "fogCloudObscurement"
-        | "flamingSphere"
-        | "moonbeam";
+      readonly procedure: "fogCloudObscurement" | "flamingSphere" | "moonbeam";
     }
   >,
 ): BattleSpellAreaChoiceHole {
@@ -473,10 +488,7 @@ export function spellAreaChoiceHoleId(
   invocation: Extract<
     SupportedSpellInvocation,
     {
-      readonly procedure:
-        | "fogCloudObscurement"
-        | "flamingSphere"
-        | "moonbeam";
+      readonly procedure: "fogCloudObscurement" | "flamingSphere" | "moonbeam";
     }
   >,
 ): BattleHoleId {

@@ -137,6 +137,7 @@ import {
   resolveObjectContactDamageRepeatSpellAct,
   resolveObjectContactDamageSpellAct,
 } from "./spells-resolve-object-contact-damage.ts";
+import { resolveMagicWeaponEnhancementSpellAct } from "./spells-resolve-release.ts";
 export {
   resolveFlamingSphereSpellAct,
   resolveFogCloudObscurementSpellAct,
@@ -147,6 +148,7 @@ export {
   resolveObjectContactDamageRepeatSpellAct,
   resolveObjectContactDamageSpellAct,
 } from "./spells-resolve-object-contact-damage.ts";
+export { resolveMagicWeaponEnhancementSpellAct } from "./spells-resolve-release.ts";
 export { resolveAttackBurstSaveDamageSpellAct } from "./spells-resolve-attack-burst.ts";
 export {
   applyChainedSpellDamage,
@@ -1907,7 +1909,8 @@ export function resolveBonusActionSpellAct(
     }
   } else if (
     invocation.procedure === "weaponDamageRider" ||
-    invocation.procedure === "weaponAttackOverride"
+    invocation.procedure === "weaponAttackOverride" ||
+    invocation.procedure === "magicWeaponEnhancement"
   ) {
     if (invocation.actionCost !== "bonusAction") {
       return invalidResult(
@@ -2056,6 +2059,14 @@ export function resolveBonusActionSpellAct(
   }
   if (invocation.procedure === "weaponDamageRider") {
     return resolveWeaponDamageRiderSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "magicWeaponEnhancement") {
+    return resolveMagicWeaponEnhancementSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

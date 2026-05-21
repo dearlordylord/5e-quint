@@ -1,6 +1,6 @@
 // Attack damage hole/disposition helpers extracted from battle-reducer.ts.
 // Cluster U (attack_damage_apply). Mechanical extraction — no behavior change.
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form unit-feature.martial-arts-attack-projection spell.invocation-weapon-attack-override spell.invocation-self-transformation-mode
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form unit-feature.martial-arts-attack-projection spell.invocation-weapon-attack-override spell.invocation-magic-weapon-enhancement spell.invocation-self-transformation-mode
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.ATTACK_BRANCHES BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP
 
 import {
@@ -39,6 +39,7 @@ import {
   type BattleFill,
   type BattleHoleId,
   type BattleState,
+  type MagicWeaponEnhancementBonus,
   type SpellMarkedDamageRider,
   type SpellAttackDamageComponent,
   type StatBlockMultiattackActionResource,
@@ -364,7 +365,8 @@ export function attackActionOptionsForActor(
       ? [unarmedStrike]
       : [
           ...attackActionVariantOptions(
-            weaponAttackWithActiveSpellOverride(
+            weaponAttackWithActiveSpellEffects(
+              state,
               actor,
               actor.origin.attack,
               mainHandWeaponItemIdForAttack(actor, actor.origin.attack),
@@ -423,7 +425,8 @@ export function offHandAttackActionOptionsForActor(
   ) {
     return [];
   }
-  const projectedOffHand = weaponAttackWithActiveSpellOverride(
+  const projectedOffHand = weaponAttackWithActiveSpellEffects(
+    state,
     actor,
     offHand,
     offHandWeaponItemIdForAttack(actor, offHand),
@@ -445,6 +448,20 @@ export function offHandAttackActionOptionsForActor(
   return attackActionVariantOptions(lightPropertyOffHand).filter(
     (attack): attack is CharacterWeaponAttackActionOption =>
       attack.kind === "weapon",
+  );
+}
+
+function weaponAttackWithActiveSpellEffects(
+  state: BattleState,
+  actor: BattleCreatureState,
+  attack: CharacterWeaponAttackActionOption,
+  attachedWeaponItemId: string | undefined,
+): CharacterWeaponAttackActionOption {
+  return weaponAttackWithMagicWeaponEnhancement(
+    state,
+    actor.combatantId,
+    weaponAttackWithActiveSpellOverride(actor, attack, attachedWeaponItemId),
+    attachedWeaponItemId,
   );
 }
 
@@ -500,6 +517,63 @@ function weaponAttackWithActiveSpellOverride(
   };
 }
 
+function weaponAttackWithMagicWeaponEnhancement(
+  state: BattleState,
+  holderCombatantId: CombatantId,
+  attack: CharacterWeaponAttackActionOption,
+  attachedWeaponItemId: string | undefined,
+): CharacterWeaponAttackActionOption {
+  if (attachedWeaponItemId === undefined) {
+    return attack;
+  }
+  const bonus = battleWeaponItemMagicWeaponEnhancementBonus(
+    state,
+    holderCombatantId,
+    attachedWeaponItemId,
+  );
+  if (bonus === null) {
+    return attack;
+  }
+  return {
+    ...attack,
+    attackBonus: attackBonus(
+      Number(
+        attack.attackBonus ?? attackBonus(Number(attack.abilityModifier)),
+      ) + bonus,
+    ),
+    damageBonus: (attack.damageBonus ?? 0) + bonus,
+    ...(attack.alternateAbilityChoices === undefined
+      ? {}
+      : {
+          alternateAbilityChoices: magicWeaponAlternateAbilityChoices(
+            attack.alternateAbilityChoices,
+            bonus,
+          ),
+        }),
+  };
+}
+
+function magicWeaponAlternateAbilityChoices(
+  choices: ReadonlyNonEmptyArray<CharacterWeaponAttackAbilityChoice>,
+  bonus: MagicWeaponEnhancementBonus,
+): ReadonlyNonEmptyArray<CharacterWeaponAttackAbilityChoice> {
+  const [first, ...rest] = choices;
+  return [
+    magicWeaponAbilityChoice(first, bonus),
+    ...rest.map((choice) => magicWeaponAbilityChoice(choice, bonus)),
+  ];
+}
+
+function magicWeaponAbilityChoice(
+  choice: CharacterWeaponAttackAbilityChoice,
+  bonus: MagicWeaponEnhancementBonus,
+): CharacterWeaponAttackAbilityChoice {
+  return {
+    ...choice,
+    attackBonus: attackBonus(Number(choice.attackBonus) + bonus),
+  };
+}
+
 function isSpellWeaponAttackOverrideEffect(
   effect: BattleActiveEffect,
 ): effect is Extract<
@@ -507,6 +581,72 @@ function isSpellWeaponAttackOverrideEffect(
   { readonly kind: "spellWeaponAttackOverride" }
 > {
   return effect.kind === "spellWeaponAttackOverride";
+}
+
+type SpellMagicWeaponEnhancementEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "spellMagicWeaponEnhancement" }
+>;
+
+type MagicWeaponEnhancementExclusion = {
+  readonly exceptSourceCombatantId?: CombatantId;
+  readonly exceptSourceSpellId?: string;
+};
+
+export function battleWeaponItemHasMagicWeaponEnhancement(
+  state: BattleState,
+  holderCombatantId: CombatantId,
+  weaponItemId: string,
+  exclusion: MagicWeaponEnhancementExclusion = {},
+): boolean {
+  return (
+    battleWeaponItemMagicWeaponEnhancementBonus(
+      state,
+      holderCombatantId,
+      weaponItemId,
+      exclusion,
+    ) !== null
+  );
+}
+
+export function battleWeaponItemMagicWeaponEnhancementBonus(
+  state: BattleState,
+  holderCombatantId: CombatantId,
+  weaponItemId: string,
+  exclusion: MagicWeaponEnhancementExclusion = {},
+): MagicWeaponEnhancementBonus | null {
+  const bonuses = [...state.combatants.values()].flatMap((combatant) =>
+    combatant.activeEffects.filter(
+      (effect): effect is SpellMagicWeaponEnhancementEffect =>
+        isSpellMagicWeaponEnhancementEffect(effect) &&
+        effect.holderCombatantId === holderCombatantId &&
+        effect.weaponItemId === weaponItemId &&
+        !spellMagicWeaponEnhancementEffectExcluded(effect, exclusion),
+    ),
+  );
+  return bonuses.reduce<MagicWeaponEnhancementBonus | null>(
+    (highest, effect) =>
+      highest === null || effect.bonus > highest ? effect.bonus : highest,
+    null,
+  );
+}
+
+function isSpellMagicWeaponEnhancementEffect(
+  effect: BattleActiveEffect,
+): effect is SpellMagicWeaponEnhancementEffect {
+  return effect.kind === "spellMagicWeaponEnhancement";
+}
+
+function spellMagicWeaponEnhancementEffectExcluded(
+  effect: SpellMagicWeaponEnhancementEffect,
+  exclusion: MagicWeaponEnhancementExclusion,
+): boolean {
+  return (
+    exclusion.exceptSourceCombatantId !== undefined &&
+    effect.sourceCombatantId === exclusion.exceptSourceCombatantId &&
+    (exclusion.exceptSourceSpellId === undefined ||
+      effect.sourceSpellId === exclusion.exceptSourceSpellId)
+  );
 }
 
 function mainHandWeaponItemIdForAttack(

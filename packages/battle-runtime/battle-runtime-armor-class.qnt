@@ -59,6 +59,7 @@ module battleRuntimeArmorClass {
         | DivineFavorWeaponDamageRider(_) => false
         | HuntersMarkDamageRider(_) => false
         | HexDamageRider(_) => false
+        | MagicWeaponEnhancement(_) => false
         | RayOfSicknessPoisoned => false
         | ChillTouchHitPointRegainPrevented(_) => false
         | StarryWispInvisibleBenefitDenied(_) => false

@@ -14,6 +14,7 @@ export const BATTLE_TRACE_HOLE_KINDS = [
   "objectContactTargets",
   "objectDropResolution",
   "heldObjectFacts",
+  "magicWeaponTargetItem",
   "damageTypeChoice",
   "spellTargetAllocation",
   "spellTargetList",

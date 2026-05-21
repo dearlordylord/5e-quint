@@ -37,6 +37,10 @@ export {
   type BattleTraceHoleKind,
 } from "./battle-trace-contract.ts";
 export { objectInvisibleBenefitDenied } from "./battle-reducer/attack-roll.ts";
+export {
+  battleWeaponItemHasMagicWeaponEnhancement,
+  battleWeaponItemMagicWeaponEnhancementBonus,
+} from "./battle-reducer/attack-damage-apply.ts";
 export { thaumaturgyBoomingVoiceInfluenceAbilityCheckHole } from "./battle-reducer/hole-helpers.ts";
 export type {
   CharacterBattleClassLevel,
@@ -282,6 +286,8 @@ export {
   type BattleLightEmitterProjection,
   type BattleLightEmitterProjectionFact,
   type BattleLightlyObscuredPerceptionRollMode,
+  type BattleMagicWeaponTargetItemFact,
+  type BattleMagicWeaponTargetItemHole,
   type BattleObscurementZone,
   type BattleMovementFillValue,
   type BattleMovementHole,
@@ -338,6 +344,8 @@ export {
   type SelfTransformationModeKind,
   type SelfTransformationModeSpellInvocation,
   type SupportedSpellInvocation,
+  type MagicWeaponEnhancementBonus,
+  type MagicWeaponEnhancementSpellInvocation,
   type ThaumaturgyBoomingVoiceSpellInvocation,
   type SuccessfulAbilityCheckReactionReductionResolutionInput,
   type SuccessfulAbilityCheckReactionReductionResolutionResult,

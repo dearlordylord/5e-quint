@@ -74,6 +74,7 @@ export function maybeSpellAct(input: {
 export function bonusSpellAct(input: {
   readonly state: BattleState;
   readonly spellId: string;
+  readonly slotLevel?: number;
 }): BonusActionSpellAct {
   const act = maybeBonusSpellAct(input);
   expect(act).toBeDefined();
@@ -86,11 +87,15 @@ export function bonusSpellAct(input: {
 export function maybeBonusSpellAct(input: {
   readonly state: BattleState;
   readonly spellId: string;
+  readonly slotLevel?: number;
 }): BonusActionSpellAct | undefined {
   return discoverBattleActs(input.state).find(
     (candidate): candidate is BonusActionSpellAct =>
       candidate.subject.tag === "bonusActionSpell" &&
-      candidate.subject.invocation.spellId === input.spellId,
+      candidate.subject.invocation.spellId === input.spellId &&
+      (input.slotLevel === undefined ||
+        (candidate.subject.invocation.tag === "spellSlot" &&
+          Number(candidate.subject.invocation.slotLevel) === input.slotLevel)),
   );
 }
 
@@ -112,6 +117,24 @@ export function bonusSpellActForItem(input: {
     );
   }
   return act;
+}
+
+export function magicWeaponTargetItemFill(
+  hole: Extract<BattleHole, { readonly kind: "magicWeaponTargetItem" }>,
+  target: {
+    readonly holderCombatantId: CombatantId;
+    readonly itemId: string;
+  },
+): Extract<BattleFill, { readonly kind: "magicWeaponTargetItem" }> {
+  return {
+    kind: "magicWeaponTargetItem",
+    holeId: hole.holeId,
+    value: {
+      kind: "nonmagicalWeaponItem",
+      holderCombatantId: target.holderCombatantId,
+      itemId: target.itemId,
+    },
+  };
 }
 
 export function bonusActionDashSpellAct(input: {
@@ -766,10 +789,7 @@ export function gustOfWindLineSavingThrowOutcomeFill(
 }
 
 export function gustOfWindLineDirectionChoiceFill(
-  hole: Extract<
-    BattleHole,
-    { readonly kind: "gustOfWindLineDirectionChoice" }
-  >,
+  hole: Extract<BattleHole, { readonly kind: "gustOfWindLineDirectionChoice" }>,
   directionId: BattleLineDirectionId = gustOfWindEastDirectionId,
 ): Extract<BattleFill, { readonly kind: "gustOfWindLineDirectionChoice" }> {
   return {

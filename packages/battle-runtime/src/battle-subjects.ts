@@ -149,6 +149,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "conditionRemovalProtection",
   "directConditionRemoval",
   "weaponDamageRider",
+  "magicWeaponEnhancement",
   "afterHitDamage",
   "afterHitSaveGatedCondition",
   "afterHitTimedDamageAndSave",

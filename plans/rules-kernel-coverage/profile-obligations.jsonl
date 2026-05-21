@@ -70,6 +70,7 @@
 {"profileId":"spell.invocation-after-hit-damage-illumination","obligationIds":["BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS"]}
 {"profileId":"spell.invocation-spell-hosted-weapon-attack","obligationIds":["BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS"]}
 {"profileId":"spell.invocation-weapon-attack-override","obligationIds":["BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS"]}
+{"profileId":"spell.invocation-magic-weapon-enhancement","obligationIds":["BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS"]}
 {"profileId":"spell.invocation-marked-damage-rider","obligationIds":["BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER"]}
 {"profileId":"spell.invocation-chained-attack-damage","obligationIds":["BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE"]}
 {"profileId":"spell.invocation-independent-attack-sequence","obligationIds":["BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE"]}

@@ -192,14 +192,14 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 504,
-      "percent": "90.6%",
+      "numerator": 508,
+      "percent": "91.4%",
       "rowsByStatus": {
-        "accepted": 367,
+        "accepted": 371,
         "accepted-no-battle-effect": 137,
         "owner-evidence-required": 1,
         "partial-battle-runtime": 11,
-        "battle-runtime-required": 40
+        "battle-runtime-required": 36
       }
     },
     "levelOneClassContainers": 12,
@@ -213,19 +213,19 @@
       "catalog-installed-owner-evidence-required": 1
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 383,
+      "catalog-installed-owner-evidence-present": 387,
       "non-runtime": 24,
       "catalog-installed-owner-evidence-required": 17,
       "catalog-only/dead-for-now": 108,
       "missing-authored-record": 10,
-      "catalog-authored-executable-follow-up": 14
+      "catalog-authored-executable-follow-up": 10
     },
     "spellPressureRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 219,
+      "catalog-installed-owner-evidence-present": 223,
       "catalog-only/dead-for-now": 108,
       "catalog-installed-owner-evidence-required": 16,
       "missing-authored-record": 10,
-      "catalog-authored-executable-follow-up": 14
+      "catalog-authored-executable-follow-up": 10
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -15315,14 +15315,25 @@
         "sourceRecordPath": "packages/surface/content/magic_weapon.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "magic_weapon"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME: L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME owns Promote Magic Weapon as a level-2-or-higher Bonus Action Spell Invocation that spends the Bonus Action and Spell Slot, consumes caller-supplied target item identity and nonmagical weapon witness facts, records one caster-owned item-attached spell effect, projects magic-weapon status plus the slot-tiered attack-roll and damage-roll bonuses only for attacks and damage made with that item, and ends on duration expiry or same-caster recast without rewriting authored weapon records or adding a parallel spell-owned loadout table. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for spell discovery, resource spending, item-attached effect state, exact-item attack and damage projections, magic-weapon status projection, duration cleanup, and same-caster recast replacement.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit magic_weapon is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME at packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/paladin:spell-level-2:spell-unit-pressure:paladin_spell_list_prayer_of_healing",
@@ -17321,14 +17332,25 @@
         "sourceRecordPath": "packages/surface/content/magic_weapon.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "magic_weapon"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME: L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME owns Promote Magic Weapon as a level-2-or-higher Bonus Action Spell Invocation that spends the Bonus Action and Spell Slot, consumes caller-supplied target item identity and nonmagical weapon witness facts, records one caster-owned item-attached spell effect, projects magic-weapon status plus the slot-tiered attack-roll and damage-roll bonuses only for attacks and damage made with that item, and ends on duration expiry or same-caster recast without rewriting authored weapon records or adding a parallel spell-owned loadout table. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for spell discovery, resource spending, item-attached effect state, exact-item attack and damage projections, magic-weapon status projection, duration cleanup, and same-caster recast replacement.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit magic_weapon is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME at packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_pass_without_trace",
@@ -21228,14 +21250,25 @@
         "sourceRecordPath": "packages/surface/content/magic_weapon.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "magic_weapon"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME: L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME owns Promote Magic Weapon as a level-2-or-higher Bonus Action Spell Invocation that spends the Bonus Action and Spell Slot, consumes caller-supplied target item identity and nonmagical weapon witness facts, records one caster-owned item-attached spell effect, projects magic-weapon status plus the slot-tiered attack-roll and damage-roll bonuses only for attacks and damage made with that item, and ends on duration expiry or same-caster recast without rewriting authored weapon records or adding a parallel spell-owned loadout table. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for spell discovery, resource spending, item-attached effect state, exact-item attack and damage projections, magic-weapon status projection, duration cleanup, and same-caster recast replacement.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit magic_weapon is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME at packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_mirror_image",
@@ -26968,14 +27001,25 @@
         "sourceRecordPath": "packages/surface/content/magic_weapon.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "magic_weapon"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME: L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME owns Promote Magic Weapon as a level-2-or-higher Bonus Action Spell Invocation that spends the Bonus Action and Spell Slot, consumes caller-supplied target item identity and nonmagical weapon witness facts, records one caster-owned item-attached spell effect, projects magic-weapon status plus the slot-tiered attack-roll and damage-roll bonuses only for attacks and damage made with that item, and ends on duration expiry or same-caster recast without rewriting authored weapon records or adding a parallel spell-owned loadout table. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for spell discovery, resource spending, item-attached effect state, exact-item attack and damage projections, magic-weapon status projection, duration cleanup, and same-caster recast replacement.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit magic_weapon is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME at packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_mind_spike",

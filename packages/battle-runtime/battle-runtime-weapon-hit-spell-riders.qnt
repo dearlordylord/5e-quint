@@ -27,6 +27,117 @@ module battleRuntimeWeaponHitSpellRiders {
   pure def fighterDivineFavorDamage(divineFavorDamageRoll: int, effects: Set[ActiveEffect]): int =
     if (activeEffectsContainDivineFavor(effects)) divineFavorDamageRoll else 0
 
+  pure def magicWeaponDurationTicks: int =
+    60 * 10
+
+  pure def magicWeaponEnhancementBonus(slotLevel: int): int =
+    if (slotLevel >= 6) 3 else if (slotLevel >= 3) 2 else if (slotLevel >= 2) 1 else 0
+
+  pure def activeEffectsWithoutMagicWeaponFromSource(effects: Set[ActiveEffect], source: Actor): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | MagicWeaponEnhancement(data) => data.source != source
+      | _ => true
+    })
+
+  pure def activeEffectsContainMagicWeaponForItem(effects: Set[ActiveEffect], target: Actor, weaponItem: MagicWeaponItem): bool =
+    effects.exists(effect => match effect {
+      | MagicWeaponEnhancement(data) => data.target == target and data.weaponItem == weaponItem
+      | _ => false
+    })
+
+  pure def activeEffectsContainMagicWeaponFromOtherSource(
+    effects: Set[ActiveEffect],
+    target: Actor,
+    weaponItem: MagicWeaponItem,
+    source: Actor,
+  ): bool =
+    effects.exists(effect => match effect {
+      | MagicWeaponEnhancement(data) => data.target == target and data.weaponItem == weaponItem and data.source != source
+      | _ => false
+    })
+
+  pure def activeEffectsMagicWeaponEnhancementBonus(effects: Set[ActiveEffect], target: Actor, weaponItem: MagicWeaponItem): int =
+    effects
+      .map(effect => match effect {
+        | MagicWeaponEnhancement(data) => if (data.target == target and data.weaponItem == weaponItem) data.bonus else 0
+        | _ => 0
+      })
+      .fold(0, (highest, bonus) => if (highest > bonus) highest else bonus)
+
+  pure def battleStateWithoutMagicWeaponFromSource(state: BattleState, source: Actor): BattleState =
+    {
+      ...state,
+      fighter: {
+        ...state.fighter,
+        activeEffects: activeEffectsWithoutMagicWeaponFromSource(state.fighter.activeEffects, source),
+      },
+      goblin: {
+        ...state.goblin,
+        activeEffects: activeEffectsWithoutMagicWeaponFromSource(state.goblin.activeEffects, source),
+      },
+    }
+
+  pure def battleStateMagicWeaponItemHasOtherSource(
+    state: BattleState,
+    target: Actor,
+    weaponItem: MagicWeaponItem,
+    source: Actor,
+  ): bool =
+    activeEffectsContainMagicWeaponFromOtherSource(state.fighter.activeEffects, target, weaponItem, source) or
+      activeEffectsContainMagicWeaponFromOtherSource(state.goblin.activeEffects, target, weaponItem, source)
+
+  pure def battleStateMagicWeaponItemIsMagic(state: BattleState, target: Actor, weaponItem: MagicWeaponItem): bool =
+    activeEffectsContainMagicWeaponForItem(state.fighter.activeEffects, target, weaponItem) or
+      activeEffectsContainMagicWeaponForItem(state.goblin.activeEffects, target, weaponItem)
+
+  pure def battleStateMagicWeaponItemBonus(state: BattleState, target: Actor, weaponItem: MagicWeaponItem): int = {
+    val fighterBonus = activeEffectsMagicWeaponEnhancementBonus(state.fighter.activeEffects, target, weaponItem)
+    val goblinBonus = activeEffectsMagicWeaponEnhancementBonus(state.goblin.activeEffects, target, weaponItem)
+    if (fighterBonus > goblinBonus) fighterBonus else goblinBonus
+  }
+
+  pure def magicWeaponAttackBonus(state: BattleState, target: Actor, weaponItem: MagicWeaponItem): int =
+    battleStateMagicWeaponItemBonus(state, target, weaponItem)
+
+  pure def magicWeaponDamageTotal(baseDamage: int, state: BattleState, target: Actor, weaponItem: MagicWeaponItem): int =
+    baseDamage + battleStateMagicWeaponItemBonus(state, target, weaponItem)
+
+  pure def resolveMagicWeapon(
+    state: BattleState,
+    target: Actor,
+    weaponItem: MagicWeaponItem,
+    targetIsNonmagicalWeapon: bool,
+    slotLevel: int,
+  ): BattleState =
+    if (
+      currentActor(state) == Fighter and
+      state.bonusActionAvailable and
+      canExpendSpellSlotThisTurn(state) and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(fighterHasRage(state)) and
+      targetIsNonmagicalWeapon and
+      slotLevel >= 2 and
+      not(battleStateMagicWeaponItemHasOtherSource(state, target, weaponItem, Fighter))
+    ) {
+      val withoutPrior = battleStateWithoutMagicWeaponFromSource(state, Fighter)
+      commitActorSpellSlotUse({
+        ...withoutPrior,
+        fighter: {
+          ...withoutPrior.fighter,
+          activeEffects: withoutPrior.fighter.activeEffects.union(Set(MagicWeaponEnhancement({
+            source: Fighter,
+            target: target,
+            weaponItem: weaponItem,
+            bonus: magicWeaponEnhancementBonus(slotLevel),
+            durationTicks: magicWeaponDurationTicks,
+          }))),
+        },
+        bonusActionAvailable: false,
+      }, Fighter)
+    } else
+      state
+
   pure def divineSmiteDamageDice(slotLevel: int, targetCreatureType: RuntimeCreatureType): int =
     battleRuntimeDivineSmiteDamageDice(
       slotLevel,

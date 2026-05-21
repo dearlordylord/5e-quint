@@ -23,6 +23,7 @@ import {
   type BattleSpellTargetAllocationSpatialFact,
   type BattleSpellTargetListSpatialFact,
   type BattleSpellCastReactionFact,
+  type BattleMagicWeaponTargetItemFact,
   type BattleObjectContactTargetSpatialFact,
   type SelfTransformationModeKind,
   type BattleTargetSpatialFact,
@@ -59,7 +60,10 @@ import {
   spellTargetAllocationHoleId,
   spellTargetListHoleId,
 } from "./spells-holes-fills.ts";
-import { spellDancingLightsPlacementHoleId } from "./spells-targeting.ts";
+import {
+  magicWeaponTargetItemHoleId,
+  spellDancingLightsPlacementHoleId,
+} from "./spells-targeting.ts";
 import { THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID } from "./domain-constants.ts";
 
 export type SpellAttackSequencePartTargetFill =
@@ -134,6 +138,12 @@ export type SpellFillSet =
         | undefined;
       readonly objectDropResolution:
         | Extract<BattleFill, { readonly kind: "objectDropResolution" }>
+        | undefined;
+      readonly magicWeaponTargetItem:
+        | {
+            readonly holeId: BattleHoleId;
+            readonly value: BattleMagicWeaponTargetItemFact;
+          }
         | undefined;
       readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
       readonly reactionSpellTargetFacts: readonly SpellCastReactionFact[];
@@ -245,6 +255,12 @@ export function spellFillSet(
     | undefined;
   let objectDropResolution:
     | Extract<BattleFill, { readonly kind: "objectDropResolution" }>
+    | undefined;
+  let magicWeaponTargetItem:
+    | {
+        readonly holeId: BattleHoleId;
+        readonly value: BattleMagicWeaponTargetItemFact;
+      }
     | undefined;
   let targetSpatialFacts: readonly BattleTargetSpatialFact[] = [];
   let reactionSpellTargetFacts: readonly SpellCastReactionFact[] = [];
@@ -531,6 +547,33 @@ export function spellFillSet(
         };
       }
       objectDropResolution = fill;
+      continue;
+    }
+
+    if (fill.kind === "magicWeaponTargetItem") {
+      if (invocation.procedure !== "magicWeaponEnhancement") {
+        return {
+          tag: "invalid",
+          message: "Magic Weapon item target does not match this spell act.",
+        };
+      }
+      if (fill.holeId !== magicWeaponTargetItemHoleId(invocation)) {
+        return {
+          tag: "invalid",
+          message:
+            "Magic Weapon item target must use the selected spell act item-target hole.",
+        };
+      }
+      if (magicWeaponTargetItem !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Magic Weapon item target was filled twice.",
+        };
+      }
+      magicWeaponTargetItem = {
+        holeId: fill.holeId,
+        value: fill.value,
+      };
       continue;
     }
 
@@ -1273,6 +1316,7 @@ export function spellFillSet(
     objectContactTargets,
     objectContactSavingThrowOutcome,
     objectDropResolution,
+    magicWeaponTargetItem,
     targetSpatialFacts,
     reactionSpellTargetFacts,
     targetAllocation,
@@ -1312,6 +1356,7 @@ export function spellFillSetContainsOnlySpellCastReactionFacts(
     fillSet.objectContactTargets === undefined &&
     fillSet.objectContactSavingThrowOutcome === undefined &&
     fillSet.objectDropResolution === undefined &&
+    fillSet.magicWeaponTargetItem === undefined &&
     fillSet.targetSpatialFacts.length === 0 &&
     fillSet.targetAllocation === undefined &&
     fillSet.targetList === undefined &&

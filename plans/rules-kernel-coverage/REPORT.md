@@ -63,7 +63,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.SPELL.SELF_TRANSFORMATION_MODE` | battle | needs-parity-witness | `spell.invocation-self-transformation-mode` |
 | `BATTLE.SPELL.REACTION_CASTING_TIME` | battle | needs-parity-witness | `spell.reaction-counterspell`, `spell.reaction-hellish-rebuke` |
 | `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` | battle | needs-parity-witness | `spell.invocation-after-hit-damage`, `spell.invocation-after-hit-damage-illumination`, `spell.invocation-after-hit-restraint-turn-start-damage`, `spell.invocation-after-hit-timed-damage-save` |
-| `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` | battle | needs-parity-witness | `spell.invocation-spell-hosted-weapon-attack`, `spell.invocation-weapon-attack-override`, `spell.invocation-weapon-damage-rider` |
+| `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` | battle | needs-parity-witness | `spell.invocation-magic-weapon-enhancement`, `spell.invocation-spell-hosted-weapon-attack`, `spell.invocation-weapon-attack-override`, `spell.invocation-weapon-damage-rider` |
 | `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` | battle | needs-parity-witness | `spell.invocation-marked-damage-rider` |
 | `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE` | battle | needs-parity-witness | `spell.invocation-chained-attack-damage` |
 | `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE` | battle | needs-parity-witness | `spell.invocation-independent-attack-sequence` |
@@ -98,18 +98,18 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Battle Hole Frontier
 
-- Total classified rows: 91
+- Total classified rows: 93
 
 | Subject | Count |
 | --- | ---: |
-| battle-hole-family | 56 |
-| battle-fill-kind | 35 |
+| battle-hole-family | 57 |
+| battle-fill-kind | 36 |
 
 | Classification | Count |
 | --- | ---: |
 | semantic-frontier | 70 |
 | deterministic-boundary-projection | 0 |
-| table-owned-fact | 21 |
+| table-owned-fact | 23 |
 | unsupported-dead-branch | 0 |
 
 | Subject | Id | Kind | Classification | Coverage | Follow-up |
@@ -205,6 +205,8 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | battle-hole-family | `BattleObjectContactSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | _none_ |
 | battle-hole-family | `BattleObjectDropResolutionHole` | `objectDropResolution` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | _none_ |
 | battle-fill-kind | `objectDropResolution` | `objectDropResolution` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | _none_ |
+| battle-hole-family | `BattleMagicWeaponTargetItemHole` | `magicWeaponTargetItem` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES`, `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` | _none_ |
+| battle-fill-kind | `magicWeaponTargetItem` | `magicWeaponTargetItem` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES`, `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` | _none_ |
 
 ## Generator Readiness
 

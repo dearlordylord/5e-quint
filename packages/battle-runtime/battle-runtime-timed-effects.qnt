@@ -163,6 +163,13 @@ module battleRuntimeTimedEffects {
             transfer: data.transfer,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
+        | MagicWeaponEnhancement(data) => MagicWeaponEnhancement({
+            source: data.source,
+            target: data.target,
+            weaponItem: data.weaponItem,
+            bonus: data.bonus,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
         | ThaumaturgyBoomingVoice(data) => ThaumaturgyBoomingVoice({
             source: data.source,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
@@ -299,6 +306,7 @@ module battleRuntimeTimedEffects {
         | DivineFavorWeaponDamageRider(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | HuntersMarkDamageRider(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | HexDamageRider(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | MagicWeaponEnhancement(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | ThaumaturgyBoomingVoice(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | SearingSmiteBurning(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | ShiningSmiteIllumination(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)

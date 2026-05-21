@@ -1,5 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-weapon-enhancement
 // Spell discovery (Cluster K). Mechanical extraction from battle-reducer.ts.
 // Discovers per-actor SupportedSpellInvocation acts, computes cast-summary
 // strings, classifies invocations, and synthesises the optional readied-spell
@@ -61,6 +62,7 @@ import {
   supportedSpellInvocationRef,
 } from "./spells-holes-fills.ts";
 import {
+  magicWeaponTargetItemHole,
   spellDancingLightsPlacementHole,
   spellObjectContactTargetsHole,
   targetListTargetingHasFixedMaximum,
@@ -605,6 +607,21 @@ export function discoverSupportedSpellInvocations(
           },
         ];
       }
+      if (invocation.procedure === "magicWeaponEnhancement") {
+        return [
+          {
+            subject: {
+              tag: "bonusActionSpell" as const,
+              actorId,
+              invocation: supportedSpellInvocationRef(invocation),
+              mode: { tag: "cast" as const },
+            },
+            label: invocation.spell.name,
+            summary: spellInvocationCastSummary(invocation),
+            initialHoles: [magicWeaponTargetItemHole(invocation)],
+          },
+        ];
+      }
       if (invocation.procedure === "weaponAttackOverride") {
         return [
           {
@@ -1065,6 +1082,9 @@ export function spellInvocationCastSummary(
   if (invocation.procedure === "weaponDamageRider") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
+  if (invocation.procedure === "magicWeaponEnhancement") {
+    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot on a nonmagical weapon.`;
+  }
   if (invocation.procedure === "afterHitDamage") {
     return invocation.resource.tag === "classFeatureFreeCast"
       ? `Cast ${invocation.spell.name} using a class feature free cast after a qualifying hit.`
@@ -1209,6 +1229,9 @@ export function spellSubjectTagForInvocation(
   if (invocation.procedure === "weaponDamageRider") {
     return "bonusActionSpell";
   }
+  if (invocation.procedure === "magicWeaponEnhancement") {
+    return "bonusActionSpell";
+  }
   if (invocation.procedure === "weaponAttackOverride") {
     return "bonusActionSpell";
   }
@@ -1331,6 +1354,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "scalarBuff" &&
     invocation.procedure !== "selfTransformationMode" &&
     invocation.procedure !== "weaponDamageRider" &&
+    invocation.procedure !== "magicWeaponEnhancement" &&
     invocation.procedure !== "afterHitDamage" &&
     invocation.procedure !== "afterHitSaveGatedCondition" &&
     invocation.procedure !== "afterHitTimedDamageAndSave" &&
@@ -1375,6 +1399,7 @@ export function readiedSpellAct(
     invocation.procedure === "scalarBuff" ||
     invocation.procedure === "selfTransformationMode" ||
     invocation.procedure === "weaponDamageRider" ||
+    invocation.procedure === "magicWeaponEnhancement" ||
     invocation.procedure === "weaponAttackOverride" ||
     invocation.procedure === "markedDamageRider" ||
     invocation.procedure === "expeditiousRetreatDash" ||

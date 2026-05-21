@@ -348,6 +348,14 @@ export function supportedSpellInvocationRef(
       procedure: "saveGatedConditionImmunity",
     };
   }
+  if (invocation.procedure === "magicWeaponEnhancement") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "magicWeaponEnhancement",
+    };
+  }
   return Match.value(invocation).pipe(
     Match.when({ procedure: "heldLight" }, (cantrip) => ({
       tag: "cantrip" as const,

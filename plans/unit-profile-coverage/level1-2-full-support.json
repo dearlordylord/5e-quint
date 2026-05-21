@@ -1826,76 +1826,6 @@
       "unitId": "magic_mouth"
     },
     {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "follow-up-split"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME: Promote Magic Weapon as a level-2-or-higher Bonus Action Spell Invocation that spends the Bonus Action and Spell Slot, consumes caller-supplied target item identity and nonmagical weapon witness facts, records one caster-owned item-attached spell effect, projects magic-weapon status plus the slot-tiered attack-roll and damage-roll bonuses only for attacks and damage made with that item, and ends on duration expiry or same-caster recast without rewriting authored weapon records or adding a parallel spell-owned loadout table. Owner: battle-runtime item-attached spell effect lifecycle plus weapon attack/damage projection. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for spell discovery, resource spending, item-attached effect state, exact-item attack and damage projections, magic-weapon status projection, duration cleanup, and same-caster recast replacement.",
-      "sourceRecordPath": "packages/surface/content/magic_weapon.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Paladin spell list Magic Weapon",
-          "id": "srd521:classes/paladin:spell-level-2:spell-unit-pressure:paladin_spell_list_magic_weapon",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 199,
-            "lineStart": 199,
-            "path": ".references/srd-5.2.1/Classes/Paladin.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Ranger spell list Magic Weapon",
-          "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_magic_weapon",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 192,
-            "lineStart": 192,
-            "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Magic Weapon",
-          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_magic_weapon",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 286,
-            "lineStart": 286,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Magic Weapon",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_magic_weapon",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 220,
-            "lineStart": 220,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "blocked-follow-up-split",
-      "strictTargetClosed": true,
-      "unitId": "magic_weapon"
-    },
-    {
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
@@ -2730,7 +2660,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 110,
+      "count": 111,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -2797,6 +2727,7 @@
         "longstrider",
         "mage_armor",
         "magic_missile",
+        "magic_weapon",
         "mirror_image",
         "misty_step",
         "monk_martial_arts",
@@ -2882,7 +2813,7 @@
       ]
     },
     {
-      "count": 20,
+      "count": 19,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
@@ -2895,7 +2826,6 @@
         "enlarge_reduce",
         "enthrall",
         "levitate",
-        "magic_weapon",
         "monk_monks_focus",
         "moonbeam",
         "prayer_of_healing",
@@ -2950,35 +2880,35 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 504,
-      "percent": "90.6%",
+      "numerator": 508,
+      "percent": "91.4%",
       "rowsByStatus": {
-        "accepted": 367,
+        "accepted": 371,
         "accepted-no-battle-effect": 137,
-        "battle-runtime-required": 40,
+        "battle-runtime-required": 36,
         "owner-evidence-required": 1,
         "partial-battle-runtime": 11
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 82,
+      "denominator": 83,
       "numerator": 44,
-      "percent": "53.7%"
+      "percent": "53%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 82,
-      "numerator": 69,
-      "percent": "84.1%"
+      "denominator": 83,
+      "numerator": 70,
+      "percent": "84.3%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 110,
+      "denominator": 111,
       "numerator": 55,
-      "percent": "50%"
+      "percent": "49.5%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 168,
-      "numerator": 110,
-      "percent": "65.5%"
+      "numerator": 111,
+      "percent": "66.1%"
     },
     "strictTargetClosure": {
       "denominator": 168,
@@ -5535,9 +5465,9 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 110,
+        "denominator": 111,
         "numerator": 55,
-        "percent": "50%"
+        "percent": "49.5%"
       }
     },
     "units": [
@@ -7097,6 +7027,25 @@
             "joinStatus": "mapped-open",
             "obligations": [
               {
+                "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
+                "runtime": "battle",
+                "status": "needs-parity-witness",
+                "title": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders"
+              }
+            ],
+            "profileId": "spell.invocation-magic-weapon-enhancement",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "magic_weapon"
+      },
+      {
+        "joinStatus": "mapped-open",
+        "profiles": [
+          {
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
                 "obligationId": "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION",
                 "runtime": "battle",
                 "status": "needs-parity-witness",
@@ -8207,19 +8156,19 @@
     "groupsByClaimTag": {
       "missing": 1,
       "profile-subset-supported": 20,
-      "supported-profile": 110,
-      "unsupported-profile": 37
+      "supported-profile": 111,
+      "unsupported-profile": 36
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 20,
+      "blocked-follow-up-split": 19,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 28,
       "open-runtime-behavior": 1,
-      "supported-profile": 110
+      "supported-profile": 111
     },
-    "nonSupportedFrontier": 58,
+    "nonSupportedFrontier": 57,
     "strictDenominator": 168
   }
 }

@@ -231,6 +231,10 @@ export const mindSpikeUnitId = "mind_spike";
 
 export const mindSpikeDurationTicks = elapsedTimeTicks(600);
 
+export const magicWeaponUnitId = "magic_weapon";
+
+export const magicWeaponDurationTicks = elapsedTimeTicks(600);
+
 export const passWithoutTraceUnitId = "pass_without_trace";
 
 export const poisonSprayUnitId = "poison_spray";
@@ -320,7 +324,9 @@ export const ensnaringStrikeHelperId = combatantId(
 
 export const greaseAreaId = battleAreaId("unit-profile-grease-ground-area");
 
-export const flamingSphereAreaId = battleAreaId("unit-profile-flaming-sphere-area");
+export const flamingSphereAreaId = battleAreaId(
+  "unit-profile-flaming-sphere-area",
+);
 
 export const moonbeamAreaId = battleAreaId("unit-profile-moonbeam-area");
 

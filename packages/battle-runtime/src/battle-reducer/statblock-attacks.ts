@@ -663,10 +663,12 @@ export function attackDamageModifier(
   attack: SupportedAttackActionOption,
 ): number {
   return Match.value(attack).pipe(
-    Match.when({ kind: "weapon" }, (weaponAttack) =>
-      Number(
-        weaponAttack.damageAbilityModifier ?? weaponAttack.abilityModifier,
-      ),
+    Match.when(
+      { kind: "weapon" },
+      (weaponAttack) =>
+        Number(
+          weaponAttack.damageAbilityModifier ?? weaponAttack.abilityModifier,
+        ) + (weaponAttack.damageBonus ?? 0),
     ),
     Match.when(
       { kind: "unarmedStrike" },

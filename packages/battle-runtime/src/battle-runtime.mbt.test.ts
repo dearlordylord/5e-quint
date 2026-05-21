@@ -3605,6 +3605,11 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
       "Battle runtime MBT does not model object drop resolution holes.",
     );
   }
+  if (hole.kind === "magicWeaponTargetItem") {
+    throw new Error(
+      "Battle runtime MBT does not model Magic Weapon target-item holes.",
+    );
+  }
   return [
     Match.value(hole).pipe(
       Match.when({ kind: "targetChoice" }, () => "TargetChoice" as const),

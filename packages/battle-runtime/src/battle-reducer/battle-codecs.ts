@@ -528,6 +528,7 @@ const CharacterWeaponAttackActionOptionSchema = Schema.Struct({
   damageAbilityModifier: Schema.optionalWith(AbilityModifier, {
     exact: true,
   }),
+  damageBonus: Schema.optionalWith(Schema.Number, { exact: true }),
   damageTypeChoices: Schema.optionalWith(
     Schema.NonEmptyArray(DamageTypeSchema).pipe(
       Schema.filter((choices) => choices.length >= 2, {
@@ -1936,6 +1937,15 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
     }),
     Schema.Struct({
       access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("magicWeaponEnhancement"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("bonusAction"),
+      bonus: Schema.Literal(1, 2, 3),
+      durationTicks: Schema.Number,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
       resource: Schema.Union(
         SpellSlotInvocationResourceSchema,
         ClassFeatureFreeCastInvocationResourceSchema,
@@ -2239,6 +2249,12 @@ export const BattleHoleSchema = Schema.Union(
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("heldObjectFacts"),
     actorId: CombatantId,
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("magicWeaponTargetItem"),
+    spell: SupportedSpellInvocationSchema,
+    requiresTableItemFact: Schema.Literal(true),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -3051,6 +3067,15 @@ type BattleFillEncoded =
       };
     }
   | {
+      readonly kind: "magicWeaponTargetItem";
+      readonly holeId: string;
+      readonly value: {
+        readonly kind: "nonmagicalWeaponItem";
+        readonly holderCombatantId: string;
+        readonly itemId: string;
+      };
+    }
+  | {
       readonly kind: "damageTypeChoice";
       readonly holeId: string;
       readonly value: DamageType;
@@ -3647,6 +3672,15 @@ export const BattleFillSchema: Schema.Schema<
             }),
           ),
         ),
+      }),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("magicWeaponTargetItem"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Struct({
+        kind: Schema.Literal("nonmagicalWeaponItem"),
+        holderCombatantId: CombatantId,
+        itemId: Schema.NonEmptyTrimmedString,
       }),
     }),
     Schema.Struct({

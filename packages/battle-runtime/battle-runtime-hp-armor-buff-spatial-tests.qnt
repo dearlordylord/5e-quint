@@ -833,6 +833,99 @@ module battleRuntimeHpArmorBuffSpatialTests {
     }
   }
 
+  run test_magic_weapon_spends_bonus_action_slot_and_projects_exact_item_bonus = {
+    val cast = resolveMagicWeapon(initialState, Fighter, FighterPrimaryWeapon, true, 6)
+    all {
+      assert(cast.fighter.activeEffects.contains(MagicWeaponEnhancement({
+        source: Fighter,
+        target: Fighter,
+        weaponItem: FighterPrimaryWeapon,
+        bonus: 3,
+        durationTicks: magicWeaponDurationTicks,
+      }))),
+      assert(not(cast.bonusActionAvailable)),
+      assert(battleActorHasCommittedSpellSlotUse(cast, Fighter)),
+      assert(battleStateMagicWeaponItemIsMagic(cast, Fighter, FighterPrimaryWeapon)),
+      assert(not(battleStateMagicWeaponItemIsMagic(cast, Fighter, FighterSecondaryWeapon))),
+      assert(magicWeaponAttackBonus(cast, Fighter, FighterPrimaryWeapon) == 3),
+      assert(magicWeaponDamageTotal(4, cast, Fighter, FighterPrimaryWeapon) == 7),
+      assert(magicWeaponAttackBonus(cast, Fighter, FighterSecondaryWeapon) == 0),
+      assert(magicWeaponDamageTotal(4, cast, Fighter, FighterSecondaryWeapon) == 4),
+      assert(spellInvocationSpendsSpellSlot(MagicWeapon)),
+    }
+  }
+
+  run test_magic_weapon_rejects_invalid_target_and_same_caster_recast_replaces_effect = {
+    val nonWeapon = resolveMagicWeapon(initialState, Fighter, FighterPrimaryWeapon, false, 2)
+    val otherSource = {
+      ...initialState,
+      goblin: {
+        ...initialState.goblin,
+        activeEffects: Set(MagicWeaponEnhancement({
+          source: Goblin,
+          target: Fighter,
+          weaponItem: FighterPrimaryWeapon,
+          bonus: 1,
+          durationTicks: magicWeaponDurationTicks,
+        })),
+      },
+    }
+    val rejected = resolveMagicWeapon(otherSource, Fighter, FighterPrimaryWeapon, true, 2)
+    val prior = {
+      ...initialState,
+      fighter: {
+        ...initialState.fighter,
+        activeEffects: Set(MagicWeaponEnhancement({
+          source: Fighter,
+          target: Fighter,
+          weaponItem: FighterSecondaryWeapon,
+          bonus: 1,
+          durationTicks: 1,
+        })),
+      },
+    }
+    val recast = resolveMagicWeapon(prior, Fighter, FighterPrimaryWeapon, true, 3)
+    all {
+      assert(nonWeapon == initialState),
+      assert(rejected == otherSource),
+      assert(recast.fighter.activeEffects == Set(MagicWeaponEnhancement({
+        source: Fighter,
+        target: Fighter,
+        weaponItem: FighterPrimaryWeapon,
+        bonus: 2,
+        durationTicks: magicWeaponDurationTicks,
+      }))),
+    }
+  }
+
+  run test_magic_weapon_duration_tick_expires_item_projection = {
+    val expiring = {
+      ...initialState,
+      fighter: {
+        ...initialState.fighter,
+        activeEffects: Set(MagicWeaponEnhancement({
+          source: Fighter,
+          target: Fighter,
+          weaponItem: FighterPrimaryWeapon,
+          bonus: 1,
+          durationTicks: 1,
+        })),
+      },
+    }
+    val ticked = {
+      ...expiring,
+      fighter: {
+        ...expiring.fighter,
+        activeEffects: tickDurationActiveEffects(expiring.fighter.activeEffects),
+      },
+    }
+    all {
+      assert(not(battleStateMagicWeaponItemIsMagic(ticked, Fighter, FighterPrimaryWeapon))),
+      assert(magicWeaponAttackBonus(ticked, Fighter, FighterPrimaryWeapon) == 0),
+      assert(magicWeaponDamageTotal(4, ticked, Fighter, FighterPrimaryWeapon) == 4),
+    }
+  }
+
   run test_divine_smite_after_hit_spends_bonus_action_and_slot_without_base_attack_replay = {
     val smote = resolveDivineSmiteAfterMeleeHit(initialState, 1, 5, HumanoidCreature, false, true)
     val alreadySpent = resolveDivineSmiteAfterMeleeHit(commitActorSpellSlotUse(initialState, Fighter), 1, 5, HumanoidCreature, false, true)

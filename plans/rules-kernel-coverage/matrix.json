@@ -24,15 +24,15 @@
     "obligations[].profiles": "Derived from profileObligations by obligation id; authored obligations.jsonl rows must not contain profiles."
   },
   "battleHoleFrontierSummary": {
-    "total": 91,
+    "total": 93,
     "bySubject": {
-      "battle-hole-family": 56,
-      "battle-fill-kind": 35
+      "battle-hole-family": 57,
+      "battle-fill-kind": 36
     },
     "byClassification": {
       "semantic-frontier": 70,
       "deterministic-boundary-projection": 0,
-      "table-owned-fact": 21,
+      "table-owned-fact": 23,
       "unsupported-dead-branch": 0
     }
   },
@@ -941,6 +941,7 @@
       "kind": "active-effect-lifecycle",
       "parityWitnesses": [],
       "profiles": [
+        "spell.invocation-magic-weapon-enhancement",
         "spell.invocation-spell-hosted-weapon-attack",
         "spell.invocation-weapon-attack-override",
         "spell.invocation-weapon-damage-rider"
@@ -2859,6 +2860,30 @@
       "id": "objectDropResolution",
       "reason": "Object drop resolution fills select the RAW Heat Metal branch after a failed holding-or-wearing save: drop the object when possible, or retain it and apply the caster-turn-start-limited fallback penalty.",
       "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES",
+        "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "magicWeaponTargetItem",
+      "id": "BattleMagicWeaponTargetItemHole",
+      "reason": "Magic Weapon target holder identity, item identity, and nonmagical-weapon witness are caller/table inventory facts. The reducer consumes the exact holder-plus-item identity for the spell-owned active effect and later attack/damage projection without deriving inventory, range, or item magicality from duplicated state.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES",
+        "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS"
+      ],
+      "fillKind": "magicWeaponTargetItem",
+      "followUpTaskIds": [],
+      "id": "magicWeaponTargetItem",
+      "reason": "Magic Weapon target-item fills supply the table-verified exact holder-plus-item identity for a nonmagical weapon; the weapon-hosted spell obligation owns the item-attached effect, same-caster replacement, other-caster rejection, and exact holder-plus-item attack/damage projection.",
+      "subject": "battle-fill-kind"
     }
   ],
   "profileObligations": [
@@ -3318,6 +3343,12 @@
     },
     {
       "obligationIds": [
+        "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS"
+      ],
+      "profileId": "spell.invocation-magic-weapon-enhancement"
+    },
+    {
+      "obligationIds": [
         "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER"
       ],
       "profileId": "spell.invocation-marked-damage-rider"
@@ -3506,6 +3537,7 @@
     "spell.invocation-hideous-laughter-repeat-save-lifecycle",
     "spell.invocation-independent-attack-sequence",
     "spell.invocation-jump-movement-replacement",
+    "spell.invocation-magic-weapon-enhancement",
     "spell.invocation-make-stable",
     "spell.invocation-marked-damage-rider",
     "spell.invocation-mirror-image-hit-interception",

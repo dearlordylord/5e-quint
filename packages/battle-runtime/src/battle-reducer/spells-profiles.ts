@@ -96,7 +96,7 @@ type OngoingInitialEffect = NonNullable<
       >["initialPhase"]
     >,
     { readonly kind: "direct" }
->["effects"]
+  >["effects"]
 >[number];
 type OngoingInitialPhase = Extract<
   SpellRecord["mechanics"],
@@ -134,6 +134,7 @@ import {
   supportedPreparedJumpMovementReplacementSpellProfile,
   supportedPreparedHealingSpellProfile,
   supportedPreparedMarkedDamageRiderSpellProfile,
+  supportedPreparedMagicWeaponEnhancementSpellProfile,
   supportedPreparedMirrorImageHitInterceptionSpellProfile,
   supportedPreparedRollModifierSpellProfile,
   supportedPreparedScalarBuffSpellProfile,
@@ -424,6 +425,12 @@ export function supportedSpellActs(
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedWeaponDamageRiderSpellProfile(
         actor.combatantId,
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      supportedPreparedMagicWeaponEnhancementSpellProfile(
         spell,
         spellcasting.spellSlots,
       ),
@@ -1055,10 +1062,7 @@ function gustOfWindLineSpell(spell: SpellRecord) {
       : null;
   const lineArea = lineHole?.value ?? null;
   const initialPhase = spell.mechanics.initialPhase;
-  const initialSave = isGustOfWindLineSaveGate(
-    initialPhase,
-    lineHole?.holeId,
-  )
+  const initialSave = isGustOfWindLineSaveGate(initialPhase, lineHole?.holeId)
     ? initialPhase
     : null;
   const strongWindOperation = spell.mechanics.operations.find(
@@ -1099,8 +1103,7 @@ function gustOfWindLineSpell(spell: SpellRecord) {
     initialSave === null ||
     !isGustOfWindLineSaveGate(endTurnOperation?.effect, lineHole?.holeId) ||
     strongWindOperation?.effect.kind !== "area_has_strong_wind" ||
-    movementCostOperation?.effect.kind !==
-      "area_movement_cost_multiplier" ||
+    movementCostOperation?.effect.kind !== "area_movement_cost_multiplier" ||
     movementCostOperation.effect.multiplier !== 2 ||
     movementCostOperation.effect.appliesTo !== "toward_source" ||
     directionOperation?.effect.kind !== "reposition_attachment" ||

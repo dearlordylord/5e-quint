@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 396,
-      "numerator": 187,
-      "percent": "47.2%"
+      "numerator": 188,
+      "percent": "47.5%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 468,
-      "numerator": 219,
-      "percent": "46.8%"
+      "numerator": 220,
+      "percent": "47%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,62 +59,62 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 220
+      "value": 221
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 133,
-      "numerator": 133,
+      "denominator": 134,
+      "numerator": 134,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 220,
-      "numerator": 220,
+      "denominator": 221,
+      "numerator": 221,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 81,
-      "numerator": 81,
+      "denominator": 82,
+      "numerator": 82,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 81,
-      "numerator": 80,
+      "denominator": 82,
+      "numerator": 81,
       "percent": "98.8%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 112,
+      "denominator": 113,
       "numerator": 61,
-      "percent": "54.5%"
+      "percent": "54%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 112,
-      "numerator": 89,
-      "percent": "79.5%"
+      "denominator": 113,
+      "numerator": 90,
+      "percent": "79.6%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 133,
+      "denominator": 134,
       "numerator": 77,
-      "percent": "57.9%"
+      "percent": "57.5%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 81,
-      "numerator": 81,
+      "denominator": 82,
+      "numerator": 82,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 81,
-      "numerator": 81,
+      "denominator": 82,
+      "numerator": 82,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 133,
+      "denominator": 134,
       "numerator": 105,
-      "percent": "78.9%"
+      "percent": "78.4%"
     },
     "supportedProfileCoverage": {
-      "denominator": 188,
-      "numerator": 133,
-      "percent": "70.7%"
+      "denominator": 189,
+      "numerator": 134,
+      "percent": "70.9%"
     }
   },
   "metricSemantics": [
@@ -3245,20 +3245,49 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gust-of-wind.test.ts"
         }
       ]
+    },
+    {
+      "id": "spell.invocation-magic-weapon-enhancement",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-release.ts"
+      ],
+      "sourceBoundary": "The runtime consumes the authored Magic Weapon item-enhancement Surface shape plus caller-supplied exact holder-plus-item identity and nonmagical weapon witness facts. It owns Bonus Action level-2-or-higher Spell Slot spending, one caster-owned item-attached Spell Effect, one-hour duration cleanup, same-caster recast replacement, other-caster active Magic Weapon rejection for the selected holder-plus-item weapon, magic-weapon status projection, and exact holder-plus-item +1/+2/+3 attack-roll and weapon damage-roll projection without mutating authored weapon records or adding spell-owned loadout state. Touch range, physical item selection, and nonmagical target verification remain table/caller witness facts at the fill boundary.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME"
+      ],
+      "title": "Spell invocation attaches a timed magic-weapon enhancement to an exact weapon item",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 112,
+        "denominator": 113,
         "numerator": 61,
-        "percent": "54.5%"
+        "percent": "54%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 112,
-        "numerator": 89,
-        "percent": "79.5%"
+        "denominator": 113,
+        "numerator": 90,
+        "percent": "79.6%"
       }
     },
     "profileKinds": [
@@ -4702,6 +4731,19 @@
         "obligations": [],
         "profileId": "spell.invocation-gust-of-wind-line",
         "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
+            "runtime": "battle",
+            "status": "needs-parity-witness",
+            "title": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders"
+          }
+        ],
+        "profileId": "spell.invocation-magic-weapon-enhancement",
+        "profileKind": "spell-invocation"
       }
     ],
     "sourceArtifacts": {
@@ -4712,9 +4754,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 133,
+          "denominator": 134,
           "numerator": 77,
-          "percent": "57.9%"
+          "percent": "57.5%"
         }
       },
       "units": [
@@ -6449,6 +6491,25 @@
             }
           ],
           "unitId": "magic_missile"
+        },
+        {
+          "joinStatus": "mapped-open",
+          "profiles": [
+            {
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
+                  "runtime": "battle",
+                  "status": "needs-parity-witness",
+                  "title": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders"
+                }
+              ],
+              "profileId": "spell.invocation-magic-weapon-enhancement",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "magic_weapon"
         },
         {
           "joinStatus": "covered",
@@ -9872,6 +9933,22 @@
         "spell.invocation-object-contact-damage"
       ],
       "taskId": "L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Package-local promoted Quint facts cover Magic Weapon's Bonus Action and level-2-or-higher Spell Slot spend, nonmagical weapon target witness, exact weapon item enhancement state, +1/+2/+3 slot-tiered attack and damage bonuses, same-caster recast replacement, other-caster active-effect rejection, and duration cleanup.",
+      "profileIds": [
+        "spell.invocation-magic-weapon-enhancement"
+      ],
+      "taskId": "L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests cover Magic Weapon Surface admission, target item fill validation, Bonus Action and Spell Slot spending, exact item magic status projection, exact item attack-roll and weapon damage-roll bonuses, same-caster recast replacement, other-caster active-effect rejection, and duration cleanup.",
+      "profileIds": [
+        "spell.invocation-magic-weapon-enhancement"
+      ],
+      "taskId": "L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME"
     }
   ],
   "units": [
@@ -21466,6 +21543,75 @@
         "status": "installed"
       },
       "claim": {
+        "profileIds": [
+          "spell.invocation-magic-weapon-enhancement"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Bonus Action level-2-or-higher Spell Slot casting using the SRD Surface item-enhancement spell shape",
+          "caller-supplied target item holder identity, item identity, and nonmagical weapon witness facts at the battle-runtime fill boundary",
+          "one caster-owned item-attached Spell Effect carrying exact holder-plus-item identity, source spell identity, +1/+2/+3 slot-tiered enhancement bonus, and one-hour duration",
+          "magic-weapon status projection from the active item-attached Spell Effect without mutating authored weapon records or adding spell-owned loadout state",
+          "exact holder-plus-item attack-roll and weapon damage-roll bonus projection for attacks made with the affected item only",
+          "same-caster recast replacement of the prior Magic Weapon effect",
+          "invalid-fill rejection when another caster's active Magic Weapon effect already makes the selected holder-plus-item weapon magical",
+          "duration cleanup through the shared timed Spell Effect lifecycle"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-magic-weapon-enhancement",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-release.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the authored Magic Weapon item-enhancement Surface shape plus caller-supplied exact holder-plus-item identity and nonmagical weapon witness facts. It owns Bonus Action level-2-or-higher Spell Slot spending, one caster-owned item-attached Spell Effect, one-hour duration cleanup, same-caster recast replacement, other-caster active Magic Weapon rejection for the selected holder-plus-item weapon, magic-weapon status projection, and exact holder-plus-item +1/+2/+3 attack-roll and weapon damage-roll projection without mutating authored weapon records or adding spell-owned loadout state. Touch range, physical item selection, and nonmagical target verification remain table/caller witness facts at the fill boundary.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME"
+          ],
+          "title": "Spell invocation attaches a timed magic-weapon enhancement to an exact weapon item",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/magic_weapon.json",
+      "unitId": "magic_weapon"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "deferredMechanics": [
           {
             "battleReadinessClosure": {
@@ -26566,39 +26712,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/magic_item_weapon_1_2_or_3.json",
       "unitId": "magic_item_weapon_1_2_or_3"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "followUpTasks": [
-          {
-            "id": "L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME",
-            "mechanic": "Promote Magic Weapon as a level-2-or-higher Bonus Action Spell Invocation that spends the Bonus Action and Spell Slot, consumes caller-supplied target item identity and nonmagical weapon witness facts, records one caster-owned item-attached spell effect, projects magic-weapon status plus the slot-tiered attack-roll and damage-roll bonuses only for attacks and damage made with that item, and ends on duration expiry or same-caster recast without rewriting authored weapon records or adding a parallel spell-owned loadout table.",
-            "owner": "battle-runtime item-attached spell effect lifecycle plus weapon attack/damage projection",
-            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for spell discovery, resource spending, item-attached effect state, exact-item attack and damage projections, magic-weapon status projection, duration cleanup, and same-caster recast replacement.",
-            "title": "Magic Weapon Item Enhancement Runtime"
-          }
-        ],
-        "futureProfileOwner": "battle-runtime item-attached spell effect lifecycle and weapon attack/damage projection",
-        "reason": "Magic Weapon is authored as an SRD Surface Spell Definition with Bonus Action Spell Slot casting, Touch range, one-hour non-Concentration duration, a nonmagical weapon target, an item-attached magic-weapon enhancement fact carrying the slot-tiered +1/+2/+3 bonus to attack rolls and damage rolls made with that weapon, and same-caster recast early ending. Task 14 completed the Surface item-enhancement shape; no promoted battle-runtime profile is claimed yet because runtime has no item-attached spell effect owner, no exact-item attack and damage projection, and no magic-weapon status projection without mutating authored weapon records or copying loadout state into a spell-owned table.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/magic_weapon.json",
-      "unitId": "magic_weapon"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
