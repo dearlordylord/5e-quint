@@ -1,22 +1,22 @@
 {
   "summary": {
-    "total": 60,
-    "covered": 33,
-    "open": 23,
-    "nonSemantic": 4,
+    "total": 65,
+    "covered": 38,
+    "open": 22,
+    "nonSemantic": 5,
     "byRuntime": {
       "shared-algebras": 1,
       "battle": 53,
-      "character-creation": 3,
+      "character-creation": 8,
       "character-sheet": 2,
       "character-battle": 1
     },
     "byStatus": {
-      "covered": 33,
-      "needs-qnt-owner": 3,
+      "covered": 38,
+      "needs-qnt-owner": 2,
       "needs-parity-witness": 19,
       "needs-surface-evidence": 1,
-      "boundary-only": 3,
+      "boundary-only": 4,
       "unsupported-by-admission": 1
     }
   },
@@ -1422,6 +1422,100 @@
       "title": "Character Creation choice-hole availability, cardinality, and option legality for the existing Fighter manifest path"
     },
     {
+      "id": "CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/fighter-fighting-style-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "character-creation.fighter-fighting-style-advancement-replacement"
+      ],
+      "qntOwners": [
+        "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt"
+      ],
+      "runtime": "character-creation",
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/character-build-advancement.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Character-Creation.md#Gaining a Level",
+        ".references/srd-5.2.1/Classes/Fighter.md#Level 1: Fighting Style",
+        ".references/srd-5.2.1/Feats.md#Fighting Style Feats"
+      ],
+      "title": "Character Creation Fighter class-level gain replacement rewrites durable CharacterBuild progression and selected Fighting Style ownership without draft state"
+    },
+    {
+      "id": "CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/warlock-eldritch-invocations-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "character-creation.warlock-pact-magic-advancement"
+      ],
+      "qntOwners": [
+        "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt"
+      ],
+      "runtime": "character-creation",
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/discovery.ts",
+        "packages/character-creation-runtime/src/finalization.ts",
+        "packages/character-creation-runtime/src/class-spellcasting.ts",
+        "packages/character-creation-runtime/src/character-build-advancement.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Character-Creation.md#Gaining a Level",
+        ".references/srd-5.2.1/Character-Creation.md#Spell Slots, Cantrips, and Prepared Spells",
+        ".references/srd-5.2.1/Classes/Warlock.md#Level 1: Pact Magic",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Gaining Spells"
+      ],
+      "title": "Character Creation Warlock Pact Magic Spell Access and Pact Slot progression from Surface class facts through build finalization and Warlock class-level gains"
+    },
+    {
+      "id": "CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/warlock-eldritch-invocations-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "character-creation.eldritch-invocation-choice"
+      ],
+      "qntOwners": [
+        "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt"
+      ],
+      "runtime": "character-creation",
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/discovery.ts",
+        "packages/character-creation-runtime/src/finalization.ts",
+        "packages/character-creation-runtime/src/eldritch-invocations.ts",
+        "packages/character-creation-runtime/src/character-build-advancement.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Character-Creation.md#Gaining a Level",
+        ".references/srd-5.2.1/Classes/Warlock.md#Level 1: Eldritch Invocations",
+        ".references/srd-5.2.1/Classes/Warlock.md#Eldritch Invocation Options"
+      ],
+      "title": "Character Creation Warlock Eldritch Invocation selection, level-gain count, prerequisite, repeatable choice, replacement, and duplicate-selection lifecycle without owning selected Eldritch Invocation runtime behavior"
+    },
+    {
       "id": "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
       "kind": "projection-scalar",
       "parityWitnesses": [
@@ -1481,30 +1575,68 @@
       "title": "Prove each currently admitted executable battle Surface profile points to a covered semantic obligation"
     },
     {
-      "followUpTaskIds": [
-        "RKBC-CREATION-FILL-VALIDATION-BATCH",
-        "RKBC-CREATION-ADVANCEMENT-REPLACEMENT",
-        "RKBC-CREATION-SPELLCASTING-PROGRESSION",
-        "RKBC-CREATION-WEAPON-MASTERY-FEAT"
+      "id": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/fighter-fighting-style-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
       ],
-      "id": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
-      "kind": "composition",
-      "parityWitnesses": [],
       "profiles": [
-        "character-creation.class-feature-advancement-replacement",
-        "character-creation.class-feature-feat-choice",
-        "character-creation.eldritch-invocation-choice",
-        "character-creation.warlock-pact-magic-advancement",
-        "character-creation.weapon-mastery-choice"
+        "character-creation.class-feature-feat-choice"
       ],
-      "qntOwners": [],
+      "qntOwners": [
+        "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt"
+      ],
       "runtime": "character-creation",
       "runtimeOwners": [
-        "packages/character-creation-runtime/src/index.ts"
+        "packages/character-creation-runtime/src/finalization.ts"
       ],
-      "status": "needs-qnt-owner",
-      "surfaceEvidence": [],
-      "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Character-Creation.md#Gaining a Level",
+        ".references/srd-5.2.1/Classes/Fighter.md#Level 1: Fighting Style",
+        ".references/srd-5.2.1/Classes/Paladin.md#Level 2: Fighting Style",
+        ".references/srd-5.2.1/Classes/Ranger.md#Level 2: Fighting Style",
+        ".references/srd-5.2.1/Feats.md#Fighting Style Feats"
+      ],
+      "title": "Character Creation finalizes class-feature feat choices as selected CharacterBuild class-choice refs without owning selected feat behavior"
+    },
+    {
+      "id": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "character-creation.weapon-mastery-choice"
+      ],
+      "qntOwners": [
+        "packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt"
+      ],
+      "runtime": "character-creation",
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/finalization.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Character-Creation.md#Gaining a Level",
+        ".references/srd-5.2.1/Classes/Fighter.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/Classes/Barbarian.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/Classes/Paladin.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/Classes/Ranger.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/Classes/Rogue.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/Equipment.md#Mastery Properties"
+      ],
+      "title": "Character Creation finalizes Weapon Mastery weapon choices as selected CharacterBuild class-choice refs without owning selected mastery-property behavior"
     },
     {
       "followUpTaskIds": [
@@ -1554,6 +1686,21 @@
       "status": "boundary-only",
       "surfaceEvidence": [],
       "title": "Malformed client payload, unreadable fill shape, and unknown public ids are parser/protocol failures rather than reducer semantics"
+    },
+    {
+      "id": "CREATION.PROTOCOL.MALFORMED_FILL_REJECTION",
+      "kind": "boundary-protocol",
+      "parityWitnesses": [],
+      "profiles": [],
+      "qntOwners": [],
+      "reason": "These failures cannot produce a typed CreationFill or CreationHoleId, so they stay at the public MCP/input parser boundary. CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY owns typed fill batches evaluated against the current draft frontier.",
+      "runtime": "character-creation",
+      "runtimeOwners": [
+        "packages/mcp/src/character-tool-input.ts"
+      ],
+      "status": "boundary-only",
+      "surfaceEvidence": [],
+      "title": "Malformed creation fill payloads, unreadable creation hole ids, and unparsed ability-score assignments are parser/protocol failures rather than reducer semantics"
     },
     {
       "id": "BATTLE.SURFACE.CATALOG_ONLY_RECORDS",
@@ -3243,31 +3390,31 @@
     },
     {
       "obligationIds": [
-        "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT"
+        "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION"
       ],
       "profileId": "character-creation.class-feature-feat-choice"
     },
     {
       "obligationIds": [
-        "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT"
+        "CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT"
       ],
-      "profileId": "character-creation.class-feature-advancement-replacement"
+      "profileId": "character-creation.fighter-fighting-style-advancement-replacement"
     },
     {
       "obligationIds": [
-        "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT"
+        "CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION"
       ],
       "profileId": "character-creation.warlock-pact-magic-advancement"
     },
     {
       "obligationIds": [
-        "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT"
+        "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION"
       ],
       "profileId": "character-creation.weapon-mastery-choice"
     },
     {
       "obligationIds": [
-        "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT"
+        "CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE"
       ],
       "profileId": "character-creation.eldritch-invocation-choice"
     }
@@ -3308,6 +3455,7 @@
     "character-creation.class-feature-resource-projection",
     "character-creation.class-feature-source-fact-projection",
     "character-creation.eldritch-invocation-choice",
+    "character-creation.fighter-fighting-style-advancement-replacement",
     "character-creation.skill-expertise-choice",
     "character-creation.warlock-pact-magic-advancement",
     "character-creation.weapon-mastery-choice",

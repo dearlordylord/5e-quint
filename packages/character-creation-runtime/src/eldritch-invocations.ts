@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: runtime-owner CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE
 import type {
   EffectAtom,
   FeatRecord,

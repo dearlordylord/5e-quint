@@ -3883,6 +3883,7 @@ describe("MCP server route", () => {
     const root = createMcpCompositionRoot();
     const draftId = "draft:mcp-tool-malformed-fills";
     readPayload(handleToolCall(root, "create_character_draft", { draftId }));
+    const before = root.sessionStore.drafts.get(characterDraftId(draftId));
 
     const rejected = readPayload(
       handleToolCall(root, "fill_creation_holes", {
@@ -3911,6 +3912,9 @@ describe("MCP server route", () => {
       }),
     );
 
+    expect(root.sessionStore.drafts.get(characterDraftId(draftId))).toEqual(
+      before,
+    );
     expect(rejected).toMatchObject({
       details: {
         code: "INVALID_FILLS",

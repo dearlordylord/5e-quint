@@ -25,13 +25,13 @@ Stat Block, and not in-play Character Sheet state.
 
 ## Boundary
 
-| Source outside runtime                    | Runtime operation               | Runtime output                 |
-| ----------------------------------------- | ------------------------------- | ------------------------------ |
-| Unit catalog                              | `discoverCreationHoles`         | fillable `CreationHole[]`      |
-| caller-submitted batch of `CreationFill`s | `fillCreationHoles`             | accepted/rejected draft update |
-| complete legal draft plus Unit facts      | `finalizeCharacterDraft`        | finalized `CharacterBuild`     |
+| Source outside runtime                     | Runtime operation                 | Runtime output                 |
+| ------------------------------------------ | --------------------------------- | ------------------------------ |
+| Unit catalog                               | `discoverCreationHoles`           | fillable `CreationHole[]`      |
+| caller-submitted batch of `CreationFill`s  | `fillCreationHoles`               | accepted/rejected draft update |
+| complete legal draft plus Unit facts       | `finalizeCharacterDraft`          | finalized `CharacterBuild`     |
 | finalized `CharacterBuild` plus level gain | `advanceCharacterBuildClassLevel` | advanced `CharacterBuild`      |
-| finalized `CharacterBuild`                | application composition outside | battle creature initialization |
+| finalized `CharacterBuild`                 | application composition outside   | battle creature initialization |
 
 `@dnd/character-creation-runtime` must not import `@dnd/battle-runtime` or the
 legacy Core package. Battle initialization from a `CharacterBuild` belongs to
@@ -77,6 +77,21 @@ the current draft frontier and the submitted batch as one optimistic-concurrency
 mutation: hole ids are creation semantic addresses, choice cardinality comes from
 the current `CreationHole`, and `staleRevision` only applies to draft updates.
 
+`CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY` remains the semantic owner for the
+current supported fill slice rather than being split by issue code. The reducer
+semantics are one invariant: a typed fill batch is checked against the current
+draft frontier, rejected batches leave the draft unchanged, accepted batches
+increment the revision and rediscover holes, and finalization status is reported
+from the pre-fill or post-fill draft as appropriate. The focused
+`character-creation-runtime.mbt.qnt` witness replays both accepted and rejected
+QNT batches against production `fillCreationHoles`.
+
+Malformed public payloads that cannot be parsed into a typed `CreationFill`,
+`CreationHoleId`, or ability-score assignment are boundary/parser failures, not
+reducer semantics. MCP input codecs and protocol tests own those failures under
+the boundary-only `CREATION.PROTOCOL.MALFORMED_FILL_REJECTION` obligation; they
+do not enter `fillCreationHoles` and do not need QNT ownership.
+
 Runtime and battle holes are analogous, not the same protocol. The shared
 runtime hole algebra supplies transient action hole shapes, while battle errors
 report action-resolution failures such as unavailable actions, runtime input
@@ -109,6 +124,8 @@ This package supports these character-creation profiles:
   progression facts;
 - level-1 Wizard spellcasting creation facts and non-Wizard list-prepared Spell
   Access facts;
+- level-1 Warlock Pact Magic Spell Access facts and Warlock Pact Magic
+  advancement facts for supported Warlock level gains;
 - retained SRD level-1 class-feature Unit refs, plus supported acquisition
   choices for Divine Order, Primal Order, Rogue Expertise, and Warlock
   Eldritch Invocations;
@@ -186,15 +203,16 @@ types.
 
 Eldritch Invocation choices are not Unit refs. The Warlock class feature Unit
 remains a retained class-feature ref derived from the Surface class record, while
-selected invocation options are character-creation option ownership facts from
-`src/eldritch-invocations.ts`. Invocation runtime behavior and spell execution
-remain outside this package.
+selected Eldritch Invocation options are character-creation option ownership
+facts from `src/eldritch-invocations.ts`. Eldritch Invocation runtime behavior
+and spell execution remain outside this package.
 
 Spellcasting on a build is source-scoped. Each source records the source Unit,
-spellcasting ability, cantrips, spellbook entries, prepared spells, and focus
-permissions for that source. Slot pools are explicit and rigid: ordinary
-`spellcasting` slots and optional `pactMagic` slots are separate pools. Battle
-and session projections decide which subset they can execute.
+spellcasting ability, cantrip Spell Access, spellbook Spell Access, prepared
+Spell Access, and focus permissions for that source. Slot pools are explicit
+and rigid: ordinary `spellcasting` slots and optional `pactMagic` slots are
+separate pools. Battle and session projections decide which subset they can
+execute.
 
 Equipment on a build is split into durable owned equipment and initial loadout.
 Loadout entries hold `CharacterEquipmentItemId`s for owned items instead of

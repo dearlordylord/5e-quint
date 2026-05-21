@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: runtime-owner CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION
 import type {
   ClassSpellcastingCreation,
   ListPreparedSpellcastingProgressionCreation,

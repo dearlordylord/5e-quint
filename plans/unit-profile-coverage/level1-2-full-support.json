@@ -2962,8 +2962,8 @@
     },
     "rulesKernelCoveredProfileJoin": {
       "denominator": 82,
-      "numerator": 39,
-      "percent": "47.6%"
+      "numerator": 44,
+      "percent": "53.7%"
     },
     "rulesKernelProfileJoin": {
       "denominator": 82,
@@ -2972,8 +2972,8 @@
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 110,
-      "numerator": 53,
-      "percent": "48.2%"
+      "numerator": 55,
+      "percent": "50%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 168,
@@ -5536,8 +5536,8 @@
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
         "denominator": 110,
-        "numerator": 53,
-        "percent": "48.2%"
+        "numerator": 55,
+        "percent": "50%"
       }
     },
     "units": [
@@ -6387,32 +6387,32 @@
         "unitId": "fighter_action_surge"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                "obligationId": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
                 "runtime": "character-creation",
-                "status": "needs-qnt-owner",
-                "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+                "status": "covered",
+                "title": "Character Creation finalizes class-feature feat choices as selected CharacterBuild class-choice refs without owning selected feat behavior"
               }
             ],
             "profileId": "character-creation.class-feature-feat-choice",
             "profileKind": "character-creation"
           },
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                "obligationId": "CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT",
                 "runtime": "character-creation",
-                "status": "needs-qnt-owner",
-                "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+                "status": "covered",
+                "title": "Character Creation Fighter class-level gain replacement rewrites durable CharacterBuild progression and selected Fighting Style ownership without draft state"
               }
             ],
-            "profileId": "character-creation.class-feature-advancement-replacement",
+            "profileId": "character-creation.fighter-fighting-style-advancement-replacement",
             "profileKind": "character-creation"
           }
         ],
@@ -7244,13 +7244,13 @@
         "joinStatus": "unmapped",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
                 "runtime": "character-creation",
-                "status": "needs-qnt-owner",
-                "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+                "status": "covered",
+                "title": "Character Creation finalizes Weapon Mastery weapon choices as selected CharacterBuild class-choice refs without owning selected mastery-property behavior"
               }
             ],
             "profileId": "character-creation.weapon-mastery-choice",
@@ -7401,13 +7401,13 @@
         "joinStatus": "unmapped",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
                 "runtime": "character-creation",
-                "status": "needs-qnt-owner",
-                "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+                "status": "covered",
+                "title": "Character Creation finalizes Weapon Mastery weapon choices as selected CharacterBuild class-choice refs without owning selected mastery-property behavior"
               }
             ],
             "profileId": "character-creation.weapon-mastery-choice",
@@ -7583,13 +7583,13 @@
         "joinStatus": "unmapped",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
                 "runtime": "character-creation",
-                "status": "needs-qnt-owner",
-                "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+                "status": "covered",
+                "title": "Character Creation finalizes Weapon Mastery weapon choices as selected CharacterBuild class-choice refs without owning selected mastery-property behavior"
               }
             ],
             "profileId": "character-creation.weapon-mastery-choice",
@@ -8103,42 +8103,29 @@
         "unitId": "warding_bond"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                "obligationId": "CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE",
                 "runtime": "character-creation",
-                "status": "needs-qnt-owner",
-                "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+                "status": "covered",
+                "title": "Character Creation Warlock Eldritch Invocation selection, level-gain count, prerequisite, repeatable choice, replacement, and duplicate-selection lifecycle without owning selected Eldritch Invocation runtime behavior"
               }
             ],
             "profileId": "character-creation.eldritch-invocation-choice",
             "profileKind": "character-creation"
           },
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                "obligationId": "CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION",
                 "runtime": "character-creation",
-                "status": "needs-qnt-owner",
-                "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
-              }
-            ],
-            "profileId": "character-creation.class-feature-advancement-replacement",
-            "profileKind": "character-creation"
-          },
-          {
-            "joinStatus": "mapped-open",
-            "obligations": [
-              {
-                "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
-                "runtime": "character-creation",
-                "status": "needs-qnt-owner",
-                "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+                "status": "covered",
+                "title": "Character Creation Warlock Pact Magic Spell Access and Pact Slot progression from Surface class facts through build finalization and Warlock class-level gains"
               }
             ],
             "profileId": "character-creation.warlock-pact-magic-advancement",

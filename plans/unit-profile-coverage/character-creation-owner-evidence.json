@@ -2411,7 +2411,7 @@
     },
     "srd521:classes/druid:level-2:class-feature-grant:druid_wild_companion": {
       "taskId": "L12G-AUTHOR-DRUID-WILD-COMPANION",
-      "profile": "character-creation.class-feature-advancement-replacement support profile",
+      "profile": "character-creation.class-feature-source-fact-projection support profile",
       "summary": "Druid Wild Companion is retained from the level-2 Druid class feature grant alongside Wild Shape; Character Creation admits same-class Druid level 2, projects level-2 Druid prepared-spell and Spell Slot table facts from the class record, and retains both sibling feature Unit refs without claiming companion lifecycle or Wild Shape shape-shifting execution.",
       "discovery": [
         "packages/character-creation-runtime/src/discovery.ts:discoverInitialDraftHoles"

@@ -1,5 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1D2-WARLOCK-ELDRITCH-INVOCATIONS warlock_eldritch_invocations
 // UNIT-IDENTITY-MBT-REPLAY: L1D2-WARLOCK-ELDRITCH-INVOCATIONS warlock_eldritch_invocations doSelectLevelOneArmorOfShadows doGainLevelTwoInvocations doReplaceArmorWithEldritchMindOnWarlockLevelGain doReplaceRepeatableInvocationByChoice doRejectPrerequisiteRetainedInvocationReplacement doRejectDuplicateInvocationSelections
+// KERNEL-COVERAGE: parity-witness CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
