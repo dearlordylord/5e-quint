@@ -10,6 +10,7 @@
 // Spell-condition expiration helpers live in spell-condition-effects-helpers.ts
 // (cycle #19) so both M and P can import them without a cycle.
 // KERNEL-COVERAGE: runtime-owner SHARED.HIT_POINTS.POSITIVE_DAMAGE BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
 
 import {
   applyCondition,

@@ -1,8 +1,8 @@
 {
   "summary": {
     "total": 72,
-    "covered": 59,
-    "open": 8,
+    "covered": 60,
+    "open": 7,
     "nonSemantic": 5,
     "byRuntime": {
       "shared-algebras": 1,
@@ -12,9 +12,9 @@
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 59,
+      "covered": 60,
       "needs-qnt-owner": 0,
-      "needs-parity-witness": 7,
+      "needs-parity-witness": 6,
       "needs-surface-evidence": 1,
       "boundary-only": 4,
       "unsupported-by-admission": 1
@@ -1215,12 +1215,14 @@
       "title": "Battle Mirror Image duplicate pool, attack-hit interception roll, duplicate destruction, bypass witnesses, and normal damage continuation"
     },
     {
-      "followUpTaskIds": [
-        "RKBC-SPELL-LINKED-EFFECT-PARITY"
-      ],
       "id": "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING",
       "kind": "active-effect-lifecycle",
-      "parityWitnesses": [],
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-warding-bond.test.ts"
+        }
+      ],
       "profiles": [
         "spell.invocation-warding-bond-linked-effect"
       ],
@@ -1237,8 +1239,10 @@
         "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
         "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
       ],
-      "status": "needs-parity-witness",
-      "surfaceEvidence": [],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Warding Bond"
+      ],
       "title": "Battle linked spell effects for Warding Bond defenses, all-damage Resistance, same-amount damage sharing, and source-zero, separation, recast, or duration cleanup"
     },
     {
@@ -2186,12 +2190,10 @@
       "coveredByObligationIds": [
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
       ],
-      "followUpTaskIds": [
-        "RKBC-SPELL-LINKED-EFFECT-PARITY"
-      ],
+      "followUpTaskIds": [],
       "holeKind": "targetSpatialFacts",
       "id": "BattleWardingBondSeparationFactsHole",
-      "reason": "Connected-creature separation is table spatial evidence. The reducer may consume the fact for Warding Bond cleanup, but distance/position derivation remains outside rules-kernel state; linked-effect cleanup parity is split into the Warding Bond obligation.",
+      "reason": "Connected-creature separation is table spatial evidence. The reducer may consume the fact for Warding Bond cleanup, but distance/position derivation remains outside rules-kernel state; linked-effect cleanup parity is covered by the Warding Bond obligation.",
       "subject": "battle-hole-family"
     },
     {
@@ -2328,12 +2330,11 @@
         "RKBC-SPELL-AFTER-HIT-RIDERS-PARITY",
         "RKBC-SPELL-WEAPON-HOSTED-PARITY",
         "RKBC-SPELL-MARKED-RIDER-PARITY",
-        "RKBC-SPELL-ATTACK-SEQUENCES-PARITY",
-        "RKBC-SPELL-LINKED-EFFECT-PARITY"
+        "RKBC-SPELL-ATTACK-SEQUENCES-PARITY"
       ],
       "holeKind": "rolledDice",
       "id": "BattleSpellDamageRollHole",
-      "reason": "Spell damage rolls feed attack, save, chained, after-hit, weapon-hosted, linked, and marked damage procedures. Generic spell damage branches, by-type reduction, disposition, and shared HP damage are covered; specialized spell damage joins now route to dedicated parity-witness obligations.",
+      "reason": "Spell damage rolls feed attack, save, chained, after-hit, weapon-hosted, linked, and marked damage procedures. Generic spell damage branches, by-type reduction, disposition, and shared HP damage are covered; remaining specialized spell damage joins route to dedicated parity-witness obligations.",
       "subject": "battle-hole-family"
     },
     {
@@ -2765,11 +2766,10 @@
         "RKBC-SPELL-AFTER-HIT-RIDERS-PARITY",
         "RKBC-SPELL-WEAPON-HOSTED-PARITY",
         "RKBC-SPELL-MARKED-RIDER-PARITY",
-        "RKBC-SPELL-ATTACK-SEQUENCES-PARITY",
-        "RKBC-SPELL-LINKED-EFFECT-PARITY"
+        "RKBC-SPELL-ATTACK-SEQUENCES-PARITY"
       ],
       "id": "rolledDice",
-      "reason": "Rolled Dice fills are shared by damage, healing, mitigation, linked effects, and feature-roll procedures. Generic damage branch, healing, type/reduction, disposition, and shared HP obligations cover the core while specialized spell roll joins route to dedicated parity-witness obligations.",
+      "reason": "Rolled Dice fills are shared by damage, healing, mitigation, linked effects, and feature-roll procedures. Generic damage branch, healing, type/reduction, disposition, shared HP, and linked-effect obligations cover the core while remaining specialized spell roll joins route to dedicated parity-witness obligations.",
       "subject": "battle-fill-kind"
     },
     {

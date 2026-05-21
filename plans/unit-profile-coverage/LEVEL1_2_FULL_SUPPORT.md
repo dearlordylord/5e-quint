@@ -12,8 +12,8 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | Strict target closure | 167/168 (99.4%) |
 | Product readiness | 509/556 (91.5%) |
 | Rules-kernel profile join | 78/84 (92.9%) |
-| Rules-kernel covered profile join | 71/84 (84.5%) |
-| Supported Unit rules-kernel chain | 95/112 (84.8%) |
+| Rules-kernel covered profile join | 72/84 (85.7%) |
+| Supported Unit rules-kernel chain | 96/112 (85.7%) |
 
 ## Scope
 
@@ -65,7 +65,6 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `protection_from_poison` | mapped-open | `spell.invocation-condition-removal-protection` (mapped-open: `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` (needs-parity-witness)) |
 | `ranger_deft_explorer` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
 | `rogue_expertise` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
-| `warding_bond` | mapped-open | `spell.invocation-warding-bond-linked-effect` (mapped-open: `BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING` (needs-parity-witness)) |
 | `wizard_scholar` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
 
 ## Non-Supported Frontier Detail

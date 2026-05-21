@@ -2846,8 +2846,8 @@
     },
     "rulesKernelCoveredProfileJoin": {
       "denominator": 84,
-      "numerator": 71,
-      "percent": "84.5%"
+      "numerator": 72,
+      "percent": "85.7%"
     },
     "rulesKernelProfileJoin": {
       "denominator": 84,
@@ -2856,8 +2856,8 @@
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 112,
-      "numerator": 95,
-      "percent": "84.8%"
+      "numerator": 96,
+      "percent": "85.7%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 168,
@@ -5420,8 +5420,8 @@
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
         "denominator": 112,
-        "numerator": 95,
-        "percent": "84.8%"
+        "numerator": 96,
+        "percent": "85.7%"
       }
     },
     "units": [
@@ -8029,15 +8029,15 @@
         "unitId": "vicious_mockery"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
                 "obligationId": "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING",
                 "runtime": "battle",
-                "status": "needs-parity-witness",
+                "status": "covered",
                 "title": "Battle linked spell effects for Warding Bond defenses, all-damage Resistance, same-amount damage sharing, and source-zero, separation, recast, or duration cleanup"
               }
             ],

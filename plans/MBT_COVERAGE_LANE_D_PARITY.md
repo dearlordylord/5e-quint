@@ -16,8 +16,8 @@
     {"number":10,"id":"RKBC-SPELL-MARKED-RIDER-PARITY","status":"done","title":"Spell Marked Damage Rider Parity Witnesses"},
     {"number":11,"id":"RKBC-SPELL-ATTACK-SEQUENCES-PARITY","status":"done","title":"Spell Attack Sequence Parity Witnesses"},
     {"number":12,"id":"RKBC-SPELL-MIRROR-IMAGE-PARITY","status":"done","title":"Mirror Image Hit Interception Parity Witness"},
-    {"number":13,"id":"RKBC-SPELL-LINKED-EFFECT-PARITY","status":"ready-for-research","title":"Linked Spell Effect Damage Sharing Parity Witness"},
-    {"number":14,"id":"RKBC-FINAL-COVERAGE-CLOSURE-GATE","status":"blocked","title":"Final MBT Coverage Closure Gate"}
+    {"number":13,"id":"RKBC-SPELL-LINKED-EFFECT-PARITY","status":"done","title":"Linked Spell Effect Damage Sharing Parity Witness"},
+    {"number":14,"id":"RKBC-FINAL-COVERAGE-CLOSURE-GATE","status":"ready-for-research","title":"Final MBT Coverage Closure Gate"}
   ]
 }
 -->
@@ -135,14 +135,14 @@ Output:
 
 ### Task 13 - RKBC-SPELL-LINKED-EFFECT-PARITY - Linked Spell Effect Damage Sharing Parity Witness
 
-Status: `ready-for-research`
+Status: `done`
 
 Output:
 - Parity witness for linked spell-effect damage sharing already supported in runtime.
 
 ### Task 14 - RKBC-FINAL-COVERAGE-CLOSURE-GATE - Final MBT Coverage Closure Gate
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on:
 - Tasks D1-D13.

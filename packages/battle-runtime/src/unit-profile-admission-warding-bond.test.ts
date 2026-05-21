@@ -1,5 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME warding_bond
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-warding-bond-linked-effect
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
 import { describe, expect, test } from "vitest";
 import {
   damageLifecycleConcentrationSavingThrowHoles,
