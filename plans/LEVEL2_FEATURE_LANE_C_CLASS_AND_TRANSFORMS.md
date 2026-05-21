@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-REROLL-OPTIONS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Sorcerer Metamagic Reroll Options"
     },
     {
@@ -132,7 +132,7 @@ Output:
 
 ### Task 4 - L12G-FOLLOWUP-SORCERER-METAMAGIC-REROLL-OPTIONS - Sorcerer Metamagic Reroll Options
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 - Current roll/fill protocols and Sorcery Point resource state.

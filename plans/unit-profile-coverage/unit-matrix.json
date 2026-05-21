@@ -10418,6 +10418,12 @@
       "note": "Focused battle-runtime tests cover Distant, Extended, and Subtle Spell as typed Metamagic selections that are rejected before Sorcery Point spending. The closure records the missing generic owners: range-bearing spell target witnesses for Distant, duration plus Concentration-saving-throw roll mode for Extended, and component/material witnesses for Subtle. No runtime profile is claimed, and production dispatch remains on typed effectKind facts rather than spell authored identity.",
       "profileIds": [],
       "taskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-PROPERTY-OPTIONS"
+    },
+    {
+      "claimKind": "accepted-runtime-closure",
+      "note": "Focused battle-runtime tests cover Empowered Spell and Seeking Spell as typed Metamagic selections that are rejected before Sorcery Point spending. The closure records the missing typed post-roll fill owners for spell damage dice rerolls and missed spell attack d20 rerolls; no runtime profile is claimed, no reroll opportunity state is stored, and production dispatch remains on typed effectKind facts rather than authored identity.",
+      "profileIds": [],
+      "taskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-REROLL-OPTIONS"
     }
   ],
   "units": [
@@ -13764,7 +13770,11 @@
             "mechanic": "Transmuted and Twinned Spell shape modifiers: substitute only Acid, Cold, Fire, Lightning, Poison, or Thunder spell damage among that closed set, and increase effective spell level by 1 only for spells whose higher-slot shape targets one additional creature."
           },
           {
-            "followUpTaskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-REROLL-OPTIONS",
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "typed post-roll spell reroll fill boundary owner",
+              "reason": "Empowered Spell needs spell damage roll fills that can carry the original damage dice selected for reroll, the Charisma-modifier dice limit, and the forced replacement rolls; Seeking Spell needs spell attack roll fills that can carry a missed spell attack d20 and its forced replacement roll. The promoted battle-runtime Metamagic boundary rejects these reroll options before Sorcery Point spending instead of storing reroll opportunity state or overloading final roll fills."
+            },
             "mechanic": "Empowered and Seeking Spell reroll modifiers: reroll damage dice up to Charisma modifier minimum one and reroll a missed spell attack d20, using the new rolls and preserving the options' different-Metamagic stacking exception."
           }
         ],
@@ -13789,13 +13799,6 @@
             "owner": "battle-runtime spell damage profile and upcast targeting projection",
             "requiredOutput": "Supported-profile or profile-subset-supported Unit claim with focused runtime tests and promoted Quint/runtime parity for typed damage-type substitution and higher-slot target-count projection without duplicating spell slot state.",
             "title": "Sorcerer Metamagic Damage Shape Options"
-          },
-          {
-            "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-REROLL-OPTIONS",
-            "mechanic": "Promote Empowered Spell and Seeking Spell rerolls after damage rolls or missed spell attacks, consuming typed reroll fills, enforcing Charisma-modifier dice limits where applicable, and using the new rolls.",
-            "owner": "battle-runtime damage-roll and spell-attack miss lifecycle",
-            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim with focused runtime tests and promoted Quint/runtime parity for post-roll damage dice rerolls and missed spell attack d20 rerolls while preserving the options' different-Metamagic stacking exception.",
-            "title": "Sorcerer Metamagic Reroll Options"
           }
         ],
         "profileIds": [

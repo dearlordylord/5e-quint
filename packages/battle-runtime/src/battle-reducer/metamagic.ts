@@ -40,6 +40,10 @@ export const TRANSMUTED_METAMAGIC_EFFECT_KIND =
   "damage_type_substitution" satisfies CharacterBattleMetamagicEffectKind;
 export const TWINNED_METAMAGIC_EFFECT_KIND =
   "effective_spell_level_increase_for_extra_target" satisfies CharacterBattleMetamagicEffectKind;
+export const EMPOWERED_METAMAGIC_EFFECT_KIND =
+  "damage_dice_reroll" satisfies CharacterBattleMetamagicEffectKind;
+export const SEEKING_METAMAGIC_EFFECT_KIND =
+  "missed_spell_attack_reroll" satisfies CharacterBattleMetamagicEffectKind;
 export const DISTANT_METAMAGIC_UNSUPPORTED_MESSAGE =
   "Distant Spell is not supported until spell target witnesses carry range facts that can be rewritten without trusting authored spell identity.";
 export const EXTENDED_METAMAGIC_UNSUPPORTED_MESSAGE =
@@ -50,6 +54,10 @@ export const TRANSMUTED_METAMAGIC_UNSUPPORTED_MESSAGE =
   "Transmuted Spell is not supported until spell damage procedure facts carry a cast-time damage-type substitution boundary that rewrites only Acid, Cold, Fire, Lightning, Poison, or Thunder damage without duplicating damage dice.";
 export const TWINNED_METAMAGIC_UNSUPPORTED_MESSAGE =
   "Twinned Spell is not supported until upcast target-count projection can increase effective spell level by 1 only for procedures whose higher-slot shape targets one additional creature without duplicating spell slot state.";
+export const EMPOWERED_METAMAGIC_UNSUPPORTED_MESSAGE =
+  "Empowered Spell is not supported until spell damage roll fills carry a typed post-roll reroll boundary that selects original damage dice up to the caster's Charisma modifier and replaces them with forced new rolls without storing reroll opportunity state.";
+export const SEEKING_METAMAGIC_UNSUPPORTED_MESSAGE =
+  "Seeking Spell is not supported until spell attack roll fills carry a typed missed-spell-attack reroll boundary that replaces one missed d20 with the forced new roll without storing reroll opportunity state.";
 
 export const QUICKENED_SPELL_METAMAGIC_SELECTION = [
   { effectKind: QUICKENED_METAMAGIC_EFFECT_KIND },
@@ -350,6 +358,10 @@ function spellMetamagicSupportIssue(input: {
   if (damageShapeIssue !== null) {
     return damageShapeIssue;
   }
+  const rerollIssue = rerollMetamagicSupportIssue(effectKinds);
+  if (rerollIssue !== null) {
+    return rerollIssue;
+  }
   const saveMetamagicOnly =
     effectKinds.size > 0 &&
     [...effectKinds].every(
@@ -403,6 +415,17 @@ function damageShapeMetamagicSupportIssue(
   }
   return effectKinds.has(TWINNED_METAMAGIC_EFFECT_KIND)
     ? TWINNED_METAMAGIC_UNSUPPORTED_MESSAGE
+    : null;
+}
+
+function rerollMetamagicSupportIssue(
+  effectKinds: ReadonlySet<CharacterBattleMetamagicEffectKind>,
+): string | null {
+  if (effectKinds.has(EMPOWERED_METAMAGIC_EFFECT_KIND)) {
+    return EMPOWERED_METAMAGIC_UNSUPPORTED_MESSAGE;
+  }
+  return effectKinds.has(SEEKING_METAMAGIC_EFFECT_KIND)
+    ? SEEKING_METAMAGIC_UNSUPPORTED_MESSAGE
     : null;
 }
 

@@ -11,6 +11,7 @@ import {
   type BattleState,
   type CharacterBattleMetamagicOptionFact,
   characterBattleResourceIsPointPool,
+  cantripSpellInvocationRef,
   discoverBattleActs,
   spendCharacterPointPoolResource,
   spellSlotInvocationRef,
@@ -19,10 +20,14 @@ import {
 import {
   DISTANT_METAMAGIC_EFFECT_KIND,
   DISTANT_METAMAGIC_UNSUPPORTED_MESSAGE,
+  EMPOWERED_METAMAGIC_EFFECT_KIND,
+  EMPOWERED_METAMAGIC_UNSUPPORTED_MESSAGE,
   EXTENDED_METAMAGIC_EFFECT_KIND,
   EXTENDED_METAMAGIC_UNSUPPORTED_MESSAGE,
   QUICKENED_METAMAGIC_EFFECT_KIND,
   QUICKENED_SPELL_METAMAGIC_SELECTION,
+  SEEKING_METAMAGIC_EFFECT_KIND,
+  SEEKING_METAMAGIC_UNSUPPORTED_MESSAGE,
   SUBTLE_METAMAGIC_EFFECT_KIND,
   SUBTLE_METAMAGIC_UNSUPPORTED_MESSAGE,
   TRANSMUTED_METAMAGIC_EFFECT_KIND,
@@ -354,6 +359,41 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
           state,
           subject: {
             ...burningHandsActionSubject(),
+            metamagic: [{ effectKind: closure.effectKind }],
+          },
+          fills: [],
+        }),
+      ).toMatchObject({
+        tag: "invalid",
+        message: closure.message,
+      });
+    }
+
+    expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
+  });
+
+  test("explicitly closes reroll Metamagic options before Sorcery Point spending", () => {
+    const state = saveMetamagicBattle({
+      knownOptions: [empoweredMetamagicOption(), seekingMetamagicOption()],
+    });
+
+    for (const closure of [
+      {
+        subject: burningHandsActionSubject(),
+        effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND,
+        message: EMPOWERED_METAMAGIC_UNSUPPORTED_MESSAGE,
+      },
+      {
+        subject: rayOfFrostActionSubject(),
+        effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
+        message: SEEKING_METAMAGIC_UNSUPPORTED_MESSAGE,
+      },
+    ] as const) {
+      expect(
+        resolveBattleSubject({
+          state,
+          subject: {
+            ...closure.subject,
             metamagic: [{ effectKind: closure.effectKind }],
           },
           fills: [],
@@ -1010,7 +1050,15 @@ function quickenedMetamagicOption(): MetamagicOptionFixture {
 
 function empoweredMetamagicOption(): MetamagicOptionFixture {
   return {
-    effectKind: "damage_dice_reroll",
+    effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND,
+    stackingMode: "can_combine_with_different_metamagic",
+    sorceryPointCost: resourceCount(1),
+  };
+}
+
+function seekingMetamagicOption(): MetamagicOptionFixture {
+  return {
+    effectKind: SEEKING_METAMAGIC_EFFECT_KIND,
     stackingMode: "can_combine_with_different_metamagic",
     sorceryPointCost: resourceCount(1),
   };
@@ -1096,6 +1144,18 @@ function burningHandsActionSubject(): Extract<
     tag: "actionSpell",
     actorId: wizardId,
     invocation: spellSlotInvocationRef("burning_hands", 1, "saveGatedDamage"),
+    mode: { tag: "cast" },
+  };
+}
+
+function rayOfFrostActionSubject(): Extract<
+  AvailableBattleAct["subject"],
+  { readonly tag: "actionSpell" }
+> {
+  return {
+    tag: "actionSpell",
+    actorId: wizardId,
+    invocation: cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
     mode: { tag: "cast" },
   };
 }
