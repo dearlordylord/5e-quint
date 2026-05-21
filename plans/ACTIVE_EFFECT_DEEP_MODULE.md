@@ -4,9 +4,11 @@ Date: 2026-05-20
 
 Status: `adopted` — supersedes `LARGE_FILE_DOMAIN_SPLIT_PLAN.md` Tier 2 #8
 (active-effects portion) and #9 (`turn-active-effects.ts` portion). On branch
-`active-effect-deep-module`: **step 1a done** (lifecycle-model relocation to
-`active-effect/types.ts`, typecheck green); **step 1b** (the `BattleActiveEffect`
-union itself) and **step 3** (lifecycle runtime) pending.
+`active-effect-deep-module`: **step 1a + 1b done** — the lifecycle model and the
+full `BattleActiveEffect` union + arm-payload types now live in
+`active-effect/types.ts` (478-line union moved; `battle-reducer.ts` down ~5,600 →
+~5,000 lines; workspace `pnpm -r typecheck` green, 9/9). **Step 3** (lifecycle
+runtime + effect-centric seam inversion) and **perception** pending.
 
 > **Implementation finding (2026-05-20):** the single-shot union relocation in
 > the original plan was over-optimistic. Doing the work surfaced two entanglements
@@ -172,13 +174,18 @@ is deferred (see Staging Decision).
    `SelfTransformationModeEffectPayload`) into `active-effect/types.ts`. Re-exported
    the previously-public types from `battle-reducer.ts`; the union and runtime import
    the rest one-directionally. Workspace `pnpm -r typecheck` green (9/9 packages).
-1b. **`BattleActiveEffect` union + arm payloads** *(NEXT)* — move the union (659–1098)
-   and its arm-payload types (`SpellCreatedHeldObject*`, etc.) into `active-effect/types.ts`.
-   Handle the value consts (`BATTLE_SPECIAL_SPEED_KINDS` etc. — keep as values, move or
-   import deliberately) and the 4 cross-domain tendrils (`BattleCommandOption`,
-   `MarkedDamageRiderAbilityCheckBehavior`, `BattleDancingLight`/`List`) via type-only
-   imports (no `import/no-cycle` lint here; TS erases type-only cycles). Co-locate
-   `SpellConditionRepeatSave` + the `SpellFailedSaveCondition*` cluster here as one move.
+1b. **`BattleActiveEffect` union + arm payloads** *(DONE)* — moved the union and its
+   arm-payload types (`SpellCreatedHeldObjectState`/`ActiveEffect`,
+   `SpellObjectContactDamageActiveEffect`) into `active-effect/types.ts`. The value
+   consts stayed in `battle-reducer.ts`; the **9 cross-domain tendrils**
+   (`BattleSpecialSpeedKind`, `BattleD20RollModifierKind`/`Delta`, `BattleCommandOption`,
+   `MarkedDamageRiderAbilityCheckBehavior`, `BattleDancingLight`/`List`, `SpellAttackKind`,
+   `SpellConditionRepeatSave`) are type-only back-imports from `battle-reducer.ts` —
+   a documented transitional type-only cycle (erased at runtime; no `import/no-cycle`
+   lint here) that dissolves as those domains extract. The previously-public types are
+   re-exported from `battle-reducer.ts`, so the move is behaviour-preserving.
+   **Deferred to a later step:** co-locating `SpellConditionRepeatSave` + the
+   `SpellFailedSaveCondition*` cluster (still in `battle-reducer.ts`).
 2. **`index.ts`** — the small public barrel re-exporting `types.ts` (and later
    `lifecycle.ts`). Migrate type-importers to `@dnd/battle-runtime/active-effect`
    where it improves locality; remove temporary re-exports from `battle-reducer.ts`
