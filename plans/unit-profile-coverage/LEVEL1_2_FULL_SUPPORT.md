@@ -12,8 +12,8 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | Strict target closure | 167/168 (99.4%) |
 | Product readiness | 509/556 (91.5%) |
 | Rules-kernel profile join | 78/84 (92.9%) |
-| Rules-kernel covered profile join | 68/84 (81%) |
-| Supported Unit rules-kernel chain | 91/112 (81.3%) |
+| Rules-kernel covered profile join | 71/84 (84.5%) |
+| Supported Unit rules-kernel chain | 95/112 (84.8%) |
 
 ## Scope
 
@@ -52,23 +52,19 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | --- | --- | --- |
 | `animal_friendship` | mapped-open | `spell.creature-type-protection-and-charm` (mapped-open: `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION` (needs-parity-witness)) |
 | `bard_jack_of_all_trades` | unmapped | `character-sheet.ability-check-proficiency-bonus` (unmapped: no obligation mapping) |
-| `chromatic_orb` | mapped-open | `spell.invocation-chained-attack-damage` (mapped-open: `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE` (needs-parity-witness)) |
 | `cleric_channel_divinity` | unmapped | `character-creation.class-feature-resource-projection` (unmapped: no obligation mapping) |
 | `cleric_divine_order` | unmapped | `character-creation.class-feature-option-projection` (unmapped: no obligation mapping) |
 | `druid_primal_order` | unmapped | `character-creation.class-feature-option-projection` (unmapped: no obligation mapping) |
-| `eldritch_blast` | mapped-open | `spell.invocation-independent-attack-sequence` (mapped-open: `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE` (needs-parity-witness)) |
 | `faerie_fire` | mapped-open | `spell.invocation-attack-roll-advantage-save` (mapped-open: `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE` (needs-parity-witness)) |
 | `heat_metal` | unmapped | `spell.invocation-object-contact-damage` (unmapped: no obligation mapping) |
 | `heroism` | mapped-open | `spell.invocation-condition-immunity-turn-start-temporary-hit-points` (mapped-open: `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS` (needs-parity-witness)) |
 | `invisibility` | mapped-open | `spell.invocation-direct-condition` (mapped-open: `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE` (needs-parity-witness)) |
 | `lesser_restoration` | mapped-open | `spell.invocation-direct-condition-removal` (mapped-open: `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` (needs-parity-witness)) |
-| `mirror_image` | mapped-open | `spell.invocation-mirror-image-hit-interception` (mapped-open: `BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION` (needs-parity-witness)) |
 | `monk_uncanny_metabolism` | unmapped | `character-creation.class-feature-source-fact-projection` (unmapped: no obligation mapping) |
 | `protection_from_evil_and_good` | mapped-open | `spell.creature-type-protection-and-charm` (mapped-open: `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION` (needs-parity-witness)) |
 | `protection_from_poison` | mapped-open | `spell.invocation-condition-removal-protection` (mapped-open: `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` (needs-parity-witness)) |
 | `ranger_deft_explorer` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
 | `rogue_expertise` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
-| `scorching_ray` | mapped-open | `spell.invocation-independent-attack-sequence` (mapped-open: `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE` (needs-parity-witness)) |
 | `warding_bond` | mapped-open | `spell.invocation-warding-bond-linked-effect` (mapped-open: `BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING` (needs-parity-witness)) |
 | `wizard_scholar` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
 

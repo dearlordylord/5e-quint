@@ -963,8 +963,8 @@
     },
     "rulesKernelCoveredProfileJoin": {
       "denominator": 58,
-      "numerator": 51,
-      "percent": "87.9%"
+      "numerator": 53,
+      "percent": "91.4%"
     },
     "rulesKernelProfileJoin": {
       "denominator": 58,
@@ -973,8 +973,8 @@
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 78,
-      "numerator": 69,
-      "percent": "88.5%"
+      "numerator": 71,
+      "percent": "91%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 94,
@@ -3246,8 +3246,8 @@
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
         "denominator": 78,
-        "numerator": 69,
-        "percent": "88.5%"
+        "numerator": 71,
+        "percent": "91%"
       }
     },
     "units": [
@@ -3511,15 +3511,15 @@
         "unitId": "chill_touch"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
                 "obligationId": "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
                 "runtime": "battle",
-                "status": "needs-parity-witness",
+                "status": "covered",
                 "title": "Battle chained spell attack sequence for damage-type choice, duplicate-die leap admission, target history, per-step attack and damage rolls, and slot-level leap limits"
               }
             ],
@@ -3776,15 +3776,15 @@
         "unitId": "druid_primal_order"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
                 "obligationId": "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
                 "runtime": "battle",
-                "status": "needs-parity-witness",
+                "status": "covered",
                 "title": "Battle independent spell attack sequences for beam and ray count, per-attack target choice, attack rolls, hit-gated damage rolls, object targets, and action or slot spend"
               }
             ],

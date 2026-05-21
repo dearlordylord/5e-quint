@@ -1,5 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-MISSING-MIRROR-IMAGE mirror_image
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-mirror-image-hit-interception
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION
 import { describe, expect, test } from "vitest";
 import {
   mirrorImageUnitId,

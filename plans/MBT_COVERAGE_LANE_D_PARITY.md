@@ -15,7 +15,7 @@
     {"number":9,"id":"RKBC-SPELL-WEAPON-HOSTED-PARITY","status":"done","title":"Spell Weapon-Hosted Attack And Rider Parity Witnesses"},
     {"number":10,"id":"RKBC-SPELL-MARKED-RIDER-PARITY","status":"done","title":"Spell Marked Damage Rider Parity Witnesses"},
     {"number":11,"id":"RKBC-SPELL-ATTACK-SEQUENCES-PARITY","status":"done","title":"Spell Attack Sequence Parity Witnesses"},
-    {"number":12,"id":"RKBC-SPELL-MIRROR-IMAGE-PARITY","status":"ready-for-research","title":"Mirror Image Hit Interception Parity Witness"},
+    {"number":12,"id":"RKBC-SPELL-MIRROR-IMAGE-PARITY","status":"done","title":"Mirror Image Hit Interception Parity Witness"},
     {"number":13,"id":"RKBC-SPELL-LINKED-EFFECT-PARITY","status":"ready-for-research","title":"Linked Spell Effect Damage Sharing Parity Witness"},
     {"number":14,"id":"RKBC-FINAL-COVERAGE-CLOSURE-GATE","status":"blocked","title":"Final MBT Coverage Closure Gate"}
   ]
@@ -128,7 +128,7 @@ Output:
 
 ### Task 12 - RKBC-SPELL-MIRROR-IMAGE-PARITY - Mirror Image Hit Interception Parity Witness
 
-Status: `ready-for-research`
+Status: `done`
 
 Output:
 - Parity witness for Mirror Image hit interception already supported in runtime.

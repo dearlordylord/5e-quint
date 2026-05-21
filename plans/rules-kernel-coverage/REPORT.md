@@ -5,15 +5,15 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 ## Summary
 
 - Total obligations: 72
-- Covered obligations: 58
-- Open transitional obligations: 9
+- Covered obligations: 59
+- Open transitional obligations: 8
 - Boundary or unsupported obligations: 5
 
 | Status | Count |
 | --- | ---: |
-| covered | 58 |
+| covered | 59 |
 | needs-qnt-owner | 0 |
-| needs-parity-witness | 8 |
+| needs-parity-witness | 7 |
 | needs-surface-evidence | 1 |
 | boundary-only | 4 |
 | unsupported-by-admission | 1 |
@@ -68,7 +68,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` | battle | covered | `spell.invocation-marked-damage-rider` |
 | `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE` | battle | covered | `spell.invocation-chained-attack-damage` |
 | `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE` | battle | covered | `spell.invocation-independent-attack-sequence` |
-| `BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION` | battle | needs-parity-witness | `spell.invocation-mirror-image-hit-interception` |
+| `BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION` | battle | covered | `spell.invocation-mirror-image-hit-interception` |
 | `BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING` | battle | needs-parity-witness | `spell.invocation-warding-bond-linked-effect` |
 | `BATTLE.SANCTUARY.TARGETING_INTERDICTION` | battle | covered | `spell.invocation-sanctuary-targeting-interdiction` |
 | `BATTLE.STAT_BLOCK.ATTACK_CONTROL` | battle | covered | `stat-block.attack-control` |
@@ -132,11 +132,11 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | battle-hole-family | `BattleSpellTargetAllocationHole` | `spellTargetAllocation` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | _none_ |
 | battle-hole-family | `BattleSpellTargetListHole` | `spellTargetList` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | _none_ |
 | battle-hole-family | `BattleAttackRollHole` | `attackRoll` | semantic-frontier | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.STAT_BLOCK.ATTACK_CONTROL`, `BATTLE.DAMAGE.ATTACK_BRANCHES` | _none_ |
-| battle-hole-family | `BattleSpellAttackRollHole` | `attackRoll` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES` | `RKBC-SPELL-AFTER-HIT-RIDERS-PARITY`, `RKBC-SPELL-ATTACK-SEQUENCES-PARITY`, `RKBC-SPELL-MIRROR-IMAGE-PARITY` |
+| battle-hole-family | `BattleSpellAttackRollHole` | `attackRoll` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES` | `RKBC-SPELL-AFTER-HIT-RIDERS-PARITY`, `RKBC-SPELL-ATTACK-SEQUENCES-PARITY` |
 | battle-hole-family | `BattleDamageRollHole` | `rolledDice` | semantic-frontier | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `SHARED.HIT_POINTS.POSITIVE_DAMAGE`, `BATTLE.DAMAGE.ATTACK_BRANCHES`, `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION`, `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | _none_ |
 | battle-hole-family | `BattleSpellDamageRollHole` | `rolledDice` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `SHARED.HIT_POINTS.POSITIVE_DAMAGE`, `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES`, `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION`, `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | `RKBC-SPELL-AFTER-HIT-RIDERS-PARITY`, `RKBC-SPELL-WEAPON-HOSTED-PARITY`, `RKBC-SPELL-MARKED-RIDER-PARITY`, `RKBC-SPELL-ATTACK-SEQUENCES-PARITY`, `RKBC-SPELL-LINKED-EFFECT-PARITY` |
 | battle-hole-family | `BattleSpellDamageReductionRollHole` | `rolledDice` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` | _none_ |
-| battle-hole-family | `BattleMirrorImageDuplicateRollHole` | `rolledDice` | semantic-frontier | _none_ | `RKBC-SPELL-MIRROR-IMAGE-PARITY` |
+| battle-hole-family | `BattleMirrorImageDuplicateRollHole` | `rolledDice` | semantic-frontier | `BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION` | _none_ |
 | battle-hole-family | `BattleSpellTurnStartDamageRollHole` | `rolledDice` | semantic-frontier | `SHARED.HIT_POINTS.POSITIVE_DAMAGE`, `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | `RKBC-SPELL-AFTER-HIT-RIDERS-PARITY` |
 | battle-hole-family | `BattleFlamingSphereDamageRollHole` | `rolledDice` | semantic-frontier | `BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE`, `SHARED.HIT_POINTS.POSITIVE_DAMAGE`, `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | _none_ |
 | battle-hole-family | `BattleSpellHealingRollHole` | `rolledDice` | semantic-frontier | `BATTLE.SPELL.HIT_POINT_RESTORATION` | _none_ |
@@ -170,7 +170,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | battle-hole-family | `BattleSanctuaryInterdictionOutcomeHole` | `sanctuaryInterdictionOutcome` | semantic-frontier | `BATTLE.SANCTUARY.TARGETING_INTERDICTION` | _none_ |
 | battle-hole-family | `BattleAttackDamageDispositionHole` | `attackDamageDisposition` | semantic-frontier | `SHARED.HIT_POINTS.POSITIVE_DAMAGE`, `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | _none_ |
 | battle-fill-kind | `attackRoll` | `attackRoll` | semantic-frontier | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.STAT_BLOCK.ATTACK_CONTROL`, `BATTLE.DAMAGE.ATTACK_BRANCHES`, `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES` | _none_ |
-| battle-fill-kind | `rolledDice` | `rolledDice` | semantic-frontier | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.HIT_POINT_RESTORATION`, `SHARED.HIT_POINTS.POSITIVE_DAMAGE`, `BATTLE.DAMAGE.ATTACK_BRANCHES`, `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES`, `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION`, `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | `RKBC-SPELL-AFTER-HIT-RIDERS-PARITY`, `RKBC-SPELL-WEAPON-HOSTED-PARITY`, `RKBC-SPELL-MARKED-RIDER-PARITY`, `RKBC-SPELL-ATTACK-SEQUENCES-PARITY`, `RKBC-SPELL-MIRROR-IMAGE-PARITY`, `RKBC-SPELL-LINKED-EFFECT-PARITY` |
+| battle-fill-kind | `rolledDice` | `rolledDice` | semantic-frontier | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.HIT_POINT_RESTORATION`, `SHARED.HIT_POINTS.POSITIVE_DAMAGE`, `BATTLE.DAMAGE.ATTACK_BRANCHES`, `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES`, `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION`, `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | `RKBC-SPELL-AFTER-HIT-RIDERS-PARITY`, `RKBC-SPELL-WEAPON-HOSTED-PARITY`, `RKBC-SPELL-MARKED-RIDER-PARITY`, `RKBC-SPELL-ATTACK-SEQUENCES-PARITY`, `RKBC-SPELL-LINKED-EFFECT-PARITY` |
 | battle-fill-kind | `damageTypeChoice` | `damageTypeChoice` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` | _none_ |
 | battle-fill-kind | `savingThrowOutcome` | `savingThrowOutcome` | semantic-frontier | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES`, `BATTLE.COMMAND.OPTION_AND_NEXT_TURN` | `RKBC-SPELL-SAVE-GATED-CONDITION-PARITY`, `RKBC-SPELL-REACTION-CASTING-PARITY`, `RKBC-SPELL-AFTER-HIT-RIDERS-PARITY` |
 | battle-fill-kind | `conditionChoice` | `conditionChoice` | semantic-frontier | _none_ | `RKBC-SPELL-SAVE-GATED-CONDITION-PARITY` |
@@ -233,7 +233,6 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 - `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION` (needs-parity-witness; follow-up: `RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY`): Battle creature-type protection, Charmed/Frightened/possession prevention, and relevant-effect Saving Throw Advantage
 - `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS` (needs-parity-witness; follow-up: `RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY`): Battle spell condition immunity with start-turn Temporary Hit Point refresh and concentration cleanup
 - `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` (needs-parity-witness; follow-up: `RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY`): Battle direct condition removal, poison protection condition removal, poison resistance, and poison Saving Throw Advantage
-- `BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION` (needs-parity-witness; follow-up: `RKBC-SPELL-MIRROR-IMAGE-PARITY`): Battle Mirror Image duplicate pool, attack-hit interception roll, duplicate destruction, bypass witnesses, and normal damage continuation
 - `BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING` (needs-parity-witness; follow-up: `RKBC-SPELL-LINKED-EFFECT-PARITY`): Battle linked spell effects for Warding Bond defenses, all-damage Resistance, same-amount damage sharing, and source-zero, separation, recast, or duration cleanup
 - `BATTLE.SURFACE.EXECUTABLE_PROFILE_JOIN` (needs-surface-evidence; follow-up: `RKBC-FINAL-B-CLOSURE-GATE`): Prove each currently admitted executable battle Surface profile points to a covered semantic obligation
 

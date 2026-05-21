@@ -1,8 +1,8 @@
 {
   "summary": {
     "total": 72,
-    "covered": 58,
-    "open": 9,
+    "covered": 59,
+    "open": 8,
     "nonSemantic": 5,
     "byRuntime": {
       "shared-algebras": 1,
@@ -12,9 +12,9 @@
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 58,
+      "covered": 59,
       "needs-qnt-owner": 0,
-      "needs-parity-witness": 8,
+      "needs-parity-witness": 7,
       "needs-surface-evidence": 1,
       "boundary-only": 4,
       "unsupported-by-admission": 1
@@ -1186,12 +1186,14 @@
       "title": "Battle independent spell attack sequences for beam and ray count, per-attack target choice, attack rolls, hit-gated damage rolls, object targets, and action or slot spend"
     },
     {
-      "followUpTaskIds": [
-        "RKBC-SPELL-MIRROR-IMAGE-PARITY"
-      ],
       "id": "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION",
       "kind": "active-effect-lifecycle",
-      "parityWitnesses": [],
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-mirror-image.test.ts"
+        }
+      ],
       "profiles": [
         "spell.invocation-mirror-image-hit-interception"
       ],
@@ -1206,8 +1208,10 @@
         "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-burst.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts"
       ],
-      "status": "needs-parity-witness",
-      "surfaceEvidence": [],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-M-P.md#Mirror Image"
+      ],
       "title": "Battle Mirror Image duplicate pool, attack-hit interception roll, duplicate destruction, bypass witnesses, and normal damage continuation"
     },
     {
@@ -2289,12 +2293,11 @@
       ],
       "followUpTaskIds": [
         "RKBC-SPELL-AFTER-HIT-RIDERS-PARITY",
-        "RKBC-SPELL-ATTACK-SEQUENCES-PARITY",
-        "RKBC-SPELL-MIRROR-IMAGE-PARITY"
+        "RKBC-SPELL-ATTACK-SEQUENCES-PARITY"
       ],
       "holeKind": "attackRoll",
       "id": "BattleSpellAttackRollHole",
-      "reason": "Spell Attack Roll results drive spell hit, miss, Critical Hit, and after-hit, beam/ray, chained, or duplicate-interception continuations. Generic spell attack damage branches are covered; specialized spell attack continuations now route to dedicated parity-witness obligations.",
+      "reason": "Spell Attack Roll results drive spell hit, miss, Critical Hit, and after-hit, beam/ray, or chained continuations. Generic spell attack damage branches are covered; specialized spell attack continuations now route to dedicated parity-witness obligations.",
       "subject": "battle-hole-family"
     },
     {
@@ -2347,13 +2350,13 @@
     },
     {
       "classification": "semantic-frontier",
-      "coveredByObligationIds": [],
-      "followUpTaskIds": [
-        "RKBC-SPELL-MIRROR-IMAGE-PARITY"
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION"
       ],
+      "followUpTaskIds": [],
       "holeKind": "rolledDice",
       "id": "BattleMirrorImageDuplicateRollHole",
-      "reason": "Mirror Image duplicate interception roll changes hit redirection, duplicate lifecycle, and continuation after an attack hit; those semantics now route to the Mirror Image parity-witness obligation.",
+      "reason": "Mirror Image duplicate interception roll changes hit redirection, duplicate lifecycle, and continuation after an attack hit; those semantics are covered by the Mirror Image hit-interception obligation.",
       "subject": "battle-hole-family"
     },
     {
@@ -2763,11 +2766,10 @@
         "RKBC-SPELL-WEAPON-HOSTED-PARITY",
         "RKBC-SPELL-MARKED-RIDER-PARITY",
         "RKBC-SPELL-ATTACK-SEQUENCES-PARITY",
-        "RKBC-SPELL-MIRROR-IMAGE-PARITY",
         "RKBC-SPELL-LINKED-EFFECT-PARITY"
       ],
       "id": "rolledDice",
-      "reason": "Rolled Dice fills are shared by damage, healing, mitigation, duplicate interception, linked effects, and feature-roll procedures. Generic damage branch, healing, type/reduction, disposition, and shared HP obligations cover the core while specialized spell roll joins route to dedicated parity-witness obligations.",
+      "reason": "Rolled Dice fills are shared by damage, healing, mitigation, linked effects, and feature-roll procedures. Generic damage branch, healing, type/reduction, disposition, and shared HP obligations cover the core while specialized spell roll joins route to dedicated parity-witness obligations.",
       "subject": "battle-fill-kind"
     },
     {

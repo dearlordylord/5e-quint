@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION
 
 module battleRuntimeMirrorImage {
   import battleRuntimeModel.* from "./battle-runtime-model"

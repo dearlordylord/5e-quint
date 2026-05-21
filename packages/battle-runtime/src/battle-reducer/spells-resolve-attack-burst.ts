@@ -1,6 +1,7 @@
 // Attack-burst save-damage spell resolution, currently Ice Knife.
 // Extracted from spells-resolve.ts as a procedure-local resolver slice.
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION
 
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import {
