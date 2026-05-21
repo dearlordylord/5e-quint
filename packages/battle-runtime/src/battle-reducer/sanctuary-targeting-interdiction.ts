@@ -20,7 +20,7 @@ import type {
 } from "../battle-reducer.ts";
 import type { CharacterBattleSpellcastingState } from "../character-battle-resources.ts";
 import type { CombatantId } from "../identity.ts";
-import { battleCreatureWithSpellActiveEffects } from "./spells-active-effects.ts";
+import { battleCreatureWithSpellActiveEffects } from "../active-effect/lifecycle.ts";
 import {
   combatantsAfterConcentrationSpellEffectsEndedIfNoEffects,
   conditionsAfterExpiringSpellConditionEffects,

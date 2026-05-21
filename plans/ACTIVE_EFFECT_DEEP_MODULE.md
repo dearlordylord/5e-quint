@@ -4,7 +4,17 @@ Date: 2026-05-20
 
 Status: `adopted` — supersedes `LARGE_FILE_DOMAIN_SPLIT_PLAN.md` Tier 2 #8
 (active-effects portion) and #9 (`turn-active-effects.ts` portion). On branch
-`active-effect-deep-module`: **step 1a + 1b done** — the lifecycle model and the
+`active-effect-deep-module`: **steps 1a + 1b + 3 done; perception deferred.**
+Step 3 (this commit): `active-effect/lifecycle.ts` is a **value-leaf** holding the
+effect-centric core — `battleCreatureWithSpellActiveEffects` plus its two pure
+closures (condition derivation: `conditionsAfterApplyingSpellConditionEffects` +
+`isConditionApplyingActiveEffect`/`activeEffectCondition`/`activeEffectConditions`;
+held-object hand-state: `battleCreatureWithSpellCreatedHeldObjectHandStateFromActiveEffects`
++ `battleCreatureWithoutSpellCreatedHeldObjectHand`). Spell-coupled
+apply-from-invocation logic stays in `battle-reducer/` and calls into it. madge
+confirms `lifecycle.ts` is in no cycle (61 value cycles unchanged).
+
+Step-1a/1b context: the lifecycle model and the
 full `BattleActiveEffect` union + arm-payload types now live in
 `active-effect/types.ts` (478-line union moved; `battle-reducer.ts` down ~5,600 →
 ~5,000 lines; workspace `pnpm -r typecheck` green, 9/9). **Step 3** (lifecycle
@@ -259,6 +269,26 @@ Circular-dependency tooling:
 - `@dnd/battle-runtime` has ~61 pre-existing **value** cycles in `battle-reducer/`
   and intentionally has no `circular` gate; this refactor does not add one and
   does not worsen that count (the type-only edge it adds is skipped).
+
+## Verification results (2026-05-21, step 3)
+
+- **Workspace typecheck**: green, 9/9 packages.
+- **madge**: `active-effect/lifecycle.ts` appears in no cycle (value-leaf); total
+  battle-runtime value-cycle count unchanged at 61.
+- **Deterministic reducer suite** (`vitest run --exclude '**/*.mbt.test.ts'`):
+  **900 passed**, 9 failed — **identical** to the pre-step-3 base state (same 4
+  files: bardic-inspiration, cutting-words, opportunity-and-light-attacks,
+  uncanny-dodge). The 9 failures are a **pre-existing** init bug ("Ability-modifier
+  resource cap requires the projected ability modifier" in
+  `character-battle-resources.ts`), unrelated to this refactor. → behaviour
+  preservation proven (zero new failures).
+- **Battle MBT**: could **not execute** in this fresh worktree — quint reports
+  `QNT404` name-resolution errors (`damageAfterAdjustments`, etc.) on `.mbt.qnt`
+  spec files this refactor never touched (`git diff` is TS-only). Root cause is a
+  worktree quint environment gap: the worktree lacks the `.quint-cache` the main
+  repo has; quint-connect version is identical. This is independent of the
+  TS-only change. To actually run MBT, prime/copy the quint cache or run it from
+  the main checkout.
 
 ## Out Of Scope
 

@@ -1,9 +1,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE
 
-import type { HandUse } from "@dnd/shared/types";
 import type {
-  BattleActiveEffect,
   BattleCreatureState,
   BattleHand,
   BattleState,
@@ -11,8 +9,11 @@ import type {
 import type { CombatantId } from "../identity.ts";
 import { combatantHandUses } from "./creature-state-leaves.ts";
 
-export const SPELL_CREATED_HELD_OBJECT_HAND_USE =
-  "spellCreatedHeldObject" as const satisfies HandUse;
+import {
+  SPELL_CREATED_HELD_OBJECT_HAND_USE,
+  battleCreatureWithoutSpellCreatedHeldObjectHand,
+} from "../active-effect/lifecycle.ts";
+export { battleCreatureWithSpellCreatedHeldObjectHandStateFromActiveEffects } from "../active-effect/lifecycle.ts";
 
 export function spellCreatedHeldObjectHasFreeHand(
   state: BattleState,
@@ -57,44 +58,3 @@ export function battleCreatureWithSpellCreatedHeldObjectHand(
   };
 }
 
-export function battleCreatureWithoutSpellCreatedHeldObjectHand(
-  combatant: BattleCreatureState,
-): BattleCreatureState {
-  if (
-    combatant.armorClass.leftHandUse !== SPELL_CREATED_HELD_OBJECT_HAND_USE &&
-    combatant.armorClass.rightHandUse !== SPELL_CREATED_HELD_OBJECT_HAND_USE
-  ) {
-    return combatant;
-  }
-  return {
-    ...combatant,
-    armorClass: {
-      ...combatant.armorClass,
-      leftHandUse:
-        combatant.armorClass.leftHandUse === SPELL_CREATED_HELD_OBJECT_HAND_USE
-          ? "free"
-          : combatant.armorClass.leftHandUse,
-      rightHandUse:
-        combatant.armorClass.rightHandUse === SPELL_CREATED_HELD_OBJECT_HAND_USE
-          ? "free"
-          : combatant.armorClass.rightHandUse,
-    },
-  };
-}
-
-export function battleCreatureWithSpellCreatedHeldObjectHandStateFromActiveEffects(
-  combatant: BattleCreatureState,
-): BattleCreatureState {
-  return combatant.activeEffects.some(spellCreatedHeldObjectEffectIsHeld)
-    ? combatant
-    : battleCreatureWithoutSpellCreatedHeldObjectHand(combatant);
-}
-
-function spellCreatedHeldObjectEffectIsHeld(
-  effect: BattleActiveEffect,
-): boolean {
-  return (
-    effect.kind === "spellCreatedHeldObject" &&
-    effect.objectState.kind === "held"
-  );
-}

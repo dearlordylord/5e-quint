@@ -31,7 +31,6 @@ import {
   battleCreatureAfterConditionRemoval,
   combatantsAfterConcentrationSpellEffectsEndedIfNoEffects,
   concentrationSpellEffectSourcesDirectlyApplyingCondition,
-  conditionsAfterApplyingSpellConditionEffects,
   conditionApplicationPreventedByCreatureTypeProtection,
   conditionHadNonSpellSourceBeforeSpellEffect,
 } from "./spell-condition-effects-helpers.ts";
@@ -77,10 +76,12 @@ import type { BattleObjectId } from "../identity.ts";
 import { HIDEOUS_LAUGHTER_DURATION_TICKS } from "./domain-constants.ts";
 import {
   battleCreatureWithSpellCreatedHeldObjectHand,
-  battleCreatureWithSpellCreatedHeldObjectHandStateFromActiveEffects,
-  battleCreatureWithoutSpellCreatedHeldObjectHand,
   spellCreatedHeldObjectFreeHand,
 } from "./spell-created-held-object.ts";
+import {
+  battleCreatureWithSpellActiveEffects,
+  battleCreatureWithoutSpellCreatedHeldObjectHand,
+} from "../active-effect/lifecycle.ts";
 
 export const FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND = 60;
 export const FAERIE_FIRE_DIM_LIGHT_RADIUS_FEET = movementFeet(10);
@@ -1154,24 +1155,6 @@ function isSpellLightEmissionPostDamageRider(
   return rider.kind === "lightEmission";
 }
 
-export function battleCreatureWithSpellActiveEffects(
-  combatant: BattleCreatureState,
-  activeEffects: readonly BattleActiveEffect[],
-): BattleCreatureState {
-  const nextCombatant = combatant.positiveHpUnconscious === null
-    ? {
-        ...combatant,
-        activeEffects,
-        conditions: conditionsAfterApplyingSpellConditionEffects(
-          combatant.conditions,
-          activeEffects,
-        ),
-      }
-    : { ...combatant, activeEffects };
-  return battleCreatureWithSpellCreatedHeldObjectHandStateFromActiveEffects(
-    nextCombatant,
-  );
-}
 
 export type SelfTransformationModeActiveEffect = Extract<
   BattleActiveEffect,

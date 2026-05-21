@@ -31,32 +31,18 @@ import { KnockedOutConditionState as KnockedOutConditionStateBrand } from "../ba
 import { battleCreatureType } from "./domain-helpers.ts";
 import { wardingBondSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
 
-const HIDEOUS_LAUGHTER_CONDITIONS = [
-  "prone",
-  "incapacitated",
-] as const satisfies ReadonlyArray<Condition>;
+import {
+  activeEffectCondition,
+  conditionsAfterApplyingSpellConditionEffects,
+  isConditionApplyingActiveEffect,
+} from "../active-effect/lifecycle.ts";
+export { conditionsAfterApplyingSpellConditionEffects };
 type ProtectionRelevantCondition = ProtectionFromEvilAndGoodPreventedCondition;
 type ProtectionRelevantEffect =
   | Extract<BattleActiveEffect, { readonly kind: "spellConditionRepeatSave" }>
   | Extract<BattleActiveEffect, { readonly kind: "possession" }>;
 type ProtectionRelevantEffectKind = ProtectionRelevantCondition | "possession";
 
-type ConditionApplyingActiveEffect =
-  | Extract<BattleActiveEffect, { readonly kind: "spellCondition" }>
-  | Extract<
-      BattleActiveEffect,
-      { readonly kind: "targetActionEndedSpellCondition" }
-    >
-  | Extract<BattleActiveEffect, { readonly kind: "spellConditionRepeatSave" }>
-  | Extract<BattleActiveEffect, { readonly kind: "spellConditionEndTurnSave" }>
-  | Extract<BattleActiveEffect, { readonly kind: "sleepPendingRepeatSave" }>
-  | Extract<BattleActiveEffect, { readonly kind: "sleepUnconscious" }>
-  | Extract<BattleActiveEffect, { readonly kind: "hideousLaughter" }>;
-
-type SingleConditionApplyingActiveEffect = Exclude<
-  ConditionApplyingActiveEffect,
-  Extract<BattleActiveEffect, { readonly kind: "hideousLaughter" }>
->;
 
 type HideousLaughterEffect = Extract<
   BattleActiveEffect,
@@ -770,37 +756,6 @@ function sameConcentrationSpellEffectSource(
   );
 }
 
-export function conditionsAfterApplyingSpellConditionEffects(
-  conditions: ConditionState,
-  activeEffects: readonly BattleActiveEffect[],
-): ConditionState {
-  const conditionImmunities = activeEffects.filter(
-    (
-      effect,
-    ): effect is Extract<
-      BattleActiveEffect,
-      { readonly kind: "conditionImmunity" }
-    > => effect.kind === "conditionImmunity",
-  );
-  const baseConditions = conditionImmunities.reduce(
-    (nextConditions, immunity) =>
-      removeCondition(nextConditions, immunity.condition),
-    conditions,
-  );
-  return activeEffects
-    .filter(isConditionApplyingActiveEffect)
-    .reduce((nextConditions, effect) => {
-      return activeEffectConditions(effect).reduce(
-        (conditionState, condition) =>
-          conditionImmunities.some(
-            (immunity) => immunity.condition === condition,
-          )
-            ? conditionState
-            : applyCondition(conditionState, condition),
-        nextConditions,
-      );
-    }, baseConditions);
-}
 
 export function conditionsAfterExpiringSpellConditionEffects(
   conditions: ConditionState,
@@ -872,42 +827,6 @@ function conditionsAfterExpiringConditionImmunity(
     : conditions;
 }
 
-function isConditionApplyingActiveEffect(
-  effect: BattleActiveEffect,
-): effect is ConditionApplyingActiveEffect {
-  return (
-    effect.kind === "spellCondition" ||
-    effect.kind === "targetActionEndedSpellCondition" ||
-    effect.kind === "spellConditionRepeatSave" ||
-    effect.kind === "spellConditionEndTurnSave" ||
-    effect.kind === "sleepPendingRepeatSave" ||
-    effect.kind === "sleepUnconscious" ||
-    effect.kind === "hideousLaughter"
-  );
-}
-
-function activeEffectConditions(
-  effect: ConditionApplyingActiveEffect,
-): readonly Condition[] {
-  return effect.kind === "hideousLaughter"
-    ? HIDEOUS_LAUGHTER_CONDITIONS
-    : [activeEffectCondition(effect)];
-}
-
-function activeEffectCondition(
-  effect: SingleConditionApplyingActiveEffect,
-): Condition {
-  if (
-    effect.kind === "spellCondition" ||
-    effect.kind === "targetActionEndedSpellCondition" ||
-    effect.kind === "spellConditionRepeatSave" ||
-    effect.kind === "spellConditionEndTurnSave"
-  )
-    return effect.condition;
-  return effect.kind === "sleepPendingRepeatSave"
-    ? "incapacitated"
-    : "unconscious";
-}
 
 function conditionsAfterExpiringHideousLaughterEffect(
   conditions: ConditionState,
