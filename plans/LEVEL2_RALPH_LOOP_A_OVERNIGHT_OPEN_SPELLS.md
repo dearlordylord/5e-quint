@@ -73,25 +73,25 @@
     {
       "number": 12,
       "id": "L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Gust of Wind Line Runtime Support"
     },
     {
       "number": 13,
       "id": "L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Gust of Wind Gas And Flame Presentation Closure"
     },
     {
       "number": 14,
       "id": "L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Magic Weapon Surface Item Enhancement Shape"
     },
     {
       "number": 15,
       "id": "L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Magic Weapon Item Enhancement Runtime"
     },
     {
@@ -226,10 +226,10 @@ The final task is intentionally blocked on every real task in this plan and plac
 | 9 | L12G-MISSING-DARKNESS - Darkness Definition And Support Or Closure | done | completed baseline | A lane; Unit `darkness`. |
 | 10 | L12G-MISSING-DARKVISION - Darkvision Definition And Support Or Closure | done | completed baseline | A lane; Unit `darkvision`. |
 | 11 | L12G-MISSING-DETECT-THOUGHTS - Detect Thoughts Definition And Closure | done | completed baseline | A lane; Unit `detect_thoughts`. |
-| 12 | L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME - Gust of Wind Line Runtime Support | ready-for-research | completed baseline | A lane; Unit `gust_of_wind`. |
-| 13 | L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE - Gust of Wind Gas And Flame Presentation Closure | ready-for-research | completed baseline | A lane; Unit `gust_of_wind`. |
-| 14 | L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE - Magic Weapon Surface Item Enhancement Shape | ready-for-research | completed baseline | A lane; Unit `magic_weapon`. |
-| 15 | L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME - Magic Weapon Item Enhancement Runtime | blocked | L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE | A lane; Unit `magic_weapon`. |
+| 12 | L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME - Gust of Wind Line Runtime Support | done | completed baseline | A lane; Unit `gust_of_wind`. |
+| 13 | L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE - Gust of Wind Gas And Flame Presentation Closure | done | completed baseline | A lane; Unit `gust_of_wind`. |
+| 14 | L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE - Magic Weapon Surface Item Enhancement Shape | done | completed baseline | A lane; Unit `magic_weapon`. |
+| 15 | L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME - Magic Weapon Item Enhancement Runtime | ready-for-research | L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE | A lane; Unit `magic_weapon`. |
 | 16 | L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE - Web Surface Area Hazard Shape | ready-for-research | completed baseline | A lane; Unit `web`. |
 | 17 | L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME - Web Restraint Hazard Runtime | blocked | L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE | A lane; Unit `web`. |
 | 18 | L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE - Web Terrain Obscurement Fire Boundary | blocked | L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE, L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME | A lane; Unit `web`. |
@@ -693,7 +693,7 @@ Acceptance:
 
 ### Task 12 - L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME - Gust of Wind Line Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `gust_of_wind`.
 Origin: Follow-up split from `gust_of_wind` unit claim and `L12G-MISSING-GUST-OF-WIND` gate task 67.
@@ -734,7 +734,7 @@ Acceptance:
 
 ### Task 13 - L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE - Gust of Wind Gas And Flame Presentation Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `gust_of_wind`.
 Origin: Follow-up split from `gust_of_wind` unit claim and `L12G-MISSING-GUST-OF-WIND` gate task 67.
@@ -775,7 +775,7 @@ Acceptance:
 
 ### Task 14 - L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE - Magic Weapon Surface Item Enhancement Shape
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `magic_weapon`.
 Origin: Follow-up split from `magic_weapon` unit claim and `L12G-SPELL-MAGIC-WEAPON`.
@@ -814,7 +814,7 @@ Acceptance:
 
 ### Task 15 - L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME - Magic Weapon Item Enhancement Runtime
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Unit: `magic_weapon`.
 Origin: Follow-up split from `magic_weapon` unit claim and `L12G-SPELL-MAGIC-WEAPON`.

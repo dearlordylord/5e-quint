@@ -732,6 +732,7 @@ export function spellFillSet(
         invocation.procedure !== "hideousLaughter" &&
         invocation.procedure !== "command" &&
         invocation.procedure !== "greaseGroundHazard" &&
+        invocation.procedure !== "gustOfWindLine" &&
         !(
           invocation.procedure === "rollModifier" &&
           invocation.saveGate !== null
@@ -1368,7 +1369,8 @@ export function spellFillSetSavingThrowTargeting(
         invocation.procedure === "sleepTargetAdmission" ||
         invocation.procedure === "hideousLaughter" ||
         invocation.procedure === "command" ||
-        invocation.procedure === "greaseGroundHazard"
+        invocation.procedure === "greaseGroundHazard" ||
+        invocation.procedure === "gustOfWindLine"
       ? invocation.targeting
       : { kind: "singleCombatant" };
 }

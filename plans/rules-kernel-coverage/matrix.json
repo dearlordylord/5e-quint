@@ -24,13 +24,13 @@
     "obligations[].profiles": "Derived from profileObligations by obligation id; authored obligations.jsonl rows must not contain profiles."
   },
   "battleHoleFrontierSummary": {
-    "total": 85,
+    "total": 88,
     "bySubject": {
-      "battle-hole-family": 52,
-      "battle-fill-kind": 33
+      "battle-hole-family": 54,
+      "battle-fill-kind": 34
     },
     "byClassification": {
-      "semantic-frontier": 64,
+      "semantic-frontier": 67,
       "deterministic-boundary-projection": 0,
       "table-owned-fact": 21,
       "unsupported-dead-branch": 0
@@ -2643,6 +2643,42 @@
       "id": "objectContactTargets",
       "reason": "Object-contact target fills supply selected contact creatures plus table-witnessed physical-contact and object-within-range facts for Heat Metal. Contact and range derivation stay at the caller/table boundary while reducer damage semantics are handled by the spell invocation profile.",
       "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "savingThrowOutcome",
+      "id": "BattleGustOfWindLineSavingThrowOutcomeHole",
+      "reason": "Gust of Wind Line save outcomes consume table-supplied area membership and push facts while reducer-visible semantics validate failed-save 15-foot non-Opportunity-Attack push facts and end-turn save advancement through the supported spell profile.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "gustOfWindLineDirectionChoice",
+      "id": "BattleGustOfWindLineDirectionChoiceHole",
+      "reason": "Gust of Wind Line direction is a table-supplied direction identity that changes the active Line effect and later movement/save fact validation without deriving map geometry in the reducer.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "fillKind": "gustOfWindLineDirectionChoice",
+      "followUpTaskIds": [],
+      "id": "gustOfWindLineDirectionChoice",
+      "reason": "Gust of Wind Line direction-choice fills supply a typed table direction identity and update reducer-owned active Line direction state without introducing automatic geometry or pathfinding.",
+      "subject": "battle-fill-kind"
     }
   ],
   "profileObligations": [
@@ -3248,6 +3284,7 @@
     "character-sheet.class-feature-point-pool-resource",
     "character-sheet.class-feature-use-count-resource",
     "character-sheet.font-of-magic-slot-to-sorcery-points",
+    "character-sheet.font-of-magic-sorcery-points-to-spell-slot",
     "character-sheet.healing-resource-action",
     "character-sheet.monk-uncanny-metabolism-initiative-recovery",
     "character-sheet.pact-slot-recovery",
@@ -3282,6 +3319,7 @@
     "spell.invocation-fog-cloud-obscurement",
     "spell.invocation-forced-reaction-movement",
     "spell.invocation-grease-ground-hazard",
+    "spell.invocation-gust-of-wind-line",
     "spell.invocation-held-light-emitter",
     "spell.invocation-hideous-laughter-repeat-save-lifecycle",
     "spell.invocation-independent-attack-sequence",

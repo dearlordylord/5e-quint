@@ -11,6 +11,7 @@ import {
   describeGrantedSpellTargetRestriction,
   describeNumericBounds,
   describeProficiencyGrant,
+  describeDelta,
   describeSignedNumber,
   describeSpellAccessMode,
 } from "./tracer-rule-labels.ts";
@@ -53,6 +54,7 @@ export type ObjectAndBarrierEffectAtom = Extract<
       | "grant_bonus_action_attack"
       | "replace_damage_die"
       | "substitute_ability_for_rolls"
+      | "grant_magic_weapon_enhancement"
       | "grant_condition_immunity"
       | "suppress_condition_benefit"
       | "grant_damage_immunity"
@@ -429,6 +431,18 @@ export function traceObjectAndBarrierEffectAtom(
         category: "effect",
         atomKind: "substitute_ability_for_rolls",
         label: `substitute_ability_for_rolls\n${e.use} for ${e.replaces}\n${e.on.join(", ")}\n${e.scope}`,
+      });
+      return id;
+    }
+    case "grant_magic_weapon_enhancement": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "grant_magic_weapon_enhancement",
+        label:
+          `grant_magic_weapon_enhancement\nmagic weapon status` +
+          `\n${describeDelta(e.bonus)} to attack rolls and damage rolls with attached weapon`,
       });
       return id;
     }

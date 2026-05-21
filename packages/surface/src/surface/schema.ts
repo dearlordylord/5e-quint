@@ -152,6 +152,7 @@ export {
   LevelAxisSchema,
   LinkedDamageSchema,
   LinkedSpeedSchema,
+  MagicalitySchema,
   MagicItemRaritySchema,
   HeavyArmorAcFormulaSchema,
   LightArmorAcFormulaSchema,

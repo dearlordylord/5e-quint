@@ -189,13 +189,13 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 499,
-      "percent": "89.7%",
+      "numerator": 503,
+      "percent": "90.5%",
       "rowsByStatus": {
-        "accepted": 362,
+        "accepted": 366,
         "accepted-no-battle-effect": 137,
         "partial-battle-runtime": 13,
-        "battle-runtime-required": 44
+        "battle-runtime-required": 40
       }
     },
     "levelOneClassContainers": 12,
@@ -208,17 +208,17 @@
       "non-runtime": 12
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 380,
+      "catalog-installed-owner-evidence-present": 384,
       "non-runtime": 24,
       "catalog-only/dead-for-now": 108,
-      "catalog-installed-owner-evidence-required": 20,
+      "catalog-installed-owner-evidence-required": 16,
       "missing-authored-record": 10,
       "catalog-authored-executable-follow-up": 14
     },
     "spellPressureRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 215,
+      "catalog-installed-owner-evidence-present": 219,
       "catalog-only/dead-for-now": 108,
-      "catalog-installed-owner-evidence-required": 20,
+      "catalog-installed-owner-evidence-required": 16,
       "missing-authored-record": 10,
       "catalog-authored-executable-follow-up": 14
     },
@@ -11837,8 +11837,14 @@
         "state": "installed",
         "unitId": "gust_of_wind"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "table/environmental-effect interaction owner; runtime-detached object/environment presentation owner",
+        "reason": "Gust of Wind's Line records the authored strong-wind area fact, and promoted Fog Cloud owns strong-wind dispersal as a caller/table-supplied cleanup command. The Gust profile does not derive overlap with gas, vapor, fog, smoke, or other cloud effects; those gas/vapor area owners consume the same table-supplied strong-wind witness at their own effect boundary instead of adding spell-local gas state; Candle and lantern flame state, protected versus unprotected flame classification, wild flame presentation, and the 50 percent extinguishing chance are object/environment presentation facts with no promoted battle-runtime owner; Gust of Wind does not add duplicate flame, candle, lantern, or environmental wind state."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -11846,13 +11852,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/effect lifecycle plus table/spatial area and movement-cost witness boundary; table/spatial presentation and environmental-effect interaction owner",
-          "evidence": "Promote follow-up split L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME, L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE: L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME owns Promote Gust of Wind's battle-visible Line profile: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caller-supplied self-origin Line area identity and direction, initial and end-turn Strength Saving Throws for caller-supplied creatures in the Line, failed-save 15-foot push facts away from the caster along the Line, active 2-for-1 Movement cost when a creature in the Line moves closer to the caster using table-supplied movement facts, Bonus Action Line direction replacement, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the Line save, push, movement-cost, direction-change, and cleanup subset without automatic geometry or pathfinding.; L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE owns Decide whether Gust of Wind's strong-wind gas or vapor dispersal should execute against promoted Fog Cloud, Stinking Cloud, Cloudkill, or other active gas/vapor areas, and close or support the candle, unprotected-flame, protected-flame dancing, and 50 percent protected-flame extinguishing clauses without adding a duplicate environmental state model. Required output: Focused Surface/runtime owner decision with tests or accepted runtime-detached closure for gas/vapor dispersal and flame presentation, reusing the authored area_has_strong_wind fact rather than duplicating wind state.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME at packages/battle-runtime/src/unit-profile-admission-gust-of-wind.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME, L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE: L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME owns Promote Gust of Wind's battle-visible Line profile: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caller-supplied self-origin Line area identity and direction, initial and end-turn Strength Saving Throws for caller-supplied creatures in the Line, failed-save 15-foot push facts away from the caster along the Line, active 2-for-1 Movement cost when a creature in the Line moves closer to the caster using table-supplied movement facts, Bonus Action Line direction replacement, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the Line save, push, movement-cost, direction-change, and cleanup subset without automatic geometry or pathfinding.; L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE owns Decide whether Gust of Wind's strong-wind gas or vapor dispersal should execute against promoted Fog Cloud, Stinking Cloud, Cloudkill, or other active gas/vapor areas, and close or support the candle, unprotected-flame, protected-flame dancing, and 50 percent protected-flame extinguishing clauses without adding a duplicate environmental state model. Required output: Focused Surface/runtime owner decision with tests or accepted runtime-detached closure for gas/vapor dispersal and flame presentation, reusing the authored area_has_strong_wind fact rather than duplicating wind state.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_heat_metal",
@@ -15310,7 +15316,7 @@
       "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE, L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME: L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE owns Replace Magic Weapon's lossy Surface mechanics with a lossless SRD shape for Bonus Action level-2-or-higher casting, Touch range, one nonmagical weapon target, one-hour non-Concentration duration, target magic-weapon status, slot-tiered +1/+2/+3 bonuses to attack rolls and damage rolls made with that weapon, and same-caster recast early ending. Required output: Magic Weapon Dhall and JSON content, plus schema/tracer support where required, represent the nonmagical weapon target, item-attached magic-weapon status, slot-tiered attack and damage bonuses, and recast ending as executable source facts rather than comments or prose-only description.; L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME owns Promote Magic Weapon as a level-2-or-higher Bonus Action Spell Invocation that spends the Bonus Action and Spell Slot, consumes caller-supplied target item identity and nonmagical weapon witness facts, records one caster-owned item-attached spell effect, projects magic-weapon status plus the slot-tiered attack-roll and damage-roll bonuses only for attacks and damage made with that item, and ends on duration expiry or same-caster recast without rewriting authored weapon records or adding a parallel spell-owned loadout table. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for spell discovery, resource spending, item-attached effect state, exact-item attack and damage projections, magic-weapon status projection, duration cleanup, and same-caster recast replacement.",
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME: L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME owns Promote Magic Weapon as a level-2-or-higher Bonus Action Spell Invocation that spends the Bonus Action and Spell Slot, consumes caller-supplied target item identity and nonmagical weapon witness facts, records one caster-owned item-attached spell effect, projects magic-weapon status plus the slot-tiered attack-roll and damage-roll bonuses only for attacks and damage made with that item, and ends on duration expiry or same-caster recast without rewriting authored weapon records or adding a parallel spell-owned loadout table. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for spell discovery, resource spending, item-attached effect state, exact-item attack and damage projections, magic-weapon status projection, duration cleanup, and same-caster recast replacement.",
       "battleReadinessStatus": "battle-runtime-required"
     },
     {
@@ -17123,8 +17129,14 @@
         "state": "installed",
         "unitId": "gust_of_wind"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "table/environmental-effect interaction owner; runtime-detached object/environment presentation owner",
+        "reason": "Gust of Wind's Line records the authored strong-wind area fact, and promoted Fog Cloud owns strong-wind dispersal as a caller/table-supplied cleanup command. The Gust profile does not derive overlap with gas, vapor, fog, smoke, or other cloud effects; those gas/vapor area owners consume the same table-supplied strong-wind witness at their own effect boundary instead of adding spell-local gas state; Candle and lantern flame state, protected versus unprotected flame classification, wild flame presentation, and the 50 percent extinguishing chance are object/environment presentation facts with no promoted battle-runtime owner; Gust of Wind does not add duplicate flame, candle, lantern, or environmental wind state."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -17132,13 +17144,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/effect lifecycle plus table/spatial area and movement-cost witness boundary; table/spatial presentation and environmental-effect interaction owner",
-          "evidence": "Promote follow-up split L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME, L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE: L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME owns Promote Gust of Wind's battle-visible Line profile: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caller-supplied self-origin Line area identity and direction, initial and end-turn Strength Saving Throws for caller-supplied creatures in the Line, failed-save 15-foot push facts away from the caster along the Line, active 2-for-1 Movement cost when a creature in the Line moves closer to the caster using table-supplied movement facts, Bonus Action Line direction replacement, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the Line save, push, movement-cost, direction-change, and cleanup subset without automatic geometry or pathfinding.; L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE owns Decide whether Gust of Wind's strong-wind gas or vapor dispersal should execute against promoted Fog Cloud, Stinking Cloud, Cloudkill, or other active gas/vapor areas, and close or support the candle, unprotected-flame, protected-flame dancing, and 50 percent protected-flame extinguishing clauses without adding a duplicate environmental state model. Required output: Focused Surface/runtime owner decision with tests or accepted runtime-detached closure for gas/vapor dispersal and flame presentation, reusing the authored area_has_strong_wind fact rather than duplicating wind state.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME at packages/battle-runtime/src/unit-profile-admission-gust-of-wind.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME, L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE: L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME owns Promote Gust of Wind's battle-visible Line profile: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caller-supplied self-origin Line area identity and direction, initial and end-turn Strength Saving Throws for caller-supplied creatures in the Line, failed-save 15-foot push facts away from the caster along the Line, active 2-for-1 Movement cost when a creature in the Line moves closer to the caster using table-supplied movement facts, Bonus Action Line direction replacement, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the Line save, push, movement-cost, direction-change, and cleanup subset without automatic geometry or pathfinding.; L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE owns Decide whether Gust of Wind's strong-wind gas or vapor dispersal should execute against promoted Fog Cloud, Stinking Cloud, Cloudkill, or other active gas/vapor areas, and close or support the candle, unprotected-flame, protected-flame dancing, and 50 percent protected-flame extinguishing clauses without adding a duplicate environmental state model. Required output: Focused Surface/runtime owner decision with tests or accepted runtime-detached closure for gas/vapor dispersal and flame presentation, reusing the authored area_has_strong_wind fact rather than duplicating wind state.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_lesser_restoration",
@@ -17310,7 +17322,7 @@
       "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE, L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME: L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE owns Replace Magic Weapon's lossy Surface mechanics with a lossless SRD shape for Bonus Action level-2-or-higher casting, Touch range, one nonmagical weapon target, one-hour non-Concentration duration, target magic-weapon status, slot-tiered +1/+2/+3 bonuses to attack rolls and damage rolls made with that weapon, and same-caster recast early ending. Required output: Magic Weapon Dhall and JSON content, plus schema/tracer support where required, represent the nonmagical weapon target, item-attached magic-weapon status, slot-tiered attack and damage bonuses, and recast ending as executable source facts rather than comments or prose-only description.; L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME owns Promote Magic Weapon as a level-2-or-higher Bonus Action Spell Invocation that spends the Bonus Action and Spell Slot, consumes caller-supplied target item identity and nonmagical weapon witness facts, records one caster-owned item-attached spell effect, projects magic-weapon status plus the slot-tiered attack-roll and damage-roll bonuses only for attacks and damage made with that item, and ends on duration expiry or same-caster recast without rewriting authored weapon records or adding a parallel spell-owned loadout table. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for spell discovery, resource spending, item-attached effect state, exact-item attack and damage projections, magic-weapon status projection, duration cleanup, and same-caster recast replacement.",
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME: L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME owns Promote Magic Weapon as a level-2-or-higher Bonus Action Spell Invocation that spends the Bonus Action and Spell Slot, consumes caller-supplied target item identity and nonmagical weapon witness facts, records one caster-owned item-attached spell effect, projects magic-weapon status plus the slot-tiered attack-roll and damage-roll bonuses only for attacks and damage made with that item, and ends on duration expiry or same-caster recast without rewriting authored weapon records or adding a parallel spell-owned loadout table. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for spell discovery, resource spending, item-attached effect state, exact-item attack and damage projections, magic-weapon status projection, duration cleanup, and same-caster recast replacement.",
       "battleReadinessStatus": "battle-runtime-required"
     },
     {
@@ -20982,8 +20994,14 @@
         "state": "installed",
         "unitId": "gust_of_wind"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "table/environmental-effect interaction owner; runtime-detached object/environment presentation owner",
+        "reason": "Gust of Wind's Line records the authored strong-wind area fact, and promoted Fog Cloud owns strong-wind dispersal as a caller/table-supplied cleanup command. The Gust profile does not derive overlap with gas, vapor, fog, smoke, or other cloud effects; those gas/vapor area owners consume the same table-supplied strong-wind witness at their own effect boundary instead of adding spell-local gas state; Candle and lantern flame state, protected versus unprotected flame classification, wild flame presentation, and the 50 percent extinguishing chance are object/environment presentation facts with no promoted battle-runtime owner; Gust of Wind does not add duplicate flame, candle, lantern, or environmental wind state."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -20991,13 +21009,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/effect lifecycle plus table/spatial area and movement-cost witness boundary; table/spatial presentation and environmental-effect interaction owner",
-          "evidence": "Promote follow-up split L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME, L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE: L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME owns Promote Gust of Wind's battle-visible Line profile: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caller-supplied self-origin Line area identity and direction, initial and end-turn Strength Saving Throws for caller-supplied creatures in the Line, failed-save 15-foot push facts away from the caster along the Line, active 2-for-1 Movement cost when a creature in the Line moves closer to the caster using table-supplied movement facts, Bonus Action Line direction replacement, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the Line save, push, movement-cost, direction-change, and cleanup subset without automatic geometry or pathfinding.; L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE owns Decide whether Gust of Wind's strong-wind gas or vapor dispersal should execute against promoted Fog Cloud, Stinking Cloud, Cloudkill, or other active gas/vapor areas, and close or support the candle, unprotected-flame, protected-flame dancing, and 50 percent protected-flame extinguishing clauses without adding a duplicate environmental state model. Required output: Focused Surface/runtime owner decision with tests or accepted runtime-detached closure for gas/vapor dispersal and flame presentation, reusing the authored area_has_strong_wind fact rather than duplicating wind state.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME at packages/battle-runtime/src/unit-profile-admission-gust-of-wind.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME, L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE: L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME owns Promote Gust of Wind's battle-visible Line profile: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caller-supplied self-origin Line area identity and direction, initial and end-turn Strength Saving Throws for caller-supplied creatures in the Line, failed-save 15-foot push facts away from the caster along the Line, active 2-for-1 Movement cost when a creature in the Line moves closer to the caster using table-supplied movement facts, Bonus Action Line direction replacement, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the Line save, push, movement-cost, direction-change, and cleanup subset without automatic geometry or pathfinding.; L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE owns Decide whether Gust of Wind's strong-wind gas or vapor dispersal should execute against promoted Fog Cloud, Stinking Cloud, Cloudkill, or other active gas/vapor areas, and close or support the candle, unprotected-flame, protected-flame dancing, and 50 percent protected-flame extinguishing clauses without adding a duplicate environmental state model. Required output: Focused Surface/runtime owner decision with tests or accepted runtime-detached closure for gas/vapor dispersal and flame presentation, reusing the authored area_has_strong_wind fact rather than duplicating wind state.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_hold_person",
@@ -21206,7 +21224,7 @@
       "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE, L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME: L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE owns Replace Magic Weapon's lossy Surface mechanics with a lossless SRD shape for Bonus Action level-2-or-higher casting, Touch range, one nonmagical weapon target, one-hour non-Concentration duration, target magic-weapon status, slot-tiered +1/+2/+3 bonuses to attack rolls and damage rolls made with that weapon, and same-caster recast early ending. Required output: Magic Weapon Dhall and JSON content, plus schema/tracer support where required, represent the nonmagical weapon target, item-attached magic-weapon status, slot-tiered attack and damage bonuses, and recast ending as executable source facts rather than comments or prose-only description.; L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME owns Promote Magic Weapon as a level-2-or-higher Bonus Action Spell Invocation that spends the Bonus Action and Spell Slot, consumes caller-supplied target item identity and nonmagical weapon witness facts, records one caster-owned item-attached spell effect, projects magic-weapon status plus the slot-tiered attack-roll and damage-roll bonuses only for attacks and damage made with that item, and ends on duration expiry or same-caster recast without rewriting authored weapon records or adding a parallel spell-owned loadout table. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for spell discovery, resource spending, item-attached effect state, exact-item attack and damage projections, magic-weapon status projection, duration cleanup, and same-caster recast replacement.",
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME: L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME owns Promote Magic Weapon as a level-2-or-higher Bonus Action Spell Invocation that spends the Bonus Action and Spell Slot, consumes caller-supplied target item identity and nonmagical weapon witness facts, records one caster-owned item-attached spell effect, projects magic-weapon status plus the slot-tiered attack-roll and damage-roll bonuses only for attacks and damage made with that item, and ends on duration expiry or same-caster recast without rewriting authored weapon records or adding a parallel spell-owned loadout table. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for spell discovery, resource spending, item-attached effect state, exact-item attack and damage projections, magic-weapon status projection, duration cleanup, and same-caster recast replacement.",
       "battleReadinessStatus": "battle-runtime-required"
     },
     {
@@ -26618,8 +26636,14 @@
         "state": "installed",
         "unitId": "gust_of_wind"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "table/environmental-effect interaction owner; runtime-detached object/environment presentation owner",
+        "reason": "Gust of Wind's Line records the authored strong-wind area fact, and promoted Fog Cloud owns strong-wind dispersal as a caller/table-supplied cleanup command. The Gust profile does not derive overlap with gas, vapor, fog, smoke, or other cloud effects; those gas/vapor area owners consume the same table-supplied strong-wind witness at their own effect boundary instead of adding spell-local gas state; Candle and lantern flame state, protected versus unprotected flame classification, wild flame presentation, and the 50 percent extinguishing chance are object/environment presentation facts with no promoted battle-runtime owner; Gust of Wind does not add duplicate flame, candle, lantern, or environmental wind state."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -26627,13 +26651,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/effect lifecycle plus table/spatial area and movement-cost witness boundary; table/spatial presentation and environmental-effect interaction owner",
-          "evidence": "Promote follow-up split L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME, L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE: L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME owns Promote Gust of Wind's battle-visible Line profile: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caller-supplied self-origin Line area identity and direction, initial and end-turn Strength Saving Throws for caller-supplied creatures in the Line, failed-save 15-foot push facts away from the caster along the Line, active 2-for-1 Movement cost when a creature in the Line moves closer to the caster using table-supplied movement facts, Bonus Action Line direction replacement, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the Line save, push, movement-cost, direction-change, and cleanup subset without automatic geometry or pathfinding.; L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE owns Decide whether Gust of Wind's strong-wind gas or vapor dispersal should execute against promoted Fog Cloud, Stinking Cloud, Cloudkill, or other active gas/vapor areas, and close or support the candle, unprotected-flame, protected-flame dancing, and 50 percent protected-flame extinguishing clauses without adding a duplicate environmental state model. Required output: Focused Surface/runtime owner decision with tests or accepted runtime-detached closure for gas/vapor dispersal and flame presentation, reusing the authored area_has_strong_wind fact rather than duplicating wind state.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME at packages/battle-runtime/src/unit-profile-admission-gust-of-wind.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME, L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE: L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME owns Promote Gust of Wind's battle-visible Line profile: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caller-supplied self-origin Line area identity and direction, initial and end-turn Strength Saving Throws for caller-supplied creatures in the Line, failed-save 15-foot push facts away from the caster along the Line, active 2-for-1 Movement cost when a creature in the Line moves closer to the caster using table-supplied movement facts, Bonus Action Line direction replacement, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the Line save, push, movement-cost, direction-change, and cleanup subset without automatic geometry or pathfinding.; L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE owns Decide whether Gust of Wind's strong-wind gas or vapor dispersal should execute against promoted Fog Cloud, Stinking Cloud, Cloudkill, or other active gas/vapor areas, and close or support the candle, unprotected-flame, protected-flame dancing, and 50 percent protected-flame extinguishing clauses without adding a duplicate environmental state model. Required output: Focused Surface/runtime owner decision with tests or accepted runtime-detached closure for gas/vapor dispersal and flame presentation, reusing the authored area_has_strong_wind fact rather than duplicating wind state.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_hold_person",
@@ -26940,7 +26964,7 @@
       "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE, L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME: L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE owns Replace Magic Weapon's lossy Surface mechanics with a lossless SRD shape for Bonus Action level-2-or-higher casting, Touch range, one nonmagical weapon target, one-hour non-Concentration duration, target magic-weapon status, slot-tiered +1/+2/+3 bonuses to attack rolls and damage rolls made with that weapon, and same-caster recast early ending. Required output: Magic Weapon Dhall and JSON content, plus schema/tracer support where required, represent the nonmagical weapon target, item-attached magic-weapon status, slot-tiered attack and damage bonuses, and recast ending as executable source facts rather than comments or prose-only description.; L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME owns Promote Magic Weapon as a level-2-or-higher Bonus Action Spell Invocation that spends the Bonus Action and Spell Slot, consumes caller-supplied target item identity and nonmagical weapon witness facts, records one caster-owned item-attached spell effect, projects magic-weapon status plus the slot-tiered attack-roll and damage-roll bonuses only for attacks and damage made with that item, and ends on duration expiry or same-caster recast without rewriting authored weapon records or adding a parallel spell-owned loadout table. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for spell discovery, resource spending, item-attached effect state, exact-item attack and damage projections, magic-weapon status projection, duration cleanup, and same-caster recast replacement.",
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME: L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME owns Promote Magic Weapon as a level-2-or-higher Bonus Action Spell Invocation that spends the Bonus Action and Spell Slot, consumes caller-supplied target item identity and nonmagical weapon witness facts, records one caster-owned item-attached spell effect, projects magic-weapon status plus the slot-tiered attack-roll and damage-roll bonuses only for attacks and damage made with that item, and ends on duration expiry or same-caster recast without rewriting authored weapon records or adding a parallel spell-owned loadout table. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for spell discovery, resource spending, item-attached effect state, exact-item attack and damage projections, magic-weapon status projection, duration cleanup, and same-caster recast replacement.",
       "battleReadinessStatus": "battle-runtime-required"
     },
     {

@@ -15,7 +15,11 @@ import type {
   SpellRecord,
 } from "@dnd/surface/surface/types";
 import { battleDancingLightId } from "../identity.ts";
-import type { BattleAreaId, CombatantId } from "../identity.ts";
+import type {
+  BattleAreaId,
+  BattleLineDirectionId,
+  CombatantId,
+} from "../identity.ts";
 import {
   combatantWearingArmor,
   currentActorId,
@@ -1794,6 +1798,91 @@ export function applyMoonbeamCastEffect(input: {
   ];
   combatants.set(input.actorId, { ...caster, activeEffects });
   return { ...input.state, combatants };
+}
+
+export function applyGustOfWindLineCastEffect(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly area: Extract<
+    BattleSpellAreaChoice,
+    { readonly kind: "gustOfWindLineArea" }
+  >;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "gustOfWindLine" }
+  >;
+}): BattleState {
+  const combatants = new Map(input.state.combatants);
+  const caster = combatants.get(input.actorId);
+  if (caster === undefined) {
+    return input.state;
+  }
+  const replacing = caster.activeEffects.filter(
+    (effect) =>
+      effect.kind === "gustOfWindLine" &&
+      effect.sourceSpellId === input.invocation.spell.id &&
+      effect.sourceCombatantId === input.actorId &&
+      effect.areaId === input.area.areaId,
+  );
+  const activeEffects = [
+    ...caster.activeEffects.filter((effect) => !replacing.includes(effect)),
+    {
+      kind: "gustOfWindLine" as const,
+      sourceSpellId: input.invocation.spell.id,
+      sourceCombatantId: input.actorId,
+      areaId: input.area.areaId,
+      directionId: input.area.directionId,
+      castTurn: {
+        actorId: input.actorId,
+        round: input.state.initiative.round,
+      },
+      line: {
+        lengthFeet: input.invocation.targeting.lengthFeet,
+        widthFeet: input.invocation.targeting.widthFeet,
+      },
+      save: {
+        ability: input.invocation.ability,
+        dc: input.invocation.dc,
+      },
+      pushDistanceFeet: input.invocation.pushDistanceFeet,
+      movementCost: input.invocation.movementCost,
+      expiresAt: {
+        kind: "concentration" as const,
+        combatantId: input.actorId,
+        durationTicks: input.invocation.durationTicks,
+      },
+    },
+  ];
+  combatants.set(input.actorId, { ...caster, activeEffects });
+  return { ...input.state, combatants };
+}
+
+export function replaceGustOfWindLineDirection(input: {
+  readonly state: BattleState;
+  readonly sourceCombatantId: CombatantId;
+  readonly sourceSpellId: SpellRecord["id"];
+  readonly areaId: BattleAreaId;
+  readonly directionId: BattleLineDirectionId;
+}): BattleState {
+  const source = input.state.combatants.get(input.sourceCombatantId);
+  if (source === undefined) {
+    return input.state;
+  }
+  const activeEffects = source.activeEffects.map((effect) =>
+    effect.kind === "gustOfWindLine" &&
+    effect.sourceCombatantId === input.sourceCombatantId &&
+    effect.sourceSpellId === input.sourceSpellId &&
+    effect.areaId === input.areaId
+      ? { ...effect, directionId: input.directionId }
+      : effect,
+  );
+  return {
+    ...input.state,
+    combatants: new Map(input.state.combatants).set(input.sourceCombatantId, {
+      ...source,
+      activeEffects,
+    }),
+  };
 }
 
 export function resetAllMoonbeamSavedThisTurn(

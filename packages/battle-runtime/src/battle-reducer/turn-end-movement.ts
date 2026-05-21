@@ -3,6 +3,7 @@
 // intended.
 
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram spell.invocation-moonbeam-movable-zone
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE BATTLE.COMMAND.OPTION_AND_NEXT_TURN BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE
@@ -13,6 +14,7 @@ import { Either } from "effect";
 import {
   resetTurnActionEconomy,
   spendAction,
+  spendActivationResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
 
 import {
@@ -70,7 +72,10 @@ import { attackActionOptionsForActor } from "./attack-damage-apply.ts";
 
 import { currentActorId } from "./creature-state-leaves.ts";
 
-import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state.ts";
+import {
+  battleCreatureStateWithKnockOutPreservedConditions,
+  combatantCanTakeActions,
+} from "./creature-state.ts";
 
 import {
   applyStartTurnDeathSavingThrow,
@@ -143,9 +148,11 @@ import {
   applyGreaseProneToTarget,
   expireBattleLightEmitters,
   markMoonbeamSavedThisTurn,
+  replaceGustOfWindLineDirection,
   resetAllMoonbeamSavedThisTurn,
   tickDurationBattleLightEmitters,
 } from "./spells-active-effects.ts";
+import { validateGustOfWindLineAreaPushFacts } from "./spells-resolve-save-gates.ts";
 
 import {
   attackActionOptionName,
@@ -172,6 +179,9 @@ import type {
   BattleFlamingSphereRamMovementHole,
   BattleFlamingSphereSavingThrowOutcomeHole,
   BattleFlamingSphereTrigger,
+  BattleGustOfWindLineDirectionChoiceHole,
+  BattleGustOfWindLineMovementFact,
+  BattleGustOfWindLineSavingThrowOutcomeHole,
   BattleMoonbeamDamageRollHole,
   BattleMoonbeamSaveTrigger,
   BattleMoonbeamSavingThrowOutcomeHole,
@@ -184,12 +194,14 @@ import type {
   BattleHoleId,
   BattleJumpMovementReplacementFact,
   BattleMovementHole,
+  BattleMovementFillValue,
   BattleOpportunityAttackThreat,
   BattleResolutionInput,
   BattleResolutionInputForSubject,
   BattleResolutionResult,
   BattleResolvedMovement,
   BattleSleepRepeatSavingThrowOutcomeHole,
+  BattleSpellAreaChoice,
   BattleSpellConditionEndTurnSavingThrowOutcomeHole,
   BattleSpellTurnStartDamageRollHole,
   BattleSpellTurnStartSavingThrowOutcomeHole,
@@ -891,6 +903,10 @@ export type FlamingSphereEffect = Extract<
 export type MoonbeamEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "moonbeam" }
+>;
+export type GustOfWindLineEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "gustOfWindLine" }
 >;
 export type CommandPendingEffect = Extract<
   BattleActiveEffect,
@@ -1848,6 +1864,322 @@ function resolveGreaseGroundHazardEndTurnSaveCommand(
   return endTurnResult.tag === "needsHoles"
     ? { ...endTurnResult, subject: input.subject }
     : endTurnResult;
+}
+
+function gustOfWindLineEffectFor(
+  state: BattleState,
+  subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "gustOfWindLineSave" | "gustOfWindLineDirectionChange";
+    }
+  >,
+): GustOfWindLineEffect | undefined {
+  const source = state.combatants.get(subject.sourceCombatantId);
+  return source?.activeEffects.find(
+    (effect): effect is GustOfWindLineEffect =>
+      effect.kind === "gustOfWindLine" &&
+      effect.sourceSpellId === subject.sourceSpellId &&
+      effect.sourceCombatantId === subject.sourceCombatantId &&
+      effect.areaId === subject.areaId &&
+      effect.directionId === subject.directionId,
+  );
+}
+
+export function gustOfWindLineSavingThrowOutcomeHole(
+  state: BattleState,
+  targetId: CombatantId,
+  effect: GustOfWindLineEffect,
+  trigger: "endsTurnInLine",
+): BattleGustOfWindLineSavingThrowOutcomeHole {
+  const key = `battle:gust-of-wind-line-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}:${effect.directionId}:${trigger}`;
+  return {
+    kind: "savingThrowOutcome",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: `${effect.sourceSpellId} end-turn STR save`,
+    gustOfWindLine: {
+      targetId,
+      sourceSpellId: effect.sourceSpellId,
+      sourceCombatantId: effect.sourceCombatantId,
+      areaId: effect.areaId,
+      directionId: effect.directionId,
+      trigger,
+      save: effect.save,
+      pushDistanceFeet: effect.pushDistanceFeet,
+    },
+    ability: effect.save.ability,
+    dc: effect.save.dc,
+    areaChoices: [],
+    targetRollModes: savingThrowRollModeProjections(
+      state,
+      effect.save.ability,
+    ).filter((projection) => projection.targetId === targetId),
+    targetFlatBonuses: savingThrowFlatBonusProjections(state).filter(
+      (projection) => projection.targetId === targetId,
+    ),
+  };
+}
+
+export function gustOfWindLineDirectionChoiceHole(
+  effect: GustOfWindLineEffect,
+): BattleGustOfWindLineDirectionChoiceHole {
+  const key = `battle:gust-of-wind-line-direction:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}:${effect.directionId}`;
+  return {
+    kind: "gustOfWindLineDirectionChoice",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: `${effect.sourceSpellId} Line direction`,
+    sourceCombatantId: effect.sourceCombatantId,
+    sourceSpellId: effect.sourceSpellId,
+    areaId: effect.areaId,
+    directionId: effect.directionId,
+    requiresTableSpatialFact: true,
+  };
+}
+
+function validateGustOfWindLineSavingThrowOutcome(
+  value: BattleSavingThrowOutcomeValue,
+  targetId: CombatantId,
+  effect: GustOfWindLineEffect,
+): string | null {
+  if (!("area" in value)) {
+    return "Gust of Wind Line Saving Throw outcome requires Line area facts.";
+  }
+  const area: BattleSpellAreaChoice = value.area;
+  if (
+    area.kind !== "gustOfWindLineArea" ||
+    area.areaId !== effect.areaId ||
+    area.directionId !== effect.directionId ||
+    area.originAnchorId !== effect.sourceCombatantId
+  ) {
+    return "Gust of Wind Line Saving Throw outcome must match the active Line area.";
+  }
+  if (
+    area.affectedTargetIds.length !== 1 ||
+    area.affectedTargetIds[0] !== targetId ||
+    value.outcomes.length !== 1 ||
+    value.outcomes[0]?.targetId !== targetId
+  ) {
+    return "Gust of Wind Line Saving Throw outcome must match the ending-turn target.";
+  }
+  return validateGustOfWindLineAreaPushFacts({
+    area,
+    failedTargetIds:
+      value.outcomes[0]?.succeeded === true ? [] : [targetId],
+    pushDistanceFeet: effect.pushDistanceFeet,
+  });
+}
+
+export function resolveGustOfWindLineSaveCommand(
+  input: BattleResolutionInput & {
+    readonly subject: Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "gustOfWindLineSave";
+      }
+    >;
+    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+  },
+): BattleResolutionResult {
+  const effect = gustOfWindLineEffectFor(input.state, input.subject);
+  if (
+    effect === undefined ||
+    !input.state.combatants.has(input.subject.actorId)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Gust of Wind Line save is no longer available.",
+    );
+  }
+  const hole = gustOfWindLineSavingThrowOutcomeHole(
+    input.state,
+    input.subject.actorId,
+    effect,
+    input.subject.trigger,
+  );
+  const matchingGustFills = input.fills.filter(
+    (fill) => fill.holeId === hole.holeId,
+  );
+  if (matchingGustFills.length > 1) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "End Turn in Gust of Wind received duplicate Gust of Wind Saving Throw outcome fills.",
+    );
+  }
+  const [matchingGustFill] = matchingGustFills;
+  if (
+    matchingGustFill !== undefined &&
+    matchingGustFill.kind !== "savingThrowOutcome"
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "End Turn in Gust of Wind requires a Gust of Wind Saving Throw outcome fill.",
+    );
+  }
+  const endTurnSubject = {
+    tag: "runtimeCommand" as const,
+    actorId: input.subject.actorId,
+    command: "endTurn" as const,
+  };
+  const endTurnFills = input.fills.filter(
+    (fill) => fill.holeId !== hole.holeId,
+  );
+  const endTurnProbe = resolveEndTurnCommand({
+    state: input.state,
+    subject: endTurnSubject,
+    fills: endTurnFills,
+  });
+  if (matchingGustFill === undefined) {
+    return endTurnProbe.tag === "needsHoles"
+      ? needsHolesResult(input.state, input.subject, [
+          hole,
+          ...endTurnProbe.holes,
+        ])
+      : endTurnProbe.tag === "invalid"
+        ? endTurnProbe
+        : needsHolesResult(input.state, input.subject, [hole]);
+  }
+  const validation = validateGustOfWindLineSavingThrowOutcome(
+    matchingGustFill.value,
+    input.subject.actorId,
+    effect,
+  );
+  if (validation !== null) {
+    return invalidResult(input.state, "invalidFill", validation);
+  }
+  if (endTurnProbe.tag === "needsHoles") {
+    return { ...endTurnProbe, subject: input.subject };
+  }
+  if (endTurnProbe.tag === "invalid") {
+    return endTurnProbe;
+  }
+  const outcome = matchingGustFill.value.outcomes[0]!;
+  if (!outcome.succeeded) {
+    const saveFailedReactionWindow = maybeOpenReactionWindow(
+      input.state,
+      {
+        trigger: "saveFailed",
+        targetId: input.subject.actorId,
+        sourceSpellId: effect.sourceSpellId,
+        continuation: {
+          kind: "replay",
+          subject: input.subject,
+          fills: input.fills,
+        },
+      },
+      input.suppressedReactionTrigger,
+    );
+    if (saveFailedReactionWindow !== null) {
+      return saveFailedReactionWindow;
+    }
+  }
+  const endTurnResult = resolveEndTurnCommand({
+    state: input.state,
+    subject: endTurnSubject,
+    fills: endTurnFills,
+  });
+  return endTurnResult.tag === "needsHoles"
+    ? { ...endTurnResult, subject: input.subject }
+    : endTurnResult;
+}
+
+export function resolveGustOfWindLineDirectionChangeCommand(
+  input: BattleResolutionInputForSubject<
+    Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "gustOfWindLineDirectionChange";
+      }
+    >
+  >,
+): BattleResolutionResult {
+  const effect = gustOfWindLineEffectFor(input.state, input.subject);
+  const actor = input.state.combatants.get(input.subject.actorId);
+  if (
+    effect === undefined ||
+    actor === undefined ||
+    input.subject.actorId !== input.subject.sourceCombatantId ||
+    input.subject.actorId !== currentActorId(input.state) ||
+    (effect.castTurn.actorId === input.subject.actorId &&
+      effect.castTurn.round === input.state.initiative.round) ||
+    !combatantCanTakeActions(actor)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Gust of Wind Line direction change is no longer available.",
+    );
+  }
+  if (
+    input.fills.some(
+      (fill) => fill.kind !== "gustOfWindLineDirectionChoice",
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Gust of Wind Line direction change accepts only direction-choice fills.",
+    );
+  }
+  const hole = gustOfWindLineDirectionChoiceHole(effect);
+  const directionFills = input.fills.filter(
+    (
+      fill,
+    ): fill is Extract<
+      BattleFill,
+      { readonly kind: "gustOfWindLineDirectionChoice" }
+    > => fill.kind === "gustOfWindLineDirectionChoice",
+  );
+  if (!everyFillUsesHoleId(directionFills, hole.holeId)) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Gust of Wind Line direction change received a fill for an unrelated hole.",
+    );
+  }
+  if (directionFills.length > 1) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Gust of Wind Line direction change received duplicate fills.",
+    );
+  }
+  const directionFill = directionFills[0];
+  if (directionFill === undefined) {
+    return needsHolesResult(input.state, input.subject, [hole]);
+  }
+  const spent = spendActivationResource(input.state.currentTurnResources, {
+    kind: "bonusAction",
+  });
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Gust of Wind Line direction change requires an available Bonus Action.",
+    );
+  }
+  const nextState = replaceGustOfWindLineDirection({
+    state: {
+      ...input.state,
+      currentTurnResources: spent.right,
+    },
+    sourceCombatantId: effect.sourceCombatantId,
+    sourceSpellId: effect.sourceSpellId,
+    areaId: effect.areaId,
+    directionId: directionFill.value.directionId,
+  });
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
 }
 
 function flamingSphereEffectFor(
@@ -4843,16 +5175,14 @@ export function parseBattleMovement(
       message: "Movement cost must be a positive integer.",
     };
   }
-  const greaseGroundDifficultTerrainValidation =
-    validateGreaseGroundDifficultTerrainMovementFact(
-      state,
-      fill.value.greaseGroundDifficultTerrain,
-      fill.value.movementCostFeet,
-    );
-  if (greaseGroundDifficultTerrainValidation !== null) {
+  const areaMovementCostValidation = validateAreaMovementCostFacts(
+    state,
+    fill.value,
+  );
+  if (areaMovementCostValidation !== null) {
     return {
       tag: "invalid",
-      message: greaseGroundDifficultTerrainValidation,
+      message: areaMovementCostValidation,
     };
   }
   const jumpMovementValidation = validateJumpMovementReplacementFact(
@@ -4959,28 +5289,41 @@ export function parseBattleMovement(
 function validateGreaseGroundDifficultTerrainMovementFact(
   state: BattleState,
   fact: BattleGreaseGroundDifficultTerrainMovementFact | undefined,
-  movementCostFeet: MovementFeet,
-): string | null {
+): AreaMovementCostFactResult {
   if (fact === undefined) {
-    return null;
+    return { tag: "notApplicable" };
   }
   if (fact.kind !== "greaseGroundDifficultTerrain") {
-    return "Grease Difficult Terrain movement fact has the wrong kind.";
+    return {
+      tag: "invalid",
+      message: "Grease Difficult Terrain movement fact has the wrong kind.",
+    };
   }
   if (
     !Number.isInteger(fact.totalDistanceFeet) ||
     fact.totalDistanceFeet <= 0
   ) {
-    return "Grease Difficult Terrain total distance must be a positive integer.";
+    return {
+      tag: "invalid",
+      message:
+        "Grease Difficult Terrain total distance must be a positive integer.",
+    };
   }
   if (
     !Number.isInteger(fact.greaseDistanceFeet) ||
     fact.greaseDistanceFeet <= 0
   ) {
-    return "Grease Difficult Terrain distance must be a positive integer.";
+    return {
+      tag: "invalid",
+      message: "Grease Difficult Terrain distance must be a positive integer.",
+    };
   }
   if (Number(fact.greaseDistanceFeet) > Number(fact.totalDistanceFeet)) {
-    return "Grease Difficult Terrain distance cannot exceed total Movement distance.";
+    return {
+      tag: "invalid",
+      message:
+        "Grease Difficult Terrain distance cannot exceed total Movement distance.",
+    };
   }
   const source = state.combatants.get(fact.sourceCombatantId);
   const activeGrease = source?.activeEffects.some(
@@ -4991,14 +5334,154 @@ function validateGreaseGroundDifficultTerrainMovementFact(
       effect.areaId === fact.areaId,
   );
   if (activeGrease !== true) {
-    return "Grease Difficult Terrain movement fact does not match an active Grease ground hazard.";
+    return {
+      tag: "invalid",
+      message:
+        "Grease Difficult Terrain movement fact does not match an active Grease ground hazard.",
+    };
+  }
+  return {
+    tag: "ok",
+    totalDistanceFeet: fact.totalDistanceFeet,
+    extraCostFeet: fact.greaseDistanceFeet,
+  };
+}
+
+function validateGustOfWindLineMovementFact(
+  state: BattleState,
+  fact: BattleGustOfWindLineMovementFact | undefined,
+): AreaMovementCostFactResult {
+  if (fact === undefined) {
+    return { tag: "notApplicable" };
+  }
+  if (fact.kind !== "gustOfWindLineMovement") {
+    return {
+      tag: "invalid",
+      message: "Gust of Wind Line movement fact has the wrong kind.",
+    };
+  }
+  if (
+    !Number.isInteger(fact.totalDistanceFeet) ||
+    fact.totalDistanceFeet <= 0
+  ) {
+    return {
+      tag: "invalid",
+      message:
+        "Gust of Wind Line total distance must be a positive integer.",
+    };
+  }
+  if (
+    !Number.isInteger(fact.closerDistanceFeet) ||
+    fact.closerDistanceFeet <= 0
+  ) {
+    return {
+      tag: "invalid",
+      message:
+        "Gust of Wind Line closer distance must be a positive integer.",
+    };
+  }
+  if (Number(fact.closerDistanceFeet) > Number(fact.totalDistanceFeet)) {
+    return {
+      tag: "invalid",
+      message:
+        "Gust of Wind Line closer distance cannot exceed total Movement distance.",
+    };
+  }
+  const source = state.combatants.get(fact.sourceCombatantId);
+  const effect = source?.activeEffects.find(
+    (candidate): candidate is GustOfWindLineEffect =>
+      candidate.kind === "gustOfWindLine" &&
+      candidate.sourceCombatantId === fact.sourceCombatantId &&
+      candidate.sourceSpellId === fact.sourceSpellId &&
+      candidate.areaId === fact.areaId &&
+      candidate.directionId === fact.directionId,
+  );
+  if (effect === undefined) {
+    return {
+      tag: "invalid",
+      message:
+        "Gust of Wind Line movement fact does not match an active Gust of Wind Line.",
+    };
+  }
+  return {
+    tag: "ok",
+    totalDistanceFeet: fact.totalDistanceFeet,
+    extraCostFeet: movementFeet(
+      Number(fact.closerDistanceFeet) *
+        (effect.movementCost.multiplier - 1),
+    ),
+  };
+}
+
+type AreaMovementCostFactResult =
+  | { readonly tag: "notApplicable" }
+  | { readonly tag: "invalid"; readonly message: string }
+  | {
+      readonly tag: "ok";
+      readonly totalDistanceFeet: MovementFeet;
+      readonly extraCostFeet: MovementFeet;
+    };
+
+function validateAreaMovementCostFacts(
+  state: BattleState,
+  value: BattleMovementFillValue,
+): string | null {
+  const grease = validateGreaseGroundDifficultTerrainMovementFact(
+    state,
+    value.greaseGroundDifficultTerrain,
+  );
+  if (grease.tag === "invalid") {
+    return grease.message;
+  }
+  const gust = validateGustOfWindLineMovementFact(
+    state,
+    value.gustOfWindLineMovement,
+  );
+  if (gust.tag === "invalid") {
+    return gust.message;
+  }
+  const areaCosts = [grease, gust].filter(
+    (
+      result,
+    ): result is Extract<AreaMovementCostFactResult, { readonly tag: "ok" }> =>
+      result.tag === "ok",
+  );
+  if (areaCosts.length === 0) {
+    return null;
+  }
+  if (value.jumpMovementReplacement !== undefined) {
+    return "Area movement-cost facts cannot be combined with Jump movement replacement.";
+  }
+  const firstAreaCost = areaCosts[0];
+  if (firstAreaCost === undefined) {
+    return null;
+  }
+  const remainingAreaCosts = areaCosts.slice(1);
+  if (
+    remainingAreaCosts.some(
+      (areaCost) =>
+        Number(areaCost.totalDistanceFeet) !==
+        Number(firstAreaCost.totalDistanceFeet),
+    )
+  ) {
+    return "Area movement-cost facts must agree on total Movement distance.";
   }
   const expectedCostFeet = movementFeet(
-    Number(fact.totalDistanceFeet) + Number(fact.greaseDistanceFeet),
+    Number(firstAreaCost.totalDistanceFeet) +
+      areaCosts.reduce(
+        (total, areaCost) => total + Number(areaCost.extraCostFeet),
+        0,
+      ),
   );
-  return Number(movementCostFeet) === Number(expectedCostFeet)
-    ? null
-    : "Grease Difficult Terrain movement must spend total distance plus 1 extra foot for every foot moved through the area.";
+  if (Number(value.movementCostFeet) === Number(expectedCostFeet)) {
+    return null;
+  }
+  if (grease.tag === "ok" && gust.tag === "ok") {
+    return "Combined Grease and Gust of Wind movement must spend total distance plus 1 extra foot for every foot moved through Grease and 1 extra foot for every foot moved closer to the caster through the Line.";
+  }
+  return grease.tag === "ok"
+    ? "Grease Difficult Terrain movement must spend total distance plus 1 extra foot for every foot moved through the area."
+    : "Gust of Wind Line movement must spend total distance plus 1 extra foot for every foot moved closer to the caster through the Line.";
 }
 
 function validateJumpMovementReplacementFact(

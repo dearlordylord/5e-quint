@@ -253,7 +253,8 @@ export function discoverSupportedSpellInvocations(
         invocation.procedure === "saveGatedAttackRollAdvantage" ||
         invocation.procedure === "sleepTargetAdmission" ||
         invocation.procedure === "hideousLaughter" ||
-        invocation.procedure === "greaseGroundHazard"
+        invocation.procedure === "greaseGroundHazard" ||
+        invocation.procedure === "gustOfWindLine"
       ) {
         if (
           invocation.targeting.kind === "singleCombatant" ||
@@ -291,7 +292,8 @@ export function discoverSupportedSpellInvocations(
               initialHoles: [targetHole, ...conditionChoiceHoles],
             },
           ];
-          return invocation.procedure === "greaseGroundHazard"
+          return invocation.procedure === "greaseGroundHazard" ||
+            invocation.procedure === "gustOfWindLine"
             ? castActs
             : [...castActs, ...readiedSpellAct(state, actorId, invocation)];
         }
@@ -318,7 +320,8 @@ export function discoverSupportedSpellInvocations(
             initialHoles: [initialHole, ...conditionChoiceHoles],
           },
         ];
-        return invocation.procedure === "greaseGroundHazard"
+        return invocation.procedure === "greaseGroundHazard" ||
+          invocation.procedure === "gustOfWindLine"
           ? castActs
           : [...castActs, ...readiedSpellAct(state, actorId, invocation)];
       }
@@ -1151,6 +1154,7 @@ export function spellActivationInvocationCastSummary(
         | "hideousLaughter"
         | "command"
         | "greaseGroundHazard"
+        | "gustOfWindLine"
         | "fogCloudObscurement"
         | "flamingSphere"
         | "moonbeam"
@@ -1344,6 +1348,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "hideousLaughter" &&
     invocation.procedure !== "command" &&
     invocation.procedure !== "greaseGroundHazard" &&
+    invocation.procedure !== "gustOfWindLine" &&
     invocation.procedure !== "fogCloudObscurement" &&
     invocation.procedure !== "flamingSphere" &&
     invocation.procedure !== "spellAttackSequence" &&
@@ -1398,6 +1403,7 @@ export function readiedSpellAct(
     invocation.procedure === "hideousLaughter" ||
     invocation.procedure === "command" ||
     invocation.procedure === "greaseGroundHazard" ||
+    invocation.procedure === "gustOfWindLine" ||
     invocation.procedure === "fogCloudObscurement" ||
     invocation.procedure === "flamingSphere" ||
     invocation.procedure === "shieldReaction" ||

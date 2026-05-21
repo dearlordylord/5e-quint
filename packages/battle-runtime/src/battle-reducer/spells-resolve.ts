@@ -129,6 +129,7 @@ import { resolveChainedSpellAttackDamageAct } from "./spells-resolve-chained.ts"
 import {
   resolveFlamingSphereSpellAct,
   resolveFogCloudObscurementSpellAct,
+  resolveGustOfWindLineSpellAct,
   resolveMoonbeamSpellAct,
 } from "./spells-resolve-area-effects.ts";
 import { resolveSpellAttackSequenceAct } from "./spells-resolve-attack-sequence.ts";
@@ -139,6 +140,7 @@ import {
 export {
   resolveFlamingSphereSpellAct,
   resolveFogCloudObscurementSpellAct,
+  resolveGustOfWindLineSpellAct,
   resolveMoonbeamSpellAct,
 } from "./spells-resolve-area-effects.ts";
 export {
@@ -447,6 +449,7 @@ export function resolveSpellAct(
       invocation.procedure === "hideousLaughter" ||
       invocation.procedure === "command" ||
       invocation.procedure === "fogCloudObscurement" ||
+      invocation.procedure === "gustOfWindLine" ||
       invocation.procedure === "flamingSphere" ||
       invocation.procedure === "moonbeam" ||
       invocation.procedure === "objectContactDamage" ||
@@ -646,6 +649,14 @@ export function resolveSpellAct(
   }
   if (invocation.procedure === "fogCloudObscurement") {
     return resolveFogCloudObscurementSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "gustOfWindLine") {
+    return resolveGustOfWindLineSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

@@ -102,6 +102,14 @@ export function supportedSpellInvocationRef(
       procedure: "greaseGroundHazard",
     };
   }
+  if (invocation.procedure === "gustOfWindLine") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "gustOfWindLine",
+    };
+  }
   if (invocation.procedure === "fogCloudObscurement") {
     return {
       tag: "spellSlot",

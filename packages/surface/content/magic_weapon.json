@@ -6,9 +6,13 @@
     "attachment": {
       "holeId": "magic_weapon_object",
       "kind": "hole",
-      "label": "target object",
+      "label": "nonmagical weapon",
       "value": {
         "count": 1,
+        "filter": {
+          "magicality": "nonmagical",
+          "objectKind": "weapon"
+        },
         "kind": "object"
       }
     },
@@ -37,30 +41,23 @@
     "operations": [
       {
         "effect": {
-          "delta": {
-            "dice": 1,
-            "dieSize": 1,
-            "kind": "fixed_dice",
-            "sign": "+"
+          "bonus": {
+            "axis": "slot",
+            "base": 1,
+            "kind": "threshold_tiers",
+            "sign": "+",
+            "tiers": [
+              {
+                "atLevel": 3,
+                "value": 2
+              },
+              {
+                "atLevel": 6,
+                "value": 3
+              }
+            ]
           },
-          "kind": "modify_roll_numeric",
-          "on": [
-            "attack_roll"
-          ]
-        },
-        "trigger": {
-          "kind": "passive"
-        }
-      },
-      {
-        "effect": {
-          "delta": {
-            "dice": 1,
-            "dieSize": 1,
-            "kind": "fixed_dice",
-            "sign": "+"
-          },
-          "kind": "modify_damage_numeric"
+          "kind": "grant_magic_weapon_enhancement"
         },
         "trigger": {
           "kind": "passive"
@@ -75,6 +72,6 @@
   "name": "Magic Weapon",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Spells/Descriptions-M-R#Magic Weapon"
+    "section": "Spells/Descriptions-M-P#Magic Weapon"
   }
 }

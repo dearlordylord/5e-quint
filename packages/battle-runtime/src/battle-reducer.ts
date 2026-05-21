@@ -6,6 +6,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.monk-focus-battle-options
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.creature-type-protection-and-charm spell.hit-point-restoration spell.invocation-after-hit-damage spell.invocation-after-hit-damage-illumination spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-blur-attack-roll-defense spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-removal-protection spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-dancing-lights-movable-dim-light spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-independent-attack-sequence spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-save-gated-condition-immunity spell.invocation-self-ability-check-advantage spell.invocation-self-teleport spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-failed-d20-test unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.zero-hit-point-replacement
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
@@ -114,6 +115,7 @@ import type {
 import type {
   BattleAreaId,
   BattleDancingLightId,
+  BattleLineDirectionId,
   BattleObjectId,
   BattleSpellEffectOccurrenceId,
   SpellId,
@@ -234,6 +236,8 @@ export {
   resetPerTurnCharacterResources,
   resetSpellDamageReductionsForNewTurn,
   resetStartOfTurnCombatant,
+  gustOfWindLineDirectionChoiceHole,
+  gustOfWindLineSavingThrowOutcomeHole,
   resolveCommandFleeAfterMovement,
   resolveCommandFleeCommand,
   resolveEndTurn,
@@ -248,6 +252,8 @@ export {
   resolveCommandGrovelCommand,
   resolveEndTurnCommand,
   resolveGreaseGroundHazardSaveCommand,
+  resolveGustOfWindLineDirectionChangeCommand,
+  resolveGustOfWindLineSaveCommand,
   resolveJumpMovementReplacementCommand,
   resolveMoveCommand,
   resolveOpportunityAttackCommand,
@@ -847,6 +853,29 @@ export type BattleActiveEffect =
         BattleActiveEffectExpiration,
         { readonly kind: "concentration" }
       >;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "gustOfWindLine";
+      readonly areaId: BattleAreaId;
+      readonly directionId: BattleLineDirectionId;
+      readonly castTurn: BattleTurnAnchor;
+      readonly line: {
+        readonly lengthFeet: MovementFeet;
+        readonly widthFeet: MovementFeet;
+      };
+      readonly save: {
+        readonly ability: Extract<Ability, "str">;
+        readonly dc: DcSource;
+      };
+      readonly pushDistanceFeet: MovementFeet;
+      readonly movementCost: {
+        readonly multiplier: 2;
+        readonly appliesTo: "towardSource";
+      };
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "concentration" }
+      > & { readonly durationTicks: ElapsedTimeTicks };
     })
   | (BattleSpellEffectBase & {
       readonly kind: "fogCloudObscurement";
@@ -1682,6 +1711,7 @@ export type BattleMovementFillValue = {
   readonly movementCostFeet: MovementFeet;
   readonly provokedOpportunityAttacks: readonly BattleOpportunityAttackThreat[];
   readonly greaseGroundDifficultTerrain?: BattleGreaseGroundDifficultTerrainMovementFact;
+  readonly gustOfWindLineMovement?: BattleGustOfWindLineMovementFact;
   readonly jumpMovementReplacement?: BattleJumpMovementReplacementFact;
   readonly commandApproach?: BattleCommandApproachMovementFact;
   readonly commandFlee?: BattleCommandFleeMovementFact;
@@ -1693,6 +1723,15 @@ export type BattleGreaseGroundDifficultTerrainMovementFact = {
   readonly areaId: BattleAreaId;
   readonly totalDistanceFeet: MovementFeet;
   readonly greaseDistanceFeet: MovementFeet;
+};
+export type BattleGustOfWindLineMovementFact = {
+  readonly kind: "gustOfWindLineMovement";
+  readonly sourceCombatantId: CombatantId;
+  readonly sourceSpellId: SpellRecord["id"];
+  readonly areaId: BattleAreaId;
+  readonly directionId: BattleLineDirectionId;
+  readonly totalDistanceFeet: MovementFeet;
+  readonly closerDistanceFeet: MovementFeet;
 };
 export type BattleCommandApproachMovementFact = {
   readonly kind: "commandApproachShortestDirectRouteTowardCaster";
@@ -1993,6 +2032,23 @@ export type BattleThunderwaveUnsecuredObjectPushOutcome = {
   readonly objectId: BattleObjectId;
   readonly disposition: BattleThunderwavePushDisposition;
 };
+export type BattleGustOfWindLinePushDisposition =
+  | {
+      readonly kind: "pushed";
+      readonly distanceFeet: MovementFeet;
+      readonly destinationId: BattleTablePositionId;
+      readonly provokesOpportunityAttacks: false;
+    }
+  | {
+      readonly kind: "blocked";
+      readonly distanceFeet: MovementFeet;
+      readonly reason: "blocked" | "noLegalDestination";
+      readonly provokesOpportunityAttacks: false;
+    };
+export type BattleGustOfWindLineCreaturePushOutcome = {
+  readonly targetId: CombatantId;
+  readonly disposition: BattleGustOfWindLinePushDisposition;
+};
 export type BattleShovePushDisposition =
   | {
       readonly kind: "pushed";
@@ -2124,6 +2180,11 @@ export type SpellTargeting =
       readonly lengthFeet: MovementFeet;
     }
   | {
+      readonly kind: "selfOriginLine";
+      readonly lengthFeet: MovementFeet;
+      readonly widthFeet: MovementFeet;
+    }
+  | {
       readonly kind: "primaryTargetOriginEmanation";
       readonly radiusFeet: MovementFeet;
     };
@@ -2139,6 +2200,10 @@ export type BattleMoonbeamAreaChoice = Extract<
   BattleSpellAreaIdentityChoice,
   { readonly kind: "moonbeamCylinderArea" }
 >;
+export type BattleGustOfWindLineAreaChoice = Extract<
+  BattleSpellAreaIdentityChoice,
+  { readonly kind: "gustOfWindLineArea" }
+>;
 export type BattleSpellAreaIdentityChoice =
   | {
       readonly kind: "fogCloudArea";
@@ -2151,6 +2216,11 @@ export type BattleSpellAreaIdentityChoice =
   | {
       readonly kind: "moonbeamCylinderArea";
       readonly areaId: BattleAreaId;
+    }
+  | {
+      readonly kind: "gustOfWindLineArea";
+      readonly areaId: BattleAreaId;
+      readonly directionId: BattleLineDirectionId;
     };
 export type SpellPostDamageRider =
   | {
@@ -3244,6 +3314,25 @@ export type SupportedSpellInvocation =
   | {
       readonly access: PreparedSpellAccess;
       readonly resource: SpellSlotInvocationResource;
+      readonly procedure: "gustOfWindLine";
+      readonly spell: SpellRecord;
+      readonly ability: Extract<Ability, "str">;
+      readonly dc: DcSource;
+      readonly targeting: Extract<
+        SpellTargeting,
+        { readonly kind: "selfOriginLine" }
+      >;
+      readonly durationTicks: ElapsedTimeTicks;
+      readonly rangeFeet: MovementFeet;
+      readonly pushDistanceFeet: MovementFeet;
+      readonly movementCost: {
+        readonly multiplier: 2;
+        readonly appliesTo: "towardSource";
+      };
+    }
+  | {
+      readonly access: PreparedSpellAccess;
+      readonly resource: SpellSlotInvocationResource;
       readonly procedure: "fogCloudObscurement";
       readonly spell: SpellRecord;
       readonly targeting: Extract<
@@ -3458,6 +3547,7 @@ type AnySupportedDamageSpellInvocation = Exclude<
       | "hideousLaughter"
       | "command"
       | "greaseGroundHazard"
+      | "gustOfWindLine"
       | "fogCloudObscurement"
       | "flamingSphere"
       | "moonbeam"
@@ -4353,6 +4443,42 @@ export type BattleGreaseGroundHazardSavingThrowOutcomeHole = {
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
 };
+export type BattleGustOfWindLineTrigger = "endsTurnInLine";
+export type BattleGustOfWindLineSavingThrowOutcomeHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "savingThrowOutcome";
+  readonly label: string;
+  readonly gustOfWindLine: {
+    readonly targetId: CombatantId;
+    readonly sourceSpellId: SpellRecord["id"];
+    readonly sourceCombatantId: CombatantId;
+    readonly areaId: BattleAreaId;
+    readonly directionId: BattleLineDirectionId;
+    readonly trigger: BattleGustOfWindLineTrigger;
+    readonly save: {
+      readonly ability: Extract<Ability, "str">;
+      readonly dc: DcSource;
+    };
+    readonly pushDistanceFeet: MovementFeet;
+  };
+  readonly ability: Extract<Ability, "str">;
+  readonly dc: DcSource;
+  readonly areaChoices: readonly [];
+  readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
+  readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
+};
+export type BattleGustOfWindLineDirectionChoiceHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "gustOfWindLineDirectionChoice";
+  readonly label: string;
+  readonly sourceCombatantId: CombatantId;
+  readonly sourceSpellId: SpellRecord["id"];
+  readonly areaId: BattleAreaId;
+  readonly directionId: BattleLineDirectionId;
+  readonly requiresTableSpatialFact: true;
+};
 export type BattleSpellConditionEndTurnSavingThrowOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -4694,6 +4820,12 @@ type BattleSpellAreaChoiceKind =
       readonly creaturePushes: readonly BattleThunderwaveCreaturePushOutcome[];
       readonly unsecuredObjectPushes: readonly BattleThunderwaveUnsecuredObjectPushOutcome[];
       readonly audibleBoom: BattleThunderwaveAudibleBoom;
+    }
+  | {
+      readonly kind: "gustOfWindLineArea";
+      readonly areaId: BattleAreaId;
+      readonly directionId: BattleLineDirectionId;
+      readonly creaturePushes: readonly BattleGustOfWindLineCreaturePushOutcome[];
     };
 export type BattleSleepNonSleeperFact = {
   readonly kind: "doesNotSleep";
@@ -4728,7 +4860,8 @@ export type BattleSpellSavingThrowOutcomeHole = {
         | "sleepTargetAdmission"
         | "hideousLaughter"
         | "command"
-        | "greaseGroundHazard";
+        | "greaseGroundHazard"
+        | "gustOfWindLine";
     }
   >;
   readonly ability: Ability;
@@ -4941,6 +5074,8 @@ export type BattleHole =
   | BattleSleepRepeatSavingThrowOutcomeHole
   | BattleHideousLaughterRepeatSavingThrowOutcomeHole
   | BattleGreaseGroundHazardSavingThrowOutcomeHole
+  | BattleGustOfWindLineSavingThrowOutcomeHole
+  | BattleGustOfWindLineDirectionChoiceHole
   | BattleSpellConditionEndTurnSavingThrowOutcomeHole
   | BattleFlamingSphereRamMovementHole
   | BattleMovableZoneRepositionMovementHole
@@ -5095,6 +5230,13 @@ export type BattleFill =
       readonly kind: "spellAreaChoice";
       readonly holeId: BattleHoleId;
       readonly value: BattleSpellAreaIdentityChoice;
+    }
+  | {
+      readonly kind: "gustOfWindLineDirectionChoice";
+      readonly holeId: BattleHoleId;
+      readonly value: {
+        readonly directionId: BattleLineDirectionId;
+      };
     }
   | {
       readonly kind: "movableZoneRamMovement";

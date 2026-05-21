@@ -230,6 +230,8 @@ export function describeHeldWeaponAttachment(
 export function describeObjectFilter(f: ObjectFilter | undefined): string {
   if (f === undefined) return "";
   const parts: string[] = [];
+  if (f.objectKind !== undefined) parts.push(f.objectKind);
+  if (f.magicality !== undefined) parts.push(f.magicality);
   if (f.material !== undefined) parts.push(f.material);
   if (f.visibility === "caster_can_see") parts.push("caster_can_see");
   if (f.manufactured === true) parts.push("manufactured");

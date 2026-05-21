@@ -13,6 +13,7 @@ import {
   type BattleAreaId,
   type BattleFill,
   type BattleHole,
+  type BattleLineDirectionId,
   type BattleObjectDamageDisposition,
   type BattleObjectIgnitionDisposition,
   type BattleSpellAreaChoice,
@@ -31,6 +32,9 @@ import type {
 import {
   flamingSphereAreaId,
   greaseAreaId,
+  gustOfWindAreaId,
+  gustOfWindEastDirectionId,
+  gustOfWindNorthDirectionId,
   moonbeamAreaId,
   resistanceUnitId,
   spellCasterId,
@@ -689,6 +693,67 @@ export function greaseSavingThrowOutcomeFill(
   };
 }
 
+export function gustOfWindLineSavingThrowOutcomeFill(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+  outcomes: readonly {
+    readonly targetId: CombatantId;
+    readonly succeeded: boolean;
+  }[],
+  options: {
+    readonly areaId?: BattleAreaId;
+    readonly directionId?: BattleLineDirectionId;
+    readonly creaturePushes?: Extract<
+      BattleSpellAreaChoice,
+      { readonly kind: "gustOfWindLineArea" }
+    >["creaturePushes"];
+  } = {},
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  const failedTargetIds = outcomes.flatMap((outcome) =>
+    outcome.succeeded ? [] : [outcome.targetId],
+  );
+  return {
+    kind: "savingThrowOutcome",
+    holeId: hole.holeId,
+    value: {
+      area: {
+        kind: "gustOfWindLineArea",
+        areaId: options.areaId ?? gustOfWindAreaId,
+        directionId: options.directionId ?? gustOfWindNorthDirectionId,
+        originAnchorId: spellCasterId,
+        affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
+        creaturePushes:
+          options.creaturePushes ??
+          failedTargetIds.map((targetId) => ({
+            targetId,
+            disposition: {
+              kind: "pushed" as const,
+              distanceFeet: movementFeet(15),
+              destinationId: battleTablePositionId(
+                `pushed:gust-of-wind:${targetId}`,
+              ),
+              provokesOpportunityAttacks: false as const,
+            },
+          })),
+      },
+      outcomes,
+    },
+  };
+}
+
+export function gustOfWindLineDirectionChoiceFill(
+  hole: Extract<
+    BattleHole,
+    { readonly kind: "gustOfWindLineDirectionChoice" }
+  >,
+  directionId: BattleLineDirectionId = gustOfWindEastDirectionId,
+): Extract<BattleFill, { readonly kind: "gustOfWindLineDirectionChoice" }> {
+  return {
+    kind: "gustOfWindLineDirectionChoice",
+    holeId: hole.holeId,
+    value: { directionId },
+  };
+}
+
 export function flamingSphereAreaFill(
   hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>,
   areaId = flamingSphereAreaId,
@@ -839,6 +904,82 @@ export function greaseGroundHazardEndTurnAct(
   actorId: CombatantId,
 ): ReturnType<typeof greaseGroundHazardSaveAct> {
   return greaseGroundHazardSaveAct(state, actorId, "endsTurnInArea");
+}
+
+export function gustOfWindLineEndTurnSaveAct(
+  state: BattleState,
+  actorId: CombatantId = spellTargetId,
+  areaId: BattleAreaId = gustOfWindAreaId,
+  directionId: BattleLineDirectionId = gustOfWindNorthDirectionId,
+): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "gustOfWindLineSave";
+    }
+  >;
+} {
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "gustOfWindLineSave";
+        }
+      >;
+    } =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "gustOfWindLineSave" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.areaId === areaId &&
+      candidate.subject.directionId === directionId,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Gust of Wind Line end-turn save act.");
+  }
+  return act;
+}
+
+export function gustOfWindLineDirectionChangeAct(
+  state: BattleState,
+  actorId: CombatantId = spellCasterId,
+  areaId: BattleAreaId = gustOfWindAreaId,
+  directionId: BattleLineDirectionId = gustOfWindNorthDirectionId,
+): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "gustOfWindLineDirectionChange";
+    }
+  >;
+} {
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "gustOfWindLineDirectionChange";
+        }
+      >;
+    } =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "gustOfWindLineDirectionChange" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.areaId === areaId &&
+      candidate.subject.directionId === directionId,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Gust of Wind Line direction-change act.");
+  }
+  return act;
 }
 
 export function flamingSphereEndTurnAct(

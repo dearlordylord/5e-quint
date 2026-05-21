@@ -3582,6 +3582,11 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
       "Battle runtime MBT does not model object contact target holes.",
     );
   }
+  if (hole.kind === "gustOfWindLineDirectionChoice") {
+    throw new Error(
+      "Battle runtime MBT does not model Gust of Wind direction-choice holes.",
+    );
+  }
   return [
     Match.value(hole).pipe(
     Match.when({ kind: "targetChoice" }, () => "TargetChoice" as const),

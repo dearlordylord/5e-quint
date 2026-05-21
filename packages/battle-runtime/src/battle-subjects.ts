@@ -5,7 +5,12 @@ import { Match, Schema } from "effect";
 import { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
 import { SpellSlotLevel, spellSlotLevel } from "@dnd/shared/types";
 import { DamageTypeSchema } from "@dnd/surface/surface/schema";
-import { CombatantId, SpellId, spellId as makeSpellId } from "./identity.ts";
+import {
+  BattleLineDirectionId,
+  CombatantId,
+  SpellId,
+  spellId as makeSpellId,
+} from "./identity.ts";
 import {
   BATTLE_REACTION_TRIGGERS,
   BATTLE_READIED_SPELL_TRIGGERS,
@@ -52,6 +57,8 @@ export const BATTLE_RUNTIME_COMMANDS = [
   "releaseGrapple",
   "opportunityAttack",
   "greaseGroundHazardSave",
+  "gustOfWindLineSave",
+  "gustOfWindLineDirectionChange",
   "movableZoneSave",
   "movableZoneReposition",
   "movableZoneRam",
@@ -122,6 +129,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "sleepTargetAdmission",
   "hideousLaughter",
   "greaseGroundHazard",
+  "gustOfWindLine",
   "fogCloudObscurement",
   "flamingSphere",
   "moonbeam",
@@ -572,6 +580,25 @@ export const BattleSubjectSchema = Schema.Union(
     sourceSpellId: SpellId,
     areaId: BattleSubjectTextSchema,
     trigger: Schema.Literal("entersArea", "endsTurnInArea"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("gustOfWindLineSave"),
+    sourceCombatantId: CombatantId,
+    sourceSpellId: SpellId,
+    areaId: BattleSubjectTextSchema,
+    directionId: BattleLineDirectionId,
+    trigger: Schema.Literal("endsTurnInLine"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("gustOfWindLineDirectionChange"),
+    sourceCombatantId: CombatantId,
+    sourceSpellId: SpellId,
+    areaId: BattleSubjectTextSchema,
+    directionId: BattleLineDirectionId,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),

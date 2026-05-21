@@ -270,6 +270,8 @@ import {
   resolveMoonbeamRepositionCommand,
   resolveMoonbeamSaveCommand,
   resolveGreaseGroundHazardSaveCommand,
+  resolveGustOfWindLineDirectionChangeCommand,
+  resolveGustOfWindLineSaveCommand,
   resolveEscapeGrapple,
   resolveEscapeSpellRestraint,
   resolveGrapple,
@@ -877,6 +879,22 @@ export function resolveBattleSubjectInternal(
         subject,
         suppressedReactionTrigger: options.suppressedReactionTrigger,
       });
+    }
+    if (
+      subject.tag === "runtimeCommand" &&
+      subject.command === "gustOfWindLineSave"
+    ) {
+      return resolveGustOfWindLineSaveCommand({
+        ...input,
+        subject,
+        suppressedReactionTrigger: options.suppressedReactionTrigger,
+      });
+    }
+    if (
+      subject.tag === "runtimeCommand" &&
+      subject.command === "gustOfWindLineDirectionChange"
+    ) {
+      return resolveGustOfWindLineDirectionChangeCommand({ ...input, subject });
     }
     if (
       subject.tag === "runtimeCommand" &&

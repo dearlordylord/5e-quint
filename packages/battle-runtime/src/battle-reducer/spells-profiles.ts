@@ -96,8 +96,12 @@ type OngoingInitialEffect = NonNullable<
       >["initialPhase"]
     >,
     { readonly kind: "direct" }
-  >["effects"]
+>["effects"]
 >[number];
+type OngoingInitialPhase = Extract<
+  SpellRecord["mechanics"],
+  { readonly family: "ongoing_effect" }
+>["initialPhase"];
 type OngoingSaveGateEffect = Extract<
   OngoingOperationEffect,
   { readonly kind: "save_gate" }
@@ -106,6 +110,12 @@ type FlamingSphereSaveEffect = OngoingSaveGateEffect & {
   readonly onFail: Extract<
     OngoingSaveGateEffect["onFail"],
     { readonly kind: "damage" }
+  >;
+};
+type GustOfWindLineSaveEffect = OngoingSaveGateEffect & {
+  readonly onFail: Extract<
+    OngoingSaveGateEffect["onFail"],
+    { readonly kind: "force_move" }
   >;
 };
 import {
@@ -302,6 +312,9 @@ export function supportedSpellActs(
         spell,
         spellcasting.spellSlots,
       ),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      supportedPreparedGustOfWindLineProfile(spell, spellcasting.spellSlots),
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedFogCloudObscurementProfile(
@@ -987,6 +1000,144 @@ export function supportedPreparedFogCloudObscurementProfile(
       },
     ];
   });
+}
+
+export function supportedPreparedGustOfWindLineProfile(
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  const line = gustOfWindLineSpell(spell);
+  if (line === null) {
+    return [];
+  }
+
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+    if (Number(slot.spellLevel) < spell.mechanics.level) {
+      return [];
+    }
+    return [
+      {
+        access: { tag: "prepared" },
+        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+        procedure: "gustOfWindLine",
+        spell,
+        ability: "str",
+        dc: { kind: "caster_spell_save_dc" },
+        targeting: {
+          kind: "selfOriginLine",
+          lengthFeet: movementFeet(line.lengthFeet),
+          widthFeet: movementFeet(line.widthFeet),
+        },
+        durationTicks: line.durationTicks,
+        rangeFeet: movementFeet(0),
+        pushDistanceFeet: movementFeet(line.pushDistanceFeet),
+        movementCost: {
+          multiplier: 2,
+          appliesTo: "towardSource",
+        },
+      },
+    ];
+  });
+}
+
+function gustOfWindLineSpell(spell: SpellRecord) {
+  if (spell.mechanics.family !== "ongoing_effect") {
+    return null;
+  }
+  const durationTicks =
+    spell.mechanics.duration.kind === "concentration"
+      ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.upTo)
+      : null;
+  const attachment = spell.mechanics.attachment;
+  const lineHole =
+    attachment.kind === "hole" && attachment.value.kind === "area"
+      ? attachment
+      : null;
+  const lineArea = lineHole?.value ?? null;
+  const initialPhase = spell.mechanics.initialPhase;
+  const initialSave = isGustOfWindLineSaveGate(
+    initialPhase,
+    lineHole?.holeId,
+  )
+    ? initialPhase
+    : null;
+  const strongWindOperation = spell.mechanics.operations.find(
+    (operation) =>
+      operation.trigger.kind === "passive" &&
+      operation.effect.kind === "area_has_strong_wind",
+  );
+  const movementCostOperation = spell.mechanics.operations.find(
+    (operation) =>
+      operation.trigger.kind === "passive" &&
+      operation.effect.kind === "area_movement_cost_multiplier",
+  );
+  const endTurnOperation = spell.mechanics.operations.find(
+    (operation) => operation.trigger.kind === "on_creature_ends_turn_in_area",
+  );
+  const directionOperation = spell.mechanics.operations.find(
+    (operation) =>
+      operation.trigger.kind === "on_caster_spends_action" &&
+      operation.trigger.cost.kind === "bonus_action" &&
+      operation.effect.kind === "reposition_attachment",
+  );
+
+  if (
+    spell.mechanics.level !== 2 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "self" ||
+    spell.mechanics.duration.kind !== "concentration" ||
+    spell.mechanics.duration.upTo.unit !== "minute" ||
+    spell.mechanics.duration.upTo.amount !== 1 ||
+    spell.mechanics.operations.length !== 4 ||
+    durationTicks === null ||
+    Either.isLeft(durationTicks) ||
+    lineArea?.kind !== "area" ||
+    lineArea.origin.kind !== "self" ||
+    lineArea.shape.kind !== "line" ||
+    lineArea.shape.lengthFeet !== 60 ||
+    lineArea.shape.widthFeet !== 10 ||
+    initialSave === null ||
+    !isGustOfWindLineSaveGate(endTurnOperation?.effect, lineHole?.holeId) ||
+    strongWindOperation?.effect.kind !== "area_has_strong_wind" ||
+    movementCostOperation?.effect.kind !==
+      "area_movement_cost_multiplier" ||
+    movementCostOperation.effect.multiplier !== 2 ||
+    movementCostOperation.effect.appliesTo !== "toward_source" ||
+    directionOperation?.effect.kind !== "reposition_attachment" ||
+    directionOperation.effect.maxMoveFeet !== undefined
+  ) {
+    return null;
+  }
+  return {
+    durationTicks: durationTicks.right,
+    lengthFeet: lineArea.shape.lengthFeet,
+    widthFeet: lineArea.shape.widthFeet,
+    pushDistanceFeet: initialSave.onFail.distanceFeet,
+  };
+}
+
+function isGustOfWindLineSaveGate(
+  effect: OngoingOperationEffect | OngoingInitialPhase | undefined,
+  areaHoleId: string | undefined,
+): effect is GustOfWindLineSaveEffect {
+  return (
+    effect?.kind === "save_gate" &&
+    areaHoleId !== undefined &&
+    effect.attachment?.kind === "hole" &&
+    effect.attachment.holeId === areaHoleId &&
+    effect.attachment.value.kind === "area" &&
+    effect.attachment.value.origin.kind === "self" &&
+    effect.attachment.value.shape.kind === "line" &&
+    effect.attachment.value.shape.lengthFeet === 60 &&
+    effect.attachment.value.shape.widthFeet === 10 &&
+    effect.ability === "str" &&
+    effect.dc.kind === "caster_spell_save_dc" &&
+    effect.onSuccess.kind === "none" &&
+    effect.onFail.kind === "force_move" &&
+    effect.onFail.movementKind === "push" &&
+    effect.onFail.originDirection === "away_from_caster" &&
+    effect.onFail.distanceFeet === 15
+  );
 }
 
 export function supportedPreparedFlamingSphereProfile(
