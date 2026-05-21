@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-PROPERTY-OPTIONS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Sorcerer Metamagic Cast Property Options"
     },
     {
@@ -110,7 +110,7 @@ Output:
 
 ### Task 2 - L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-PROPERTY-OPTIONS - Sorcerer Metamagic Cast Property Options
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 - Current Metamagic option projection and spell invocation discovery.

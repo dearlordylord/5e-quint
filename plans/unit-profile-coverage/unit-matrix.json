@@ -10412,6 +10412,12 @@
         "spell.invocation-antimagic-field-tracked-light-suppression"
       ],
       "taskId": "L12G-ANTIMAGIC-FIELD-TRACKED-LIGHT-SUPPRESSION"
+    },
+    {
+      "claimKind": "accepted-runtime-closure",
+      "note": "Focused battle-runtime tests cover Distant, Extended, and Subtle Spell as typed Metamagic selections that are rejected before Sorcery Point spending. The closure records the missing generic owners: range-bearing spell target witnesses for Distant, duration plus Concentration-saving-throw roll mode for Extended, and component/material witnesses for Subtle. No runtime profile is claimed, and production dispatch remains on typed effectKind facts rather than spell authored identity.",
+      "profileIds": [],
+      "taskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-PROPERTY-OPTIONS"
     }
   ],
   "units": [
@@ -13746,7 +13752,11 @@
             "mechanic": "Careful and Heightened Spell saving throw modifiers: protect a Charisma-modifier-limited selected creature set with automatic save success and no half-damage-on-success, and give one target Disadvantage on saves against the spell."
           },
           {
-            "followUpTaskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-PROPERTY-OPTIONS",
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "generic spell cast-property witness owner",
+              "reason": "Distant Spell needs range-bearing spell target witnesses before range can be rewritten without trusting authored spell identity; Extended Spell needs generic duration and Concentration-saving-throw roll-mode ownership; Subtle Spell needs component witnesses that suppress Verbal and Somatic components while preserving consumed or priced Material components. The promoted battle-runtime Metamagic boundary rejects these cast-property options before Sorcery Point spending rather than charging inert Metamagic."
+            },
             "mechanic": "Distant, Extended, and Subtle Spell cast-property modifiers: double range only for spells with a range of at least 5 feet or make Touch range 30 feet, double eligible duration to a 24-hour cap plus Concentration save Advantage, and suppress eligible spell components while preserving consumed or priced Material components."
           },
           {
@@ -13772,13 +13782,6 @@
             "owner": "battle-runtime saving throw spell resolution hooks",
             "requiredOutput": "Supported-profile or profile-subset-supported Unit claim with typed holes/fills, focused runtime tests, and promoted Quint/runtime parity for Careful and Heightened without option identity dispatch.",
             "title": "Sorcerer Metamagic Save Options"
-          },
-          {
-            "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-PROPERTY-OPTIONS",
-            "mechanic": "Promote Distant, Extended, and Subtle Spell for supported spell procedures by rewriting range, duration, Concentration-save roll mode, and component requirements from typed spell facts and caller-supplied component/material witnesses.",
-            "owner": "battle-runtime spell invocation profile projection plus concentration and component witness boundaries",
-            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim with focused tests for Distant range changes, Extended duration and Concentration-save Advantage, and Subtle component suppression while preserving consumed or priced Material components.",
-            "title": "Sorcerer Metamagic Cast Property Options"
           },
           {
             "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-DAMAGE-SHAPE-OPTIONS",

@@ -17,8 +17,14 @@ import {
   startBattle,
 } from "./index.ts";
 import {
+  DISTANT_METAMAGIC_EFFECT_KIND,
+  DISTANT_METAMAGIC_UNSUPPORTED_MESSAGE,
+  EXTENDED_METAMAGIC_EFFECT_KIND,
+  EXTENDED_METAMAGIC_UNSUPPORTED_MESSAGE,
   QUICKENED_METAMAGIC_EFFECT_KIND,
   QUICKENED_SPELL_METAMAGIC_SELECTION,
+  SUBTLE_METAMAGIC_EFFECT_KIND,
+  SUBTLE_METAMAGIC_UNSUPPORTED_MESSAGE,
 } from "./battle-reducer/metamagic.ts";
 import {
   characterSeed,
@@ -281,6 +287,47 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       message:
         "A spell can use only one Metamagic option unless one selected option explicitly combines with a different Metamagic option.",
     });
+  });
+
+  test("explicitly closes cast-property Metamagic options before Sorcery Point spending", () => {
+    const state = metamagicBattle({
+      knownOptions: [
+        distantMetamagicOption(),
+        extendedMetamagicOption(),
+        subtleMetamagicOption(),
+      ],
+    });
+
+    for (const closure of [
+      {
+        effectKind: DISTANT_METAMAGIC_EFFECT_KIND,
+        message: DISTANT_METAMAGIC_UNSUPPORTED_MESSAGE,
+      },
+      {
+        effectKind: EXTENDED_METAMAGIC_EFFECT_KIND,
+        message: EXTENDED_METAMAGIC_UNSUPPORTED_MESSAGE,
+      },
+      {
+        effectKind: SUBTLE_METAMAGIC_EFFECT_KIND,
+        message: SUBTLE_METAMAGIC_UNSUPPORTED_MESSAGE,
+      },
+    ] as const) {
+      expect(
+        resolveBattleSubject({
+          state,
+          subject: {
+            ...cureWoundsActionSubject(),
+            metamagic: [{ effectKind: closure.effectKind }],
+          },
+          fills: [],
+        }),
+      ).toMatchObject({
+        tag: "invalid",
+        message: closure.message,
+      });
+    }
+
+    expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
   });
 
   test("blocks Quickened level 1+ spells after this turn has already cast a level 1+ spell", () => {
@@ -945,6 +992,46 @@ function carefulMetamagicOption(): MetamagicOptionFixture {
     effectKind: "saving_throw_protection",
     stackingMode: "one_per_spell",
     sorceryPointCost: resourceCount(1),
+  };
+}
+
+function distantMetamagicOption(): MetamagicOptionFixture {
+  return {
+    effectKind: DISTANT_METAMAGIC_EFFECT_KIND,
+    stackingMode: "one_per_spell",
+    sorceryPointCost: resourceCount(1),
+  };
+}
+
+function extendedMetamagicOption(): MetamagicOptionFixture {
+  return {
+    effectKind: EXTENDED_METAMAGIC_EFFECT_KIND,
+    stackingMode: "one_per_spell",
+    sorceryPointCost: resourceCount(1),
+  };
+}
+
+function subtleMetamagicOption(): MetamagicOptionFixture {
+  return {
+    effectKind: SUBTLE_METAMAGIC_EFFECT_KIND,
+    stackingMode: "one_per_spell",
+    sorceryPointCost: resourceCount(1),
+  };
+}
+
+function cureWoundsActionSubject(): Extract<
+  AvailableBattleAct["subject"],
+  { readonly tag: "actionSpell" }
+> {
+  return {
+    tag: "actionSpell",
+    actorId: wizardId,
+    invocation: spellSlotInvocationRef(
+      "cure_wounds",
+      1,
+      "directHitPointRestoration",
+    ),
+    mode: { tag: "cast" },
   };
 }
 

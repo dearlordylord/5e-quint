@@ -30,6 +30,18 @@ export const CAREFUL_METAMAGIC_EFFECT_KIND =
   "saving_throw_protection" satisfies CharacterBattleMetamagicEffectKind;
 export const HEIGHTENED_METAMAGIC_EFFECT_KIND =
   "saving_throw_disadvantage" satisfies CharacterBattleMetamagicEffectKind;
+export const DISTANT_METAMAGIC_EFFECT_KIND =
+  "spell_range_increase" satisfies CharacterBattleMetamagicEffectKind;
+export const EXTENDED_METAMAGIC_EFFECT_KIND =
+  "duration_extension_and_concentration_save_advantage" satisfies CharacterBattleMetamagicEffectKind;
+export const SUBTLE_METAMAGIC_EFFECT_KIND =
+  "component_suppression" satisfies CharacterBattleMetamagicEffectKind;
+export const DISTANT_METAMAGIC_UNSUPPORTED_MESSAGE =
+  "Distant Spell is not supported until spell target witnesses carry range facts that can be rewritten without trusting authored spell identity.";
+export const EXTENDED_METAMAGIC_UNSUPPORTED_MESSAGE =
+  "Extended Spell is not supported until spell duration and Concentration-saving-throw roll mode are owned by a generic cast-property boundary.";
+export const SUBTLE_METAMAGIC_UNSUPPORTED_MESSAGE =
+  "Subtle Spell is not supported until spell-cast component witnesses can suppress Verbal and Somatic components while preserving consumed or priced Material components.";
 
 export const QUICKENED_SPELL_METAMAGIC_SELECTION = [
   { effectKind: QUICKENED_METAMAGIC_EFFECT_KIND },
@@ -322,6 +334,10 @@ function spellMetamagicSupportIssue(input: {
       ? null
       : "Selected Metamagic option effect is not supported for this spell procedure.";
   }
+  const castPropertyIssue = castPropertyMetamagicSupportIssue(effectKinds);
+  if (castPropertyIssue !== null) {
+    return castPropertyIssue;
+  }
   const saveMetamagicOnly =
     effectKinds.size > 0 &&
     [...effectKinds].every(
@@ -351,6 +367,20 @@ function spellMetamagicSupportIssue(input: {
     return "Selected Metamagic option effect is not supported for this spell procedure.";
   }
   return null;
+}
+
+function castPropertyMetamagicSupportIssue(
+  effectKinds: ReadonlySet<CharacterBattleMetamagicEffectKind>,
+): string | null {
+  if (effectKinds.has(DISTANT_METAMAGIC_EFFECT_KIND)) {
+    return DISTANT_METAMAGIC_UNSUPPORTED_MESSAGE;
+  }
+  if (effectKinds.has(EXTENDED_METAMAGIC_EFFECT_KIND)) {
+    return EXTENDED_METAMAGIC_UNSUPPORTED_MESSAGE;
+  }
+  return effectKinds.has(SUBTLE_METAMAGIC_EFFECT_KIND)
+    ? SUBTLE_METAMAGIC_UNSUPPORTED_MESSAGE
+    : null;
 }
 
 function spellInvocationSupportsSaveMetamagic(
