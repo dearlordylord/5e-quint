@@ -12,6 +12,7 @@ import locateObjectInput from "../../content/locate_object.json";
 import magicWeaponInput from "../../content/magic_weapon.json";
 import magicMouthInput from "../../content/magic_mouth.json";
 import moonbeamInput from "../../content/moonbeam.json";
+import prayerOfHealingInput from "../../content/prayer_of_healing.json";
 import ropeTrickInput from "../../content/rope_trick.json";
 import wardingBondInput from "../../content/warding_bond.json";
 import { decodeUnitRecordSync } from "../surface/schema.ts";
@@ -321,6 +322,37 @@ describe("Surface trace interpreter", () => {
             "changed circumstances: not_accounted_for",
             "repeat casting: 25% cumulative_percent_per_cast_after_first until long_rest",
             "repeat result: no_answer",
+          ].join("\n"),
+        }),
+      ]),
+    );
+  });
+
+  test("renders Prayer of Healing as ranged multi-recipient rest healing", () => {
+    const trace = traceUnit(decodeUnitRecordSync(prayerOfHealingInput));
+
+    expect(trace.nodes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          atomKind: "hole",
+          label: expect.stringContaining(
+            "casting requirement: remain within spell range for entire casting",
+          ),
+        }),
+        expect.objectContaining({
+          atomKind: "grant_rest_benefit",
+          label: [
+            "grant_rest_benefit",
+            "short_rest",
+            "target: target_creature",
+          ].join("\n"),
+        }),
+        expect.objectContaining({
+          atomKind: "spell_recipient_rest_lockout",
+          label: [
+            "spell_recipient_rest_lockout",
+            "target: target_creature",
+            "reset: target_finishes_long_rest",
           ].join("\n"),
         }),
       ]),

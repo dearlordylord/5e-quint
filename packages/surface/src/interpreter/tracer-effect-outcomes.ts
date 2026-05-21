@@ -28,6 +28,8 @@ export type OutcomeEffectAtom = Extract<
       | "delayed_save"
       | "condition_persists_after_full_duration"
       | "heal_hp"
+      | "grant_rest_benefit"
+      | "spell_recipient_rest_lockout"
       | "prevent_hit_point_regain"
       | "heal_to_max_hp"
       | "modify_max_hp"
@@ -268,6 +270,26 @@ export function traceOutcomeEffectAtom(
         category: "effect",
         atomKind: "heal",
         label: `heal\n${describeDiceAmount(e.amount)}\ntarget: ${e.target}`,
+      });
+      return id;
+    }
+    case "grant_rest_benefit": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "grant_rest_benefit",
+        label: `grant_rest_benefit\n${e.benefit}\ntarget: ${e.target}`,
+      });
+      return id;
+    }
+    case "spell_recipient_rest_lockout": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "lifecycle",
+        atomKind: "spell_recipient_rest_lockout",
+        label: `spell_recipient_rest_lockout\ntarget: ${e.target}\nreset: ${e.resetBy}`,
       });
       return id;
     }

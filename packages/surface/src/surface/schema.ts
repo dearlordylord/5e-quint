@@ -114,6 +114,7 @@ export {
   TargetCountSlotScalingSchema,
   TargetCountThresholdTierSchema,
   TargetCountThresholdTiersSchema,
+  TargetCastingRequirementSchema,
   TargetDispositionSchema,
   TargetSelectionSchema,
   TargetStateFilterSchema,

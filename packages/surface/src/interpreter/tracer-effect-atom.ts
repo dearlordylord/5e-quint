@@ -47,6 +47,8 @@ export function traceEffectAtom(
     case "delayed_save":
     case "condition_persists_after_full_duration":
     case "heal_hp":
+    case "grant_rest_benefit":
+    case "spell_recipient_rest_lockout":
     case "prevent_hit_point_regain":
     case "heal_to_max_hp":
     case "modify_max_hp":

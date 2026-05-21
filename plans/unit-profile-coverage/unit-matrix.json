@@ -20464,13 +20464,6 @@
       "claim": {
         "followUpTasks": [
           {
-            "id": "L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST",
-            "mechanic": "Replace Prayer of Healing's partial mechanics with a lossless SRD Surface shape for 10-minute non-ritual casting, up-to-five recipients that remain within 30 feet for the entire casting, slot-scaled 2d8 plus 1d8 per slot above 2 Hit Point restoration, granted Short Rest benefits, and per-recipient immunity to being affected again until that creature finishes a Long Rest.",
-            "owner": "surface Spell Definition authoring",
-            "requiredOutput": "Prayer of Healing Dhall and JSON content, with schema and tracer support where required, represent the Short Rest benefit and Long Rest recipient lockout as executable source facts instead of comments or prose-only description.",
-            "title": "Prayer Of Healing Surface Rest Shape"
-          },
-          {
             "id": "L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST",
             "mechanic": "Apply Prayer of Healing after the completed 10-minute cast by spending the spell slot at completion, consuming caller-supplied recipient eligibility facts, granting each selected Character Sheet the existing Short Rest benefits without duplicating rest algorithms, applying the slot-scaled healing roll capped by Hit Point maximum, and recording/clearing the per-recipient Long Rest lockout from the same rest state owner.",
             "owner": "character-sheet-runtime plus spellcasting resource owner",
@@ -20478,8 +20471,8 @@
             "title": "Prayer Of Healing Character Sheet Rest Runtime"
           }
         ],
-        "futureProfileOwner": "surface Spell Definition authoring plus character-sheet-runtime rest application plus spellcasting resource owner",
-        "reason": "Prayer of Healing is authored and installed as an SRD Surface Spell Definition with its 10-minute spell shell, fixed up-to-five target count, and slot-scaled 2d8 Hit Point restoration only. The local SRD 5.2.1 passage additionally grants each recipient the benefits of a Short Rest and prevents that creature from being affected by the spell again until it finishes a Long Rest. Task 40 claims no battle-runtime support and leaves the row blocked by the concrete follow-up split listed on this claim.",
+        "futureProfileOwner": "character-sheet-runtime rest application plus spellcasting resource owner",
+        "reason": "Prayer of Healing is authored and installed as an SRD Surface Spell Definition with its 10-minute non-ritual spell shell, fixed up-to-five creature recipients that must remain within spell range for the entire casting, slot-scaled 2d8 Hit Point restoration, Short Rest benefit, and per-recipient same-spell lockout until that creature finishes a Long Rest. No runtime support is claimed until the Character Sheet rest and Spell Slot owners consume those Surface facts.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
