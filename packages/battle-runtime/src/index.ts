@@ -337,6 +337,7 @@ export {
   type BattleTargetChoiceHole,
   type BattleTargetSpatialFact,
   type BattleThaumaturgyActiveOneMinuteEffectCountHole,
+  type BattleTrackedOngoingSpellLightEmitter,
   type BattleTurnResources,
   type BattleUnitFeatureRollHole,
   type BardicInspirationFailedD20TestResolutionInput,

@@ -402,6 +402,13 @@ type Skill = Schema.Schema.Type<typeof SkillSchema>;
 type Condition = Schema.Schema.Type<typeof ConditionSchema>;
 type CreatureType = Schema.Schema.Type<typeof CreatureTypeSchema>;
 type Ability = Schema.Schema.Type<typeof AbilitySchema>;
+const SpellcastingAbilityCheckAbilitySchema = Schema.Union(
+  AbilitySchema,
+  Schema.Literal("caster_spellcasting_ability"),
+);
+type SpellcastingAbilityCheckAbility = Schema.Schema.Type<
+  typeof SpellcastingAbilityCheckAbilitySchema
+>;
 type UsageLimit = Schema.Schema.Type<typeof UsageLimitSchema>;
 type AbilityFilter = Schema.Schema.Type<typeof AbilityFilterSchema>;
 type SavingThrowSourceFilter = Schema.Schema.Type<
@@ -1491,7 +1498,7 @@ type ActivationPhase =
   | {
       readonly kind: "ability_check_gate";
       readonly attachment: Attachment;
-      readonly ability: Ability;
+      readonly ability: SpellcastingAbilityCheckAbility;
       readonly skill?: Skill;
       readonly dc: number;
       readonly onPass: EffectAtom;
@@ -1528,7 +1535,7 @@ type OngoingEffect =
     }
   | {
       readonly kind: "ability_check_gate";
-      readonly ability: Ability;
+      readonly ability: SpellcastingAbilityCheckAbility;
       readonly skill?: Skill;
       readonly dc: DcSource;
       readonly onPass: EffectAtom;
@@ -1722,7 +1729,12 @@ export const TargetCountSlotScalingSchema = Schema.Struct({
   baseLevel: SpellSlotLevelSchema,
 });
 
-export const TargetKindSchema = Schema.Literal("creature", "object");
+const TARGET_KINDS = [
+  "creature",
+  "object",
+  "magical_effect",
+] as const satisfies ReadonlyNonEmptyArray<string>;
+export const TargetKindSchema = Schema.Literal(...TARGET_KINDS);
 export const TargetDispositionSchema = Schema.Literal("willing");
 export const TargetStateFilterSchema = nonEmpty(
   Schema.Literal("falling", "zero_hp_not_dead"),
@@ -3537,7 +3549,7 @@ export const ActivationPhaseSchema: Schema.suspend<
     Schema.Struct({
       kind: Schema.Literal("ability_check_gate"),
       attachment: AttachmentSchema,
-      ability: AbilitySchema,
+      ability: SpellcastingAbilityCheckAbilitySchema,
       skill: optionalExact(SkillSchema),
       dc: Schema.Number,
       onPass: EffectAtomSchema,
@@ -3583,7 +3595,7 @@ export const OngoingEffectSchema: Schema.suspend<
     }),
     Schema.Struct({
       kind: Schema.Literal("ability_check_gate"),
-      ability: AbilitySchema,
+      ability: SpellcastingAbilityCheckAbilitySchema,
       skill: optionalExact(SkillSchema),
       dc: DcSourceSchema,
       onPass: EffectAtomSchema,

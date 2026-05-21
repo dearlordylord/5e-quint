@@ -220,6 +220,12 @@ module battleRuntimeModel {
     | ConcentrationLightEmitterExpiration({ actor: Actor })
     | DurationLightEmitterExpiration({ durationTicks: int })
     | UntilDispelledLightEmitterExpiration
+  type OngoingSpellTracking =
+    | UntrackedSpellLightEmitter
+    | TrackedOngoingSpellLightEmitter({
+        sourceEffectId: int,
+        sourceSpellLevel: int,
+      })
   type LightEmitter =
     | SpellLightEmitter({
         source: Actor,
@@ -227,6 +233,7 @@ module battleRuntimeModel {
         attachment: LightEmitterAttachment,
         emission: LightEmission,
         opaqueCoverInteraction: LightEmitterOpaqueCoverInteraction,
+        ongoingSpellTracking: OngoingSpellTracking,
         expiresAt: LightEmitterExpiration,
       })
     | ObjectInvisibleRevealLightEmitter({

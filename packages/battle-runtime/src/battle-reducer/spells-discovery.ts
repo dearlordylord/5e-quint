@@ -79,6 +79,7 @@ import {
   spellCastCanTriggerCounterspell,
   type CounterspellCapableReactor,
 } from "./counterspell-reaction-discovery.ts";
+import { ongoingSpellTargetChoiceHole } from "./spells-ongoing-spell-ending.ts";
 
 export function discoverSupportedSpellInvocations(
   state: BattleState,
@@ -622,6 +623,23 @@ export function discoverSupportedSpellInvocations(
           },
         ];
       }
+      if (invocation.procedure === "ongoingSpellEnd") {
+        return [
+          {
+            subject: {
+              tag: "actionSpell" as const,
+              actorId,
+              invocation: supportedSpellInvocationRef(invocation),
+              mode: { tag: "cast" as const },
+            },
+            label: invocation.spell.name,
+            summary: spellInvocationCastSummary(invocation),
+            initialHoles: [
+              ongoingSpellTargetChoiceHole(state, actorId, invocation),
+            ],
+          },
+        ];
+      }
       if (invocation.procedure === "weaponDamageRider") {
         return [
           {
@@ -1039,6 +1057,9 @@ export function spellInvocationCastSummary(
       ? `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`
       : `Cast ${invocation.spell.name} as a cantrip.`;
   }
+  if (invocation.procedure === "ongoingSpellEnd") {
+    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+  }
   if (invocation.procedure === "heldLightHurl") {
     return `Take a Magic action to hurl ${invocation.spell.name}.`;
   }
@@ -1370,6 +1391,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "dancingLightsCombinedCast" &&
     invocation.procedure !== "dancingLightsReposition" &&
     invocation.procedure !== "objectLight" &&
+    invocation.procedure !== "ongoingSpellEnd" &&
     invocation.procedure !== "heldLightHurl" &&
     invocation.procedure !== "spellHostedWeaponAttack" &&
     invocation.procedure !== "weaponAttackOverride" &&
@@ -1448,6 +1470,7 @@ export function readiedSpellAct(
     invocation.procedure === "afterHitDamageAndIllumination" ||
     invocation.procedure === "heldLight" ||
     invocation.procedure === "heldLightHurl" ||
+    invocation.procedure === "ongoingSpellEnd" ||
     invocation.procedure === "rollModifier" ||
     invocation.procedure === "creatureTypeProtection" ||
     invocation.procedure === "blurAttackRollDefense" ||

@@ -170,6 +170,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "shieldReaction",
   "counterspell",
   "objectLight",
+  "ongoingSpellEnd",
   "featherFallMitigation",
 ] as const;
 export type SpellSlotProcedure = (typeof SPELL_SLOT_PROCEDURES)[number];

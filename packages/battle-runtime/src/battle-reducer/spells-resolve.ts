@@ -140,6 +140,7 @@ import {
   resolveObjectContactDamageSpellAct,
 } from "./spells-resolve-object-contact-damage.ts";
 import { resolveMagicWeaponEnhancementSpellAct } from "./spells-resolve-release.ts";
+import { resolveOngoingSpellEndSpellAct } from "./spells-ongoing-spell-ending.ts";
 export {
   resolveFlamingSphereSpellAct,
   resolveFogCloudObscurementSpellAct,
@@ -153,6 +154,7 @@ export {
   resolveObjectContactDamageSpellAct,
 } from "./spells-resolve-object-contact-damage.ts";
 export { resolveMagicWeaponEnhancementSpellAct } from "./spells-resolve-release.ts";
+export { resolveOngoingSpellEndSpellAct } from "./spells-ongoing-spell-ending.ts";
 export { resolveAttackBurstSaveDamageSpellAct } from "./spells-resolve-attack-burst.ts";
 export {
   applyChainedSpellDamage,
@@ -433,6 +435,7 @@ export function resolveSpellAct(
     (invocation.procedure === "directHitPointRestoration" ||
       invocation.procedure === "heldLightHurl" ||
       invocation.procedure === "objectLight" ||
+      invocation.procedure === "ongoingSpellEnd" ||
       invocation.procedure === "spellHostedWeaponAttack" ||
       invocation.procedure === "weaponAttackOverride" ||
       invocation.procedure === "damageReduction" ||
@@ -574,6 +577,14 @@ export function resolveSpellAct(
   }
   if (invocation.procedure === "objectLight") {
     return resolveObjectLightSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "ongoingSpellEnd") {
+    return resolveOngoingSpellEndSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

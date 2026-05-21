@@ -68,6 +68,7 @@ import {
   BattleId,
   BattleLineDirectionId,
   BattleObjectId,
+  BattleSpellEffectOccurrenceId,
   BattleTablePositionId,
   CombatantId,
   SpellId,
@@ -97,6 +98,7 @@ import {
   SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS,
   THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
 } from "./domain-constants.ts";
+import { BattleSpellEffectLevel } from "./spells-effective-level.ts";
 
 const BATTLE_SURFACE_SKILLS = SURFACE_SKILLS;
 const BATTLE_SURFACE_ABILITIES = ABILITIES;
@@ -1153,6 +1155,14 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       expiresAt: BattleRuntimeObjectSchema,
     }),
     Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("ongoingSpellEnd"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      rangeFeet: MovementFeet,
+    }),
+    Schema.Struct({
       access: ClassCantripSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,
       procedure: Schema.Literal("heldLightHurl"),
@@ -2199,6 +2209,51 @@ const BattleSavingThrowFlatBonusProjectionSchema = Schema.Struct({
   bonus: Schema.Number,
 });
 
+const BattleLightEmitterAttachmentSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("combatant"),
+    combatantId: CombatantId,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("object"),
+    objectId: BattleObjectId,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("dancingLight"),
+    lightId: BattleDancingLightId,
+    positionId: BattleTablePositionId,
+    form: Schema.Literal("separateLights", "combinedMediumForm"),
+  }),
+);
+
+const BattleOngoingSpellEffectRefSchema = Schema.Struct({
+  kind: Schema.Literal("spellLightEmitter"),
+  sourceEffectId: BattleSpellEffectOccurrenceId,
+});
+
+const BattleOngoingSpellTargetSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("combatant"),
+    combatantId: CombatantId,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("object"),
+    objectId: BattleObjectId,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("magicalEffect"),
+    effect: BattleOngoingSpellEffectRefSchema,
+  }),
+);
+
+const BattleOngoingSpellTargetWithinRangeFactSchema = Schema.Struct({
+  kind: Schema.Literal("ongoingSpellTargetWithinRange"),
+  casterId: CombatantId,
+  spellId: Schema.String,
+  target: BattleOngoingSpellTargetSchema,
+  rangeFeet: MovementFeet,
+});
+
 export const BattleHoleSchema = Schema.Union(
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2234,6 +2289,16 @@ export const BattleHoleSchema = Schema.Union(
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("objectTargetChoice"),
     requiresTableSpatialFact: Schema.Literal(true),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("ongoingSpellTargetChoice"),
+    label: Schema.String,
+    requiresTableSpatialFact: Schema.Literal(true),
+    casterId: CombatantId,
+    spellId: Schema.String,
+    rangeFeet: MovementFeet,
+    choices: Schema.Array(BattleOngoingSpellTargetSchema),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2768,6 +2833,19 @@ export const BattleHoleSchema = Schema.Union(
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
+    kind: Schema.Literal("spellcastingAbilityCheck"),
+    label: Schema.String,
+    dc: DifficultyClass,
+    spellcastingAbilityCheck: Schema.Struct({
+      casterId: CombatantId,
+      sourceSpellId: Schema.String,
+      target: BattleOngoingSpellTargetSchema,
+      effect: BattleOngoingSpellEffectRefSchema,
+      contestedSpellLevel: BattleSpellEffectLevel,
+    }),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
     kind: Schema.Literal("grappleOutcome"),
     label: Schema.String,
     actorId: CombatantId,
@@ -3059,6 +3137,48 @@ type BattleFillEncoded =
             readonly casterCanSeeObject: true;
           }
       )[];
+    }
+  | {
+      readonly kind: "ongoingSpellTargetChoice";
+      readonly holeId: string;
+      readonly value:
+        | {
+            readonly kind: "combatant";
+            readonly combatantId: string;
+          }
+        | {
+            readonly kind: "object";
+            readonly objectId: string;
+          }
+        | {
+            readonly kind: "magicalEffect";
+            readonly effect: {
+              readonly kind: "spellLightEmitter";
+              readonly sourceEffectId: string;
+            };
+          };
+      readonly spatialFacts: readonly {
+        readonly kind: "ongoingSpellTargetWithinRange";
+        readonly casterId: string;
+        readonly spellId: string;
+        readonly target:
+          | {
+              readonly kind: "combatant";
+              readonly combatantId: string;
+            }
+          | {
+              readonly kind: "object";
+              readonly objectId: string;
+            }
+          | {
+              readonly kind: "magicalEffect";
+              readonly effect: {
+                readonly kind: "spellLightEmitter";
+                readonly sourceEffectId: string;
+              };
+            };
+        readonly rangeFeet: number;
+      }[];
     }
   | {
       readonly kind: "objectContactTargets";
@@ -3666,6 +3786,12 @@ export const BattleFillSchema: Schema.Schema<
           }),
         ),
       ),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("ongoingSpellTargetChoice"),
+      holeId: BattleHoleIdSchema,
+      value: BattleOngoingSpellTargetSchema,
+      spatialFacts: Schema.Array(BattleOngoingSpellTargetWithinRangeFactSchema),
     }),
     Schema.Struct({
       kind: Schema.Literal("objectContactTargets"),
@@ -4577,40 +4703,36 @@ const BattleLightEmitterEndOfTurnExpirationSchema = Schema.Struct({
   round: Schema.Number,
 });
 
+const BattleSpellLightEmitterFields = {
+  kind: Schema.Literal("spellLightEmitter"),
+  sourceSpellId: Schema.String,
+  sourceCombatantId: CombatantId,
+  attachment: BattleLightEmitterAttachmentSchema,
+  emission: Schema.Union(
+    BattleDimLightEmissionSchema,
+    Schema.Struct({
+      kind: Schema.Literal("brightAndDim"),
+      brightRadiusFeet: MovementFeet,
+      dimAdditionalFeet: MovementFeet,
+    }),
+  ),
+  opaqueCoverInteraction: Schema.Union(
+    Schema.Struct({ kind: Schema.Literal("blocksEmission") }),
+    Schema.Struct({ kind: Schema.Literal("doesNotBlockEmission") }),
+  ),
+  expiresAt: BattleRuntimeObjectSchema,
+};
+
 const BattleLightEmitterSchema = Schema.Union(
   Schema.Struct({
-    kind: Schema.Literal("spellLightEmitter"),
-    sourceSpellId: Schema.String,
-    sourceCombatantId: CombatantId,
-    attachment: Schema.Union(
-      Schema.Struct({
-        kind: Schema.Literal("combatant"),
-        combatantId: CombatantId,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("object"),
-        objectId: BattleObjectId,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("dancingLight"),
-        lightId: BattleDancingLightId,
-        positionId: BattleTablePositionId,
-        form: Schema.Literal("separateLights", "combinedMediumForm"),
-      }),
-    ),
-    emission: Schema.Union(
-      BattleDimLightEmissionSchema,
-      Schema.Struct({
-        kind: Schema.Literal("brightAndDim"),
-        brightRadiusFeet: MovementFeet,
-        dimAdditionalFeet: MovementFeet,
-      }),
-    ),
-    opaqueCoverInteraction: Schema.Union(
-      Schema.Struct({ kind: Schema.Literal("blocksEmission") }),
-      Schema.Struct({ kind: Schema.Literal("doesNotBlockEmission") }),
-    ),
-    expiresAt: BattleRuntimeObjectSchema,
+    ...BattleSpellLightEmitterFields,
+    sourceEffectId: BattleSpellEffectOccurrenceId,
+    sourceSpellLevel: BattleSpellEffectLevel,
+  }),
+  Schema.Struct({
+    ...BattleSpellLightEmitterFields,
+    sourceEffectId: Schema.optionalWith(Schema.Never, { exact: true }),
+    sourceSpellLevel: Schema.optionalWith(Schema.Never, { exact: true }),
   }),
   Schema.Struct({
     kind: Schema.Literal("objectInvisibleRevealLightEmitter"),

@@ -297,6 +297,14 @@ export function supportedSpellInvocationRef(
       procedure: "objectLight",
     };
   }
+  if (invocation.procedure === "ongoingSpellEnd") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "ongoingSpellEnd",
+    };
+  }
   if (invocation.procedure === "dancingLightsSeparateCast") {
     return {
       tag: "cantrip",

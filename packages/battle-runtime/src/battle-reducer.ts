@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ongoing-spell-ending
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-mirror-image-hit-interception
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode
@@ -145,6 +146,7 @@ import {
 import type { ZeroHpLifecycle } from "./zero-hp-lifecycle.ts";
 
 import { type DamageAmountByTypeEntry } from "./battle-reducer/damage-helpers.ts";
+import type { BattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
 import {
   BATTLE_ATTACK_RANGE_BANDS,
   type BattleD20RollModifierDieSize,
@@ -1234,13 +1236,25 @@ export type BattleLightEmitterOpaqueCoverInteraction =
   | {
       readonly kind: "doesNotBlockEmission";
     };
-export type BattleSpellLightEmitter = BattleSpellEffectBase & {
+type BattleSpellLightEmitterBase = BattleSpellEffectBase & {
   readonly kind: "spellLightEmitter";
   readonly attachment: BattleLightEmitterAttachment;
   readonly emission: BattleLightEmission;
   readonly opaqueCoverInteraction: BattleLightEmitterOpaqueCoverInteraction;
   readonly expiresAt: BattleActiveEffectExpiration;
 };
+export type BattleTrackedOngoingSpellLightEmitter =
+  BattleSpellLightEmitterBase & {
+    readonly sourceEffectId: BattleSpellEffectOccurrenceId;
+    readonly sourceSpellLevel: BattleSpellEffectLevel;
+  };
+export type BattleProjectedSpellLightEmitter = BattleSpellLightEmitterBase & {
+  readonly sourceEffectId?: never;
+  readonly sourceSpellLevel?: never;
+};
+export type BattleSpellLightEmitter =
+  | BattleTrackedOngoingSpellLightEmitter
+  | BattleProjectedSpellLightEmitter;
 export type BattleObjectInvisibleRevealLightEmitter = BattleSpellEffectBase & {
   readonly kind: "objectInvisibleRevealLightEmitter";
   readonly objectId: BattleObjectId;
@@ -1253,6 +1267,30 @@ export type BattleObjectInvisibleRevealLightEmitter = BattleSpellEffectBase & {
 export type BattleLightEmitter =
   | BattleSpellLightEmitter
   | BattleObjectInvisibleRevealLightEmitter;
+export type BattleOngoingSpellEffectRef = {
+  readonly kind: "spellLightEmitter";
+  readonly sourceEffectId: BattleSpellEffectOccurrenceId;
+};
+export type BattleOngoingSpellTarget =
+  | {
+      readonly kind: "combatant";
+      readonly combatantId: CombatantId;
+    }
+  | {
+      readonly kind: "object";
+      readonly objectId: BattleObjectId;
+    }
+  | {
+      readonly kind: "magicalEffect";
+      readonly effect: BattleOngoingSpellEffectRef;
+    };
+export type BattleOngoingSpellTargetWithinRangeFact = {
+  readonly kind: "ongoingSpellTargetWithinRange";
+  readonly casterId: CombatantId;
+  readonly spellId: SpellRecord["id"];
+  readonly target: BattleOngoingSpellTarget;
+  readonly rangeFeet: MovementFeet;
+};
 export type BattleSpellObscurementZone = {
   readonly kind: "spellObscurementZone";
   readonly sourceSpellId: SpellRecord["id"];
@@ -3029,6 +3067,14 @@ type ObjectLightSpellInvocationBase = {
 };
 export type ObjectLightSpellInvocation = ObjectLightSpellInvocationBase &
   ObjectLightSpellSource;
+export type OngoingSpellEndSpellInvocation = {
+  readonly access: PreparedSpellAccess;
+  readonly resource: SpellSlotInvocationResource;
+  readonly procedure: "ongoingSpellEnd";
+  readonly spell: SpellRecord;
+  readonly actionCost: "magicAction";
+  readonly rangeFeet: MovementFeet;
+};
 export type HeldLightHurlSpellInvocation = DamageSpellSource & {
   readonly access: ClassCantripSpellAccess;
   readonly resource: NoSpellInvocationResource;
@@ -3265,6 +3311,7 @@ export function spellAttackDamagePayloadIsResolved(
 export type SupportedSpellInvocation =
   | HeldLightSpellInvocation
   | ObjectLightSpellInvocation
+  | OngoingSpellEndSpellInvocation
   | HeldLightHurlSpellInvocation
   | DancingLightsSpellInvocation
   | SpellCreatedHeldObjectSpellInvocation
@@ -3709,6 +3756,7 @@ type AnySupportedDamageSpellInvocation = Exclude<
       | "featherFallMitigation"
       | "heldLight"
       | "objectLight"
+      | "ongoingSpellEnd"
       | "spellCreatedHeldObject"
       | "spellCreatedHeldObjectReEvoke"
       | "dancingLightsSeparateCast"
@@ -5231,6 +5279,21 @@ export type BattleAbilityCheckHole = {
   readonly rollMode?: AttackRollMode;
   readonly requiresTableSpatialFact?: boolean;
 };
+export type BattleSpellcastingAbilityCheckHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "spellcastingAbilityCheck";
+  readonly label: string;
+  readonly dc: DifficultyClass;
+  readonly spellcastingAbilityCheck: {
+    readonly casterId: CombatantId;
+    readonly sourceSpellId: SpellRecord["id"];
+    readonly target: BattleOngoingSpellTarget;
+    readonly effect: BattleOngoingSpellEffectRef;
+    readonly contestedSpellLevel: BattleSpellEffectLevel;
+  };
+  readonly requiresTableSpatialFact?: boolean;
+};
 export type BattleGrappleOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -5300,6 +5363,17 @@ export type BattleAttackDamageDispositionHole = {
   readonly targetId: CombatantId;
   readonly choices: readonly BattleAttackDamageDisposition[];
 };
+export type BattleOngoingSpellTargetChoiceHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "ongoingSpellTargetChoice";
+  readonly label: string;
+  readonly requiresTableSpatialFact: true;
+  readonly casterId: CombatantId;
+  readonly spellId: SpellRecord["id"];
+  readonly rangeFeet: MovementFeet;
+  readonly choices: readonly BattleOngoingSpellTarget[];
+};
 export type BattleHole =
   | BattleTargetChoiceHole
   | BattleSpellCastReactionFactsHole
@@ -5355,10 +5429,12 @@ export type BattleHole =
   | BattleReactionDecisionHole
   | BattleMovementHole
   | BattleAbilityCheckHole
+  | BattleSpellcastingAbilityCheckHole
   | BattleGrappleOutcomeHole
   | BattleShoveOutcomeHole
   | BattleSanctuaryInterdictionOutcomeHole
-  | BattleAttackDamageDispositionHole;
+  | BattleAttackDamageDispositionHole
+  | BattleOngoingSpellTargetChoiceHole;
 
 export type BattleAttackRollResult = AttackRollResult & {
   readonly activatedOngoingFeatureUnitId?: UnitRecord["id"];
@@ -5485,6 +5561,12 @@ export type BattleFill =
             | "spellObjectTargetSight";
         }
       >[];
+    }
+  | {
+      readonly kind: "ongoingSpellTargetChoice";
+      readonly holeId: BattleHoleId;
+      readonly value: BattleOngoingSpellTarget;
+      readonly spatialFacts: readonly BattleOngoingSpellTargetWithinRangeFact[];
     }
   | {
       readonly kind: "objectContactTargets";

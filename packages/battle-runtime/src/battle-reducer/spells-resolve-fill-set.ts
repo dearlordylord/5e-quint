@@ -25,6 +25,7 @@ import {
   type BattleSpellCastReactionFact,
   type BattleMagicWeaponTargetItemFact,
   type BattleObjectContactTargetSpatialFact,
+  type BattleOngoingSpellTargetWithinRangeFact,
   type SelfTransformationModeKind,
   type BattleTargetSpatialFact,
   type SpellTargeting,
@@ -145,6 +146,20 @@ export type SpellFillSet =
             readonly value: BattleMagicWeaponTargetItemFact;
           }
         | undefined;
+      readonly ongoingSpellTarget:
+        | {
+            readonly holeId: BattleHoleId;
+            readonly target: Extract<
+              BattleFill,
+              { readonly kind: "ongoingSpellTargetChoice" }
+            >["value"];
+            readonly spatialFacts: readonly BattleOngoingSpellTargetWithinRangeFact[];
+          }
+        | undefined;
+      readonly ongoingSpellAbilityChecks: readonly Extract<
+        BattleFill,
+        { readonly kind: "abilityCheck" }
+      >[];
       readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
       readonly reactionSpellTargetFacts: readonly SpellCastReactionFact[];
       readonly targetAllocation:
@@ -262,6 +277,20 @@ export function spellFillSet(
         readonly value: BattleMagicWeaponTargetItemFact;
       }
     | undefined;
+  let ongoingSpellTarget:
+    | {
+        readonly holeId: BattleHoleId;
+        readonly target: Extract<
+          BattleFill,
+          { readonly kind: "ongoingSpellTargetChoice" }
+        >["value"];
+        readonly spatialFacts: readonly BattleOngoingSpellTargetWithinRangeFact[];
+      }
+    | undefined;
+  const ongoingSpellAbilityChecks: Extract<
+    BattleFill,
+    { readonly kind: "abilityCheck" }
+  >[] = [];
   let targetSpatialFacts: readonly BattleTargetSpatialFact[] = [];
   let reactionSpellTargetFacts: readonly SpellCastReactionFact[] = [];
   let reactionSpellTargetFactsFilled = false;
@@ -502,6 +531,27 @@ export function spellFillSet(
             fact.kind === "spellObjectTarget" ||
             fact.kind === "spellObjectTargetSight",
         ),
+      };
+      continue;
+    }
+
+    if (fill.kind === "ongoingSpellTargetChoice") {
+      if (invocation.procedure !== "ongoingSpellEnd") {
+        return {
+          tag: "invalid",
+          message: "Ongoing spell target fill does not match this spell act.",
+        };
+      }
+      if (ongoingSpellTarget !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Ongoing spell target was filled twice.",
+        };
+      }
+      ongoingSpellTarget = {
+        holeId: fill.holeId,
+        target: fill.value,
+        spatialFacts: fill.spatialFacts,
       };
       continue;
     }
@@ -1305,6 +1355,24 @@ export function spellFillSet(
       continue;
     }
 
+    if (
+      fill.kind === "abilityCheck" &&
+      invocation.procedure === "ongoingSpellEnd"
+    ) {
+      if (
+        ongoingSpellAbilityChecks.some(
+          (candidate) => candidate.holeId === fill.holeId,
+        )
+      ) {
+        return {
+          tag: "invalid",
+          message: "Ongoing spell ending ability check was filled twice.",
+        };
+      }
+      ongoingSpellAbilityChecks.push(fill);
+      continue;
+    }
+
     return {
       tag: "invalid",
       message: `Fill ${fill.kind} does not match the spell replay holes.`,
@@ -1319,6 +1387,8 @@ export function spellFillSet(
     objectContactSavingThrowOutcome,
     objectDropResolution,
     magicWeaponTargetItem,
+    ongoingSpellTarget,
+    ongoingSpellAbilityChecks,
     targetSpatialFacts,
     reactionSpellTargetFacts,
     targetAllocation,
@@ -1359,6 +1429,8 @@ export function spellFillSetContainsOnlySpellCastReactionFacts(
     fillSet.objectContactSavingThrowOutcome === undefined &&
     fillSet.objectDropResolution === undefined &&
     fillSet.magicWeaponTargetItem === undefined &&
+    fillSet.ongoingSpellTarget === undefined &&
+    fillSet.ongoingSpellAbilityChecks.length === 0 &&
     fillSet.targetSpatialFacts.length === 0 &&
     fillSet.targetAllocation === undefined &&
     fillSet.targetList === undefined &&

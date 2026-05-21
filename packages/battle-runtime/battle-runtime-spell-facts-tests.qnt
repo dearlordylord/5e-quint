@@ -110,6 +110,7 @@ module battleRuntimeSpellFactsTests {
         attachment: CombatantLightEmitter({ actor: Goblin }),
         emission: DimLightEmission({ radiusFeet: 10 }),
         opaqueCoverInteraction: LightEmitterDoesNotBlockOpaqueCover,
+        ongoingSpellTracking: UntrackedSpellLightEmitter,
         expiresAt: EndOfTurnLightEmitterExpiration({ actor: Fighter, round: 2 }),
       })),
       assert(spellAttackDamageSupportsObjectTarget(StarryWispSpellAttack)),

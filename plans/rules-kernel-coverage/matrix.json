@@ -24,13 +24,13 @@
     "obligations[].profiles": "Derived from profileObligations by obligation id; authored obligations.jsonl rows must not contain profiles."
   },
   "battleHoleFrontierSummary": {
-    "total": 94,
+    "total": 97,
     "bySubject": {
-      "battle-hole-family": 58,
-      "battle-fill-kind": 36
+      "battle-hole-family": 60,
+      "battle-fill-kind": 37
     },
     "byClassification": {
-      "semantic-frontier": 71,
+      "semantic-frontier": 74,
       "deterministic-boundary-projection": 0,
       "table-owned-fact": 23,
       "unsupported-dead-branch": 0
@@ -2708,7 +2708,7 @@
       "fillKind": "movement",
       "followUpTaskIds": [],
       "id": "movement",
-      "reason": "Movement fills spend movement budget and carry Opportunity Attack frontier facts covered by the movement obligation. The areaDifficultTerrain, jumpMovementReplacement route/landing witness, commandApproach, commandFlee, forced-movement route, terrain, and placement facts are caller/table evidence covered by the boundary obligation; route selection and geometry stay out of rules-kernel state. Jump failed-landing Prone stays coupled to the route/landing witness, and profile joins are recorded in profile-obligations.jsonl.",
+      "reason": "Movement fills spend movement budget and carry Opportunity Attack frontier facts covered by the movement obligation. The greaseGroundDifficultTerrain, jumpMovementReplacement route/landing witness, commandApproach, commandFlee, forced-movement route, terrain, and placement facts are caller/table evidence covered by the boundary obligation; route selection and geometry stay out of rules-kernel state. Jump failed-landing Prone stays coupled to the route/landing witness, and profile joins are recorded in profile-obligations.jsonl.",
       "subject": "battle-fill-kind"
     },
     {
@@ -2925,6 +2925,42 @@
       "id": "BattleWebRestraintSavingThrowOutcomeHole",
       "reason": "Web restraint Saving Throw outcomes consume table-triggered entry or start-turn area membership witnesses and drive reducer-owned spell-condition application plus first-entry ledger updates. Automatic geometry and area membership derivation remain table-owned boundary facts.",
       "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "ongoingSpellTargetChoice",
+      "id": "BattleOngoingSpellTargetChoiceHole",
+      "reason": "Dispel Magic ongoing-spell target holes select the creature, object, or magical effect whose tracked ongoing spell effects are considered; target-within-range facts remain caller/table evidence.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "spellcastingAbilityCheck",
+      "id": "BattleSpellcastingAbilityCheckHole",
+      "reason": "Spellcasting Ability Check holes resolve Dispel Magic higher-level contested ongoing spell effects using the caller-supplied check total against the derived DC.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "fillKind": "ongoingSpellTargetChoice",
+      "followUpTaskIds": [],
+      "id": "ongoingSpellTargetChoice",
+      "reason": "Ongoing spell target fills carry the selected Dispel Magic target plus table-supplied within-range facts; the selected target scopes which tracked ongoing spell effects can end.",
+      "subject": "battle-fill-kind"
     }
   ],
   "profileObligations": [
@@ -3598,6 +3634,7 @@
     "spell.invocation-moonbeam-movable-zone",
     "spell.invocation-object-contact-damage",
     "spell.invocation-object-light",
+    "spell.invocation-ongoing-spell-ending",
     "spell.invocation-roll-modifier",
     "spell.invocation-sanctuary-targeting-interdiction",
     "spell.invocation-save-gated-condition-immunity",

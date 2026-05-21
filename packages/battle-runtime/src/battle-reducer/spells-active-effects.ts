@@ -17,7 +17,10 @@ import type {
   DamageType,
   SpellRecord,
 } from "@dnd/surface/surface/types";
-import { battleDancingLightId } from "../identity.ts";
+import {
+  battleDancingLightId,
+  battleSpellEffectOccurrenceId,
+} from "../identity.ts";
 import type {
   BattleAreaId,
   BattleLineDirectionId,
@@ -93,6 +96,7 @@ import {
   battleCreatureWithoutSpellCreatedHeldObjectHand,
   spellCreatedHeldObjectFreeHand,
 } from "./spell-created-held-object.ts";
+import { spellInvocationEffectiveSpellLevel } from "./spells-effective-level.ts";
 
 export const FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND = 60;
 export const FAERIE_FIRE_DIM_LIGHT_RADIUS_FEET = movementFeet(10);
@@ -2812,6 +2816,13 @@ export function applyObjectLightSpellEffect(
         kind: "spellLightEmitter",
         sourceSpellId: invocation.spell.id,
         sourceCombatantId: actorId,
+        sourceEffectId: objectLightSpellEffectOccurrenceId(
+          state,
+          actorId,
+          objectId,
+          invocation,
+        ),
+        sourceSpellLevel: spellInvocationEffectiveSpellLevel(invocation),
         attachment: { kind: "object", objectId },
         emission: invocation.light,
         opaqueCoverInteraction: { kind: "blocksEmission" },
@@ -2819,6 +2830,34 @@ export function applyObjectLightSpellEffect(
       },
     ],
   };
+}
+
+function objectLightSpellEffectOccurrenceId(
+  state: BattleState,
+  actorId: CombatantId,
+  objectId: BattleObjectId,
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "objectLight" }
+  >,
+) {
+  const prefix = `${actorId}:${invocation.spell.id}:${objectId}:object-light:`;
+  const nextOrdinal =
+    Math.max(
+      0,
+      ...state.lightEmitters.flatMap((emitter) => {
+        if (
+          emitter.kind !== "spellLightEmitter" ||
+          !("sourceEffectId" in emitter) ||
+          !emitter.sourceEffectId.startsWith(prefix)
+        ) {
+          return [];
+        }
+        const ordinal = Number(emitter.sourceEffectId.slice(prefix.length));
+        return Number.isInteger(ordinal) && ordinal > 0 ? [ordinal] : [];
+      }),
+    ) + 1;
+  return battleSpellEffectOccurrenceId(`${prefix}${nextOrdinal}`);
 }
 
 export function applyMarkedDamageRiderSpellEffect(

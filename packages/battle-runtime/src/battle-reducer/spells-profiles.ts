@@ -1,5 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ongoing-spell-ending
 // Spell profile predicates and projections (Cluster O). Mechanical extraction
 // from battle-reducer.ts. Aggregates: per-procedure `supported*Profile`
 // predicates, spell-specific authoring bodies (faerieFire, animalFriendship,
@@ -85,6 +86,12 @@ import {
   supportedPreparedSpellAttackProfile,
 } from "./spells-profiles-attack-damage.ts";
 export * from "./spells-profiles-attack-damage.ts";
+
+const DISPEL_MAGIC_TARGET_KINDS = [
+  "creature",
+  "object",
+  "magical_effect",
+] as const;
 
 type OngoingOperationEffect = Extract<
   SpellRecord["mechanics"],
@@ -426,6 +433,12 @@ export function supportedSpellActs(
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedObjectLightSpellProfile(spell, spellcasting.spellSlots),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      supportedPreparedOngoingSpellEndSpellProfile(
+        spell,
+        spellcasting.spellSlots,
+      ),
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedSpellCreatedHeldObjectProfile(
@@ -899,6 +912,113 @@ function isTouchedObjectLightDirectPhase(
     phase.attachment.value.filter === undefined &&
     phase.effects?.some((effect) => effect.kind === "emit_light") === true
   );
+}
+
+export function supportedPreparedOngoingSpellEndSpellProfile(
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  const range =
+    spell.mechanics.family === "activation" ? spell.mechanics.range : null;
+  const rangeFeet =
+    range?.kind === "point" && typeof range.feet === "number"
+      ? range.feet
+      : null;
+  if (
+    spell.mechanics.family !== "activation" ||
+    range === null ||
+    spell.mechanics.level !== 3 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    rangeFeet !== 120 ||
+    spell.mechanics.duration.kind !== "instantaneous" ||
+    spell.mechanics.components.v !== true ||
+    spell.mechanics.components.s !== true ||
+    spell.mechanics.components.m !== false
+  ) {
+    return [];
+  }
+  const directPhase = spell.mechanics.phases[0];
+  const abilityCheckPhase = spell.mechanics.phases[1];
+  if (
+    spell.mechanics.phases.length !== 2 ||
+    directPhase === undefined ||
+    abilityCheckPhase === undefined ||
+    !isOngoingSpellEndDirectPhase(directPhase) ||
+    !isOngoingSpellEndAbilityCheckPhase(abilityCheckPhase) ||
+    ongoingSpellEndTargetHoleId(directPhase) !==
+      ongoingSpellEndTargetHoleId(abilityCheckPhase)
+  ) {
+    return [];
+  }
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] =>
+    Number(slot.spellLevel) < spell.mechanics.level
+      ? []
+      : [
+          {
+            access: { tag: "prepared" },
+            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+            procedure: "ongoingSpellEnd",
+            spell,
+            actionCost: "magicAction",
+            rangeFeet: movementFeet(rangeFeet),
+          },
+        ],
+  );
+}
+
+function isOngoingSpellEndDirectPhase(phase: ActivationPhase): boolean {
+  return (
+    phase.kind === "direct" &&
+    isOngoingSpellEndTargetAttachment(phase.attachment) &&
+    phase.effects?.length === 1 &&
+    phase.effects[0]?.kind === "end_ongoing_spells" &&
+    phase.effects[0]?.maxSpellLevel === "caster_slot_level"
+  );
+}
+
+function isOngoingSpellEndAbilityCheckPhase(phase: ActivationPhase): boolean {
+  return (
+    phase.kind === "ability_check_gate" &&
+    String(phase.ability) === "caster_spellcasting_ability" &&
+    phase.dc === 10 &&
+    phase.autoSuccessIfCasterSlotGte === "target_spell_level" &&
+    phase.onPass.kind === "end_ongoing_spells" &&
+    phase.onPass.maxSpellLevel === "contested_spell_level" &&
+    phase.onFail === undefined &&
+    isOngoingSpellEndTargetAttachment(phase.attachment)
+  );
+}
+
+function isOngoingSpellEndTargetAttachment(
+  attachment: Extract<
+    ActivationPhase,
+    { readonly attachment: unknown }
+  >["attachment"],
+): boolean {
+  const targetKinds =
+    attachment.kind === "hole" &&
+    attachment.value.kind === "target" &&
+    "targetKinds" in attachment.value.selection
+      ? attachment.value.selection.targetKinds
+      : undefined;
+  return (
+    attachment.kind === "hole" &&
+    attachment.value.kind === "target" &&
+    attachment.value.selection.mode === "one" &&
+    targetKinds !== undefined &&
+    sameStringSet(targetKinds, DISPEL_MAGIC_TARGET_KINDS)
+  );
+}
+
+function ongoingSpellEndTargetHoleId(phase: ActivationPhase): string | null {
+  if (phase.kind !== "direct" && phase.kind !== "ability_check_gate") {
+    return null;
+  }
+  const attachment = phase.attachment;
+  return attachment.kind === "hole" &&
+    isOngoingSpellEndTargetAttachment(attachment)
+    ? attachment.holeId
+    : null;
 }
 
 export function supportedCantripMakeStableSpellProfile(

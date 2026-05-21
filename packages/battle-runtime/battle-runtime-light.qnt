@@ -86,9 +86,19 @@ module battleRuntimeLight {
 
   pure def lightDurationTicks: int = 600
 
+  pure def lightObjectSourceEffectId: int = 1
+
+  pure def lightSpellLevel: int = 0
+
   pure def continualFlameBrightLightRadiusFeet: int = 20
 
   pure def continualFlameDimLightAdditionalFeet: int = 20
+
+  pure def continualFlameSourceEffectId: int = 2
+
+  pure def alternateContinualFlameSourceEffectId: int = 3
+
+  pure def continualFlameSpellLevel: int = 2
 
   pure def dancingLightsDimLightRadiusFeet: int = 10
 
@@ -122,6 +132,7 @@ module battleRuntimeLight {
       attachment: DancingLightEmitter({ light: light, position: position, combined: combined }),
       emission: DimLightEmission({ radiusFeet: dancingLightsDimLightRadiusFeet }),
       opaqueCoverInteraction: LightEmitterDoesNotBlockOpaqueCover,
+      ongoingSpellTracking: UntrackedSpellLightEmitter,
       expiresAt: ConcentrationLightEmitterExpiration({ actor: Fighter }),
     })
 
@@ -224,6 +235,10 @@ module battleRuntimeLight {
         dimAdditionalFeet: lightDimLightAdditionalFeet,
       }),
       opaqueCoverInteraction: LightEmitterBlocksOpaqueCover,
+      ongoingSpellTracking: TrackedOngoingSpellLightEmitter({
+        sourceEffectId: lightObjectSourceEffectId,
+        sourceSpellLevel: lightSpellLevel,
+      }),
       expiresAt: DurationLightEmitterExpiration({ durationTicks: lightDurationTicks }),
     })
 
@@ -237,6 +252,10 @@ module battleRuntimeLight {
         dimAdditionalFeet: continualFlameDimLightAdditionalFeet,
       }),
       opaqueCoverInteraction: LightEmitterBlocksOpaqueCover,
+      ongoingSpellTracking: TrackedOngoingSpellLightEmitter({
+        sourceEffectId: continualFlameSourceEffectId,
+        sourceSpellLevel: continualFlameSpellLevel,
+      }),
       expiresAt: UntilDispelledLightEmitterExpiration,
     })
 
@@ -361,6 +380,97 @@ module battleRuntimeLight {
       | ObjectInvisibleRevealLightEmitter(_) => true
     })
 
+  pure def dispelMagicEndsTrackedOngoingSpell(
+    slotLevel: int,
+    successfulCheckEffectIds: Set[int],
+    sourceEffectId: int,
+    sourceSpellLevel: int,
+  ): bool =
+    sourceSpellLevel <= slotLevel or successfulCheckEffectIds.contains(sourceEffectId)
+
+  pure def dispelMagicCheckSucceeds(checkTotal: int, sourceSpellLevel: int): bool =
+    checkTotal >= 10 + sourceSpellLevel
+
+  pure def dispelMagicSuccessfulAbilityCheckEffectIds(
+    sourceEffectId: int,
+    checkTotal: int,
+    sourceSpellLevel: int,
+  ): Set[int] =
+    if (dispelMagicCheckSucceeds(checkTotal, sourceSpellLevel)) Set(sourceEffectId) else Set()
+
+  pure def spellLightEmitterWithOngoingSpellTracking(
+    emitter: LightEmitter,
+    sourceEffectId: int,
+    sourceSpellLevel: int,
+  ): LightEmitter =
+    match emitter {
+      | SpellLightEmitter(data) => SpellLightEmitter({
+          ...data,
+          ongoingSpellTracking: TrackedOngoingSpellLightEmitter({
+            sourceEffectId: sourceEffectId,
+            sourceSpellLevel: sourceSpellLevel,
+          }),
+        })
+      | ObjectInvisibleRevealLightEmitter(_) => emitter
+    }
+
+  pure def dispelMagicOngoingSpellTrackingHasSourceEffectId(
+    tracking: OngoingSpellTracking,
+    sourceEffectId: int,
+  ): bool =
+    match tracking {
+      | UntrackedSpellLightEmitter => false
+      | TrackedOngoingSpellLightEmitter(data) => data.sourceEffectId == sourceEffectId
+    }
+
+  pure def dispelMagicEndsOngoingSpellTracking(
+    tracking: OngoingSpellTracking,
+    slotLevel: int,
+    successfulCheckEffectIds: Set[int],
+  ): bool =
+    match tracking {
+      | UntrackedSpellLightEmitter => false
+      | TrackedOngoingSpellLightEmitter(data) =>
+          dispelMagicEndsTrackedOngoingSpell(
+            slotLevel,
+            successfulCheckEffectIds,
+            data.sourceEffectId,
+            data.sourceSpellLevel,
+          )
+    }
+
+  pure def dispelMagicObjectTargetLightEmitters(
+    emitters: Set[LightEmitter],
+    objectTarget: ObjectTarget,
+    slotLevel: int,
+    successfulCheckEffectIds: Set[int],
+  ): Set[LightEmitter] =
+    emitters.filter(emitter => match emitter {
+      | SpellLightEmitter(data) =>
+          data.attachment != ObjectLightEmitter({ object: objectTarget })
+          or not(dispelMagicEndsOngoingSpellTracking(
+            data.ongoingSpellTracking,
+            slotLevel,
+            successfulCheckEffectIds,
+          ))
+      | ObjectInvisibleRevealLightEmitter(_) => true
+    })
+
+  pure def dispelMagicMagicalEffectTargetLightEmitters(
+    emitters: Set[LightEmitter],
+    sourceEffectId: int,
+    slotLevel: int,
+    successfulCheckEffectIds: Set[int],
+  ): Set[LightEmitter] =
+    emitters.filter(emitter => match emitter {
+      | SpellLightEmitter(data) =>
+          not(
+            dispelMagicOngoingSpellTrackingHasSourceEffectId(data.ongoingSpellTracking, sourceEffectId) and
+            dispelMagicEndsOngoingSpellTracking(data.ongoingSpellTracking, slotLevel, successfulCheckEffectIds)
+          )
+      | ObjectInvisibleRevealLightEmitter(_) => true
+    })
+
   pure def activeEffectsWithoutProduceFlameHeldLight(effects: Set[ActiveEffect]): Set[ActiveEffect] =
     effects.filter(effect => match effect {
       | ProduceFlameHeldLight(_) => false
@@ -383,6 +493,7 @@ module battleRuntimeLight {
         dimAdditionalFeet: produceFlameDimLightAdditionalFeet,
       }),
       opaqueCoverInteraction: LightEmitterDoesNotBlockOpaqueCover,
+      ongoingSpellTracking: UntrackedSpellLightEmitter,
       expiresAt: DurationLightEmitterExpiration({ durationTicks: durationTicks }),
     })
 
@@ -461,6 +572,7 @@ module battleRuntimeLight {
         dimAdditionalFeet: flameBladeDimLightAdditionalFeet,
       }),
       opaqueCoverInteraction: LightEmitterDoesNotBlockOpaqueCover,
+      ongoingSpellTracking: UntrackedSpellLightEmitter,
       expiresAt: ConcentrationLightEmitterExpiration({ actor: Fighter }),
     })
 
@@ -485,6 +597,7 @@ module battleRuntimeLight {
             attachment: CombatantLightEmitter({ actor: actor }),
             emission: DimLightEmission({ radiusFeet: faerieFireDimLightRadiusFeet }),
             opaqueCoverInteraction: LightEmitterDoesNotBlockOpaqueCover,
+            ongoingSpellTracking: UntrackedSpellLightEmitter,
             expiresAt: ConcentrationLightEmitterExpiration({ actor: Fighter }),
           }))
         | _ => Set()
@@ -501,6 +614,7 @@ module battleRuntimeLight {
         dimAdditionalFeet: 0,
       }),
       opaqueCoverInteraction: LightEmitterDoesNotBlockOpaqueCover,
+      ongoingSpellTracking: UntrackedSpellLightEmitter,
       expiresAt: ConcentrationLightEmitterExpiration({ actor: Fighter }),
     })
 
@@ -520,6 +634,7 @@ module battleRuntimeLight {
           attachment: ObjectLightEmitter({ object: data.object }),
           emission: DimLightEmission({ radiusFeet: faerieFireDimLightRadiusFeet }),
           opaqueCoverInteraction: LightEmitterDoesNotBlockOpaqueCover,
+          ongoingSpellTracking: UntrackedSpellLightEmitter,
           expiresAt: ConcentrationLightEmitterExpiration({ actor: data.source }),
         })
     })

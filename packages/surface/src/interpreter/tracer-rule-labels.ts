@@ -1010,10 +1010,13 @@ export function capitalizeWords(value: string): string {
 }
 
 export function describeAbilityCheck(
-  ability: Ability,
+  ability: Ability | "caster_spellcasting_ability",
   skill: Skill | undefined,
 ): string {
-  const abilityLabel = ability.toUpperCase();
+  const abilityLabel =
+    ability === "caster_spellcasting_ability"
+      ? "SPELLCASTING"
+      : ability.toUpperCase();
   return skill === undefined ? abilityLabel : `${abilityLabel} (${skill})`;
 }
 

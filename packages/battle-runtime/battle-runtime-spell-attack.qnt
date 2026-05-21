@@ -610,6 +610,7 @@ module battleRuntimeSpellAttack {
           attachment: attachment,
           emission: DimLightEmission({ radiusFeet: 10 }),
           opaqueCoverInteraction: LightEmitterDoesNotBlockOpaqueCover,
+          ongoingSpellTracking: UntrackedSpellLightEmitter,
           expiresAt: EndOfTurnLightEmitterExpiration({
             actor: source,
             round: endOfCasterNextTurnExpiresAtRound(state, source),
@@ -629,6 +630,7 @@ module battleRuntimeSpellAttack {
           attachment: attachment,
           emission: DimLightEmission({ radiusFeet: 10 }),
           opaqueCoverInteraction: LightEmitterDoesNotBlockOpaqueCover,
+          ongoingSpellTracking: UntrackedSpellLightEmitter,
           expiresAt: ConcentrationLightEmitterExpiration({ actor: source }),
         })
     }

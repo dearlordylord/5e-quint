@@ -107,6 +107,8 @@ export const continualFlameUnitId = "continual_flame";
 
 export const counterspellUnitId = "counterspell";
 
+export const dispelMagicUnitId = "dispel_magic";
+
 export const entangleUnitId = "entangle";
 
 export const eldritchBlastUnitId = "eldritch_blast";
