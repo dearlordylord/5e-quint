@@ -399,8 +399,12 @@ describe("MCP server route", () => {
           equipment: {
             ...build.equipment,
             loadout: {
-              armor: build.equipment.loadout.armor,
-              shield: build.equipment.loadout.shield,
+              ...(build.equipment.loadout.armor === undefined
+                ? {}
+                : { armor: build.equipment.loadout.armor }),
+              ...(build.equipment.loadout.shield === undefined
+                ? {}
+                : { shield: build.equipment.loadout.shield }),
             },
           },
         },

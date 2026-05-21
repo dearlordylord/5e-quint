@@ -494,6 +494,13 @@ export function characterResourceState(
   if (!activationResourceIsLimited(resource)) {
     throw new Error("Character battle resource has an unsupported cap shape.");
   }
+  if (input.usesRemaining !== undefined) {
+    return {
+      ...useCountBase,
+      resource,
+      usesRemaining: resourceCount(input.usesRemaining),
+    };
+  }
   const defaultUsesRemaining = characterBattleResourceMaxUses({
     unit: input.unit,
     classLevels,
@@ -507,10 +514,7 @@ export function characterResourceState(
   return {
     ...useCountBase,
     resource,
-    usesRemaining:
-      input.usesRemaining === undefined
-        ? defaultUsesRemaining
-        : resourceCount(input.usesRemaining),
+    usesRemaining: defaultUsesRemaining,
   };
 }
 

@@ -22,6 +22,7 @@
     /* Linting */
     "skipLibCheck": true,
     "strict": true,
+    "exactOptionalPropertyTypes": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,

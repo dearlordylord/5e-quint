@@ -458,7 +458,10 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
     expect(result.snapshot.turn).toMatchObject({
       actionResources: [],
       spellSlotUsesThisTurn: [],
-      levelOnePlusSpellCastsThisTurn: [],
+      // Armor of Shadows expends no Spell Slot, but Mage Armor is still a
+      // level 1+ spell; casting it counts toward the per-turn leveled-spell
+      // limit that gates Quickened Spell (Sorcerer, Quickened Spell).
+      levelOnePlusSpellCastsThisTurn: [wizardId],
       quickenedLevelOnePlusSpellCastsThisTurn: [],
     });
     expect(warlock?.origin.kind).toBe("character");

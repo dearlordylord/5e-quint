@@ -287,6 +287,7 @@ function characterListRow(
   session: CharacterSession,
 ): Either.Either<CharacterSessionRow, string> {
   if (session.tag === "available") {
+    const spellSlots = characterBattleSpellSlots(session);
     return Either.right({
       characterId,
       status: session.tag,
@@ -297,9 +298,7 @@ function characterListRow(
         maximum: characterSheetHitPointMaximum(session),
         state: session.hitPoints,
       },
-      ...(characterBattleSpellSlots(session) === undefined
-        ? {}
-        : { spellSlots: characterBattleSpellSlots(session) }),
+      ...(spellSlots === undefined ? {} : { spellSlots }),
     });
   }
 

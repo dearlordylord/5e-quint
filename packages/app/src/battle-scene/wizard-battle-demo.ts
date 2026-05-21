@@ -199,7 +199,7 @@ type AreaSpellPlan = {
 
 type WizardBattleDemoBuilder = {
   state: BattleState
-  startedTurnActorId?: CombatantId
+  startedTurnActorId: CombatantId | undefined
   readonly steps: Array<WizardBattleDemoStep>
   readonly objectIgnitions: Array<BattleObjectIgnitionOutcome>
 }
@@ -394,6 +394,7 @@ function requireWizardBattleDemo(): WizardBattleDemo {
       [fireballUnitId]: fireball,
       [shatterUnitId]: shatter
     }),
+    startedTurnActorId: undefined,
     steps: [],
     objectIgnitions: []
   }
