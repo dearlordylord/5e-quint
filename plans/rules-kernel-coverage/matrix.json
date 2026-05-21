@@ -8,7 +8,7 @@
       "shared-algebras": 1,
       "battle": 54,
       "character-creation": 8,
-      "character-sheet": 2,
+      "character-sheet": 3,
       "character-battle": 1
     },
     "byStatus": {
@@ -1670,7 +1670,6 @@
     },
     {
       "followUpTaskIds": [
-        "RKBC-SHEET-HP-REST-HIT-DICE",
         "RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS",
         "RKBC-SHEET-FEATURE-RESOURCES"
       ],
@@ -1685,7 +1684,7 @@
       ],
       "status": "needs-qnt-owner",
       "surfaceEvidence": [],
-      "title": "Audit current Character Sheet HP, rest, spell-slot, pact-slot, Hit Dice, and feature-resource transitions into QNT-connected obligations"
+      "title": "Audit remaining Character Sheet spell-slot, pact-slot, and feature-resource rest/resource transitions into QNT-connected obligations"
     },
     {
       "followUpTaskIds": [
@@ -1785,6 +1784,36 @@
       "status": "covered",
       "surfaceEvidence": [],
       "title": "Shared resolved positive-Hit-Point damage procedure and its TS parity route through consuming reducers"
+    },
+    {
+      "id": "SHEET.HP_REST_HIT_DICE.TRANSITIONS",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "deterministicReplayRationale": "Character Sheet HP/rest/Hit Dice replay is a closed fixture covering the named gate and benefit cases: Short Rest and Long Rest start HP gates, 16-hour Long Rest calendar wait rejection, Short Rest and Long Rest duration-proof rejections at the benefit boundary, one-die and two-die sequential Short Rest Hit Point Dice spends, interrupted Short Rest no-benefit, Long Rest HP/Hit Point Dice/max-HP-reduction reset, interrupted Long Rest before/after the one-hour Short Rest benefit threshold, and Long Rest physical-exertion threshold rejection. Random interleavings are not the risk at this sheet boundary.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/character-sheet-runtime/src/hp-rest-hit-dice.mbt.test.ts",
+          "qntSpecPath": "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/hit-point-recovery.qnt",
+        "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt"
+      ],
+      "runtime": "character-sheet",
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/index.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Playing-the-Game.md#Healing",
+        ".references/srd-5.2.1/Rules-Glossary.md#Short Rest",
+        ".references/srd-5.2.1/Rules-Glossary.md#Long Rest",
+        ".references/srd-5.2.1/Character-Creation.md#Hit Points and Hit Point Dice"
+      ],
+      "title": "Character Sheet Hit Point healing, Short Rest, Long Rest, interruption, and Hit Point Dice transitions"
     }
   ],
   "battleHoleFrontier": [

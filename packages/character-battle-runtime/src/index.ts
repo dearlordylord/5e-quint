@@ -15,6 +15,7 @@ import {
   CHARACTER_SHEET_KNOCKED_OUT_UNCONSCIOUS,
   characterSheetCurrentHp,
   characterSheetDruidWildShapeKnownForms,
+  characterSheetHitPointMaximum,
   characterSheetPactSlots,
   characterSheetSpellSlotSourceState,
   characterSheetSpellSlots,
@@ -92,6 +93,7 @@ export type CharacterSheetBattleInitInput = Omit<
   CharacterBuildCreatureInput,
   | "build"
   | "characterId"
+  | "hitPointMaximum"
   | "currentHp"
   | "tempHp"
   | "conditions"
@@ -131,6 +133,7 @@ export function characterSheetBattleInit(input: CharacterSheetBattleInitInput) {
     unitLibrary,
     build: sheet.build,
     characterId: sheet.characterId,
+    hitPointMaximum: characterSheetHitPointMaximum(sheet),
     currentHp: characterSheetCurrentHp(sheet),
     tempHp: characterSheetTempHp(sheet),
     ...withDefinedCharacterBattleSheetState(sheet),
@@ -156,12 +159,13 @@ export function applyBattleHandoffToCharacterSheet(input: {
       "Battle handoff character identity does not match Character Sheet.",
     );
   }
-  if (input.combatant.maxHp !== input.sheet.maximumHp) {
+  const hitPointMaximum = characterSheetHitPointMaximum(input.sheet);
+  if (input.combatant.maxHp !== hitPointMaximum) {
     return characterSheetBattleHandoffIssue(
       "Battle handoff maximum HP does not match Character Sheet.",
     );
   }
-  if (input.combatant.hp > input.sheet.maximumHp) {
+  if (input.combatant.hp > hitPointMaximum) {
     return characterSheetBattleHandoffIssue(
       "Battle handoff current HP exceeds Character Sheet maximum HP.",
     );
@@ -201,6 +205,7 @@ export function applyBattleHandoffToCharacterSheet(input: {
     characterId: input.sheet.characterId,
     build: input.sheet.build,
     maximumHp: input.sheet.maximumHp,
+    hitPointMaximumReduction: input.sheet.hitPointMaximumReduction,
     currentHp: input.combatant.hp,
     tempHp: input.combatant.tempHp,
     conditions: characterSheetConditionsFromBattle(input.combatant),

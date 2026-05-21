@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE
+// KERNEL-COVERAGE: runtime-owner SHEET.HP_REST_HIT_DICE.TRANSITIONS
 import {
   ALIGNMENT_MORALITIES,
   ALIGNMENT_ORDERS,
@@ -75,6 +76,8 @@ import {
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import {
+  ELAPSED_TIME_TICKS_PER_HOUR,
+  elapsedTimeTicks,
   elapsedTimeTicksFromTimeSpanDuration,
   parseElapsedTimeTicks,
   parsePositiveElapsedTimeTicks,
@@ -199,6 +202,42 @@ const UNCANNY_METABOLISM_REST_FEATURE_TAG = "uncannyMetabolism" as const;
 const JACK_OF_ALL_TRADES_PROFICIENCY_BONUS_DIVISOR = 2;
 const LAY_ON_HANDS_POISONED_REMOVAL_COST = resourceCount(5);
 const RITUAL_ADDITIONAL_CASTING_TIME_MINUTES = 10;
+const CHARACTER_SHEET_REST_ACTIVITY_INTERRUPTION_VALUES = [
+  "rollInitiative",
+  "castNonCantripSpell",
+  "takeDamage",
+] as const;
+const characterSheetShortRestStartBrand: unique symbol = Symbol(
+  "CharacterSheetShortRestStart",
+);
+const characterSheetShortRestCompletionBrand: unique symbol = Symbol(
+  "CharacterSheetShortRestCompletion",
+);
+const characterSheetLongRestStartBrand: unique symbol = Symbol(
+  "CharacterSheetLongRestStart",
+);
+const characterSheetLongRestCompletionBrand: unique symbol = Symbol(
+  "CharacterSheetLongRestCompletion",
+);
+export type CharacterSheetRestActivityInterruption =
+  (typeof CHARACTER_SHEET_REST_ACTIVITY_INTERRUPTION_VALUES)[number];
+export type CharacterSheetShortRestInterruption =
+  CharacterSheetRestActivityInterruption;
+export type CharacterSheetLongRestInterruption =
+  | CharacterSheetRestActivityInterruption
+  | {
+      readonly tag: "physicalExertion";
+      readonly durationTicks: ElapsedTimeTicks;
+    };
+export const CHARACTER_SHEET_SHORT_REST_TICKS = elapsedTimeTicks(
+  ELAPSED_TIME_TICKS_PER_HOUR,
+);
+export const CHARACTER_SHEET_LONG_REST_BASE_TICKS = elapsedTimeTicks(
+  ELAPSED_TIME_TICKS_PER_HOUR * 8,
+);
+export const CHARACTER_SHEET_LONG_REST_WAIT_TICKS = elapsedTimeTicks(
+  ELAPSED_TIME_TICKS_PER_HOUR * 16,
+);
 type StoredClassFeatureLanguageFact =
   CharacterBuild["classFeatureLanguages"][number];
 type StoredClassFeatureLanguage = StoredClassFeatureLanguageFact["language"];
@@ -245,6 +284,7 @@ export type CharacterSheet =
       readonly characterId: CharacterSheetId;
       readonly build: SpellcastingCharacterBuild;
       readonly maximumHp: HpType;
+      readonly hitPointMaximumReduction: HpType;
       readonly hitPoints: CharacterSheetHitPoints;
       readonly conditions: readonly CharacterSheetCondition[];
       readonly spentHitDice: readonly CharacterSheetSpentHitDiePool[];
@@ -263,6 +303,7 @@ export type CharacterSheet =
       readonly characterId: CharacterSheetId;
       readonly build: NonSpellcastingCharacterBuild;
       readonly maximumHp: HpType;
+      readonly hitPointMaximumReduction: HpType;
       readonly hitPoints: CharacterSheetHitPoints;
       readonly conditions: readonly CharacterSheetCondition[];
       readonly spentHitDice: readonly CharacterSheetSpentHitDiePool[];
@@ -460,13 +501,47 @@ export type CharacterSheetFontOfMagicSorceryPointsToSpellSlotInput = {
   readonly spellLevel: SpellSlotLevel;
 };
 
-export type CharacterSheetShortRestInput = {
+export type CharacterSheetShortRestStart = {
+  readonly tag: "shortRestStarted";
   readonly sheet: CharacterSheet;
+  readonly requiredRestTicks: typeof CHARACTER_SHEET_SHORT_REST_TICKS;
+  readonly [characterSheetShortRestStartBrand]: true;
+};
+
+export type CharacterSheetShortRestStartInput = {
+  readonly sheet: CharacterSheet;
+};
+
+export type CharacterSheetShortRestCompletion = {
+  readonly tag: "shortRestCompleted";
+  readonly startedRest: CharacterSheetShortRestStart;
+  readonly restedTicks: ElapsedTimeTicks;
+  readonly [characterSheetShortRestCompletionBrand]: true;
+};
+
+export type CharacterSheetShortRestCompletionInput = {
+  readonly rest: CharacterSheetShortRestStart;
+  readonly restedTicks: ElapsedTimeTicks;
+};
+
+export type CharacterSheetShortRestInput = {
+  readonly completion: CharacterSheetShortRestCompletion;
   readonly unitLibrary: UnitCatalog;
   readonly spendHitDice?: readonly CharacterSheetHitDieSpend[];
   readonly arcaneRecovery?: {
     readonly refundSpellSlots: readonly CharacterSheetArcaneRecoverySlotRefund[];
   };
+};
+
+export type CharacterSheetShortRestInterruptionInput = {
+  readonly rest: CharacterSheetShortRestStart;
+  readonly interruption: CharacterSheetShortRestInterruption;
+};
+
+export type CharacterSheetShortRestInterruptionOutcome = {
+  readonly tag: "shortRestInterruptedNoBenefit";
+  readonly sheet: CharacterSheet;
+  readonly interruption: CharacterSheetShortRestInterruption;
 };
 
 export type CharacterSheetMagicalCunningInput = {
@@ -479,20 +554,80 @@ export type CharacterSheetWeaponMasteryReselection = {
   readonly selectedWeaponUnitIds: ReadonlyNonEmptyArray<UnitRecord["id"]>;
 };
 
-export type CharacterSheetLongRestInput =
+export type CharacterSheetLongRestStartTiming =
+  | { readonly tag: "noPriorLongRest" }
   | {
-      readonly sheet: CharacterSheet;
-      readonly unitLibrary?: never;
-      readonly weaponMasteryReselections?: never;
-      readonly druidWildShapeKnownFormReplacement?: never;
-      readonly statBlockCatalog?: never;
+      readonly tag: "elapsedSinceLastLongRest";
+      readonly elapsedTicks: ElapsedTimeTicks;
+    };
+
+export type CharacterSheetLongRestCalendarGate =
+  | {
+      readonly tag: "canStart";
+      readonly requiredWaitTicks: typeof CHARACTER_SHEET_LONG_REST_WAIT_TICKS;
     }
   | {
-      readonly sheet: CharacterSheet;
-      readonly unitLibrary: UnitCatalog;
-      readonly weaponMasteryReselections?: ReadonlyNonEmptyArray<CharacterSheetWeaponMasteryReselection>;
-      readonly druidWildShapeKnownFormReplacement?: CharacterSheetDruidWildShapeKnownFormReplacement;
-      readonly statBlockCatalog?: StatBlockCatalog;
+      readonly tag: "mustWait";
+      readonly requiredWaitTicks: typeof CHARACTER_SHEET_LONG_REST_WAIT_TICKS;
+      readonly remainingTicks: ElapsedTimeTicks;
+    };
+
+export type CharacterSheetLongRestStartInput = {
+  readonly sheet: CharacterSheet;
+  readonly timing: CharacterSheetLongRestStartTiming;
+};
+
+export type CharacterSheetLongRestStart = {
+  readonly tag: "longRestStarted";
+  readonly sheet: CharacterSheet;
+  readonly requiredRestTicks: ElapsedTimeTicks;
+  readonly nextLongRestStartWaitTicks: typeof CHARACTER_SHEET_LONG_REST_WAIT_TICKS;
+  readonly [characterSheetLongRestStartBrand]: true;
+};
+
+export type CharacterSheetLongRestCompletion = {
+  readonly tag: "longRestCompleted";
+  readonly startedRest: CharacterSheetLongRestStart;
+  readonly restedTicks: ElapsedTimeTicks;
+  readonly [characterSheetLongRestCompletionBrand]: true;
+};
+
+export type CharacterSheetLongRestCompletionInput = {
+  readonly rest: CharacterSheetLongRestStart;
+  readonly restedTicks: ElapsedTimeTicks;
+};
+
+export type CharacterSheetLongRestInput = {
+  readonly completion: CharacterSheetLongRestCompletion;
+  readonly unitLibrary: UnitCatalog;
+  readonly weaponMasteryReselections?: ReadonlyNonEmptyArray<CharacterSheetWeaponMasteryReselection>;
+  readonly druidWildShapeKnownFormReplacement?: CharacterSheetDruidWildShapeKnownFormReplacement;
+  readonly statBlockCatalog?: StatBlockCatalog;
+};
+
+export type CharacterSheetLongRestInterruptionInput = {
+  readonly rest: CharacterSheetLongRestStart;
+  readonly unitLibrary: UnitCatalog;
+  readonly restedTicks: ElapsedTimeTicks;
+  readonly interruption: CharacterSheetLongRestInterruption;
+  readonly spendHitDice?: readonly CharacterSheetHitDieSpend[];
+  readonly arcaneRecovery?: {
+    readonly refundSpellSlots: readonly CharacterSheetArcaneRecoverySlotRefund[];
+  };
+};
+
+export type CharacterSheetLongRestInterruptionOutcome =
+  | {
+      readonly tag: "longRestInterruptedNoBenefit";
+      readonly rest: CharacterSheetLongRestStart;
+      readonly interruption: CharacterSheetLongRestInterruption;
+      readonly requiredLongRestTicks: ElapsedTimeTicks;
+    }
+  | {
+      readonly tag: "longRestInterruptedWithShortRestBenefits";
+      readonly rest: CharacterSheetLongRestStart;
+      readonly interruption: CharacterSheetLongRestInterruption;
+      readonly requiredLongRestTicks: ElapsedTimeTicks;
     };
 
 export type CharacterSheetLayOnHandsInput = {
@@ -514,6 +649,7 @@ export type CharacterSheetInput = {
   readonly maximumHp: HpType;
   readonly currentHp: HpType;
   readonly tempHp: HpType;
+  readonly hitPointMaximumReduction: HpType;
   readonly conditions: readonly CharacterSheetCondition[];
   readonly unitLibrary: UnitCatalog;
   readonly positiveHpUnconscious?: CharacterSheetPositiveHpUnconscious;
@@ -868,6 +1004,7 @@ function createCharacterSheet(
       characterId: input.characterId,
       build: input.build,
       maximumHp: input.maximumHp,
+      hitPointMaximumReduction: input.hitPointMaximumReduction,
       hitPoints: hitPoints.right,
       conditions: conditions.right,
       spentHitDice: spentHitDice.right,
@@ -913,6 +1050,7 @@ function createCharacterSheet(
     characterId: input.characterId,
     build,
     maximumHp: input.maximumHp,
+    hitPointMaximumReduction: input.hitPointMaximumReduction,
     hitPoints: hitPoints.right,
     conditions: conditions.right,
     spentHitDice: spentHitDice.right,
@@ -1038,6 +1176,15 @@ export function parseCharacterSheet(
   }
   const maximumHp = parseHp(value.maximumHp);
   if (Either.isLeft(maximumHp)) return Either.left(maximumHp.left);
+  if (!Object.hasOwn(value, "hitPointMaximumReduction")) {
+    return characterSheetIssue(
+      "Character Sheet Hit Point maximum reduction is required.",
+    );
+  }
+  const hitPointMaximumReduction = parseHp(value.hitPointMaximumReduction);
+  if (Either.isLeft(hitPointMaximumReduction)) {
+    return Either.left(hitPointMaximumReduction.left);
+  }
   const hitPoints = parseStoredHitPoints(value.hitPoints);
   if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
   const conditions = parseStoredConditions(value.conditions);
@@ -1072,6 +1219,7 @@ export function parseCharacterSheet(
       characterId: characterSheetId(value.characterId),
       build: build.right,
       maximumHp: maximumHp.right,
+      hitPointMaximumReduction: hitPointMaximumReduction.right,
       currentHp: hitPoints.right.currentHp,
       tempHp: hitPoints.right.tempHp,
       conditions: conditions.right,
@@ -1151,6 +1299,10 @@ export function characterSheetCurrentHp(sheet: CharacterSheet): HpType {
 
 export function characterSheetTempHp(sheet: CharacterSheet): HpType {
   return sheet.hitPoints.tempHp;
+}
+
+export function characterSheetHitPointMaximum(sheet: CharacterSheet): HpType {
+  return Hp(Number(sheet.maximumHp) - Number(sheet.hitPointMaximumReduction));
 }
 
 export function characterSheetHitPointsCurrentHp(
@@ -1418,8 +1570,9 @@ export function useMonkUncannyMetabolismWhenRollingInitiative(
 
   const currentHp = characterSheetCurrentHp(input.sheet);
   const healing = useState.right.healing.monkLevelBonus + roll;
+  const hitPointMaximum = characterSheetHitPointMaximum(input.sheet);
   const hitPoints = characterSheetHitPoints({
-    currentHp: Hp(Math.min(Number(input.sheet.maximumHp), currentHp + healing)),
+    currentHp: Hp(Math.min(Number(hitPointMaximum), currentHp + healing)),
     tempHp: characterSheetTempHp(input.sheet),
   });
   if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
@@ -1749,9 +1902,69 @@ export function characterBuildHasSpellbookSpell(input: {
   );
 }
 
+export function startShortRest(
+  input: CharacterSheetShortRestStartInput,
+): Either.Either<CharacterSheetShortRestStart, CharacterSheetIssue> {
+  if (characterSheetCurrentHp(input.sheet) < Hp(1)) {
+    return characterSheetIssue(
+      "Short Rest requires the Character Sheet to have at least 1 HP.",
+    );
+  }
+  return Either.right({
+    tag: "shortRestStarted",
+    sheet: input.sheet,
+    requiredRestTicks: CHARACTER_SHEET_SHORT_REST_TICKS,
+    [characterSheetShortRestStartBrand]: true,
+  });
+}
+
+export function finishShortRest(
+  input: CharacterSheetShortRestCompletionInput,
+): Either.Either<CharacterSheetShortRestCompletion, CharacterSheetIssue> {
+  if (Number(input.restedTicks) < Number(input.rest.requiredRestTicks)) {
+    return characterSheetIssue(
+      "Short Rest requires 1 hour before benefits can be received.",
+    );
+  }
+  return Either.right({
+    tag: "shortRestCompleted",
+    startedRest: input.rest,
+    restedTicks: input.restedTicks,
+    [characterSheetShortRestCompletionBrand]: true,
+  });
+}
+
+export function interruptShortRest(
+  input: CharacterSheetShortRestInterruptionInput,
+): CharacterSheetShortRestInterruptionOutcome {
+  return {
+    tag: "shortRestInterruptedNoBenefit",
+    sheet: input.rest.sheet,
+    interruption: input.interruption,
+  };
+}
+
 export function completeShortRest(
   input: CharacterSheetShortRestInput,
 ): Either.Either<CharacterSheet, CharacterSheetIssue> {
+  return completeShortRestBenefits({
+    sheet: input.completion.startedRest.sheet,
+    unitLibrary: input.unitLibrary,
+    spendHitDice: input.spendHitDice,
+    arcaneRecovery: input.arcaneRecovery,
+  });
+}
+
+function completeShortRestBenefits(input: {
+  readonly sheet: CharacterSheet;
+  readonly unitLibrary: UnitCatalog;
+  readonly spendHitDice?: readonly CharacterSheetHitDieSpend[] | undefined;
+  readonly arcaneRecovery?:
+    | {
+        readonly refundSpellSlots: readonly CharacterSheetArcaneRecoverySlotRefund[];
+      }
+    | undefined;
+}): Either.Either<CharacterSheet, CharacterSheetIssue> {
   if (characterSheetCurrentHp(input.sheet) < Hp(1)) {
     return characterSheetIssue(
       "Short Rest requires the Character Sheet to have at least 1 HP.",
@@ -1780,21 +1993,85 @@ export function completeShortRest(
   });
 }
 
-export function completeLongRest(
-  input: CharacterSheetLongRestInput,
-): Either.Either<CharacterSheet, CharacterSheetIssue> {
+export function characterSheetLongRestCalendarGate(
+  timing: CharacterSheetLongRestStartTiming,
+): CharacterSheetLongRestCalendarGate {
+  if (timing.tag === "noPriorLongRest") {
+    return {
+      tag: "canStart",
+      requiredWaitTicks: CHARACTER_SHEET_LONG_REST_WAIT_TICKS,
+    };
+  }
+  const remainingTicks =
+    Number(CHARACTER_SHEET_LONG_REST_WAIT_TICKS) - Number(timing.elapsedTicks);
+  if (remainingTicks <= 0) {
+    return {
+      tag: "canStart",
+      requiredWaitTicks: CHARACTER_SHEET_LONG_REST_WAIT_TICKS,
+    };
+  }
+  return {
+    tag: "mustWait",
+    requiredWaitTicks: CHARACTER_SHEET_LONG_REST_WAIT_TICKS,
+    remainingTicks: elapsedTimeTicks(remainingTicks),
+  };
+}
+
+export function startLongRest(
+  input: CharacterSheetLongRestStartInput,
+): Either.Either<CharacterSheetLongRestStart, CharacterSheetIssue> {
   if (characterSheetCurrentHp(input.sheet) < Hp(1)) {
     return characterSheetIssue(
       "Long Rest requires the Character Sheet to have at least 1 HP.",
     );
   }
+  const calendarGate = characterSheetLongRestCalendarGate(input.timing);
+  if (calendarGate.tag === "mustWait") {
+    return characterSheetIssue(
+      "Long Rest requires waiting 16 hours after finishing the previous Long Rest.",
+    );
+  }
+  return Either.right({
+    tag: "longRestStarted",
+    sheet: input.sheet,
+    requiredRestTicks: CHARACTER_SHEET_LONG_REST_BASE_TICKS,
+    nextLongRestStartWaitTicks: CHARACTER_SHEET_LONG_REST_WAIT_TICKS,
+    [characterSheetLongRestStartBrand]: true,
+  });
+}
+
+export function finishLongRest(
+  input: CharacterSheetLongRestCompletionInput,
+): Either.Either<CharacterSheetLongRestCompletion, CharacterSheetIssue> {
+  if (Number(input.restedTicks) < Number(input.rest.requiredRestTicks)) {
+    return characterSheetIssue(
+      "Long Rest requires the full required duration before benefits can be received.",
+    );
+  }
+  return Either.right({
+    tag: "longRestCompleted",
+    startedRest: input.rest,
+    restedTicks: input.restedTicks,
+    [characterSheetLongRestCompletionBrand]: true,
+  });
+}
+
+export function completeLongRest(
+  input: CharacterSheetLongRestInput,
+): Either.Either<CharacterSheet, CharacterSheetIssue> {
+  const sheet = input.completion.startedRest.sheet;
+  if (characterSheetCurrentHp(sheet) < Hp(1)) {
+    return characterSheetIssue(
+      "Long Rest requires the Character Sheet to have at least 1 HP.",
+    );
+  }
   const hitPoints = characterSheetHitPoints({
-    currentHp: input.sheet.maximumHp,
+    currentHp: sheet.maximumHp,
     tempHp: Hp(0),
   });
   if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
-  if (isCharacterSheetWithSpellSlots(input.sheet)) {
-    const build = characterSheetLongRestBuild(input, input.sheet.build);
+  if (isCharacterSheetWithSpellSlots(sheet)) {
+    const build = characterSheetLongRestBuild(input, sheet.build);
     if (Either.isLeft(build)) return Either.left(build.left);
     const druidWildShapeKnownForms = druidWildShapeKnownFormsAfterLongRest({
       input,
@@ -1804,8 +2081,10 @@ export function completeLongRest(
       return Either.left(druidWildShapeKnownForms.left);
     }
     return Either.right({
-      ...input.sheet,
+      ...sheet,
       build: build.right,
+      maximumHp: sheet.maximumHp,
+      hitPointMaximumReduction: Hp(0),
       hitPoints: hitPoints.right,
       spentHitDice: [],
       restFeatureUses: [],
@@ -1813,20 +2092,18 @@ export function completeLongRest(
       ...(druidWildShapeKnownForms.right === undefined
         ? {}
         : { druidWildShapeKnownForms: druidWildShapeKnownForms.right }),
-      spellSlotExpenditures: input.sheet.spellSlotExpenditures.map(
-        (expenditure) => ({
-          ...expenditure,
-          expended: resourceCount(0),
-        }),
-      ),
+      spellSlotExpenditures: sheet.spellSlotExpenditures.map((expenditure) => ({
+        ...expenditure,
+        expended: resourceCount(0),
+      })),
       createdSpellSlots: [],
       pactSlotExpenditure:
-        input.sheet.pactSlotExpenditure === undefined
+        sheet.pactSlotExpenditure === undefined
           ? undefined
-          : { ...input.sheet.pactSlotExpenditure, expended: resourceCount(0) },
+          : { ...sheet.pactSlotExpenditure, expended: resourceCount(0) },
     });
   }
-  const build = characterSheetLongRestBuild(input, input.sheet.build);
+  const build = characterSheetLongRestBuild(input, sheet.build);
   if (Either.isLeft(build)) return Either.left(build.left);
   const druidWildShapeKnownForms = druidWildShapeKnownFormsAfterLongRest({
     input,
@@ -1836,8 +2113,10 @@ export function completeLongRest(
     return Either.left(druidWildShapeKnownForms.left);
   }
   return Either.right({
-    ...input.sheet,
+    ...sheet,
     build: build.right,
+    maximumHp: sheet.maximumHp,
+    hitPointMaximumReduction: Hp(0),
     hitPoints: hitPoints.right,
     spentHitDice: [],
     restFeatureUses: [],
@@ -1846,6 +2125,91 @@ export function completeLongRest(
       ? {}
       : { druidWildShapeKnownForms: druidWildShapeKnownForms.right }),
   });
+}
+
+export function interruptLongRest(
+  input: CharacterSheetLongRestInterruptionInput,
+): Either.Either<
+  CharacterSheetLongRestInterruptionOutcome,
+  CharacterSheetIssue
+> {
+  const physicalExertionIssue = longRestPhysicalExertionInterruptionIssue(
+    input.interruption,
+  );
+  if (physicalExertionIssue !== null) {
+    return characterSheetIssue(physicalExertionIssue);
+  }
+  if (Number(input.restedTicks) >= Number(input.rest.requiredRestTicks)) {
+    return characterSheetIssue(
+      "Long Rest interruption requires rested time before the required Long Rest duration.",
+    );
+  }
+  const requiredLongRestTicks = elapsedTimeTicks(
+    Number(input.rest.requiredRestTicks) + ELAPSED_TIME_TICKS_PER_HOUR,
+  );
+  const resumedRest = characterSheetLongRestAfterInterruption({
+    rest: input.rest,
+    sheet: input.rest.sheet,
+    requiredRestTicks: requiredLongRestTicks,
+  });
+  if (Number(input.restedTicks) < Number(CHARACTER_SHEET_SHORT_REST_TICKS)) {
+    if (
+      input.spendHitDice !== undefined ||
+      input.arcaneRecovery !== undefined
+    ) {
+      return characterSheetIssue(
+        "Interrupted Long Rest before 1 hour cannot receive Short Rest benefit inputs.",
+      );
+    }
+    return Either.right({
+      tag: "longRestInterruptedNoBenefit",
+      rest: resumedRest,
+      interruption: input.interruption,
+      requiredLongRestTicks,
+    });
+  }
+  const shortRest = completeShortRestBenefits({
+    sheet: input.rest.sheet,
+    unitLibrary: input.unitLibrary,
+    spendHitDice: input.spendHitDice,
+    arcaneRecovery: input.arcaneRecovery,
+  });
+  if (Either.isLeft(shortRest)) return Either.left(shortRest.left);
+  const resumedRestWithBenefits = characterSheetLongRestAfterInterruption({
+    rest: input.rest,
+    sheet: shortRest.right,
+    requiredRestTicks: requiredLongRestTicks,
+  });
+  return Either.right({
+    tag: "longRestInterruptedWithShortRestBenefits",
+    rest: resumedRestWithBenefits,
+    interruption: input.interruption,
+    requiredLongRestTicks,
+  });
+}
+
+function longRestPhysicalExertionInterruptionIssue(
+  interruption: CharacterSheetLongRestInterruption,
+): string | null {
+  if (typeof interruption === "string") return null;
+  return Number(interruption.durationTicks) <
+    Number(CHARACTER_SHEET_SHORT_REST_TICKS)
+    ? "Long Rest physical exertion interruption requires at least 1 hour."
+    : null;
+}
+
+function characterSheetLongRestAfterInterruption(input: {
+  readonly rest: CharacterSheetLongRestStart;
+  readonly sheet: CharacterSheet;
+  readonly requiredRestTicks: ElapsedTimeTicks;
+}): CharacterSheetLongRestStart {
+  return {
+    tag: "longRestStarted",
+    sheet: input.sheet,
+    requiredRestTicks: input.requiredRestTicks,
+    nextLongRestStartWaitTicks: input.rest.nextLongRestStartWaitTicks,
+    [characterSheetLongRestStartBrand]: true,
+  };
 }
 
 export function completeMagicalCunningRite(
@@ -1918,15 +2282,11 @@ function druidWildShapeKnownFormsAfterLongRest(input: {
   CharacterSheetDruidWildShapeKnownForms | undefined,
   CharacterSheetIssue
 > {
+  const sheet = input.input.completion.startedRest.sheet;
   if (input.input.druidWildShapeKnownFormReplacement === undefined) {
-    return Either.right(input.input.sheet.druidWildShapeKnownForms);
+    return Either.right(sheet.druidWildShapeKnownForms);
   }
-  if (input.input.unitLibrary === undefined) {
-    return characterSheetIssue(
-      "Wild Shape known-form replacement requires the Unit library.",
-    );
-  }
-  if (input.input.sheet.druidWildShapeKnownForms === undefined) {
+  if (sheet.druidWildShapeKnownForms === undefined) {
     return characterSheetIssue(
       "Wild Shape known-form replacement requires current known forms.",
     );
@@ -1948,8 +2308,7 @@ function druidWildShapeKnownFormsAfterLongRest(input: {
     return Either.left(statBlockCatalog.left);
   const replaced = replaceDruidWildShapeKnownForm({
     facts: facts.right,
-    currentKnownFormStatBlockIds:
-      input.input.sheet.druidWildShapeKnownForms.statBlockIds,
+    currentKnownFormStatBlockIds: sheet.druidWildShapeKnownForms.statBlockIds,
     replacement: input.input.druidWildShapeKnownFormReplacement,
     statBlockCatalog: statBlockCatalog.right,
   });
@@ -3767,8 +4126,9 @@ function spendHitDice(input: {
     }
   }
   const currentHp = characterSheetCurrentHp(input.sheet);
+  const hitPointMaximum = characterSheetHitPointMaximum(input.sheet);
   const healedHp = Hp(
-    Math.min(input.sheet.maximumHp, currentHp + healingTotal),
+    Math.min(Number(hitPointMaximum), currentHp + healingTotal),
   );
   const hitPoints = characterSheetHitPoints({
     currentHp: healedHp,
@@ -3861,7 +4221,10 @@ function applyLayOnHandsTargetEffects(input: {
     );
   }
   const currentHp = characterSheetCurrentHp(input.sheet);
-  if (currentHp + input.restoreHp > input.sheet.maximumHp) {
+  if (
+    currentHp + input.restoreHp >
+    characterSheetHitPointMaximum(input.sheet)
+  ) {
     return characterSheetIssue(
       "Lay On Hands HP restoration cannot exceed the target's missing HP.",
     );
@@ -4161,12 +4524,20 @@ function isSpellbookRitualAccessFeature(
 }
 
 function characterSheetHitPointCapacity(
-  input: Pick<CharacterSheetInput, "maximumHp" | "currentHp">,
+  input: Pick<
+    CharacterSheetInput,
+    "maximumHp" | "currentHp" | "hitPointMaximumReduction"
+  >,
 ): Either.Either<void, CharacterSheetIssue> {
   if (input.maximumHp < 1) {
     return characterSheetIssue("Character Sheet maximum HP must be positive.");
   }
-  if (input.currentHp > input.maximumHp) {
+  if (input.hitPointMaximumReduction >= input.maximumHp) {
+    return characterSheetIssue(
+      "Character Sheet Hit Point maximum reduction must leave a positive Hit Point maximum.",
+    );
+  }
+  if (input.currentHp > input.maximumHp - input.hitPointMaximumReduction) {
     return characterSheetIssue(
       "Character Sheet current HP exceeds maximum HP.",
     );

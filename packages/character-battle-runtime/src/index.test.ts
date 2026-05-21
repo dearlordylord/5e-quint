@@ -43,6 +43,7 @@ import {
   characterSheetCurrentHp,
   characterSheetPactSlots,
   characterSheetDruidWildShapeKnownForms,
+  characterSheetHitPointMaximum,
   characterSheetSpellSlotSourceState,
   characterSheetSpellSlots,
   characterSheetId,
@@ -110,11 +111,14 @@ const DRUID_WILD_SHAPE_KNOWN_FORM_IDS = [
 ] as const;
 
 function createFreshCharacterSheet(
-  input: Omit<CharacterSheetInput, "conditions"> &
-    Partial<Pick<CharacterSheetInput, "conditions">>,
+  input: Omit<CharacterSheetInput, "conditions" | "hitPointMaximumReduction"> &
+    Partial<
+      Pick<CharacterSheetInput, "conditions" | "hitPointMaximumReduction">
+    >,
 ) {
   return createFreshCharacterSheetCore({
     conditions: [],
+    hitPointMaximumReduction: Hp(0),
     ...input,
   });
 }
@@ -172,6 +176,41 @@ describe("Character Sheet battle handoff", () => {
     });
 
     expect(Either.isLeft(handoff)).toBe(true);
+  });
+
+  test("preserves reduced Hit Point maximum during battle handoff", () => {
+    const sheet = createFreshCharacterSheet({
+      characterId: characterSheetId("character:sheet-reduced-maximum"),
+      build,
+      maximumHp: Hp(10),
+      hitPointMaximumReduction: Hp(3),
+      currentHp: Hp(7),
+      tempHp: Hp(0),
+      unitLibrary,
+    });
+    expect(Either.isRight(sheet)).toBe(true);
+    if (Either.isLeft(sheet)) return;
+
+    const handoff = applyBattleHandoffToCharacterSheet({
+      sheet: sheet.right,
+      unitLibrary,
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:sheet-reduced-maximum"),
+        },
+        hp: Hp(6),
+        maxHp: Hp(7),
+        tempHp: Hp(0),
+        positiveHpUnconscious: null,
+      }),
+    });
+
+    expect(Either.isRight(handoff)).toBe(true);
+    if (Either.isLeft(handoff)) return;
+    expect(handoff.right.hitPointMaximumReduction).toBe(3);
+    expect(characterSheetHitPointMaximum(handoff.right)).toBe(7);
+    expect(characterSheetCurrentHp(handoff.right)).toBe(6);
   });
 
   test("preserves remaining Temporary Hit Points from battle handoff", () => {
@@ -314,6 +353,56 @@ describe("Character Sheet battle handoff", () => {
     expect(
       init.creatureInit.druidWildShapeKnownForms?.map((form) => form.id),
     ).toEqual(DRUID_WILD_SHAPE_KNOWN_FORM_IDS);
+  });
+
+  test("projects reduced Character Sheet Hit Point maximum into battle initialization", () => {
+    const sheet = createFreshCharacterSheet({
+      characterId: characterSheetId("character:reduced-maximum-init"),
+      build,
+      maximumHp: Hp(10),
+      hitPointMaximumReduction: Hp(3),
+      currentHp: Hp(7),
+      tempHp: Hp(0),
+      unitLibrary,
+    });
+    expect(Either.isRight(sheet)).toBe(true);
+    if (Either.isLeft(sheet)) return;
+
+    const init = expectRight(
+      characterSheetBattleInit({
+        combatantId: combatantId("reduced-maximum-init"),
+        displayName: "Fighter",
+        sheet: sheet.right,
+        initiative: initiativeScore(20),
+        side: battleCombatantSide("party"),
+        unitLibrary,
+        statBlockCatalog,
+      }),
+    );
+
+    expect(init.creatureInit.maxHp).toBe(7);
+    expect(init.creatureInit.currentHp).toBe(7);
+  });
+
+  test("rejects CharacterBuild battle initialization max HP above the build-derived maximum", () => {
+    const init = battleCreatureInitFromCharacterBuild({
+      combatantId: combatantId("contradictory-maximum-init"),
+      characterId: characterId("character:contradictory-maximum-init"),
+      displayName: "Fighter",
+      build,
+      initiative: initiativeScore(20),
+      side: battleCombatantSide("party"),
+      unitLibrary,
+      hitPointMaximum: Hp(13),
+    });
+
+    expect(init).toEqual(
+      Either.left({
+        tag: "battleCreatureInitIssue",
+        message:
+          "Character battle initialization max HP exceeds build-derived max HP.",
+      }),
+    );
   });
 
   test("rejects ineligible Druid Wild Shape known forms during battle initialization", () => {
@@ -968,7 +1057,7 @@ describe("Character Sheet battle handoff", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:monk-uncanny-handoff"),
       build: monkBuild({ level: 2, str: 12, dex: 16 }),
-      maximumHp: Hp(16),
+      maximumHp: Hp(15),
       currentHp: Hp(8),
       tempHp: Hp(0),
       unitLibrary,
@@ -1042,7 +1131,7 @@ describe("Character Sheet battle handoff", () => {
           ],
         },
         hp: Hp(14),
-        maxHp: Hp(16),
+        maxHp: Hp(15),
         tempHp: Hp(0),
         positiveHpUnconscious: null,
       }),
@@ -3239,23 +3328,22 @@ function paladinsSmitePaladinBuild(): CharacterBuild {
   };
 }
 
-function hasFixedCharacterBattleResourceCap(
-  resource: CharacterBattleResourceState["resource"],
-): resource is Extract<
+type LimitedCharacterBattleResource = Extract<
   CharacterBattleResourceState,
   { readonly usesRemaining: ResourceCount }
->["resource"] & {
+>["resource"];
+
+function hasFixedCharacterBattleResourceCap(
+  resource: ReturnType<typeof characterBattleResourceForUnit>,
+): resource is LimitedCharacterBattleResource & {
   readonly cap: { readonly kind: "fixed" };
 } {
   return resource.kind === "use_count" && resource.cap.kind === "fixed";
 }
 
 function hasLimitedCharacterBattleResourceCap(
-  resource: CharacterBattleResourceState["resource"],
-): resource is Extract<
-  CharacterBattleResourceState,
-  { readonly usesRemaining: ResourceCount }
->["resource"] {
+  resource: ReturnType<typeof characterBattleResourceForUnit>,
+): resource is LimitedCharacterBattleResource {
   return resource.kind === "use_count" && resource.cap.kind !== "unlimited";
 }
 

@@ -92,6 +92,7 @@ export type CharacterBuildCreatureInput = {
   readonly build: CharacterBuild;
   readonly initiative: InitiativeScore;
   readonly side: BattleCombatantSide;
+  readonly hitPointMaximum?: Hp;
   readonly currentHp?: Hp;
   readonly tempHp?: Hp;
   readonly conditions?: readonly Condition[];
@@ -143,7 +144,18 @@ export function battleCreatureInitFromCharacterBuild(
       hitPoints.left.map((issue) => issue.message).join("; "),
     );
   }
-  const maxHp = Hp(hitPoints.right.maximum);
+  const buildMaximumHp = Hp(hitPoints.right.maximum);
+  const maxHp = input.hitPointMaximum ?? buildMaximumHp;
+  if (maxHp > buildMaximumHp) {
+    return battleCreatureInitIssue(
+      "Character battle initialization max HP exceeds build-derived max HP.",
+    );
+  }
+  if (maxHp < Hp(1)) {
+    return battleCreatureInitIssue(
+      "Character battle initialization max HP must be positive.",
+    );
+  }
   const weaponMasteries = characterBattleWeaponMasterySelections(
     input.build,
     input.unitLibrary,

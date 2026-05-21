@@ -103,19 +103,19 @@
     {
       "number": 17,
       "id": "RKBC-SHEET-HP-REST-HIT-DICE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Character Sheet HP Rest And Hit Dice Transitions"
     },
     {
       "number": 18,
       "id": "RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Character Sheet Spell Slot And Pact Slot Transitions"
     },
     {
       "number": 19,
       "id": "RKBC-SHEET-FEATURE-RESOURCES",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Character Sheet Feature Resource Transitions"
     },
     {
@@ -411,9 +411,9 @@ Reviewers should reject:
 | 14 | RKBC-CREATION-ADVANCEMENT-REPLACEMENT - Character Creation Advancement And Replacement | done | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH | Covered Fighter Fighting Style advancement replacement as `CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT`; Warlock spellcasting/invocation is closed by Task 15, and weapon mastery/feat creation is closed by Task 16. |
 | 15 | RKBC-CREATION-SPELLCASTING-PROGRESSION - Character Creation Spell Access Progression And Eldritch Invocation Choices | done | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH | Covered Warlock Pact Magic Spell Access/Pact Slot progression and Eldritch Invocation choice lifecycle as split obligations. |
 | 16 | RKBC-CREATION-WEAPON-MASTERY-FEAT - Character Creation Weapon Mastery And Feat Choice | done | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH | Covered class-feature feat finalization and Weapon Mastery choice finalization as split character-creation obligations; selected feat/mastery behavior remains owned by selected Unit runtime profiles, and sheet Weapon Mastery reselection remains Task 20. |
-| 17 | RKBC-SHEET-HP-REST-HIT-DICE - Character Sheet HP Rest And Hit Dice Transitions | ready-for-research | baseline | Split HP, healing, Short Rest, Long Rest, and Hit Dice semantics into covered obligations. |
-| 18 | RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS - Character Sheet Spell Slot And Pact Slot Transitions | blocked | RKBC-SHEET-HP-REST-HIT-DICE | Cover spell-slot and pact-slot spend/recovery transitions while reusing `RKBC-SHEET-HP-REST-HIT-DICE` rest timing/benefit semantics. |
-| 19 | RKBC-SHEET-FEATURE-RESOURCES - Character Sheet Feature Resource Transitions | blocked | RKBC-SHEET-HP-REST-HIT-DICE | Cover Lay On Hands, Arcane Recovery, class feature use counts, and similar sheet-owned resources while reusing `RKBC-SHEET-HP-REST-HIT-DICE` HP/rest algebra. |
+| 17 | RKBC-SHEET-HP-REST-HIT-DICE - Character Sheet HP Rest And Hit Dice Transitions | done | baseline | Covered HP healing, Short Rest, Long Rest, interruption, Hit Point Dice spend/restore, and max-HP reduction reset as `SHEET.HP_REST_HIT_DICE.TRANSITIONS`. |
+| 18 | RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS - Character Sheet Spell Slot And Pact Slot Transitions | ready-for-research | RKBC-SHEET-HP-REST-HIT-DICE | Cover spell-slot and pact-slot spend/recovery transitions while reusing `RKBC-SHEET-HP-REST-HIT-DICE` rest timing/benefit semantics. |
+| 19 | RKBC-SHEET-FEATURE-RESOURCES - Character Sheet Feature Resource Transitions | ready-for-research | RKBC-SHEET-HP-REST-HIT-DICE | Cover Lay On Hands, Arcane Recovery, class feature use counts, and similar sheet-owned resources while reusing `RKBC-SHEET-HP-REST-HIT-DICE` HP/rest algebra. |
 | 20 | RKBC-SHEET-WEAPON-MASTERY-RITUAL - Character Sheet Weapon Mastery And Ritual Projection | ready-for-research | baseline | Cover weapon mastery reselection and spellbook/ritual projection semantics. |
 | 21 | RKBC-HANDOFF-BATTLE-INIT - Character Battle Initialization Projection | ready-for-research | baseline | Cover Character Sheet/build projection into battle initialization. |
 | 22 | RKBC-HANDOFF-BATTLE-SETTLEMENT - Character Battle Settlement Back To Sheet | blocked | RKBC-SHEET-HP-REST-HIT-DICE, RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS, RKBC-HANDOFF-BATTLE-INIT | Cover HP, condition, spell-slot, and resource settlement from battle back to sheet. |
@@ -795,7 +795,7 @@ Weapon Mastery reselection remains dependency-ordered in Task 20.
 
 ### Task 17 - RKBC-SHEET-HP-REST-HIT-DICE - Character Sheet HP Rest And Hit Dice Transitions
 
-Status: `ready-for-research`
+Status: `done`
 
 Scope: split HP lifecycle, healing, Short Rest, Long Rest, and Hit Dice
 transitions out of `SHEET.REST_AND_RESOURCE.TRANSITIONS`.
@@ -813,9 +813,17 @@ Acceptance:
   interrupted Short Rest no-benefit outcome.
 - Rest-triggered and calendar-time-triggered semantics stay separated.
 
+Result: `SHEET.HP_REST_HIT_DICE.TRANSITIONS` covers Character Sheet Hit Point
+healing, Short Rest and Long Rest start gates, duration completion gates,
+interruption outcomes, Hit Point Dice spending and restoration, and max-HP
+reduction reset. The remaining `SHEET.REST_AND_RESOURCE.TRANSITIONS`
+aggregate now names only slot and feature-resource follow-ups, so Tasks 18 and
+19 are runnable against the shared rest timing/benefit API instead of
+re-modeling rest procedure logic.
+
 ### Task 18 - RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS - Character Sheet Spell Slot And Pact Slot Transitions
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `RKBC-SHEET-HP-REST-HIT-DICE`.
 
@@ -834,7 +842,7 @@ Acceptance:
 
 ### Task 19 - RKBC-SHEET-FEATURE-RESOURCES - Character Sheet Feature Resource Transitions
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `RKBC-SHEET-HP-REST-HIT-DICE`.
 

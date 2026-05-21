@@ -14,7 +14,8 @@ import {
   progressionOptionId,
   SUPPORTED_LANGUAGE_OPTION_IDS
 } from "@dnd/character-creation-runtime"
-import { characterSheetDruidWildShapeKnownForms } from "@dnd/character-sheet-runtime"
+import { type CharacterSheet, characterSheetDruidWildShapeKnownForms } from "@dnd/character-sheet-runtime"
+import { Hp } from "@dnd/shared/types"
 import { Either } from "effect"
 import { describe, expect, test } from "vitest"
 
@@ -22,6 +23,7 @@ import {
   abilityScoresFill,
   assessCharacterDraft,
   characterCreationUnitLibrary,
+  characterSheetSummary,
   createCharacterSheetFromDraft,
   createStoredDraftId
 } from "#/components/character-creation/characterCreationRuntime.ts"
@@ -52,6 +54,26 @@ describe("character creation runtime", () => {
     if (Either.isRight(sheet)) {
       expect(characterSheetDruidWildShapeKnownForms(sheet.right)?.statBlockIds).toEqual(DRUID_WILD_SHAPE_KNOWN_FORM_IDS)
     }
+  })
+
+  test("summarizes reduced Character Sheet Hit Point maximum", () => {
+    const sheet = createCharacterSheetFromDraft(completeSupportedDruidTwoDraft(), {
+      druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS
+    })
+    expect(Either.isRight(sheet)).toBe(true)
+    if (Either.isLeft(sheet)) return
+
+    const reduced = {
+      ...sheet.right,
+      hitPointMaximumReduction: Hp(3),
+      hitPoints: {
+        tag: "positive",
+        currentHp: Hp(sheet.right.maximumHp - 3),
+        tempHp: Hp(0)
+      }
+    } satisfies CharacterSheet
+
+    expect(characterSheetSummary(reduced).maximumHp).toBe(sheet.right.maximumHp - 3)
   })
 })
 

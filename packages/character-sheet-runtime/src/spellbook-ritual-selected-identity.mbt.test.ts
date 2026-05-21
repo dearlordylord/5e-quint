@@ -323,6 +323,7 @@ function spellbookRitualSheet(input: {
       maximumHp: Hp(8),
       currentHp: Hp(8),
       tempHp: Hp(0),
+      hitPointMaximumReduction: Hp(0),
       conditions: [],
       unitLibrary,
     }),

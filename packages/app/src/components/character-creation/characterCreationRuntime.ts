@@ -20,6 +20,7 @@ import {
 import {
   type CharacterSheet,
   characterSheetCurrentHp,
+  characterSheetHitPointMaximum,
   characterSheetId,
   characterSheetSpellSlots,
   characterSheetTempHp,
@@ -109,6 +110,7 @@ export function createCharacterSheetFromDraft(
     maximumHp: Hp(hitPoints.right.maximum),
     currentHp: Hp(hitPoints.right.maximum),
     tempHp: Hp(0),
+    hitPointMaximumReduction: Hp(0),
     conditions: [],
     unitLibrary: characterCreationUnitLibrary,
     ...(input.druidWildShapeKnownFormStatBlockIds === undefined
@@ -146,7 +148,7 @@ export function characterSheetSummary(sheet: CharacterSheet): {
     characterId: sheet.characterId,
     currentHp: characterSheetCurrentHp(sheet),
     tempHp: characterSheetTempHp(sheet),
-    maximumHp: sheet.maximumHp,
+    maximumHp: characterSheetHitPointMaximum(sheet),
     hitPointState: sheet.hitPoints.tag,
     spellSlotLevels: characterSheetSpellSlots(sheet)?.map((slot) => slot.spellLevel) ?? []
   }

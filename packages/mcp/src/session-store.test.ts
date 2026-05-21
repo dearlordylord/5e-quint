@@ -40,6 +40,7 @@ describe("MCP character sessions", () => {
       maximumHp: Hp(16),
       currentHp: Hp(16),
       tempHp: Hp(0),
+      hitPointMaximumReduction: Hp(0),
       conditions: [],
       unitLibrary,
     });
@@ -58,6 +59,7 @@ describe("MCP character sessions", () => {
       maximumHp: Hp(16),
       currentHp: Hp(16),
       tempHp: Hp(0),
+      hitPointMaximumReduction: Hp(0),
       conditions: [],
       unitLibrary,
       druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,

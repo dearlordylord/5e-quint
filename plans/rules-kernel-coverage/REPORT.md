@@ -23,7 +23,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | shared-algebras | 1 |
 | battle | 54 |
 | character-creation | 8 |
-| character-sheet | 2 |
+| character-sheet | 3 |
 | character-battle | 1 |
 
 ## Obligations
@@ -96,6 +96,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.SURFACE.CATALOG_ONLY_RECORDS` | battle | unsupported-by-admission | _outside reducer semantics_ |
 | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | battle | boundary-only | _outside reducer semantics_ |
 | `SHARED.HIT_POINTS.POSITIVE_DAMAGE` | shared-algebras | covered | `spell.invocation-flaming-sphere-hazard-ram`, `spell.invocation-moonbeam-movable-zone`, `spell.invocation-spell-created-held-object` |
+| `SHEET.HP_REST_HIT_DICE.TRANSITIONS` | character-sheet | covered | _direct reducer entrypoint_ |
 
 ## Battle Hole Frontier
 
@@ -241,7 +242,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 - `BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION` (needs-parity-witness; follow-up: `RKBC-SPELL-MIRROR-IMAGE-PARITY`): Battle Mirror Image duplicate pool, attack-hit interception roll, duplicate destruction, bypass witnesses, and normal damage continuation
 - `BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING` (needs-parity-witness; follow-up: `RKBC-SPELL-LINKED-EFFECT-PARITY`): Battle linked spell effects for Warding Bond defenses, all-damage Resistance, same-amount damage sharing, and source-zero, separation, recast, or duration cleanup
 - `BATTLE.SURFACE.EXECUTABLE_PROFILE_JOIN` (needs-surface-evidence; follow-up: `RKBC-FINAL-B-CLOSURE-GATE`): Prove each currently admitted executable battle Surface profile points to a covered semantic obligation
-- `SHEET.REST_AND_RESOURCE.TRANSITIONS` (needs-qnt-owner; follow-up: `RKBC-SHEET-HP-REST-HIT-DICE`, `RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS`, `RKBC-SHEET-FEATURE-RESOURCES`): Audit current Character Sheet HP, rest, spell-slot, pact-slot, Hit Dice, and feature-resource transitions into QNT-connected obligations
+- `SHEET.REST_AND_RESOURCE.TRANSITIONS` (needs-qnt-owner; follow-up: `RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS`, `RKBC-SHEET-FEATURE-RESOURCES`): Audit remaining Character Sheet spell-slot, pact-slot, and feature-resource rest/resource transitions into QNT-connected obligations
 - `CHARACTER.BATTLE.HANDOFF.SETTLEMENT` (needs-qnt-owner; follow-up: `RKBC-HANDOFF-BATTLE-SETTLEMENT`): Audit Character Sheet to battle init and battle handoff settlement for HP, zero-HP lifecycle, conditions, spell slots, and identity checks
 
 ## Checker Issues
