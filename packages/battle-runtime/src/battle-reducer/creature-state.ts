@@ -1,5 +1,5 @@
 // Creature state init/snapshot/lifecycle helpers extracted from
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form spell.invocation-warding-bond-linked-effect
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form spell.invocation-warding-bond-linked-effect character-sheet.metamagic-battle-resource-bridge
 // battle-reducer.ts. Cluster G (creature_state). Mechanical extraction —
 // no behavior change. Pass 8 also absorbed:
 //   - `assertCurrentHpWithinMaxHp` (cycle #9)
@@ -49,6 +49,8 @@ import type {
 } from "../battle-init.ts";
 import {
   characterBattleInvocationSpellAccessInitIssue,
+  characterBattleMetamagicInitIssue,
+  characterBattleResourceIsPointPool,
   characterBattleSpellbookRitualSpellAccessInitIssue,
   characterBattleResourceInitIssue,
   characterBattleResourceUsage,
@@ -224,6 +226,9 @@ export function battleCreatureStateFromInit(
         resources: (creatureInit.resources ?? []).map((resource) =>
           characterResourceState(resource, classLevels),
         ),
+        ...(creatureInit.metamagic === undefined
+          ? {}
+          : { metamagic: creatureInit.metamagic }),
         ongoingFeatureProfiles: characterOngoingFeatureProfiles(
           creatureInit.resources ?? [],
           creatureInit.unitFeatures ?? [],
@@ -561,6 +566,13 @@ export function combatantOriginSnapshot(
 export function characterResourceSnapshot(
   resource: CharacterBattleResourceState,
 ): BattleCharacterResourceSnapshot {
+  if (characterBattleResourceIsPointPool(resource)) {
+    return {
+      unitId: resource.unit.id,
+      usage: "pointPool",
+      pointsRemaining: resource.pointsRemaining,
+    };
+  }
   const common = {
     unitId: resource.unit.id,
     usedThisTurn: resource.usedThisTurn,
@@ -725,11 +737,19 @@ export function characterResourceInitIssue(
   if (creatureInit.kind !== "character") {
     return null;
   }
+  const classLevels = parseCharacterBattleClassLevels(creatureInit.classLevels);
   for (const resource of creatureInit.resources ?? []) {
-    const issue = characterBattleResourceInitIssue(resource);
+    const issue = characterBattleResourceInitIssue(resource, classLevels);
     if (issue !== null) {
       return battleStateInitIssue(issue);
     }
+  }
+  const metamagicIssue = characterBattleMetamagicInitIssue({
+    metamagic: creatureInit.metamagic,
+    resources: creatureInit.resources ?? [],
+  });
+  if (metamagicIssue !== null) {
+    return battleStateInitIssue(metamagicIssue);
   }
   return null;
 }

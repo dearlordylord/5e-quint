@@ -55,7 +55,10 @@ import {
   type BattleSubject,
 } from "../battle-subjects.ts";
 
-import { spendCharacterResourceUse } from "../character-battle-resources.ts";
+import {
+  resourceHasUsesRemaining,
+  spendCharacterResourceUse,
+} from "../character-battle-resources.ts";
 
 import { CombatantId } from "../identity.ts";
 
@@ -464,7 +467,8 @@ export function resolveBonusActionDashTemporaryHitPoints(
       origin: {
         ...actor.origin,
         resources: actor.origin.resources.map((candidate) =>
-          candidate.unit.id === sourceUnitId
+          candidate.unit.id === sourceUnitId &&
+          resourceHasUsesRemaining(candidate)
             ? spendCharacterResourceUse(candidate)
             : candidate,
         ),

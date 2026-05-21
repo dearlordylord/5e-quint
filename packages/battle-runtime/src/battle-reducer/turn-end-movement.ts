@@ -50,6 +50,7 @@ import {
   type BattleMovementSpeedKind,
   type BattleSubject,
 } from "../battle-subjects.ts";
+import { characterBattleResourceIsUseCount } from "../character-battle-resources.ts";
 
 import { type BattleReactionTrigger } from "../battle-reaction-triggers.ts";
 
@@ -2051,10 +2052,7 @@ function validateFlamingSphereRamMovement(
 }
 
 function validateFlamingSphereRepositionMovement(
-  fill: Extract<
-    BattleFill,
-    { readonly kind: "movableZoneRepositionMovement" }
-  >,
+  fill: Extract<BattleFill, { readonly kind: "movableZoneRepositionMovement" }>,
   hole: BattleMovableZoneRepositionMovementHole,
 ): string | null {
   if (fill.holeId !== hole.holeId) {
@@ -2156,8 +2154,8 @@ export function resolveFlamingSphereSaveCommand(
     );
   }
   // Dispatcher only routes here when trigger === "endsTurnWithinFiveFeetOfSphere".
-  const flamingSphereTrigger =
-    input.subject.trigger as BattleFlamingSphereTrigger;
+  const flamingSphereTrigger = input.subject
+    .trigger as BattleFlamingSphereTrigger;
   const saveHole = flamingSphereSavingThrowOutcomeHole(
     input.state,
     input.subject.actorId,
@@ -2669,7 +2667,11 @@ function moonbeamEffectFor(
 
 function moonbeamTriggerLabel(
   trigger: BattleMoonbeamSaveTrigger,
-): "appears-in-area" | "area-moves-into-space" | "enters-area" | "ends-turn-in-area" {
+):
+  | "appears-in-area"
+  | "area-moves-into-space"
+  | "enters-area"
+  | "ends-turn-in-area" {
   if (trigger === "appearsInArea") {
     return "appears-in-area";
   }
@@ -2780,7 +2782,10 @@ function validateMoonbeamDamageRoll(
   if (fill.holeId !== hole.holeId) {
     return "Movable zone save damage must use the selected damage hole.";
   }
-  const validation = validateRolledDiceForDiceExpr(fill.value, hole.movableZone.damage.expr);
+  const validation = validateRolledDiceForDiceExpr(
+    fill.value,
+    hole.movableZone.damage.expr,
+  );
   return validation === null ? null : validation.reason;
 }
 
@@ -2791,7 +2796,10 @@ function validateMoonbeamRepositionMovement(
   if (fill.holeId !== hole.holeId) {
     return "Movable zone reposition movement must use the selected movement hole.";
   }
-  if (Number(fill.value.moveFeet) <= 0 || !Number.isInteger(fill.value.moveFeet)) {
+  if (
+    Number(fill.value.moveFeet) <= 0 ||
+    !Number.isInteger(fill.value.moveFeet)
+  ) {
     return "Movable zone reposition movement distance must be a positive integer.";
   }
   return Number(fill.value.moveFeet) <= Number(hole.movableZone.maxMoveFeet)
@@ -2806,7 +2814,8 @@ function moonbeamAdjustedDamage(input: {
   readonly saveSucceeded: boolean;
 }): number {
   const rolledDamage =
-    rolledDiceTotal(input.damageFill.value) + (input.effect.damage.expr.flat ?? 0);
+    rolledDiceTotal(input.damageFill.value) +
+    (input.effect.damage.expr.flat ?? 0);
   const saveAdjustedDamage = input.saveSucceeded
     ? Math.floor(rolledDamage / 2)
     : rolledDamage;
@@ -2920,7 +2929,9 @@ export function resolveMoonbeamSaveCommand(
     moonbeamTrigger,
   );
   const saveFills = input.fills.filter(
-    (fill): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
+    (
+      fill,
+    ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
       fill.kind === "savingThrowOutcome" && fill.holeId === saveHole.holeId,
   );
   const damageFills = input.fills.filter(
@@ -3007,12 +3018,17 @@ export function resolveMoonbeamSaveCommand(
     damageFill,
     saveSucceeded: saveOutcome.succeeded,
   });
-  const concentrationHole = concentrationSavingThrowHole(target, adjustedDamage);
+  const concentrationHole = concentrationSavingThrowHole(
+    target,
+    adjustedDamage,
+  );
   const concentrationFills =
     concentrationHole === null
       ? []
       : input.fills.filter(
-          (fill): fill is Extract<
+          (
+            fill,
+          ): fill is Extract<
             BattleFill,
             { readonly kind: "concentrationSavingThrow" }
           > =>
@@ -3053,7 +3069,11 @@ export function resolveMoonbeamSaveCommand(
     saveSucceeded: saveOutcome.succeeded,
     concentrationSavingThrow: concentrationFill,
   });
-  const afterMark = markMoonbeamSavedThisTurn(afterDamage, input.subject.actorId, effect);
+  const afterMark = markMoonbeamSavedThisTurn(
+    afterDamage,
+    input.subject.actorId,
+    effect,
+  );
   if (isEndTurn) {
     const endTurnResult = resolveEndTurnCommand({
       state: afterMark,
@@ -3082,7 +3102,9 @@ export function resolveMoonbeamRepositionCommand(
     >;
   },
 ): BattleResolutionResult {
-  if (input.fills.some((fill) => fill.kind !== "movableZoneRepositionMovement")) {
+  if (
+    input.fills.some((fill) => fill.kind !== "movableZoneRepositionMovement")
+  ) {
     return invalidResult(
       input.state,
       "invalidFill",
@@ -3103,7 +3125,9 @@ export function resolveMoonbeamRepositionCommand(
   }
   const movementHole = moonbeamRepositionMovementHole(effect);
   const movementFills = input.fills.filter(
-    (fill): fill is Extract<
+    (
+      fill,
+    ): fill is Extract<
       BattleFill,
       { readonly kind: "movableZoneRepositionMovement" }
     > => fill.kind === "movableZoneRepositionMovement",
@@ -5117,10 +5141,11 @@ export function resetPerTurnCharacterResources(
     ...combatant,
     origin: {
       ...combatant.origin,
-      resources: combatant.origin.resources.map((resource) => ({
-        ...resource,
-        usedThisTurn: false,
-      })),
+      resources: combatant.origin.resources.map((resource) =>
+        characterBattleResourceIsUseCount(resource)
+          ? { ...resource, usedThisTurn: false }
+          : resource,
+      ),
     },
   };
 }

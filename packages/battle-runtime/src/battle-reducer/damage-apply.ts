@@ -1112,7 +1112,7 @@ function applyZeroHitPointReplacement(
     origin: {
       ...nextCombatant.origin,
       resources: nextCombatant.origin.resources.map((resource) =>
-        resource.unit.id === unitId
+        resource.unit.id === unitId && resourceHasUsesRemaining(resource)
           ? spendCharacterResourceUse(resource)
           : resource,
       ),

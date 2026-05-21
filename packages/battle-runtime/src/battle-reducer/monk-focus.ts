@@ -19,8 +19,9 @@ import type {
   MonkFocusOptionBattleResolutionInput,
 } from "../battle-reducer.ts";
 import type { CombatantId } from "../identity.ts";
-import type { CharacterBattleResourceState } from "../character-battle-resources.ts";
+import type { CharacterBattleUseCountResourceState } from "../character-battle-resources.ts";
 import {
+  characterBattleResourceIsUseCount,
   resourceHasUsesRemaining,
   spendCharacterResourceUse,
 } from "../character-battle-resources.ts";
@@ -48,7 +49,7 @@ import {
 
 type MonkFocusResourceFact = {
   readonly actor: CharacterBattleCreatureState;
-  readonly resource: CharacterBattleResourceState;
+  readonly resource: CharacterBattleUseCountResourceState;
   readonly profile: BattleMonkFocusBattleOptionsSupportProfile;
 };
 
@@ -544,7 +545,11 @@ function monkFocusResourceForActor(
   if (!isCharacterBattleCreatureState(actor)) return null;
   for (const resource of actor.origin.resources) {
     const support = battleMonkFocusBattleOptionsSupportForUnit(resource.unit);
-    if (support !== null && support !== "unsupported") {
+    if (
+      support !== null &&
+      support !== "unsupported" &&
+      characterBattleResourceIsUseCount(resource)
+    ) {
       return { actor, resource, profile: support };
     }
   }
@@ -578,7 +583,7 @@ function flurryOfBlowsUnarmedStrikeForActor(
 function stateWithMonkFocusResource(
   state: BattleState,
   actor: CharacterBattleCreatureState,
-  resource: CharacterBattleResourceState,
+  resource: CharacterBattleUseCountResourceState,
 ): BattleState {
   const currentActor = state.combatants.get(actor.combatantId);
   if (currentActor?.origin.kind !== "character") return state;

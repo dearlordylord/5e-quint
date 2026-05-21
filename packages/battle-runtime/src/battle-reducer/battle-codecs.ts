@@ -4006,6 +4006,11 @@ const BattleCharacterResourceSnapshotSchema = Schema.Union(
     usesRemaining: Schema.Number,
     usedThisTurn: Schema.Boolean,
   }),
+  Schema.Struct({
+    unitId: Schema.String,
+    usage: Schema.Literal("pointPool"),
+    pointsRemaining: Schema.Number,
+  }),
 );
 
 const StatBlockPartKeySchema = Schema.Struct({

@@ -103,6 +103,7 @@ import {
   type SpellInvocationRef,
 } from "./battle-subjects.ts";
 import {
+  type CharacterBattleMetamagicState,
   type CharacterBattleResourceState,
   type CharacterBattleSpellcastingState,
 } from "./character-battle-resources.ts";
@@ -2890,7 +2891,10 @@ export type SpellCreatedHeldObjectSpellInvocation =
       readonly resource: NoSpellInvocationResource;
       readonly procedure: "spellCreatedHeldObjectAttack";
       readonly spell: SpellRecord;
-      readonly targeting: Extract<SpellTargeting, { readonly kind: "singleCombatant" }>;
+      readonly targeting: Extract<
+        SpellTargeting,
+        { readonly kind: "singleCombatant" }
+      >;
       readonly damage: SpellCreatedHeldObjectActiveEffect["attack"]["damage"];
       readonly rangeFeet: MovementFeet;
       readonly attackKind: SpellCreatedHeldObjectActiveEffect["attack"]["attackKind"];
@@ -3736,6 +3740,7 @@ type BattleCreatureStateCommon = {
         readonly unarmedStrike: CharacterUnarmedStrikeActionOption;
         readonly offHandAttack?: CharacterWeaponAttackActionOption;
         readonly resources: readonly CharacterBattleResourceState[];
+        readonly metamagic?: CharacterBattleMetamagicState;
         readonly ongoingFeatureProfiles: ReadonlyMap<
           OngoingFeatureSourceKey,
           Extract<
@@ -3940,9 +3945,7 @@ export type BattleObjectTargetChoiceHole = {
 export type BattleObjectContactTargetSpatialFact = Extract<
   BattleTargetSpatialFact,
   {
-    readonly kind:
-      | "spellObjectPhysicalContact"
-      | "spellObjectWithinSpellRange";
+    readonly kind: "spellObjectPhysicalContact" | "spellObjectWithinSpellRange";
   }
 >;
 export type BattleObjectContactTargetsHole = {
@@ -3994,10 +3997,7 @@ export type BattleSpellAreaChoiceHole = {
   readonly spell: Extract<
     SupportedSpellInvocation,
     {
-      readonly procedure:
-        | "fogCloudObscurement"
-        | "flamingSphere"
-        | "moonbeam";
+      readonly procedure: "fogCloudObscurement" | "flamingSphere" | "moonbeam";
     }
   >;
   readonly area: Extract<
@@ -5498,6 +5498,11 @@ export type BattleCharacterResourceSnapshot =
       readonly usage: "limited";
       readonly usesRemaining: number;
       readonly usedThisTurn: boolean;
+    }
+  | {
+      readonly unitId: UnitRecord["id"];
+      readonly usage: "pointPool";
+      readonly pointsRemaining: number;
     };
 export type CharacterBattleCreatureState = BattleCreatureState & {
   readonly origin: Extract<

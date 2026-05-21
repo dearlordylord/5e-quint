@@ -82,14 +82,14 @@
       "percent": "98.8%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 109,
+      "denominator": 110,
       "numerator": 56,
-      "percent": "51.4%"
+      "percent": "50.9%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 109,
+      "denominator": 110,
       "numerator": 89,
-      "percent": "81.7%"
+      "percent": "80.9%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 132,
@@ -2811,6 +2811,37 @@
       ]
     },
     {
+      "id": "character-sheet.metamagic-battle-resource-bridge",
+      "profileKind": "character-sheet",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/index.ts",
+        "packages/character-battle-runtime/src/index.ts",
+        "packages/character-battle-runtime/src/battle-creature-init.ts",
+        "packages/battle-runtime/src/character-battle-resources.ts",
+        "packages/battle-runtime/src/battle-reducer/creature-state.ts"
+      ],
+      "sourceBoundary": "Character Sheet preserves selected Metamagic option facts and validates that they match the retained Sorcerer Metamagic feature before Character Battle consumes those CharacterBuild facts and the existing Font of Magic point-pool resource projection. Battle state stores only the shared Sorcery Point point-pool remaining points plus Metamagic effectKind, stackingMode, and cost facts; it does not create a Metamagic-local pool or execute cast-time Metamagic options. Character Sheet handoff persists battle point-pool spending back as the Font of Magic pointPoolResource expenditure.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-SORCERER-METAMAGIC-BATTLE-RESOURCE-BRIDGE"
+      ],
+      "title": "Character Battle carries Metamagic facts with the shared Sorcery Point pool",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+        }
+      ]
+    },
+    {
       "id": "character-sheet.class-feature-long-rest-use-state",
       "profileKind": "character-sheet",
       "qntOwners": [],
@@ -3168,14 +3199,14 @@
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 109,
+        "denominator": 110,
         "numerator": 56,
-        "percent": "51.4%"
+        "percent": "50.9%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 109,
+        "denominator": 110,
         "numerator": 89,
-        "percent": "81.7%"
+        "percent": "80.9%"
       }
     },
     "profileKinds": [
@@ -4441,6 +4472,12 @@
         "joinStatus": "unmapped",
         "obligations": [],
         "profileId": "character-sheet.font-of-magic-sorcery-points-to-spell-slot",
+        "profileKind": "character-sheet"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "character-sheet.metamagic-battle-resource-bridge",
         "profileKind": "character-sheet"
       },
       {
@@ -9487,6 +9524,14 @@
     },
     {
       "claimKind": "completed-runtime-parity",
+      "note": "Character Battle projects selected Sorcerer Metamagic facts as effectKind, stackingMode, and Sorcery Point cost facts, carries the shared Font of Magic Sorcery Point point-pool resource into battle state, exposes typed point-pool spending without a Metamagic-local resource pool, and persists battle point-pool spending back to Character Sheet pointPoolResource expenditure. Cast-time Metamagic admission and option effects remain deferred to the narrower Metamagic follow-up profiles.",
+      "profileIds": [
+        "character-sheet.metamagic-battle-resource-bridge"
+      ],
+      "taskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-BATTLE-RESOURCE-BRIDGE"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
       "note": "Focused Character Sheet tests cover Font of Magic ownership from the installed Surface resource-pool operation, ordinary Spell Slot expenditure, Sorcery Point gain equal to the expended slot level, shared Sorcery Point cap rejection, unexpended-slot gating, and non-owner rejection. The Sorcery Point to temporary Spell Slot direction remains split to L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS.",
       "profileIds": [
         "character-sheet.font-of-magic-slot-to-sorcery-points"
@@ -12888,14 +12933,16 @@
           "character-creation.class-feature-resource-projection",
           "character-sheet.class-feature-point-pool-resource",
           "character-sheet.font-of-magic-slot-to-sorcery-points",
-          "character-sheet.font-of-magic-sorcery-points-to-spell-slot"
+          "character-sheet.font-of-magic-sorcery-points-to-spell-slot",
+          "character-sheet.metamagic-battle-resource-bridge"
         ],
         "supportedMechanics": [
           "Character Creation projects Sorcerer level 2 Font of Magic retained feature and shared Sorcery Point point-pool facts from the installed Surface feature",
           "Character Sheet tracks Sorcery Point expenditure, derives the Sorcerer-level cap, and restores expended Sorcery Points on Long Rest",
           "Character Sheet converts a source-aware ordinary or created Spell Slot into Sorcery Points, requiring explicit source selection when both sources of the same level are available",
           "Character Sheet transforms Sorcery Points into created Spell Slot delta state from the Creating Spell Slots table, enforcing point cost, minimum Sorcerer level, and level-5 cap",
-          "Created Spell Slot delta state is aggregated for Character Battle init, preserved exactly when handoff is source-unambiguous, rejected when handoff is source-ambiguous, and cleared on Long Rest"
+          "Created Spell Slot delta state is aggregated for Character Battle init, preserved exactly when handoff is source-unambiguous, rejected when handoff is source-ambiguous, and cleared on Long Rest",
+          "Character Battle carries the existing Font of Magic Sorcery Point point-pool into battle state for Metamagic, exposes remaining points without a Metamagic-local pool, and persists battle point spending back to the Character Sheet pointPoolResource expenditure"
         ],
         "tag": "profile-subset-supported"
       },
@@ -12999,6 +13046,37 @@
               "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
             }
           ]
+        },
+        {
+          "id": "character-sheet.metamagic-battle-resource-bridge",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/index.ts",
+            "packages/character-battle-runtime/src/index.ts",
+            "packages/character-battle-runtime/src/battle-creature-init.ts",
+            "packages/battle-runtime/src/character-battle-resources.ts",
+            "packages/battle-runtime/src/battle-reducer/creature-state.ts"
+          ],
+          "sourceBoundary": "Character Sheet preserves selected Metamagic option facts and validates that they match the retained Sorcerer Metamagic feature before Character Battle consumes those CharacterBuild facts and the existing Font of Magic point-pool resource projection. Battle state stores only the shared Sorcery Point point-pool remaining points plus Metamagic effectKind, stackingMode, and cost facts; it does not create a Metamagic-local pool or execute cast-time Metamagic options. Character Sheet handoff persists battle point-pool spending back as the Font of Magic pointPoolResource expenditure.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-SORCERER-METAMAGIC-BATTLE-RESOURCE-BRIDGE"
+          ],
+          "title": "Character Battle carries Metamagic facts with the shared Sorcery Point pool",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+            }
+          ]
         }
       ],
       "sourceRecordPath": "packages/surface/content/sorcerer_font_of_magic.json",
@@ -13012,10 +13090,6 @@
       },
       "claim": {
         "deferredMechanics": [
-          {
-            "followUpTaskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-BATTLE-RESOURCE-BRIDGE",
-            "mechanic": "Battle Sorcery Point and Metamagic option bridge: carry the existing Font of Magic point-pool expenditure and CharacterBuild selected Metamagic option facts into battle state, persist point-pool spend through Character Sheet handoff, and admit cast-time option selections by typed effectKind/stackingMode facts rather than option authored identity."
-          },
           {
             "followUpTaskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED",
             "mechanic": "Metamagic cast-time governor and Quickened limits: enforce known-option selection, Sorcery Point affordability, one option per spell plus Empowered/Seeking stacking exceptions, Quickened action-to-Bonus-Action rewrite, and the current-turn level-1-plus spell prohibition."
@@ -13038,13 +13112,6 @@
           }
         ],
         "followUpTasks": [
-          {
-            "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-BATTLE-RESOURCE-BRIDGE",
-            "mechanic": "Project the existing Font of Magic Sorcery Point point-pool and selected Metamagic option facts into battle without creating a Metamagic-local pool or dispatching on option names, slugs, Unit ids, or provenance text.",
-            "owner": "character-battle-runtime plus battle-runtime character resource handoff",
-            "requiredOutput": "Character Battle and battle-runtime state can carry and spend the shared Sorcery Point point-pool, hand it back to Character Sheet resourceExpenditures, and expose known Metamagic options as typed effectKind/stackingMode/cost facts with focused tests and coverage evidence.",
-            "title": "Sorcerer Metamagic Battle Resource Bridge"
-          },
           {
             "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED",
             "mechanic": "Apply known-option, Sorcery Point affordability, one-option-per-spell, Empowered/Seeking stacking, and Quickened action-cost plus level-1-plus turn-limit rules at the Spell Invocation boundary.",
@@ -13084,13 +13151,15 @@
         "profileIds": [
           "character-creation.class-feature-option-projection",
           "character-creation.class-feature-source-fact-projection",
-          "character-creation.class-feature-advancement-replacement"
+          "character-creation.class-feature-advancement-replacement",
+          "character-sheet.metamagic-battle-resource-bridge"
         ],
         "supportedMechanics": [
           "Character Creation admits same-class Sorcerer level-2 progression, discovers the Metamagic choice container from the installed Surface feature, and finalizes exactly two unique selected Metamagic option ids as CharacterBuild option facts instead of retained option Unit refs",
           "Character Creation projects Metamagic source facts from the retained Surface feature and Sorcerer class level: known-option count thresholds at Sorcerer levels 2, 10, and 17; unique known-option roster; option Sorcery Point costs; Empowered and Seeking stacking exceptions; the one-option-per-spell default; and the shared Font of Magic Sorcery Point resource link without duplicating the Sorcery Point pool",
           "Character Creation consumes the Metamagic class-level replacement fact in the Sorcerer level-gain workflow, replacing exactly one currently known Metamagic option with one currently unknown option while preserving the known-option count, and derives Sorcerer level 10 and 17 option gains from the installed Surface choice-count thresholds without duplicating class progression or option roster state",
-          "Character Sheet parsing preserves the selected CharacterBuild Metamagic option facts and rejects stored Metamagic option selections that do not match the retained feature and Sorcerer-level option count"
+          "Character Sheet parsing preserves the selected CharacterBuild Metamagic option facts and rejects stored Metamagic option selections that do not match the retained feature and Sorcerer-level option count",
+          "Character Battle projects selected Metamagic option facts into battle as typed effectKind, stackingMode, and Sorcery Point cost facts, links them to the shared Font of Magic point-pool resource, and hands battle point-pool spending back through Character Sheet resourceExpenditures without dispatching on option authored identity"
         ],
         "tag": "profile-subset-supported"
       },
@@ -13167,6 +13236,37 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-sheet.metamagic-battle-resource-bridge",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/index.ts",
+            "packages/character-battle-runtime/src/index.ts",
+            "packages/character-battle-runtime/src/battle-creature-init.ts",
+            "packages/battle-runtime/src/character-battle-resources.ts",
+            "packages/battle-runtime/src/battle-reducer/creature-state.ts"
+          ],
+          "sourceBoundary": "Character Sheet preserves selected Metamagic option facts and validates that they match the retained Sorcerer Metamagic feature before Character Battle consumes those CharacterBuild facts and the existing Font of Magic point-pool resource projection. Battle state stores only the shared Sorcery Point point-pool remaining points plus Metamagic effectKind, stackingMode, and cost facts; it does not create a Metamagic-local pool or execute cast-time Metamagic options. Character Sheet handoff persists battle point-pool spending back as the Font of Magic pointPoolResource expenditure.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-SORCERER-METAMAGIC-BATTLE-RESOURCE-BRIDGE"
+          ],
+          "title": "Character Battle carries Metamagic facts with the shared Sorcery Point pool",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
             }
           ]
         }

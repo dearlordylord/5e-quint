@@ -72,6 +72,21 @@
         "packages/character-sheet-runtime/src/index.test.ts:sorcererFontOfMagicSlotCreationGateTestName"
       ]
     },
+    "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_metamagic": {
+      "taskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-BATTLE-RESOURCE-BRIDGE",
+      "profile": "Character Sheet Metamagic battle resource bridge runtime",
+      "summary": "Metamagic selected option facts are preserved through Character Sheet parsing only when they match the retained Sorcerer Metamagic feature and Sorcerer-level known-option count. Those parsed CharacterBuild facts provide the Character Battle bridge source for typed Metamagic effectKind, stackingMode, and cost facts while the shared Font of Magic Sorcery Point point-pool remains owned by the existing Character Sheet resource expenditure state.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/index.ts:parseCharacterBuild",
+        "packages/character-sheet-runtime/src/index.ts:parseStoredResourceExpenditures",
+        "packages/character-sheet-runtime/src/index.ts:storedSorcererMetamagicSelectionIssue",
+        "packages/character-sheet-runtime/src/index.ts:parseStoredFeatures"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/index.test.ts:sorcererMetamagicKnownOptionsSheetParsingTestName",
+        "packages/character-sheet-runtime/src/index.test.ts:sorcererMetamagicKnownOptionsGateTestName"
+      ]
+    },
     "srd521:classes/monk:level-2:class-feature-grant:monk_uncanny_metabolism": {
       "taskId": "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME",
       "profile": "Character Sheet Uncanny Metabolism Initiative recovery and Long Rest use state runtime",

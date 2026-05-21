@@ -22,6 +22,7 @@ import {
   goblinId,
   unitLibrary,
   battleId,
+  characterBattleResourceIsUseCount,
   characterBattleResourceIsUnlimited,
   characterBattleResourceSupportedForUnit,
   classFeatureFreeCastSpellInvocationRef,
@@ -195,6 +196,7 @@ describe("battle runtime: Favored Enemy", () => {
     const [favoredEnemyResource] = ranger.origin.resources;
     if (
       favoredEnemyResource === undefined ||
+      !characterBattleResourceIsUseCount(favoredEnemyResource) ||
       characterBattleResourceIsUnlimited(favoredEnemyResource)
     ) {
       throw new Error("Expected Favored Enemy to be a limited resource.");

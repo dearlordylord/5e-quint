@@ -67,13 +67,13 @@
     {
       "number": 11,
       "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-BATTLE-RESOURCE-BRIDGE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Sorcerer Metamagic Battle Resource Bridge"
     },
     {
       "number": 12,
       "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Sorcerer Metamagic Cast Governor And Quickened"
     },
     {
@@ -109,7 +109,7 @@
     {
       "number": 18,
       "id": "L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Sorcerer Font Of Magic Bonus Action And Battle Slot Source"
     },
     {
@@ -207,14 +207,14 @@ The final task is intentionally blocked on every real task in this plan and plac
 | 8 | L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS - Sorcerer Metamagic Character Facts And Option Projection | done | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS | C lane; Unit `sorcerer_metamagic`. |
 | 9 | L12G-FOLLOWUP-SORCERER-METAMAGIC-ADVANCEMENT-REPLACEMENT - Sorcerer Metamagic Advancement Replacement | done | L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS | C lane; Unit `sorcerer_metamagic`. |
 | 10 | L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION - Sorcerer Metamagic Cast-Time Option Execution | done | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-ADVANCEMENT-REPLACEMENT | C lane; Unit `sorcerer_metamagic`; closed as executable follow-up split. |
-| 11 | L12G-FOLLOWUP-SORCERER-METAMAGIC-BATTLE-RESOURCE-BRIDGE - Sorcerer Metamagic Battle Resource Bridge | ready-for-research | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-ADVANCEMENT-REPLACEMENT | C lane; Unit `sorcerer_metamagic`. |
-| 12 | L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED - Sorcerer Metamagic Cast Governor And Quickened | blocked | L12G-FOLLOWUP-SORCERER-METAMAGIC-BATTLE-RESOURCE-BRIDGE | C lane; Unit `sorcerer_metamagic`. |
+| 11 | L12G-FOLLOWUP-SORCERER-METAMAGIC-BATTLE-RESOURCE-BRIDGE - Sorcerer Metamagic Battle Resource Bridge | done | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-ADVANCEMENT-REPLACEMENT | C lane; Unit `sorcerer_metamagic`. |
+| 12 | L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED - Sorcerer Metamagic Cast Governor And Quickened | ready-for-research | L12G-FOLLOWUP-SORCERER-METAMAGIC-BATTLE-RESOURCE-BRIDGE | C lane; Unit `sorcerer_metamagic`. |
 | 13 | L12G-FOLLOWUP-SORCERER-METAMAGIC-SAVE-OPTIONS - Sorcerer Metamagic Save Options | blocked | L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED | C lane; Unit `sorcerer_metamagic`. |
 | 14 | L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-PROPERTY-OPTIONS - Sorcerer Metamagic Cast Property Options | blocked | L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED | C lane; Unit `sorcerer_metamagic`. |
 | 15 | L12G-FOLLOWUP-SORCERER-METAMAGIC-DAMAGE-SHAPE-OPTIONS - Sorcerer Metamagic Damage Shape Options | blocked | L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED | C lane; Unit `sorcerer_metamagic`. |
 | 16 | L12G-FOLLOWUP-SORCERER-METAMAGIC-REROLL-OPTIONS - Sorcerer Metamagic Reroll Options | blocked | L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED | C lane; Unit `sorcerer_metamagic`. |
 | 17 | L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME - Monk Step of the Wind Jump Distance Runtime | ready-for-research | L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS | C lane; Unit `monk_monks_focus`. |
-| 18 | L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE - Sorcerer Font Of Magic Bonus Action And Battle Slot Source | blocked | L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-BATTLE-RESOURCE-BRIDGE | C lane; Unit `sorcerer_font_of_magic`; coordinates shared Sorcery Point battle state with Metamagic bridge. |
+| 18 | L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE - Sorcerer Font Of Magic Bonus Action And Battle Slot Source | ready-for-research | L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-BATTLE-RESOURCE-BRIDGE | C lane; Unit `sorcerer_font_of_magic`; coordinates shared Sorcery Point battle state with Metamagic bridge. |
 | 19 | L12G-RECURSIVE-TAIL-LOOP-C - LOOP-C Recursive Next-Batch Planning Tail | blocked | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME, L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS, L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS, L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-ADVANCEMENT-REPLACEMENT, L12G-FOLLOWUP-SORCERER-METAMAGIC-BATTLE-RESOURCE-BRIDGE, L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED, L12G-FOLLOWUP-SORCERER-METAMAGIC-SAVE-OPTIONS, L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-PROPERTY-OPTIONS, L12G-FOLLOWUP-SORCERER-METAMAGIC-DAMAGE-SHAPE-OPTIONS, L12G-FOLLOWUP-SORCERER-METAMAGIC-REROLL-OPTIONS, L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME, L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE | Last-resort next-batch planning safety net; auto-unblocks only after every real task in this plan is `done`. |
 
 ## Task Details
@@ -636,7 +636,7 @@ Acceptance:
 
 ### Task 11 - L12G-FOLLOWUP-SORCERER-METAMAGIC-BATTLE-RESOURCE-BRIDGE - Sorcerer Metamagic Battle Resource Bridge
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `sorcerer_metamagic`.
 Origin: Split from L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION.
@@ -674,7 +674,7 @@ Acceptance:
 
 ### Task 12 - L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED - Sorcerer Metamagic Cast Governor And Quickened
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Unit: `sorcerer_metamagic`.
 Origin: Split from L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION.
@@ -891,7 +891,7 @@ Acceptance:
 
 ### Task 18 - L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE - Sorcerer Font Of Magic Bonus Action And Battle Slot Source
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Unit: `sorcerer_font_of_magic`.
 Origin: Split from L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS after Task 7 promoted Character Sheet created-slot state but left battle action-economy and slot-source preservation unresolved.

@@ -171,7 +171,8 @@ export function spendClassFeatureFreeCastResource(
         origin: {
           ...actor.origin,
           resources: actor.origin.resources.map((candidate) =>
-            candidate.unit.id === resourceUnitId
+            candidate.unit.id === resourceUnitId &&
+            resourceHasUsesRemaining(candidate)
               ? spendCharacterResourceUse(candidate)
               : candidate,
           ),
