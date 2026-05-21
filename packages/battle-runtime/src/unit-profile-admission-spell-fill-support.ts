@@ -40,6 +40,7 @@ import {
   spellCasterId,
   spellTargetId,
   thunderwaveObjectId,
+  webAreaId,
 } from "./unit-profile-admission-catalog-support.ts";
 import { requireCombatant } from "./unit-profile-admission-creature-fixture-support.ts";
 
@@ -821,6 +822,17 @@ export function moonbeamAreaFill(
   };
 }
 
+export function webAreaFill(
+  hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>,
+  areaId = webAreaId,
+): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
+  return {
+    kind: "spellAreaChoice",
+    holeId: hole.holeId,
+    value: { kind: "webCubeArea", areaId },
+  };
+}
+
 export function flamingSphereRamMovementFill(
   hole: Extract<BattleHole, { readonly kind: "movableZoneRamMovement" }>,
   moveFeet = 30,
@@ -943,6 +955,111 @@ export function greaseGroundHazardEndTurnAct(
   actorId: CombatantId,
 ): ReturnType<typeof greaseGroundHazardSaveAct> {
   return greaseGroundHazardSaveAct(state, actorId, "endsTurnInArea");
+}
+
+export function webRestraintSaveAct(
+  state: BattleState,
+  actorId: CombatantId,
+  trigger: "entersArea" | "startsTurnInArea",
+): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "webRestraintSave";
+    }
+  >;
+} {
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "webRestraintSave";
+        }
+      >;
+    } =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "webRestraintSave" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.trigger === trigger &&
+      candidate.subject.areaId === webAreaId,
+  );
+  if (act === undefined) {
+    throw new Error(`Expected Web ${trigger} save act.`);
+  }
+  return act;
+}
+
+export function webRestrainedNoLongerInAreaAct(
+  state: BattleState,
+  actorId: CombatantId,
+): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "webRestrainedNoLongerInArea";
+    }
+  >;
+} {
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "webRestrainedNoLongerInArea";
+        }
+      >;
+    } =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "webRestrainedNoLongerInArea" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.areaId === webAreaId,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Web no-longer-in-area cleanup act.");
+  }
+  return act;
+}
+
+export function webAreaRemovedAct(
+  state: BattleState,
+): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "webAreaRemoved";
+    }
+  >;
+} {
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "webAreaRemoved";
+        }
+      >;
+    } =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "webAreaRemoved" &&
+      candidate.subject.areaId === webAreaId,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Web area removal act.");
+  }
+  return act;
 }
 
 export function gustOfWindLineEndTurnSaveAct(

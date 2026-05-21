@@ -8,6 +8,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-weapon-enhancement
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.creature-type-protection-and-charm spell.hit-point-restoration spell.invocation-after-hit-damage spell.invocation-after-hit-damage-illumination spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-blur-attack-roll-defense spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-removal-protection spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-dancing-lights-movable-dim-light spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-independent-attack-sequence spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-save-gated-condition-immunity spell.invocation-self-ability-check-advantage spell.invocation-self-teleport spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-failed-d20-test unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.zero-hit-point-replacement
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
@@ -157,6 +158,7 @@ import {
   type ScorchingRayRayCount,
   type SelfTransformationModeKind,
   type SelfTransformationNonNaturalWeaponModeKind,
+  SPELL_CONDITION_ABILITY_CHECK_ACTORS,
   SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS,
   THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
 } from "./battle-reducer/domain-constants.ts";
@@ -228,6 +230,7 @@ export {
   movementHole,
   commandPendingEffectsForActor,
   greaseGroundHazardSavingThrowOutcomeHole,
+  webRestraintSavingThrowOutcomeHole,
   movementHoleWithBudget,
   parseBattleMovement,
   readiedMovementBudgetForActor,
@@ -254,6 +257,9 @@ export {
   resolveCommandGrovelCommand,
   resolveEndTurnCommand,
   resolveGreaseGroundHazardSaveCommand,
+  resolveWebAreaRemovedCommand,
+  resolveWebRestrainedNoLongerInAreaCommand,
+  resolveWebRestraintSaveCommand,
   resolveGustOfWindLineDirectionChangeCommand,
   resolveGustOfWindLineSaveCommand,
   resolveJumpMovementReplacementCommand,
@@ -550,6 +556,8 @@ type BattleUnitFeatureEffectBase = {
 };
 export type SpellConditionAbilityCheckSuccessEnd =
   (typeof SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS)[number];
+export type SpellConditionAbilityCheckActor =
+  (typeof SPELL_CONDITION_ABILITY_CHECK_ACTORS)[number];
 export type ProtectionFromEvilAndGoodPreventedCondition =
   (typeof PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS)[number];
 export type BattlePossessionAttemptDisposition =
@@ -578,6 +586,7 @@ export type SpellConditionEscape =
       readonly kind: "abilityCheck";
       readonly ability: "str";
       readonly skill: "athletics";
+      readonly allowedActor: SpellConditionAbilityCheckActor;
       readonly successEnds: SpellConditionAbilityCheckSuccessEnd;
     }
   | {
@@ -834,6 +843,20 @@ export type BattleActiveEffect =
         BattleActiveEffectExpiration,
         { readonly kind: "duration" }
       >;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "webRestraintHazard";
+      readonly areaId: BattleAreaId;
+      readonly save: {
+        readonly ability: Extract<Ability, "dex">;
+        readonly dc: DcSource;
+      };
+      readonly entrySavedThisTurn: readonly CombatantId[];
+      readonly startTurnSavedThisTurn: readonly CombatantId[];
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "concentration" }
+      > & { readonly durationTicks: ElapsedTimeTicks };
     })
   | (BattleSpellEffectBase & {
       readonly kind: "flamingSphere";
@@ -2229,6 +2252,10 @@ export type BattleFogCloudAreaChoice = Extract<
   BattleSpellAreaIdentityChoice,
   { readonly kind: "fogCloudArea" }
 >;
+export type BattleWebCubeAreaChoice = Extract<
+  BattleSpellAreaIdentityChoice,
+  { readonly kind: "webCubeArea" }
+>;
 export type BattleFlamingSphereAreaChoice = Extract<
   BattleSpellAreaIdentityChoice,
   { readonly kind: "flamingSphereArea" }
@@ -2244,6 +2271,10 @@ export type BattleGustOfWindLineAreaChoice = Extract<
 export type BattleSpellAreaIdentityChoice =
   | {
       readonly kind: "fogCloudArea";
+      readonly areaId: BattleAreaId;
+    }
+  | {
+      readonly kind: "webCubeArea";
       readonly areaId: BattleAreaId;
     }
   | {
@@ -3363,6 +3394,20 @@ export type SupportedSpellInvocation =
   | {
       readonly access: PreparedSpellAccess;
       readonly resource: SpellSlotInvocationResource;
+      readonly procedure: "webRestraintHazard";
+      readonly spell: SpellRecord;
+      readonly ability: Extract<Ability, "dex">;
+      readonly dc: DcSource;
+      readonly targeting: Extract<
+        SpellTargeting,
+        { readonly kind: "pointOriginCube" }
+      >;
+      readonly durationTicks: ElapsedTimeTicks;
+      readonly rangeFeet: MovementFeet;
+    }
+  | {
+      readonly access: PreparedSpellAccess;
+      readonly resource: SpellSlotInvocationResource;
       readonly procedure: "gustOfWindLine";
       readonly spell: SpellRecord;
       readonly ability: Extract<Ability, "str">;
@@ -3598,6 +3643,7 @@ type AnySupportedDamageSpellInvocation = Exclude<
       | "hideousLaughter"
       | "command"
       | "greaseGroundHazard"
+      | "webRestraintHazard"
       | "gustOfWindLine"
       | "fogCloudObscurement"
       | "flamingSphere"
@@ -4177,7 +4223,11 @@ export type BattleSpellAreaChoiceHole = {
   readonly spell: Extract<
     SupportedSpellInvocation,
     {
-      readonly procedure: "fogCloudObscurement" | "flamingSphere" | "moonbeam";
+      readonly procedure:
+        | "fogCloudObscurement"
+        | "flamingSphere"
+        | "moonbeam"
+        | "webRestraintHazard";
     }
   >;
   readonly area: Extract<
@@ -4186,7 +4236,8 @@ export type BattleSpellAreaChoiceHole = {
       readonly kind:
         | "pointOriginSphere"
         | "pointOriginSphereDiameter"
-        | "pointOriginCylinder";
+        | "pointOriginCylinder"
+        | "pointOriginCube";
     }
   >;
 };
@@ -4535,6 +4586,29 @@ export type BattleGreaseGroundHazardSavingThrowOutcomeHole = {
     readonly sourceCombatantId: CombatantId;
     readonly areaId: BattleAreaId;
     readonly trigger: BattleGreaseGroundHazardTrigger;
+    readonly save: {
+      readonly ability: Extract<Ability, "dex">;
+      readonly dc: DcSource;
+    };
+  };
+  readonly ability: Extract<Ability, "dex">;
+  readonly dc: DcSource;
+  readonly areaChoices: readonly [];
+  readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
+  readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
+};
+export type BattleWebRestraintTrigger = "entersArea" | "startsTurnInArea";
+export type BattleWebRestraintSavingThrowOutcomeHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "savingThrowOutcome";
+  readonly label: string;
+  readonly webRestraint: {
+    readonly targetId: CombatantId;
+    readonly sourceSpellId: SpellRecord["id"];
+    readonly sourceCombatantId: CombatantId;
+    readonly areaId: BattleAreaId;
+    readonly trigger: BattleWebRestraintTrigger;
     readonly save: {
       readonly ability: Extract<Ability, "dex">;
       readonly dc: DcSource;
@@ -5180,6 +5254,7 @@ export type BattleHole =
   | BattleSleepRepeatSavingThrowOutcomeHole
   | BattleHideousLaughterRepeatSavingThrowOutcomeHole
   | BattleGreaseGroundHazardSavingThrowOutcomeHole
+  | BattleWebRestraintSavingThrowOutcomeHole
   | BattleGustOfWindLineSavingThrowOutcomeHole
   | BattleGustOfWindLineDirectionChoiceHole
   | BattleSpellConditionEndTurnSavingThrowOutcomeHole

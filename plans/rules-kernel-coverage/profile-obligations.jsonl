@@ -88,3 +88,4 @@
 {"profileId":"character-creation.warlock-pact-magic-advancement","obligationIds":["CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION"]}
 {"profileId":"character-creation.weapon-mastery-choice","obligationIds":["CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION"]}
 {"profileId":"character-creation.eldritch-invocation-choice","obligationIds":["CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE"]}
+{"profileId":"spell.invocation-web-restraint-hazard","obligationIds":["BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"]}

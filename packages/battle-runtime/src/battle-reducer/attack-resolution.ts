@@ -1508,6 +1508,23 @@ export function resolveEscapeSpellRestraint(
       "No spell-imposed Restraint is available to escape.",
     );
   }
+  if (effect.escape?.kind !== "abilityCheck") {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Spell-imposed Restraint escape is no longer available.",
+    );
+  }
+  if (
+    effect.escape.allowedActor === "target" &&
+    input.subject.actorId !== input.subject.targetId
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "This spell-imposed Restraint can only be escaped by the restrained target.",
+    );
+  }
   if (
     actorHasStatBlockMultiattackActionResource(
       input.state,
@@ -1546,6 +1563,7 @@ export function resolveEscapeSpellRestraint(
   }
   if (
     input.subject.actorId !== input.subject.targetId &&
+    effect.escape.allowedActor === "targetOrCreatureWithinReach" &&
     !spellRestraintEscapeActorWithinTargetReach(
       check.value.spatialFacts ?? [],
       input.subject.actorId,

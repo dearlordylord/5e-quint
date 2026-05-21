@@ -2150,6 +2150,7 @@ export function supportedPreparedAfterHitSaveGatedConditionSpellProfile(
             kind: "abilityCheck",
             ability: "str",
             skill: "athletics",
+            allowedActor: "targetOrCreatureWithinReach",
             successEnds: "spell",
           },
           turnStartDamage: {

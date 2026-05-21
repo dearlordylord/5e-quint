@@ -581,7 +581,8 @@ export function spellFillSet(
       if (
         invocation.procedure !== "fogCloudObscurement" &&
         invocation.procedure !== "flamingSphere" &&
-        invocation.procedure !== "moonbeam"
+        invocation.procedure !== "moonbeam" &&
+        invocation.procedure !== "webRestraintHazard"
       ) {
         return {
           tag: "invalid",

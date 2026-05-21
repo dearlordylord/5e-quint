@@ -26,6 +26,10 @@ export const SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS = [
   "condition",
   "spell",
 ] as const;
+export const SPELL_CONDITION_ABILITY_CHECK_ACTORS = [
+  "target",
+  "targetOrCreatureWithinReach",
+] as const;
 export const COMMAND_OPTIONS = [
   "grovel",
   "halt",

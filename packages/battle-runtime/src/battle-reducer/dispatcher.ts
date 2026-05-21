@@ -4,6 +4,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // Owns subject resolution, reaction windows, interrupted-procedure replay,
 // turn snapshots, and reaction-choice orchestration.
 
@@ -272,6 +273,9 @@ import {
   resolveMoonbeamRepositionCommand,
   resolveMoonbeamSaveCommand,
   resolveGreaseGroundHazardSaveCommand,
+  resolveWebAreaRemovedCommand,
+  resolveWebRestrainedNoLongerInAreaCommand,
+  resolveWebRestraintSaveCommand,
   resolveGustOfWindLineDirectionChangeCommand,
   resolveGustOfWindLineSaveCommand,
   resolveEscapeGrapple,
@@ -881,6 +885,28 @@ export function resolveBattleSubjectInternal(
         subject,
         suppressedReactionTrigger: options.suppressedReactionTrigger,
       });
+    }
+    if (
+      subject.tag === "runtimeCommand" &&
+      subject.command === "webRestraintSave"
+    ) {
+      return resolveWebRestraintSaveCommand({
+        ...input,
+        subject,
+        suppressedReactionTrigger: options.suppressedReactionTrigger,
+      });
+    }
+    if (
+      subject.tag === "runtimeCommand" &&
+      subject.command === "webRestrainedNoLongerInArea"
+    ) {
+      return resolveWebRestrainedNoLongerInAreaCommand({ ...input, subject });
+    }
+    if (
+      subject.tag === "runtimeCommand" &&
+      subject.command === "webAreaRemoved"
+    ) {
+      return resolveWebAreaRemovedCommand({ ...input, subject });
     }
     if (
       subject.tag === "runtimeCommand" &&

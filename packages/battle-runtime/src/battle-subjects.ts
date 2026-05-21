@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form spell.invocation-flaming-sphere-hazard-ram spell.invocation-self-transformation-mode spell.invocation-spell-created-held-object
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE
 
 import { Match, Schema } from "effect";
@@ -57,6 +58,9 @@ export const BATTLE_RUNTIME_COMMANDS = [
   "releaseGrapple",
   "opportunityAttack",
   "greaseGroundHazardSave",
+  "webRestraintSave",
+  "webRestrainedNoLongerInArea",
+  "webAreaRemoved",
   "gustOfWindLineSave",
   "gustOfWindLineDirectionChange",
   "movableZoneSave",
@@ -129,6 +133,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "sleepTargetAdmission",
   "hideousLaughter",
   "greaseGroundHazard",
+  "webRestraintHazard",
   "gustOfWindLine",
   "fogCloudObscurement",
   "flamingSphere",
@@ -581,6 +586,31 @@ export const BattleSubjectSchema = Schema.Union(
     sourceSpellId: SpellId,
     areaId: BattleSubjectTextSchema,
     trigger: Schema.Literal("entersArea", "endsTurnInArea"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("webRestraintSave"),
+    sourceCombatantId: CombatantId,
+    sourceSpellId: SpellId,
+    areaId: BattleSubjectTextSchema,
+    trigger: Schema.Literal("entersArea", "startsTurnInArea"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("webRestrainedNoLongerInArea"),
+    sourceCombatantId: CombatantId,
+    sourceSpellId: SpellId,
+    areaId: BattleSubjectTextSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("webAreaRemoved"),
+    sourceCombatantId: CombatantId,
+    sourceSpellId: SpellId,
+    areaId: BattleSubjectTextSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),

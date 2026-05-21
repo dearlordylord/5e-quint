@@ -12,6 +12,7 @@
 // (resolve), and F (turn).
 
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import {
@@ -87,6 +88,10 @@ type OngoingOperationEffect = Extract<
   SpellRecord["mechanics"],
   { readonly family: "ongoing_effect" }
 >["operations"][number]["effect"];
+type OngoingOperation = Extract<
+  SpellRecord["mechanics"],
+  { readonly family: "ongoing_effect" }
+>["operations"][number];
 type OngoingInitialEffect = NonNullable<
   Extract<
     NonNullable<
@@ -116,6 +121,12 @@ type GustOfWindLineSaveEffect = OngoingSaveGateEffect & {
   readonly onFail: Extract<
     OngoingSaveGateEffect["onFail"],
     { readonly kind: "force_move" }
+  >;
+};
+type WebRestraintSaveEffect = OngoingSaveGateEffect & {
+  readonly onFail: Extract<
+    OngoingSaveGateEffect["onFail"],
+    { readonly kind: "apply_condition_while_in_area_or_until_escape" }
   >;
 };
 import {
@@ -328,6 +339,12 @@ export function supportedSpellActs(
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedMoonbeamProfile(spell, spellcasting.spellSlots),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      supportedPreparedWebRestraintHazardProfile(
+        spell,
+        spellcasting.spellSlots,
+      ),
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedObjectContactDamageProfile(
@@ -1438,6 +1455,151 @@ function isMoonbeamSaveGate(
     return null;
   }
   return damage;
+}
+
+export function supportedPreparedWebRestraintHazardProfile(
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  const web = webRestraintHazardSpell(spell);
+  if (web === null) {
+    return [];
+  }
+
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+    if (Number(slot.spellLevel) < spell.mechanics.level) {
+      return [];
+    }
+    return [
+      {
+        access: { tag: "prepared" },
+        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+        procedure: "webRestraintHazard",
+        spell,
+        ability: "dex",
+        dc: { kind: "caster_spell_save_dc" },
+        targeting: {
+          kind: "pointOriginCube",
+          sideFeet: movementFeet(web.sideFeet),
+        },
+        durationTicks: web.durationTicks,
+        rangeFeet: movementFeet(web.rangeFeet),
+      },
+    ];
+  });
+}
+
+function webRestraintHazardSpell(spell: SpellRecord): {
+  readonly durationTicks: ElapsedTimeTicks;
+  readonly rangeFeet: number;
+  readonly sideFeet: number;
+} | null {
+  if (spell.mechanics.family !== "ongoing_effect") {
+    return null;
+  }
+  const durationTicks =
+    spell.mechanics.duration.kind === "concentration"
+      ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.upTo)
+      : null;
+  const attachment = spell.mechanics.attachment;
+  const area =
+    attachment.kind === "hole" && attachment.value.kind === "area"
+      ? attachment.value
+      : null;
+  const enterOperation = spell.mechanics.operations.find(
+    (operation) => operation.trigger.kind === "on_creature_enters_area",
+  );
+  const startTurnOperation = spell.mechanics.operations.find(
+    (operation) =>
+      operation.trigger.kind === "on_creature_starts_turn_in_area",
+  );
+  const escapeOperation = spell.mechanics.operations.find(
+    (operation) =>
+      operation.trigger.kind === "on_affected_creature_spends_action",
+  );
+  const difficultTerrainOperation = spell.mechanics.operations.find(
+    (operation) =>
+      operation.trigger.kind === "passive" &&
+      operation.effect.kind === "area_is_difficult_terrain",
+  );
+  const lightlyObscuredOperation = spell.mechanics.operations.find(
+    (operation) =>
+      operation.trigger.kind === "passive" &&
+      operation.effect.kind === "area_is_lightly_obscured",
+  );
+  const anchorOperation = spell.mechanics.operations.find(
+    (operation) =>
+      operation.trigger.kind === "passive" &&
+      operation.effect.kind === "area_anchor_or_layering_requirement",
+  );
+  const burnAwayOperation = spell.mechanics.operations.find(
+    (operation) =>
+      operation.trigger.kind === "passive" &&
+      operation.effect.kind === "area_section_burns_away",
+  );
+
+  if (
+    spell.mechanics.level !== 2 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "point" ||
+    spell.mechanics.range.feet !== 60 ||
+    spell.mechanics.duration.kind !== "concentration" ||
+    spell.mechanics.duration.upTo.unit !== "hour" ||
+    spell.mechanics.duration.upTo.amount !== 1 ||
+    spell.mechanics.operations.length !== 7 ||
+    durationTicks === null ||
+    Either.isLeft(durationTicks) ||
+    area?.kind !== "area" ||
+    area.origin.kind !== "point_within_range" ||
+    area.shape.kind !== "cube" ||
+    area.shape.sideFeet !== 20 ||
+    !isWebRestraintSaveGate(enterOperation?.effect) ||
+    enterOperation?.usageLimit?.kind !== "once_per_turn" ||
+    !isWebRestraintSaveGate(startTurnOperation?.effect) ||
+    !isWebRestraintEscapeOperation(escapeOperation) ||
+    difficultTerrainOperation === undefined ||
+    lightlyObscuredOperation === undefined ||
+    anchorOperation?.effect.kind !== "area_anchor_or_layering_requirement" ||
+    burnAwayOperation?.effect.kind !== "area_section_burns_away"
+  ) {
+    return null;
+  }
+
+  return {
+    durationTicks: durationTicks.right,
+    rangeFeet: spell.mechanics.range.feet,
+    sideFeet: area.shape.sideFeet,
+  };
+}
+
+function isWebRestraintSaveGate(
+  effect: OngoingOperationEffect | undefined,
+): effect is WebRestraintSaveEffect {
+  return (
+    effect?.kind === "save_gate" &&
+    effect.ability === "dex" &&
+    effect.dc.kind === "caster_spell_save_dc" &&
+    effect.onSuccess.kind === "none" &&
+    effect.onFail.kind === "apply_condition_while_in_area_or_until_escape" &&
+    effect.onFail.condition === "restrained"
+  );
+}
+
+function isWebRestraintEscapeOperation(
+  operation: OngoingOperation | undefined,
+): boolean {
+  return (
+    operation?.trigger.kind === "on_affected_creature_spends_action" &&
+    operation.trigger.cost.kind === "action" &&
+    operation.predicate?.kind === "has_condition" &&
+    operation.predicate.condition === "restrained" &&
+    operation.effect.kind === "ability_check_gate" &&
+    operation.effect.ability === "str" &&
+    operation.effect.skill === "athletics" &&
+    operation.effect.dc.kind === "caster_spell_save_dc" &&
+    operation.effect.onPass.kind === "remove_condition" &&
+    operation.effect.onPass.condition === "restrained"
+  );
 }
 
 export function supportedPreparedObjectContactDamageProfile(

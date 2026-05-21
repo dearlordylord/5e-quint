@@ -5,6 +5,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram spell.invocation-moonbeam-movable-zone
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE BATTLE.COMMAND.OPTION_AND_NEXT_TURN BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE
@@ -83,6 +84,7 @@ import {
   applyStartTurnDeathSavingThrow,
   applyHitPointMaximumIncreaseExpiration,
   applyTemporaryHitPoints,
+  breakBattleConcentration,
   breakCombatantConcentration,
   concentrationSavingThrowHole,
   damageLifecycleConcentrationSavingThrowHoles,
@@ -148,10 +150,14 @@ import {
 import {
   applyCommandGrovelProneToTarget,
   applyGreaseProneToTarget,
+  applyWebRestrainedCondition,
   expireBattleLightEmitters,
+  markWebSavedThisTurn,
   markMoonbeamSavedThisTurn,
+  removeWebRestrainedCondition,
   replaceGustOfWindLineDirection,
   resetAllMoonbeamSavedThisTurn,
+  resetAllWebSavedThisTurn,
   tickDurationBattleLightEmitters,
 } from "./spells-active-effects.ts";
 import { validateGustOfWindLineAreaPushFacts } from "./spells-resolve-save-gates.ts";
@@ -191,6 +197,8 @@ import type {
   BattleGreaseGroundDifficultTerrainMovementFact,
   BattleGrappleLink,
   BattleGreaseGroundHazardSavingThrowOutcomeHole,
+  BattleWebRestraintSavingThrowOutcomeHole,
+  BattleWebRestraintTrigger,
   BattleHideousLaughterRepeatSavingThrowOutcomeHole,
   BattleHeldObjectFactsHole,
   BattleHoleId,
@@ -352,8 +360,11 @@ export function resolveEndTurn(
   const combatantsAfterMoonbeamReset = resetAllMoonbeamSavedThisTurn(
     combatantsAfterStartEffects,
   );
-  const combatantsAfterStartTurnEffects = applyStartOfTurnActiveEffects(
+  const combatantsAfterWebSaveReset = resetAllWebSavedThisTurn(
     combatantsAfterMoonbeamReset,
+  );
+  const combatantsAfterStartTurnEffects = applyStartOfTurnActiveEffects(
+    combatantsAfterWebSaveReset,
     nextActorId,
   );
   const combatantsAfterSpellTurnStartDamage = applyStartTurnSpellDamageFills(
@@ -897,6 +908,10 @@ function validateSpellConditionEndTurnSavingThrowOutcome(
 export type GreaseGroundHazardEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "greaseGroundHazard" }
+>;
+export type WebRestraintHazardEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "webRestraintHazard" }
 >;
 export type FlamingSphereEffect = Extract<
   BattleActiveEffect,
@@ -1749,6 +1764,279 @@ function resolveGreaseGroundHazardEntrySaveCommand(
   };
 }
 
+function webRestraintHazardEffectFor(
+  state: BattleState,
+  subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command:
+        | "webRestraintSave"
+        | "webRestrainedNoLongerInArea"
+        | "webAreaRemoved";
+    }
+  >,
+): WebRestraintHazardEffect | undefined {
+  const source = state.combatants.get(subject.sourceCombatantId);
+  return source?.activeEffects.find(
+    (effect): effect is WebRestraintHazardEffect =>
+      effect.kind === "webRestraintHazard" &&
+      effect.sourceSpellId === subject.sourceSpellId &&
+      effect.sourceCombatantId === subject.sourceCombatantId &&
+      effect.areaId === subject.areaId,
+  );
+}
+
+export function webRestraintSavingThrowOutcomeHole(
+  state: BattleState,
+  targetId: CombatantId,
+  effect: WebRestraintHazardEffect,
+  trigger: BattleWebRestraintTrigger,
+): BattleWebRestraintSavingThrowOutcomeHole {
+  const key = `battle:web-restraint-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}:${trigger}`;
+  return {
+    kind: "savingThrowOutcome",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: `${effect.sourceSpellId} ${trigger === "entersArea" ? "entry" : "start-turn"} DEX save`,
+    webRestraint: {
+      targetId,
+      sourceSpellId: effect.sourceSpellId,
+      sourceCombatantId: effect.sourceCombatantId,
+      areaId: effect.areaId,
+      trigger,
+      save: effect.save,
+    },
+    ability: effect.save.ability,
+    dc: effect.save.dc,
+    areaChoices: [],
+    targetRollModes: savingThrowRollModeProjections(
+      state,
+      effect.save.ability,
+    ).filter((projection) => projection.targetId === targetId),
+    targetFlatBonuses: savingThrowFlatBonusProjections(state).filter(
+      (projection) => projection.targetId === targetId,
+    ),
+  };
+}
+
+function validateWebRestraintSavingThrowOutcome(
+  value: BattleSavingThrowOutcomeValue,
+  targetId: CombatantId,
+): string | null {
+  if ("area" in value) {
+    return "Web Restraint Saving Throw outcome must not include area facts.";
+  }
+  return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
+    ? null
+    : "Web Restraint Saving Throw outcome must match the triggering target.";
+}
+
+function webRestraintSaveAlreadyResolved(
+  effect: WebRestraintHazardEffect,
+  targetId: CombatantId,
+  trigger: BattleWebRestraintTrigger,
+): boolean {
+  return trigger === "entersArea"
+    ? effect.entrySavedThisTurn.includes(targetId)
+    : effect.startTurnSavedThisTurn.includes(targetId);
+}
+
+export function resolveWebRestraintSaveCommand(
+  input: BattleResolutionInput & {
+    readonly subject: Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "webRestraintSave";
+      }
+    >;
+    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+  },
+): BattleResolutionResult {
+  if (
+    input.fills.some((fill) => fill.kind !== "savingThrowOutcome") ||
+    input.fills.length > 1
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Web Restraint save accepts exactly one Saving Throw outcome fill.",
+    );
+  }
+  const effect = webRestraintHazardEffectFor(input.state, input.subject);
+  if (
+    effect === undefined ||
+    !input.state.combatants.has(input.subject.actorId)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Web Restraint save is no longer available.",
+    );
+  }
+  if (
+    webRestraintSaveAlreadyResolved(
+      effect,
+      input.subject.actorId,
+      input.subject.trigger,
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Web Restraint save was already resolved for this target this turn.",
+    );
+  }
+  const hole = webRestraintSavingThrowOutcomeHole(
+    input.state,
+    input.subject.actorId,
+    effect,
+    input.subject.trigger,
+  );
+  const [savingThrowFill] = input.fills;
+  if (savingThrowFill === undefined) {
+    return needsHolesResult(input.state, input.subject, [hole]);
+  }
+  if (savingThrowFill.kind !== "savingThrowOutcome") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Web Restraint save requires a Saving Throw outcome fill.",
+    );
+  }
+  if (savingThrowFill.holeId !== hole.holeId) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Web Restraint save requires the matching Saving Throw outcome fill.",
+    );
+  }
+  const validation = validateWebRestraintSavingThrowOutcome(
+    savingThrowFill.value,
+    input.subject.actorId,
+  );
+  if (validation !== null) {
+    return invalidResult(input.state, "invalidFill", validation);
+  }
+  const outcome = savingThrowFill.value.outcomes[0]!;
+  if (!outcome.succeeded) {
+    const saveFailedReactionWindow = maybeOpenReactionWindow(
+      input.state,
+      {
+        trigger: "saveFailed",
+        targetId: input.subject.actorId,
+        sourceSpellId: effect.sourceSpellId,
+        continuation: {
+          kind: "replay",
+          subject: input.subject,
+          fills: input.fills,
+        },
+      },
+      input.suppressedReactionTrigger,
+    );
+    if (saveFailedReactionWindow !== null) {
+      return saveFailedReactionWindow;
+    }
+  }
+  const marked = markWebSavedThisTurn(
+    input.state,
+    input.subject.actorId,
+    effect,
+    input.subject.trigger,
+  );
+  const nextEffect = webRestraintHazardEffectFor(marked, input.subject);
+  const nextState =
+    !outcome.succeeded && nextEffect !== undefined
+      ? applyWebRestrainedCondition(marked, input.subject.actorId, nextEffect)
+      : marked;
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+export function resolveWebRestrainedNoLongerInAreaCommand(
+  input: BattleResolutionInput & {
+    readonly subject: Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "webRestrainedNoLongerInArea";
+      }
+    >;
+  },
+): BattleResolutionResult {
+  if (input.fills.length > 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Web no-longer-in-area cleanup uses no fills.",
+    );
+  }
+  if (webRestraintHazardEffectFor(input.state, input.subject) === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Web Restraint cleanup is no longer available.",
+    );
+  }
+  const nextState = removeWebRestrainedCondition({
+    state: input.state,
+    targetId: input.subject.actorId,
+    sourceCombatantId: input.subject.sourceCombatantId,
+    sourceSpellId: input.subject.sourceSpellId,
+  });
+  return nextState === input.state
+    ? invalidResult(
+        input.state,
+        "staleSubject",
+        "Web Restraint cleanup is no longer available.",
+      )
+    : {
+        tag: "resolved",
+        state: nextState,
+        snapshot: snapshotBattle(nextState),
+      };
+}
+
+export function resolveWebAreaRemovedCommand(
+  input: BattleResolutionInput & {
+    readonly subject: Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "webAreaRemoved";
+      }
+    >;
+  },
+): BattleResolutionResult {
+  if (input.fills.length > 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Web area removal uses no fills.",
+    );
+  }
+  if (webRestraintHazardEffectFor(input.state, input.subject) === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Web area is no longer active.",
+    );
+  }
+  const nextState = breakBattleConcentration(
+    input.state,
+    input.subject.sourceCombatantId,
+  );
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
 function resolveGreaseGroundHazardEndTurnSaveCommand(
   input: BattleResolutionInput & {
     readonly subject: Extract<
@@ -1968,8 +2256,7 @@ function validateGustOfWindLineSavingThrowOutcome(
   }
   return validateGustOfWindLineAreaPushFacts({
     area,
-    failedTargetIds:
-      value.outcomes[0]?.succeeded === true ? [] : [targetId],
+    failedTargetIds: value.outcomes[0]?.succeeded === true ? [] : [targetId],
     pushDistanceFeet: effect.pushDistanceFeet,
   });
 }
@@ -2120,9 +2407,7 @@ export function resolveGustOfWindLineDirectionChangeCommand(
     );
   }
   if (
-    input.fills.some(
-      (fill) => fill.kind !== "gustOfWindLineDirectionChoice",
-    )
+    input.fills.some((fill) => fill.kind !== "gustOfWindLineDirectionChoice")
   ) {
     return invalidResult(
       input.state,
@@ -5403,8 +5688,7 @@ function validateGustOfWindLineMovementFact(
   ) {
     return {
       tag: "invalid",
-      message:
-        "Gust of Wind Line total distance must be a positive integer.",
+      message: "Gust of Wind Line total distance must be a positive integer.",
     };
   }
   if (
@@ -5413,8 +5697,7 @@ function validateGustOfWindLineMovementFact(
   ) {
     return {
       tag: "invalid",
-      message:
-        "Gust of Wind Line closer distance must be a positive integer.",
+      message: "Gust of Wind Line closer distance must be a positive integer.",
     };
   }
   if (Number(fact.closerDistanceFeet) > Number(fact.totalDistanceFeet)) {
@@ -5444,8 +5727,7 @@ function validateGustOfWindLineMovementFact(
     tag: "ok",
     totalDistanceFeet: fact.totalDistanceFeet,
     extraCostFeet: movementFeet(
-      Number(fact.closerDistanceFeet) *
-        (effect.movementCost.multiplier - 1),
+      Number(fact.closerDistanceFeet) * (effect.movementCost.multiplier - 1),
     ),
   };
 }

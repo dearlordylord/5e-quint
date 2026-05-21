@@ -93,6 +93,7 @@ import {
   MIRROR_IMAGE_UNAFFECTED_SENSES,
   SCORCHING_RAY_RAY_COUNTS,
   SELF_TRANSFORMATION_MODE_KINDS,
+  SPELL_CONDITION_ABILITY_CHECK_ACTORS,
   SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS,
   THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
 } from "./domain-constants.ts";
@@ -1041,6 +1042,7 @@ const SpellConditionEscapeSchema = Schema.Union(
     kind: Schema.Literal("abilityCheck"),
     ability: Schema.Literal("str"),
     skill: Schema.Literal("athletics"),
+    allowedActor: Schema.Literal(...SPELL_CONDITION_ABILITY_CHECK_ACTORS),
     successEnds: Schema.Literal(...SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS),
   }),
   Schema.Struct({
@@ -1607,6 +1609,20 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("greaseGroundHazard"),
+      spell: BattleRuntimeObjectSchema,
+      ability: Schema.Literal("dex"),
+      dc: DcSourceSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("pointOriginCube"),
+        sideFeet: MovementFeet,
+      }),
+      durationTicks: Schema.Number,
+      rangeFeet: MovementFeet,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("webRestraintHazard"),
       spell: BattleRuntimeObjectSchema,
       ability: Schema.Literal("dex"),
       dc: DcSourceSchema,
@@ -2489,6 +2505,10 @@ export const BattleHoleSchema = Schema.Union(
         radiusFeet: MovementFeet,
         heightFeet: MovementFeet,
       }),
+      Schema.Struct({
+        kind: Schema.Literal("pointOriginCube"),
+        sideFeet: MovementFeet,
+      }),
     ),
   }),
   Schema.Struct({
@@ -2538,6 +2558,17 @@ export const BattleHoleSchema = Schema.Union(
     kind: Schema.Literal("savingThrowOutcome"),
     label: Schema.String,
     greaseGroundHazard: BattleRuntimeObjectSchema,
+    ability: Schema.Literal("dex"),
+    dc: DcSourceSchema,
+    areaChoices: Schema.Array(BattleRuntimeObjectSchema),
+    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("savingThrowOutcome"),
+    label: Schema.String,
+    webRestraint: BattleRuntimeObjectSchema,
     ability: Schema.Literal("dex"),
     dc: DcSourceSchema,
     areaChoices: Schema.Array(BattleRuntimeObjectSchema),
@@ -3091,6 +3122,10 @@ type BattleFillEncoded =
       readonly value:
         | {
             readonly kind: "fogCloudArea";
+            readonly areaId: string;
+          }
+        | {
+            readonly kind: "webCubeArea";
             readonly areaId: string;
           }
         | {
@@ -3771,6 +3806,10 @@ export const BattleFillSchema: Schema.Schema<
       value: Schema.Union(
         Schema.Struct({
           kind: Schema.Literal("fogCloudArea"),
+          areaId: BattleAreaId,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("webCubeArea"),
           areaId: BattleAreaId,
         }),
         Schema.Struct({

@@ -1,5 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-fog-cloud-obscurement spell.invocation-flaming-sphere-hazard-ram spell.invocation-moonbeam-movable-zone
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE
 import type {
   ActionSpellBattleResolutionInput,
@@ -15,6 +16,7 @@ import {
   applyFogCloudObscurementCastEffect,
   applyGustOfWindLineCastEffect,
   applyMoonbeamCastEffect,
+  applyWebRestraintHazardCastEffect,
 } from "./spells-active-effects.ts";
 import { spellSavingThrowOutcomeHole } from "./spells-damage-fills.ts";
 import { spellAreaChoiceHole } from "./spells-holes-fills.ts";
@@ -230,6 +232,78 @@ export function resolveMoonbeamSpellAct(input: {
     return resourced;
   }
   const nextState = applyMoonbeamCastEffect({
+    state: resourced.state,
+    actorId: input.actorId,
+    areaId: input.fillSet.areaChoice.areaId,
+    invocation: input.invocation,
+  });
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+export function resolveWebRestraintHazardSpellAct(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "webRestraintHazard" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  if (
+    input.fillSet.targetId !== undefined ||
+    input.fillSet.objectTarget !== undefined ||
+    input.fillSet.targetAllocation !== undefined ||
+    input.fillSet.targetList !== undefined ||
+    input.fillSet.attackRoll !== undefined ||
+    input.fillSet.savingThrowOutcomes !== undefined ||
+    input.fillSet.skillChoice !== undefined ||
+    input.fillSet.abilityChoice !== undefined ||
+    input.fillSet.commandOptionChoice !== undefined ||
+    input.fillSet.damageTypeChoice !== undefined ||
+    input.fillSet.concentrationSavingThrows.length > 0 ||
+    input.fillSet.damageDispositions.length > 0 ||
+    input.fillSet.damageRoll !== undefined ||
+    input.fillSet.movement !== undefined ||
+    input.fillSet.spellDamageReductionRolls.length > 0 ||
+    input.fillSet.attackBurstDamageRoll !== undefined ||
+    input.fillSet.healingRoll !== undefined
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Web uses one table-supplied cube area fill.",
+    );
+  }
+  if (input.fillSet.areaChoice === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      spellAreaChoiceHole(input.invocation),
+    ]);
+  }
+  if (
+    input.fillSet.areaChoice.kind !== "webCubeArea" ||
+    input.fillSet.areaChoice.areaId.length === 0
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Web area id must be a non-empty cube area.",
+    );
+  }
+
+  const resourced = spendSpellCastResources({
+    state: input.input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+  });
+  if (resourced.tag === "invalid") {
+    return resourced;
+  }
+  const nextState = applyWebRestraintHazardCastEffect({
     state: resourced.state,
     actorId: input.actorId,
     areaId: input.fillSet.areaChoice.areaId,

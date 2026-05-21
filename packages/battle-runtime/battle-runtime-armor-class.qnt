@@ -100,6 +100,8 @@ module battleRuntimeArmorClass {
         | GreaseGroundHazard(_) => false
         | FogCloudObscurement(_) => false
         | FlamingSphere(_) => false
+        | WebRestraintHazard(_) => false
+        | WebRestrained(_) => false
         | HeatMetalObjectContactDamage(_) => false
         | HeatMetalHoldingWearingPenalty(_) => false
         | CommandPending(_) => false

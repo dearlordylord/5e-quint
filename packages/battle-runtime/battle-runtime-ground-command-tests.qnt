@@ -197,6 +197,92 @@ module battleRuntimeGroundCommandTests {
     }
   }
 
+  run test_web_records_restraint_hazard_and_concentration = {
+    val resolved = resolveWeb(initialState, webAreaId, 2)
+    all {
+      assert(resolved.fighter.activeEffects.contains(WebRestraintHazard({
+        areaId: webAreaId,
+        durationTicks: webDurationTicks,
+        entrySavedThisTurn: Set(),
+        startTurnSavedThisTurn: Set(),
+      }))),
+      assert(resolved.fighter.concentrating),
+      assert(not(resolved.actionAvailable)),
+      assert(battleActorHasCommittedSpellSlotUse(resolved, Fighter)),
+    }
+  }
+
+  run test_web_entry_save_restrains_once_per_turn_and_resets_next_turn = {
+    val resolved = resolveWeb(initialState, webAreaId, 2)
+    val entryFailed = resolveWebRestraintSave(resolved, Goblin, webAreaId, true, false)
+    val duplicateEntry = resolveWebRestraintSave(entryFailed, Goblin, webAreaId, true, false)
+    val goblinTurn = endTurn(entryFailed)
+    all {
+      assert(entryFailed.goblin.activeEffects.contains(WebRestrained({ source: Fighter, durationTicks: webDurationTicks }))),
+      assert(webEntrySaveAlreadyResolved(entryFailed, Goblin, webAreaId)),
+      assert(duplicateEntry.goblin.activeEffects == entryFailed.goblin.activeEffects),
+      assert(not(webEntrySaveAlreadyResolved(goblinTurn, Goblin, webAreaId))),
+      assert(not(webStartTurnSaveAlreadyResolved(goblinTurn, Goblin, webAreaId))),
+    }
+  }
+
+  run test_web_start_turn_save_restrains_and_escape_removes_condition = {
+    val resolved = resolveWeb(initialState, webAreaId, 2)
+    val goblinTurn = endTurn(resolved)
+    val startTurnFailed = resolveWebRestraintSave(goblinTurn, Goblin, webAreaId, false, false)
+    val duplicateStartTurn = resolveWebRestraintSave(startTurnFailed, Goblin, webAreaId, false, false)
+    val escaped = escapeWebRestrained(startTurnFailed, Goblin, true)
+    all {
+      assert(startTurnFailed.goblin.activeEffects.contains(WebRestrained({ source: Fighter, durationTicks: webDurationTicks }))),
+      assert(webStartTurnSaveAlreadyResolved(startTurnFailed, Goblin, webAreaId)),
+      assert(duplicateStartTurn.fighter.activeEffects == startTurnFailed.fighter.activeEffects),
+      assert(not(escaped.goblin.activeEffects.contains(WebRestrained({ source: Fighter, durationTicks: webDurationTicks })))),
+      assert(not(escaped.actionAvailable)),
+      assert(webRestraintHazardActive(escaped, webAreaId)),
+    }
+  }
+
+  run test_web_no_longer_in_area_and_area_removal_cleanup = {
+    val resolved = resolveWeb(initialState, webAreaId, 2)
+    val restrained = resolveWebRestraintSave(resolved, Goblin, webAreaId, true, false)
+    val leftArea = webRestrainedNoLongerInArea(restrained, Goblin, webAreaId)
+    val restrainedAgain = resolveWebRestraintSave(resolved, Goblin, webAreaId, false, false)
+    val removedArea = removeWebArea(restrainedAgain, webAreaId)
+    all {
+      assert(not(leftArea.goblin.activeEffects.contains(WebRestrained({ source: Fighter, durationTicks: webDurationTicks })))),
+      assert(webRestraintHazardActive(leftArea, webAreaId)),
+      assert(not(webRestraintHazardActive(removedArea, webAreaId))),
+      assert(not(removedArea.goblin.activeEffects.contains(WebRestrained({ source: Fighter, durationTicks: webDurationTicks })))),
+      assert(not(removedArea.fighter.concentrating)),
+    }
+  }
+
+  run test_web_duration_expiration_clears_hazard_restraint_and_concentration = {
+    val expiring = {
+      ...initialState,
+      fighter: {
+        ...initialState.fighter,
+        concentrating: true,
+        activeEffects: Set(WebRestraintHazard({
+          areaId: webAreaId,
+          durationTicks: 1,
+          entrySavedThisTurn: Set(Goblin),
+          startTurnSavedThisTurn: Set(Goblin),
+        })),
+      },
+      goblin: {
+        ...initialState.goblin,
+        activeEffects: Set(WebRestrained({ source: Fighter, durationTicks: 1 })),
+      },
+    }
+    val ticked = tickRoundDurationSpellEffects(expiring)
+    all {
+      assert(not(webRestraintHazardActive(ticked, webAreaId))),
+      assert(not(ticked.goblin.activeEffects.contains(WebRestrained({ source: Fighter, durationTicks: 1 })))),
+      assert(not(ticked.fighter.concentrating)),
+    }
+  }
+
   run test_command_grovel_records_next_turn_pending_effect_on_failed_save = {
     val resolved = resolveCommand(initialState, Set(Goblin), Set(Goblin), 1, CommandGrovelOption)
     all {

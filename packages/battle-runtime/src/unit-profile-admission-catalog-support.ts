@@ -203,6 +203,8 @@ export const flamingSphereUnitId = "flaming_sphere";
 
 export const moonbeamUnitId = "moonbeam";
 
+export const webUnitId = "web";
+
 export const guidingBoltUnitId = "guiding_bolt";
 
 export const guidanceUnitId = "guidance";
@@ -329,6 +331,8 @@ export const flamingSphereAreaId = battleAreaId(
 );
 
 export const moonbeamAreaId = battleAreaId("unit-profile-moonbeam-area");
+
+export const webAreaId = battleAreaId("unit-profile-web-area");
 
 export const gustOfWindAreaId = battleAreaId(
   "unit-profile-gust-of-wind-line-area",

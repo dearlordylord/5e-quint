@@ -718,6 +718,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
             kind: "abilityCheck",
             ability: "str",
             skill: "athletics",
+            allowedActor: "target",
             successEnds: "condition",
           },
           turnStartDamage: null,

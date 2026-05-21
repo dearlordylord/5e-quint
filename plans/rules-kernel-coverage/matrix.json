@@ -24,13 +24,13 @@
     "obligations[].profiles": "Derived from profileObligations by obligation id; authored obligations.jsonl rows must not contain profiles."
   },
   "battleHoleFrontierSummary": {
-    "total": 93,
+    "total": 94,
     "bySubject": {
-      "battle-hole-family": 57,
+      "battle-hole-family": 58,
       "battle-fill-kind": 36
     },
     "byClassification": {
-      "semantic-frontier": 70,
+      "semantic-frontier": 71,
       "deterministic-boundary-projection": 0,
       "table-owned-fact": 23,
       "unsupported-dead-branch": 0
@@ -195,6 +195,7 @@
       ],
       "profiles": [
         "spell.invocation-damage-save-or-attack",
+        "spell.invocation-web-restraint-hazard",
         "spell.reaction-shield",
         "spell.readied-action-time-spell"
       ],
@@ -2884,6 +2885,18 @@
       "id": "magicWeaponTargetItem",
       "reason": "Magic Weapon target-item fills supply the table-verified exact holder-plus-item identity for a nonmagical weapon; the weapon-hosted spell obligation owns the item-attached effect, same-caster replacement, other-caster rejection, and exact holder-plus-item attack/damage projection.",
       "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "savingThrowOutcome",
+      "id": "BattleWebRestraintSavingThrowOutcomeHole",
+      "reason": "Web restraint Saving Throw outcomes consume table-triggered entry or start-turn area membership witnesses and drive reducer-owned spell-condition application plus first-entry ledger updates. Automatic geometry and area membership derivation remain table-owned boundary facts.",
+      "subject": "battle-hole-family"
     }
   ],
   "profileObligations": [
@@ -3448,6 +3461,12 @@
         "CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE"
       ],
       "profileId": "character-creation.eldritch-invocation-choice"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "spell.invocation-web-restraint-hazard"
     }
   ],
   "generatorReadiness": [
@@ -3557,6 +3576,7 @@
     "spell.invocation-warding-bond-linked-effect",
     "spell.invocation-weapon-attack-override",
     "spell.invocation-weapon-damage-rider",
+    "spell.invocation-web-restraint-hazard",
     "spell.reaction-counterspell",
     "spell.reaction-hellish-rebuke",
     "spell.reaction-shield",

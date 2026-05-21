@@ -469,7 +469,11 @@ export function spellAreaChoiceHole(
   invocation: Extract<
     SupportedSpellInvocation,
     {
-      readonly procedure: "fogCloudObscurement" | "flamingSphere" | "moonbeam";
+      readonly procedure:
+        | "fogCloudObscurement"
+        | "flamingSphere"
+        | "moonbeam"
+        | "webRestraintHazard";
     }
   >,
 ): BattleSpellAreaChoiceHole {
@@ -488,7 +492,11 @@ export function spellAreaChoiceHoleId(
   invocation: Extract<
     SupportedSpellInvocation,
     {
-      readonly procedure: "fogCloudObscurement" | "flamingSphere" | "moonbeam";
+      readonly procedure:
+        | "fogCloudObscurement"
+        | "flamingSphere"
+        | "moonbeam"
+        | "webRestraintHazard";
     }
   >,
 ): BattleHoleId {

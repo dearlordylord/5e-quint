@@ -1,6 +1,7 @@
 // Battle act discovery extracted from ../battle-reducer.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode spell.invocation-spell-created-held-object
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // Owns top-level act discovery and subject/action-resource discovery helpers.
 // Mechanical move; no behavior change intended.
 
@@ -111,6 +112,7 @@ import {
 
 import {
   greaseGroundHazardSavingThrowOutcomeHole,
+  webRestraintSavingThrowOutcomeHole,
   gustOfWindLineDirectionChoiceHole,
   gustOfWindLineSavingThrowOutcomeHole,
   flamingSphereRamMovementHole,
@@ -125,6 +127,7 @@ import {
   readiedSpellInitialHoles,
   standFromProneCostFeet,
   type GreaseGroundHazardEffect,
+  type WebRestraintHazardEffect,
   type GustOfWindLineEffect,
   type FlamingSphereEffect,
   type MoonbeamEffect,
@@ -173,101 +176,121 @@ export function discoverBattleActs(
   if (!state.combatants.has(actorId)) {
     return acts;
   }
+  const startTurnWebActs = webRestraintStartTurnSaveActs(state, actorId);
   const commandGrovelEffects = commandPendingEffectsForActor(
     state,
     actorId,
   ).filter((effect) => effect.option === "grovel");
   if (commandGrovelEffects.length > 0) {
-    return commandGrovelEffects.map((effect) => ({
-      subject: {
-        tag: "runtimeCommand" as const,
-        actorId,
-        command: "commandGrovel" as const,
-        sourceCombatantId: effect.sourceCombatantId,
-        sourceSpellId: spellId(effect.sourceSpellId),
-      },
-      label: "Command: Grovel",
-      summary: "Have the Prone condition and end the turn.",
-      initialHoles: [],
-    }));
+    return [
+      ...startTurnWebActs,
+      ...commandGrovelEffects.map((effect) => ({
+        subject: {
+          tag: "runtimeCommand" as const,
+          actorId,
+          command: "commandGrovel" as const,
+          sourceCombatantId: effect.sourceCombatantId,
+          sourceSpellId: spellId(effect.sourceSpellId),
+        },
+        label: "Command: Grovel",
+        summary: "Have the Prone condition and end the turn.",
+        initialHoles: [],
+      })),
+    ];
   }
   const commandDropEffects = commandPendingEffectsForActor(
     state,
     actorId,
   ).filter((effect) => effect.option === "drop");
   if (commandDropEffects.length > 0) {
-    return commandDropEffects.map((effect) => {
-      const subject = {
-        tag: "runtimeCommand" as const,
-        actorId,
-        command: "commandDrop" as const,
-        sourceCombatantId: effect.sourceCombatantId,
-        sourceSpellId: spellId(effect.sourceSpellId),
-      };
-      const canonicalObjectIds = canonicalHeldObjectIdsForActor(state, actorId);
-      return {
-        subject,
-        label: "Command: Drop",
-        summary: "Drop held objects and end the turn.",
-        initialHoles:
-          canonicalObjectIds === null
-            ? [commandDropHeldObjectFactsHole(subject)]
-            : [],
-      };
-    });
+    return [
+      ...startTurnWebActs,
+      ...commandDropEffects.map((effect) => {
+        const subject = {
+          tag: "runtimeCommand" as const,
+          actorId,
+          command: "commandDrop" as const,
+          sourceCombatantId: effect.sourceCombatantId,
+          sourceSpellId: spellId(effect.sourceSpellId),
+        };
+        const canonicalObjectIds = canonicalHeldObjectIdsForActor(
+          state,
+          actorId,
+        );
+        return {
+          subject,
+          label: "Command: Drop",
+          summary: "Drop held objects and end the turn.",
+          initialHoles:
+            canonicalObjectIds === null
+              ? [commandDropHeldObjectFactsHole(subject)]
+              : [],
+        };
+      }),
+    ];
   }
   const commandApproachEffects = commandPendingEffectsForActor(
     state,
     actorId,
   ).filter((effect) => effect.option === "approach");
   if (commandApproachEffects.length > 0) {
-    return commandApproachEffects.map((effect) => ({
-      subject: {
-        tag: "runtimeCommand" as const,
-        actorId,
-        command: "commandApproach" as const,
-        sourceCombatantId: effect.sourceCombatantId,
-        sourceSpellId: spellId(effect.sourceSpellId),
-      },
-      label: "Command: Approach",
-      summary: "Move toward the caster by a supplied shortest/direct route.",
-      initialHoles: combatantCanMoveInState(state, actorId)
-        ? [movementHole(state, actorId)]
-        : [],
-    }));
+    return [
+      ...startTurnWebActs,
+      ...commandApproachEffects.map((effect) => ({
+        subject: {
+          tag: "runtimeCommand" as const,
+          actorId,
+          command: "commandApproach" as const,
+          sourceCombatantId: effect.sourceCombatantId,
+          sourceSpellId: spellId(effect.sourceSpellId),
+        },
+        label: "Command: Approach",
+        summary: "Move toward the caster by a supplied shortest/direct route.",
+        initialHoles: combatantCanMoveInState(state, actorId)
+          ? [movementHole(state, actorId)]
+          : [],
+      })),
+    ];
   }
   const commandFleeEffects = commandPendingEffectsForActor(
     state,
     actorId,
   ).filter((effect) => effect.option === "flee");
   if (commandFleeEffects.length > 0) {
-    return commandFleeEffects.map((effect) => ({
-      subject: {
-        tag: "runtimeCommand" as const,
-        actorId,
-        command: "commandFlee" as const,
-        sourceCombatantId: effect.sourceCombatantId,
-        sourceSpellId: spellId(effect.sourceSpellId),
-      },
-      label: "Command: Flee",
-      summary: "Move away from the caster by supplied fastest-available means.",
-      initialHoles: combatantCanMoveInState(state, actorId)
-        ? [movementHole(state, actorId)]
-        : [],
-    }));
+    return [
+      ...startTurnWebActs,
+      ...commandFleeEffects.map((effect) => ({
+        subject: {
+          tag: "runtimeCommand" as const,
+          actorId,
+          command: "commandFlee" as const,
+          sourceCombatantId: effect.sourceCombatantId,
+          sourceSpellId: spellId(effect.sourceSpellId),
+        },
+        label: "Command: Flee",
+        summary:
+          "Move away from the caster by supplied fastest-available means.",
+        initialHoles: combatantCanMoveInState(state, actorId)
+          ? [movementHole(state, actorId)]
+          : [],
+      })),
+    ];
   }
   if (state.currentTurnResources.commandHalt !== null) {
+    acts.push(...startTurnWebActs);
     acts.push(...greaseGroundHazardEndTurnActs(state, actorId));
     acts.push(...gustOfWindLineEndTurnSaveActs(state, actorId));
     acts.push(...flamingSphereEndTurnSaveActs(state, actorId));
     acts.push(...moonbeamEndTurnSaveActs(state, actorId));
     acts.push(...fogCloudStrongWindDispersalActs(state, actorId));
+    acts.push(...webAreaRemovalActs(state, actorId));
     acts.push(...wardingBondSeparationActs(state, actorId));
     acts.push(endTurnAct(actorId));
     acts.push(...readiedSpellReleaseActs(state, actorId));
     acts.push(...discoverLegendaryActionActs(state));
     return acts;
   }
+  acts.push(...startTurnWebActs);
   acts.push(...selfTransformationModeReplacementActs(state, actorId));
   const attackActionOptions = attackActionOptionsForActor(
     state,
@@ -462,6 +485,13 @@ export function discoverBattleActs(
   }
   for (const { targetId, effect } of spellRestraintEffectEntries(state)) {
     if (
+      effect.escape?.kind === "abilityCheck" &&
+      effect.escape.allowedActor === "target" &&
+      actorId !== targetId
+    ) {
+      continue;
+    }
+    if (
       combatantCanTakeActions(state.combatants.get(actorId)) &&
       !actorHasStatBlockMultiattackActionResource(state, actorId) &&
       canSpendAction(state.currentTurnResources, "utilize")
@@ -548,6 +578,8 @@ export function discoverBattleActs(
   acts.push(...gustOfWindLineDirectionChangeActs(state, actorId));
   acts.push(...movementActs(state, actorId));
   acts.push(...greaseGroundHazardEntrySaveActs(state, actorId));
+  acts.push(...webRestraintEntrySaveActs(state, actorId));
+  acts.push(...webRestrainedNoLongerInAreaActs(state, actorId));
   acts.push(...protectionRelevantEffectSaveActs(state, actorId));
   if (standFromProneCostFeet(state, actorId) !== null) {
     acts.push({
@@ -562,6 +594,7 @@ export function discoverBattleActs(
   acts.push(...flamingSphereEndTurnSaveActs(state, actorId));
   acts.push(...moonbeamEndTurnSaveActs(state, actorId));
   acts.push(...fogCloudStrongWindDispersalActs(state, actorId));
+  acts.push(...webAreaRemovalActs(state, actorId));
   acts.push(...wardingBondSeparationActs(state, actorId));
   acts.push(endTurnAct(actorId));
   acts.push(...readiedSpellReleaseActs(state, actorId));
@@ -789,6 +822,127 @@ function greaseGroundHazardSaveAct(
   };
 }
 
+function activeWebRestraintHazards(
+  state: BattleState,
+): readonly WebRestraintHazardEffect[] {
+  return [...state.combatants].flatMap(([, combatant]) =>
+    combatant.activeEffects.filter(
+      (effect): effect is WebRestraintHazardEffect =>
+        effect.kind === "webRestraintHazard",
+    ),
+  );
+}
+
+function webRestraintEntrySaveActs(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly AvailableBattleAct[] {
+  return activeWebRestraintHazards(state).flatMap((effect) =>
+    effect.entrySavedThisTurn.includes(actorId)
+      ? []
+      : [webRestraintSaveAct(state, actorId, effect, "entersArea")],
+  );
+}
+
+function webRestraintStartTurnSaveActs(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly AvailableBattleAct[] {
+  return activeWebRestraintHazards(state).flatMap((effect) =>
+    effect.startTurnSavedThisTurn.includes(actorId)
+      ? []
+      : [webRestraintSaveAct(state, actorId, effect, "startsTurnInArea")],
+  );
+}
+
+function webRestraintSaveAct(
+  state: BattleState,
+  actorId: CombatantId,
+  effect: WebRestraintHazardEffect,
+  trigger: "entersArea" | "startsTurnInArea",
+): AvailableBattleAct {
+  return {
+    subject: {
+      tag: "runtimeCommand",
+      actorId,
+      command: "webRestraintSave",
+      sourceCombatantId: effect.sourceCombatantId,
+      sourceSpellId: spellId(effect.sourceSpellId),
+      areaId: effect.areaId,
+      trigger,
+    },
+    label: trigger === "entersArea" ? "Enter Web" : "Start Turn in Web",
+    summary:
+      trigger === "entersArea"
+        ? "Resolve the table-supplied first-entry Web Dexterity Saving Throw."
+        : "Resolve the table-supplied start-turn Web Dexterity Saving Throw.",
+    initialHoles: [
+      webRestraintSavingThrowOutcomeHole(state, actorId, effect, trigger),
+    ],
+  };
+}
+
+function webRestrainedNoLongerInAreaActs(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly AvailableBattleAct[] {
+  const actor = state.combatants.get(actorId);
+  if (actor === undefined) {
+    return [];
+  }
+  return actor.activeEffects.flatMap(
+    (effect): readonly AvailableBattleAct[] => {
+      if (
+        effect.kind !== "spellCondition" ||
+        effect.condition !== "restrained" ||
+        effect.escape?.kind !== "abilityCheck"
+      ) {
+        return [];
+      }
+      return activeWebRestraintHazards(state)
+        .filter(
+          (web) =>
+            web.sourceCombatantId === effect.sourceCombatantId &&
+            web.sourceSpellId === effect.sourceSpellId,
+        )
+        .map((web) => ({
+          subject: {
+            tag: "runtimeCommand" as const,
+            actorId,
+            command: "webRestrainedNoLongerInArea" as const,
+            sourceCombatantId: web.sourceCombatantId,
+            sourceSpellId: spellId(web.sourceSpellId),
+            areaId: web.areaId,
+          },
+          label: "Leave Web",
+          summary:
+            "Apply the table-supplied fact that the restrained target is no longer in the Web area.",
+          initialHoles: [],
+        }));
+    },
+  );
+}
+
+function webAreaRemovalActs(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly AvailableBattleAct[] {
+  return activeWebRestraintHazards(state).map((effect) => ({
+    subject: {
+      tag: "runtimeCommand" as const,
+      actorId,
+      command: "webAreaRemoved" as const,
+      sourceCombatantId: effect.sourceCombatantId,
+      sourceSpellId: spellId(effect.sourceSpellId),
+      areaId: effect.areaId,
+    },
+    label: "Remove Web Area",
+    summary:
+      "Apply a table-supplied Web collapse, burn-away, or removal fact and end the spell area.",
+    initialHoles: [],
+  }));
+}
+
 function activeGustOfWindLineEffects(
   state: BattleState,
 ): readonly GustOfWindLineEffect[] {
@@ -1010,9 +1164,7 @@ function flamingSphereRamAct(
   };
 }
 
-function activeMoonbeamEffects(
-  state: BattleState,
-): readonly MoonbeamEffect[] {
+function activeMoonbeamEffects(state: BattleState): readonly MoonbeamEffect[] {
   return [...state.combatants.values()].flatMap((combatant) =>
     combatant.activeEffects.filter(
       (effect): effect is MoonbeamEffect => effect.kind === "moonbeam",
