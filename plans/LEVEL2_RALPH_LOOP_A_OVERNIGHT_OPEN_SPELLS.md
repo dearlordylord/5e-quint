@@ -115,7 +115,7 @@
     {
       "number": 19,
       "id": "L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Darkness Point-Origin Area Runtime Support"
     },
     {
@@ -233,7 +233,7 @@ The final task is intentionally blocked on every real task in this plan and plac
 | 16 | L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE - Web Surface Area Hazard Shape | done | completed baseline | A lane; Unit `web`. |
 | 17 | L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME - Web Restraint Hazard Runtime | done | L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE | A lane; Unit `web`. |
 | 18 | L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE - Web Terrain Obscurement Fire Boundary | done | L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE, L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME | A lane; Unit `web`. |
-| 19 | L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME - Darkness Point-Origin Area Runtime Support | ready-for-research | L12G-MISSING-DARKNESS | A lane; Unit `darkness`. |
+| 19 | L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME - Darkness Point-Origin Area Runtime Support | done | L12G-MISSING-DARKNESS | A lane; Unit `darkness`. |
 | 20 | L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH - Darkness Object-Origin Branch | ready-for-research | L12G-MISSING-DARKNESS | A lane; Unit `darkness`. |
 | 21 | L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL - Darkness Spell-Created Light Dispel | blocked | L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME, L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH | A lane; Unit `darkness`. |
 | 22 | L12G-RECURSIVE-TAIL-LOOP-A - LOOP-A Recursive Next-Batch Planning Tail | blocked | L12G-SPELL-LESSER-RESTORATION, L12G-SPELL-MAGIC-WEAPON, L12G-SPELL-MIND-SPIKE, L12G-SPELL-WEB, L12G-MISSING-ANIMAL-MESSENGER, L12G-MISSING-ARCANISTS-MAGIC-AURA, L12G-MISSING-AUGURY, L12G-MISSING-CALM-EMOTIONS, L12G-MISSING-DARKNESS, L12G-MISSING-DARKVISION, L12G-MISSING-DETECT-THOUGHTS, L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME, L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE, L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE, L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME, L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE, L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME, L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE, L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME, L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH, L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL | Last-resort next-batch planning safety net; auto-unblocks only after every real task in this plan is `done`. |
@@ -974,7 +974,7 @@ Acceptance:
 
 ### Task 19 - L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME - Darkness Point-Origin Area Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `darkness`.
 Origin: Follow-up split from Task 9 and the Darkness Unit claim.
