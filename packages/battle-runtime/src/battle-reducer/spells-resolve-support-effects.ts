@@ -5,6 +5,7 @@
 // Covers healing, scalar buffs, roll modifiers, protection, damage reduction,
 // and condition-immunity/temporary-hit-point procedures.
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HIT_POINT_RESTORATION
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAKE_STABLE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS
 

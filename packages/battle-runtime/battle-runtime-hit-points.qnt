@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// KERNEL-COVERAGE: qnt-owner BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE
+// KERNEL-COVERAGE: qnt-owner BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE BATTLE.SPELL.MAKE_STABLE_LIFECYCLE
 
 module battleRuntimeHitPoints {
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"

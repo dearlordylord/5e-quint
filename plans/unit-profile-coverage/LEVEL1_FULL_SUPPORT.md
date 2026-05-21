@@ -12,8 +12,8 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | Strict target closure | 94/94 (100%) |
 | Product readiness | 367/367 (100%) |
 | Rules-kernel profile join | 56/58 (96.6%) |
-| Rules-kernel covered profile join | 42/58 (72.4%) |
-| Supported Unit rules-kernel chain | 59/78 (75.6%) |
+| Rules-kernel covered profile join | 43/58 (74.1%) |
+| Supported Unit rules-kernel chain | 60/78 (76.9%) |
 
 ## Scope
 
@@ -64,7 +64,6 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | `rogue_expertise` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
 | `searing_smite` | mapped-open | `spell.invocation-after-hit-timed-damage-save` (mapped-open: `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` (needs-parity-witness)) |
 | `shillelagh` | mapped-open | `spell.invocation-weapon-attack-override` (mapped-open: `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` (needs-parity-witness)) |
-| `spare_the_dying` | mapped-open | `spell.invocation-make-stable` (mapped-open: `BATTLE.SPELL.MAKE_STABLE_LIFECYCLE` (needs-parity-witness)) |
 | `true_strike` | mapped-open | `spell.invocation-spell-hosted-weapon-attack` (mapped-open: `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` (needs-parity-witness)) |
 
 ## Non-Supported Frontier Detail

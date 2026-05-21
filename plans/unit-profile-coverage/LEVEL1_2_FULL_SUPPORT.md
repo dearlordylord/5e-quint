@@ -12,8 +12,8 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | Strict target closure | 167/168 (99.4%) |
 | Product readiness | 509/556 (91.5%) |
 | Rules-kernel profile join | 78/84 (92.9%) |
-| Rules-kernel covered profile join | 56/84 (66.7%) |
-| Supported Unit rules-kernel chain | 77/112 (68.8%) |
+| Rules-kernel covered profile join | 57/84 (67.9%) |
+| Supported Unit rules-kernel chain | 78/112 (69.6%) |
 
 ## Scope
 
@@ -81,7 +81,6 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `searing_smite` | mapped-open | `spell.invocation-after-hit-timed-damage-save` (mapped-open: `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` (needs-parity-witness)) |
 | `shillelagh` | mapped-open | `spell.invocation-weapon-attack-override` (mapped-open: `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` (needs-parity-witness)) |
 | `shining_smite` | mapped-open | `spell.invocation-after-hit-damage-illumination` (mapped-open: `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` (needs-parity-witness)) |
-| `spare_the_dying` | mapped-open | `spell.invocation-make-stable` (mapped-open: `BATTLE.SPELL.MAKE_STABLE_LIFECYCLE` (needs-parity-witness)) |
 | `true_strike` | mapped-open | `spell.invocation-spell-hosted-weapon-attack` (mapped-open: `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` (needs-parity-witness)) |
 | `warding_bond` | mapped-open | `spell.invocation-warding-bond-linked-effect` (mapped-open: `BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING` (needs-parity-witness)) |
 | `wizard_scholar` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |

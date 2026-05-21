@@ -963,8 +963,8 @@
     },
     "rulesKernelCoveredProfileJoin": {
       "denominator": 58,
-      "numerator": 42,
-      "percent": "72.4%"
+      "numerator": 43,
+      "percent": "74.1%"
     },
     "rulesKernelProfileJoin": {
       "denominator": 58,
@@ -973,8 +973,8 @@
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 78,
-      "numerator": 59,
-      "percent": "75.6%"
+      "numerator": 60,
+      "percent": "76.9%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 94,
@@ -3246,8 +3246,8 @@
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
         "denominator": 78,
-        "numerator": 59,
-        "percent": "75.6%"
+        "numerator": 60,
+        "percent": "76.9%"
       }
     },
     "units": [
@@ -5120,15 +5120,15 @@
         "unitId": "sorcerous_burst"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
                 "obligationId": "BATTLE.SPELL.MAKE_STABLE_LIFECYCLE",
                 "runtime": "battle",
-                "status": "needs-parity-witness",
+                "status": "covered",
                 "title": "Battle Spare the Dying target admission and zero-Hit-Point non-dead Stable lifecycle mutation"
               }
             ],
