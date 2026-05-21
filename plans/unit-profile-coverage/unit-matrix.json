@@ -83,8 +83,8 @@
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 118,
-      "numerator": 82,
-      "percent": "69.5%"
+      "numerator": 84,
+      "percent": "71.2%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 118,
@@ -93,8 +93,8 @@
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 135,
-      "numerator": 101,
-      "percent": "74.8%"
+      "numerator": 103,
+      "percent": "76.3%"
     },
     "runtimeMappingCoverage": {
       "denominator": 86,
@@ -3430,8 +3430,8 @@
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 118,
-        "numerator": 82,
-        "percent": "69.5%"
+        "numerator": 84,
+        "percent": "71.2%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 118,
@@ -4216,7 +4216,7 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
@@ -4227,7 +4227,7 @@
           {
             "obligationId": "BATTLE.SPELL.REACTION_CASTING_TIME",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle reaction-casting-time spells for spell-cast and after-damage triggers, Reaction spend, Spell Slot ledger, interruption, and continuation resume"
           }
         ],
@@ -4235,7 +4235,7 @@
         "profileKind": "reaction"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
@@ -4246,7 +4246,7 @@
           {
             "obligationId": "BATTLE.SPELL.REACTION_CASTING_TIME",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle reaction-casting-time spells for spell-cast and after-damage triggers, Reaction spend, Spell Slot ledger, interruption, and continuation resume"
           }
         ],
@@ -5032,8 +5032,8 @@
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
           "denominator": 135,
-          "numerator": 101,
-          "percent": "74.8%"
+          "numerator": 103,
+          "percent": "76.3%"
         }
       },
       "units": [
@@ -5625,10 +5625,10 @@
           "unitId": "command"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
@@ -5639,7 +5639,7 @@
                 {
                   "obligationId": "BATTLE.SPELL.REACTION_CASTING_TIME",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle reaction-casting-time spells for spell-cast and after-damage triggers, Reaction spend, Spell Slot ledger, interruption, and continuation resume"
                 }
               ],
@@ -6373,10 +6373,10 @@
           "unitId": "heat_metal"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
@@ -6387,7 +6387,7 @@
                 {
                   "obligationId": "BATTLE.SPELL.REACTION_CASTING_TIME",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle reaction-casting-time spells for spell-cast and after-damage triggers, Reaction spend, Spell Slot ledger, interruption, and continuation resume"
                 }
               ],

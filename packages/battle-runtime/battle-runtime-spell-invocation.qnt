@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.REACTION_CASTING_TIME
 
 module battleRuntimeSpellInvocation {
   import battleRuntimeFeatureBridge.* from "./battle-runtime-feature-bridge"

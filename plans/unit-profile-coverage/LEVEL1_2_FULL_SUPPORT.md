@@ -12,8 +12,8 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | Strict target closure | 167/168 (99.4%) |
 | Product readiness | 509/556 (91.5%) |
 | Rules-kernel profile join | 78/84 (92.9%) |
-| Rules-kernel covered profile join | 58/84 (69%) |
-| Supported Unit rules-kernel chain | 79/112 (70.5%) |
+| Rules-kernel covered profile join | 59/84 (70.2%) |
+| Supported Unit rules-kernel chain | 80/112 (71.4%) |
 
 ## Scope
 
@@ -62,7 +62,6 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `ensnaring_strike` | mapped-open | `spell.invocation-after-hit-restraint-turn-start-damage` (mapped-open: `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` (needs-parity-witness)) |
 | `faerie_fire` | mapped-open | `spell.invocation-attack-roll-advantage-save` (mapped-open: `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE` (needs-parity-witness)) |
 | `heat_metal` | unmapped | `spell.invocation-object-contact-damage` (unmapped: no obligation mapping) |
-| `hellish_rebuke` | mapped-open | `spell.reaction-hellish-rebuke` (mapped-open: `BATTLE.REACTION.OFFER_DECLINE_RESUME` (covered), `BATTLE.SPELL.REACTION_CASTING_TIME` (needs-parity-witness)) |
 | `heroism` | mapped-open | `spell.invocation-condition-immunity-turn-start-temporary-hit-points` (mapped-open: `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS` (needs-parity-witness)) |
 | `hex` | mapped-open | `spell.invocation-marked-damage-rider` (mapped-open: `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` (needs-parity-witness)) |
 | `hunters_mark` | mapped-open | `spell.invocation-marked-damage-rider` (mapped-open: `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` (needs-parity-witness)) |

@@ -963,8 +963,8 @@
     },
     "rulesKernelCoveredProfileJoin": {
       "denominator": 58,
-      "numerator": 43,
-      "percent": "74.1%"
+      "numerator": 44,
+      "percent": "75.9%"
     },
     "rulesKernelProfileJoin": {
       "denominator": 58,
@@ -973,8 +973,8 @@
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 78,
-      "numerator": 60,
-      "percent": "76.9%"
+      "numerator": 61,
+      "percent": "78.2%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 94,
@@ -3246,8 +3246,8 @@
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
         "denominator": 78,
-        "numerator": 60,
-        "percent": "76.9%"
+        "numerator": 61,
+        "percent": "78.2%"
       }
     },
     "units": [
@@ -4123,10 +4123,10 @@
         "unitId": "healing_word"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
@@ -4137,7 +4137,7 @@
               {
                 "obligationId": "BATTLE.SPELL.REACTION_CASTING_TIME",
                 "runtime": "battle",
-                "status": "needs-parity-witness",
+                "status": "covered",
                 "title": "Battle reaction-casting-time spells for spell-cast and after-damage triggers, Reaction spend, Spell Slot ledger, interruption, and continuation resume"
               }
             ],

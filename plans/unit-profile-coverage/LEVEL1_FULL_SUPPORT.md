@@ -12,8 +12,8 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | Strict target closure | 94/94 (100%) |
 | Product readiness | 367/367 (100%) |
 | Rules-kernel profile join | 56/58 (96.6%) |
-| Rules-kernel covered profile join | 43/58 (74.1%) |
-| Supported Unit rules-kernel chain | 60/78 (76.9%) |
+| Rules-kernel covered profile join | 44/58 (75.9%) |
+| Supported Unit rules-kernel chain | 61/78 (78.2%) |
 
 ## Scope
 
@@ -56,7 +56,6 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | `eldritch_blast` | mapped-open | `spell.invocation-independent-attack-sequence` (mapped-open: `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE` (needs-parity-witness)) |
 | `ensnaring_strike` | mapped-open | `spell.invocation-after-hit-restraint-turn-start-damage` (mapped-open: `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` (needs-parity-witness)) |
 | `faerie_fire` | mapped-open | `spell.invocation-attack-roll-advantage-save` (mapped-open: `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE` (needs-parity-witness)) |
-| `hellish_rebuke` | mapped-open | `spell.reaction-hellish-rebuke` (mapped-open: `BATTLE.REACTION.OFFER_DECLINE_RESUME` (covered), `BATTLE.SPELL.REACTION_CASTING_TIME` (needs-parity-witness)) |
 | `heroism` | mapped-open | `spell.invocation-condition-immunity-turn-start-temporary-hit-points` (mapped-open: `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS` (needs-parity-witness)) |
 | `hex` | mapped-open | `spell.invocation-marked-damage-rider` (mapped-open: `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` (needs-parity-witness)) |
 | `hunters_mark` | mapped-open | `spell.invocation-marked-damage-rider` (mapped-open: `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` (needs-parity-witness)) |

@@ -1,8 +1,8 @@
 {
   "summary": {
     "total": 72,
-    "covered": 52,
-    "open": 15,
+    "covered": 53,
+    "open": 14,
     "nonSemantic": 5,
     "byRuntime": {
       "shared-algebras": 1,
@@ -12,9 +12,9 @@
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 52,
+      "covered": 53,
       "needs-qnt-owner": 0,
-      "needs-parity-witness": 14,
+      "needs-parity-witness": 13,
       "needs-surface-evidence": 1,
       "boundary-only": 4,
       "unsupported-by-admission": 1
@@ -944,12 +944,18 @@
       "title": "Battle self-transformation mode choice, Magic Action mode replacement, natural-weapon override, and Aquatic projections"
     },
     {
-      "followUpTaskIds": [
-        "RKBC-SPELL-REACTION-CASTING-PARITY"
-      ],
       "id": "BATTLE.SPELL.REACTION_CASTING_TIME",
       "kind": "reaction-continuation",
-      "parityWitnesses": [],
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/counterspell-reaction-spell.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"
+        }
+      ],
       "profiles": [
         "spell.reaction-counterspell",
         "spell.reaction-hellish-rebuke"
@@ -965,8 +971,12 @@
         "packages/battle-runtime/src/battle-reducer/reaction-triggered-spells.ts",
         "packages/battle-runtime/src/battle-reducer/spell-cast-reaction-frame.ts"
       ],
-      "status": "needs-parity-witness",
-      "surfaceEvidence": [],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Reaction and Bonus Action Triggers",
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Counterspell",
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Hellish Rebuke"
+      ],
       "title": "Battle reaction-casting-time spells for spell-cast and after-damage triggers, Reaction spend, Spell Slot ledger, interruption, and continuation resume"
     },
     {
