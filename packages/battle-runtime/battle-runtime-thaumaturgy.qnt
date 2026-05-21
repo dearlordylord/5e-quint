@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS
 module battleRuntimeThaumaturgy {
   import battleRuntimeModel.* from "./battle-runtime-model"
 

@@ -933,16 +933,30 @@ function validateRuntimeTestWitnessProfiles(
         `${obligation.id} runtime-test witness requires ${profileId} to already record profile-level qnt-proof ownership.`,
       );
     }
-    for (const witness of runtimeTestWitnesses) {
-      const hasRuntimeTestOwner = verificationOwners.some(
+    const hasRuntimeTestWitness = runtimeTestWitnesses.some((witness) =>
+      verificationOwners.some(
+        (owner) =>
+          owner.kind === "runtime-test" && owner.ownerPath === witness.ownerPath,
+      ),
+    );
+    if (!hasRuntimeTestWitness) {
+      issues.push(
+        `${obligation.id} has no runtime-test witness that verifies ${profileId}.`,
+      );
+    }
+  }
+  for (const witness of runtimeTestWitnesses) {
+    const verifiesMappedProfile = profileIds.some((profileId) => {
+      const profile = profilesById.get(profileId);
+      return (profile?.verificationOwners ?? []).some(
         (owner) =>
           owner.kind === "runtime-test" && owner.ownerPath === witness.ownerPath,
       );
-      if (!hasRuntimeTestOwner) {
-        issues.push(
-          `${obligation.id} runtime-test witness ${witness.ownerPath} is not a runtime-test verification owner for ${profileId}.`,
-        );
-      }
+    });
+    if (!verifiesMappedProfile) {
+      issues.push(
+        `${obligation.id} runtime-test witness ${witness.ownerPath} is not a runtime-test verification owner for any mapped profile.`,
+      );
     }
   }
   return issues;

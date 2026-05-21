@@ -2,6 +2,7 @@
 // Owns target, target-list, and roll-modifier choice interpretation for resolved spell fills.
 
 // KERNEL-COVERAGE: runtime-owner BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS
 import {
   isScalarBuffTargetListInvocation,
   type SelectedRollModifierSpellEffect,

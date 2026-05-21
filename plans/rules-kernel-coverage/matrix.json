@@ -1,8 +1,8 @@
 {
   "summary": {
     "total": 72,
-    "covered": 48,
-    "open": 19,
+    "covered": 50,
+    "open": 17,
     "nonSemantic": 5,
     "byRuntime": {
       "shared-algebras": 1,
@@ -12,9 +12,9 @@
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 48,
+      "covered": 50,
       "needs-qnt-owner": 0,
-      "needs-parity-witness": 18,
+      "needs-parity-witness": 16,
       "needs-surface-evidence": 1,
       "boundary-only": 4,
       "unsupported-by-admission": 1
@@ -770,12 +770,18 @@
       "title": "Battle Spare the Dying target admission and zero-Hit-Point non-dead Stable lifecycle mutation"
     },
     {
-      "followUpTaskIds": [
-        "RKBC-SPELL-ROLL-SCALAR-PARITY"
-      ],
       "id": "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
       "kind": "active-effect-lifecycle",
-      "parityWitnesses": [],
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/thaumaturgy-booming-voice.test.ts"
+        }
+      ],
       "profiles": [
         "spell.invocation-roll-modifier",
         "spell.invocation-self-ability-check-advantage"
@@ -790,17 +796,26 @@
         "packages/battle-runtime/src/battle-reducer/spells-resolve-target-selection.ts",
         "packages/battle-runtime/src/battle-reducer/attack-roll.ts"
       ],
-      "status": "needs-parity-witness",
-      "surfaceEvidence": [],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Bane",
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Bless",
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Enhance Ability",
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Guidance",
+        ".references/srd-5.2.1/Spells/Descriptions-M-P.md#Pass without Trace",
+        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Thaumaturgy"
+      ],
       "title": "Battle spell d20 roll modifiers for attack rolls, Saving Throws, Ability Checks, skill checks, and selected witness projections"
     },
     {
-      "followUpTaskIds": [
-        "RKBC-SPELL-ROLL-SCALAR-PARITY"
-      ],
       "id": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
       "kind": "active-effect-lifecycle",
-      "parityWitnesses": [],
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts"
+        }
+      ],
       "profiles": [
         "spell.scalar-buff"
       ],
@@ -813,8 +828,15 @@
         "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
         "packages/battle-runtime/src/battle-reducer/movement-speed.ts"
       ],
-      "status": "needs-parity-witness",
-      "surfaceEvidence": [],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Aid",
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Barkskin",
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#False Life",
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Longstrider",
+        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Shield of Faith",
+        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Spider Climb"
+      ],
       "title": "Battle spell scalar buffs for Armor Class, Speed, special speeds, Hit Point maximum, and Temporary Hit Point effects"
     },
     {

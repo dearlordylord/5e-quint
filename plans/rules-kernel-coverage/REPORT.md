@@ -5,15 +5,15 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 ## Summary
 
 - Total obligations: 72
-- Covered obligations: 48
-- Open transitional obligations: 19
+- Covered obligations: 50
+- Open transitional obligations: 17
 - Boundary or unsupported obligations: 5
 
 | Status | Count |
 | --- | ---: |
-| covered | 48 |
+| covered | 50 |
 | needs-qnt-owner | 0 |
-| needs-parity-witness | 18 |
+| needs-parity-witness | 16 |
 | needs-surface-evidence | 1 |
 | boundary-only | 4 |
 | unsupported-by-admission | 1 |
@@ -56,8 +56,8 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE` | battle | covered | `spell.invocation-blur-attack-roll-defense` |
 | `BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE` | battle | needs-parity-witness | `spell.invocation-moonbeam-movable-zone` |
 | `BATTLE.SPELL.MAKE_STABLE_LIFECYCLE` | battle | needs-parity-witness | `spell.invocation-make-stable` |
-| `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS` | battle | needs-parity-witness | `spell.invocation-roll-modifier`, `spell.invocation-self-ability-check-advantage` |
-| `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` | battle | needs-parity-witness | `spell.scalar-buff` |
+| `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS` | battle | covered | `spell.invocation-roll-modifier`, `spell.invocation-self-ability-check-advantage` |
+| `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` | battle | covered | `spell.scalar-buff` |
 | `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION` | battle | needs-parity-witness | `spell.creature-type-protection-and-charm` |
 | `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS` | battle | needs-parity-witness | `spell.invocation-condition-immunity-turn-start-temporary-hit-points` |
 | `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` | battle | needs-parity-witness | `spell.invocation-condition-removal-protection`, `spell.invocation-direct-condition-removal` |
@@ -231,8 +231,6 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 - `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE` (needs-parity-witness; follow-up: `RKBC-SPELL-SAVE-GATED-CONDITION-PARITY`): Battle failed-save spell attack-roll Advantage effects from saving throw holes through active-effect application
 - `BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE` (needs-parity-witness; follow-up: `RKBC-SPELL-MOONBEAM-MOVABLE-ZONE-PARITY`): Battle Moonbeam movable Cylinder lifecycle, once-per-turn save limiting, reposition, damage, and cleanup
 - `BATTLE.SPELL.MAKE_STABLE_LIFECYCLE` (needs-parity-witness; follow-up: `RKBC-SPELL-MAKE-STABLE-PARITY`): Battle Spare the Dying target admission and zero-Hit-Point non-dead Stable lifecycle mutation
-- `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS` (needs-parity-witness; follow-up: `RKBC-SPELL-ROLL-SCALAR-PARITY`): Battle spell d20 roll modifiers for attack rolls, Saving Throws, Ability Checks, skill checks, and selected witness projections
-- `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` (needs-parity-witness; follow-up: `RKBC-SPELL-ROLL-SCALAR-PARITY`): Battle spell scalar buffs for Armor Class, Speed, special speeds, Hit Point maximum, and Temporary Hit Point effects
 - `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION` (needs-parity-witness; follow-up: `RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY`): Battle creature-type protection, Charmed/Frightened/possession prevention, and relevant-effect Saving Throw Advantage
 - `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS` (needs-parity-witness; follow-up: `RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY`): Battle spell condition immunity with start-turn Temporary Hit Point refresh and concentration cleanup
 - `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` (needs-parity-witness; follow-up: `RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY`): Battle direct condition removal, poison protection condition removal, poison resistance, and poison Saving Throw Advantage
