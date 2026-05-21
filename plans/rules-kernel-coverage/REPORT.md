@@ -5,15 +5,15 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 ## Summary
 
 - Total obligations: 72
-- Covered obligations: 47
-- Open transitional obligations: 20
+- Covered obligations: 48
+- Open transitional obligations: 19
 - Boundary or unsupported obligations: 5
 
 | Status | Count |
 | --- | ---: |
-| covered | 47 |
+| covered | 48 |
 | needs-qnt-owner | 0 |
-| needs-parity-witness | 19 |
+| needs-parity-witness | 18 |
 | needs-surface-evidence | 1 |
 | boundary-only | 4 |
 | unsupported-by-admission | 1 |
@@ -37,7 +37,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | battle | covered | `spell.invocation-damage-save-or-attack`, `spell.invocation-web-restraint-hazard`, `spell.reaction-shield`, `spell.readied-action-time-spell` |
 | `BATTLE.SPELL.HIT_POINT_RESTORATION` | battle | covered | `spell.hit-point-restoration` |
 | `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE` | battle | needs-parity-witness | `spell.invocation-direct-condition` |
-| `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` | battle | needs-parity-witness | `spell.invocation-condition-save`, `spell.invocation-hideous-laughter-repeat-save-lifecycle` |
+| `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` | battle | covered | `spell.invocation-condition-save`, `spell.invocation-hideous-laughter-repeat-save-lifecycle` |
 | `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE` | battle | needs-parity-witness | `spell.invocation-attack-roll-advantage-save` |
 | `BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE` | battle | covered | `spell.invocation-sleep-repeat-save-lifecycle`, `spell.invocation-sleep-target-admission` |
 | `BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE` | battle | covered | `spell.invocation-grease-ground-hazard` |
@@ -228,7 +228,6 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 ## Open Work
 
 - `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE` (needs-parity-witness; follow-up: `RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY`): Battle direct spell-owned condition application, concentration cleanup, duration cleanup, and target-action early end
-- `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` (needs-parity-witness; follow-up: `RKBC-SPELL-SAVE-GATED-CONDITION-PARITY`): Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup
 - `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE` (needs-parity-witness; follow-up: `RKBC-SPELL-SAVE-GATED-CONDITION-PARITY`): Battle failed-save spell attack-roll Advantage effects from saving throw holes through active-effect application
 - `BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE` (needs-parity-witness; follow-up: `RKBC-SPELL-MOONBEAM-MOVABLE-ZONE-PARITY`): Battle Moonbeam movable Cylinder lifecycle, once-per-turn save limiting, reposition, damage, and cleanup
 - `BATTLE.SPELL.MAKE_STABLE_LIFECYCLE` (needs-parity-witness; follow-up: `RKBC-SPELL-MAKE-STABLE-PARITY`): Battle Spare the Dying target admission and zero-Hit-Point non-dead Stable lifecycle mutation

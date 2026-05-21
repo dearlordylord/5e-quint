@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE
 
 module battleRuntimeSaveGatedSpell {
   import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"

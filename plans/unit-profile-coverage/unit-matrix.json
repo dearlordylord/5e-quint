@@ -83,8 +83,8 @@
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 118,
-      "numerator": 75,
-      "percent": "63.6%"
+      "numerator": 77,
+      "percent": "65.3%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 118,
@@ -93,8 +93,8 @@
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 135,
-      "numerator": 85,
-      "percent": "63%"
+      "numerator": 90,
+      "percent": "66.7%"
     },
     "runtimeMappingCoverage": {
       "denominator": 86,
@@ -108,8 +108,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 135,
-      "numerator": 107,
-      "percent": "79.3%"
+      "numerator": 108,
+      "percent": "80%"
     },
     "supportedProfileCoverage": {
       "denominator": 192,
@@ -3430,8 +3430,8 @@
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 118,
-        "numerator": 75,
-        "percent": "63.6%"
+        "numerator": 77,
+        "percent": "65.3%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 118,
@@ -3941,12 +3941,12 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup"
           }
         ],
@@ -4576,12 +4576,12 @@
         "profileKind": "character-sheet"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup"
           }
         ],
@@ -5032,8 +5032,8 @@
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
           "denominator": 135,
-          "numerator": 85,
-          "percent": "63%"
+          "numerator": 90,
+          "percent": "66.7%"
         }
       },
       "units": [
@@ -5360,15 +5360,15 @@
           "unitId": "bless"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup"
                 }
               ],
@@ -5548,15 +5548,15 @@
           "unitId": "cleric_divine_order"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup"
                 }
               ],
@@ -5845,15 +5845,15 @@
           "unitId": "ensnaring_strike"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup"
                 }
               ],
@@ -6455,15 +6455,15 @@
           "unitId": "hex"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup"
                 }
               ],
@@ -6474,15 +6474,15 @@
           "unitId": "hideous_laughter"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup"
                 }
               ],
@@ -16233,6 +16233,11 @@
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "condition-saving-throw-lifecycle"
+        },
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts",
           "tag": "deterministic-admission-projection",

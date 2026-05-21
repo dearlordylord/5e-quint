@@ -1,8 +1,8 @@
 {
   "summary": {
     "total": 72,
-    "covered": 47,
-    "open": 20,
+    "covered": 48,
+    "open": 19,
     "nonSemantic": 5,
     "byRuntime": {
       "shared-algebras": 1,
@@ -12,9 +12,9 @@
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 47,
+      "covered": 48,
       "needs-qnt-owner": 0,
-      "needs-parity-witness": 19,
+      "needs-parity-witness": 18,
       "needs-surface-evidence": 1,
       "boundary-only": 4,
       "unsupported-by-admission": 1
@@ -259,12 +259,16 @@
       "title": "Battle direct spell-owned condition application, concentration cleanup, duration cleanup, and target-action early end"
     },
     {
-      "followUpTaskIds": [
-        "RKBC-SPELL-SAVE-GATED-CONDITION-PARITY"
-      ],
       "id": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
       "kind": "active-effect-lifecycle",
-      "parityWitnesses": [],
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
       "profiles": [
         "spell.invocation-condition-save",
         "spell.invocation-hideous-laughter-repeat-save-lifecycle"
@@ -279,7 +283,7 @@
         "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
         "packages/battle-runtime/src/battle-reducer/damage-apply.ts"
       ],
-      "status": "needs-parity-witness",
+      "status": "covered",
       "surfaceEvidence": [],
       "title": "Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup"
     },

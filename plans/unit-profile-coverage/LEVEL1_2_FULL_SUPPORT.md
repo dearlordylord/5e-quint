@@ -12,8 +12,8 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | Strict target closure | 167/168 (99.4%) |
 | Product readiness | 509/556 (91.5%) |
 | Rules-kernel profile join | 78/84 (92.9%) |
-| Rules-kernel covered profile join | 52/84 (61.9%) |
-| Supported Unit rules-kernel chain | 63/112 (56.3%) |
+| Rules-kernel covered profile join | 54/84 (64.3%) |
+| Supported Unit rules-kernel chain | 68/112 (60.7%) |
 
 ## Scope
 
@@ -57,17 +57,14 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `bard_jack_of_all_trades` | unmapped | `character-sheet.ability-check-proficiency-bonus` (unmapped: no obligation mapping) |
 | `barkskin` | mapped-open | `spell.scalar-buff` (mapped-open: `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` (needs-parity-witness)) |
 | `bless` | mapped-open | `spell.invocation-roll-modifier` (mapped-open: `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS` (needs-parity-witness)) |
-| `blindness_deafness` | mapped-open | `spell.invocation-condition-save` (mapped-open: `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` (needs-parity-witness)) |
 | `chromatic_orb` | mapped-open | `spell.invocation-chained-attack-damage` (mapped-open: `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE` (needs-parity-witness)) |
 | `cleric_channel_divinity` | unmapped | `character-creation.class-feature-resource-projection` (unmapped: no obligation mapping) |
 | `cleric_divine_order` | unmapped | `character-creation.class-feature-option-projection` (unmapped: no obligation mapping) |
-| `color_spray` | mapped-open | `spell.invocation-condition-save` (mapped-open: `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` (needs-parity-witness)) |
 | `divine_favor` | mapped-open | `spell.invocation-weapon-damage-rider` (mapped-open: `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` (needs-parity-witness)) |
 | `divine_smite` | mapped-open | `spell.invocation-after-hit-damage` (mapped-open: `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` (needs-parity-witness)) |
 | `druid_primal_order` | unmapped | `character-creation.class-feature-option-projection` (unmapped: no obligation mapping) |
 | `eldritch_blast` | mapped-open | `spell.invocation-independent-attack-sequence` (mapped-open: `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE` (needs-parity-witness)) |
 | `ensnaring_strike` | mapped-open | `spell.invocation-after-hit-restraint-turn-start-damage` (mapped-open: `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` (needs-parity-witness)) |
-| `entangle` | mapped-open | `spell.invocation-condition-save` (mapped-open: `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` (needs-parity-witness)) |
 | `faerie_fire` | mapped-open | `spell.invocation-attack-roll-advantage-save` (mapped-open: `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE` (needs-parity-witness)) |
 | `false_life` | mapped-open | `spell.scalar-buff` (mapped-open: `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` (needs-parity-witness)) |
 | `guidance` | mapped-open | `spell.invocation-roll-modifier` (mapped-open: `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS` (needs-parity-witness)) |
@@ -75,8 +72,6 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `hellish_rebuke` | mapped-open | `spell.reaction-hellish-rebuke` (mapped-open: `BATTLE.REACTION.OFFER_DECLINE_RESUME` (covered), `BATTLE.SPELL.REACTION_CASTING_TIME` (needs-parity-witness)) |
 | `heroism` | mapped-open | `spell.invocation-condition-immunity-turn-start-temporary-hit-points` (mapped-open: `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS` (needs-parity-witness)) |
 | `hex` | mapped-open | `spell.invocation-marked-damage-rider` (mapped-open: `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` (needs-parity-witness)) |
-| `hideous_laughter` | mapped-open | `spell.invocation-hideous-laughter-repeat-save-lifecycle` (mapped-open: `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` (needs-parity-witness)) |
-| `hold_person` | mapped-open | `spell.invocation-condition-save` (mapped-open: `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` (needs-parity-witness)) |
 | `hunters_mark` | mapped-open | `spell.invocation-marked-damage-rider` (mapped-open: `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` (needs-parity-witness)) |
 | `invisibility` | mapped-open | `spell.invocation-direct-condition` (mapped-open: `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE` (needs-parity-witness)) |
 | `lesser_restoration` | mapped-open | `spell.invocation-direct-condition-removal` (mapped-open: `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` (needs-parity-witness)) |

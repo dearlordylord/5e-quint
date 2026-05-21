@@ -963,8 +963,8 @@
     },
     "rulesKernelCoveredProfileJoin": {
       "denominator": 58,
-      "numerator": 38,
-      "percent": "65.5%"
+      "numerator": 40,
+      "percent": "69%"
     },
     "rulesKernelProfileJoin": {
       "denominator": 58,
@@ -973,8 +973,8 @@
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 78,
-      "numerator": 50,
-      "percent": "64.1%"
+      "numerator": 53,
+      "percent": "67.9%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 94,
@@ -3246,8 +3246,8 @@
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
         "denominator": 78,
-        "numerator": 50,
-        "percent": "64.1%"
+        "numerator": 53,
+        "percent": "67.9%"
       }
     },
     "units": [
@@ -3561,15 +3561,15 @@
         "unitId": "cleric_divine_order"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
                 "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
                 "runtime": "battle",
-                "status": "needs-parity-witness",
+                "status": "covered",
                 "title": "Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup"
               }
             ],
@@ -3814,15 +3814,15 @@
         "unitId": "ensnaring_strike"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
                 "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
                 "runtime": "battle",
-                "status": "needs-parity-witness",
+                "status": "covered",
                 "title": "Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup"
               }
             ],
@@ -4205,15 +4205,15 @@
         "unitId": "hex"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
                 "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
                 "runtime": "battle",
-                "status": "needs-parity-witness",
+                "status": "covered",
                 "title": "Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup"
               }
             ],

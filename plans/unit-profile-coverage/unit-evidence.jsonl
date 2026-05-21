@@ -99,6 +99,7 @@
 {"unitId":"color_spray","evidence":{"tag":"selected-identity-mbt","taskId":"condition-saving-throw-lifecycle","ownerPath":"packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts"}}
 {"unitId":"entangle","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV29C","ownerPath":"packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts"}}
 {"unitId":"entangle","evidence":{"tag":"selected-identity-mbt","taskId":"condition-saving-throw-lifecycle","ownerPath":"packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts"}}
+{"unitId":"blindness_deafness","evidence":{"tag":"selected-identity-mbt","taskId":"condition-saving-throw-lifecycle","ownerPath":"packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts"}}
 {"unitId":"ice_knife","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV29E","ownerPath":"packages/battle-runtime/src/unit-profile-admission-chained-attack-and-mage-armor-spells.test.ts"}}
 {"unitId":"ice_knife","evidence":{"tag":"selected-identity-mbt","taskId":"level1-damage-spell-selected-identity","ownerPath":"packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts"}}
 {"unitId":"bane","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV30B","ownerPath":"packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"}}

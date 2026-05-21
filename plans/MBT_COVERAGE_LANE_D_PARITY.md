@@ -6,7 +6,7 @@
   "tasks": [
     {"number":1,"id":"RKBC-HANDOFF-IDENTITY-CONFLICTS","status":"done","title":"Character Battle Identity And Max HP Conflict Handling"},
     {"number":2,"id":"RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY","status":"done","title":"Spell Direct Condition Removal And Protection Parity Witnesses"},
-    {"number":3,"id":"RKBC-SPELL-SAVE-GATED-CONDITION-PARITY","status":"ready-for-research","title":"Spell Save-Gated Condition Parity Witnesses"},
+    {"number":3,"id":"RKBC-SPELL-SAVE-GATED-CONDITION-PARITY","status":"done","title":"Spell Save-Gated Condition Parity Witnesses"},
     {"number":4,"id":"RKBC-SPELL-ROLL-SCALAR-PARITY","status":"ready-for-research","title":"Spell Roll Modifier And Scalar Buff Parity Witnesses"},
     {"number":5,"id":"RKBC-SPELL-MAKE-STABLE-PARITY","status":"ready-for-research","title":"Spell Make Stable Parity Witness"},
     {"number":6,"id":"RKBC-SPELL-SELF-TRANSFORMATION-PARITY","status":"ready-for-research","title":"Spell Self Transformation Mode Parity Witness"},
@@ -64,7 +64,7 @@ Output:
 
 ### Task 3 - RKBC-SPELL-SAVE-GATED-CONDITION-PARITY - Spell Save-Gated Condition Parity Witnesses
 
-Status: `ready-for-research`
+Status: `done`
 
 Output:
 - Parity witnesses or focused tests for save-gated condition profiles already supported in runtime.

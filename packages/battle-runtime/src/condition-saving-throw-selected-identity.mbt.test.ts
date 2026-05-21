@@ -1,9 +1,11 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt condition-saving-throw-lifecycle color_spray entangle hideous_laughter hold_person sleep
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt condition-saving-throw-lifecycle blindness_deafness color_spray entangle hideous_laughter hold_person sleep
+// UNIT-IDENTITY-MBT-REPLAY: condition-saving-throw-lifecycle blindness_deafness doResolveBlindnessDeafnessBlindedSavingThrow doResolveBlindnessDeafnessDeafenedSavingThrow
 // UNIT-IDENTITY-MBT-REPLAY: condition-saving-throw-lifecycle color_spray doResolveColorSprayFailedSavingThrow
 // UNIT-IDENTITY-MBT-REPLAY: condition-saving-throw-lifecycle entangle doResolveEntangleFailedSavingThrow
 // UNIT-IDENTITY-MBT-REPLAY: condition-saving-throw-lifecycle hideous_laughter doResolveHideousLaughterRepeatSavingThrowSuccess
 // UNIT-IDENTITY-MBT-REPLAY: condition-saving-throw-lifecycle hold_person doResolveHoldPersonFailedSavingThrow doResolveHoldPersonRepeatSavingThrowSuccess
 // UNIT-IDENTITY-MBT-REPLAY: condition-saving-throw-lifecycle sleep doResolveSleepRepeatSavingThrowFailure
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -45,9 +47,12 @@ import {
   type BattleSubject,
   type CombatantId,
 } from "./index.ts";
+import { spellConditionChoiceFill } from "./unit-profile-admission-spell-fill-support.ts";
 
 const conditionSavingThrowSelectedIdentityDriverSchema = {
   init: {},
+  doResolveBlindnessDeafnessBlindedSavingThrow: {},
+  doResolveBlindnessDeafnessDeafenedSavingThrow: {},
   doResolveColorSprayFailedSavingThrow: {},
   doResolveEntangleFailedSavingThrow: {},
   doResolveHoldPersonFailedSavingThrow: {},
@@ -63,6 +68,7 @@ type ConditionSavingThrowSelectedIdentityDriverAction = Exclude<
 
 type ConditionSavingThrowSelectedIdentityProjection = {
   readonly targetBlinded: boolean;
+  readonly targetDeafened: boolean;
   readonly targetRestrained: boolean;
   readonly targetParalyzed: boolean;
   readonly targetIncapacitated: boolean;
@@ -87,6 +93,7 @@ type SelectedUnitIdentityReplay = {
 };
 
 const conditionSavingThrowSpellUnitIds = [
+  "blindness_deafness",
   "color_spray",
   "entangle",
   "hold_person",
@@ -125,6 +132,36 @@ if (unitCatalogResult.tag !== "ok") {
 const unitLibrary = unitCatalogResult.catalog;
 
 const selectedUnitIdentityReplays = [
+  {
+    taskId: "condition-saving-throw-lifecycle",
+    unitId: "blindness_deafness",
+    actions: [
+      "doResolveBlindnessDeafnessBlindedSavingThrow",
+      "doResolveBlindnessDeafnessDeafenedSavingThrow",
+    ],
+    sequences: [
+      {
+        name: "failed-constitution-saving-throw-applies-chosen-blinded-condition",
+        actions: ["doResolveBlindnessDeafnessBlindedSavingThrow"],
+        expected: expectedProjection({
+          targetBlinded: true,
+          actionAvailable: false,
+          secondLevelSlotsExpended: 1,
+          lastResult: "resolved",
+        }),
+      },
+      {
+        name: "failed-constitution-saving-throw-applies-chosen-deafened-condition",
+        actions: ["doResolveBlindnessDeafnessDeafenedSavingThrow"],
+        expected: expectedProjection({
+          targetDeafened: true,
+          actionAvailable: false,
+          secondLevelSlotsExpended: 1,
+          lastResult: "resolved",
+        }),
+      },
+    ],
+  },
   {
     taskId: "condition-saving-throw-lifecycle",
     unitId: "color_spray",
@@ -304,6 +341,24 @@ function createConditionSavingThrowSelectedIdentityDriver() {
 
     return {
       init: reset,
+      doResolveBlindnessDeafnessBlindedSavingThrow: () => {
+        state = conditionSpellBattle(
+          srdSpellRecord("blindness_deafness"),
+          "wizard",
+        );
+        recordResolvedResult(
+          resolveBlindnessDeafnessFailedSavingThrow("blinded"),
+        );
+      },
+      doResolveBlindnessDeafnessDeafenedSavingThrow: () => {
+        state = conditionSpellBattle(
+          srdSpellRecord("blindness_deafness"),
+          "wizard",
+        );
+        recordResolvedResult(
+          resolveBlindnessDeafnessFailedSavingThrow("deafened"),
+        );
+      },
       doResolveColorSprayFailedSavingThrow: () => {
         state = conditionSpellBattle(srdSpellRecord("color_spray"), "wizard");
         recordResolvedResult(resolveAreaSavingThrowSpell("color_spray"));
@@ -349,6 +404,42 @@ function createConditionSavingThrowSelectedIdentityDriver() {
         subject: act.subject,
         fills: [
           savingThrowOutcomeFill(savingThrow, [{ targetId, succeeded: false }]),
+        ],
+      });
+    }
+
+    function resolveBlindnessDeafnessFailedSavingThrow(
+      selectedCondition: "blinded" | "deafened",
+    ): BattleResolutionResult {
+      const act = spellAct({
+        state,
+        spellId: "blindness_deafness",
+        slotLevel: 2,
+      });
+      const target = requireHole(act.initialHoles, "spellTargetList");
+      const conditionChoice = requireHole(act.initialHoles, "conditionChoice");
+      const targetFill = spellTargetListFill(target, "blindness_deafness", [
+        targetId,
+      ]);
+      const conditionChoiceFill = spellConditionChoiceFill(
+        conditionChoice,
+        selectedCondition,
+      );
+      const initialSave = requireResultHole(
+        resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [targetFill, conditionChoiceFill],
+        }),
+        "savingThrowOutcome",
+      );
+      return resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          targetFill,
+          conditionChoiceFill,
+          savingThrowOutcomeFill(initialSave, [{ targetId, succeeded: false }]),
         ],
       });
     }
@@ -492,6 +583,7 @@ function expectedProjection(
 ): ConditionSavingThrowSelectedIdentityProjection {
   return {
     targetBlinded: false,
+    targetDeafened: false,
     targetRestrained: false,
     targetParalyzed: false,
     targetIncapacitated: false,
@@ -538,7 +630,7 @@ function conditionSpellBattle(
           invocationSpellAccesses: [],
           spellbookRitualSpellAccesses: [],
           spellSlots:
-            spell.id === "hold_person"
+            spell.id === "hold_person" || spell.id === "blindness_deafness"
               ? [{ spellLevel: 2, count: 1 }]
               : [{ spellLevel: 1, count: 1 }],
         },
@@ -721,6 +813,7 @@ function projectConditionSavingThrowSelectedIdentityState(
   }
   return {
     targetBlinded: snapshotHasCondition(target.conditions, "blinded"),
+    targetDeafened: snapshotHasCondition(target.conditions, "deafened"),
     targetRestrained: snapshotHasCondition(target.conditions, "restrained"),
     targetParalyzed: snapshotHasCondition(target.conditions, "paralyzed"),
     targetIncapacitated: snapshotHasCondition(
@@ -768,6 +861,7 @@ function normalizeConditionSavingThrowSelectedIdentityQuintState(
   const state = quintStateRecord(raw);
   return {
     targetBlinded: booleanField(state, "qTargetBlinded"),
+    targetDeafened: booleanField(state, "qTargetDeafened"),
     targetRestrained: booleanField(state, "qTargetRestrained"),
     targetParalyzed: booleanField(state, "qTargetParalyzed"),
     targetIncapacitated: booleanField(state, "qTargetIncapacitated"),
