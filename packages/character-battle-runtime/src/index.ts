@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: runtime-owner SHEET.FEATURE_RESOURCES.TRANSITIONS
 import {
   combatantKnockedOutUnconscious,
   combatantHasActiveDruidWildShape,

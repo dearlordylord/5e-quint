@@ -1,8 +1,8 @@
 {
   "summary": {
     "total": 67,
-    "covered": 40,
-    "open": 22,
+    "covered": 41,
+    "open": 21,
     "nonSemantic": 5,
     "byRuntime": {
       "shared-algebras": 1,
@@ -12,8 +12,8 @@
       "character-battle": 1
     },
     "byStatus": {
-      "covered": 40,
-      "needs-qnt-owner": 2,
+      "covered": 41,
+      "needs-qnt-owner": 1,
       "needs-parity-witness": 19,
       "needs-surface-evidence": 1,
       "boundary-only": 4,
@@ -1669,21 +1669,45 @@
       "title": "Character Creation finalizes Weapon Mastery weapon choices as selected CharacterBuild class-choice refs without owning selected mastery-property behavior"
     },
     {
-      "followUpTaskIds": [
-        "RKBC-SHEET-FEATURE-RESOURCES"
-      ],
-      "id": "SHEET.REST_AND_RESOURCE.TRANSITIONS",
+      "id": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
       "kind": "state-transition",
-      "parityWitnesses": [],
-      "profiles": [],
-      "qntOwners": [],
+      "parityWitnesses": [
+        {
+          "deterministicReplayRationale": "Character Sheet feature-resource replay is a closed fixture for named resource cases: Lay On Hands spend and Long Rest pool reset, class-feature use-count Short Rest recovery, point-pool Long Rest reset, Font of Magic slot/Sorcery Point conversions and gates, Uncanny Metabolism use-state reset plus Initiative recovery, and Metamagic shared point-pool battle bridge handoff. Random interleavings are not the risk at this sheet resource boundary.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/character-battle-runtime/src/character-sheet-feature-resources.mbt.test.ts",
+          "qntSpecPath": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "character-sheet.class-feature-long-rest-use-state",
+        "character-sheet.class-feature-point-pool-resource",
+        "character-sheet.class-feature-use-count-resource",
+        "character-sheet.font-of-magic-slot-to-sorcery-points",
+        "character-sheet.font-of-magic-sorcery-points-to-spell-slot",
+        "character-sheet.healing-resource-action",
+        "character-sheet.metamagic-battle-resource-bridge",
+        "character-sheet.monk-uncanny-metabolism-initiative-recovery"
+      ],
+      "qntOwners": [
+        "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt"
+      ],
       "runtime": "character-sheet",
       "runtimeOwners": [
-        "packages/character-sheet-runtime/src/index.ts"
+        "packages/character-sheet-runtime/src/index.ts",
+        "packages/character-battle-runtime/src/index.ts"
       ],
-      "status": "needs-qnt-owner",
-      "surfaceEvidence": [],
-      "title": "Audit remaining Character Sheet feature-resource rest/resource transitions into QNT-connected obligations"
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Classes/Paladin.md#Level 1: Lay On Hands",
+        ".references/srd-5.2.1/Classes/Druid.md#Level 2: Wild Shape",
+        ".references/srd-5.2.1/Classes/Monk.md#Level 2: Monk's Focus",
+        ".references/srd-5.2.1/Classes/Monk.md#Level 2: Uncanny Metabolism",
+        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Font of Magic",
+        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic"
+      ],
+      "title": "Character Sheet non-slot feature-resource spend, recovery, reset, conversion, and battle bridge transitions"
     },
     {
       "followUpTaskIds": [
@@ -3576,6 +3600,54 @@
         "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS"
       ],
       "profileId": "character-sheet.pact-slot-recovery"
+    },
+    {
+      "obligationIds": [
+        "SHEET.FEATURE_RESOURCES.TRANSITIONS"
+      ],
+      "profileId": "character-sheet.healing-resource-action"
+    },
+    {
+      "obligationIds": [
+        "SHEET.FEATURE_RESOURCES.TRANSITIONS"
+      ],
+      "profileId": "character-sheet.class-feature-use-count-resource"
+    },
+    {
+      "obligationIds": [
+        "SHEET.FEATURE_RESOURCES.TRANSITIONS"
+      ],
+      "profileId": "character-sheet.class-feature-point-pool-resource"
+    },
+    {
+      "obligationIds": [
+        "SHEET.FEATURE_RESOURCES.TRANSITIONS"
+      ],
+      "profileId": "character-sheet.font-of-magic-slot-to-sorcery-points"
+    },
+    {
+      "obligationIds": [
+        "SHEET.FEATURE_RESOURCES.TRANSITIONS"
+      ],
+      "profileId": "character-sheet.font-of-magic-sorcery-points-to-spell-slot"
+    },
+    {
+      "obligationIds": [
+        "SHEET.FEATURE_RESOURCES.TRANSITIONS"
+      ],
+      "profileId": "character-sheet.metamagic-battle-resource-bridge"
+    },
+    {
+      "obligationIds": [
+        "SHEET.FEATURE_RESOURCES.TRANSITIONS"
+      ],
+      "profileId": "character-sheet.class-feature-long-rest-use-state"
+    },
+    {
+      "obligationIds": [
+        "SHEET.FEATURE_RESOURCES.TRANSITIONS"
+      ],
+      "profileId": "character-sheet.monk-uncanny-metabolism-initiative-recovery"
     },
     {
       "obligationIds": [

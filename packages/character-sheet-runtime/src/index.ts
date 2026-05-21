@@ -1,6 +1,7 @@
 // KERNEL-COVERAGE: runtime-owner SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE
 // KERNEL-COVERAGE: runtime-owner SHEET.HP_REST_HIT_DICE.TRANSITIONS
 // KERNEL-COVERAGE: runtime-owner SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS
+// KERNEL-COVERAGE: runtime-owner SHEET.FEATURE_RESOURCES.TRANSITIONS
 import {
   ALIGNMENT_MORALITIES,
   ALIGNMENT_ORDERS,
@@ -375,6 +376,13 @@ export type CharacterSheetHitDieSpend = {
   readonly classUnitId: UnitRecord["id"];
   readonly roll: DieRollResult;
 };
+
+type CharacterSheetHitPointRecoveryOverflow =
+  | { readonly tag: "capAtMaximum" }
+  | {
+      readonly tag: "rejectAboveMaximum";
+      readonly message: string;
+    };
 
 export type CharacterSheetRestFeatureUse =
   | {
@@ -1575,36 +1583,28 @@ export function useMonkUncannyMetabolismWhenRollingInitiative(
       `Uncanny Metabolism Martial Arts die roll must be within d${dieSize}.`,
     );
   }
-  if (
-    input.sheet.hitPoints.tag === "zero" &&
-    input.sheet.hitPoints.lifecycle.tag === "dead"
-  ) {
-    return characterSheetIssue(
-      "Uncanny Metabolism cannot restore HP to a dead character.",
-    );
-  }
 
-  const currentHp = characterSheetCurrentHp(input.sheet);
   const healing = useState.right.healing.monkLevelBonus + roll;
-  const hitPointMaximum = characterSheetHitPointMaximum(input.sheet);
-  const hitPoints = characterSheetHitPoints({
-    currentHp: Hp(Math.min(Number(hitPointMaximum), currentHp + healing)),
-    tempHp: characterSheetTempHp(input.sheet),
+  const healed = recoverCharacterSheetHitPoints({
+    sheet: input.sheet,
+    healing: Hp(healing),
+    overflow: { tag: "capAtMaximum" },
+    deadCharacterMessage:
+      "Uncanny Metabolism cannot restore HP to a dead character.",
   });
-  if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
+  if (Either.isLeft(healed)) return Either.left(healed.left);
 
   return Either.right({
-    ...input.sheet,
-    hitPoints: hitPoints.right,
+    ...healed.right,
     restFeatureUses: [
-      ...input.sheet.restFeatureUses,
+      ...healed.right.restFeatureUses,
       {
         tag: UNCANNY_METABOLISM_REST_FEATURE_TAG,
         usedSinceLongRest: true,
       },
     ],
     resourceExpenditures: replaceUseCountResourceExpenditure({
-      expenditures: input.sheet.resourceExpenditures,
+      expenditures: healed.right.resourceExpenditures,
       unitId: useState.right.focusRecovery.resourceUnitId,
       expended: resourceCount(0),
     }),
@@ -4136,21 +4136,51 @@ function spendHitDice(input: {
       };
     }
   }
-  const currentHp = characterSheetCurrentHp(input.sheet);
-  const hitPointMaximum = characterSheetHitPointMaximum(input.sheet);
-  const healedHp = Hp(
-    Math.min(Number(hitPointMaximum), currentHp + healingTotal),
-  );
-  const hitPoints = characterSheetHitPoints({
-    currentHp: healedHp,
-    tempHp: characterSheetTempHp(input.sheet),
+  const healed = recoverCharacterSheetHitPoints({
+    sheet: input.sheet,
+    healing: Hp(healingTotal),
+    overflow: { tag: "capAtMaximum" },
+    deadCharacterMessage:
+      "Short Rest Hit Dice cannot restore HP to a dead character.",
   });
-  if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
+  if (Either.isLeft(healed)) return Either.left(healed.left);
   return Either.right({
-    ...input.sheet,
-    hitPoints: hitPoints.right,
+    ...healed.right,
     spentHitDice: nextSpentHitDice,
   });
+}
+
+// Rest and feature-resource callers share this owner for Character Sheet HP recovery.
+function recoverCharacterSheetHitPoints(input: {
+  readonly sheet: CharacterSheet;
+  readonly healing: HpType;
+  readonly overflow: CharacterSheetHitPointRecoveryOverflow;
+  readonly deadCharacterMessage: string;
+}): Either.Either<CharacterSheet, CharacterSheetIssue> {
+  if (input.healing === Hp(0)) return Either.right(input.sheet);
+  if (
+    input.sheet.hitPoints.tag === "zero" &&
+    input.sheet.hitPoints.lifecycle.tag === "dead"
+  ) {
+    return characterSheetIssue(input.deadCharacterMessage);
+  }
+
+  const currentHp = characterSheetCurrentHp(input.sheet);
+  const hitPointMaximum = characterSheetHitPointMaximum(input.sheet);
+  const recoveredHp = currentHp + input.healing;
+  if (
+    input.overflow.tag === "rejectAboveMaximum" &&
+    recoveredHp > hitPointMaximum
+  ) {
+    return characterSheetIssue(input.overflow.message);
+  }
+  const hitPoints = characterSheetHitPoints({
+    currentHp: Hp(Math.min(Number(hitPointMaximum), Number(recoveredHp))),
+    tempHp: characterSheetTempHp(input.sheet),
+  });
+  return Either.isLeft(hitPoints)
+    ? Either.left(hitPoints.left)
+    : Either.right({ ...input.sheet, hitPoints: hitPoints.right });
 }
 
 function layOnHandsSpend(
@@ -4223,34 +4253,19 @@ function applyLayOnHandsTargetEffects(input: {
   if (input.restoreHp === 0) {
     return Either.right({ ...input.sheet, conditions });
   }
-  if (
-    input.sheet.hitPoints.tag === "zero" &&
-    input.sheet.hitPoints.lifecycle.tag === "dead"
-  ) {
-    return characterSheetIssue(
-      "Lay On Hands cannot restore HP to a dead target.",
-    );
-  }
-  const currentHp = characterSheetCurrentHp(input.sheet);
-  if (
-    currentHp + input.restoreHp >
-    characterSheetHitPointMaximum(input.sheet)
-  ) {
-    return characterSheetIssue(
-      "Lay On Hands HP restoration cannot exceed the target's missing HP.",
-    );
-  }
-  const hitPoints = characterSheetHitPoints({
-    currentHp: Hp(currentHp + input.restoreHp),
-    tempHp: characterSheetTempHp(input.sheet),
+  const healed = recoverCharacterSheetHitPoints({
+    sheet: input.sheet,
+    healing: input.restoreHp,
+    overflow: {
+      tag: "rejectAboveMaximum",
+      message:
+        "Lay On Hands HP restoration cannot exceed the target's missing HP.",
+    },
+    deadCharacterMessage: "Lay On Hands cannot restore HP to a dead target.",
   });
-  return Either.isLeft(hitPoints)
-    ? Either.left(hitPoints.left)
-    : Either.right({
-        ...input.sheet,
-        hitPoints: hitPoints.right,
-        conditions,
-      });
+  return Either.isLeft(healed)
+    ? Either.left(healed.left)
+    : Either.right({ ...healed.right, conditions });
 }
 
 function applyArcaneRecovery(input: {

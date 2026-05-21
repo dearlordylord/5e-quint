@@ -86,6 +86,14 @@
 {"profileId":"character-sheet.armor-class-base-formula","obligationIds":["SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE"]}
 {"profileId":"character-sheet.short-rest-spell-slot-recovery","obligationIds":["SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS"]}
 {"profileId":"character-sheet.pact-slot-recovery","obligationIds":["SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS"]}
+{"profileId":"character-sheet.healing-resource-action","obligationIds":["SHEET.FEATURE_RESOURCES.TRANSITIONS"]}
+{"profileId":"character-sheet.class-feature-use-count-resource","obligationIds":["SHEET.FEATURE_RESOURCES.TRANSITIONS"]}
+{"profileId":"character-sheet.class-feature-point-pool-resource","obligationIds":["SHEET.FEATURE_RESOURCES.TRANSITIONS"]}
+{"profileId":"character-sheet.font-of-magic-slot-to-sorcery-points","obligationIds":["SHEET.FEATURE_RESOURCES.TRANSITIONS"]}
+{"profileId":"character-sheet.font-of-magic-sorcery-points-to-spell-slot","obligationIds":["SHEET.FEATURE_RESOURCES.TRANSITIONS"]}
+{"profileId":"character-sheet.metamagic-battle-resource-bridge","obligationIds":["SHEET.FEATURE_RESOURCES.TRANSITIONS"]}
+{"profileId":"character-sheet.class-feature-long-rest-use-state","obligationIds":["SHEET.FEATURE_RESOURCES.TRANSITIONS"]}
+{"profileId":"character-sheet.monk-uncanny-metabolism-initiative-recovery","obligationIds":["SHEET.FEATURE_RESOURCES.TRANSITIONS"]}
 {"profileId":"character-creation.class-feature-feat-choice","obligationIds":["CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION"]}
 {"profileId":"character-creation.fighter-fighting-style-advancement-replacement","obligationIds":["CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT"]}
 {"profileId":"character-creation.warlock-pact-magic-advancement","obligationIds":["CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION"]}

@@ -83,18 +83,18 @@
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 117,
-      "numerator": 65,
-      "percent": "55.6%"
+      "numerator": 73,
+      "percent": "62.4%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 117,
-      "numerator": 94,
-      "percent": "80.3%"
+      "numerator": 102,
+      "percent": "87.2%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 135,
-      "numerator": 80,
-      "percent": "59.3%"
+      "numerator": 81,
+      "percent": "60%"
     },
     "runtimeMappingCoverage": {
       "denominator": 85,
@@ -3398,13 +3398,13 @@
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 117,
-        "numerator": 65,
-        "percent": "55.6%"
+        "numerator": 73,
+        "percent": "62.4%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 117,
-        "numerator": 94,
-        "percent": "80.3%"
+        "numerator": 102,
+        "percent": "87.2%"
       }
     },
     "profileKinds": [
@@ -3799,8 +3799,15 @@
         "profileKind": "bonus-action"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+            "runtime": "character-sheet",
+            "status": "covered",
+            "title": "Character Sheet non-slot feature-resource spend, recovery, reset, conversion, and battle bridge transitions"
+          }
+        ],
         "profileId": "character-sheet.healing-resource-action",
         "profileKind": "character-sheet"
       },
@@ -4682,44 +4689,93 @@
         "profileKind": "character-sheet"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+            "runtime": "character-sheet",
+            "status": "covered",
+            "title": "Character Sheet non-slot feature-resource spend, recovery, reset, conversion, and battle bridge transitions"
+          }
+        ],
         "profileId": "character-sheet.class-feature-use-count-resource",
         "profileKind": "character-sheet"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+            "runtime": "character-sheet",
+            "status": "covered",
+            "title": "Character Sheet non-slot feature-resource spend, recovery, reset, conversion, and battle bridge transitions"
+          }
+        ],
         "profileId": "character-sheet.class-feature-point-pool-resource",
         "profileKind": "character-sheet"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+            "runtime": "character-sheet",
+            "status": "covered",
+            "title": "Character Sheet non-slot feature-resource spend, recovery, reset, conversion, and battle bridge transitions"
+          }
+        ],
         "profileId": "character-sheet.font-of-magic-slot-to-sorcery-points",
         "profileKind": "character-sheet"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+            "runtime": "character-sheet",
+            "status": "covered",
+            "title": "Character Sheet non-slot feature-resource spend, recovery, reset, conversion, and battle bridge transitions"
+          }
+        ],
         "profileId": "character-sheet.font-of-magic-sorcery-points-to-spell-slot",
         "profileKind": "character-sheet"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+            "runtime": "character-sheet",
+            "status": "covered",
+            "title": "Character Sheet non-slot feature-resource spend, recovery, reset, conversion, and battle bridge transitions"
+          }
+        ],
         "profileId": "character-sheet.metamagic-battle-resource-bridge",
         "profileKind": "character-sheet"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+            "runtime": "character-sheet",
+            "status": "covered",
+            "title": "Character Sheet non-slot feature-resource spend, recovery, reset, conversion, and battle bridge transitions"
+          }
+        ],
         "profileId": "character-sheet.class-feature-long-rest-use-state",
         "profileKind": "character-sheet"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+            "runtime": "character-sheet",
+            "status": "covered",
+            "title": "Character Sheet non-slot feature-resource spend, recovery, reset, conversion, and battle bridge transitions"
+          }
+        ],
         "profileId": "character-sheet.monk-uncanny-metabolism-initiative-recovery",
         "profileKind": "character-sheet"
       },
@@ -4924,8 +4980,8 @@
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
           "denominator": 135,
-          "numerator": 80,
-          "percent": "59.3%"
+          "numerator": 81,
+          "percent": "60%"
         }
       },
       "units": [
@@ -6905,14 +6961,28 @@
               "profileKind": "character-creation"
             },
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+                  "runtime": "character-sheet",
+                  "status": "covered",
+                  "title": "Character Sheet non-slot feature-resource spend, recovery, reset, conversion, and battle bridge transitions"
+                }
+              ],
               "profileId": "character-sheet.class-feature-long-rest-use-state",
               "profileKind": "character-sheet"
             },
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+                  "runtime": "character-sheet",
+                  "status": "covered",
+                  "title": "Character Sheet non-slot feature-resource spend, recovery, reset, conversion, and battle bridge transitions"
+                }
+              ],
               "profileId": "character-sheet.monk-uncanny-metabolism-initiative-recovery",
               "profileKind": "character-sheet"
             }
@@ -6996,11 +7066,18 @@
           "unitId": "paladin_extra_attack"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+                  "runtime": "character-sheet",
+                  "status": "covered",
+                  "title": "Character Sheet non-slot feature-resource spend, recovery, reset, conversion, and battle bridge transitions"
+                }
+              ],
               "profileId": "character-sheet.healing-resource-action",
               "profileKind": "character-sheet"
             }

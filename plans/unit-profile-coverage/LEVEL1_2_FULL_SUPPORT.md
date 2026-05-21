@@ -11,9 +11,9 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | Strict runtime/profile support | 112/168 (66.7%) |
 | Strict target closure | 167/168 (99.4%) |
 | Product readiness | 509/556 (91.5%) |
-| Rules-kernel profile join | 73/84 (86.9%) |
-| Rules-kernel covered profile join | 47/84 (56%) |
-| Supported Unit rules-kernel chain | 58/112 (51.8%) |
+| Rules-kernel profile join | 76/84 (90.5%) |
+| Rules-kernel covered profile join | 50/84 (59.5%) |
+| Supported Unit rules-kernel chain | 59/112 (52.7%) |
 
 ## Scope
 
@@ -83,8 +83,7 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `longstrider` | mapped-open | `spell.scalar-buff` (mapped-open: `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` (needs-parity-witness)) |
 | `magic_weapon` | mapped-open | `spell.invocation-magic-weapon-enhancement` (mapped-open: `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` (needs-parity-witness)) |
 | `mirror_image` | mapped-open | `spell.invocation-mirror-image-hit-interception` (mapped-open: `BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION` (needs-parity-witness)) |
-| `monk_uncanny_metabolism` | unmapped | `character-creation.class-feature-source-fact-projection` (unmapped: no obligation mapping); `character-sheet.class-feature-long-rest-use-state` (unmapped: no obligation mapping); `character-sheet.monk-uncanny-metabolism-initiative-recovery` (unmapped: no obligation mapping) |
-| `paladin_lay_on_hands` | unmapped | `character-sheet.healing-resource-action` (unmapped: no obligation mapping) |
+| `monk_uncanny_metabolism` | unmapped | `character-creation.class-feature-source-fact-projection` (unmapped: no obligation mapping) |
 | `paladin_paladins_smite` | mapped-open | `spell.invocation-after-hit-damage` (mapped-open: `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` (needs-parity-witness)) |
 | `paladin_weapon_mastery` | unmapped | `character-sheet.weapon-mastery-reselection` (unmapped: no obligation mapping) |
 | `protection_from_evil_and_good` | mapped-open | `spell.creature-type-protection-and-charm` (mapped-open: `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION` (needs-parity-witness)) |

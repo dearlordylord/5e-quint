@@ -115,7 +115,7 @@
     {
       "number": 19,
       "id": "RKBC-SHEET-FEATURE-RESOURCES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Character Sheet Feature Resource Transitions"
     },
     {
@@ -249,8 +249,8 @@ Current B status:
 | Metric | Current |
 | --- | ---: |
 | Rules-kernel obligations | 15 |
-| Covered obligations | 8 |
-| Open transitional obligations | 5 |
+| Covered obligations | 9 |
+| Open transitional obligations | 4 |
 | Boundary/unsupported obligations | 2 |
 | Rules-kernel profile join coverage | 25/95 (26.3%) |
 | Rules-kernel covered profile coverage | 20/95 (21.1%) |
@@ -261,7 +261,6 @@ Open transitional obligations:
 - `BATTLE.HOLE.SEMANTIC_FRONTIER_CLASSIFICATION`
 - `BATTLE.SURFACE.EXECUTABLE_PROFILE_JOIN`
 - `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT`
-- `SHEET.REST_AND_RESOURCE.TRANSITIONS`
 - `CHARACTER.BATTLE.HANDOFF.SETTLEMENT`
 
 ## Done State
@@ -413,7 +412,7 @@ Reviewers should reject:
 | 16 | RKBC-CREATION-WEAPON-MASTERY-FEAT - Character Creation Weapon Mastery And Feat Choice | done | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH | Covered class-feature feat finalization and Weapon Mastery choice finalization as split character-creation obligations; selected feat/mastery behavior remains owned by selected Unit runtime profiles, and sheet Weapon Mastery reselection remains Task 20. |
 | 17 | RKBC-SHEET-HP-REST-HIT-DICE - Character Sheet HP Rest And Hit Dice Transitions | done | baseline | Covered HP healing, Short Rest, Long Rest, interruption, Hit Point Dice spend/restore, and max-HP reduction reset as `SHEET.HP_REST_HIT_DICE.TRANSITIONS`. |
 | 18 | RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS - Character Sheet Spell Slot And Pact Slot Transitions | done | RKBC-SHEET-HP-REST-HIT-DICE | Covered Spell Slot, created Spell Slot, Pact Slot, Arcane Recovery, and Magical Cunning transitions as `SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS`. |
-| 19 | RKBC-SHEET-FEATURE-RESOURCES - Character Sheet Feature Resource Transitions | ready-for-research | RKBC-SHEET-HP-REST-HIT-DICE | Cover remaining non-slot sheet feature resources, including Lay On Hands, healing-resource actions, class feature use counts/point pools, Font of Magic conversions, Metamagic battle resource bridge, class-feature Long Rest use state, and Monk Uncanny Metabolism initiative recovery. |
+| 19 | RKBC-SHEET-FEATURE-RESOURCES - Character Sheet Feature Resource Transitions | done | RKBC-SHEET-HP-REST-HIT-DICE | Covered non-slot feature-resource spend, recovery, reset, conversion, and battle bridge transitions as `SHEET.FEATURE_RESOURCES.TRANSITIONS`. |
 | 20 | RKBC-SHEET-WEAPON-MASTERY-RITUAL - Character Sheet Weapon Mastery And Ritual Projection | ready-for-research | baseline | Cover weapon mastery reselection and spellbook/ritual projection semantics. |
 | 21 | RKBC-HANDOFF-BATTLE-INIT - Character Battle Initialization Projection | ready-for-research | baseline | Cover Character Sheet/build projection into battle initialization. |
 | 22 | RKBC-HANDOFF-BATTLE-SETTLEMENT - Character Battle Settlement Back To Sheet | blocked | RKBC-SHEET-HP-REST-HIT-DICE, RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS, RKBC-HANDOFF-BATTLE-INIT | Cover HP, condition, spell-slot, and resource settlement from battle back to sheet. |
@@ -851,7 +850,7 @@ remaining `SHEET.REST_AND_RESOURCE.TRANSITIONS` aggregate now names only Task
 
 ### Task 19 - RKBC-SHEET-FEATURE-RESOURCES - Character Sheet Feature Resource Transitions
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: `RKBC-SHEET-HP-REST-HIT-DICE`.
 
@@ -870,6 +869,14 @@ Acceptance:
 - Healing-resource actions call through the shared HP mutation owner instead of
   duplicating HP algebra.
 - Surface/profile rows map through covered obligations.
+
+Result: `SHEET.FEATURE_RESOURCES.TRANSITIONS` covers Lay On Hands spend and
+Long Rest pool reset, class-feature use-count Short Rest recovery,
+class-feature point-pool Long Rest reset, Font of Magic Spell Slot/Sorcery
+Point conversions and gates, Uncanny Metabolism Long Rest use state plus
+Initiative recovery, and the Metamagic shared Sorcery Point battle bridge. The
+deterministic QNT replay uses fixed sheet-resource fixtures because the risk is
+resource ownership/projection, not random interleavings.
 
 ### Task 20 - RKBC-SHEET-WEAPON-MASTERY-RITUAL - Character Sheet Weapon Mastery And Ritual Projection
 

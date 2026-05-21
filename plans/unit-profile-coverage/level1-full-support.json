@@ -963,18 +963,18 @@
     },
     "rulesKernelCoveredProfileJoin": {
       "denominator": 58,
-      "numerator": 35,
-      "percent": "60.3%"
+      "numerator": 36,
+      "percent": "62.1%"
     },
     "rulesKernelProfileJoin": {
       "denominator": 58,
-      "numerator": 53,
-      "percent": "91.4%"
+      "numerator": 54,
+      "percent": "93.1%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 78,
-      "numerator": 45,
-      "percent": "57.7%"
+      "numerator": 46,
+      "percent": "59%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 94,
@@ -3246,8 +3246,8 @@
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
         "denominator": 78,
-        "numerator": 45,
-        "percent": "57.7%"
+        "numerator": 46,
+        "percent": "59%"
       }
     },
     "units": [
@@ -4501,11 +4501,18 @@
         "unitId": "monk_unarmored_defense"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+                "runtime": "character-sheet",
+                "status": "covered",
+                "title": "Character Sheet non-slot feature-resource spend, recovery, reset, conversion, and battle bridge transitions"
+              }
+            ],
             "profileId": "character-sheet.healing-resource-action",
             "profileKind": "character-sheet"
           }
