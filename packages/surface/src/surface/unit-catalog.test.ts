@@ -4,6 +4,7 @@ import { Either, Option, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import findFamiliarInput from "../../content/find_familiar.json";
+import magicWeaponInput from "../../content/magic_weapon.json";
 import moonbeamInput from "../../content/moonbeam.json";
 import sorcererFontOfMagicInput from "../../content/sorcerer_font_of_magic.json";
 import sorcererMetamagicInput from "../../content/sorcerer_metamagic.json";
@@ -1895,6 +1896,109 @@ describe("SRD Unit catalog boundary", () => {
           },
         },
       ]);
+    }
+  });
+
+  test("decodes Magic Weapon as an item-attached weapon enhancement", () => {
+    const magicWeapon = decodeUnitRecordSync(magicWeaponInput);
+
+    expect(magicWeapon.kind).toBe("spell");
+    if (
+      magicWeapon.kind !== "spell" ||
+      magicWeapon.mechanics.family !== "ongoing_effect"
+    ) {
+      throw new Error("Expected Magic Weapon to be an ongoing-effect spell.");
+    }
+
+    expect(magicWeapon.provenance).toEqual({
+      kind: "srd-5.2.1",
+      section: "Spells/Descriptions-M-P#Magic Weapon",
+    });
+    expect(magicWeapon.mechanics.castingTime).toEqual({
+      kind: "bonus_action",
+    });
+    expect(magicWeapon.mechanics.range).toEqual({ kind: "touch" });
+    expect(magicWeapon.mechanics.duration).toEqual({
+      kind: "timed",
+      value: { unit: "hour", amount: 1 },
+      earlyEnd: [{ kind: "caster_recasts_spell" }],
+    });
+    expect(magicWeapon.mechanics.attachment).toEqual({
+      kind: "hole",
+      holeId: "magic_weapon_object",
+      label: "nonmagical weapon",
+      value: {
+        kind: "object",
+        count: 1,
+        filter: { objectKind: "weapon", magicality: "nonmagical" },
+      },
+    });
+    expect(magicWeapon.mechanics.operations).toEqual([
+      {
+        trigger: { kind: "passive" },
+        effect: {
+          kind: "grant_magic_weapon_enhancement",
+          bonus: {
+            kind: "threshold_tiers",
+            axis: "slot",
+            base: 1,
+            tiers: [
+              { atLevel: 3, value: 2 },
+              { atLevel: 6, value: 3 },
+            ],
+            sign: "+",
+          },
+        },
+      },
+    ]);
+  });
+
+  test("rejects Magic Weapon enhancement bonuses outside the SRD slot tiers", () => {
+    const decode = Schema.decodeUnknownEither(EffectAtomSchema);
+    const invalidBonuses = [
+      { kind: "fixed_number", amount: 1, sign: "+" },
+      { kind: "fixed_dice", dice: 1, dieSize: 4, sign: "+" },
+      {
+        kind: "threshold_tiers",
+        axis: "character",
+        base: 1,
+        tiers: [
+          { atLevel: 3, value: 2 },
+          { atLevel: 6, value: 3 },
+        ],
+        sign: "+",
+      },
+      {
+        kind: "threshold_tiers",
+        axis: "slot",
+        base: 1,
+        tiers: [
+          { atLevel: 3, value: 2 },
+          { atLevel: 5, value: 3 },
+        ],
+        sign: "+",
+      },
+      {
+        kind: "threshold_tiers",
+        axis: "slot",
+        base: 1,
+        tiers: [
+          { atLevel: 3, value: 2 },
+          { atLevel: 6, value: 3 },
+        ],
+        sign: "-",
+      },
+    ] as const;
+
+    for (const bonus of invalidBonuses) {
+      expect(
+        Either.isLeft(
+          decode({
+            kind: "grant_magic_weapon_enhancement",
+            bonus,
+          }),
+        ),
+      ).toBe(true);
     }
   });
 

@@ -56,10 +56,12 @@ export const WeaponFilterSchema = Schema.Union(
   }),
 );
 
+export const MagicalitySchema = Schema.Literal("magical", "nonmagical");
+
 export const ResistanceSourceFilterSchema = Schema.Struct({
   kind: Schema.Literal("attack"),
   weaponFilter: exactOptional(WeaponFilterSchema),
-  magicality: exactOptional(Schema.Literal("magical", "nonmagical")),
+  magicality: exactOptional(MagicalitySchema),
 });
 
 export const SavingThrowSourceFilterSchema = Schema.Struct({

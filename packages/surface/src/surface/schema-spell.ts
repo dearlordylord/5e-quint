@@ -17,6 +17,7 @@ import {
   GrantedSpellTargetRestrictionSchema,
   LevelAxisSchema,
   LinkedSpeedSchema,
+  MagicalitySchema,
   ProficiencyGrantSchema,
   ProvenanceSchema,
   ResistanceSourceFilterSchema,
@@ -346,6 +347,23 @@ export const DamageSourceFilterSchema = strictStruct({
   attackRollFilter: Schema.Literal("weapon_or_unarmed_strike"),
 });
 
+const MagicWeaponEnhancementBonusSchema = strictStruct({
+  kind: Schema.Literal("threshold_tiers"),
+  axis: Schema.Literal("slot"),
+  base: Schema.Literal(1),
+  tiers: Schema.Tuple(
+    strictStruct({
+      atLevel: Schema.Literal(3),
+      value: Schema.Literal(2),
+    }),
+    strictStruct({
+      atLevel: Schema.Literal(6),
+      value: Schema.Literal(3),
+    }),
+  ),
+  sign: Schema.Literal("+"),
+});
+
 export const ForceMovePushEffectSchema = strictStruct({
   kind: Schema.Literal("force_move"),
   movementKind: Schema.Literal("push"),
@@ -375,6 +393,9 @@ export const ForceMoveEffectSchema = Schema.Union(
 type DamageTypeRef = Schema.Schema.Type<typeof DamageTypeRefSchema>;
 type DiceAmount = Schema.Schema.Type<typeof DiceAmountSchema>;
 type DiceDelta = Schema.Schema.Type<typeof DiceDeltaSchema>;
+type MagicWeaponEnhancementBonus = Schema.Schema.Type<
+  typeof MagicWeaponEnhancementBonusSchema
+>;
 type WeaponFilter = Schema.Schema.Type<typeof WeaponFilterSchema>;
 type ObjectFilter = Schema.Schema.Type<typeof ObjectFilterSchema>;
 type Skill = Schema.Schema.Type<typeof SkillSchema>;
@@ -766,6 +787,10 @@ type EffectAtom =
       readonly weaponFilter?: WeaponFilter;
       readonly abilityFilter?: ReadonlyNonEmptyArray<Ability>;
       readonly minimumDamageTotal?: 1;
+    }
+  | {
+      readonly kind: "grant_magic_weapon_enhancement";
+      readonly bonus: MagicWeaponEnhancementBonus;
     }
   | {
       readonly kind: "modify_size_category";
@@ -1902,6 +1927,8 @@ export const CreatureSizeFilterSchema = strictStruct({
 });
 
 export const ObjectMaterialSchema = Schema.Literal("metal", "flammable");
+const ObjectKindFilterSchema = Schema.Literal("weapon");
+const ObjectMagicalityFilterSchema = MagicalitySchema;
 
 export const ObjectTargetRelationSchema = Schema.Literal(
   "loose",
@@ -1915,6 +1942,8 @@ export const ObjectVisibilityRequirementSchema =
   Schema.Literal("caster_can_see");
 
 export const ObjectFilterSchema = Schema.Struct({
+  objectKind: optionalExact(ObjectKindFilterSchema),
+  magicality: optionalExact(ObjectMagicalityFilterSchema),
   material: optionalExact(ObjectMaterialSchema),
   visibility: optionalExact(ObjectVisibilityRequirementSchema),
   targetRelation: optionalExact(ObjectTargetRelationSchema),
@@ -2549,6 +2578,10 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         weaponFilter: optionalExact(WeaponFilterSchema),
         abilityFilter: optionalExact(nonEmpty(AbilitySchema)),
         minimumDamageTotal: optionalExact(Schema.Literal(1)),
+      }),
+      strictStruct({
+        kind: Schema.Literal("grant_magic_weapon_enhancement"),
+        bonus: MagicWeaponEnhancementBonusSchema,
       }),
       Schema.Struct({
         kind: Schema.Literal("modify_size_category"),

@@ -9,6 +9,7 @@ import flameBladeInput from "../../content/flame_blade.json";
 import heatMetalInput from "../../content/heat_metal.json";
 import locateAnimalsOrPlantsInput from "../../content/locate_animals_or_plants.json";
 import locateObjectInput from "../../content/locate_object.json";
+import magicWeaponInput from "../../content/magic_weapon.json";
 import magicMouthInput from "../../content/magic_mouth.json";
 import moonbeamInput from "../../content/moonbeam.json";
 import ropeTrickInput from "../../content/rope_trick.json";
@@ -168,6 +169,35 @@ describe("Surface trace interpreter", () => {
           label: expect.stringContaining(
             "spell cast again on connected creature",
           ),
+        }),
+      ]),
+    );
+  });
+
+  test("renders Magic Weapon's nonmagical weapon enhancement facts", () => {
+    const trace = traceUnit(decodeUnitRecordSync(magicWeaponInput));
+
+    expect(trace.nodes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          atomKind: "hole",
+          label: expect.stringContaining("nonmagical weapon"),
+        }),
+        expect.objectContaining({
+          atomKind: "hole",
+          label: expect.stringContaining("filter: weapon, nonmagical"),
+        }),
+        expect.objectContaining({
+          atomKind: "grant_magic_weapon_enhancement",
+          label: [
+            "grant_magic_weapon_enhancement",
+            "magic weapon status",
+            "+1 (slot tiers L3:2, L6:3) to attack rolls and damage rolls with attached weapon",
+          ].join("\n"),
+        }),
+        expect.objectContaining({
+          atomKind: "expire",
+          label: expect.stringContaining("caster_recasts_spell"),
         }),
       ]),
     );
