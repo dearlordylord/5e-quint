@@ -83,8 +83,8 @@
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 109,
-      "numerator": 56,
-      "percent": "51.4%"
+      "numerator": 57,
+      "percent": "52.3%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 109,
@@ -2488,23 +2488,21 @@
       ]
     },
     {
-      "id": "character-creation.class-feature-advancement-replacement",
+      "id": "character-creation.fighter-fighting-style-advancement-replacement",
       "profileKind": "character-creation",
       "qntOwners": [],
       "runtimeOwners": [
-        "packages/character-creation-runtime/src/index.ts"
+        "packages/character-creation-runtime/src/character-build-advancement.ts"
       ],
-      "sourceBoundary": "CharacterBuild progression plus Surface class-feature and class spellcasting facts; replacement and gain choices are accepted only as part of a class-level gain and rewrite existing CharacterBuild feature refs, selected invocation ownership, or Warlock Pact Magic spellcasting facts without parallel selected-option state.",
+      "sourceBoundary": "CharacterBuild Fighter progression plus the retained Surface Fighting Style feature ref; replacement is accepted only as part of a Fighter level gain and rewrites the selected Fighting Style feat ref without retaining draft state or duplicating selected feat execution.",
       "taskRefs": [
-        "L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE",
-        "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE",
-        "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
+        "L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE"
       ],
-      "title": "Character Creation advances CharacterBuild class levels with class-feature replacement and gain choices",
+      "title": "Character Creation advances Fighter levels with Fighting Style feat replacement",
       "verificationOwners": [
         {
-          "kind": "runtime-test",
-          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/fighter-fighting-style-selected-identity.mbt.test.ts"
         }
       ]
     },
@@ -2635,8 +2633,9 @@
       "runtimeOwners": [
         "packages/character-creation-runtime/src/index.ts"
       ],
-      "sourceBoundary": "Surface class-feature records retained by class progression can project source links to other owned facts, such as Uncanny Metabolism linking to the shared Monk's Focus resource and existing Martial Arts die source, without storing duplicate resource caps, die tiers, or class progression state.",
+      "sourceBoundary": "Surface class-feature records retained by class progression can project source links to other owned facts, such as Wild Companion retaining the sibling Druid feature ref set or Uncanny Metabolism linking to the shared Monk's Focus resource and existing Martial Arts die source, without storing duplicate resource caps, die tiers, or class progression state.",
       "taskRefs": [
+        "L12G-AUTHOR-DRUID-WILD-COMPANION",
         "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS"
       ],
       "title": "Character Creation projects retained class-feature source links into CharacterBuild facts",
@@ -3168,8 +3167,8 @@
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 109,
-        "numerator": 56,
-        "percent": "51.4%"
+        "numerator": 57,
+        "percent": "52.3%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 109,
@@ -4311,23 +4310,23 @@
             "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
             "runtime": "character-creation",
             "status": "needs-qnt-owner",
-            "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+            "title": "Audit remaining Character Creation finalization, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
           }
         ],
         "profileId": "character-creation.class-feature-feat-choice",
         "profileKind": "character-creation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
-            "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+            "obligationId": "CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT",
             "runtime": "character-creation",
-            "status": "needs-qnt-owner",
-            "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+            "status": "covered",
+            "title": "Character Creation Fighter class-level gain replacement rewrites durable CharacterBuild progression and selected Fighting Style ownership without draft state"
           }
         ],
-        "profileId": "character-creation.class-feature-advancement-replacement",
+        "profileId": "character-creation.fighter-fighting-style-advancement-replacement",
         "profileKind": "character-creation"
       },
       {
@@ -4337,7 +4336,7 @@
             "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
             "runtime": "character-creation",
             "status": "needs-qnt-owner",
-            "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+            "title": "Audit remaining Character Creation finalization, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
           }
         ],
         "profileId": "character-creation.warlock-pact-magic-advancement",
@@ -4350,7 +4349,7 @@
             "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
             "runtime": "character-creation",
             "status": "needs-qnt-owner",
-            "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+            "title": "Audit remaining Character Creation finalization, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
           }
         ],
         "profileId": "character-creation.weapon-mastery-choice",
@@ -4363,7 +4362,7 @@
             "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
             "runtime": "character-creation",
             "status": "needs-qnt-owner",
-            "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+            "title": "Audit remaining Character Creation finalization, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
           }
         ],
         "profileId": "character-creation.eldritch-invocation-choice",
@@ -5635,23 +5634,23 @@
                   "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
                   "runtime": "character-creation",
                   "status": "needs-qnt-owner",
-                  "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+                  "title": "Audit remaining Character Creation finalization, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
                 }
               ],
               "profileId": "character-creation.class-feature-feat-choice",
               "profileKind": "character-creation"
             },
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                  "obligationId": "CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT",
                   "runtime": "character-creation",
-                  "status": "needs-qnt-owner",
-                  "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+                  "status": "covered",
+                  "title": "Character Creation Fighter class-level gain replacement rewrites durable CharacterBuild progression and selected Fighting Style ownership without draft state"
                 }
               ],
-              "profileId": "character-creation.class-feature-advancement-replacement",
+              "profileId": "character-creation.fighter-fighting-style-advancement-replacement",
               "profileKind": "character-creation"
             }
           ],
@@ -6692,7 +6691,7 @@
                   "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
                   "runtime": "character-creation",
                   "status": "needs-qnt-owner",
-                  "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+                  "title": "Audit remaining Character Creation finalization, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
                 }
               ],
               "profileId": "character-creation.weapon-mastery-choice",
@@ -6887,7 +6886,7 @@
                   "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
                   "runtime": "character-creation",
                   "status": "needs-qnt-owner",
-                  "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+                  "title": "Audit remaining Character Creation finalization, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
                 }
               ],
               "profileId": "character-creation.weapon-mastery-choice",
@@ -7113,7 +7112,7 @@
                   "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
                   "runtime": "character-creation",
                   "status": "needs-qnt-owner",
-                  "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+                  "title": "Audit remaining Character Creation finalization, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
                 }
               ],
               "profileId": "character-creation.weapon-mastery-choice",
@@ -7636,7 +7635,7 @@
                   "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
                   "runtime": "character-creation",
                   "status": "needs-qnt-owner",
-                  "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+                  "title": "Audit remaining Character Creation finalization, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
                 }
               ],
               "profileId": "character-creation.eldritch-invocation-choice",
@@ -7649,20 +7648,7 @@
                   "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
                   "runtime": "character-creation",
                   "status": "needs-qnt-owner",
-                  "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
-                }
-              ],
-              "profileId": "character-creation.class-feature-advancement-replacement",
-              "profileKind": "character-creation"
-            },
-            {
-              "joinStatus": "mapped-open",
-              "obligations": [
-                {
-                  "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
-                  "runtime": "character-creation",
-                  "status": "needs-qnt-owner",
-                  "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+                  "title": "Audit remaining Character Creation finalization, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
                 }
               ],
               "profileId": "character-creation.warlock-pact-magic-advancement",
@@ -9386,9 +9372,9 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused character-creation runtime tests cover CharacterBuild class-level gain with Fighter Fighting Style replacement as one advancement operation.",
+      "note": "Focused character-creation selected-identity MBT covers CharacterBuild class-level gain with Fighter Fighting Style replacement as one advancement operation.",
       "profileIds": [
-        "character-creation.class-feature-advancement-replacement"
+        "character-creation.fighter-fighting-style-advancement-replacement"
       ],
       "taskId": "L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE"
     },
@@ -9396,8 +9382,7 @@
       "claimKind": "completed-runtime-parity",
       "note": "Focused character-creation runtime tests cover Warlock level gains that add invocations from the Surface invocation count table, optional Warlock-level replacement with prerequisite gating, prerequisite-retention lockout, Repeatable invocation associated-choice identity, and duplicate-selection enforcement.",
       "profileIds": [
-        "character-creation.eldritch-invocation-choice",
-        "character-creation.class-feature-advancement-replacement"
+        "character-creation.eldritch-invocation-choice"
       ],
       "taskId": "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE"
     },
@@ -9406,8 +9391,7 @@
       "note": "Focused character-creation runtime tests cover Warlock Pact Magic advancement from Surface progression facts, including cantrip and prepared-spell gains, Warlock-level cantrip and prepared-spell replacement, Pact Slot count and slot-level projection, and invocation prerequisite checks against freshly updated Warlock cantrip facts.",
       "profileIds": [
         "character-creation.warlock-pact-magic-advancement",
-        "character-creation.eldritch-invocation-choice",
-        "character-creation.class-feature-advancement-replacement"
+        "character-creation.eldritch-invocation-choice"
       ],
       "taskId": "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
     },
@@ -9442,6 +9426,14 @@
         "character-creation.class-feature-resource-projection"
       ],
       "taskId": "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Character Creation runtime tests cover Druid level 2 Wild Companion feature-retention source facts from the Surface class feature while companion lifecycle execution stays owned by Find Familiar and Druid Wild Shape follow-up boundaries.",
+      "profileIds": [
+        "character-creation.class-feature-source-fact-projection"
+      ],
+      "taskId": "L12G-AUTHOR-DRUID-WILD-COMPANION"
     },
     {
       "claimKind": "completed-runtime-parity",
@@ -10106,7 +10098,7 @@
         },
         "profileIds": [
           "character-creation.class-feature-feat-choice",
-          "character-creation.class-feature-advancement-replacement"
+          "character-creation.fighter-fighting-style-advancement-replacement"
         ],
         "supportedMechanics": [
           "Level 1 Fighter character creation discovers the Fighting Style feat choice from the Surface class-feature record",
@@ -10152,23 +10144,21 @@
           ]
         },
         {
-          "id": "character-creation.class-feature-advancement-replacement",
+          "id": "character-creation.fighter-fighting-style-advancement-replacement",
           "profileKind": "character-creation",
           "qntOwners": [],
           "runtimeOwners": [
-            "packages/character-creation-runtime/src/index.ts"
+            "packages/character-creation-runtime/src/character-build-advancement.ts"
           ],
-          "sourceBoundary": "CharacterBuild progression plus Surface class-feature and class spellcasting facts; replacement and gain choices are accepted only as part of a class-level gain and rewrite existing CharacterBuild feature refs, selected invocation ownership, or Warlock Pact Magic spellcasting facts without parallel selected-option state.",
+          "sourceBoundary": "CharacterBuild Fighter progression plus the retained Surface Fighting Style feature ref; replacement is accepted only as part of a Fighter level gain and rewrites the selected Fighting Style feat ref without retaining draft state or duplicating selected feat execution.",
           "taskRefs": [
-            "L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE",
-            "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE",
-            "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
+            "L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE"
           ],
-          "title": "Character Creation advances CharacterBuild class levels with class-feature replacement and gain choices",
+          "title": "Character Creation advances Fighter levels with Fighting Style feat replacement",
           "verificationOwners": [
             {
-              "kind": "runtime-test",
-              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+              "kind": "focused-mbt",
+              "ownerPath": "packages/character-creation-runtime/src/fighter-fighting-style-selected-identity.mbt.test.ts"
             }
           ]
         }
@@ -11624,7 +11614,7 @@
           }
         ],
         "profileIds": [
-          "character-creation.class-feature-advancement-replacement"
+          "character-creation.class-feature-source-fact-projection"
         ],
         "supportedMechanics": [
           "Wild Companion is authored as a Druid level-2 Surface class-feature record that requires a Magic action, links to the existing Find Familiar Spell Definition, names the SRD spend choices as a Spell Slot or one use of the existing Wild Shape feature resource, removes Material components, fixes the familiar mode to Fey, and adds the caster-finished-Long-Rest disappearance boundary.",
@@ -11638,19 +11628,18 @@
       "kind": "class_feature",
       "profiles": [
         {
-          "id": "character-creation.class-feature-advancement-replacement",
+          "id": "character-creation.class-feature-source-fact-projection",
           "profileKind": "character-creation",
           "qntOwners": [],
           "runtimeOwners": [
             "packages/character-creation-runtime/src/index.ts"
           ],
-          "sourceBoundary": "CharacterBuild progression plus Surface class-feature and class spellcasting facts; replacement and gain choices are accepted only as part of a class-level gain and rewrite existing CharacterBuild feature refs, selected invocation ownership, or Warlock Pact Magic spellcasting facts without parallel selected-option state.",
+          "sourceBoundary": "Surface class-feature records retained by class progression can project source links to other owned facts, such as Wild Companion retaining the sibling Druid feature ref set or Uncanny Metabolism linking to the shared Monk's Focus resource and existing Martial Arts die source, without storing duplicate resource caps, die tiers, or class progression state.",
           "taskRefs": [
-            "L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE",
-            "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE",
-            "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
+            "L12G-AUTHOR-DRUID-WILD-COMPANION",
+            "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS"
           ],
-          "title": "Character Creation advances CharacterBuild class levels with class-feature replacement and gain choices",
+          "title": "Character Creation projects retained class-feature source links into CharacterBuild facts",
           "verificationOwners": [
             {
               "kind": "runtime-test",
@@ -12082,8 +12071,9 @@
           "runtimeOwners": [
             "packages/character-creation-runtime/src/index.ts"
           ],
-          "sourceBoundary": "Surface class-feature records retained by class progression can project source links to other owned facts, such as Uncanny Metabolism linking to the shared Monk's Focus resource and existing Martial Arts die source, without storing duplicate resource caps, die tiers, or class progression state.",
+          "sourceBoundary": "Surface class-feature records retained by class progression can project source links to other owned facts, such as Wild Companion retaining the sibling Druid feature ref set or Uncanny Metabolism linking to the shared Monk's Focus resource and existing Martial Arts die source, without storing duplicate resource caps, die tiers, or class progression state.",
           "taskRefs": [
+            "L12G-AUTHOR-DRUID-WILD-COMPANION",
             "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS"
           ],
           "title": "Character Creation projects retained class-feature source links into CharacterBuild facts",
@@ -13073,8 +13063,9 @@
           "runtimeOwners": [
             "packages/character-creation-runtime/src/index.ts"
           ],
-          "sourceBoundary": "Surface class-feature records retained by class progression can project source links to other owned facts, such as Uncanny Metabolism linking to the shared Monk's Focus resource and existing Martial Arts die source, without storing duplicate resource caps, die tiers, or class progression state.",
+          "sourceBoundary": "Surface class-feature records retained by class progression can project source links to other owned facts, such as Wild Companion retaining the sibling Druid feature ref set or Uncanny Metabolism linking to the shared Monk's Focus resource and existing Martial Arts die source, without storing duplicate resource caps, die tiers, or class progression state.",
           "taskRefs": [
+            "L12G-AUTHOR-DRUID-WILD-COMPANION",
             "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS"
           ],
           "title": "Character Creation projects retained class-feature source links into CharacterBuild facts",
@@ -13103,7 +13094,6 @@
         },
         "profileIds": [
           "character-creation.eldritch-invocation-choice",
-          "character-creation.class-feature-advancement-replacement",
           "character-creation.warlock-pact-magic-advancement"
         ],
         "supportedMechanics": [
@@ -13151,27 +13141,6 @@
             "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
           ],
           "title": "Character Creation finalizes and advances Eldritch Invocation choices as selected invocation ownership",
-          "verificationOwners": [
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
-            }
-          ]
-        },
-        {
-          "id": "character-creation.class-feature-advancement-replacement",
-          "profileKind": "character-creation",
-          "qntOwners": [],
-          "runtimeOwners": [
-            "packages/character-creation-runtime/src/index.ts"
-          ],
-          "sourceBoundary": "CharacterBuild progression plus Surface class-feature and class spellcasting facts; replacement and gain choices are accepted only as part of a class-level gain and rewrite existing CharacterBuild feature refs, selected invocation ownership, or Warlock Pact Magic spellcasting facts without parallel selected-option state.",
-          "taskRefs": [
-            "L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE",
-            "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE",
-            "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
-          ],
-          "title": "Character Creation advances CharacterBuild class levels with class-feature replacement and gain choices",
           "verificationOwners": [
             {
               "kind": "runtime-test",

@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT
 
 module characterCreationFighterFightingStyleSelectedIdentityMbt {
   var qLastResult: str

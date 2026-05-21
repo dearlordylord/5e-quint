@@ -156,7 +156,6 @@ export {
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.eldritch-invocation-choice
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.class-feature-option-projection
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.skill-expertise-choice
-// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.class-feature-advancement-replacement
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.warlock-pact-magic-advancement
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.class-feature-resource-projection
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.class-feature-source-fact-projection

@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 61,
-    "covered": 33,
+    "total": 62,
+    "covered": 34,
     "open": 23,
     "nonSemantic": 5,
     "byRuntime": {
       "shared-algebras": 1,
       "battle": 53,
-      "character-creation": 4,
+      "character-creation": 5,
       "character-sheet": 2,
       "character-battle": 1
     },
     "byStatus": {
-      "covered": 33,
+      "covered": 34,
       "needs-qnt-owner": 3,
       "needs-parity-witness": 19,
       "needs-surface-evidence": 1,
@@ -1422,6 +1422,35 @@
       "title": "Character Creation choice-hole availability, cardinality, and option legality for the existing Fighter manifest path"
     },
     {
+      "id": "CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/fighter-fighting-style-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "character-creation.fighter-fighting-style-advancement-replacement"
+      ],
+      "qntOwners": [
+        "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt"
+      ],
+      "runtime": "character-creation",
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/character-build-advancement.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Character-Creation.md#Gaining a Level",
+        ".references/srd-5.2.1/Classes/Fighter.md#Level 1: Fighting Style",
+        ".references/srd-5.2.1/Feats.md#Fighting Style Feats"
+      ],
+      "title": "Character Creation Fighter class-level gain replacement rewrites durable CharacterBuild progression and selected Fighting Style ownership without draft state"
+    },
+    {
       "id": "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
       "kind": "projection-scalar",
       "parityWitnesses": [
@@ -1482,7 +1511,6 @@
     },
     {
       "followUpTaskIds": [
-        "RKBC-CREATION-ADVANCEMENT-REPLACEMENT",
         "RKBC-CREATION-SPELLCASTING-PROGRESSION",
         "RKBC-CREATION-WEAPON-MASTERY-FEAT"
       ],
@@ -1490,7 +1518,6 @@
       "kind": "composition",
       "parityWitnesses": [],
       "profiles": [
-        "character-creation.class-feature-advancement-replacement",
         "character-creation.class-feature-feat-choice",
         "character-creation.eldritch-invocation-choice",
         "character-creation.warlock-pact-magic-advancement",
@@ -1503,7 +1530,7 @@
       ],
       "status": "needs-qnt-owner",
       "surfaceEvidence": [],
-      "title": "Audit remaining current Character Creation finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+      "title": "Audit remaining Character Creation finalization, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
     },
     {
       "followUpTaskIds": [
@@ -3194,9 +3221,9 @@
     },
     {
       "obligationIds": [
-        "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT"
+        "CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT"
       ],
-      "profileId": "character-creation.class-feature-advancement-replacement"
+      "profileId": "character-creation.fighter-fighting-style-advancement-replacement"
     },
     {
       "obligationIds": [
@@ -3247,12 +3274,12 @@
     }
   ],
   "profileIdsSeenFromUnitProfileCoverage": [
-    "character-creation.class-feature-advancement-replacement",
     "character-creation.class-feature-feat-choice",
     "character-creation.class-feature-option-projection",
     "character-creation.class-feature-resource-projection",
     "character-creation.class-feature-source-fact-projection",
     "character-creation.eldritch-invocation-choice",
+    "character-creation.fighter-fighting-style-advancement-replacement",
     "character-creation.skill-expertise-choice",
     "character-creation.warlock-pact-magic-advancement",
     "character-creation.weapon-mastery-choice",

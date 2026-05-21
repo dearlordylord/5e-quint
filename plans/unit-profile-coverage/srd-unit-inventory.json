@@ -10031,7 +10031,7 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L12G-AUTHOR-DRUID-WILD-COMPANION character-creation.class-feature-advancement-replacement support profile; Druid Wild Companion is retained from the level-2 Druid class feature grant alongside Wild Shape; Character Creation admits same-class Druid level 2, projects level-2 Druid prepared-spell and Spell Slot table facts from the class record, and retains both sibling feature Unit refs without claiming companion lifecycle or Wild Shape shape-shifting execution.",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L12G-AUTHOR-DRUID-WILD-COMPANION character-creation.class-feature-source-fact-projection support profile; Druid Wild Companion is retained from the level-2 Druid class feature grant alongside Wild Shape; Character Creation admits same-class Druid level 2, projects level-2 Druid prepared-spell and Spell Slot table facts from the class record, and retains both sibling feature Unit refs without claiming companion lifecycle or Wild Shape shape-shifting execution.",
           "status": "owner evidence present"
         }
       ],

@@ -85,7 +85,7 @@
     {
       "number": 14,
       "id": "RKBC-CREATION-ADVANCEMENT-REPLACEMENT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Character Creation Advancement And Replacement"
     },
     {
@@ -408,7 +408,7 @@ Reviewers should reject:
 | 11 | RKBC-PROFILE-JOIN-TABLE-CALLER - Table Caller Profile Join And Boundary Classification | done | RKBC-BATTLE-HOLE-INVENTORY, RKBC-BATTLE-HOLE-TARGETS-AREAS, RKBC-BATTLE-HOLE-MOVEMENT-ROUTE | Table-caller and spatial spell profiles are mapped to covered reducer obligations, boundary-only table facts, or precise mapped-open parity obligations without expanding MBT state space. |
 | 12 | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY - Character Creation Choice Discovery And Cardinality | done | baseline | Choice-hole availability, cardinality, and option legality are split into covered `CREATION.CHOICE_DISCOVERY_CARDINALITY`; remaining creation profile families stay visible in Tasks 13-16. |
 | 13 | RKBC-CREATION-FILL-VALIDATION-BATCH - Character Creation Fill Validation And Atomic Batch | done | baseline | Typed fill validation, batch atomicity, rediscovery, and finalization status remain covered by `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY`; malformed fill payloads are split into boundary-only `CREATION.PROTOCOL.MALFORMED_FILL_REJECTION`. |
-| 14 | RKBC-CREATION-ADVANCEMENT-REPLACEMENT - Character Creation Advancement And Replacement | ready-for-research | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH | Cover advancement replacement semantics and class-feature replacement profiles. |
+| 14 | RKBC-CREATION-ADVANCEMENT-REPLACEMENT - Character Creation Advancement And Replacement | done | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH | Covered Fighter Fighting Style advancement replacement as `CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT`; remaining spellcasting/invocation and weapon mastery/feat creation profiles stay visible in Tasks 15 and 16. |
 | 15 | RKBC-CREATION-SPELLCASTING-PROGRESSION - Character Creation Spell Access Progression And Eldritch Invocation Choices | ready-for-research | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH | Cover Pact Magic progression, Spell Access/progression facts, and Eldritch Invocation choices. |
 | 16 | RKBC-CREATION-WEAPON-MASTERY-FEAT - Character Creation Weapon Mastery And Feat Choice | ready-for-research | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH | Cover Weapon Mastery and feat-choice profiles without duplicating selected Unit behavior. |
 | 17 | RKBC-SHEET-HP-REST-HIT-DICE - Character Sheet HP Rest And Hit Dice Transitions | ready-for-research | baseline | Split HP, healing, Short Rest, Long Rest, and Hit Dice semantics into covered obligations. |
@@ -728,7 +728,7 @@ Acceptance:
 
 ### Task 14 - RKBC-CREATION-ADVANCEMENT-REPLACEMENT - Character Creation Advancement And Replacement
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: `RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY` and `RKBC-CREATION-FILL-VALIDATION-BATCH`.
 
@@ -740,6 +740,12 @@ Acceptance:
 - Advancement replacement profiles no longer point only to the broad audit row.
 - Durable character facts are not polluted with transient draft/session state.
 - New obligations have QNT owner and parity witness.
+
+Result: `CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT` covers Fighter
+level-gain replacement for the selected Fighting Style feat through the existing
+focused selected-identity MBT. The remaining Warlock Pact Magic/Eldritch
+Invocation and weapon mastery/feat creation families stay dependency-ordered in
+Tasks 15 and 16.
 
 ### Task 15 - RKBC-CREATION-SPELLCASTING-PROGRESSION - Character Creation Spell Access Progression And Eldritch Invocation Choices
 

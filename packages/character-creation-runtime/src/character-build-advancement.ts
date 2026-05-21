@@ -1,3 +1,5 @@
+// KERNEL-COVERAGE: runtime-owner CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.fighter-fighting-style-advancement-replacement
 import { Brand, Either, Match, Option } from "effect";
 import type { ClassName } from "@dnd/shared/game-facts";
 import { readClassCreationFacts } from "@dnd/surface/surface/character-creation-readers";
