@@ -47,6 +47,7 @@ export type {
   CharacterBattleClassLevelInit,
 } from "./character-class-level.ts";
 export {
+  CHARACTER_BATTLE_METAMAGIC_EFFECT_KINDS,
   PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE,
   characterBattleResourceSupportedForUnit,
   characterBattleResourceUsage,
@@ -70,6 +71,7 @@ export {
   type CharacterBattleFeatureInit,
   type CharacterBattleInvocationSpellAccessInit,
   type CharacterBattleInvocationSpellAccessState,
+  type CharacterBattleMetamagicEffectKind,
   type CharacterBattleMetamagicOptionFact,
   type CharacterBattleMetamagicState,
   type CharacterBattlePointPoolResourceState,
@@ -146,6 +148,7 @@ export {
   BattleSubjectSchema,
   SPELL_SLOT_PROCEDURES,
   SpellInvocationRefSchema,
+  SpellMetamagicSelectionSchema,
   SpellSubjectModeSchema,
   armorOfShadowsSpellInvocationRef,
   cantripSpellInvocationRef,
@@ -160,6 +163,7 @@ export {
   type CantripSpellProcedure,
   type SpellInvocationRef,
   type SpellInvocationRefEncoded,
+  type SpellMetamagicSelection,
   type SpellSlotProcedure,
   type SpellSubjectMode,
 } from "./battle-subjects.ts";

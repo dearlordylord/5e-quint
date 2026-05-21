@@ -100,6 +100,8 @@ describe("battle runtime: setup and discovery", () => {
         actionResources: [{ kind: "action", source: "turn" }],
         bonusActionAvailable: true,
         spellSlotUsesThisTurn: [],
+        levelOnePlusSpellCastsThisTurn: [],
+        quickenedLevelOnePlusSpellCastsThisTurn: [],
         attackRollMadeThisTurn: false,
         attackDamageRidersUsedThisTurn: [],
         weaponDamageDiceRollChoicesUsedThisTurn: [],

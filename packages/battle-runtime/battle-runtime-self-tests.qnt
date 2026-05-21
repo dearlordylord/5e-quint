@@ -10,4 +10,5 @@ module battleRuntimeSelfTests {
   import battleRuntimeLightConcentrationMovementReactionTests.* from "./battle-runtime-light-concentration-movement-reaction-tests"
   import battleRuntimeSelfTransformationTests.* from "./battle-runtime-self-transformation-tests"
   import battleRuntimeObjectContactDamageTests.* from "./battle-runtime-object-contact-damage-tests"
+  import battleRuntimeMetamagic.* from "./battle-runtime-metamagic"
 }

@@ -284,6 +284,7 @@ export {
   SpellSlotToPointPoolOperationSchema,
   SorcererClassFeatureMechanicsSchema,
   SorcererClassFeatureRecordSchema,
+  SORCERER_METAMAGIC_EFFECT_KINDS,
   SORCERER_METAMAGIC_OPTION_IDS,
   SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY,
   SorcererMetamagicMechanicsSchema,

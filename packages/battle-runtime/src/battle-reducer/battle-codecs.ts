@@ -4419,6 +4419,8 @@ const BattleTurnSnapshotSchema = Schema.Struct({
       }),
     ),
   ),
+  levelOnePlusSpellCastsThisTurn: Schema.Array(CombatantId),
+  quickenedLevelOnePlusSpellCastsThisTurn: Schema.Array(CombatantId),
   attackRollMadeThisTurn: Schema.Boolean,
   attackDamageRidersUsedThisTurn: Schema.Array(
     Schema.Struct({

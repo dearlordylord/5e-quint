@@ -1371,6 +1371,7 @@ export function resolveMarkedDamageRiderSpellAct(input: {
           },
           input.actorId,
           input.invocation.resource.resourceUnitId,
+          input.invocation,
           input.input.state,
         )
       : spendMarkedDamageRiderSpellSlot(

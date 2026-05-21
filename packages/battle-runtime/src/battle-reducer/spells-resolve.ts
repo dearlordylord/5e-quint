@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // Spell resolution dispatch (Cluster L). Mechanical extraction from
 // battle-reducer.ts. The largest cluster in the file: master spell-act
 // resolvers (`resolveSpellAct`, `resolveAttackBurstSaveDamageSpellAct`,
@@ -123,6 +124,10 @@ import {
   selectedAttackRollMissToHitReplacement,
 } from "./statblock-attacks.ts";
 
+import {
+  admitSpellMetamagicApplications,
+  metamagicActionCostOverride,
+} from "./metamagic.ts";
 import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 
 import { resolveChainedSpellAttackDamageAct } from "./spells-resolve-chained.ts";
@@ -398,6 +403,20 @@ export function resolveSpellAct(
       input.state,
       "unsupportedActOption",
       "Action-time spell act requires a supported prepared spell or cantrip.",
+    );
+  }
+  const metamagicAdmission = admitSpellMetamagicApplications({
+    state: input.state,
+    actor,
+    actorId: subject.actorId,
+    invocation,
+    subject,
+  });
+  if (metamagicAdmission.tag !== "ok") {
+    return invalidResult(
+      input.state,
+      "unsupportedSubject",
+      metamagicAdmission.message,
     );
   }
   if (!spellHasAvailableSpend(actor, invocation)) {
@@ -744,6 +763,7 @@ export function resolveSpellAct(
       actorId: subject.actorId,
       invocation,
       fillSet,
+      metamagicApplications: metamagicAdmission.applications,
     });
   }
   if (invocation.procedure === "scalarBuff") {
@@ -1897,6 +1917,23 @@ export function resolveBonusActionSpellAct(
       "Bonus Action spell act requires a supported Bonus Action spell.",
     );
   }
+  const metamagicAdmission = admitSpellMetamagicApplications({
+    state: input.state,
+    actor,
+    actorId: subject.actorId,
+    invocation,
+    subject,
+  });
+  if (metamagicAdmission.tag !== "ok") {
+    return invalidResult(
+      input.state,
+      "unsupportedSubject",
+      metamagicAdmission.message,
+    );
+  }
+  const actionCostOverride = metamagicActionCostOverride(
+    metamagicAdmission.applications,
+  );
   if (invocation.procedure === "heldLight") {
     if (invocation.actionCost !== "bonusAction") {
       return invalidResult(
@@ -1992,10 +2029,18 @@ export function resolveBonusActionSpellAct(
         "Bonus Action spell subject requires a supported Bonus Action spell act.",
       );
     }
-  } else if (
-    invocation.procedure !== "directHitPointRestoration" ||
-    invocation.actionCost !== "bonusAction"
-  ) {
+  } else if (invocation.procedure === "directHitPointRestoration") {
+    if (
+      invocation.actionCost !== "bonusAction" &&
+      actionCostOverride !== "bonusAction"
+    ) {
+      return invalidResult(
+        input.state,
+        "unsupportedSubject",
+        "Bonus Action spell subject requires a supported Bonus Action spell act.",
+      );
+    }
+  } else {
     return invalidResult(
       input.state,
       "unsupportedSubject",
@@ -2014,6 +2059,7 @@ export function resolveBonusActionSpellAct(
       input.state.currentTurnResources,
       input.subject.actorId,
       invocation,
+      actionCostOverride === undefined ? undefined : { actionCostOverride },
     )
   ) {
     return invalidResult(
@@ -2159,6 +2205,8 @@ export function resolveBonusActionSpellAct(
     actorId: subject.actorId,
     invocation,
     fillSet,
+    metamagicApplications: metamagicAdmission.applications,
+    ...(actionCostOverride === undefined ? {} : { actionCostOverride }),
   });
 }
 

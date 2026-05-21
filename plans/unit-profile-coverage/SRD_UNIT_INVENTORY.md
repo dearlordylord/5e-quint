@@ -27,14 +27,14 @@ This is the default `%` for level-1 readiness questions. A row counts only when 
 
 This is the default `%` for level-1 plus level-2 readiness questions. It uses the same acceptance rules as the level-1 metric, but includes level-2 class-feature rows and level-2 spell-list pressure.
 
-- Accepted: 510/556 (91.7%)
+- Accepted: 509/556 (91.5%)
 
 #### Level 1-2 Battle Readiness by Status
 
-- accepted: 373
+- accepted: 372
 - accepted-no-battle-effect: 137
 - battle-runtime-required: 31
-- owner-evidence-required: 1
+- owner-evidence-required: 2
 - partial-battle-runtime: 14
 
 ### Level-1 Rows by Disposition
@@ -44,7 +44,8 @@ This is the default `%` for level-1 plus level-2 readiness questions. It uses th
 
 ### Level-2 Rows by Disposition
 
-- catalog-installed-owner-evidence-present: 20
+- catalog-installed-needs-owner-evidence: 1
+- catalog-installed-owner-evidence-present: 19
 - catalog-installed-owner-evidence-required: 1
 - non-runtime: 12
 
@@ -347,7 +348,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Rogue Cunning Action|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Rogue.md:81|
 |Rogue level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Rogue.md:37|
 |Sorcerer Font of Magic|class feature||current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present; character-sheet-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Sorcerer.md:87|
-|Sorcerer Metamagic|class feature||current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present; character-sheet-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Sorcerer.md:111|
+|Sorcerer Metamagic|class feature||current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-needs-owner-evidence|owner-evidence-required||Unit catalog/admission: catalog-only evidence; operational owner evidence still required|Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only.|.references/srd-5.2.1/Classes/Sorcerer.md:111|
 |Sorcerer level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Sorcerer.md:36|
 |Warlock Magical Cunning|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-sheet-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Warlock.md:92|
 |Warlock level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Warlock.md:36|

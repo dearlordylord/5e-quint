@@ -41,6 +41,8 @@ import * as Either from "effect/Either";
 
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.metamagic-battle-resource-bridge
 
+export { SORCERER_METAMAGIC_EFFECT_KINDS as CHARACTER_BATTLE_METAMAGIC_EFFECT_KINDS } from "@dnd/surface/surface/schema";
+
 export type CharacterBattleUseCountResourceInit = {
   readonly unit: UnitRecord;
   readonly usesRemaining?: number;
@@ -74,6 +76,8 @@ export type CharacterBattleMetamagicOptionFact = {
   readonly stackingMode: SorcererMetamagicOption["stackingMode"];
   readonly sorceryPointCost: ResourceCount;
 };
+export type CharacterBattleMetamagicEffectKind =
+  CharacterBattleMetamagicOptionFact["effectKind"];
 
 export type CharacterBattleMetamagicState = {
   readonly sorceryPointResourceUnitId: UnitRecord["id"];

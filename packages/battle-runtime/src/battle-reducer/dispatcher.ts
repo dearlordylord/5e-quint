@@ -2971,6 +2971,7 @@ export function resolveCastAttackHitBonusActionSpellCommand(
           input.state,
           input.subject.casterId,
           invocation.resource.resourceUnitId,
+          invocation,
         )
       : spendSpellCastResources({
           state: input.state,
@@ -3061,6 +3062,7 @@ function spendAfterHitDamageFreeCastResource(
   state: BattleState,
   casterId: CombatantId,
   resourceUnitId: string,
+  invocation: SupportedSpellInvocation,
 ): SpellCastResourceSpendResult {
   const spentBonusAction = spendActivationResource(state.currentTurnResources, {
     kind: "bonusAction",
@@ -3079,6 +3081,7 @@ function spendAfterHitDamageFreeCastResource(
     },
     casterId,
     resourceUnitId,
+    invocation,
     state,
   );
 }
@@ -4281,6 +4284,9 @@ export function battleTurnSnapshot(state: BattleState): BattleTurnSnapshot {
     actionResources: resources.actionResources,
     bonusActionAvailable: resources.currentHasBonusAction,
     spellSlotUsesThisTurn: resources.spellSlotUsesThisTurn,
+    levelOnePlusSpellCastsThisTurn: resources.levelOnePlusSpellCastsThisTurn,
+    quickenedLevelOnePlusSpellCastsThisTurn:
+      resources.quickenedLevelOnePlusSpellCastsThisTurn,
     attackRollMadeThisTurn: resources.attackRollMadeThisTurn,
     attackDamageRidersUsedThisTurn: resources.attackDamageRidersUsedThisTurn,
     weaponDamageDiceRollChoicesUsedThisTurn:

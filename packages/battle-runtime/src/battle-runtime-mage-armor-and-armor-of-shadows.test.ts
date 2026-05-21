@@ -458,6 +458,8 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
     expect(result.snapshot.turn).toMatchObject({
       actionResources: [],
       spellSlotUsesThisTurn: [],
+      levelOnePlusSpellCastsThisTurn: [],
+      quickenedLevelOnePlusSpellCastsThisTurn: [],
     });
     expect(warlock?.origin.kind).toBe("character");
     if (warlock?.origin.kind !== "character") {

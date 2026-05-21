@@ -72,24 +72,24 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 84,
-      "numerator": 84,
+      "denominator": 85,
+      "numerator": 85,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 84,
-      "numerator": 83,
+      "denominator": 85,
+      "numerator": 84,
       "percent": "98.8%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 116,
+      "denominator": 117,
       "numerator": 63,
-      "percent": "54.3%"
+      "percent": "53.8%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 116,
+      "denominator": 117,
       "numerator": 92,
-      "percent": "79.3%"
+      "percent": "78.6%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 135,
@@ -97,13 +97,13 @@
       "percent": "57.8%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 84,
-      "numerator": 84,
+      "denominator": 85,
+      "numerator": 85,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 84,
-      "numerator": 84,
+      "denominator": 85,
+      "numerator": 85,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -1438,7 +1438,7 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
-      "sourceBoundary": "Runtime consumes typed table-supplied object identity facts, emitter-distance facts, and opaque-cover witnesses. Light additionally consumes size and worn/carried facts and owns one-hour duration cleanup plus same-caster recast replacement. Continual Flame consumes a touched-object fact, owns level-2+ Spell Slot casting, source-owned object attachment, Bright/Dim 20-foot radii, non-ticking until-dispelled persistence, and preserves prior Continual Flame emitters from the same caster. Existing light projection derives Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences without duplicating emitter state. Dispel Magic ongoing-spell-ending consumes the tracked source spell level exposed on object spell-light emitters to remove generic object-attached spell-light occurrences such as Continual Flame without a spell-specific remover registry. Darkness overlap and Antimagic Field suppression remain outside this object-emitter profile; this profile exposes object attachment and the until-dispelled marker for those future owners, while any additional generic Spell Effect facts belong to the remover or suppressor owner. Colored/flame presentation, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, non-heat/fuel presentation, smother/quenched adjudication, and costly consumed Material component availability/consumption are outside this object-emitter runtime boundary.",
+      "sourceBoundary": "Runtime consumes typed table-supplied object identity facts, emitter-distance facts, and opaque-cover witnesses. Light additionally consumes size and worn/carried facts and owns one-hour duration cleanup plus same-caster recast replacement. Continual Flame consumes a touched-object fact, owns level-2+ Spell Slot casting, source-owned object attachment, Bright/Dim 20-foot radii, non-ticking until-dispelled persistence, and preserves prior Continual Flame emitters from the same caster. Existing light projection derives Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences without duplicating emitter state. Removal or suppression triggers such as Dispel Magic, Darkness overlap, and Antimagic Field are outside this object-emitter profile; this profile exposes object attachment and the until-dispelled marker for those future owners, while any additional generic Spell Effect facts belong to the remover or suppressor owner rather than a Continual Flame-specific registry. Colored/flame presentation, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, non-heat/fuel presentation, smother/quenched adjudication, and costly consumed Material component availability/consumption are outside this object-emitter runtime boundary.",
       "taskRefs": [
         "SRDINV70B",
         "SRDINV89C",
@@ -3361,20 +3361,50 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dispel-magic.test.ts"
         }
       ]
+    },
+    {
+      "id": "unit-feature.metamagic-cast-governor-quickened",
+      "profileKind": "bonus-action",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-resources.ts",
+        "packages/battle-runtime/src/battle-subjects.ts"
+      ],
+      "sourceBoundary": "The runtime consumes Character Battle Metamagic effectKind, stackingMode, Sorcery Point cost facts, and the existing Font of Magic point-pool resource. It admits selected Quickened Spell facts for supported direct Hit Point restoration action-casting Spell Invocation shapes, enforces known-option and Sorcery Point affordability gates, enforces one-option-per-spell before option-specific support, rejects unsupported second-option effects instead of charging inert Metamagic, spends Bonus Action, Spell Slot, and Sorcery Point resources, and applies the same-turn level-1-plus spell-cast prohibition through a level-1-plus spell turn fact rather than a Spell Slot-only proxy. Quickened action-casting spell procedures beyond direct Hit Point restoration remain tracked by L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS, and this profile does not claim Sorcery Incarnate, Arcane Apotheosis, or non-Quickened option effects.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED"
+      ],
+      "title": "Unit feature admits Metamagic selections and rewrites Quickened action spells to Bonus Action",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 116,
+        "denominator": 117,
         "numerator": 63,
-        "percent": "54.3%"
+        "percent": "53.8%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 116,
+        "denominator": 117,
         "numerator": 92,
-        "percent": "79.3%"
+        "percent": "78.6%"
       }
     },
     "profileKinds": [
@@ -4863,6 +4893,12 @@
         "obligations": [],
         "profileId": "spell.invocation-ongoing-spell-ending",
         "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "unit-feature.metamagic-cast-governor-quickened",
+        "profileKind": "bonus-action"
       }
     ],
     "sourceArtifacts": {
@@ -10151,6 +10187,22 @@
         "spell.invocation-ongoing-spell-ending"
       ],
       "taskId": "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Package-local battle-runtime Quint facts model typed Metamagic option admission, known-option and Sorcery Point gates, one-option-per-spell plus stacking exception facts, Quickened Spell rewriting supported direct Hit Point restoration action spells to Bonus Action, rejection of unsupported second-option effects before Sorcery Point spending, Bonus Action rather than Magic Action spending, Spell Slot turn ledger commit, level-1-plus spell cast turn fact commit, and rejection after a same-turn level-1-plus spell cast including a non-slot prior cast witness.",
+      "profileIds": [
+        "unit-feature.metamagic-cast-governor-quickened"
+      ],
+      "taskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Quickened Spell discovery as a Bonus Action subject for supported direct Hit Point restoration action spells, known-option selection, Sorcery Point affordability and spending through the shared Font of Magic point-pool resource, one-option-per-spell enforcement, stacking-exception facts without admitting unsupported second-option effects, Bonus Action plus Spell Slot spending with Magic Action preserved, same-turn level-1-plus spell-cast prohibition through a turn fact that is not a Spell Slot-only proxy, and rejection of unsupported non-Quickened Metamagic selections.",
+      "profileIds": [
+        "unit-feature.metamagic-cast-governor-quickened"
+      ],
+      "taskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED"
     }
   ],
   "units": [
@@ -13477,8 +13529,8 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED",
-            "mechanic": "Metamagic cast-time governor and Quickened limits: enforce known-option selection, Sorcery Point affordability, one option per spell plus Empowered/Seeking stacking exceptions, Quickened action-to-Bonus-Action rewrite, and the current-turn level-1-plus spell prohibition."
+            "followUpTaskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS",
+            "mechanic": "Quickened Spell for action-casting Spell Invocation procedures beyond the supported direct Hit Point restoration slice: apply the Bonus Action rewrite and level-1-plus spell turn fact to every supported action-casting spell procedure rather than only direct Hit Point restoration."
           },
           {
             "followUpTaskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-SAVE-OPTIONS",
@@ -13499,11 +13551,11 @@
         ],
         "followUpTasks": [
           {
-            "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED",
-            "mechanic": "Apply known-option, Sorcery Point affordability, one-option-per-spell, Empowered/Seeking stacking, and Quickened action-cost plus level-1-plus turn-limit rules at the Spell Invocation boundary.",
-            "owner": "battle-runtime spell invocation discovery and resource spending",
-            "requiredOutput": "Profile-subset-supported or supported Unit claim with focused runtime tests and promoted Quint/runtime parity for Metamagic use admission, resource spend, one-per-spell and Empowered/Seeking stacking limits, Quickened Bonus Action casting, and the level-1-plus same-turn prohibition without claiming Sorcery Incarnate or Arcane Apotheosis feature modifiers.",
-            "title": "Sorcerer Metamagic Cast Governor And Quickened"
+            "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS",
+            "mechanic": "Promote Quickened Spell from direct Hit Point restoration to every supported action-casting Spell Invocation procedure, using typed procedure support gates and the level-1-plus spell cast turn fact for slot and free-cast resources.",
+            "owner": "battle-runtime Spell Invocation discovery and resolution profiles plus package-local Quint parity",
+            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim with focused runtime tests and promoted Quint/runtime parity for Quickened action-to-Bonus-Action rewrite across each supported spell profile without option authored identity dispatch.",
+            "title": "Sorcerer Metamagic Quickened All Action Spells"
           },
           {
             "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-SAVE-OPTIONS",
@@ -13521,7 +13573,7 @@
           },
           {
             "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-DAMAGE-SHAPE-OPTIONS",
-            "mechanic": "Promote Transmuted Spell and Twinned Spell for supported spell procedures by substituting only Acid, Cold, Fire, Lightning, Poison, or Thunder damage types and increasing effective spell level by 1 only for spells whose higher-slot profile targets one additional creature.",
+            "mechanic": "Promote Transmuted Spell and Twinned Spell for supported spell procedures by substituting only Acid, Cold, Fire, Lightning, Poison, or Thunder spell damage types and increasing effective spell level by 1 only for spells whose higher-slot profile targets one additional creature.",
             "owner": "battle-runtime spell damage profile and upcast targeting projection",
             "requiredOutput": "Supported-profile or profile-subset-supported Unit claim with focused runtime tests and promoted Quint/runtime parity for typed damage-type substitution and higher-slot target-count projection without duplicating spell slot state.",
             "title": "Sorcerer Metamagic Damage Shape Options"
@@ -13538,14 +13590,16 @@
           "character-creation.class-feature-option-projection",
           "character-creation.class-feature-source-fact-projection",
           "character-creation.class-feature-advancement-replacement",
-          "character-sheet.metamagic-battle-resource-bridge"
+          "character-sheet.metamagic-battle-resource-bridge",
+          "unit-feature.metamagic-cast-governor-quickened"
         ],
         "supportedMechanics": [
           "Character Creation admits same-class Sorcerer level-2 progression, discovers the Metamagic choice container from the installed Surface feature, and finalizes exactly two unique selected Metamagic option ids as CharacterBuild option facts instead of retained option Unit refs",
           "Character Creation projects Metamagic source facts from the retained Surface feature and Sorcerer class level: known-option count thresholds at Sorcerer levels 2, 10, and 17; unique known-option roster; option Sorcery Point costs; Empowered and Seeking stacking exceptions; the one-option-per-spell default; and the shared Font of Magic Sorcery Point resource link without duplicating the Sorcery Point pool",
           "Character Creation consumes the Metamagic class-level replacement fact in the Sorcerer level-gain workflow, replacing exactly one currently known Metamagic option with one currently unknown option while preserving the known-option count, and derives Sorcerer level 10 and 17 option gains from the installed Surface choice-count thresholds without duplicating class progression or option roster state",
           "Character Sheet parsing preserves the selected CharacterBuild Metamagic option facts and rejects stored Metamagic option selections that do not match the retained feature and Sorcerer-level option count",
-          "Character Battle projects selected Metamagic option facts into battle as typed effectKind, stackingMode, and Sorcery Point cost facts, links them to the shared Font of Magic point-pool resource, and hands battle point-pool spending back through Character Sheet resourceExpenditures without dispatching on option authored identity"
+          "Character Battle projects selected Metamagic option facts into battle as typed effectKind, stackingMode, and Sorcery Point cost facts, links them to the shared Font of Magic point-pool resource, and hands battle point-pool spending back through Character Sheet resourceExpenditures without dispatching on option authored identity",
+          "The Metamagic Spell Invocation boundary admits selected typed effectKind facts from known options, enforces affordability against the shared Sorcery Point pool, enforces one option per spell before option-specific support, rejects unsupported second-option effects instead of charging inert Metamagic, and promotes Quickened Spell for supported direct Hit Point restoration action-casting Spell Invocation shapes by discovering and resolving a Bonus Action subject that spends the Bonus Action, Sorcery Points, and Spell Slot while rejecting same-turn level-1-plus spell casts through a turn fact that covers slot and free-cast resource paths"
         ],
         "tag": "profile-subset-supported"
       },
@@ -13647,6 +13701,36 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "unit-feature.metamagic-cast-governor-quickened",
+          "profileKind": "bonus-action",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-metamagic.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-resources.ts",
+            "packages/battle-runtime/src/battle-subjects.ts"
+          ],
+          "sourceBoundary": "The runtime consumes Character Battle Metamagic effectKind, stackingMode, Sorcery Point cost facts, and the existing Font of Magic point-pool resource. It admits selected Quickened Spell facts for supported direct Hit Point restoration action-casting Spell Invocation shapes, enforces known-option and Sorcery Point affordability gates, enforces one-option-per-spell before option-specific support, rejects unsupported second-option effects instead of charging inert Metamagic, spends Bonus Action, Spell Slot, and Sorcery Point resources, and applies the same-turn level-1-plus spell-cast prohibition through a level-1-plus spell turn fact rather than a Spell Slot-only proxy. Quickened action-casting spell procedures beyond direct Hit Point restoration remain tracked by L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS, and this profile does not claim Sorcery Incarnate, Arcane Apotheosis, or non-Quickened option effects.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED"
+          ],
+          "title": "Unit feature admits Metamagic selections and rewrites Quickened action spells to Bonus Action",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-metamagic.qnt"
             },
             {
               "kind": "runtime-test",
@@ -16712,6 +16796,10 @@
       "claim": {
         "deferredMechanics": [
           {
+            "followUpTaskId": "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING",
+            "mechanic": "Dispel Magic ending of an ongoing Continual Flame spell occurrence on a targeted object or magical effect, including spell-level and higher-slot gates, is blocked on a shared ongoing Spell Effect ending owner rather than a Continual Flame-specific remover registry."
+          },
+          {
             "followUpTaskId": "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL",
             "mechanic": "Darkness overlap dispelling spell-created Bright Light or Dim Light from level-2-or-lower spells is blocked on a Darkness runtime/profile owner that can consume generic spell-created light facts such as Continual Flame without dispatching on spell identity; the SRD Darkness Unit is authored separately by Task 9."
           },
@@ -16738,6 +16826,13 @@
         ],
         "followUpTasks": [
           {
+            "id": "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING",
+            "mechanic": "Promote Dispel Magic's target creature, object, or magical effect procedure so it ends ongoing spells on the target, including object-attached Continual Flame occurrences, using spell-level and higher-slot gates from the Dispel Magic RAW without adding a Continual Flame-specific removal registry.",
+            "owner": "Dispel Magic Unit support plus battle-runtime ongoing Spell Effect lifecycle owner",
+            "requiredOutput": "Supported Dispel Magic profile or accepted closure with focused tests and promoted Quint/runtime parity for ending ongoing spell occurrences on targets, including object-attached until-dispelled light emitters exposed by the object-light profile.",
+            "title": "Dispel Magic Ongoing Spell Ending"
+          },
+          {
             "id": "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL",
             "mechanic": "Promote or close the overlap rule that dispels another level-2-or-lower spell when Darkness overlaps Bright Light or Dim Light created by that spell, consuming generic spell-created light facts such as Continual Flame rather than spell identity.",
             "owner": "battle-runtime Darkness area and spell-created light overlap owner",
@@ -16752,10 +16847,9 @@
             "title": "Antimagic Field Spell Effect Suppression"
           }
         ],
-        "futureProfileOwner": "Darkness runtime spell-created light overlap support plus Antimagic Field Spell Effect suppression plus character inventory/equipment component legality plus runtime-detached object presentation owner",
+        "futureProfileOwner": "Dispel Magic ongoing Spell Effect ending plus Darkness runtime spell-created light overlap support plus Antimagic Field Spell Effect suppression plus character inventory/equipment component legality plus runtime-detached object presentation owner",
         "profileIds": [
-          "spell.invocation-object-light",
-          "spell.invocation-ongoing-spell-ending"
+          "spell.invocation-object-light"
         ],
         "rawRequirementIds": [
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
@@ -16767,8 +16861,7 @@
           "until-dispelled persistence represented by a non-ticking light-emitter expiration",
           "preserves prior Continual Flame emitters from the same caster because SRD Continual Flame has no recast-ending clause",
           "caller-supplied emitter projection facts derive Bright Light, Dim Light, and opaque-cover suppression from the object emitter",
-          "derived Dim Light illumination projects Lightly Obscured sight consequences and Darkvision-adjusted sight consequences without duplicating emitter state",
-          "generic Dispel Magic ongoing-spell-ending can remove tracked object-attached Continual Flame spell-light occurrences using source spell level, target identity, and higher-slot or spellcasting-ability-check gates without a Continual Flame-specific remover registry"
+          "derived Dim Light illumination projects Lightly Obscured sight consequences and Darkvision-adjusted sight consequences without duplicating emitter state"
         ],
         "tag": "profile-subset-supported"
       },
@@ -16792,7 +16885,7 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
-          "sourceBoundary": "Runtime consumes typed table-supplied object identity facts, emitter-distance facts, and opaque-cover witnesses. Light additionally consumes size and worn/carried facts and owns one-hour duration cleanup plus same-caster recast replacement. Continual Flame consumes a touched-object fact, owns level-2+ Spell Slot casting, source-owned object attachment, Bright/Dim 20-foot radii, non-ticking until-dispelled persistence, and preserves prior Continual Flame emitters from the same caster. Existing light projection derives Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences without duplicating emitter state. Dispel Magic ongoing-spell-ending consumes the tracked source spell level exposed on object spell-light emitters to remove generic object-attached spell-light occurrences such as Continual Flame without a spell-specific remover registry. Darkness overlap and Antimagic Field suppression remain outside this object-emitter profile; this profile exposes object attachment and the until-dispelled marker for those future owners, while any additional generic Spell Effect facts belong to the remover or suppressor owner. Colored/flame presentation, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, non-heat/fuel presentation, smother/quenched adjudication, and costly consumed Material component availability/consumption are outside this object-emitter runtime boundary.",
+          "sourceBoundary": "Runtime consumes typed table-supplied object identity facts, emitter-distance facts, and opaque-cover witnesses. Light additionally consumes size and worn/carried facts and owns one-hour duration cleanup plus same-caster recast replacement. Continual Flame consumes a touched-object fact, owns level-2+ Spell Slot casting, source-owned object attachment, Bright/Dim 20-foot radii, non-ticking until-dispelled persistence, and preserves prior Continual Flame emitters from the same caster. Existing light projection derives Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences without duplicating emitter state. Removal or suppression triggers such as Dispel Magic, Darkness overlap, and Antimagic Field are outside this object-emitter profile; this profile exposes object attachment and the until-dispelled marker for those future owners, while any additional generic Spell Effect facts belong to the remover or suppressor owner rather than a Continual Flame-specific registry. Colored/flame presentation, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, non-heat/fuel presentation, smother/quenched adjudication, and costly consumed Material component availability/consumption are outside this object-emitter runtime boundary.",
           "taskRefs": [
             "SRDINV70B",
             "SRDINV89C",
@@ -16807,32 +16900,6 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-object-light-spells.test.ts"
-            }
-          ]
-        },
-        {
-          "id": "spell.invocation-ongoing-spell-ending",
-          "profileKind": "spell-invocation",
-          "qntOwners": [
-            "packages/battle-runtime/battle-runtime.qnt"
-          ],
-          "runtimeOwners": [
-            "packages/battle-runtime/src/battle-reducer.ts",
-            "packages/battle-runtime/src/battle-reducer/spells-ongoing-spell-ending.ts"
-          ],
-          "sourceBoundary": "The runtime consumes the authored Dispel Magic ongoing-spell-ending Surface shape, caller-selected creature/object/magical-effect target identity, caller-supplied target-within-range facts, tracked ongoing Spell Effect facts carried by BattleSpellLightEmitter source spell level, and caller-supplied spellcasting ability check totals for higher-level contested spells. It owns Magic Action and Spell Slot spending, target-scoped removal of tracked spell-light emitters whose source spell level is at or below the Dispel Magic slot level, DC 10 plus source spell level check gating for higher-level tracked emitters, and generic object-attached Continual Flame cleanup without dispatching on Continual Flame identity. Broader non-light active spell effects, spell-specific dispel immunities, automatic geometry, and table selection of magical-effect identity remain outside this subset boundary.",
-          "taskRefs": [
-            "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING"
-          ],
-          "title": "Spell invocation ends tracked ongoing spell effects on a selected target",
-          "verificationOwners": [
-            {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dispel-magic.test.ts"
             }
           ]
         }
@@ -19729,7 +19796,7 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
-          "sourceBoundary": "Runtime consumes typed table-supplied object identity facts, emitter-distance facts, and opaque-cover witnesses. Light additionally consumes size and worn/carried facts and owns one-hour duration cleanup plus same-caster recast replacement. Continual Flame consumes a touched-object fact, owns level-2+ Spell Slot casting, source-owned object attachment, Bright/Dim 20-foot radii, non-ticking until-dispelled persistence, and preserves prior Continual Flame emitters from the same caster. Existing light projection derives Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences without duplicating emitter state. Dispel Magic ongoing-spell-ending consumes the tracked source spell level exposed on object spell-light emitters to remove generic object-attached spell-light occurrences such as Continual Flame without a spell-specific remover registry. Darkness overlap and Antimagic Field suppression remain outside this object-emitter profile; this profile exposes object attachment and the until-dispelled marker for those future owners, while any additional generic Spell Effect facts belong to the remover or suppressor owner. Colored/flame presentation, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, non-heat/fuel presentation, smother/quenched adjudication, and costly consumed Material component availability/consumption are outside this object-emitter runtime boundary.",
+          "sourceBoundary": "Runtime consumes typed table-supplied object identity facts, emitter-distance facts, and opaque-cover witnesses. Light additionally consumes size and worn/carried facts and owns one-hour duration cleanup plus same-caster recast replacement. Continual Flame consumes a touched-object fact, owns level-2+ Spell Slot casting, source-owned object attachment, Bright/Dim 20-foot radii, non-ticking until-dispelled persistence, and preserves prior Continual Flame emitters from the same caster. Existing light projection derives Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences without duplicating emitter state. Removal or suppression triggers such as Dispel Magic, Darkness overlap, and Antimagic Field are outside this object-emitter profile; this profile exposes object attachment and the until-dispelled marker for those future owners, while any additional generic Spell Effect facts belong to the remover or suppressor owner rather than a Continual Flame-specific registry. Colored/flame presentation, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, non-heat/fuel presentation, smother/quenched adjudication, and costly consumed Material component availability/consumption are outside this object-emitter runtime boundary.",
           "taskRefs": [
             "SRDINV70B",
             "SRDINV89C",

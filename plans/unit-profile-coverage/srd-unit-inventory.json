@@ -192,12 +192,12 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 510,
-      "percent": "91.7%",
+      "numerator": 509,
+      "percent": "91.5%",
       "rowsByStatus": {
-        "accepted": 373,
+        "accepted": 372,
         "accepted-no-battle-effect": 137,
-        "owner-evidence-required": 1,
+        "owner-evidence-required": 2,
         "partial-battle-runtime": 14,
         "battle-runtime-required": 31
       }
@@ -208,17 +208,19 @@
       "non-runtime": 12
     },
     "levelTwoRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 20,
+      "catalog-installed-owner-evidence-present": 19,
       "non-runtime": 12,
-      "catalog-installed-owner-evidence-required": 1
+      "catalog-installed-owner-evidence-required": 1,
+      "catalog-installed-needs-owner-evidence": 1
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 392,
+      "catalog-installed-owner-evidence-present": 391,
       "non-runtime": 24,
       "catalog-installed-owner-evidence-required": 14,
       "catalog-only/dead-for-now": 108,
       "missing-authored-record": 10,
-      "catalog-authored-executable-follow-up": 8
+      "catalog-authored-executable-follow-up": 8,
+      "catalog-installed-needs-owner-evidence": 1
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 228,
@@ -18923,26 +18925,16 @@
         "unitId": "sorcerer_metamagic"
       },
       "unitProfileDisposition": "profile-subset-supported",
-      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "finalDisposition": "catalog-installed-needs-owner-evidence",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
           "evidence": "candidate Unit sorcerer_metamagic is installed in srdUnitCollection",
-          "status": "catalog evidence"
-        },
-        {
-          "owner": "character-creation-runtime",
-          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS character-creation.class-feature-option-projection, character-creation.class-feature-source-fact-projection, and character-creation.class-feature-advancement-replacement support profiles; Metamagic is discovered from the level-2 Sorcerer class feature grant, filled from the installed SRD Metamagic option roster, finalized as selected CharacterBuild Metamagic option facts, projected with Sorcerer-level known-option counts, option costs, stacking modes, spell-use limit, and the shared Font of Magic Sorcery Point resource link, and advanced through Sorcerer level gains that replace one known option with one unknown option or add level-10 and level-17 options from the Surface choice-count thresholds.",
-          "status": "owner evidence present"
-        },
-        {
-          "owner": "character-sheet-runtime",
-          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L12G-FOLLOWUP-SORCERER-METAMAGIC-BATTLE-RESOURCE-BRIDGE Character Sheet Metamagic battle resource bridge runtime; Metamagic selected option facts are preserved through Character Sheet parsing only when they match the retained Sorcerer Metamagic feature and Sorcerer-level known-option count. Those parsed CharacterBuild facts provide the Character Battle bridge source for typed Metamagic effectKind, stackingMode, and cost facts while the shared Font of Magic Sorcery Point point-pool remains owned by the existing Character Sheet resource expenditure state.",
-          "status": "owner evidence present"
+          "status": "catalog-only evidence; operational owner evidence still required"
         }
       ],
-      "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "accepted"
+      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only.",
+      "battleReadinessStatus": "owner-evidence-required"
     },
     {
       "id": "srd521:classes/sorcerer:level-2:class-table-summary:sorcerer_level_2_feature_table_row",

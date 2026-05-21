@@ -3839,6 +3839,8 @@ export type BattleTurnResources = ActionEconomyState & {
   readonly currentHasBonusAction: boolean;
   readonly commandHalt: BattleCommandHaltTurnSuppression | null;
   readonly spellSlotUsesThisTurn: readonly BattleTurnSpellSlotUse[];
+  readonly levelOnePlusSpellCastsThisTurn: readonly CombatantId[];
+  readonly quickenedLevelOnePlusSpellCastsThisTurn: readonly CombatantId[];
   readonly attackRollMadeThisTurn: boolean;
   readonly attackDamageRidersUsedThisTurn: readonly AttackDamageRiderUsage[];
   readonly weaponDamageDiceRollChoicesUsedThisTurn: readonly WeaponDamageDiceRollChoiceUsage[];
@@ -5950,6 +5952,8 @@ export type BattleTurnSnapshot = {
   readonly actionResources: readonly RuntimeActionResource[];
   readonly bonusActionAvailable: boolean;
   readonly spellSlotUsesThisTurn: readonly BattleTurnSpellSlotUse[];
+  readonly levelOnePlusSpellCastsThisTurn: readonly CombatantId[];
+  readonly quickenedLevelOnePlusSpellCastsThisTurn: readonly CombatantId[];
   readonly attackRollMadeThisTurn: boolean;
   readonly attackDamageRidersUsedThisTurn: readonly AttackDamageRiderUsage[];
   readonly weaponDamageDiceRollChoicesUsedThisTurn: readonly WeaponDamageDiceRollChoiceUsage[];

@@ -1,6 +1,7 @@
 // Support-effect spell resolution extracted from spells-resolve.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // Covers healing, scalar buffs, roll modifiers, protection, damage reduction,
 // and condition-immunity/temporary-hit-point procedures.
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HIT_POINT_RESTORATION
@@ -19,6 +20,7 @@ import {
   type BattleTeleportDestinationFact,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
+import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resources.ts";
 import { spellId, type CombatantId } from "../identity.ts";
 import { applyHpHealing, breakBattleConcentration } from "./damage-apply.ts";
 import { needsHolesResult } from "./hole-helpers.ts";
@@ -90,6 +92,8 @@ export function resolvePreparedHealingSpellAct(input: {
     { readonly procedure: "directHitPointRestoration" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+  readonly actionCostOverride?: "magicAction" | "bonusAction";
+  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
 }): BattleResolutionResult {
   if (
     input.fillSet.attackRoll !== undefined ||
@@ -127,6 +131,7 @@ export function resolvePreparedHealingSpellAct(input: {
       targetIds: targetSelection.targetIds,
       reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
       castingResource:
+        input.actionCostOverride === "bonusAction" ||
         input.input.subject.tag === "bonusActionSpell"
           ? { kind: "bonusAction" }
           : { kind: "magicAction" },
@@ -175,6 +180,12 @@ export function resolvePreparedHealingSpellAct(input: {
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
+    ...(input.actionCostOverride === undefined
+      ? {}
+      : { actionCostOverride: input.actionCostOverride }),
+    ...(input.metamagicApplications === undefined
+      ? {}
+      : { metamagicApplications: input.metamagicApplications }),
   });
 }
 

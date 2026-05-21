@@ -4457,6 +4457,8 @@ export function resetBattleTurnResources(
     ...base,
     commandHalt: null,
     spellSlotUsesThisTurn: [],
+    levelOnePlusSpellCastsThisTurn: [],
+    quickenedLevelOnePlusSpellCastsThisTurn: [],
     attackRollMadeThisTurn: false,
     attackDamageRidersUsedThisTurn: [],
     weaponDamageDiceRollChoicesUsedThisTurn: [],

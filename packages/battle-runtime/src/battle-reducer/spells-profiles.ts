@@ -2644,20 +2644,81 @@ export function spellActTurnResourceAvailable(
   resources: BattleTurnResources,
   actorId: CombatantId,
   invocation: SupportedSpellInvocation,
+  options?: {
+    readonly actionCostOverride?: "magicAction" | "bonusAction";
+  },
 ): boolean {
+  if (
+    spellInvocationIsLevelOnePlus(invocation) &&
+    combatantHasQuickenedLevelOnePlusSpellCastThisTurn(resources, actorId)
+  ) {
+    return false;
+  }
   if (
     invocation.resource.tag === "spellSlot" &&
     combatantHasSpellSlotUseThisTurn(resources, actorId)
   ) {
     return false;
   }
-  if ("actionCost" in invocation && invocation.actionCost === "bonusAction") {
+  const actionCost =
+    options?.actionCostOverride ??
+    ("actionCost" in invocation ? invocation.actionCost : "magicAction");
+  if (actionCost === "bonusAction") {
     return resources.currentHasBonusAction;
   }
   if (invocation.resource.tag === "none") {
     return canSpendAction(resources, "magic");
   }
   return canSpendAction(resources, "magic");
+}
+
+export function spellInvocationIsLevelOnePlus(
+  invocation: SupportedSpellInvocation,
+): boolean {
+  return invocation.spell.mechanics.level >= 1;
+}
+
+export function markLevelOnePlusSpellCastThisTurn(
+  resources: BattleTurnResources,
+  combatantId: CombatantId,
+): BattleTurnResources {
+  return combatantHasLevelOnePlusSpellCastThisTurn(resources, combatantId)
+    ? resources
+    : {
+        ...resources,
+        levelOnePlusSpellCastsThisTurn: [
+          ...resources.levelOnePlusSpellCastsThisTurn,
+          combatantId,
+        ],
+      };
+}
+
+export function markInvocationLevelOnePlusSpellCastThisTurn(
+  resources: BattleTurnResources,
+  combatantId: CombatantId,
+  invocation: SupportedSpellInvocation,
+): BattleTurnResources {
+  return spellInvocationIsLevelOnePlus(invocation)
+    ? markLevelOnePlusSpellCastThisTurn(resources, combatantId)
+    : resources;
+}
+
+export function markQuickenedLevelOnePlusSpellCastThisTurn(
+  resources: BattleTurnResources,
+  combatantId: CombatantId,
+): BattleTurnResources {
+  return combatantHasQuickenedLevelOnePlusSpellCastThisTurn(
+    resources,
+    combatantId,
+  )
+    ? resources
+    : {
+        ...resources,
+        quickenedLevelOnePlusSpellCastsThisTurn: [
+          ...resources.quickenedLevelOnePlusSpellCastsThisTurn,
+          combatantId,
+        ],
+      };
 }
 
 export function markSpellSlotExpendedThisTurn(
@@ -2674,16 +2735,21 @@ export function markSpellSlotExpendedThisTurn(
     kind: "committed",
     combatantId,
   };
-  return Either.right({
-    ...resources,
-    spellSlotUsesThisTurn: pending
-      ? resources.spellSlotUsesThisTurn.map((use) =>
-          use.kind === "pending" && use.combatantId === combatantId
-            ? nextUse
-            : use,
-        )
-      : [...resources.spellSlotUsesThisTurn, nextUse],
-  });
+  return Either.right(
+    markLevelOnePlusSpellCastThisTurn(
+      {
+        ...resources,
+        spellSlotUsesThisTurn: pending
+          ? resources.spellSlotUsesThisTurn.map((use) =>
+              use.kind === "pending" && use.combatantId === combatantId
+                ? nextUse
+                : use,
+            )
+          : [...resources.spellSlotUsesThisTurn, nextUse],
+      },
+      combatantId,
+    ),
+  );
 }
 
 export function claimPendingSpellSlotUseThisTurn(
@@ -2728,5 +2794,21 @@ export function combatantHasCommittedSpellSlotUseThisTurn(
 ): boolean {
   return resources.spellSlotUsesThisTurn.some(
     (use) => use.kind === "committed" && use.combatantId === combatantId,
+  );
+}
+
+export function combatantHasLevelOnePlusSpellCastThisTurn(
+  resources: BattleTurnResources,
+  combatantId: CombatantId,
+): boolean {
+  return resources.levelOnePlusSpellCastsThisTurn.includes(combatantId);
+}
+
+export function combatantHasQuickenedLevelOnePlusSpellCastThisTurn(
+  resources: BattleTurnResources,
+  combatantId: CombatantId,
+): boolean {
+  return resources.quickenedLevelOnePlusSpellCastsThisTurn.includes(
+    combatantId,
   );
 }

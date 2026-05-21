@@ -1,6 +1,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-weapon-enhancement
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // Spell discovery (Cluster K). Mechanical extraction from battle-reducer.ts.
 // Discovers per-actor SupportedSpellInvocation acts, computes cast-summary
 // strings, classifies invocations, and synthesises the optional readied-spell
@@ -80,6 +81,10 @@ import {
   type CounterspellCapableReactor,
 } from "./counterspell-reaction-discovery.ts";
 import { ongoingSpellTargetChoiceHole } from "./spells-ongoing-spell-ending.ts";
+import {
+  actorCanOfferQuickenedSpellMetamagic,
+  QUICKENED_SPELL_METAMAGIC_SELECTION,
+} from "./metamagic.ts";
 
 export function discoverSupportedSpellInvocations(
   state: BattleState,
@@ -109,13 +114,20 @@ export function discoverSupportedSpellInvocations(
       if (!spellInvocationCasterPrerequisiteIsMet(actor, invocation)) {
         return [];
       }
-      if (
-        !spellActTurnResourceAvailable(
-          state.currentTurnResources,
+      const naturalTurnResourceAvailable = spellActTurnResourceAvailable(
+        state.currentTurnResources,
+        actorId,
+        invocation,
+      );
+      const quickenedTurnResourceAvailable =
+        invocation.procedure === "directHitPointRestoration" &&
+        actorCanOfferQuickenedSpellMetamagic({
+          state,
+          actor,
           actorId,
           invocation,
-        )
-      ) {
+        });
+      if (!naturalTurnResourceAvailable && !quickenedTurnResourceAvailable) {
         return [];
       }
       if (invocation.procedure === "command") {
@@ -968,7 +980,7 @@ export function discoverSupportedSpellInvocations(
             ? spellTargetListHole(state, actorId, invocation)
             : spellTargetHole(state, actorId, invocation);
       const castActs =
-        targetHole.choices.length === 0
+        targetHole.choices.length === 0 || !naturalTurnResourceAvailable
           ? []
           : [
               {
@@ -983,7 +995,28 @@ export function discoverSupportedSpellInvocations(
                 initialHoles: [targetHole],
               },
             ];
-      return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
+      const quickenedCastActs =
+        targetHole.choices.length === 0 || !quickenedTurnResourceAvailable
+          ? []
+          : [
+              {
+                subject: {
+                  tag: "bonusActionSpell" as const,
+                  actorId,
+                  invocation: supportedSpellInvocationRef(invocation),
+                  mode: { tag: "cast" as const },
+                  metamagic: QUICKENED_SPELL_METAMAGIC_SELECTION,
+                },
+                label: `${invocation.spell.name} (Quickened Spell)`,
+                summary: `Cast ${invocation.spell.name} with Quickened Spell as a Bonus Action.`,
+                initialHoles: [targetHole],
+              },
+            ];
+      return [
+        ...castActs,
+        ...quickenedCastActs,
+        ...readiedSpellAct(state, actorId, invocation),
+      ];
     },
   );
   return acts.map((act) =>
