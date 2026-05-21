@@ -12,8 +12,8 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | Strict target closure | 94/94 (100%) |
 | Product readiness | 367/367 (100%) |
 | Rules-kernel profile join | 56/58 (96.6%) |
-| Rules-kernel covered profile join | 44/58 (75.9%) |
-| Supported Unit rules-kernel chain | 61/78 (78.2%) |
+| Rules-kernel covered profile join | 50/58 (86.2%) |
+| Supported Unit rules-kernel chain | 67/78 (85.9%) |
 
 ## Scope
 
@@ -50,20 +50,14 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | `animal_friendship` | mapped-open | `spell.creature-type-protection-and-charm` (mapped-open: `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION` (needs-parity-witness)) |
 | `chromatic_orb` | mapped-open | `spell.invocation-chained-attack-damage` (mapped-open: `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE` (needs-parity-witness)) |
 | `cleric_divine_order` | unmapped | `character-creation.class-feature-option-projection` (unmapped: no obligation mapping) |
-| `divine_favor` | mapped-open | `spell.invocation-weapon-damage-rider` (mapped-open: `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` (needs-parity-witness)) |
-| `divine_smite` | mapped-open | `spell.invocation-after-hit-damage` (mapped-open: `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` (needs-parity-witness)) |
 | `druid_primal_order` | unmapped | `character-creation.class-feature-option-projection` (unmapped: no obligation mapping) |
 | `eldritch_blast` | mapped-open | `spell.invocation-independent-attack-sequence` (mapped-open: `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE` (needs-parity-witness)) |
-| `ensnaring_strike` | mapped-open | `spell.invocation-after-hit-restraint-turn-start-damage` (mapped-open: `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` (needs-parity-witness)) |
 | `faerie_fire` | mapped-open | `spell.invocation-attack-roll-advantage-save` (mapped-open: `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE` (needs-parity-witness)) |
 | `heroism` | mapped-open | `spell.invocation-condition-immunity-turn-start-temporary-hit-points` (mapped-open: `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS` (needs-parity-witness)) |
 | `hex` | mapped-open | `spell.invocation-marked-damage-rider` (mapped-open: `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` (needs-parity-witness)) |
 | `hunters_mark` | mapped-open | `spell.invocation-marked-damage-rider` (mapped-open: `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` (needs-parity-witness)) |
 | `protection_from_evil_and_good` | mapped-open | `spell.creature-type-protection-and-charm` (mapped-open: `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION` (needs-parity-witness)) |
 | `rogue_expertise` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
-| `searing_smite` | mapped-open | `spell.invocation-after-hit-timed-damage-save` (mapped-open: `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` (needs-parity-witness)) |
-| `shillelagh` | mapped-open | `spell.invocation-weapon-attack-override` (mapped-open: `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` (needs-parity-witness)) |
-| `true_strike` | mapped-open | `spell.invocation-spell-hosted-weapon-attack` (mapped-open: `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` (needs-parity-witness)) |
 
 ## Non-Supported Frontier Detail
 

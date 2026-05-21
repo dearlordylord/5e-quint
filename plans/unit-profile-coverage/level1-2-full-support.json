@@ -2846,8 +2846,8 @@
     },
     "rulesKernelCoveredProfileJoin": {
       "denominator": 84,
-      "numerator": 59,
-      "percent": "70.2%"
+      "numerator": 67,
+      "percent": "79.8%"
     },
     "rulesKernelProfileJoin": {
       "denominator": 84,
@@ -2856,8 +2856,8 @@
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 112,
-      "numerator": 80,
-      "percent": "71.4%"
+      "numerator": 89,
+      "percent": "79.5%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 168,
@@ -5420,8 +5420,8 @@
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
         "denominator": 112,
-        "numerator": 80,
-        "percent": "71.4%"
+        "numerator": 89,
+        "percent": "79.5%"
       }
     },
     "units": [
@@ -6057,15 +6057,15 @@
         "unitId": "dissonant_whispers"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
                 "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
                 "runtime": "battle",
-                "status": "needs-parity-witness",
+                "status": "covered",
                 "title": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders"
               }
             ],
@@ -6076,15 +6076,15 @@
         "unitId": "divine_favor"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
                 "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
                 "runtime": "battle",
-                "status": "needs-parity-witness",
+                "status": "covered",
                 "title": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup"
               }
             ],
@@ -6126,15 +6126,15 @@
         "unitId": "eldritch_blast"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
                 "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
                 "runtime": "battle",
-                "status": "needs-parity-witness",
+                "status": "covered",
                 "title": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup"
               }
             ],
@@ -6975,15 +6975,15 @@
         "unitId": "magic_missile"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
                 "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
                 "runtime": "battle",
-                "status": "needs-parity-witness",
+                "status": "covered",
                 "title": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders"
               }
             ],
@@ -7146,15 +7146,15 @@
         "unitId": "paladin_lay_on_hands"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
                 "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
                 "runtime": "battle",
-                "status": "needs-parity-witness",
+                "status": "covered",
                 "title": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup"
               }
             ],
@@ -7632,15 +7632,15 @@
         "unitId": "scorching_ray"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
                 "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
                 "runtime": "battle",
-                "status": "needs-parity-witness",
+                "status": "covered",
                 "title": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup"
               }
             ],
@@ -7720,15 +7720,15 @@
         "unitId": "shield_of_faith"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
                 "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
                 "runtime": "battle",
-                "status": "needs-parity-witness",
+                "status": "covered",
                 "title": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders"
               }
             ],
@@ -7739,15 +7739,15 @@
         "unitId": "shillelagh"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
                 "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
                 "runtime": "battle",
-                "status": "needs-parity-witness",
+                "status": "covered",
                 "title": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup"
               }
             ],
@@ -7966,15 +7966,15 @@
         "unitId": "thunderwave"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
                 "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
                 "runtime": "battle",
-                "status": "needs-parity-witness",
+                "status": "covered",
                 "title": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders"
               }
             ],

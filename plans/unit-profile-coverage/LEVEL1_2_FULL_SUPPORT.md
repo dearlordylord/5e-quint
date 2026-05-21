@@ -12,8 +12,8 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | Strict target closure | 167/168 (99.4%) |
 | Product readiness | 509/556 (91.5%) |
 | Rules-kernel profile join | 78/84 (92.9%) |
-| Rules-kernel covered profile join | 59/84 (70.2%) |
-| Supported Unit rules-kernel chain | 80/112 (71.4%) |
+| Rules-kernel covered profile join | 67/84 (79.8%) |
+| Supported Unit rules-kernel chain | 89/112 (79.5%) |
 
 ## Scope
 
@@ -55,11 +55,8 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `chromatic_orb` | mapped-open | `spell.invocation-chained-attack-damage` (mapped-open: `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE` (needs-parity-witness)) |
 | `cleric_channel_divinity` | unmapped | `character-creation.class-feature-resource-projection` (unmapped: no obligation mapping) |
 | `cleric_divine_order` | unmapped | `character-creation.class-feature-option-projection` (unmapped: no obligation mapping) |
-| `divine_favor` | mapped-open | `spell.invocation-weapon-damage-rider` (mapped-open: `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` (needs-parity-witness)) |
-| `divine_smite` | mapped-open | `spell.invocation-after-hit-damage` (mapped-open: `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` (needs-parity-witness)) |
 | `druid_primal_order` | unmapped | `character-creation.class-feature-option-projection` (unmapped: no obligation mapping) |
 | `eldritch_blast` | mapped-open | `spell.invocation-independent-attack-sequence` (mapped-open: `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE` (needs-parity-witness)) |
-| `ensnaring_strike` | mapped-open | `spell.invocation-after-hit-restraint-turn-start-damage` (mapped-open: `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` (needs-parity-witness)) |
 | `faerie_fire` | mapped-open | `spell.invocation-attack-roll-advantage-save` (mapped-open: `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE` (needs-parity-witness)) |
 | `heat_metal` | unmapped | `spell.invocation-object-contact-damage` (unmapped: no obligation mapping) |
 | `heroism` | mapped-open | `spell.invocation-condition-immunity-turn-start-temporary-hit-points` (mapped-open: `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS` (needs-parity-witness)) |
@@ -67,19 +64,13 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `hunters_mark` | mapped-open | `spell.invocation-marked-damage-rider` (mapped-open: `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` (needs-parity-witness)) |
 | `invisibility` | mapped-open | `spell.invocation-direct-condition` (mapped-open: `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE` (needs-parity-witness)) |
 | `lesser_restoration` | mapped-open | `spell.invocation-direct-condition-removal` (mapped-open: `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` (needs-parity-witness)) |
-| `magic_weapon` | mapped-open | `spell.invocation-magic-weapon-enhancement` (mapped-open: `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` (needs-parity-witness)) |
 | `mirror_image` | mapped-open | `spell.invocation-mirror-image-hit-interception` (mapped-open: `BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION` (needs-parity-witness)) |
 | `monk_uncanny_metabolism` | unmapped | `character-creation.class-feature-source-fact-projection` (unmapped: no obligation mapping) |
-| `paladin_paladins_smite` | mapped-open | `spell.invocation-after-hit-damage` (mapped-open: `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` (needs-parity-witness)) |
 | `protection_from_evil_and_good` | mapped-open | `spell.creature-type-protection-and-charm` (mapped-open: `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION` (needs-parity-witness)) |
 | `protection_from_poison` | mapped-open | `spell.invocation-condition-removal-protection` (mapped-open: `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` (needs-parity-witness)) |
 | `ranger_deft_explorer` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
 | `rogue_expertise` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
 | `scorching_ray` | mapped-open | `spell.invocation-independent-attack-sequence` (mapped-open: `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE` (needs-parity-witness)) |
-| `searing_smite` | mapped-open | `spell.invocation-after-hit-timed-damage-save` (mapped-open: `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` (needs-parity-witness)) |
-| `shillelagh` | mapped-open | `spell.invocation-weapon-attack-override` (mapped-open: `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` (needs-parity-witness)) |
-| `shining_smite` | mapped-open | `spell.invocation-after-hit-damage-illumination` (mapped-open: `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` (needs-parity-witness)) |
-| `true_strike` | mapped-open | `spell.invocation-spell-hosted-weapon-attack` (mapped-open: `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` (needs-parity-witness)) |
 | `warding_bond` | mapped-open | `spell.invocation-warding-bond-linked-effect` (mapped-open: `BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING` (needs-parity-witness)) |
 | `wizard_scholar` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
 

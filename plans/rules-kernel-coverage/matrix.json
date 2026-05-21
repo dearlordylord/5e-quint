@@ -1,8 +1,8 @@
 {
   "summary": {
     "total": 72,
-    "covered": 54,
-    "open": 13,
+    "covered": 55,
+    "open": 12,
     "nonSemantic": 5,
     "byRuntime": {
       "shared-algebras": 1,
@@ -12,9 +12,9 @@
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 54,
+      "covered": 55,
       "needs-qnt-owner": 0,
-      "needs-parity-witness": 12,
+      "needs-parity-witness": 11,
       "needs-surface-evidence": 1,
       "boundary-only": 4,
       "unsupported-by-admission": 1
@@ -1030,12 +1030,18 @@
       "title": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup"
     },
     {
-      "followUpTaskIds": [
-        "RKBC-SPELL-WEAPON-HOSTED-PARITY"
-      ],
       "id": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
       "kind": "active-effect-lifecycle",
-      "parityWitnesses": [],
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts"
+        }
+      ],
       "profiles": [
         "spell.invocation-magic-weapon-enhancement",
         "spell.invocation-spell-hosted-weapon-attack",
@@ -1056,8 +1062,14 @@
         "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
         "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts"
       ],
-      "status": "needs-parity-witness",
-      "surfaceEvidence": [],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Divine Favor",
+        ".references/srd-5.2.1/Spells/Descriptions-M-P.md#Magic Weapon",
+        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Shillelagh",
+        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#True Strike",
+        ".references/srd-5.2.1/Rules-Glossary.md#Weapon Attack"
+      ],
       "title": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders"
     },
     {

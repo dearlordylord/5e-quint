@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84H shillelagh
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31A divine_favor
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME magic_weapon
