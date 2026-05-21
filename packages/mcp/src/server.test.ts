@@ -32,6 +32,8 @@ import {
   creationHoleId,
   fillCreationHoles,
   finalizeCharacterDraft,
+  sorcererMetamagicOptionId,
+  SORCERER_METAMAGIC_UNIT_ID,
   type CharacterDraft,
   type CharacterBuild,
   type CreationFill,
@@ -4506,6 +4508,26 @@ describe("MCP server route", () => {
             level: 5,
             keepClassChoices: false,
           }).progression,
+          // A level-5 Sorcerer knows two Metamagic options; the build is
+          // invalid without them (Metamagic known option count must match the
+          // Sorcerer level).
+          features: [
+            ...build.features,
+            {
+              kind: "selectedSorcererMetamagicOption" as const,
+              selectedFromUnitId: SORCERER_METAMAGIC_UNIT_ID,
+              optionId: expectRight(
+                sorcererMetamagicOptionId("sorcerer_quickened_spell"),
+              ),
+            },
+            {
+              kind: "selectedSorcererMetamagicOption" as const,
+              selectedFromUnitId: SORCERER_METAMAGIC_UNIT_ID,
+              optionId: expectRight(
+                sorcererMetamagicOptionId("sorcerer_careful_spell"),
+              ),
+            },
+          ],
           equipment: {
             ...build.equipment,
             loadout: {

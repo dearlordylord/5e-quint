@@ -42,40 +42,34 @@ only the current frontier context.
 
 ## Known Pre-Existing Failures (untriaged)
 
-- **Battle-runtime ability-modifier resource-cap init throw.** In a clean
-  frozen-lockfile checkout, 9 deterministic `@dnd/battle-runtime` tests fail during
-  `startBattle` → `battleCreatureStateFromInit` → `characterResourceState` with
-  `Error: Ability-modifier resource cap requires the projected ability modifier`
-  (`character-battle-resources.ts` `supportedUseCountCapForLevel`, thrown when
-  `capAbilityModifier` is undefined). Affected files:
-  `battle-runtime-bardic-inspiration.test.ts`,
-  `battle-runtime-cutting-words.test.ts`,
-  `battle-runtime-opportunity-and-light-attacks.test.ts`,
-  `battle-runtime-uncanny-dodge-and-damage-reductions.test.ts`. Found 2026-05-21
-  while verifying the active-effect deep-module refactor; confirmed **independent**
-  of that refactor (reproduces at the pre-refactor base state). Needs triage: real
-  regression vs. expected.
+- **Resolved 2026-05-21** (all pre-existing on master, confirmed independent of the
+  active-effect refactor, fixed and verified — deterministic `@dnd/battle-runtime`
+  suite 958 passed / 0 failed; `pnpm -r typecheck` green across all packages):
+  - battle-runtime ability-modifier resource-cap init throw (9 tests) —
+    `characterResourceState` computed the default use count eagerly even when
+    `usesRemaining` was supplied; now lazy.
+  - `battle-runtime-mage-armor-and-armor-of-shadows` "Armor of Shadows" assertion —
+    the test wrongly expected an empty `levelOnePlusSpellCastsThisTurn`; per RAW
+    (Quickened Spell) a slotless Mage Armor still counts as a level 1+ cast.
+  - `@dnd/app` and `@dnd/mcp` `sourceEffectId` typecheck errors — both packages
+    omitted `exactOptionalPropertyTypes`; aligned with the rest of the workspace and
+    fixed the few latent violations that surfaced.
+  - `@dnd/mcp` "Sorcerous Burst" test — its level-5 Sorcerer build omitted the two
+    required Metamagic option selections; added them.
 - **Fresh-worktree battle MBT can't resolve quint modules.** In a worktree without
   a primed `.quint-cache`, `battle-runtime.mbt.test.ts` fails with quint `QNT404`
   name-resolution errors (`damageAfterAdjustments`, etc.) even though those names
   exist in the `.qnt` corpus. quint-connect version matches the main repo. Likely a
   missing cache-priming step in worktree setup; blocks MBT verification outside the
   main checkout.
-- **`@dnd/app` typecheck red on light-emitter narrowing.** `pnpm -r typecheck` fails
-  only in `@dnd/app` with `TS18048 'emitter.sourceEffectId' is possibly 'undefined'` at
-  `battle-reducer/spells-active-effects.ts` (`objectLightSpellEffectOccurrenceId`).
-  `BattleProjectedSpellLightEmitter` declares `sourceEffectId?: never`, but
-  `app/tsconfig.json` omits `exactOptionalPropertyTypes` (which `battle-runtime` sets), so
-  under app's looser check the `"sourceEffectId" in emitter` guard still leaves `undefined`.
-  Reproduced on a clean `master` (afe910f6) checkout — **pre-existing**, not introduced by
-  the active-effect refactor/merge. One-line fix available (narrow on `!== undefined`, or
-  set the flag in app's tsconfig); left untouched as a master-scoped concern. Found
-  2026-05-21.
-- **`battle-runtime-mage-armor-and-armor-of-shadows` assertion failure.** "Armor of Shadows
-  casts self-only Mage Armor without expending a Spell Slot" fails a `toMatchObject` on
-  `result.snapshot.turn`. Reproduced on a clean `master` (afe910f6) checkout — **pre-existing**
-  and distinct from the init-bug above (a real `AssertionError`, not the resource-cap throw).
-  Needs triage. Found 2026-05-21.
+- **`@dnd/mcp` `mcp-protocol.test.ts` memory leak.** The "runs the full acceptance
+  client over in-memory MCP" test exhausts the V8 heap and crashes the vitest worker
+  (`JavaScript heap out of memory`), even in isolation and with
+  `--max-old-space-size=6144` — more heap only delays the crash (~118s at default
+  heap, ~350s at 6 GB). A genuine leak somewhere in the in-memory MCP acceptance
+  harness / `protocol-server` / battle-runtime path it drives, not a heap-ceiling or
+  assertion failure: every other `@dnd/mcp` test file passes individually. The file
+  predates the merge; needs memory profiling. Found 2026-05-21.
 
 ## Ralph Task Index
 
