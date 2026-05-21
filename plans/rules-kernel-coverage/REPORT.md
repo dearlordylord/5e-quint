@@ -4,14 +4,14 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Summary
 
-- Total obligations: 71
-- Covered obligations: 45
+- Total obligations: 72
+- Covered obligations: 46
 - Open transitional obligations: 21
 - Boundary or unsupported obligations: 5
 
 | Status | Count |
 | --- | ---: |
-| covered | 45 |
+| covered | 46 |
 | needs-qnt-owner | 1 |
 | needs-parity-witness | 19 |
 | needs-surface-evidence | 1 |

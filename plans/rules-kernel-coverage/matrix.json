@@ -1,7 +1,7 @@
 {
   "summary": {
-    "total": 71,
-    "covered": 45,
+    "total": 72,
+    "covered": 46,
     "open": 21,
     "nonSemantic": 5,
     "byRuntime": {
@@ -12,7 +12,7 @@
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 45,
+      "covered": 46,
       "needs-qnt-owner": 1,
       "needs-parity-witness": 19,
       "needs-surface-evidence": 1,
@@ -3967,6 +3967,7 @@
     "unit-feature.first-attack-roll-reckless-advantage",
     "unit-feature.innate-sorcery-activation",
     "unit-feature.martial-arts-attack-projection",
+    "unit-feature.metamagic-cast-governor-quickened",
     "unit-feature.monk-focus-battle-options",
     "unit-feature.passive-armor-class-bonus",
     "unit-feature.passive-ranged-attack-roll-bonus",
