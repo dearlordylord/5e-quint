@@ -1503,47 +1503,6 @@
       "unitId": "gust_of_wind"
     },
     {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "follow-up-split"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY: Promote the holding/wearing penalty for creatures that take Heat Metal damage from the object: caller-supplied held-or-worn object facts, Constitution Saving Throw against caster Spell Save DC, drop-if-possible through the existing dropped-object outcome boundary without introducing inventory simulation, fallback Disadvantage on Attack Rolls and Ability Checks until the start of the caster's next turn when the object is not dropped, and cleanup/replacement behavior tied to the same Heat Metal spell occurrence. Owner: battle-runtime object holding/wearing drop boundary plus D20 roll-mode projection. Required output: Supported-profile or profile-subset-supported Unit claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the save, drop outcome, fallback roll-mode projection, caster-turn-start expiry, and Concentration cleanup.",
-      "sourceRecordPath": "packages/surface/content/heat_metal.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Bard spell list Heat Metal",
-          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_heat_metal",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 198,
-            "lineStart": 198,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Druid spell list Heat Metal",
-          "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_heat_metal",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 239,
-            "lineStart": 239,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        }
-      ],
-      "status": "blocked-follow-up-split",
-      "strictTargetClosed": true,
-      "unitId": "heat_metal"
-    },
-    {
       "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
@@ -2771,7 +2730,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 109,
+      "count": 110,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -2822,6 +2781,7 @@
         "guidance",
         "guiding_bolt",
         "healing_word",
+        "heat_metal",
         "hellish_rebuke",
         "heroism",
         "hex",
@@ -2922,7 +2882,7 @@
       ]
     },
     {
-      "count": 21,
+      "count": 20,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
@@ -2934,7 +2894,6 @@
         "enhance_ability",
         "enlarge_reduce",
         "enthrall",
-        "heat_metal",
         "levitate",
         "magic_weapon",
         "monk_monks_focus",
@@ -2991,34 +2950,35 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 503,
-      "percent": "90.5%",
+      "numerator": 504,
+      "percent": "90.6%",
       "rowsByStatus": {
-        "accepted": 366,
+        "accepted": 367,
         "accepted-no-battle-effect": 137,
         "battle-runtime-required": 40,
-        "partial-battle-runtime": 13
+        "owner-evidence-required": 1,
+        "partial-battle-runtime": 11
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 81,
+      "denominator": 82,
       "numerator": 39,
-      "percent": "48.1%"
+      "percent": "47.6%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 81,
+      "denominator": 82,
       "numerator": 69,
-      "percent": "85.2%"
+      "percent": "84.1%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 109,
+      "denominator": 110,
       "numerator": 53,
-      "percent": "48.6%"
+      "percent": "48.2%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 168,
-      "numerator": 109,
-      "percent": "64.9%"
+      "numerator": 110,
+      "percent": "65.5%"
     },
     "strictTargetClosure": {
       "denominator": 168,
@@ -5575,9 +5535,9 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 109,
+        "denominator": 110,
         "numerator": 53,
-        "percent": "48.6%"
+        "percent": "48.2%"
       }
     },
     "units": [
@@ -6720,6 +6680,18 @@
           }
         ],
         "unitId": "healing_word"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-object-contact-damage",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "heat_metal"
       },
       {
         "joinStatus": "mapped-open",
@@ -8247,20 +8219,20 @@
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
       "missing": 1,
-      "profile-subset-supported": 21,
-      "supported-profile": 109,
+      "profile-subset-supported": 20,
+      "supported-profile": 110,
       "unsupported-profile": 37
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 21,
+      "blocked-follow-up-split": 20,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 28,
       "open-runtime-behavior": 1,
-      "supported-profile": 109
+      "supported-profile": 110
     },
-    "nonSupportedFrontier": 59,
+    "nonSupportedFrontier": 58,
     "strictDenominator": 168
   }
 }

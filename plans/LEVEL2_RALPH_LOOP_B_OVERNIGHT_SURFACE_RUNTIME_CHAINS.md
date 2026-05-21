@@ -73,7 +73,7 @@
     {
       "number": 12,
       "id": "L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Heat Metal Holding Wearing Penalty Runtime"
     },
     {
@@ -190,7 +190,7 @@ The final task is intentionally blocked on every real task in this plan and plac
 | 9 | L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT - Flame Blade Runtime Support | done | L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE | B lane; Unit `flame_blade`; promoted spell-created held object runtime support. |
 | 10 | L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE - Heat Metal Surface Contact Escape Shape | done | completed baseline | B lane; Unit `heat_metal`. |
 | 11 | L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME - Heat Metal Contact Damage Runtime | done | L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE | B lane; Unit `heat_metal`. |
-| 12 | L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY - Heat Metal Holding Wearing Penalty Runtime | ready-for-research | L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE, L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME | B lane; Unit `heat_metal`. |
+| 12 | L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY - Heat Metal Holding Wearing Penalty Runtime | done | L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE, L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME | B lane; Unit `heat_metal`; promoted held/worn save, drop witness, fallback penalty, and cleanup runtime support. |
 | 13 | L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING - Dispel Magic Ongoing Spell Ending | ready-for-research | L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL | B lane split; Unit `dispel_magic`; resolves generic ongoing spell ending for object-attached Continual Flame occurrences without a spell-specific removal registry. |
 | 14 | L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL - Darkness Spell-Created Light Dispel | ready-for-research | L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL | B lane split; Unit `darkness`; first author or close the missing SRD Darkness Unit, then resolve level-2-or-lower spell-created light overlap dispel. |
 | 15 | L12G-FOLLOWUP-ANTIMAGIC-FIELD-SPELL-EFFECT-SUPPRESSION - Antimagic Field Spell Effect Suppression | ready-for-research | L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL | B lane split; Unit `antimagic_field`; resolves generic ongoing spell suppression for object-attached Continual Flame occurrences without duplicating emitter state. |
@@ -642,7 +642,7 @@ Acceptance:
 
 ### Task 12 - L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY - Heat Metal Holding Wearing Penalty Runtime
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `heat_metal`.
 Origin: Follow-up split from completed `L12G-SPELL-HEAT-METAL`.

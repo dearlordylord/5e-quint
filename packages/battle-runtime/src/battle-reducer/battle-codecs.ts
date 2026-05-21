@@ -1,6 +1,7 @@
 // Runtime codecs for battle reducer public payloads.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // Extracted from ../battle-reducer.ts; this module owns Effect Schema values,
 // while domain types remain exported by the reducer facade.
 
@@ -819,6 +820,14 @@ const BattleTargetSpatialFactSchema = Schema.Union(
     sourceSpellId: Schema.String,
     objectId: BattleObjectId,
     rangeFeet: MovementFeet,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("spellObjectHoldingOrWearing"),
+    sourceCombatantId: CombatantId,
+    sourceSpellId: Schema.String,
+    objectId: BattleObjectId,
+    targetId: CombatantId,
+    relation: Schema.Literal("holding", "wearing"),
   }),
   Schema.Struct({
     kind: Schema.Literal("spellLeapTargetWithinRange"),
@@ -2203,6 +2212,31 @@ export const BattleHoleSchema = Schema.Union(
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
+    kind: Schema.Literal("savingThrowOutcome"),
+    objectContactSave: Schema.Struct({
+      sourceCombatantId: CombatantId,
+      sourceSpellId: SpellId,
+      objectId: BattleObjectId,
+      targetIds: Schema.Array(CombatantId),
+    }),
+    ability: Schema.Literal("con"),
+    dc: DcSourceSchema,
+    areaChoices: Schema.Array(BattleRuntimeObjectSchema),
+    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("objectDropResolution"),
+    objectDrop: Schema.Struct({
+      sourceCombatantId: CombatantId,
+      sourceSpellId: SpellId,
+      objectId: BattleObjectId,
+      targetIds: Schema.Array(CombatantId),
+    }),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
     kind: Schema.Literal("heldObjectFacts"),
     actorId: CombatantId,
   }),
@@ -2988,7 +3022,33 @@ type BattleFillEncoded =
             readonly objectId: string;
             readonly rangeFeet: number;
           }
+        | {
+            readonly kind: "spellObjectHoldingOrWearing";
+            readonly sourceCombatantId: string;
+            readonly sourceSpellId: string;
+            readonly objectId: string;
+            readonly targetId: string;
+            readonly relation: "holding" | "wearing";
+          }
       )[];
+    }
+  | {
+      readonly kind: "objectDropResolution";
+      readonly holeId: string;
+      readonly value: {
+        readonly outcomes: readonly (
+          | {
+              readonly targetId: string;
+              readonly capability: { readonly kind: "canDrop" };
+              readonly result: { readonly kind: "dropped" };
+            }
+          | {
+              readonly targetId: string;
+              readonly capability: { readonly kind: "cannotDrop" };
+              readonly result: { readonly kind: "notDropped" };
+            }
+        )[];
+      };
     }
   | {
       readonly kind: "damageTypeChoice";
@@ -3550,8 +3610,44 @@ export const BattleFillSchema: Schema.Schema<
             objectId: BattleObjectId,
             rangeFeet: MovementFeet,
           }),
+          Schema.Struct({
+            kind: Schema.Literal("spellObjectHoldingOrWearing"),
+            sourceCombatantId: CombatantId,
+            sourceSpellId: Schema.String,
+            objectId: BattleObjectId,
+            targetId: CombatantId,
+            relation: Schema.Literal("holding", "wearing"),
+          }),
         ),
       ),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("objectDropResolution"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Struct({
+        outcomes: Schema.Array(
+          Schema.Union(
+            Schema.Struct({
+              targetId: CombatantId,
+              capability: Schema.Struct({
+                kind: Schema.Literal("canDrop"),
+              }),
+              result: Schema.Struct({
+                kind: Schema.Literal("dropped"),
+              }),
+            }),
+            Schema.Struct({
+              targetId: CombatantId,
+              capability: Schema.Struct({
+                kind: Schema.Literal("cannotDrop"),
+              }),
+              result: Schema.Struct({
+                kind: Schema.Literal("notDropped"),
+              }),
+            }),
+          ),
+        ),
+      }),
     }),
     Schema.Struct({
       kind: Schema.Literal("spellTargetAllocation"),

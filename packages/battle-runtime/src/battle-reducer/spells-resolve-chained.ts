@@ -51,9 +51,7 @@ import {
   damageLifecycleHideousLaughterDamageRepeatSaveHoles,
 } from "./damage-apply.ts";
 import { damageAmountAfterTargetAdjustments } from "./damage-helpers.ts";
-import {
-  isHideousLaughterDamageRepeatSaveFill,
-} from "./hideous-laughter-repeat-save.ts";
+import { isHideousLaughterDamageRepeatSaveFill } from "./hideous-laughter-repeat-save.ts";
 import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
@@ -683,6 +681,7 @@ export function resolveCompletedChainedSpell(input: {
       events: input.afterDamageEvents,
       objectDamages: [],
       objectIgnitions: [],
+      droppedObjects: [],
       suppressedReactionTrigger: input.input.input.suppressedReactionTrigger,
     });
   }
@@ -701,6 +700,7 @@ export function resolveCompletedChainedSpell(input: {
     events: input.afterDamageEvents,
     objectDamages: [],
     objectIgnitions: [],
+    droppedObjects: [],
     suppressedReactionTrigger: input.input.input.suppressedReactionTrigger,
   });
 }

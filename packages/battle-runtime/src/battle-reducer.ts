@@ -662,6 +662,15 @@ export type SpellObjectContactDamageActiveEffect = BattleSpellEffectBase & {
     { readonly kind: "concentration" }
   > & { readonly durationTicks: ElapsedTimeTicks };
 };
+export type ObjectContactPenaltyActiveEffect = BattleSpellEffectBase & {
+  readonly kind: "selfAttackRollAndAbilityCheckRollMode";
+  readonly sourceEffectId: BattleSpellEffectOccurrenceId;
+  readonly mode: Extract<AttackRollMode, "disadvantage">;
+  readonly expiresAt: Extract<
+    BattleActiveEffectExpiration,
+    { readonly kind: "startOfTurn" }
+  >;
+};
 export type BattleActiveEffect =
   | (BattleUnitFeatureEffectBase & {
       readonly kind: "bardicInspirationDie";
@@ -1098,6 +1107,7 @@ export type BattleActiveEffect =
     })
   | SpellCreatedHeldObjectActiveEffect
   | SpellObjectContactDamageActiveEffect
+  | ObjectContactPenaltyActiveEffect
   | (BattleSpellEffectBase & {
       readonly kind: "dancingLights";
       readonly expiresAt: Extract<
@@ -1292,6 +1302,7 @@ export type BattleInterruptedProcedure =
       readonly events: readonly BattleAfterDamageEvent[];
       readonly objectDamages: readonly BattleObjectDamageOutcome[];
       readonly objectIgnitions: readonly BattleObjectIgnitionOutcome[];
+      readonly droppedObjects: readonly BattleDroppedObjectOutcome[];
     }
   | {
       readonly kind: "weaponMasteryCleave";
@@ -1312,6 +1323,7 @@ export type BattleInterruptedProcedure =
       readonly events: readonly BattleAfterDamageEvent[];
       readonly objectDamages: readonly BattleObjectDamageOutcome[];
       readonly objectIgnitions: readonly BattleObjectIgnitionOutcome[];
+      readonly droppedObjects: readonly BattleDroppedObjectOutcome[];
     }
   | {
       readonly kind: "commandApproachMovement";
@@ -1902,6 +1914,14 @@ export type BattleTargetSpatialFact =
       readonly sourceSpellId: SpellRecord["id"];
       readonly objectId: BattleObjectId;
       readonly rangeFeet: MovementFeet;
+    }
+  | {
+      readonly kind: "spellObjectHoldingOrWearing";
+      readonly sourceCombatantId: CombatantId;
+      readonly sourceSpellId: SpellRecord["id"];
+      readonly objectId: BattleObjectId;
+      readonly targetId: CombatantId;
+      readonly relation: "holding" | "wearing";
     }
   | {
       readonly kind: "spellLeapTargetWithinRange";
@@ -2960,7 +2980,10 @@ export type SpellCreatedHeldObjectSpellInvocation =
       readonly resource: NoSpellInvocationResource;
       readonly procedure: "spellCreatedHeldObjectAttack";
       readonly spell: SpellRecord;
-      readonly targeting: Extract<SpellTargeting, { readonly kind: "singleCombatant" }>;
+      readonly targeting: Extract<
+        SpellTargeting,
+        { readonly kind: "singleCombatant" }
+      >;
       readonly damage: SpellCreatedHeldObjectActiveEffect["attack"]["damage"];
       readonly rangeFeet: MovementFeet;
       readonly attackKind: SpellCreatedHeldObjectActiveEffect["attack"]["attackKind"];
@@ -4032,7 +4055,8 @@ export type BattleObjectContactTargetSpatialFact = Extract<
   {
     readonly kind:
       | "spellObjectPhysicalContact"
-      | "spellObjectWithinSpellRange";
+      | "spellObjectWithinSpellRange"
+      | "spellObjectHoldingOrWearing";
   }
 >;
 export type BattleObjectContactTargetsHole = {
@@ -4049,6 +4073,46 @@ export type BattleObjectContactTargetsHole = {
   };
   readonly choices: readonly CombatantId[];
   readonly requiresTableSpatialFact: true;
+};
+export type BattleObjectContactSavingThrowOutcomeHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "savingThrowOutcome";
+  readonly label: string;
+  readonly objectContactSave: {
+    readonly sourceCombatantId: CombatantId;
+    readonly sourceSpellId: SpellId;
+    readonly objectId: BattleObjectId;
+    readonly targetIds: readonly CombatantId[];
+  };
+  readonly ability: Extract<Ability, "con">;
+  readonly dc: Extract<DcSource, { readonly kind: "caster_spell_save_dc" }>;
+  readonly areaChoices: readonly [];
+  readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
+  readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
+};
+export type BattleObjectDropResolution =
+  | {
+      readonly targetId: CombatantId;
+      readonly capability: { readonly kind: "canDrop" };
+      readonly result: { readonly kind: "dropped" };
+    }
+  | {
+      readonly targetId: CombatantId;
+      readonly capability: { readonly kind: "cannotDrop" };
+      readonly result: { readonly kind: "notDropped" };
+    };
+export type BattleObjectDropResolutionHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "objectDropResolution";
+  readonly label: string;
+  readonly objectDrop: {
+    readonly sourceCombatantId: CombatantId;
+    readonly sourceSpellId: SpellId;
+    readonly objectId: BattleObjectId;
+    readonly targetIds: readonly CombatantId[];
+  };
 };
 export type BattleSpellCastReactionFactsHole = {
   readonly holeInstanceKey: HoleInstanceKey;
@@ -4084,10 +4148,7 @@ export type BattleSpellAreaChoiceHole = {
   readonly spell: Extract<
     SupportedSpellInvocation,
     {
-      readonly procedure:
-        | "fogCloudObscurement"
-        | "flamingSphere"
-        | "moonbeam";
+      readonly procedure: "fogCloudObscurement" | "flamingSphere" | "moonbeam";
     }
   >;
   readonly area: Extract<
@@ -5047,6 +5108,8 @@ export type BattleHole =
   | BattleWardingBondSeparationFactsHole
   | BattleObjectTargetChoiceHole
   | BattleObjectContactTargetsHole
+  | BattleObjectContactSavingThrowOutcomeHole
+  | BattleObjectDropResolutionHole
   | BattleSpellAreaChoiceHole
   | BattleTeleportDestinationHole
   | BattleHeldObjectFactsHole
@@ -5225,6 +5288,13 @@ export type BattleFill =
         readonly targetIds: readonly CombatantId[];
       };
       readonly spatialFacts: readonly BattleObjectContactTargetSpatialFact[];
+    }
+  | {
+      readonly kind: "objectDropResolution";
+      readonly holeId: BattleHoleId;
+      readonly value: {
+        readonly outcomes: readonly BattleObjectDropResolution[];
+      };
     }
   | {
       readonly kind: "spellAreaChoice";

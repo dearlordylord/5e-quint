@@ -858,20 +858,18 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
                   }),
                 );
           return applyPreparedSlotSpellDamage(state, targetId, damageAmount, {
-                concentrationSavingThrow:
-                  concentrationSaveByTargetId.get(targetId),
-                wardingBondDamageShareConcentrationSavingThrows:
-                  concentrationLifecycleFills,
-                damageDisposition: damageDispositionForTarget(
-                  burstDamageDispositionHoles,
-                  input.fillSet.damageDispositions,
-                  targetId,
-                ),
-                hideousLaughterDamageRepeatSaves:
-                  hideousLaughterLifecycleFills,
-                hideousLaughterDamageRepeatSaveEventKey: burstDamageEventKey,
-                damageSourceId: input.actorId,
-              });
+            concentrationSavingThrow: concentrationSaveByTargetId.get(targetId),
+            wardingBondDamageShareConcentrationSavingThrows:
+              concentrationLifecycleFills,
+            damageDisposition: damageDispositionForTarget(
+              burstDamageDispositionHoles,
+              input.fillSet.damageDispositions,
+              targetId,
+            ),
+            hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
+            hideousLaughterDamageRepeatSaveEventKey: burstDamageEventKey,
+            damageSourceId: input.actorId,
+          });
         }, damagedByAttackWithConcentration);
 
   const spentResources = spendSpellCastResources({
@@ -923,6 +921,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
     events: afterDamageEvents,
     objectDamages: [],
     objectIgnitions: [],
+    droppedObjects: [],
     suppressedReactionTrigger: input.input.suppressedReactionTrigger,
   });
   if (afterDamageReactionWindow.tag === "needsHoles") {

@@ -1,6 +1,10 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 
 import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
+import {
+  holeId,
+  holeInstanceKey,
+} from "@dnd/shared-algebras/runtime-hole-algebra";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import { Either } from "effect";
 import {
@@ -9,18 +13,25 @@ import {
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type BattleAfterDamageEvent,
+  type BattleCreatureState,
+  type BattleDroppedObjectOutcome,
   type BattleHoleId,
+  type BattleObjectContactSavingThrowOutcomeHole,
   type BattleObjectContactTargetSpatialFact,
+  type BattleObjectDropResolutionHole,
   type BattleResolutionResult,
   type BattleState,
   type BonusActionSpellBattleResolutionInput,
+  type ObjectContactPenaltyActiveEffect,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import type { BattleReactionTrigger } from "../battle-reaction-triggers.ts";
 import {
   battleSpellEffectOccurrenceId,
   type BattleObjectId,
+  type BattleSpellEffectOccurrenceId,
   type CombatantId,
+  spellId,
 } from "../identity.ts";
 import {
   damageDispositionFillFor,
@@ -42,6 +53,7 @@ import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-target
 import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
 import {
   applyPreparedSlotSpellDamage,
+  savingThrowRollModeProjections,
   spellDamageAmountForTarget,
   spellDamageHole,
   validateSpellDamageFill,
@@ -55,6 +67,7 @@ import {
   spellObjectContactTargetsHoleId,
   spellObjectTargetHole,
 } from "./spells-targeting.ts";
+import { wardingBondSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
 
 type ObjectContactDamageInvocation = Extract<
   SupportedSpellInvocation,
@@ -68,6 +81,23 @@ type ObjectContactDamageAnyInvocation =
   | ObjectContactDamageInvocation
   | ObjectContactDamageRepeatInvocation;
 type OkSpellFillSet = Extract<SpellFillSet, { readonly tag: "ok" }>;
+type ObjectContactHoldingOrWearingRelation = Extract<
+  BattleObjectContactTargetSpatialFact,
+  { readonly kind: "spellObjectHoldingOrWearing" }
+>["relation"];
+type ObjectContactTargetSelection = {
+  readonly tag: "ok";
+  readonly targetIds: readonly CombatantId[];
+  readonly spatialFacts: readonly BattleObjectContactTargetSpatialFact[];
+  readonly holdingOrWearingByTarget: ReadonlyMap<
+    CombatantId,
+    ObjectContactHoldingOrWearingRelation
+  >;
+};
+type DamagedHoldingOrWearingTarget = {
+  readonly targetId: CombatantId;
+  readonly target: BattleCreatureState;
+};
 
 export function resolveObjectContactDamageSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
@@ -176,8 +206,10 @@ export function resolveObjectContactDamageSpellAct(input: {
       fillSet: input.fillSet,
       actorId: input.actorId,
       invocation: input.invocation,
+      objectId: objectTarget.objectId,
       targetIds: contactSelection.targetIds,
       contactFacts: contactSelection.spatialFacts,
+      holdingOrWearingByTarget: contactSelection.holdingOrWearingByTarget,
     });
     if (damageResolution.tag !== "resolved") {
       return damageResolution;
@@ -186,6 +218,7 @@ export function resolveObjectContactDamageSpellAct(input: {
       state: damageResolution.state,
       subject: input.input.subject,
       events: damageResolution.events,
+      droppedObjects: damageResolution.droppedObjects,
       suppressedReactionTrigger: input.input.suppressedReactionTrigger,
     });
   }
@@ -197,8 +230,10 @@ export function resolveObjectContactDamageSpellAct(input: {
     fillSet: input.fillSet,
     actorId: input.actorId,
     invocation: input.invocation,
+    objectId: objectTarget.objectId,
     targetIds: contactSelection.targetIds,
     contactFacts: contactSelection.spatialFacts,
+    holdingOrWearingByTarget: contactSelection.holdingOrWearingByTarget,
   });
   if (damageResolution.tag !== "resolved") {
     return damageResolution;
@@ -222,6 +257,7 @@ export function resolveObjectContactDamageSpellAct(input: {
     state: effected,
     subject: input.input.subject,
     events: damageResolution.events,
+    droppedObjects: damageResolution.droppedObjects,
     suppressedReactionTrigger: input.input.suppressedReactionTrigger,
   });
 }
@@ -270,8 +306,10 @@ export function resolveObjectContactDamageRepeatSpellAct(input: {
     fillSet: input.fillSet,
     actorId: input.actorId,
     invocation: input.invocation,
+    objectId: input.invocation.activeEffect.objectId,
     targetIds: contactSelection.targetIds,
     contactFacts: contactSelection.spatialFacts,
+    holdingOrWearingByTarget: contactSelection.holdingOrWearingByTarget,
   });
   if (damageResolution.tag !== "resolved") {
     return damageResolution;
@@ -291,6 +329,7 @@ export function resolveObjectContactDamageRepeatSpellAct(input: {
     state: { ...damageResolution.state, currentTurnResources: spent.right },
     subject: input.input.subject,
     events: damageResolution.events,
+    droppedObjects: damageResolution.droppedObjects,
     suppressedReactionTrigger: input.input.suppressedReactionTrigger,
   });
 }
@@ -303,13 +342,12 @@ function validateObjectContactTargets(input: {
   readonly fillSet: OkSpellFillSet;
   readonly requiresObjectWithinRange: boolean;
 }):
-  | { readonly tag: "needsHoles"; readonly hole: ReturnType<typeof spellObjectContactTargetsHole> }
-  | { readonly tag: "invalid"; readonly message: string }
   | {
-      readonly tag: "ok";
-      readonly targetIds: readonly CombatantId[];
-      readonly spatialFacts: readonly BattleObjectContactTargetSpatialFact[];
-    } {
+      readonly tag: "needsHoles";
+      readonly hole: ReturnType<typeof spellObjectContactTargetsHole>;
+    }
+  | { readonly tag: "invalid"; readonly message: string }
+  | ObjectContactTargetSelection {
   const hole = spellObjectContactTargetsHole({
     state: input.state,
     sourceCombatantId: input.actorId,
@@ -362,10 +400,7 @@ function validateObjectContactTargets(input: {
       fact.objectId === input.objectId &&
       fact.rangeFeet === input.invocation.rangeFeet,
   );
-  if (
-    input.requiresObjectWithinRange &&
-    matchingRangeFacts.length !== 1
-  ) {
+  if (input.requiresObjectWithinRange && matchingRangeFacts.length !== 1) {
     return {
       tag: "invalid",
       message:
@@ -420,10 +455,49 @@ function validateObjectContactTargets(input: {
         "Every object-contact target must have a matching physical-contact witness.",
     };
   }
+  const holdingOrWearingFacts = fill.spatialFacts.filter(
+    (
+      fact,
+    ): fact is Extract<
+      BattleObjectContactTargetSpatialFact,
+      { readonly kind: "spellObjectHoldingOrWearing" }
+    > => fact.kind === "spellObjectHoldingOrWearing",
+  );
+  const matchingHoldingOrWearingFacts = holdingOrWearingFacts.filter(
+    (fact) =>
+      fact.sourceCombatantId === input.actorId &&
+      fact.sourceSpellId === input.invocation.spell.id &&
+      fact.objectId === input.objectId &&
+      selectedTargetIds.has(fact.targetId),
+  );
+  if (matchingHoldingOrWearingFacts.length !== holdingOrWearingFacts.length) {
+    return {
+      tag: "invalid",
+      message:
+        "Holding-or-wearing witnesses must match selected object-contact targets.",
+    };
+  }
+  const holdingOrWearingTargets = new Set(
+    matchingHoldingOrWearingFacts.map((fact) => fact.targetId),
+  );
+  if (holdingOrWearingTargets.size !== matchingHoldingOrWearingFacts.length) {
+    return {
+      tag: "invalid",
+      message:
+        "Object-contact target fill must not repeat a holding-or-wearing witness for the same combatant.",
+    };
+  }
+  const holdingOrWearingByTarget = new Map<
+    CombatantId,
+    ObjectContactHoldingOrWearingRelation
+  >(
+    matchingHoldingOrWearingFacts.map((fact) => [fact.targetId, fact.relation]),
+  );
   return {
     tag: "ok",
     targetIds,
     spatialFacts: fill.spatialFacts,
+    holdingOrWearingByTarget,
   };
 }
 
@@ -431,26 +505,39 @@ function resolveObjectContactDamage(input: {
   readonly state: BattleState;
   readonly needsHolesState?: BattleState;
   readonly errorState: BattleState;
-  readonly subject: ActionSpellBattleResolutionInput["subject"] | BonusActionSpellBattleResolutionInput["subject"];
+  readonly subject:
+    | ActionSpellBattleResolutionInput["subject"]
+    | BonusActionSpellBattleResolutionInput["subject"];
   readonly fillSet: OkSpellFillSet;
   readonly actorId: CombatantId;
   readonly invocation: ObjectContactDamageAnyInvocation;
+  readonly objectId: BattleObjectId;
   readonly targetIds: readonly CombatantId[];
   readonly contactFacts: readonly BattleObjectContactTargetSpatialFact[];
+  readonly holdingOrWearingByTarget: ReadonlyMap<
+    CombatantId,
+    ObjectContactHoldingOrWearingRelation
+  >;
 }):
   | {
       readonly tag: "resolved";
       readonly state: BattleState;
       readonly events: readonly BattleAfterDamageEvent[];
+      readonly droppedObjects: readonly BattleDroppedObjectOutcome[];
     }
-  | Extract<BattleResolutionResult, { readonly tag: "needsHoles" | "invalid" }> {
+  | Extract<
+      BattleResolutionResult,
+      { readonly tag: "needsHoles" | "invalid" }
+    > {
   const needsHolesState = input.needsHolesState ?? input.state;
   if (input.targetIds.length === 0) {
     if (
       input.fillSet.damageRoll !== undefined ||
       input.fillSet.concentrationSavingThrows.length > 0 ||
       input.fillSet.damageDispositions.length > 0 ||
-      input.fillSet.hideousLaughterDamageRepeatSaves.length > 0
+      input.fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
+      input.fillSet.objectContactSavingThrowOutcome !== undefined ||
+      input.fillSet.objectDropResolution !== undefined
     ) {
       return invalidResult(
         input.errorState,
@@ -458,7 +545,12 @@ function resolveObjectContactDamage(input: {
         "Object-contact damage fills are not valid when no contact creatures are selected.",
       );
     }
-    return { tag: "resolved", state: input.state, events: [] };
+    return {
+      tag: "resolved",
+      state: input.state,
+      events: [],
+      droppedObjects: [],
+    };
   }
   if (input.fillSet.damageRoll === undefined) {
     return needsHolesResult(needsHolesState, input.subject, [
@@ -612,6 +704,108 @@ function resolveObjectContactDamage(input: {
       "Hideous Laughter damage repeat save fill must match a requested damaged target.",
     );
   }
+  const damagedHoldingOrWearingTargets =
+    objectContactDamagedHoldingOrWearingTargets(input);
+  const objectContactSaveHole = objectContactSavingThrowOutcomeHole({
+    state: input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    objectId: input.objectId,
+    targets: damagedHoldingOrWearingTargets,
+  });
+  if (
+    objectContactSaveHole === null &&
+    input.fillSet.objectContactSavingThrowOutcome !== undefined
+  ) {
+    return invalidResult(
+      input.errorState,
+      "invalidFill",
+      "Object-contact saving throw outcome is only valid for a damaged creature holding or wearing the spell object.",
+    );
+  }
+  if (
+    objectContactSaveHole !== null &&
+    input.fillSet.objectContactSavingThrowOutcome === undefined
+  ) {
+    return needsHolesResult(needsHolesState, input.subject, [
+      objectContactSaveHole,
+    ]);
+  }
+  if (
+    objectContactSaveHole !== null &&
+    input.fillSet.objectContactSavingThrowOutcome !== undefined
+  ) {
+    const saveValidation = objectContactSavingThrowFillValidation({
+      fill: input.fillSet.objectContactSavingThrowOutcome,
+      hole: objectContactSaveHole,
+    });
+    if (saveValidation !== null) {
+      return invalidResult(input.errorState, "invalidFill", saveValidation);
+    }
+  }
+  const failedSaveTargetIds =
+    input.fillSet.objectContactSavingThrowOutcome === undefined
+      ? []
+      : input.fillSet.objectContactSavingThrowOutcome.value.outcomes
+          .filter((outcome) => !outcome.succeeded)
+          .map((outcome) => outcome.targetId);
+  const objectDropHole =
+    failedSaveTargetIds.length === 0
+      ? null
+      : objectDropResolutionHole({
+          actorId: input.actorId,
+          invocation: input.invocation,
+          objectId: input.objectId,
+          targetIds: failedSaveTargetIds,
+        });
+  if (
+    objectDropHole === null &&
+    input.fillSet.objectDropResolution !== undefined
+  ) {
+    return invalidResult(
+      input.errorState,
+      "invalidFill",
+      "Object drop resolution is only valid for failed object-contact saving throws.",
+    );
+  }
+  if (
+    objectDropHole !== null &&
+    input.fillSet.objectDropResolution === undefined
+  ) {
+    return needsHolesResult(needsHolesState, input.subject, [objectDropHole]);
+  }
+  if (
+    objectDropHole !== null &&
+    input.fillSet.objectDropResolution !== undefined
+  ) {
+    const dropValidation = objectDropResolutionFillValidation({
+      fill: input.fillSet.objectDropResolution,
+      hole: objectDropHole,
+    });
+    if (dropValidation !== null) {
+      return invalidResult(input.errorState, "invalidFill", dropValidation);
+    }
+  }
+  const droppedObjects =
+    input.fillSet.objectDropResolution?.value.outcomes.flatMap(
+      (outcome): readonly BattleDroppedObjectOutcome[] =>
+        outcome.result.kind === "dropped"
+          ? [
+              {
+                kind: "heldObjectDropped",
+                actorId: outcome.targetId,
+                objectId: input.objectId,
+                sourceCombatantId: input.actorId,
+                sourceSpellId: spellId(input.invocation.spell.id),
+              },
+            ]
+          : [],
+    ) ?? [];
+  const penaltyTargetIds =
+    input.fillSet.objectDropResolution?.value.outcomes.flatMap(
+      (outcome): readonly CombatantId[] =>
+        outcome.result.kind === "notDropped" ? [outcome.targetId] : [],
+    ) ?? [];
   const damaged = input.targetIds.reduce((state, targetId) => {
     const target = state.combatants.get(targetId);
     if (target === undefined || input.fillSet.damageRoll === undefined) {
@@ -665,33 +859,274 @@ function resolveObjectContactDamage(input: {
       damageSourceId: input.actorId,
     });
   }, input.state);
+  const penalized = applyObjectContactPenalties({
+    state: damaged,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    objectId: input.objectId,
+    targetIds: penaltyTargetIds,
+  });
   return {
     tag: "resolved",
-    state: damaged,
-    events: input.targetIds.flatMap((targetId): readonly BattleAfterDamageEvent[] => {
-      const target = input.state.combatants.get(targetId);
-      if (target === undefined || input.fillSet.damageRoll === undefined) {
-        return [];
-      }
-      const damageAmount = spellDamageAmountForTarget(
-        target,
-        input.invocation,
-        input.fillSet.damageRoll,
-      );
-      return [
-        {
-          damageSourceId: input.actorId,
-          damagedId: targetId,
-          damageAmount: toDamageAmount(damageAmount),
-          reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
-            facts: input.contactFacts,
-            damagedId: targetId,
+    state: penalized,
+    droppedObjects,
+    events: input.targetIds.flatMap(
+      (targetId): readonly BattleAfterDamageEvent[] => {
+        const target = input.state.combatants.get(targetId);
+        if (target === undefined || input.fillSet.damageRoll === undefined) {
+          return [];
+        }
+        const damageAmount = spellDamageAmountForTarget(
+          target,
+          input.invocation,
+          input.fillSet.damageRoll,
+        );
+        return [
+          {
             damageSourceId: input.actorId,
-          }),
-        },
-      ];
-    }),
+            damagedId: targetId,
+            damageAmount: toDamageAmount(damageAmount),
+            reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
+              facts: input.contactFacts,
+              damagedId: targetId,
+              damageSourceId: input.actorId,
+            }),
+          },
+        ];
+      },
+    ),
   };
+}
+
+function objectContactDamagedHoldingOrWearingTargets(input: {
+  readonly state: BattleState;
+  readonly fillSet: OkSpellFillSet;
+  readonly invocation: ObjectContactDamageAnyInvocation;
+  readonly targetIds: readonly CombatantId[];
+  readonly holdingOrWearingByTarget: ReadonlyMap<
+    CombatantId,
+    ObjectContactHoldingOrWearingRelation
+  >;
+}): readonly DamagedHoldingOrWearingTarget[] {
+  return input.targetIds.flatMap((targetId) => {
+    const relation = input.holdingOrWearingByTarget.get(targetId);
+    const target = input.state.combatants.get(targetId);
+    if (
+      relation === undefined ||
+      target === undefined ||
+      input.fillSet.damageRoll === undefined
+    ) {
+      return [];
+    }
+    const damageAmount = spellDamageAmountForTarget(
+      target,
+      input.invocation,
+      input.fillSet.damageRoll,
+    );
+    return damageAmount <= 0 ? [] : [{ targetId, target }];
+  });
+}
+
+function objectContactSavingThrowOutcomeHole(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly invocation: ObjectContactDamageAnyInvocation;
+  readonly objectId: BattleObjectId;
+  readonly targets: readonly DamagedHoldingOrWearingTarget[];
+}): BattleObjectContactSavingThrowOutcomeHole | null {
+  if (input.targets.length === 0) {
+    return null;
+  }
+  const key = objectContactSavingThrowOutcomeHoleKey({
+    actorId: input.actorId,
+    spellId: input.invocation.spell.id,
+    objectId: input.objectId,
+  });
+  return {
+    kind: "savingThrowOutcome",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: `${input.invocation.spell.name} holding or wearing Constitution save`,
+    objectContactSave: {
+      sourceCombatantId: input.actorId,
+      sourceSpellId: spellId(input.invocation.spell.id),
+      objectId: input.objectId,
+      targetIds: input.targets.map((target) => target.targetId),
+    },
+    ability: "con",
+    dc: { kind: "caster_spell_save_dc" },
+    areaChoices: [],
+    targetRollModes: savingThrowRollModeProjections(input.state, "con"),
+    targetFlatBonuses: input.targets.flatMap((target) =>
+      wardingBondSavingThrowFlatBonusProjectionsForTarget(target.target),
+    ),
+  };
+}
+
+function objectContactSavingThrowOutcomeHoleKey(input: {
+  readonly actorId: CombatantId;
+  readonly spellId: string;
+  readonly objectId: BattleObjectId;
+}): string {
+  return `battle:spell:object-contact-damage:holding-wearing-save:${input.actorId}:${input.spellId}:${input.objectId}`;
+}
+
+function objectContactSavingThrowFillValidation(input: {
+  readonly fill: Extract<OkSpellFillSet["objectContactSavingThrowOutcome"], {}>;
+  readonly hole: BattleObjectContactSavingThrowOutcomeHole;
+}): string | null {
+  if (input.fill.holeId !== input.hole.holeId) {
+    return "Object-contact saving throw outcome must use the selected spell object save hole.";
+  }
+  if ("area" in input.fill.value) {
+    return "Object-contact saving throw outcome must not include area facts.";
+  }
+  return exactOutcomeTargetsValidation({
+    outcomes: input.fill.value.outcomes,
+    targetIds: input.hole.objectContactSave.targetIds,
+    message:
+      "Object-contact saving throw outcomes must match damaged holding-or-wearing targets exactly once.",
+  });
+}
+
+function objectDropResolutionHole(input: {
+  readonly actorId: CombatantId;
+  readonly invocation: ObjectContactDamageAnyInvocation;
+  readonly objectId: BattleObjectId;
+  readonly targetIds: readonly CombatantId[];
+}): BattleObjectDropResolutionHole {
+  const key = objectDropResolutionHoleKey({
+    actorId: input.actorId,
+    spellId: input.invocation.spell.id,
+    objectId: input.objectId,
+  });
+  return {
+    kind: "objectDropResolution",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: `${input.invocation.spell.name} object drop resolution`,
+    objectDrop: {
+      sourceCombatantId: input.actorId,
+      sourceSpellId: spellId(input.invocation.spell.id),
+      objectId: input.objectId,
+      targetIds: input.targetIds,
+    },
+  };
+}
+
+function objectDropResolutionHoleKey(input: {
+  readonly actorId: CombatantId;
+  readonly spellId: string;
+  readonly objectId: BattleObjectId;
+}): string {
+  return `battle:spell:object-contact-damage:drop-resolution:${input.actorId}:${input.spellId}:${input.objectId}`;
+}
+
+function objectDropResolutionFillValidation(input: {
+  readonly fill: Extract<OkSpellFillSet["objectDropResolution"], {}>;
+  readonly hole: BattleObjectDropResolutionHole;
+}): string | null {
+  if (input.fill.holeId !== input.hole.holeId) {
+    return "Object drop resolution must use the selected spell object drop hole.";
+  }
+  return exactOutcomeTargetsValidation({
+    outcomes: input.fill.value.outcomes,
+    targetIds: input.hole.objectDrop.targetIds,
+    message:
+      "Object drop resolution outcomes must match failed object-contact saves exactly once.",
+  });
+}
+
+function exactOutcomeTargetsValidation(input: {
+  readonly outcomes: readonly { readonly targetId: CombatantId }[];
+  readonly targetIds: readonly CombatantId[];
+  readonly message: string;
+}): string | null {
+  const outcomeTargetIds = input.outcomes.map((outcome) => outcome.targetId);
+  if (outcomeTargetIds.length !== new Set(outcomeTargetIds).size) {
+    return input.message;
+  }
+  const targetIds = new Set(input.targetIds);
+  if (
+    outcomeTargetIds.length !== targetIds.size ||
+    outcomeTargetIds.some((targetId) => !targetIds.has(targetId))
+  ) {
+    return input.message;
+  }
+  return null;
+}
+
+function applyObjectContactPenalties(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly invocation: ObjectContactDamageAnyInvocation;
+  readonly objectId: BattleObjectId;
+  readonly targetIds: readonly CombatantId[];
+}): BattleState {
+  if (input.targetIds.length === 0) {
+    return input.state;
+  }
+  const sourceEffectId = objectContactDamageEffectId({
+    actorId: input.actorId,
+    spellId: input.invocation.spell.id,
+    objectId: input.objectId,
+  });
+  if (
+    !objectContactDamageEffectIsActive({
+      state: input.state,
+      actorId: input.actorId,
+      effectId: sourceEffectId,
+    })
+  ) {
+    return input.state;
+  }
+  let combatants = input.state.combatants;
+  for (const targetId of input.targetIds) {
+    const target = combatants.get(targetId);
+    if (target === undefined) {
+      continue;
+    }
+    const effect: ObjectContactPenaltyActiveEffect = {
+      kind: "selfAttackRollAndAbilityCheckRollMode",
+      sourceEffectId,
+      sourceSpellId: input.invocation.spell.id,
+      sourceCombatantId: input.actorId,
+      mode: "disadvantage",
+      expiresAt: {
+        kind: "startOfTurn",
+        combatantId: input.actorId,
+      },
+    };
+    combatants = new Map(combatants).set(targetId, {
+      ...target,
+      activeEffects: [
+        ...target.activeEffects.filter(
+          (candidate) =>
+            !(
+              candidate.kind === "selfAttackRollAndAbilityCheckRollMode" &&
+              candidate.sourceEffectId === effect.sourceEffectId
+            ),
+        ),
+        effect,
+      ],
+    });
+  }
+  return { ...input.state, combatants };
+}
+
+function objectContactDamageEffectIsActive(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly effectId: BattleSpellEffectOccurrenceId;
+}): boolean {
+  const actor = input.state.combatants.get(input.actorId);
+  return (
+    actor?.activeEffects.some(
+      (effect) =>
+        effect.kind === "spellObjectContactDamage" &&
+        effect.effectId === input.effectId,
+    ) ?? false
+  );
 }
 
 function applyObjectContactDamageActiveEffect(input: {
@@ -706,9 +1141,11 @@ function applyObjectContactDamageActiveEffect(input: {
   }
   const effect = {
     kind: "spellObjectContactDamage" as const,
-    effectId: battleSpellEffectOccurrenceId(
-      `${input.actorId}:${input.invocation.spell.id}:${input.objectId}`,
-    ),
+    effectId: objectContactDamageEffectId({
+      actorId: input.actorId,
+      spellId: input.invocation.spell.id,
+      objectId: input.objectId,
+    }),
     sourceSpellId: input.invocation.spell.id,
     sourceCombatantId: input.actorId,
     objectId: input.objectId,
@@ -742,10 +1179,23 @@ function applyObjectContactDamageActiveEffect(input: {
   };
 }
 
+function objectContactDamageEffectId(input: {
+  readonly actorId: CombatantId;
+  readonly spellId: string;
+  readonly objectId: BattleObjectId;
+}): BattleSpellEffectOccurrenceId {
+  return battleSpellEffectOccurrenceId(
+    `${input.actorId}:${input.spellId}:${input.objectId}`,
+  );
+}
+
 function finishObjectContactDamageResolution(input: {
   readonly state: BattleState;
-  readonly subject: ActionSpellBattleResolutionInput["subject"] | BonusActionSpellBattleResolutionInput["subject"];
+  readonly subject:
+    | ActionSpellBattleResolutionInput["subject"]
+    | BonusActionSpellBattleResolutionInput["subject"];
   readonly events: readonly BattleAfterDamageEvent[];
+  readonly droppedObjects: readonly BattleDroppedObjectOutcome[];
   readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
 }): BattleResolutionResult {
   if (input.events.length > 0) {
@@ -755,6 +1205,7 @@ function finishObjectContactDamageResolution(input: {
       events: input.events,
       objectDamages: [],
       objectIgnitions: [],
+      droppedObjects: input.droppedObjects,
       suppressedReactionTrigger: input.suppressedReactionTrigger,
     });
     if (afterDamageReactionWindow.tag === "needsHoles") {
@@ -765,6 +1216,9 @@ function finishObjectContactDamageResolution(input: {
     tag: "resolved",
     state: input.state,
     snapshot: snapshotBattle(input.state),
+    ...(input.droppedObjects.length === 0
+      ? {}
+      : { droppedObjects: input.droppedObjects }),
   };
 }
 

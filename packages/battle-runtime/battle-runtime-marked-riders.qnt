@@ -128,6 +128,12 @@ module battleRuntimeMarkedRiders {
       | _ => false
     })) AdvantageAbilityCheck else NormalAbilityCheck
 
+  pure def heatMetalHoldingWearingPenaltyAbilityCheckRollMode(effects: Set[ActiveEffect]): AbilityCheckRollMode =
+    if (effects.exists(effect => match effect {
+      | HeatMetalHoldingWearingPenalty(_) => true
+      | _ => false
+    })) DisadvantageAbilityCheck else NormalAbilityCheck
+
   pure def requiredAbilityCheckRollMode(
     disadvantageMode: AbilityCheckRollMode,
     advantageMode: AbilityCheckRollMode,

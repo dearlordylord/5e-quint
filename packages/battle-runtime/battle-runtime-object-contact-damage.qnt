@@ -36,11 +36,14 @@ module battleRuntimeObjectContactDamage {
       | _ => true
     })
 
-  pure def heatMetalObjectContactDamageActive(state: BattleState, objectId: int): bool =
-    state.fighter.activeEffects.exists(effect => match effect {
+  pure def heatMetalObjectContactDamageActiveForCombatant(combatant: Combatant, objectId: int): bool =
+    combatant.activeEffects.exists(effect => match effect {
       | HeatMetalObjectContactDamage(data) => data.objectId == objectId
       | _ => false
     })
+
+  pure def heatMetalObjectContactDamageActive(state: BattleState, objectId: int): bool =
+    heatMetalObjectContactDamageActiveForCombatant(state.fighter, objectId)
 
   pure def heatMetalObjectContactDamageActiveDamageDice(state: BattleState, objectId: int): int =
     state.fighter.activeEffects
@@ -81,31 +84,119 @@ module battleRuntimeObjectContactDamage {
       Fighter,
     )
 
+  pure def heatMetalHoldingWearingPenaltyEffect(source: Actor, objectId: int): ActiveEffect =
+    HeatMetalHoldingWearingPenalty({
+      source: source,
+      objectId: objectId,
+      expiresAtActor: source,
+    })
+
+  pure def heatMetalFailedHoldingWearingSaveTargets(
+    contactTargets: Set[Actor],
+    holdingOrWearingTargets: Set[Actor],
+    saveSucceededTargets: Set[Actor],
+  ): Set[Actor] =
+    contactTargets
+      .filter(target => holdingOrWearingTargets.contains(target))
+      .filter(target => not(saveSucceededTargets.contains(target)))
+
+  pure def heatMetalDropWitnessesValid(
+    failedTargets: Set[Actor],
+    canDropTargets: Set[Actor],
+    droppedTargets: Set[Actor],
+  ): bool =
+    droppedTargets.forall(target => failedTargets.contains(target) and canDropTargets.contains(target)) and
+      failedTargets.forall(target =>
+        if (canDropTargets.contains(target))
+          droppedTargets.contains(target)
+        else
+          not(droppedTargets.contains(target))
+      )
+
+  pure def heatMetalDroppedTargets(
+    contactTargets: Set[Actor],
+    holdingOrWearingTargets: Set[Actor],
+    saveSucceededTargets: Set[Actor],
+    canDropTargets: Set[Actor],
+    droppedTargets: Set[Actor],
+  ): Set[Actor] = {
+    val failedTargets = heatMetalFailedHoldingWearingSaveTargets(contactTargets, holdingOrWearingTargets, saveSucceededTargets)
+    if (heatMetalDropWitnessesValid(failedTargets, canDropTargets, droppedTargets))
+      droppedTargets
+    else
+      Set()
+  }
+
+  pure def heatMetalPenaltyTargets(
+    contactTargets: Set[Actor],
+    holdingOrWearingTargets: Set[Actor],
+    saveSucceededTargets: Set[Actor],
+    canDropTargets: Set[Actor],
+    droppedTargets: Set[Actor],
+  ): Set[Actor] = {
+    val failedTargets = heatMetalFailedHoldingWearingSaveTargets(contactTargets, holdingOrWearingTargets, saveSucceededTargets)
+    if (heatMetalDropWitnessesValid(failedTargets, canDropTargets, droppedTargets))
+      failedTargets.filter(target => not(droppedTargets.contains(target)))
+    else
+      Set()
+  }
+
   pure def stateAfterHeatMetalContactDamage(
     state: BattleState,
+    objectId: int,
     contactTargets: Set[Actor],
+    holdingOrWearingTargets: Set[Actor],
+    saveSucceededTargets: Set[Actor],
+    canDropTargets: Set[Actor],
+    droppedTargets: Set[Actor],
     rolledDamage: int,
     fighterConcentrationSaveSucceeded: bool,
     goblinConcentrationSaveSucceeded: bool,
-  ): BattleState =
+  ): BattleState = {
+    val penaltyTargets = heatMetalPenaltyTargets(
+      contactTargets,
+      holdingOrWearingTargets,
+      saveSucceededTargets,
+      canDropTargets,
+      droppedTargets,
+    )
+    val penalty = heatMetalHoldingWearingPenaltyEffect(Fighter, objectId)
+    val damagedFighter =
+      if (contactTargets.contains(Fighter))
+        combatantWithHeatMetalDamage(state.fighter, rolledDamage, fighterConcentrationSaveSucceeded)
+      else
+        state.fighter
+    val sourceEffectStillActive = heatMetalObjectContactDamageActiveForCombatant(damagedFighter, objectId)
+    val damagedGoblin =
+      if (contactTargets.contains(Goblin))
+        combatantWithHeatMetalDamage(state.goblin, rolledDamage, goblinConcentrationSaveSucceeded)
+      else
+        state.goblin
+    val penalizedFighter =
+      if (penaltyTargets.contains(Fighter) and sourceEffectStillActive)
+        { ...damagedFighter, activeEffects: damagedFighter.activeEffects.exclude(Set(penalty)).union(Set(penalty)) }
+      else
+        damagedFighter
+    val penalizedGoblin =
+      if (penaltyTargets.contains(Goblin) and sourceEffectStillActive)
+        { ...damagedGoblin, activeEffects: damagedGoblin.activeEffects.exclude(Set(penalty)).union(Set(penalty)) }
+      else
+        damagedGoblin
     {
       ...state,
-      fighter:
-        if (contactTargets.contains(Fighter))
-          combatantWithHeatMetalDamage(state.fighter, rolledDamage, fighterConcentrationSaveSucceeded)
-        else
-          state.fighter,
-      goblin:
-        if (contactTargets.contains(Goblin))
-          combatantWithHeatMetalDamage(state.goblin, rolledDamage, goblinConcentrationSaveSucceeded)
-        else
-          state.goblin,
+      fighter: penalizedFighter,
+      goblin: penalizedGoblin,
     }
+  }
 
   pure def resolveHeatMetal(
     state: BattleState,
     objectId: int,
     contactTargets: Set[Actor],
+    holdingOrWearingTargets: Set[Actor],
+    saveSucceededTargets: Set[Actor],
+    canDropTargets: Set[Actor],
+    droppedTargets: Set[Actor],
     slotLevel: int,
     rolledDamage: int,
     fighterConcentrationSaveSucceeded: bool,
@@ -127,7 +218,12 @@ module battleRuntimeObjectContactDamage {
       }, Fighter)
       stateAfterHeatMetalContactDamage(
         cast,
+        objectId,
         contactTargets,
+        holdingOrWearingTargets,
+        saveSucceededTargets,
+        canDropTargets,
+        droppedTargets,
         rolledDamage,
         fighterConcentrationSaveSucceeded,
         goblinConcentrationSaveSucceeded,
@@ -150,6 +246,10 @@ module battleRuntimeObjectContactDamage {
     objectId: int,
     objectWithinRange: bool,
     contactTargets: Set[Actor],
+    holdingOrWearingTargets: Set[Actor],
+    saveSucceededTargets: Set[Actor],
+    canDropTargets: Set[Actor],
+    droppedTargets: Set[Actor],
     rolledDamage: int,
     fighterConcentrationSaveSucceeded: bool,
     goblinConcentrationSaveSucceeded: bool,
@@ -159,7 +259,12 @@ module battleRuntimeObjectContactDamage {
     else {
       val damaged = stateAfterHeatMetalContactDamage(
         state,
+        objectId,
         contactTargets,
+        holdingOrWearingTargets,
+        saveSucceededTargets,
+        canDropTargets,
+        droppedTargets,
         rolledDamage,
         fighterConcentrationSaveSucceeded,
         goblinConcentrationSaveSucceeded,

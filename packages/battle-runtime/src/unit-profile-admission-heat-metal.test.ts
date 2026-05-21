@@ -1,4 +1,4 @@
-// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME heat_metal
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY heat_metal
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-object-contact-damage
 import type { DiceAmount, SpellRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
@@ -19,6 +19,8 @@ import {
   bonusSpellAct,
   maybeBonusSpellAct,
   maybeSpellAct,
+  objectDropResolutionFill,
+  savingThrowOutcomeFill,
   spellAct,
   spellManufacturedMetalObjectTargetFill,
   spellObjectContactTargetsFill,
@@ -26,6 +28,7 @@ import {
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
   battleObjectId,
+  breakBattleConcentration,
   elapsedTimeTicks,
   endTurn,
   Hp,
@@ -33,6 +36,8 @@ import {
   resolveBattleSubject,
   spellSlotInvocationRef,
 } from "./unit-profile-admission-test-support.ts";
+import { requiredAttackRollMode } from "./battle-reducer/attack-roll.ts";
+import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
 
 const heatMetalDurationTicks = elapsedTimeTicks(10);
 type LinearPerLevelDiceAmount = Extract<
@@ -149,6 +154,38 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
       heatMetalWithObjectContactDamageAmount(spell, {
         ...amount,
         perLevel: { ...amount.perLevel, flat: 1 },
+      }),
+    ] as const satisfies readonly SpellRecord[];
+
+    for (const unsupportedSpell of unsupportedSpells) {
+      const state = spellBattle({
+        preparedSpells: [unsupportedSpell],
+        spellSlots: [{ spellLevel: 2, count: 1 }],
+      });
+
+      expect(
+        maybeSpellAct({ state, spellId: heatMetalUnitId }),
+      ).toBeUndefined();
+    }
+  });
+
+  test("support admission rejects Heat Metal holding-or-wearing save shapes outside the runtime projection", () => {
+    const spell = spellRecord(heatMetalUnitId);
+    const save = heatMetalObjectContactHoldingOrWearingSave(spell);
+    const unsupportedSpells = [
+      heatMetalWithObjectContactHoldingOrWearingSave(spell, {
+        ...save,
+        ability: "dex",
+      }),
+      heatMetalWithObjectContactHoldingOrWearingSave(spell, {
+        ...save,
+        onFailure: {
+          ...save.onFailure,
+          fallback: {
+            ...save.onFailure.fallback,
+            on: ["attack_roll"],
+          },
+        },
       }),
     ] as const satisfies readonly SpellRecord[];
 
@@ -382,6 +419,116 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
     );
   });
 
+  test("self-contact failed no-drop save does not apply the penalty after same-occurrence Concentration breaks", () => {
+    const spell = spellRecord(heatMetalUnitId);
+    const objectId = battleObjectId("heat-metal-worn-gauntlet");
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const act = spellAct({ state, spellId: heatMetalUnitId, slotLevel: 2 });
+    const objectFill = spellManufacturedMetalObjectTargetFill({
+      hole: requireHole(act.initialHoles, "objectTargetChoice"),
+      objectId,
+      spellId: heatMetalUnitId,
+      casterId: spellCasterId,
+    });
+    const contactHole = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [objectFill],
+      }),
+      "objectContactTargets",
+    );
+    const contactFill = spellObjectContactTargetsFill({
+      hole: contactHole,
+      targetIds: [spellCasterId],
+      holdingOrWearing: new Map([[spellCasterId, "wearing"]]),
+    });
+    const damageHole = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [objectFill, contactFill],
+      }),
+      "rolledDice",
+    );
+    const damageFill = damageRollFillWithGroups(damageHole, [[4, 5]]);
+    const needsConcentration = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [objectFill, contactFill, damageFill],
+    });
+    const concentrationHole = requireResultHole(
+      needsConcentration,
+      "concentrationSavingThrow",
+    );
+    const concentrationFill = concentrationSavingThrowFill(
+      concentrationHole,
+      false,
+    );
+    const needsSave = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [objectFill, contactFill, damageFill, concentrationFill],
+    });
+    const saveHole = requireResultHole(needsSave, "savingThrowOutcome");
+    const failedSaveFill = savingThrowOutcomeFill(saveHole, [
+      { targetId: spellCasterId, succeeded: false },
+    ]);
+    const needsDrop = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        objectFill,
+        contactFill,
+        damageFill,
+        concentrationFill,
+        failedSaveFill,
+      ],
+    });
+    const dropHole = requireResultHole(needsDrop, "objectDropResolution");
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        objectFill,
+        contactFill,
+        damageFill,
+        concentrationFill,
+        failedSaveFill,
+        objectDropResolutionFill(dropHole, [
+          {
+            targetId: spellCasterId,
+            capability: { kind: "cannotDrop" },
+            result: { kind: "notDropped" },
+          },
+        ]),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Heat Metal self no-drop to resolve.");
+    }
+    const caster = requireCombatant(resolved.state, spellCasterId);
+    expect(caster.concentration).toBeNull();
+    expect(caster.activeEffects).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "spellObjectContactDamage",
+          objectId,
+        }),
+        expect.objectContaining({
+          kind: "selfAttackRollAndAbilityCheckRollMode",
+          sourceEffectId: `${spellCasterId}:${heatMetalUnitId}:${objectId}`,
+        }),
+      ]),
+    );
+  });
+
   test("initial cast can select no contact creatures without requesting damage", () => {
     const spell = spellRecord(heatMetalUnitId);
     const objectId = battleObjectId("heat-metal-empty-contact");
@@ -571,6 +718,360 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
       effectKind: "spellEffect",
     });
   });
+
+  test("damaged wearing target that fails the save and cannot drop takes the attack and ability-check penalty until the caster turn starts", () => {
+    const spell = spellRecord(heatMetalUnitId);
+    const objectId = battleObjectId("heat-metal-worn-breastplate");
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      targetHp: 30,
+      targetMaxHp: 30,
+    });
+    const act = spellAct({ state, spellId: heatMetalUnitId, slotLevel: 2 });
+    const objectFill = spellManufacturedMetalObjectTargetFill({
+      hole: requireHole(act.initialHoles, "objectTargetChoice"),
+      objectId,
+      spellId: heatMetalUnitId,
+      casterId: spellCasterId,
+    });
+    const contactHole = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [objectFill],
+      }),
+      "objectContactTargets",
+    );
+    const contactFill = spellObjectContactTargetsFill({
+      hole: contactHole,
+      targetIds: [spellTargetId],
+      holdingOrWearing: new Map([[spellTargetId, "wearing"]]),
+    });
+    const damageHole = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [objectFill, contactFill],
+      }),
+      "rolledDice",
+    );
+    const needsSave = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        objectFill,
+        contactFill,
+        damageRollFillWithGroups(damageHole, [[4, 5]]),
+      ],
+    });
+    const saveHole = requireResultHole(needsSave, "savingThrowOutcome");
+    expect(saveHole).toMatchObject({
+      objectContactSave: {
+        sourceCombatantId: spellCasterId,
+        sourceSpellId: heatMetalUnitId,
+        objectId,
+        targetIds: [spellTargetId],
+      },
+      ability: "con",
+      dc: { kind: "caster_spell_save_dc" },
+    });
+    const failedSaveFill = savingThrowOutcomeFill(saveHole, [
+      { targetId: spellTargetId, succeeded: false },
+    ]);
+    const needsDrop = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        objectFill,
+        contactFill,
+        damageRollFillWithGroups(damageHole, [[4, 5]]),
+        failedSaveFill,
+      ],
+    });
+    const dropHole = requireResultHole(needsDrop, "objectDropResolution");
+    expect(dropHole).toMatchObject({
+      objectDrop: {
+        sourceCombatantId: spellCasterId,
+        sourceSpellId: heatMetalUnitId,
+        objectId,
+        targetIds: [spellTargetId],
+      },
+    });
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        objectFill,
+        contactFill,
+        damageRollFillWithGroups(damageHole, [[4, 5]]),
+        failedSaveFill,
+        objectDropResolutionFill(dropHole, [
+          {
+            targetId: spellTargetId,
+            capability: { kind: "cannotDrop" },
+            result: { kind: "notDropped" },
+          },
+        ]),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Heat Metal failed save no-drop to resolve.");
+    }
+    expect(requireCombatant(resolved.state, spellTargetId).hp).toBe(Hp(21));
+    expect(resolved.droppedObjects).toBeUndefined();
+    expect(
+      requireCombatant(resolved.state, spellTargetId).activeEffects,
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "selfAttackRollAndAbilityCheckRollMode",
+          sourceEffectId: `${spellCasterId}:${heatMetalUnitId}:${objectId}`,
+          sourceSpellId: heatMetalUnitId,
+          sourceCombatantId: spellCasterId,
+          mode: "disadvantage",
+          expiresAt: { kind: "startOfTurn", combatantId: spellCasterId },
+        }),
+      ]),
+    );
+    expect(
+      requiredAbilityCheckRollMode(resolved.state, spellTargetId, "str"),
+    ).toBe("disadvantage");
+    expect(
+      requiredAbilityCheckRollMode(resolved.state, spellTargetId, "wis"),
+    ).toBe("disadvantage");
+    expect(
+      requiredAttackRollMode(resolved.state, spellTargetId, spellCasterId),
+    ).toBe("disadvantage");
+
+    const concentrationBroken = breakBattleConcentration(
+      resolved.state,
+      spellCasterId,
+    );
+    expect(
+      requireCombatant(concentrationBroken, spellTargetId).activeEffects,
+    ).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "selfAttackRollAndAbilityCheckRollMode",
+          sourceEffectId: `${spellCasterId}:${heatMetalUnitId}:${objectId}`,
+        }),
+      ]),
+    );
+
+    const targetTurn = endTurn({
+      state: resolved.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected Heat Metal caster End Turn to resolve.");
+    }
+    expect(
+      requiredAttackRollMode(targetTurn.state, spellTargetId, spellCasterId),
+    ).toBe("disadvantage");
+    const casterTurn = endTurn({
+      state: targetTurn.state,
+      actorId: spellTargetId,
+    });
+    if (casterTurn.tag !== "resolved") {
+      throw new Error("Expected Heat Metal target End Turn to resolve.");
+    }
+    expect(
+      requiredAbilityCheckRollMode(casterTurn.state, spellTargetId, "str"),
+    ).toBeUndefined();
+    expect(
+      requiredAttackRollMode(casterTurn.state, spellTargetId, spellCasterId),
+    ).toBeUndefined();
+  });
+
+  test("damaged holding target that fails the save and can drop emits the dropped-object outcome without the penalty", () => {
+    const spell = spellRecord(heatMetalUnitId);
+    const objectId = battleObjectId("heat-metal-held-sword");
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      targetHp: 30,
+      targetMaxHp: 30,
+    });
+    const act = spellAct({ state, spellId: heatMetalUnitId, slotLevel: 2 });
+    const objectFill = spellManufacturedMetalObjectTargetFill({
+      hole: requireHole(act.initialHoles, "objectTargetChoice"),
+      objectId,
+      spellId: heatMetalUnitId,
+      casterId: spellCasterId,
+    });
+    const contactHole = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [objectFill],
+      }),
+      "objectContactTargets",
+    );
+    const contactFill = spellObjectContactTargetsFill({
+      hole: contactHole,
+      targetIds: [spellTargetId],
+      holdingOrWearing: new Map([[spellTargetId, "holding"]]),
+    });
+    const damageHole = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [objectFill, contactFill],
+      }),
+      "rolledDice",
+    );
+    const saveHole = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          objectFill,
+          contactFill,
+          damageRollFillWithGroups(damageHole, [[2, 3]]),
+        ],
+      }),
+      "savingThrowOutcome",
+    );
+    const failedSaveFill = savingThrowOutcomeFill(saveHole, [
+      { targetId: spellTargetId, succeeded: false },
+    ]);
+    const dropHole = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          objectFill,
+          contactFill,
+          damageRollFillWithGroups(damageHole, [[2, 3]]),
+          failedSaveFill,
+        ],
+      }),
+      "objectDropResolution",
+    );
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        objectFill,
+        contactFill,
+        damageRollFillWithGroups(damageHole, [[2, 3]]),
+        failedSaveFill,
+        objectDropResolutionFill(dropHole, [
+          {
+            targetId: spellTargetId,
+            capability: { kind: "canDrop" },
+            result: { kind: "dropped" },
+          },
+        ]),
+      ],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      droppedObjects: [
+        {
+          kind: "heldObjectDropped",
+          actorId: spellTargetId,
+          objectId,
+          sourceCombatantId: spellCasterId,
+          sourceSpellId: heatMetalUnitId,
+        },
+      ],
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Heat Metal failed save drop to resolve.");
+    }
+    expect(
+      requiredAttackRollMode(resolved.state, spellTargetId, spellCasterId),
+    ).toBeUndefined();
+    expect(
+      requireCombatant(resolved.state, spellTargetId).activeEffects,
+    ).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "selfAttackRollAndAbilityCheckRollMode",
+        }),
+      ]),
+    );
+  });
+
+  test("damaged holding-or-wearing target that succeeds the save does not need a drop witness", () => {
+    const spell = spellRecord(heatMetalUnitId);
+    const objectId = battleObjectId("heat-metal-saved-helmet");
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      targetHp: 30,
+      targetMaxHp: 30,
+    });
+    const act = spellAct({ state, spellId: heatMetalUnitId, slotLevel: 2 });
+    const objectFill = spellManufacturedMetalObjectTargetFill({
+      hole: requireHole(act.initialHoles, "objectTargetChoice"),
+      objectId,
+      spellId: heatMetalUnitId,
+      casterId: spellCasterId,
+    });
+    const contactHole = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [objectFill],
+      }),
+      "objectContactTargets",
+    );
+    const contactFill = spellObjectContactTargetsFill({
+      hole: contactHole,
+      targetIds: [spellTargetId],
+      holdingOrWearing: new Map([[spellTargetId, "wearing"]]),
+    });
+    const damageHole = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [objectFill, contactFill],
+      }),
+      "rolledDice",
+    );
+    const saveHole = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          objectFill,
+          contactFill,
+          damageRollFillWithGroups(damageHole, [[1, 2]]),
+        ],
+      }),
+      "savingThrowOutcome",
+    );
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        objectFill,
+        contactFill,
+        damageRollFillWithGroups(damageHole, [[1, 2]]),
+        savingThrowOutcomeFill(saveHole, [
+          { targetId: spellTargetId, succeeded: true },
+        ]),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Heat Metal successful save to resolve.");
+    }
+    expect(resolved.droppedObjects).toBeUndefined();
+    expect(
+      requiredAbilityCheckRollMode(resolved.state, spellTargetId, "str"),
+    ).toBeUndefined();
+  });
 });
 
 function heatMetalWithInitialObjectHoleId(
@@ -653,6 +1154,59 @@ function heatMetalObjectContactDamageAmount(
     throw new Error("Expected Heat Metal object-contact damage amount.");
   }
   return effect.amount;
+}
+
+function heatMetalWithObjectContactHoldingOrWearingSave(
+  spell: SpellRecord,
+  holdingOrWearingSave: unknown,
+): SpellRecord {
+  const mechanics = requireHeatMetalOngoingEffectMechanics(spell);
+  const initialPhase = mechanics.initialPhase;
+  const repeatOperation = mechanics.operations[0];
+  if (
+    initialPhase?.kind !== "direct" ||
+    initialPhase.effects?.[0]?.kind !== "object_contact_damage" ||
+    repeatOperation?.effect.kind !== "object_contact_damage"
+  ) {
+    throw new Error(
+      "Expected Heat Metal to have initial and repeat object-contact damage.",
+    );
+  }
+  return {
+    ...spell,
+    mechanics: {
+      ...mechanics,
+      initialPhase: {
+        ...initialPhase,
+        effects: [
+          {
+            ...initialPhase.effects[0],
+            holdingOrWearingSave,
+          },
+        ],
+      },
+      operations: [
+        {
+          ...repeatOperation,
+          effect: {
+            ...repeatOperation.effect,
+            holdingOrWearingSave,
+          },
+        },
+      ],
+    },
+  } as SpellRecord;
+}
+
+function heatMetalObjectContactHoldingOrWearingSave(spell: SpellRecord) {
+  const mechanics = requireHeatMetalOngoingEffectMechanics(spell);
+  const initialPhase = mechanics.initialPhase;
+  const effect =
+    initialPhase?.kind === "direct" ? initialPhase.effects?.[0] : null;
+  if (effect?.kind !== "object_contact_damage") {
+    throw new Error("Expected Heat Metal object-contact damage save.");
+  }
+  return effect.holdingOrWearingSave;
 }
 
 function requireHeatMetalOngoingEffectMechanics(

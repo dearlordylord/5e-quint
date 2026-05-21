@@ -1660,7 +1660,8 @@ function isObjectContactDamageEffect(
     effect.contact.kind ===
       "table_witnessed_physical_contact_with_spell_object" &&
     effect.damageType === "fire" &&
-    isSupportedHeatMetalDamageAmount(amount)
+    isSupportedHeatMetalDamageAmount(amount) &&
+    isSupportedObjectContactHoldingOrWearingSave(effect.holdingOrWearingSave)
   );
 }
 
@@ -1698,7 +1699,35 @@ function sameObjectContactDamageEffect(
     left.amount.perLevel.dice === right.amount.perLevel.dice &&
     left.amount.perLevel.dieSize === right.amount.perLevel.dieSize &&
     left.amount.perLevel.flat === right.amount.perLevel.flat &&
-    left.contact.kind === right.contact.kind
+    left.contact.kind === right.contact.kind &&
+    isSupportedObjectContactHoldingOrWearingSave(right.holdingOrWearingSave)
+  );
+}
+
+function isSupportedObjectContactHoldingOrWearingSave(
+  save: ObjectContactDamageEffect["holdingOrWearingSave"],
+): boolean {
+  const fallbackRolls = save.onFailure.fallback.on;
+  return (
+    save.appliesIf.kind === "table_witnessed_holding_or_wearing_spell_object" &&
+    save.ability === "con" &&
+    save.dc.kind === "caster_spell_save_dc" &&
+    save.onSuccess.kind === "none" &&
+    save.onFailure.kind === "drop_if_possible_else_disadvantage" &&
+    save.onFailure.dropCapabilityWitness.kind ===
+      "table_witnessed_drop_capability" &&
+    save.onFailure.dropCapabilityWitness.subject === "damaged_creature" &&
+    save.onFailure.dropCapabilityWitness.object === "spell_object" &&
+    save.onFailure.dropResultWitness.kind === "table_witnessed_drop_result" &&
+    save.onFailure.dropResultWitness.subject === "damaged_creature" &&
+    save.onFailure.dropResultWitness.object === "spell_object" &&
+    save.onFailure.fallbackWhen === "object_not_dropped" &&
+    save.onFailure.fallback.kind === "modify_roll_advantage" &&
+    save.onFailure.fallback.mode === "disadvantage" &&
+    fallbackRolls.length === 2 &&
+    fallbackRolls.includes("attack_roll") &&
+    fallbackRolls.includes("ability_check") &&
+    save.onFailure.fallback.expiresOn.kind === "caster_turn_start"
   );
 }
 

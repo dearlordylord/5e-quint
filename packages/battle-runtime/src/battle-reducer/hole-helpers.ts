@@ -4,6 +4,7 @@
 // hideAbilityCheckHole, searchAbilityCheckHole, escapeSpellRestraintAbilityCheckHole (from H).
 
 // KERNEL-COVERAGE: runtime-owner BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 import { Match } from "effect";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { difficultyClass, type DifficultyClass } from "@dnd/shared/types";
@@ -240,8 +241,9 @@ function activeAbilityCheckRollModeEffectMatches(
   return (
     actor?.activeEffects.some(
       (effect) =>
-        effect.kind === "abilityCheckRollMode" &&
-        effect.ability === ability &&
+        ((effect.kind === "abilityCheckRollMode" &&
+          effect.ability === ability) ||
+          effect.kind === "selfAttackRollAndAbilityCheckRollMode") &&
         effect.mode === mode,
     ) ?? false
   );

@@ -26,6 +26,7 @@ module battleRuntimeTimedEffects {
   ): Set[ActiveEffect] =
     effects.filter(effect => match effect {
       | WeaponMasterySapNextAttackDisadvantage(data) => data.source != actor
+      | HeatMetalHoldingWearingPenalty(data) => data.expiresAtActor != actor
       | _ => true
     })
 
