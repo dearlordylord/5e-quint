@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// KERNEL-COVERAGE: qnt-owner CHARACTER.BATTLE.HANDOFF.SETTLEMENT
+// KERNEL-COVERAGE: qnt-owner CHARACTER.BATTLE.HANDOFF.SETTLEMENT CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS
 
 module characterBattleSettlementMbt {
   var qLastResult: str
@@ -18,6 +18,10 @@ module characterBattleSettlementMbt {
   var qSpentHitDice: int
   var qRestFeatureUsed: bool
   var qBuildUnchanged: bool
+  var qZeroHpState: str
+  var qZeroHpSuccesses: int
+  var qZeroHpFailures: int
+  var qStableRecoveryElapsed: int
   var qReplayIndex: int
 
   type BattleSettlementFacts = {
@@ -33,6 +37,10 @@ module characterBattleSettlementMbt {
     spentHitDice: int,
     restFeatureUsed: bool,
     buildUnchanged: bool,
+    zeroHpState: str,
+    zeroHpSuccesses: int,
+    zeroHpFailures: int,
+    stableRecoveryElapsed: int,
   }
 
   pure def emptySettlementFacts: BattleSettlementFacts = {
@@ -48,6 +56,10 @@ module characterBattleSettlementMbt {
     spentHitDice: 0,
     restFeatureUsed: false,
     buildUnchanged: true,
+    zeroHpState: "none",
+    zeroHpSuccesses: 0,
+    zeroHpFailures: 0,
+    stableRecoveryElapsed: 0,
   }
 
   action recordProjection(
@@ -72,6 +84,10 @@ module characterBattleSettlementMbt {
     qSpentHitDice' = facts.spentHitDice,
     qRestFeatureUsed' = facts.restFeatureUsed,
     qBuildUnchanged' = facts.buildUnchanged,
+    qZeroHpState' = facts.zeroHpState,
+    qZeroHpSuccesses' = facts.zeroHpSuccesses,
+    qZeroHpFailures' = facts.zeroHpFailures,
+    qStableRecoveryElapsed' = facts.stableRecoveryElapsed,
     qReplayIndex' = replayIndex,
   }
 
@@ -123,9 +139,73 @@ module characterBattleSettlementMbt {
     ),
   }
 
+  action doRejectMismatchedCharacterIdentity = all {
+    qReplayIndex == 3,
+    recordProjection(
+      "mismatched-character-identity-rejected",
+      false,
+      "Battle handoff character identity does not match Character Sheet.",
+      emptySettlementFacts,
+      4,
+    ),
+  }
+
+  action doRejectMaximumHpDrift = all {
+    qReplayIndex == 4,
+    recordProjection(
+      "maximum-hp-drift-rejected",
+      false,
+      "Battle handoff maximum HP does not match Character Sheet.",
+      emptySettlementFacts,
+      5,
+    ),
+  }
+
+  action doRejectActiveWildShapeHandoff = all {
+    qReplayIndex == 5,
+    recordProjection(
+      "active-wild-shape-handoff-rejected",
+      false,
+      "Battle handoff while Wild Shape is active is blocked; dismiss or resolve reversion before Character Sheet handoff.",
+      emptySettlementFacts,
+      6,
+    ),
+  }
+
+  action doRejectStableRecoveryProgressHandoff = all {
+    qReplayIndex == 6,
+    recordProjection(
+      "stable-recovery-progress-rejected",
+      false,
+      "Battle handoff cannot preserve in-progress Stable recovery timers.",
+      emptySettlementFacts
+        .with("zeroHpState", "stable")
+        .with("stableRecoveryElapsed", 1),
+      7,
+    ),
+  }
+
+  action doSettleZeroHpStableLifecycle = all {
+    qReplayIndex == 7,
+    recordProjection(
+      "settle-zero-hp-stable-lifecycle",
+      true,
+      "none",
+      emptySettlementFacts
+        .with("zeroHpState", "stable")
+        .with("stableRecoveryElapsed", 0),
+      8,
+    ),
+  }
+
   action step = any {
     doSettleHitPointsConditionsSlotsAndPreservedSheetState,
     doSettleFeatureResourceExpenditure,
     doRejectAmbiguousCreatedSpellSlotSource,
+    doRejectMismatchedCharacterIdentity,
+    doRejectMaximumHpDrift,
+    doRejectActiveWildShapeHandoff,
+    doRejectStableRecoveryProgressHandoff,
+    doSettleZeroHpStableLifecycle,
   }
 }

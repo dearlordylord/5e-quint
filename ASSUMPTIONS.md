@@ -233,7 +233,23 @@ These distinctions are caller-side concerns (which attacks to resolve, whether g
 
 **Changes:** `creature.qnt`: `init` adds `nondet pcClass = Set("Fighter", "Barbarian").oneOf()`, sets `fighterLevel`/`barbarianLevel` based on selection. `creature.mbt.test.ts`: init handler reads `pcClass` and sets levels accordingly.
 
-## A27: Remaining TS-only barbarian features
+## A26 Stable recovery timers do not cross the battle handoff boundary
+
+**Assumption:** Character Battle handoff may preserve a fresh Stable zero-HP lifecycle, but it rejects an in-progress Stable recovery timer. Calendar-time progress toward the "regains 1 Hit Point after 1d4 hours" outcome remains Character Sheet state and must not be projected into or back out of battle handoff.
+
+**Rules basis (SRD 5.2.1 Rules Glossary "Stable"):** The SRD defines Stable as a creature with 0 Hit Points that isn't required to make Death Saving Throws, and says the creature regains 1 Hit Point after `1d4` hours if it isn't healed first. The SRD does not define a combat-time procedure for partially elapsed out-of-combat Stable recovery while entering or exiting a battle boundary. Representing elapsed recovery time during handoff is therefore an architectural modeling choice rather than a direct RAW rule.
+
+**Changes:** `packages/character-battle-runtime/src/index.ts`: `unsupportedStableRecoveryBattleBoundary` rejects Stable recovery state unless it is the fresh `elapsedBeforeRecoveryRoll = 0` boundary shape. `packages/character-battle-runtime/character-battle-settlement.mbt.qnt` and `packages/character-battle-runtime/src/character-battle-settlement.mbt.test.ts` include deterministic witness cases for rejected in-progress Stable recovery handoff and accepted fresh Stable settlement.
+
+## A27 Active Wild Shape does not cross the character-sheet handoff boundary
+
+**Assumption:** Character Battle handoff rejects a combatant that is still in an active Wild Shape form. The caller must dismiss the form or resolve reversion before projecting durable Character Sheet state.
+
+**Rules basis (SRD 5.2.1 Druid Level 2 "Wild Shape"):** The SRD defines how long a Wild Shape form lasts and says the druid can leave the form early as a Bonus Action, or that the form ends when Wild Shape is used again, the druid has the Incapacitated condition, or dies. The SRD does not define a cross-boundary persistence protocol for writing durable Character Sheet state while the battle projection is still in Beast form. Blocking handoff until reversion is therefore an architectural boundary choice rather than a direct RAW handoff rule.
+
+**Changes:** `packages/character-battle-runtime/src/index.ts`: `applyBattleHandoffToCharacterSheet` rejects combatants with `combatantHasActiveDruidWildShape(input.combatant)`. `packages/character-battle-runtime/character-battle-settlement.mbt.qnt` and `packages/character-battle-runtime/src/character-battle-settlement.mbt.test.ts` include deterministic witness cases for active Wild Shape handoff rejection.
+
+## A28: Remaining TS-only barbarian features
 
 **Assumption:** Brutal Strike effects (Forceful Blow, Hamstring Blow, Staggering Blow, Sundering Blow), Frenzy bonus damage, and Relentless Rage save resolution remain TS-only features. These are caller-side composition (e.g., applying extra damage dice and resolving replacement saves) rather than resource tracking, so they don't need Quint state variables. Danger Sense is no longer TS-only at the promoted battle-runtime boundary; it is modeled as a passive Saving Throw roll-mode profile that grants Advantage on Dexterity Saving Throws unless the target has the Incapacitated condition.
 

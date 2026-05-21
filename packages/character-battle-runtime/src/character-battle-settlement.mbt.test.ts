@@ -1,4 +1,4 @@
-// KERNEL-COVERAGE: parity-witness CHARACTER.BATTLE.HANDOFF.SETTLEMENT
+// KERNEL-COVERAGE: parity-witness CHARACTER.BATTLE.HANDOFF.SETTLEMENT CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS
 import * as path from "node:path";
 
 import {
@@ -6,6 +6,7 @@ import {
   battleCreatureInitFromStatBlock,
   battleId,
   characterBattleResourceIsPointPool,
+  characterId,
   combatantId,
   initiativeScore,
   spendCharacterPointPoolResource,
@@ -32,6 +33,7 @@ import {
   type CharacterSheet,
   type CharacterSheetInput,
 } from "@dnd/character-sheet-runtime";
+import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import {
   applyCondition,
   EMPTY_CONDITION_STATE,
@@ -59,6 +61,11 @@ const settlementScenarios = [
   "settle-hit-points-conditions-slots-and-preserved-sheet-state",
   "settle-feature-resource-expenditure",
   "ambiguous-created-spell-slot-source-rejected",
+  "mismatched-character-identity-rejected",
+  "maximum-hp-drift-rejected",
+  "active-wild-shape-handoff-rejected",
+  "stable-recovery-progress-rejected",
+  "settle-zero-hp-stable-lifecycle",
 ] as const;
 type SettlementScenario = (typeof settlementScenarios)[number];
 const settlementReplayStepCount = settlementScenarios.length - 1;
@@ -79,6 +86,10 @@ type BattleSettlementProjection = {
   readonly spentHitDice: number;
   readonly restFeatureUsed: boolean;
   readonly buildUnchanged: boolean;
+  readonly zeroHpState: "none" | "unstable" | "stable" | "dead";
+  readonly zeroHpSuccesses: number;
+  readonly zeroHpFailures: number;
+  readonly stableRecoveryElapsed: number;
   readonly replayIndex: number;
 };
 
@@ -94,6 +105,11 @@ const driverSchema = {
   doSettleHitPointsConditionsSlotsAndPreservedSheetState: {},
   doSettleFeatureResourceExpenditure: {},
   doRejectAmbiguousCreatedSpellSlotSource: {},
+  doRejectMismatchedCharacterIdentity: {},
+  doRejectMaximumHpDrift: {},
+  doRejectActiveWildShapeHandoff: {},
+  doRejectStableRecoveryProgressHandoff: {},
+  doSettleZeroHpStableLifecycle: {},
   step: {},
 } as const;
 
@@ -149,6 +165,21 @@ function createSettlementDriver() {
       },
       doRejectAmbiguousCreatedSpellSlotSource: () => {
         projection = rejectAmbiguousCreatedSpellSlotSource();
+      },
+      doRejectMismatchedCharacterIdentity: () => {
+        projection = rejectMismatchedCharacterIdentity();
+      },
+      doRejectMaximumHpDrift: () => {
+        projection = rejectMaximumHpDrift();
+      },
+      doRejectActiveWildShapeHandoff: () => {
+        projection = rejectActiveWildShapeHandoff();
+      },
+      doRejectStableRecoveryProgressHandoff: () => {
+        projection = rejectStableRecoveryProgressHandoff();
+      },
+      doSettleZeroHpStableLifecycle: () => {
+        projection = settleZeroHpStableLifecycle();
       },
       step: () => {},
       getState: () => projection,
@@ -347,6 +378,244 @@ function rejectAmbiguousCreatedSpellSlotSource(): BattleSettlementProjection {
   });
 }
 
+function rejectMismatchedCharacterIdentity(): BattleSettlementProjection {
+  const sheet = sheetFixture({
+    characterIdText: "character:battle-settlement-sheet",
+    build: wizardWarlockBuild(),
+    maximumHp: 10,
+    currentHp: 10,
+  });
+  const combatant = startCharacterBattle({
+    battleIdText: "battle:settlement-identity-mismatch",
+    combatantId: combatantId("combatant:settlement-identity-mismatch"),
+    sheet,
+  });
+  const result = applyBattleHandoffToCharacterSheet({
+    sheet,
+    unitLibrary,
+    combatant: {
+      ...combatant,
+      origin: {
+        ...combatant.origin,
+        characterId: characterId("character:battle-settlement-other-sheet"),
+      },
+    },
+  });
+  if (Either.isRight(result)) {
+    throw new Error("Expected mismatched identity handoff rejection.");
+  }
+  return projectFromParts({
+    lastResult: "mismatched-character-identity-rejected",
+    accepted: false,
+    message: result.left.message,
+    replayIndex: 4,
+  });
+}
+
+function rejectMaximumHpDrift(): BattleSettlementProjection {
+  const sheet = sheetFixture({
+    characterIdText: "character:battle-settlement-maximum",
+    build: wizardWarlockBuild(),
+    maximumHp: 10,
+    currentHp: 10,
+  });
+  const combatant = startCharacterBattle({
+    battleIdText: "battle:settlement-maximum-drift",
+    combatantId: combatantId("combatant:settlement-maximum-drift"),
+    sheet,
+  });
+  const result = applyBattleHandoffToCharacterSheet({
+    sheet,
+    unitLibrary,
+    combatant: {
+      ...combatant,
+      maxHp: Hp(12),
+    },
+  });
+  if (Either.isRight(result)) {
+    throw new Error("Expected maximum HP drift handoff rejection.");
+  }
+  return projectFromParts({
+    lastResult: "maximum-hp-drift-rejected",
+    accepted: false,
+    message: result.left.message,
+    replayIndex: 5,
+  });
+}
+
+function rejectActiveWildShapeHandoff(): BattleSettlementProjection {
+  const sheet = sheetFixture({
+    characterIdText: "character:druid-wild-shape-active-handoff",
+    build: druidWildShapeBuild(),
+    maximumHp: 15,
+    currentHp: 15,
+    statBlockCatalog,
+    druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
+  });
+  const combatant = startCharacterBattle({
+    battleIdText: "battle:settlement-active-wild-shape",
+    combatantId: combatantId("combatant:settlement-active-wild-shape"),
+    sheet,
+  });
+  const result = applyBattleHandoffToCharacterSheet({
+    sheet,
+    unitLibrary,
+    combatant: {
+      ...combatant,
+      activeEffects: [
+        ...combatant.activeEffects,
+        {
+          kind: "druidWildShapeForm",
+          sourceUnitId: "druid_wild_shape",
+          sourceCombatantId: combatant.combatantId,
+          formStatBlockId: "stat_block_cat",
+          equipmentDisposition: "merged",
+          resources: {
+            legendaryActionUsesRemaining: resourceCount(0),
+            dailyUses: [],
+            unavailableRechargeParts: [],
+            unavailableRestRechargeParts: [],
+          },
+          expiresAt: {
+            kind: "duration",
+            durationTicks: elapsedTimeTicks(600),
+          },
+        },
+      ],
+    },
+  });
+  if (Either.isRight(result)) {
+    throw new Error("Expected active Wild Shape handoff rejection.");
+  }
+  return projectFromParts({
+    lastResult: "active-wild-shape-handoff-rejected",
+    accepted: false,
+    message: result.left.message,
+    replayIndex: 6,
+  });
+}
+
+function rejectStableRecoveryProgressHandoff(): BattleSettlementProjection {
+  const startedSheet = sheetFixture({
+    characterIdText: "character:stable-recovery-started",
+    build: wizardWarlockBuild(),
+    maximumHp: 10,
+    currentHp: 10,
+  });
+  const stableSheet = sheetFixture({
+    characterIdText: "character:stable-recovery-sheet",
+    build: wizardWarlockBuild(),
+    maximumHp: 10,
+    currentHp: 0,
+    zeroHpLifecycle: {
+      tag: "stable",
+      recovery: {
+        kind: "regains1HpAfter1d4Hours",
+        elapsedBeforeRecoveryRoll: elapsedTimeTicks(1),
+      },
+    },
+  });
+  const combatant = startCharacterBattle({
+    battleIdText: "battle:settlement-stable-recovery",
+    combatantId: combatantId("combatant:settlement-stable-recovery"),
+    sheet: startedSheet,
+  });
+  const result = applyBattleHandoffToCharacterSheet({
+    sheet: stableSheet,
+    unitLibrary,
+    combatant: {
+      ...combatant,
+      origin: {
+        ...combatant.origin,
+        characterId: characterId("character:stable-recovery-sheet"),
+      },
+      hp: Hp(0),
+      positiveHpUnconscious: null,
+      zeroHpLifecycle: {
+        policy: "usesDeathSavingThrows",
+        deathSaves: {
+          deathSaves: { successes: 0, failures: 0 },
+          stable: true,
+          dead: false,
+          hpRegained: false,
+        },
+      },
+    },
+  });
+  if (Either.isRight(result)) {
+    throw new Error(
+      "Expected in-progress Stable recovery handoff rejection.",
+    );
+  }
+  return projectFromParts({
+    lastResult: "stable-recovery-progress-rejected",
+    accepted: false,
+    message: result.left.message,
+    zeroHpState: "stable",
+    stableRecoveryElapsed: 1,
+    replayIndex: 7,
+  });
+}
+
+function settleZeroHpStableLifecycle(): BattleSettlementProjection {
+  const startedSheet = sheetFixture({
+    characterIdText: "character:stable-recovery-started-accepted",
+    build: wizardWarlockBuild(),
+    maximumHp: 10,
+    currentHp: 10,
+  });
+  const stableSheet = sheetFixture({
+    characterIdText: "character:stable-recovery-sheet-accepted",
+    build: wizardWarlockBuild(),
+    maximumHp: 10,
+    currentHp: 0,
+    zeroHpLifecycle: {
+      tag: "stable",
+      recovery: {
+        kind: "regains1HpAfter1d4Hours",
+        elapsedBeforeRecoveryRoll: elapsedTimeTicks(0),
+      },
+    },
+  });
+  const combatant = startCharacterBattle({
+    battleIdText: "battle:settlement-stable-recovery-accepted",
+    combatantId: combatantId("combatant:settlement-stable-recovery-accepted"),
+    sheet: startedSheet,
+  });
+  const settled = requireRight(
+    applyBattleHandoffToCharacterSheet({
+      sheet: stableSheet,
+      unitLibrary,
+      combatant: {
+        ...combatant,
+        origin: {
+          ...combatant.origin,
+          characterId: characterId("character:stable-recovery-sheet-accepted"),
+        },
+        hp: Hp(0),
+        positiveHpUnconscious: null,
+        zeroHpLifecycle: {
+          policy: "usesDeathSavingThrows",
+          deathSaves: {
+            deathSaves: { successes: 0, failures: 0 },
+            stable: true,
+            dead: false,
+            hpRegained: false,
+          },
+        },
+      },
+    }),
+  );
+  return projectFromSheet({
+    lastResult: "settle-zero-hp-stable-lifecycle",
+    accepted: true,
+    message: "none",
+    sheet: settled,
+    originalBuild: stableSheet.build,
+    replayIndex: 8,
+  });
+}
+
 function startCharacterBattle(input: {
   readonly battleIdText: string;
   readonly combatantId: ReturnType<typeof combatantId>;
@@ -432,8 +701,54 @@ function projectFromSheet(input: {
     ),
     buildUnchanged:
       JSON.stringify(input.sheet.build) === JSON.stringify(input.originalBuild),
+    ...zeroHpProjection(input.sheet),
     replayIndex: input.replayIndex,
   });
+}
+
+function zeroHpProjection(
+  sheet: CharacterSheet,
+): Pick<
+  BattleSettlementProjection,
+  | "zeroHpState"
+  | "zeroHpSuccesses"
+  | "zeroHpFailures"
+  | "stableRecoveryElapsed"
+> {
+  if (sheet.hitPoints.tag !== "zero") {
+    return {
+      zeroHpState: "none",
+      zeroHpSuccesses: 0,
+      zeroHpFailures: 0,
+      stableRecoveryElapsed: 0,
+    };
+  }
+  const lifecycle = sheet.hitPoints.lifecycle;
+  if (lifecycle.tag === "stable") {
+    return {
+      zeroHpState: "stable",
+      zeroHpSuccesses: 0,
+      zeroHpFailures: 0,
+      stableRecoveryElapsed:
+        lifecycle.recovery.kind === "regains1HpAfter1d4Hours"
+          ? Number(lifecycle.recovery.elapsedBeforeRecoveryRoll)
+          : 0,
+    };
+  }
+  if (lifecycle.tag === "dead") {
+    return {
+      zeroHpState: "dead",
+      zeroHpSuccesses: lifecycle.deathSaves.successes,
+      zeroHpFailures: lifecycle.deathSaves.failures,
+      stableRecoveryElapsed: 0,
+    };
+  }
+  return {
+    zeroHpState: "unstable",
+    zeroHpSuccesses: lifecycle.deathSaves.successes,
+    zeroHpFailures: lifecycle.deathSaves.failures,
+    stableRecoveryElapsed: 0,
+  };
 }
 
 function spellSlotExpended(sheet: CharacterSheet, spellLevel: 1): number {
@@ -487,11 +802,15 @@ function sheetFixture(
     Pick<
       CharacterSheetInput,
       | "conditions"
+      | "druidWildShapeKnownFormStatBlockIds"
+      | "hitPointMaximumReduction"
+      | "statBlockCatalog"
       | "spellSlots"
       | "pactSlots"
       | "spentHitDice"
       | "restFeatureUses"
       | "resourceExpenditures"
+      | "zeroHpLifecycle"
     >
   >,
 ): CharacterSheet {
@@ -502,9 +821,21 @@ function sheetFixture(
       maximumHp: Hp(input.maximumHp),
       currentHp: Hp(input.currentHp),
       tempHp: Hp(input.tempHp ?? 0),
-      hitPointMaximumReduction: Hp(0),
+      hitPointMaximumReduction: Hp(input.hitPointMaximumReduction ?? 0),
       conditions: input.conditions ?? [],
       unitLibrary,
+      ...(input.zeroHpLifecycle === undefined
+        ? {}
+        : { zeroHpLifecycle: input.zeroHpLifecycle }),
+      ...(input.statBlockCatalog === undefined
+        ? {}
+        : { statBlockCatalog: input.statBlockCatalog }),
+      ...(input.druidWildShapeKnownFormStatBlockIds === undefined
+        ? {}
+        : {
+            druidWildShapeKnownFormStatBlockIds:
+              input.druidWildShapeKnownFormStatBlockIds,
+          }),
       ...(input.spellSlots === undefined
         ? {}
         : { spellSlots: input.spellSlots }),
@@ -652,6 +983,18 @@ function baseBuild(input: {
   };
 }
 
+const DRUID_WILD_SHAPE_KNOWN_FORM_IDS = [
+  "stat_block_cat",
+  "stat_block_riding_horse",
+] as const;
+
+function druidWildShapeBuild(): CharacterBuild {
+  return baseBuild({
+    startingClass: "class_druid",
+    advancements: ["class_druid"],
+  });
+}
+
 function initialProjection(): BattleSettlementProjection {
   return projectFromParts({
     lastResult: "init",
@@ -686,6 +1029,10 @@ function projectFromParts(
     spentHitDice: 0,
     restFeatureUsed: false,
     buildUnchanged: true,
+    zeroHpState: "none",
+    zeroHpSuccesses: 0,
+    zeroHpFailures: 0,
+    stableRecoveryElapsed: 0,
     ...input,
   };
 }
@@ -736,6 +1083,19 @@ function normalizeSettlementQuintState(
       "qRestFeatureUsed",
     ),
     buildUnchanged: booleanField(state["qBuildUnchanged"], "qBuildUnchanged"),
+    zeroHpState: zeroHpStateField(state["qZeroHpState"]),
+    zeroHpSuccesses: numberFromQuintInt(
+      state["qZeroHpSuccesses"],
+      "qZeroHpSuccesses",
+    ),
+    zeroHpFailures: numberFromQuintInt(
+      state["qZeroHpFailures"],
+      "qZeroHpFailures",
+    ),
+    stableRecoveryElapsed: numberFromQuintInt(
+      state["qStableRecoveryElapsed"],
+      "qStableRecoveryElapsed",
+    ),
     replayIndex: numberFromQuintInt(state["qReplayIndex"], "qReplayIndex"),
   };
 }
@@ -762,6 +1122,20 @@ function scenarioField(raw: unknown): SettlementScenario {
 
 function isSettlementScenario(raw: string): raw is SettlementScenario {
   return settlementScenarios.some((scenario) => scenario === raw);
+}
+
+function zeroHpStateField(
+  raw: unknown,
+): BattleSettlementProjection["zeroHpState"] {
+  if (
+    raw === "none" ||
+    raw === "unstable" ||
+    raw === "stable" ||
+    raw === "dead"
+  ) {
+    return raw;
+  }
+  throw new Error(`Unknown battle-settlement zero-HP state ${String(raw)}.`);
 }
 
 function numberFromQuintInt(raw: unknown, field: string): number {

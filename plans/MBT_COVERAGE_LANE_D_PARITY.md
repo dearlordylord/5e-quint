@@ -4,7 +4,7 @@
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    {"number":1,"id":"RKBC-HANDOFF-IDENTITY-CONFLICTS","status":"ready-for-research","title":"Character Battle Identity And Max HP Conflict Handling"},
+    {"number":1,"id":"RKBC-HANDOFF-IDENTITY-CONFLICTS","status":"done","title":"Character Battle Identity And Max HP Conflict Handling"},
     {"number":2,"id":"RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY","status":"ready-for-research","title":"Spell Direct Condition Removal And Protection Parity Witnesses"},
     {"number":3,"id":"RKBC-SPELL-SAVE-GATED-CONDITION-PARITY","status":"ready-for-research","title":"Spell Save-Gated Condition Parity Witnesses"},
     {"number":4,"id":"RKBC-SPELL-ROLL-SCALAR-PARITY","status":"ready-for-research","title":"Spell Roll Modifier And Scalar Buff Parity Witnesses"},
@@ -47,7 +47,7 @@ Every task must include:
 
 ### Task 1 - RKBC-HANDOFF-IDENTITY-CONFLICTS - Character Battle Identity And Max HP Conflict Handling
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 - Current character battle initialization and settlement coverage.
