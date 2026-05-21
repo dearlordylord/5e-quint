@@ -7,7 +7,7 @@
     {"number":1,"id":"L12G-FOLLOWUP-GENERIC-ONGOING-SPELL-EFFECT-DISPEL","status":"done","title":"Generic Ongoing Spell Effect Dispel Runtime"},
     {"number":2,"id":"L12G-FOLLOWUP-ANTIMAGIC-FIELD-GENERIC-SUPPRESSION","status":"done","title":"Antimagic Field Generic Suppression Runtime"},
     {"number":3,"id":"L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST","status":"done","title":"Prayer Of Healing Surface Rest Shape"},
-    {"number":4,"id":"L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST","status":"ready-for-research","title":"Prayer Of Healing Character Sheet Rest Runtime"},
+    {"number":4,"id":"L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST","status":"done","title":"Prayer Of Healing Character Sheet Rest Runtime"},
     {"number":5,"id":"L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE","status":"ready-for-research","title":"Ray Of Enfeeblement D20 Lifecycle Runtime"},
     {"number":6,"id":"L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY","status":"blocked","title":"Ray Of Enfeeblement Damage Roll Penalty Runtime"},
     {"number":7,"id":"L12G-FOLLOWUP-SPIRITUAL-WEAPON-SURFACE-PROXY-SHAPE","status":"ready-for-research","title":"Spiritual Weapon Proxy Surface Shape"},
@@ -82,7 +82,7 @@ Output:
 
 ### Task 4 - L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST - Prayer Of Healing Character Sheet Rest Runtime
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 - Task B3.

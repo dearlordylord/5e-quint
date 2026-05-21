@@ -151,6 +151,7 @@
         "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense",
         "srd521:classes/barbarian:level-1:mastery-pressure:barbarian_weapon_mastery",
         "srd521:classes/bard:level-2:class-feature-grant:bard_jack_of_all_trades",
+        "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_prayer_of_healing",
         "srd521:classes/druid:level-2:class-feature-grant:druid_wild_shape",
         "srd521:classes/fighter:level-1:mastery-pressure:fighter_weapon_mastery",
         "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense",
@@ -158,6 +159,7 @@
         "srd521:classes/monk:level-2:class-feature-grant:monk_uncanny_metabolism",
         "srd521:classes/paladin:level-1:class-feature-grant:paladin_lay_on_hands",
         "srd521:classes/paladin:level-1:mastery-pressure:paladin_weapon_mastery",
+        "srd521:classes/paladin:spell-level-2:spell-unit-pressure:paladin_spell_list_prayer_of_healing",
         "srd521:classes/ranger:level-1:mastery-pressure:ranger_weapon_mastery",
         "srd521:classes/rogue:level-1:mastery-pressure:rogue_weapon_mastery",
         "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_font_of_magic",
@@ -192,14 +194,14 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 509,
-      "percent": "91.5%",
+      "numerator": 511,
+      "percent": "91.9%",
       "rowsByStatus": {
-        "accepted": 372,
+        "accepted": 374,
         "accepted-no-battle-effect": 137,
         "owner-evidence-required": 2,
         "partial-battle-runtime": 14,
-        "battle-runtime-required": 31
+        "battle-runtime-required": 29
       }
     },
     "levelOneClassContainers": 12,
@@ -214,18 +216,18 @@
       "catalog-installed-needs-owner-evidence": 1
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 391,
+      "catalog-installed-owner-evidence-present": 393,
       "non-runtime": 24,
-      "catalog-installed-owner-evidence-required": 14,
+      "catalog-installed-owner-evidence-required": 12,
       "catalog-only/dead-for-now": 108,
       "missing-authored-record": 10,
       "catalog-authored-executable-follow-up": 8,
       "catalog-installed-needs-owner-evidence": 1
     },
     "spellPressureRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 228,
+      "catalog-installed-owner-evidence-present": 230,
       "catalog-only/dead-for-now": 108,
-      "catalog-installed-owner-evidence-required": 13,
+      "catalog-installed-owner-evidence-required": 11,
       "missing-authored-record": 10,
       "catalog-authored-executable-follow-up": 8
     },
@@ -9141,8 +9143,14 @@
         "state": "installed",
         "unitId": "prayer_of_healing"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "caller/table completed-cast and range-maintenance witness provider",
+        "reason": "Prayer of Healing application consumes completed-cast recipient eligibility facts; map geometry, range over the entire casting, Magic-action sequencing for the 10-minute cast, and interruption detection are not stored as parallel Character Sheet state."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -9150,13 +9158,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-sheet-runtime plus spellcasting resource owner",
-          "evidence": "Promote follow-up split L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST: L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST owns Apply Prayer of Healing after the completed 10-minute cast by spending the spell slot at completion, consuming caller-supplied recipient eligibility facts, granting each selected Character Sheet the existing Short Rest benefits without duplicating rest algorithms, applying the slot-scaled healing roll capped by Hit Point maximum, and recording/clearing the per-recipient Long Rest lockout from the same rest state owner. Required output: Supported profile or profile-subset evidence, focused runtime tests, and owner evidence for Prayer of Healing's Character Sheet rest-benefit application, healing, Spell Slot spend timing, and Long Rest recipient lockout while leaving automatic range tracking and encounter-time casting interruption as caller/table facts.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST at packages/character-sheet-runtime/src/index.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST: L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST owns Apply Prayer of Healing after the completed 10-minute cast by spending the spell slot at completion, consuming caller-supplied recipient eligibility facts, granting each selected Character Sheet the existing Short Rest benefits without duplicating rest algorithms, applying the slot-scaled healing roll capped by Hit Point maximum, and recording/clearing the per-recipient Long Rest lockout from the same rest state owner. Required output: Supported profile or profile-subset evidence, focused runtime tests, and owner evidence for Prayer of Healing's Character Sheet rest-benefit application, healing, Spell Slot spend timing, and Long Rest recipient lockout while leaving automatic range tracking and encounter-time casting interruption as caller/table facts.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_protection_from_poison",
@@ -15363,8 +15371,14 @@
         "state": "installed",
         "unitId": "prayer_of_healing"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "caller/table completed-cast and range-maintenance witness provider",
+        "reason": "Prayer of Healing application consumes completed-cast recipient eligibility facts; map geometry, range over the entire casting, Magic-action sequencing for the 10-minute cast, and interruption detection are not stored as parallel Character Sheet state."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -15372,13 +15386,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-sheet-runtime plus spellcasting resource owner",
-          "evidence": "Promote follow-up split L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST: L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST owns Apply Prayer of Healing after the completed 10-minute cast by spending the spell slot at completion, consuming caller-supplied recipient eligibility facts, granting each selected Character Sheet the existing Short Rest benefits without duplicating rest algorithms, applying the slot-scaled healing roll capped by Hit Point maximum, and recording/clearing the per-recipient Long Rest lockout from the same rest state owner. Required output: Supported profile or profile-subset evidence, focused runtime tests, and owner evidence for Prayer of Healing's Character Sheet rest-benefit application, healing, Spell Slot spend timing, and Long Rest recipient lockout while leaving automatic range tracking and encounter-time casting interruption as caller/table facts.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST at packages/character-sheet-runtime/src/index.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST: L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST owns Apply Prayer of Healing after the completed 10-minute cast by spending the spell slot at completion, consuming caller-supplied recipient eligibility facts, granting each selected Character Sheet the existing Short Rest benefits without duplicating rest algorithms, applying the slot-scaled healing roll capped by Hit Point maximum, and recording/clearing the per-recipient Long Rest lockout from the same rest state owner. Required output: Supported profile or profile-subset evidence, focused runtime tests, and owner evidence for Prayer of Healing's Character Sheet rest-benefit application, healing, Spell Slot spend timing, and Long Rest recipient lockout while leaving automatic range tracking and encounter-time casting interruption as caller/table facts.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/paladin:spell-level-2:spell-unit-pressure:paladin_spell_list_protection_from_poison",

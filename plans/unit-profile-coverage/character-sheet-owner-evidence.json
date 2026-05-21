@@ -274,6 +274,38 @@
         "packages/character-sheet-runtime/src/index.test.ts:jackOfAllTradesRequiresBardLevelTwoFeatureTestName"
       ]
     },
+    "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_prayer_of_healing": {
+      "taskId": "L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST",
+      "profile": "Character Sheet spell-granted Short Rest benefit runtime",
+      "summary": "Prayer of Healing is read from the installed Surface Spell Definition shape and applied after caller-provided completed-casting eligibility. The runtime spends one level-2-or-higher Spell Slot at completion, applies existing Short Rest benefit logic to each selected Character Sheet without duplicating rest algorithms, applies slot-scaled healing capped by Hit Point maximum, records a same-spell recipient Long Rest lockout in Long Rest-cleared sheet rest state, and leaves automatic range tracking and interruption to caller/table facts.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/index.ts:applyCharacterSheetSpellRestBenefit",
+        "packages/character-sheet-runtime/src/index.ts:characterSheetSpellRestBenefitProfile",
+        "packages/character-sheet-runtime/src/index.ts:completeShortRestBenefits",
+        "packages/character-sheet-runtime/src/index.ts:recoverCharacterSheetHitPoints",
+        "packages/character-sheet-runtime/src/index.ts:spendCharacterSheetSpellSlot",
+        "packages/character-sheet-runtime/src/index.ts:completeLongRest"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/index.test.ts:prayerOfHealingRestBenefitApplicationTestName"
+      ]
+    },
+    "srd521:classes/paladin:spell-level-2:spell-unit-pressure:paladin_spell_list_prayer_of_healing": {
+      "taskId": "L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST",
+      "profile": "Character Sheet spell-granted Short Rest benefit runtime",
+      "summary": "Prayer of Healing is read from the installed Surface Spell Definition shape and applied after caller-provided completed-casting eligibility. The runtime spends one level-2-or-higher Spell Slot at completion, applies existing Short Rest benefit logic to each selected Character Sheet without duplicating rest algorithms, applies slot-scaled healing capped by Hit Point maximum, records a same-spell recipient Long Rest lockout in Long Rest-cleared sheet rest state, and leaves automatic range tracking and interruption to caller/table facts.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/index.ts:applyCharacterSheetSpellRestBenefit",
+        "packages/character-sheet-runtime/src/index.ts:characterSheetSpellRestBenefitProfile",
+        "packages/character-sheet-runtime/src/index.ts:completeShortRestBenefits",
+        "packages/character-sheet-runtime/src/index.ts:recoverCharacterSheetHitPoints",
+        "packages/character-sheet-runtime/src/index.ts:spendCharacterSheetSpellSlot",
+        "packages/character-sheet-runtime/src/index.ts:completeLongRest"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/index.test.ts:prayerOfHealingRestBenefitApplicationTestName"
+      ]
+    },
     "srd521:classes/warlock:level-2:class-feature-grant:warlock_magical_cunning": {
       "taskId": "L12G-AUTHOR-WARLOCK-MAGICAL-CUNNING",
       "profile": "Character Sheet Pact Slot recovery runtime",

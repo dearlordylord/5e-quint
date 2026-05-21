@@ -82,14 +82,14 @@
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 118,
+      "denominator": 119,
       "numerator": 75,
-      "percent": "63.6%"
+      "percent": "63%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 118,
+      "denominator": 119,
       "numerator": 104,
-      "percent": "88.1%"
+      "percent": "87.4%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 135,
@@ -3398,6 +3398,25 @@
       ]
     },
     {
+      "id": "character-sheet.spell-rest-benefit-application",
+      "profileKind": "character-sheet",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "Character Sheet consumes an installed Surface Spell Definition shape with caller-selected creature recipients, slot-scaled Hit Point healing, a granted Short Rest benefit, and a same-spell recipient lockout reset by the recipient finishing a Long Rest. The runtime spends one Spell Slot at completion, applies existing Short Rest benefit logic per selected Character Sheet without duplicating rest algorithms, applies capped spell healing from caller-supplied dice, stores only the same-spell recipient lockout source reference in Long Rest-cleared sheet rest state, and leaves completed 10-minute casting, range maintenance, and interruption tracking to caller/table facts.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST"
+      ],
+      "title": "Character Sheet applies a spell-granted Short Rest benefit with slot-scaled healing and Long Rest recipient lockout",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
       "id": "spell.invocation-antimagic-field-ongoing-spell-suppression",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -3431,14 +3450,14 @@
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 118,
+        "denominator": 119,
         "numerator": 75,
-        "percent": "63.6%"
+        "percent": "63%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 118,
+        "denominator": 119,
         "numerator": 104,
-        "percent": "88.1%"
+        "percent": "87.4%"
       }
     },
     "profileKinds": [
@@ -5017,6 +5036,12 @@
         "obligations": [],
         "profileId": "unit-feature.metamagic-cast-governor-quickened",
         "profileKind": "bonus-action"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "character-sheet.spell-rest-benefit-application",
+        "profileKind": "character-sheet"
       },
       {
         "joinStatus": "unmapped",
@@ -10446,6 +10471,14 @@
         "spell.invocation-antimagic-field-ongoing-spell-suppression"
       ],
       "taskId": "L12G-FOLLOWUP-ANTIMAGIC-FIELD-GENERIC-SUPPRESSION"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Character Sheet runtime tests cover Prayer of Healing Surface-profile admission by shape, completed-cast recipient eligibility consumption, level-2-or-higher Spell Slot spend at completion, existing Short Rest benefit application to each recipient without duplicating the rest algorithm, slot-scaled capped healing, same-spell recipient Long Rest lockout, and Long Rest lockout clearing while range and interruption remain caller/table facts.",
+      "profileIds": [
+        "character-sheet.spell-rest-benefit-application"
+      ],
+      "taskId": "L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST"
     }
   ],
   "units": [
@@ -20462,24 +20495,58 @@
         "status": "installed"
       },
       "claim": {
-        "followUpTasks": [
+        "deferredMechanics": [
           {
-            "id": "L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST",
-            "mechanic": "Apply Prayer of Healing after the completed 10-minute cast by spending the spell slot at completion, consuming caller-supplied recipient eligibility facts, granting each selected Character Sheet the existing Short Rest benefits without duplicating rest algorithms, applying the slot-scaled healing roll capped by Hit Point maximum, and recording/clearing the per-recipient Long Rest lockout from the same rest state owner.",
-            "owner": "character-sheet-runtime plus spellcasting resource owner",
-            "requiredOutput": "Supported profile or profile-subset evidence, focused runtime tests, and owner evidence for Prayer of Healing's Character Sheet rest-benefit application, healing, Spell Slot spend timing, and Long Rest recipient lockout while leaving automatic range tracking and encounter-time casting interruption as caller/table facts.",
-            "title": "Prayer Of Healing Character Sheet Rest Runtime"
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "caller/table completed-cast and range-maintenance witness provider",
+              "reason": "Prayer of Healing application consumes completed-cast recipient eligibility facts; map geometry, range over the entire casting, Magic-action sequencing for the 10-minute cast, and interruption detection are not stored as parallel Character Sheet state."
+            },
+            "mechanic": "automatic 10-minute casting progress, range maintenance tracking, and encounter-time casting interruption detection"
           }
         ],
-        "futureProfileOwner": "character-sheet-runtime rest application plus spellcasting resource owner",
-        "reason": "Prayer of Healing is authored and installed as an SRD Surface Spell Definition with its 10-minute non-ritual spell shell, fixed up-to-five creature recipients that must remain within spell range for the entire casting, slot-scaled 2d8 Hit Point restoration, Short Rest benefit, and per-recipient same-spell lockout until that creature finishes a Long Rest. No runtime support is claimed until the Character Sheet rest and Spell Slot owners consume those Surface facts.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "character-sheet.spell-rest-benefit-application"
+        ],
+        "supportedMechanics": [
+          "Character Sheet admits the installed Surface Spell Definition shape for caller-selected creature recipients, slot-scaled healing, granted Short Rest benefit, and same-spell recipient lockout reset by Long Rest",
+          "After a completed 10-minute cast, the Character Sheet runtime spends one level-2-or-higher Spell Slot at completion, with explicit source selection when ordinary and created Spell Slots of that level are both available",
+          "Each selected recipient consumes caller-supplied remained-within-range-for-entire-casting eligibility, receives existing Short Rest benefit processing without a duplicate rest algorithm, receives slot-scaled healing capped by Hit Point maximum, and records a same-spell Long Rest lockout in the recipient's Long Rest-cleared rest state",
+          "Finishing a Long Rest clears the recipient lockout through existing Character Sheet rest state"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-sheet.spell-rest-benefit-application",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Character Sheet consumes an installed Surface Spell Definition shape with caller-selected creature recipients, slot-scaled Hit Point healing, a granted Short Rest benefit, and a same-spell recipient lockout reset by the recipient finishing a Long Rest. The runtime spends one Spell Slot at completion, applies existing Short Rest benefit logic per selected Character Sheet without duplicating rest algorithms, applies capped spell healing from caller-supplied dice, stores only the same-spell recipient lockout source reference in Long Rest-cleared sheet rest state, and leaves completed 10-minute casting, range maintenance, and interruption tracking to caller/table facts.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST"
+          ],
+          "title": "Character Sheet applies a spell-granted Short Rest benefit with slot-scaled healing and Long Rest recipient lockout",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/prayer_of_healing.json",
       "unitId": "prayer_of_healing"
     },

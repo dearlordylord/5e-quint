@@ -165,6 +165,7 @@ import { Brand, Either, Match, Option } from "effect";
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.font-of-magic-sorcery-points-to-spell-slot
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.metamagic-battle-resource-bridge
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.monk-uncanny-metabolism-initiative-recovery
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.spell-rest-benefit-application
 
 const WEAPON_PROFICIENCY_CATEGORY_VALUES = ["simple", "martial"] as const;
 const ARMOR_TRAINING_CATEGORY_VALUES = [
@@ -203,9 +204,13 @@ const byKind = Match.discriminator("kind");
 const ARCANE_RECOVERY_REST_FEATURE_TAG = "arcaneRecovery" as const;
 const MAGICAL_CUNNING_REST_FEATURE_TAG = "magicalCunning" as const;
 const UNCANNY_METABOLISM_REST_FEATURE_TAG = "uncannyMetabolism" as const;
+const SPELL_RECIPIENT_REST_LOCKOUT_TAG = "spellRecipientRestLockout" as const;
 const JACK_OF_ALL_TRADES_PROFICIENCY_BONUS_DIVISOR = 2;
 const LAY_ON_HANDS_POISONED_REMOVAL_COST = resourceCount(5);
 const RITUAL_ADDITIONAL_CASTING_TIME_MINUTES = 10;
+type CharacterSheetShortRestBenefitHpGate =
+  | "requiresShortRestStartHp"
+  | "spellGrantedRestBenefit";
 const CHARACTER_SHEET_REST_ACTIVITY_INTERRUPTION_VALUES = [
   "rollInitiative",
   "castNonCantripSpell",
@@ -397,6 +402,11 @@ export type CharacterSheetRestFeatureUse =
     }
   | {
       readonly tag: typeof UNCANNY_METABOLISM_REST_FEATURE_TAG;
+      readonly usedSinceLongRest: true;
+    }
+  | {
+      readonly tag: typeof SPELL_RECIPIENT_REST_LOCKOUT_TAG;
+      readonly spellId: UnitRecord["id"];
       readonly usedSinceLongRest: true;
     };
 
@@ -654,6 +664,34 @@ export type CharacterSheetLayOnHandsInput = {
 export type CharacterSheetLayOnHandsResult = {
   readonly source: CharacterSheet;
   readonly target: CharacterSheet;
+};
+
+export type CharacterSheetSpellRestBenefitRecipientEligibility = {
+  readonly remainedWithinRangeForEntireCasting: true;
+};
+
+export type CharacterSheetSpellRestBenefitRecipient = {
+  readonly sheet: CharacterSheet;
+  readonly eligibility: CharacterSheetSpellRestBenefitRecipientEligibility;
+  readonly healingRolls: readonly DieRollResult[];
+  readonly spendHitDice?: readonly CharacterSheetHitDieSpend[];
+  readonly arcaneRecovery?: {
+    readonly refundSpellSlots: readonly CharacterSheetArcaneRecoverySlotRefund[];
+  };
+};
+
+export type CharacterSheetSpellRestBenefitInput = {
+  readonly caster: CharacterSheet;
+  readonly spellId: UnitRecord["id"];
+  readonly unitLibrary: UnitCatalog;
+  readonly castLevel: SpellSlotLevel;
+  readonly spellSlotSource?: CharacterSheetFontOfMagicSpellSlotSource;
+  readonly recipients: ReadonlyNonEmptyArray<CharacterSheetSpellRestBenefitRecipient>;
+};
+
+export type CharacterSheetSpellRestBenefitResult = {
+  readonly caster: CharacterSheet;
+  readonly recipients: readonly CharacterSheet[];
 };
 
 export type CharacterSheetInput = {
@@ -1720,6 +1758,124 @@ function fontOfMagicSpellSlotSpendForSorceryPoints(input: {
       });
 }
 
+function spendCharacterSheetSpellSlot(input: {
+  readonly sheet: CharacterSheet;
+  readonly spellLevel: SpellSlotLevel;
+  readonly spellSlotSource:
+    | CharacterSheetFontOfMagicSpellSlotSource
+    | undefined;
+}): Either.Either<CharacterSheet, CharacterSheetIssue> {
+  if (!isCharacterSheetWithSpellSlots(input.sheet)) {
+    return characterSheetIssue(
+      "Spell rest benefit application requires Spell Slot state.",
+    );
+  }
+  const spellSlotSpend = spendCharacterSheetSpellSlotSource({
+    sheet: input.sheet,
+    spellLevel: input.spellLevel,
+    spellSlotSource: input.spellSlotSource,
+  });
+  if (Either.isLeft(spellSlotSpend)) return Either.left(spellSlotSpend.left);
+  return Either.right({
+    ...input.sheet,
+    spellSlotExpenditures: spellSlotSpend.right.ordinarySpellSlotExpenditures,
+    createdSpellSlots: spellSlotSpend.right.createdSpellSlots,
+  });
+}
+
+function spendCharacterSheetSpellSlotSource(input: {
+  readonly sheet: CharacterSheetWithSpellSlots;
+  readonly spellLevel: SpellSlotLevel;
+  readonly spellSlotSource:
+    | CharacterSheetFontOfMagicSpellSlotSource
+    | undefined;
+}): Either.Either<CharacterSheetSpellSlotSourceState, CharacterSheetIssue> {
+  const ordinarySlot = ordinarySpellSlotStates(input.sheet).find(
+    (slot) => slot.spellLevel === input.spellLevel,
+  );
+  const createdSlot = input.sheet.createdSpellSlots.find(
+    (slot) => slot.spellLevel === input.spellLevel,
+  );
+  const ordinaryAvailable =
+    ordinarySlot !== undefined && ordinarySlot.expended < ordinarySlot.count;
+  const createdAvailable =
+    createdSlot !== undefined && createdSlot.expended < createdSlot.count;
+  const source = characterSheetSpellSlotSpendSource({
+    spellSlotSource: input.spellSlotSource,
+    ordinarySlot,
+    ordinaryAvailable,
+    createdSlot,
+    createdAvailable,
+  });
+  if (Either.isLeft(source)) return Either.left(source.left);
+  return source.right === "ordinary"
+    ? Either.right({
+        ordinarySpellSlotExpenditures: input.sheet.spellSlotExpenditures.map(
+          (slot) =>
+            slot.spellLevel === input.spellLevel
+              ? { ...slot, expended: resourceCount(slot.expended + 1) }
+              : slot,
+        ),
+        createdSpellSlots: input.sheet.createdSpellSlots,
+      })
+    : Either.right({
+        ordinarySpellSlotExpenditures: input.sheet.spellSlotExpenditures,
+        createdSpellSlots: input.sheet.createdSpellSlots.map((slot) =>
+          slot.spellLevel === input.spellLevel
+            ? { ...slot, expended: resourceCount(slot.expended + 1) }
+            : slot,
+        ),
+      });
+}
+
+function characterSheetSpellSlotSpendSource(input: {
+  readonly spellSlotSource:
+    | CharacterSheetFontOfMagicSpellSlotSource
+    | undefined;
+  readonly ordinarySlot: CharacterSheetSpellSlotState | undefined;
+  readonly ordinaryAvailable: boolean;
+  readonly createdSlot: CharacterSheetCreatedSpellSlotState | undefined;
+  readonly createdAvailable: boolean;
+}): Either.Either<
+  CharacterSheetFontOfMagicSpellSlotSource,
+  CharacterSheetIssue
+> {
+  if (input.spellSlotSource === "ordinary") {
+    return input.ordinaryAvailable
+      ? Either.right("ordinary")
+      : characterSheetIssue(
+          "Spell Slot spend requires an unexpended ordinary Spell Slot.",
+        );
+  }
+  if (input.spellSlotSource === "created") {
+    return input.createdAvailable
+      ? Either.right("created")
+      : characterSheetIssue(
+          "Spell Slot spend requires an unexpended created Spell Slot.",
+        );
+  }
+  if (input.ordinaryAvailable && input.createdAvailable) {
+    return characterSheetIssue(
+      "Spell Slot spend requires a source when ordinary and created Spell Slots are both available.",
+    );
+  }
+  if (input.ordinaryAvailable) return Either.right("ordinary");
+  if (input.createdAvailable) return Either.right("created");
+  if (input.ordinarySlot !== undefined && input.createdSlot === undefined) {
+    return characterSheetIssue(
+      "Spell Slot spend requires an unexpended ordinary Spell Slot.",
+    );
+  }
+  if (input.createdSlot !== undefined && input.ordinarySlot === undefined) {
+    return characterSheetIssue(
+      "Spell Slot spend requires an unexpended created Spell Slot.",
+    );
+  }
+  return characterSheetIssue(
+    "Spell Slot spend requires an unexpended Spell Slot.",
+  );
+}
+
 function fontOfMagicSpellSlotSourceForSorceryPointConversion(input: {
   readonly spellSlotSource:
     | CharacterSheetFontOfMagicSpellSlotSource
@@ -1968,6 +2124,7 @@ export function completeShortRest(
   return completeShortRestBenefits({
     sheet: input.completion.startedRest.sheet,
     unitLibrary: input.unitLibrary,
+    hpGate: "requiresShortRestStartHp",
     spendHitDice: input.spendHitDice,
     arcaneRecovery: input.arcaneRecovery,
   });
@@ -1976,6 +2133,7 @@ export function completeShortRest(
 function completeShortRestBenefits(input: {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
+  readonly hpGate: CharacterSheetShortRestBenefitHpGate;
   readonly spendHitDice?: readonly CharacterSheetHitDieSpend[] | undefined;
   readonly arcaneRecovery?:
     | {
@@ -1983,7 +2141,10 @@ function completeShortRestBenefits(input: {
       }
     | undefined;
 }): Either.Either<CharacterSheet, CharacterSheetIssue> {
-  if (characterSheetCurrentHp(input.sheet) < Hp(1)) {
+  if (
+    input.hpGate === "requiresShortRestStartHp" &&
+    characterSheetCurrentHp(input.sheet) < Hp(1)
+  ) {
     return characterSheetIssue(
       "Short Rest requires the Character Sheet to have at least 1 HP.",
     );
@@ -2189,6 +2350,7 @@ export function interruptLongRest(
   const shortRest = completeShortRestBenefits({
     sheet: input.rest.sheet,
     unitLibrary: input.unitLibrary,
+    hpGate: "requiresShortRestStartHp",
     spendHitDice: input.spendHitDice,
     arcaneRecovery: input.arcaneRecovery,
   });
@@ -2559,6 +2721,49 @@ export function applyLayOnHands(
           target: targetAfterHealing.right,
         },
   );
+}
+
+export function applyCharacterSheetSpellRestBenefit(
+  input: CharacterSheetSpellRestBenefitInput,
+): Either.Either<CharacterSheetSpellRestBenefitResult, CharacterSheetIssue> {
+  const profile = characterSheetSpellRestBenefitProfile({
+    spellId: input.spellId,
+    unitLibrary: input.unitLibrary,
+  });
+  if (Either.isLeft(profile)) return Either.left(profile.left);
+  if (input.castLevel < profile.right.baseSpellLevel) {
+    return characterSheetIssue(
+      "Spell rest benefit application requires a Spell Slot at or above the spell's base level.",
+    );
+  }
+  const recipientIssue = spellRestBenefitRecipientIssue(input, profile.right);
+  if (recipientIssue !== null) return characterSheetIssue(recipientIssue);
+  const caster = spendCharacterSheetSpellSlot({
+    sheet: input.caster,
+    spellLevel: input.castLevel,
+    spellSlotSource: input.spellSlotSource,
+  });
+  if (Either.isLeft(caster)) return Either.left(caster.left);
+
+  let casterSheet = caster.right;
+  const recipients: CharacterSheet[] = [];
+  for (const recipient of input.recipients) {
+    const affected = applySpellRestBenefitToRecipient({
+      profile: profile.right,
+      recipient:
+        recipient.sheet.characterId === casterSheet.characterId
+          ? { ...recipient, sheet: casterSheet }
+          : recipient,
+      unitLibrary: input.unitLibrary,
+      castLevel: input.castLevel,
+    });
+    if (Either.isLeft(affected)) return Either.left(affected.left);
+    if (affected.right.characterId === casterSheet.characterId) {
+      casterSheet = affected.right;
+    }
+    recipients.push(affected.right);
+  }
+  return Either.right({ caster: casterSheet, recipients });
 }
 
 export function characterSheetArmorClassState(
@@ -3434,21 +3639,40 @@ function restFeatureUsesFromInput(
     if (use.usedSinceLongRest !== true) {
       return characterSheetIssue("Expected supported rest feature use state.");
     }
-    if (usedFeatureTags.has(use.tag)) {
+    const useKey = restFeatureUseStateKey(use);
+    if (usedFeatureTags.has(useKey)) {
       return characterSheetIssue("Rest feature use state must not duplicate.");
     }
     const featureUseState = restFeatureUseStateMatchesBuild(input, use);
     if (Either.isLeft(featureUseState))
       return Either.left(featureUseState.left);
-    usedFeatureTags.add(use.tag);
+    usedFeatureTags.add(useKey);
   }
   return Either.right([...uses]);
+}
+
+function restFeatureUseStateKey(use: CharacterSheetRestFeatureUse): string {
+  return use.tag === SPELL_RECIPIENT_REST_LOCKOUT_TAG
+    ? `${use.tag}:${use.spellId}`
+    : use.tag;
 }
 
 function restFeatureUseStateMatchesBuild(
   input: Pick<CharacterSheetInput, "build" | "unitLibrary">,
   use: CharacterSheetRestFeatureUse,
 ): Either.Either<void, CharacterSheetIssue> {
+  if (use.tag === SPELL_RECIPIENT_REST_LOCKOUT_TAG) {
+    const profile = characterSheetSpellRestBenefitProfile({
+      spellId: use.spellId,
+      unitLibrary: input.unitLibrary,
+    });
+    if (Either.isLeft(profile)) {
+      return characterSheetIssue(
+        "Spell recipient rest lockout requires an admitted spell rest-benefit profile.",
+      );
+    }
+    return Either.right(undefined);
+  }
   if (use.tag === ARCANE_RECOVERY_REST_FEATURE_TAG) {
     if (
       Either.isLeft(
@@ -4150,6 +4374,330 @@ function spendHitDice(input: {
     ...healed.right,
     spentHitDice: nextSpentHitDice,
   });
+}
+
+type CharacterSheetSpellRestBenefitProfile = {
+  readonly spellId: UnitRecord["id"];
+  readonly baseSpellLevel: SpellSlotLevel;
+  readonly maxRecipients: number;
+  readonly healingBaseDice: number;
+  readonly healingDieSize: number;
+  readonly healingDicePerSlotAboveBase: number;
+};
+
+type CharacterSheetSpellRestBenefitHealingEffect = {
+  readonly kind: "heal_hp";
+  readonly target: "target_creature";
+  readonly amount: {
+    readonly kind: "linear_per_level";
+    readonly axis: "slot";
+    readonly base: {
+      readonly dice: number;
+      readonly dieSize: number;
+      readonly flat?: number;
+    };
+    readonly perLevel: {
+      readonly dice?: number;
+      readonly dieSize?: number;
+      readonly flat?: number;
+    };
+    readonly startingAtLevel: number;
+  };
+};
+
+type CharacterSheetSpellRestBenefitEffects = {
+  readonly healing: CharacterSheetSpellRestBenefitHealingEffect;
+};
+
+function characterSheetSpellRestBenefitProfile(input: {
+  readonly spellId: UnitRecord["id"];
+  readonly unitLibrary: UnitCatalog;
+}): Either.Either<CharacterSheetSpellRestBenefitProfile, CharacterSheetIssue> {
+  const unit = input.unitLibrary.getUnit(input.spellId);
+  if (Option.isNone(unit) || unit.value.kind !== "spell") {
+    return characterSheetIssue(
+      "Spell rest benefit application requires an installed Spell Definition.",
+    );
+  }
+  const mechanics = unit.value.mechanics;
+  if (mechanics.family !== "activation" || mechanics.level < 1) {
+    return characterSheetIssue(
+      "Spell rest benefit application requires a leveled activation Spell Definition.",
+    );
+  }
+  if (!isSpellRestBenefitCastingShell(mechanics)) {
+    return characterSheetIssue(
+      "Spell rest benefit application requires a 10-minute non-ritual spell with 30-foot point range and instantaneous duration.",
+    );
+  }
+  const phase = mechanics.phases.length === 1 ? mechanics.phases[0] : undefined;
+  if (phase === undefined || phase.kind !== "direct") {
+    return characterSheetIssue(
+      "Spell rest benefit application requires one direct spell phase.",
+    );
+  }
+  const selection =
+    phase.attachment.kind === "hole" && phase.attachment.value.kind === "target"
+      ? phase.attachment.value.selection
+      : undefined;
+  if (
+    selection === undefined ||
+    selection.mode !== "choose_up_to" ||
+    selection.count !== 5 ||
+    !isExactCreatureTargetKindList(selection.targetKinds) ||
+    !hasRemainWithinSpellRangeForEntireCastingRequirement(selection)
+  ) {
+    return characterSheetIssue(
+      "Spell rest benefit application requires up-to-five creature recipients that remain within range for the entire casting.",
+    );
+  }
+  const effects: readonly unknown[] = phase.effects ?? [];
+  const restBenefitEffects = characterSheetSpellRestBenefitEffects(
+    effects,
+    mechanics.level,
+  );
+  if (Either.isLeft(restBenefitEffects)) {
+    return Either.left(restBenefitEffects.left);
+  }
+  const { healing } = restBenefitEffects.right;
+  const healingDicePerSlotAboveBase = healing.amount.perLevel.dice;
+  if (healingDicePerSlotAboveBase === undefined) {
+    return characterSheetIssue(
+      "Spell rest benefit application requires slot-scaled healing, Short Rest benefit, and Long Rest lockout facts.",
+    );
+  }
+  return Either.right({
+    spellId: unit.value.id,
+    baseSpellLevel: spellSlotLevel(mechanics.level),
+    maxRecipients: selection.count,
+    healingBaseDice: healing.amount.base.dice,
+    healingDieSize: healing.amount.base.dieSize,
+    healingDicePerSlotAboveBase,
+  });
+}
+
+function isSpellRestBenefitCastingShell(mechanics: SpellRecord["mechanics"]) {
+  return (
+    mechanics.castingTime.kind === "minutes" &&
+    mechanics.castingTime.amount === 10 &&
+    mechanics.castingTime.ritual === false &&
+    mechanics.range.kind === "point" &&
+    mechanics.range.feet === 30 &&
+    mechanics.duration.kind === "instantaneous"
+  );
+}
+
+function isExactCreatureTargetKindList(
+  value: readonly unknown[] | undefined,
+): value is readonly ["creature"] {
+  return Array.isArray(value) && value.length === 1 && value[0] === "creature";
+}
+
+function hasRemainWithinSpellRangeForEntireCastingRequirement(
+  selection: Readonly<Record<string, unknown>>,
+): boolean {
+  const requirement = selection.castingRequirement;
+  return (
+    isRecord(requirement) &&
+    requirement.kind === "remain_within_spell_range_for_entire_casting"
+  );
+}
+
+function characterSheetSpellRestBenefitEffects(
+  effects: readonly unknown[],
+  baseSpellLevel: number,
+): Either.Either<CharacterSheetSpellRestBenefitEffects, CharacterSheetIssue> {
+  if (effects.length !== 3) {
+    return characterSheetIssue(
+      "Spell rest benefit application requires exactly healing, Short Rest benefit, and Long Rest lockout facts.",
+    );
+  }
+  let healing: CharacterSheetSpellRestBenefitHealingEffect | undefined;
+  let shortRestBenefit = false;
+  let lockout = false;
+  for (const effect of effects) {
+    if (isSpellRestBenefitHealingEffect(effect) && healing === undefined) {
+      healing = effect;
+      continue;
+    }
+    if (isSpellRestBenefitShortRestEffect(effect) && !shortRestBenefit) {
+      shortRestBenefit = true;
+      continue;
+    }
+    if (isSpellRestBenefitLockoutEffect(effect) && !lockout) {
+      lockout = true;
+      continue;
+    }
+    return characterSheetIssue(
+      "Spell rest benefit application cannot ignore unsupported spell effects.",
+    );
+  }
+  if (
+    healing === undefined ||
+    !shortRestBenefit ||
+    !lockout ||
+    healing.amount.startingAtLevel !== baseSpellLevel ||
+    healing.amount.base.flat !== undefined ||
+    healing.amount.perLevel.dice === undefined ||
+    healing.amount.perLevel.flat !== undefined ||
+    (healing.amount.perLevel.dieSize !== undefined &&
+      healing.amount.perLevel.dieSize !== healing.amount.base.dieSize)
+  ) {
+    return characterSheetIssue(
+      "Spell rest benefit application requires slot-scaled healing, Short Rest benefit, and Long Rest lockout facts.",
+    );
+  }
+  return Either.right({
+    healing,
+  });
+}
+
+function isSpellRestBenefitHealingEffect(
+  effect: unknown,
+): effect is CharacterSheetSpellRestBenefitHealingEffect {
+  if (!isRecord(effect) || effect.kind !== "heal_hp") return false;
+  if (effect.target !== "target_creature" || !isRecord(effect.amount)) {
+    return false;
+  }
+  const amount = effect.amount;
+  return (
+    amount.kind === "linear_per_level" &&
+    amount.axis === "slot" &&
+    isRecord(amount.base) &&
+    isRecord(amount.perLevel) &&
+    typeof amount.base.dice === "number" &&
+    typeof amount.base.dieSize === "number" &&
+    (amount.base.flat === undefined || typeof amount.base.flat === "number") &&
+    (amount.perLevel.dice === undefined ||
+      typeof amount.perLevel.dice === "number") &&
+    (amount.perLevel.dieSize === undefined ||
+      typeof amount.perLevel.dieSize === "number") &&
+    (amount.perLevel.flat === undefined ||
+      typeof amount.perLevel.flat === "number") &&
+    typeof amount.startingAtLevel === "number"
+  );
+}
+
+function isSpellRestBenefitShortRestEffect(effect: unknown): boolean {
+  return (
+    isRecord(effect) &&
+    effect.kind === "grant_rest_benefit" &&
+    effect.benefit === "short_rest" &&
+    effect.target === "target_creature"
+  );
+}
+
+function isSpellRestBenefitLockoutEffect(effect: unknown): boolean {
+  return (
+    isRecord(effect) &&
+    effect.kind === "spell_recipient_rest_lockout" &&
+    effect.resetBy === "target_finishes_long_rest" &&
+    effect.target === "target_creature"
+  );
+}
+
+function spellRestBenefitRecipientIssue(
+  input: CharacterSheetSpellRestBenefitInput,
+  profile: CharacterSheetSpellRestBenefitProfile,
+): string | null {
+  if (input.recipients.length > profile.maxRecipients) {
+    return "Spell rest benefit application cannot affect more recipients than the Spell Definition allows.";
+  }
+  const seenCharacterIds = new Set<CharacterSheetId>();
+  for (const recipient of input.recipients) {
+    if (recipient.eligibility.remainedWithinRangeForEntireCasting !== true) {
+      return "Spell rest benefit application requires caller-supplied completed-casting recipient eligibility.";
+    }
+    if (seenCharacterIds.has(recipient.sheet.characterId)) {
+      return "Spell rest benefit application cannot target the same Character Sheet twice.";
+    }
+    seenCharacterIds.add(recipient.sheet.characterId);
+    if (hasSpellRecipientRestLockout(recipient.sheet, profile.spellId)) {
+      return "Spell rest benefit recipient cannot be affected by this spell again until finishing a Long Rest.";
+    }
+  }
+  return null;
+}
+
+function applySpellRestBenefitToRecipient(input: {
+  readonly profile: CharacterSheetSpellRestBenefitProfile;
+  readonly recipient: CharacterSheetSpellRestBenefitRecipient;
+  readonly unitLibrary: UnitCatalog;
+  readonly castLevel: SpellSlotLevel;
+}): Either.Either<CharacterSheet, CharacterSheetIssue> {
+  const shortRested = completeShortRestBenefits({
+    sheet: input.recipient.sheet,
+    unitLibrary: input.unitLibrary,
+    hpGate: "spellGrantedRestBenefit",
+    spendHitDice: input.recipient.spendHitDice,
+    arcaneRecovery: input.recipient.arcaneRecovery,
+  });
+  if (Either.isLeft(shortRested)) return Either.left(shortRested.left);
+  const healing = spellRestBenefitHealingAmount({
+    profile: input.profile,
+    castLevel: input.castLevel,
+    healingRolls: input.recipient.healingRolls,
+  });
+  if (Either.isLeft(healing)) return Either.left(healing.left);
+  const healed = recoverCharacterSheetHitPoints({
+    sheet: shortRested.right,
+    healing: healing.right,
+    overflow: { tag: "capAtMaximum" },
+    deadCharacterMessage:
+      "Spell rest benefit healing cannot restore HP to a dead character.",
+  });
+  if (Either.isLeft(healed)) return Either.left(healed.left);
+  return Either.right({
+    ...healed.right,
+    restFeatureUses: [
+      ...healed.right.restFeatureUses,
+      {
+        tag: SPELL_RECIPIENT_REST_LOCKOUT_TAG,
+        spellId: input.profile.spellId,
+        usedSinceLongRest: true,
+      },
+    ],
+  });
+}
+
+function spellRestBenefitHealingAmount(input: {
+  readonly profile: CharacterSheetSpellRestBenefitProfile;
+  readonly castLevel: SpellSlotLevel;
+  readonly healingRolls: readonly DieRollResult[];
+}): Either.Either<HpType, CharacterSheetIssue> {
+  const dice =
+    input.profile.healingBaseDice +
+    (input.castLevel - input.profile.baseSpellLevel) *
+      input.profile.healingDicePerSlotAboveBase;
+  if (input.healingRolls.length !== dice) {
+    return characterSheetIssue(
+      "Spell rest benefit healing rolls must match the current cast level.",
+    );
+  }
+  const invalidRoll = input.healingRolls.find(
+    (roll) =>
+      !Number.isInteger(Number(roll)) ||
+      roll < 1 ||
+      roll > input.profile.healingDieSize,
+  );
+  if (invalidRoll !== undefined) {
+    return characterSheetIssue(
+      `Spell rest benefit healing roll must be within d${input.profile.healingDieSize}.`,
+    );
+  }
+  return Either.right(
+    Hp(input.healingRolls.reduce((total, roll) => total + roll, 0)),
+  );
+}
+
+function hasSpellRecipientRestLockout(
+  sheet: CharacterSheet,
+  spellId: UnitRecord["id"],
+): boolean {
+  return sheet.restFeatureUses.some(
+    (use) =>
+      use.tag === SPELL_RECIPIENT_REST_LOCKOUT_TAG && use.spellId === spellId,
+  );
 }
 
 // Rest and feature-resource callers share this owner for Character Sheet HP recovery.
@@ -4999,15 +5547,26 @@ function parseStoredRestFeatureUses(
     if (
       (use.tag !== ARCANE_RECOVERY_REST_FEATURE_TAG &&
         use.tag !== MAGICAL_CUNNING_REST_FEATURE_TAG &&
-        use.tag !== UNCANNY_METABOLISM_REST_FEATURE_TAG) ||
+        use.tag !== UNCANNY_METABOLISM_REST_FEATURE_TAG &&
+        use.tag !== SPELL_RECIPIENT_REST_LOCKOUT_TAG) ||
       use.usedSinceLongRest !== true
     ) {
       return characterSheetIssue("Expected supported rest feature use state.");
     }
-    uses.push({
-      tag: use.tag,
-      usedSinceLongRest: true,
-    });
+    if (use.tag === SPELL_RECIPIENT_REST_LOCKOUT_TAG) {
+      if (typeof use.spellId !== "string") {
+        return characterSheetIssue(
+          "Spell recipient rest lockout requires a spell Unit id.",
+        );
+      }
+      uses.push({
+        tag: use.tag,
+        spellId: use.spellId,
+        usedSinceLongRest: true,
+      });
+      continue;
+    }
+    uses.push({ tag: use.tag, usedSinceLongRest: true });
   }
   return restFeatureUsesFromInput({
     build,
