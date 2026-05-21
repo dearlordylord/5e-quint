@@ -127,19 +127,19 @@
     {
       "number": 21,
       "id": "RKBC-HANDOFF-BATTLE-INIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Character Battle Initialization Projection"
     },
     {
       "number": 22,
       "id": "RKBC-HANDOFF-BATTLE-SETTLEMENT",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Character Battle Settlement Back To Sheet"
     },
     {
       "number": 23,
       "id": "RKBC-HANDOFF-IDENTITY-CONFLICTS",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Character Battle Identity And Max HP Conflict Handling"
     },
     {
@@ -414,9 +414,9 @@ Reviewers should reject:
 | 18 | RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS - Character Sheet Spell Slot And Pact Slot Transitions | done | RKBC-SHEET-HP-REST-HIT-DICE | Covered Spell Slot, created Spell Slot, Pact Slot, Arcane Recovery, and Magical Cunning transitions as `SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS`. |
 | 19 | RKBC-SHEET-FEATURE-RESOURCES - Character Sheet Feature Resource Transitions | done | RKBC-SHEET-HP-REST-HIT-DICE | Covered non-slot feature-resource spend, recovery, reset, conversion, and battle bridge transitions as `SHEET.FEATURE_RESOURCES.TRANSITIONS`. |
 | 20 | RKBC-SHEET-WEAPON-MASTERY-RITUAL - Character Sheet Weapon Mastery And Ritual Projection | done | baseline | Covered Character Sheet Weapon Mastery reselection and spellbook Ritual Spell Access projection with deterministic selected-identity replays. |
-| 21 | RKBC-HANDOFF-BATTLE-INIT - Character Battle Initialization Projection | ready-for-research | baseline | Cover Character Sheet/build projection into battle initialization. |
-| 22 | RKBC-HANDOFF-BATTLE-SETTLEMENT - Character Battle Settlement Back To Sheet | blocked | RKBC-SHEET-HP-REST-HIT-DICE, RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS, RKBC-HANDOFF-BATTLE-INIT | Cover HP, condition, spell-slot, and resource settlement from battle back to sheet. |
-| 23 | RKBC-HANDOFF-IDENTITY-CONFLICTS - Character Battle Identity And Max HP Conflict Handling | blocked | RKBC-SHEET-HP-REST-HIT-DICE, RKBC-HANDOFF-BATTLE-INIT | Cover identity checks, max-HP conflicts, and zero-HP lifecycle handoff. |
+| 21 | RKBC-HANDOFF-BATTLE-INIT - Character Battle Initialization Projection | done | baseline | Covered Character Sheet/build projection into battle initialization as `CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION`. |
+| 22 | RKBC-HANDOFF-BATTLE-SETTLEMENT - Character Battle Settlement Back To Sheet | ready-for-research | RKBC-SHEET-HP-REST-HIT-DICE, RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS, RKBC-HANDOFF-BATTLE-INIT | Cover HP, condition, spell-slot, and resource settlement from battle back to sheet. |
+| 23 | RKBC-HANDOFF-IDENTITY-CONFLICTS - Character Battle Identity And Max HP Conflict Handling | ready-for-research | RKBC-SHEET-HP-REST-HIT-DICE, RKBC-HANDOFF-BATTLE-INIT | Cover identity checks, max-HP conflicts, and zero-HP lifecycle handoff. |
 | 24 | RKBC-FINAL-B-CLOSURE-GATE - Final Rules Kernel B Closure Gate | blocked | RKBC-BATTLE-HOLE-INVENTORY, RKBC-BATTLE-HOLE-TARGETS-AREAS, RKBC-BATTLE-HOLE-MOVEMENT-ROUTE, RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION, RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND, RKBC-BATTLE-HOLE-REACTION-CONCENTRATION, RKBC-PROFILE-JOIN-FEATURE-PASSIVE-RESOURCE, RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS, RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION, RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION, RKBC-PROFILE-JOIN-TABLE-CALLER, RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH, RKBC-CREATION-ADVANCEMENT-REPLACEMENT, RKBC-CREATION-SPELLCASTING-PROGRESSION, RKBC-CREATION-WEAPON-MASTERY-FEAT, RKBC-SHEET-HP-REST-HIT-DICE, RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS, RKBC-SHEET-FEATURE-RESOURCES, RKBC-SHEET-WEAPON-MASTERY-RITUAL, RKBC-HANDOFF-BATTLE-INIT, RKBC-HANDOFF-BATTLE-SETTLEMENT, RKBC-HANDOFF-IDENTITY-CONFLICTS, RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY, RKBC-SPELL-SAVE-GATED-CONDITION-PARITY, RKBC-SPELL-ROLL-SCALAR-PARITY, RKBC-SPELL-MAKE-STABLE-PARITY, RKBC-SPELL-SELF-TRANSFORMATION-PARITY, RKBC-SPELL-REACTION-CASTING-PARITY, RKBC-SPELL-AFTER-HIT-RIDERS-PARITY, RKBC-SPELL-WEAPON-HOSTED-PARITY, RKBC-SPELL-MARKED-RIDER-PARITY, RKBC-SPELL-ATTACK-SEQUENCES-PARITY, RKBC-SPELL-MIRROR-IMAGE-PARITY, RKBC-SPELL-LINKED-EFFECT-PARITY, RKBC-SPELL-MOONBEAM-MOVABLE-ZONE-PARITY | Remove merge-acceptable `needs-*` statuses, wire quality gate, and prove reports show B closure. |
 | 25 | RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY - Spell Direct Condition Removal And Protection Parity Witnesses | ready-for-research | RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION | Add focused parity witnesses for direct spell condition application, creature-type protection/charm prevention, condition-immunity Temporary Hit Point refresh, and condition removal/protection obligations. |
 | 26 | RKBC-SPELL-SAVE-GATED-CONDITION-PARITY - Spell Save-Gated Condition Parity Witnesses | ready-for-research | RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION | Add focused parity witnesses for save-gated condition lifecycle, condition-choice holes, non-Sleep repeat saves, and save-gated attack-roll Advantage effects. |
@@ -902,7 +902,7 @@ covered risk is fixed projection behavior, not random interleavings.
 
 ### Task 21 - RKBC-HANDOFF-BATTLE-INIT - Character Battle Initialization Projection
 
-Status: `ready-for-research`
+Status: `done`
 
 Scope: cover projection from character build/sheet facts into battle
 initialization, including identity, HP, AC, conditions, spellcasting facts, and
@@ -915,9 +915,16 @@ Acceptance:
   boundary makes the duplication executable.
 - Covered obligations connect QNT to production handoff behavior.
 
+Result: `CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION` covers Character Sheet and
+Character Build projection into battle initialization for identity, Hit Points,
+Temporary Hit Points, Armor Class, Conditions, Spell Slots, Metamagic facts, and
+supported Unit profile refs. The witness uses deterministic QNT replay because
+the covered risk is a fixed runtime-boundary projection, not random battle
+action interleavings.
+
 ### Task 22 - RKBC-HANDOFF-BATTLE-SETTLEMENT - Character Battle Settlement Back To Sheet
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `RKBC-SHEET-HP-REST-HIT-DICE`, `RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS`, and `RKBC-HANDOFF-BATTLE-INIT`.
 
@@ -932,7 +939,7 @@ Acceptance:
 
 ### Task 23 - RKBC-HANDOFF-IDENTITY-CONFLICTS - Character Battle Identity And Max HP Conflict Handling
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `RKBC-SHEET-HP-REST-HIT-DICE` and `RKBC-HANDOFF-BATTLE-INIT`.
 

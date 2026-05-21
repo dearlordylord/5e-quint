@@ -78,6 +78,7 @@ import {
   characterUnitRefsWithBattleSupportProfiles,
 } from "./battle-support-profiles.ts";
 
+// KERNEL-COVERAGE: runtime-owner CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.monk-focus-battle-options character-sheet.metamagic-battle-resource-bridge
 
 // MCP owns cross-runtime wiring. Character creation finalizes a CharacterBuild;

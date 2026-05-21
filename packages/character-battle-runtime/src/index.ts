@@ -1,4 +1,4 @@
-// KERNEL-COVERAGE: runtime-owner SHEET.FEATURE_RESOURCES.TRANSITIONS
+// KERNEL-COVERAGE: runtime-owner SHEET.FEATURE_RESOURCES.TRANSITIONS CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION
 import {
   combatantKnockedOutUnconscious,
   combatantHasActiveDruidWildShape,
@@ -102,6 +102,7 @@ export type CharacterSheetBattleInitInput = Omit<
   | "zeroHpLifecycle"
   | "spellSlots"
   | "bookOfShadowsPresence"
+  | "resourceExpenditures"
   | "druidWildShapeKnownForms"
 > & {
   readonly sheet: CharacterSheet;

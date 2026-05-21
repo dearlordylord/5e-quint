@@ -1,7 +1,7 @@
 {
   "summary": {
-    "total": 69,
-    "covered": 43,
+    "total": 70,
+    "covered": 44,
     "open": 21,
     "nonSemantic": 5,
     "byRuntime": {
@@ -9,10 +9,10 @@
       "battle": 54,
       "character-creation": 8,
       "character-sheet": 6,
-      "character-battle": 1
+      "character-battle": 2
     },
     "byStatus": {
-      "covered": 43,
+      "covered": 44,
       "needs-qnt-owner": 1,
       "needs-parity-witness": 19,
       "needs-surface-evidence": 1,
@@ -1710,8 +1710,44 @@
       "title": "Character Sheet non-slot feature-resource spend, recovery, reset, conversion, and battle bridge transitions"
     },
     {
+      "id": "CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION",
+      "kind": "composition",
+      "parityWitnesses": [
+        {
+          "deterministicReplayRationale": "Character Battle initialization replay is a fixed projection fixture for sheet HP, Temporary Hit Points, Armor Class, conditions, Spell Slot counts and expenditures, Metamagic facts, supported Unit profile refs, and max-HP rejection. The risk is deterministic projection across runtime boundaries, not random action interleavings.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/character-battle-runtime/src/character-battle-init-projection.mbt.test.ts",
+          "qntSpecPath": "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt"
+      ],
+      "runtime": "character-battle",
+      "runtimeOwners": [
+        "packages/character-battle-runtime/src/index.ts",
+        "packages/character-battle-runtime/src/battle-creature-init.ts",
+        "packages/character-battle-runtime/src/battle-character-build-projection.ts",
+        "packages/character-battle-runtime/src/battle-support-profiles.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Character-Creation.md#Fill In Numbers",
+        ".references/srd-5.2.1/Playing-the-Game.md#The Order of Combat",
+        ".references/srd-5.2.1/Playing-the-Game.md#Armor Class",
+        ".references/srd-5.2.1/Playing-the-Game.md#Hit Points",
+        ".references/srd-5.2.1/Rules-Glossary.md#Character Sheet",
+        ".references/srd-5.2.1/Rules-Glossary.md#Condition",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Spell Slots"
+      ],
+      "title": "Character Sheet and Character Build projection into Battle initialization for identity, HP, Armor Class, conditions, Spell Slots, and supported Unit profiles"
+    },
+    {
       "followUpTaskIds": [
-        "RKBC-HANDOFF-BATTLE-SETTLEMENT"
+        "RKBC-HANDOFF-BATTLE-SETTLEMENT",
+        "RKBC-HANDOFF-IDENTITY-CONFLICTS"
       ],
       "id": "CHARACTER.BATTLE.HANDOFF.SETTLEMENT",
       "kind": "composition",
@@ -1724,7 +1760,7 @@
       ],
       "status": "needs-qnt-owner",
       "surfaceEvidence": [],
-      "title": "Audit Character Sheet to battle init and battle handoff settlement for HP, zero-HP lifecycle, conditions, spell slots, and identity checks"
+      "title": "Character battle settlement back to Character Sheet for HP, zero-HP lifecycle, conditions, Spell Slots, resources, and identity/max-HP conflicts"
     },
     {
       "id": "BATTLE.PROTOCOL.MALFORMED_PAYLOAD_REJECTION",
