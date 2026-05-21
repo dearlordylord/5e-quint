@@ -77,9 +77,9 @@ module battleRuntimeGroundCommandTests {
     val moved = moveFighterThroughGreaseGroundDifficultTerrain(resolved, greaseAreaId, 10, 5, false)
     val expired = { ...resolved, fighter: { ...resolved.fighter, activeEffects: Set() } }
     all {
-      assert(greaseGroundDifficultTerrainMovementCost(resolved, greaseAreaId, 10, 5) == 15),
+      assert(areaDifficultTerrainMovementCost(resolved, greaseAreaId, 10, 5) == 15),
       assert(moved.fighter.movementSpent == 15),
-      assert(greaseGroundDifficultTerrainMovementCost(expired, greaseAreaId, 10, 5) == 0),
+      assert(areaDifficultTerrainMovementCost(expired, greaseAreaId, 10, 5) == 0),
     }
   }
 
@@ -135,6 +135,66 @@ module battleRuntimeGroundCommandTests {
     all {
       assert(not(fogCloudObscurementActive(dispersed, fogCloudAreaId))),
       assert(not(dispersed.fighter.concentrating)),
+    }
+  }
+
+  run test_darkness_records_magical_darkness_area_and_concentration = {
+    val resolved = resolveDarknessPointOrigin(initialState, darknessAreaId, 2)
+    all {
+      assert(resolved.fighter.activeEffects.contains(MagicalDarknessPointOrigin({
+        areaId: darknessAreaId,
+        radiusFeet: darknessRadiusFeet,
+        durationTicks: darknessDurationTicks,
+      }))),
+      assert(resolved.fighter.concentrating),
+      assert(not(resolved.actionAvailable)),
+      assert(battleActorHasCommittedSpellSlotUse(resolved, Fighter)),
+    }
+  }
+
+  run test_darkness_rejects_level_one_slot = {
+    val resolved = resolveDarknessPointOrigin(initialState, darknessAreaId, 1)
+    all {
+      assert(not(magicalDarknessPointOriginActive(resolved, darknessAreaId))),
+      assert(not(battleActorHasCommittedSpellSlotUse(resolved, Fighter))),
+    }
+  }
+
+  run test_darkness_projection_blocks_darkvision_and_nonmagical_light = {
+    val resolved = resolveDarknessPointOrigin(initialState, darknessAreaId, 2)
+    all {
+      assert(magicalDarknessPointOriginSightObscurement(resolved, darknessAreaId, OrdinarySight) == HeavilyObscuredSight),
+      assert(magicalDarknessPointOriginSightObscurement(resolved, darknessAreaId, DarkvisionSight({ rangeFeet: 60, distanceFeet: 30 })) == HeavilyObscuredSight),
+      assert(magicalDarknessPointOriginNonmagicalLightIllumination(resolved, darknessAreaId, BrightLightIllumination) == DarknessIllumination),
+    }
+  }
+
+  run test_darkness_concentration_break_removes_area = {
+    val resolved = resolveDarknessPointOrigin(initialState, darknessAreaId, 2)
+    val broken = breakConcentrationSpellEffects(resolved, Fighter)
+    all {
+      assert(not(magicalDarknessPointOriginActive(broken, darknessAreaId))),
+      assert(not(broken.fighter.concentrating)),
+    }
+  }
+
+  run test_darkness_duration_expiration_removes_area_and_concentration = {
+    val expiring = {
+      ...initialState,
+      fighter: {
+        ...initialState.fighter,
+        concentrating: true,
+        activeEffects: Set(MagicalDarknessPointOrigin({
+          areaId: darknessAreaId,
+          radiusFeet: darknessRadiusFeet,
+          durationTicks: 1,
+        })),
+      },
+    }
+    val ticked = tickRoundDurationSpellEffects(expiring)
+    all {
+      assert(not(magicalDarknessPointOriginActive(ticked, darknessAreaId))),
+      assert(not(ticked.fighter.concentrating)),
     }
   }
 
@@ -194,6 +254,103 @@ module battleRuntimeGroundCommandTests {
       assert(not(moved.bonusActionAvailable)),
       assert(tooFar.goblin.hp == initialState.goblin.hp),
       assert(tooFar.bonusActionAvailable),
+    }
+  }
+
+  run test_web_records_restraint_hazard_and_concentration = {
+    val resolved = resolveWeb(initialState, webAreaId, 2)
+    all {
+      assert(resolved.fighter.activeEffects.contains(WebRestraintHazard({
+        areaId: webAreaId,
+        sideFeet: webSideFeet,
+        durationTicks: webDurationTicks,
+        entrySavedThisTurn: Set(),
+        startTurnSavedThisTurn: Set(),
+      }))),
+      assert(resolved.fighter.concentrating),
+      assert(not(resolved.actionAvailable)),
+      assert(battleActorHasCommittedSpellSlotUse(resolved, Fighter)),
+    }
+  }
+
+  run test_web_area_difficult_terrain_movement_cost_uses_active_web_area = {
+    val resolved = resolveWeb(initialState, webAreaId, 2)
+    val removedArea = removeWebArea(resolved, webAreaId)
+    all {
+      assert(areaDifficultTerrainMovementCost(resolved, webAreaId, 10, 5) == 15),
+      assert(areaDifficultTerrainMovementCost(removedArea, webAreaId, 10, 5) == 0),
+    }
+  }
+
+  run test_web_entry_save_restrains_once_per_turn_and_resets_next_turn = {
+    val resolved = resolveWeb(initialState, webAreaId, 2)
+    val entryFailed = resolveWebRestraintSave(resolved, Goblin, webAreaId, true, false)
+    val duplicateEntry = resolveWebRestraintSave(entryFailed, Goblin, webAreaId, true, false)
+    val goblinTurn = endTurn(entryFailed)
+    all {
+      assert(entryFailed.goblin.activeEffects.contains(WebRestrained({ source: Fighter, durationTicks: webDurationTicks }))),
+      assert(webEntrySaveAlreadyResolved(entryFailed, Goblin, webAreaId)),
+      assert(duplicateEntry.goblin.activeEffects == entryFailed.goblin.activeEffects),
+      assert(not(webEntrySaveAlreadyResolved(goblinTurn, Goblin, webAreaId))),
+      assert(not(webStartTurnSaveAlreadyResolved(goblinTurn, Goblin, webAreaId))),
+    }
+  }
+
+  run test_web_start_turn_save_restrains_and_escape_removes_condition = {
+    val resolved = resolveWeb(initialState, webAreaId, 2)
+    val goblinTurn = endTurn(resolved)
+    val startTurnFailed = resolveWebRestraintSave(goblinTurn, Goblin, webAreaId, false, false)
+    val duplicateStartTurn = resolveWebRestraintSave(startTurnFailed, Goblin, webAreaId, false, false)
+    val escaped = escapeWebRestrained(startTurnFailed, Goblin, true)
+    all {
+      assert(startTurnFailed.goblin.activeEffects.contains(WebRestrained({ source: Fighter, durationTicks: webDurationTicks }))),
+      assert(webStartTurnSaveAlreadyResolved(startTurnFailed, Goblin, webAreaId)),
+      assert(duplicateStartTurn.fighter.activeEffects == startTurnFailed.fighter.activeEffects),
+      assert(not(escaped.goblin.activeEffects.contains(WebRestrained({ source: Fighter, durationTicks: webDurationTicks })))),
+      assert(not(escaped.actionAvailable)),
+      assert(webRestraintHazardActive(escaped, webAreaId)),
+    }
+  }
+
+  run test_web_no_longer_in_area_and_area_removal_cleanup = {
+    val resolved = resolveWeb(initialState, webAreaId, 2)
+    val restrained = resolveWebRestraintSave(resolved, Goblin, webAreaId, true, false)
+    val leftArea = webRestrainedNoLongerInArea(restrained, Goblin, webAreaId)
+    val restrainedAgain = resolveWebRestraintSave(resolved, Goblin, webAreaId, false, false)
+    val removedArea = removeWebArea(restrainedAgain, webAreaId)
+    all {
+      assert(not(leftArea.goblin.activeEffects.contains(WebRestrained({ source: Fighter, durationTicks: webDurationTicks })))),
+      assert(webRestraintHazardActive(leftArea, webAreaId)),
+      assert(not(webRestraintHazardActive(removedArea, webAreaId))),
+      assert(not(removedArea.goblin.activeEffects.contains(WebRestrained({ source: Fighter, durationTicks: webDurationTicks })))),
+      assert(not(removedArea.fighter.concentrating)),
+    }
+  }
+
+  run test_web_duration_expiration_clears_hazard_restraint_and_concentration = {
+    val expiring = {
+      ...initialState,
+      fighter: {
+        ...initialState.fighter,
+        concentrating: true,
+        activeEffects: Set(WebRestraintHazard({
+          areaId: webAreaId,
+          sideFeet: webSideFeet,
+          durationTicks: 1,
+          entrySavedThisTurn: Set(Goblin),
+          startTurnSavedThisTurn: Set(Goblin),
+        })),
+      },
+      goblin: {
+        ...initialState.goblin,
+        activeEffects: Set(WebRestrained({ source: Fighter, durationTicks: 1 })),
+      },
+    }
+    val ticked = tickRoundDurationSpellEffects(expiring)
+    all {
+      assert(not(webRestraintHazardActive(ticked, webAreaId))),
+      assert(not(ticked.goblin.activeEffects.contains(WebRestrained({ source: Fighter, durationTicks: 1 })))),
+      assert(not(ticked.fighter.concentrating)),
     }
   }
 

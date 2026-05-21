@@ -37,8 +37,12 @@ module battleRuntimeConcentration {
         | SearingSmiteBurning(_) => false
         | ShiningSmiteIllumination(_) => false
         | FogCloudObscurement(_) => false
+        | MagicalDarknessPointOrigin(_) => false
         | FlamingSphere(_) => false
+        | WebRestraintHazard(_) => false
+        | WebRestrained(_) => false
         | HeatMetalObjectContactDamage(_) => false
+        | HeatMetalHoldingWearingPenalty(_) => false
         | ResistanceDamageReduction(_) => false
         | SleepPendingRepeatSave(_) => false
         | SleepUnconscious(_) => false

@@ -11,8 +11,10 @@ import {
 import { zeroHitPointReplacementUnitProfile } from "@dnd/shared-algebras/zero-hit-point-replacement-algebra";
 import type {
   ActivationResource,
+  ClassFeatureRecord,
   ClassName,
   EffectAtom,
+  PointPoolResource,
   SpellRecord,
   UnitRecord,
 } from "@dnd/surface/surface/types";
@@ -35,15 +37,52 @@ import {
   pactOfTheChainFindFamiliarFormEligibilityForSpell,
   type PactOfTheChainFindFamiliarFormEligibility,
 } from "./find-familiar-forms.ts";
+import * as Either from "effect/Either";
 
-export type CharacterBattleResourceInit = {
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.metamagic-battle-resource-bridge
+
+export { SORCERER_METAMAGIC_EFFECT_KINDS as CHARACTER_BATTLE_METAMAGIC_EFFECT_KINDS } from "@dnd/surface/surface/schema";
+
+export type CharacterBattleUseCountResourceInit = {
   readonly unit: UnitRecord;
   readonly usesRemaining?: number;
   readonly capAbilityModifier?: AbilityModifier;
+  readonly pointsRemaining?: never;
 };
+
+export type CharacterBattlePointPoolResourceInit = {
+  readonly unit: UnitRecord;
+  readonly pointsRemaining?: number;
+  readonly usesRemaining?: never;
+  readonly capAbilityModifier?: never;
+};
+
+export type CharacterBattleResourceInit =
+  | CharacterBattleUseCountResourceInit
+  | CharacterBattlePointPoolResourceInit;
 
 export type CharacterBattleFeatureInit = {
   readonly unit: UnitRecord;
+};
+
+type SorcererMetamagicMechanics = Extract<
+  ClassFeatureRecord["mechanics"],
+  { readonly family: "metamagic_options" }
+>;
+type SorcererMetamagicOption = SorcererMetamagicMechanics["options"][number];
+
+export type CharacterBattleMetamagicOptionFact = {
+  readonly effectKind: SorcererMetamagicOption["effectKind"];
+  readonly stackingMode: SorcererMetamagicOption["stackingMode"];
+  readonly sorceryPointCost: ResourceCount;
+};
+export type CharacterBattleMetamagicEffectKind =
+  CharacterBattleMetamagicOptionFact["effectKind"];
+
+export type CharacterBattleMetamagicState = {
+  readonly sorceryPointResourceUnitId: UnitRecord["id"];
+  readonly spellUseLimit: SorcererMetamagicMechanics["spellUseLimit"]["kind"];
+  readonly knownOptions: readonly CharacterBattleMetamagicOptionFact[];
 };
 
 type UseCountActivationResource = Extract<
@@ -73,6 +112,18 @@ type UnlimitedActivationResource = SupportedUseCountActivationResource & {
 type CharacterBattleActivationResource =
   | LimitedUseCountActivationResource
   | UnlimitedActivationResource;
+type SupportedPointPoolResource = PointPoolResource & {
+  readonly cap: Extract<
+    PointPoolResource["cap"],
+    | { readonly kind: "fixed" }
+    | { readonly kind: "proficiency_bonus" }
+    | { readonly kind: "linear_per_level" }
+    | { readonly kind: "threshold_tiers" }
+  >;
+};
+type CharacterBattleResource =
+  | CharacterBattleActivationResource
+  | SupportedPointPoolResource;
 type SpellAccessGrant = Extract<
   EffectAtom,
   { readonly kind: "grant_spell_access" }
@@ -116,18 +167,43 @@ type PactOfTheChainFindFamiliarSpellRecord = SpellRecord & {
 
 type CharacterBattleResourceStateBase = {
   readonly unit: UnitRecord;
-  readonly usedThisTurn: boolean;
 };
 
+export type CharacterBattleUseCountResourceStateBase =
+  CharacterBattleResourceStateBase & {
+    readonly usedThisTurn: boolean;
+  };
+
 export type CharacterBattleResourceState =
-  | (CharacterBattleResourceStateBase & {
+  | (CharacterBattleUseCountResourceStateBase & {
       readonly resource: LimitedUseCountActivationResource;
       readonly usesRemaining: ResourceCount;
     })
-  | (CharacterBattleResourceStateBase & {
+  | (CharacterBattleUseCountResourceStateBase & {
       readonly resource: UnlimitedActivationResource;
       readonly usesRemaining?: never;
+    })
+  | (CharacterBattleResourceStateBase & {
+      readonly resource: SupportedPointPoolResource;
+      readonly pointsRemaining: ResourceCount;
+      readonly usesRemaining?: never;
+      readonly usedThisTurn?: never;
     });
+
+export type CharacterBattleUseCountResourceState = Extract<
+  CharacterBattleResourceState,
+  { readonly usedThisTurn: boolean }
+>;
+
+export type CharacterBattlePointPoolResourceState = Extract<
+  CharacterBattleResourceState,
+  { readonly pointsRemaining: ResourceCount }
+>;
+
+export type CharacterBattlePointPoolSpendIssue = {
+  readonly tag: "characterBattlePointPoolSpendIssue";
+  readonly message: string;
+};
 
 export type CharacterBattleSpellSlotInit = {
   readonly spellLevel: number;
@@ -383,13 +459,37 @@ export function characterResourceState(
   input: CharacterBattleResourceInit,
   classLevels: readonly CharacterBattleClassLevel[],
 ): CharacterBattleResourceState {
+  const initIssue = characterBattleResourceInitIssue(input, classLevels);
+  if (initIssue !== null) {
+    throw new Error(initIssue);
+  }
   const resource = characterBattleResourceForUnit(input.unit);
-  const base = {
-    unit: input.unit,
+  const base = { unit: input.unit };
+  if (resource.kind === "point_pool") {
+    const defaultPointsRemaining = characterBattleResourceMaxPoints({
+      unit: input.unit,
+      classLevels,
+    });
+    if (defaultPointsRemaining === undefined) {
+      throw new Error(
+        "Point-pool character battle resource requires a finite cap.",
+      );
+    }
+    return {
+      ...base,
+      resource,
+      pointsRemaining:
+        input.pointsRemaining === undefined
+          ? defaultPointsRemaining
+          : resourceCount(input.pointsRemaining),
+    };
+  }
+  const useCountBase = {
+    ...base,
     usedThisTurn: false,
   };
   if (activationResourceIsUnlimited(resource)) {
-    return { ...base, resource };
+    return { ...useCountBase, resource };
   }
   if (!activationResourceIsLimited(resource)) {
     throw new Error("Character battle resource has an unsupported cap shape.");
@@ -405,7 +505,7 @@ export function characterResourceState(
     throw new Error("Limited character battle resource requires a finite cap.");
   }
   return {
-    ...base,
+    ...useCountBase,
     resource,
     usesRemaining:
       input.usesRemaining === undefined
@@ -419,36 +519,88 @@ export function characterBattleResourceMaxUses(input: {
   readonly classLevels: readonly CharacterBattleClassLevel[];
   readonly capAbilityModifier?: AbilityModifier;
 }): ResourceCount | undefined {
-  const unitClassLevel =
-    input.unit.kind === "class_feature"
-      ? requireCharacterClassLevel(input.classLevels, input.unit.className)
-      : undefined;
-  const characterLevel = input.classLevels.reduce(
-    (total, classLevel) => total + Number(classLevel.level),
-    0,
-  );
   const resource = characterBattleResourceForUnit(input.unit);
+  if (resource.kind === "point_pool") {
+    return undefined;
+  }
   if (activationResourceIsUnlimited(resource)) {
     return undefined;
   }
   if (!activationResourceIsLimited(resource)) {
     throw new Error("Character battle resource has an unsupported cap shape.");
   }
-  return supportedUseCountCapForLevel(
+  return supportedResourceCapForLevel(
     resource,
-    unitClassLevel ?? characterLevel,
+    characterBattleResourceLevel(input.unit, input.classLevels),
     input.capAbilityModifier,
   );
 }
 
+export function characterBattleResourceMaxPoints(input: {
+  readonly unit: UnitRecord;
+  readonly classLevels: readonly CharacterBattleClassLevel[];
+  readonly capAbilityModifier?: AbilityModifier;
+}): ResourceCount | undefined {
+  const resource = characterBattleResourceForUnit(input.unit);
+  if (resource.kind !== "point_pool") {
+    return undefined;
+  }
+  return supportedResourceCapForLevel(
+    resource,
+    characterBattleResourceLevel(input.unit, input.classLevels),
+    input.capAbilityModifier,
+  );
+}
+
+function characterBattleResourceLevel(
+  unit: UnitRecord,
+  classLevels: readonly CharacterBattleClassLevel[],
+): number {
+  const unitClassLevel =
+    unit.kind === "class_feature"
+      ? requireCharacterClassLevel(classLevels, unit.className)
+      : undefined;
+  const characterLevel = classLevels.reduce(
+    (total, classLevel) => total + Number(classLevel.level),
+    0,
+  );
+  return unitClassLevel ?? characterLevel;
+}
+
 export function characterBattleResourceInitIssue(
   input: CharacterBattleResourceInit,
+  classLevels: readonly CharacterBattleClassLevel[],
 ): string | null {
-  const resource = characterBattleActivationResourceForUnit(input.unit);
+  const resource = characterBattleResourceForUnitOrNull(input.unit);
   if (resource === null) {
-    return "Character battle resources must be supported limited-use Units.";
+    return "Character battle resources must be supported resource Units.";
   }
-  return resource?.kind === "use_count" &&
+  if (
+    resource.kind === "point_pool" &&
+    (input.usesRemaining !== undefined ||
+      input.capAbilityModifier !== undefined)
+  ) {
+    return "Point-pool character battle resources must not carry use-count state.";
+  }
+  if (resource.kind !== "point_pool" && input.pointsRemaining !== undefined) {
+    return "Use-count character battle resources must not carry point-pool state.";
+  }
+  if (resource.kind === "point_pool" && input.pointsRemaining !== undefined) {
+    if (!Number.isInteger(input.pointsRemaining) || input.pointsRemaining < 0) {
+      return "Point-pool character battle resource remaining points must be a nonnegative integer.";
+    }
+    const maxPoints = characterBattleResourceMaxPoints({
+      unit: input.unit,
+      classLevels,
+    });
+    if (maxPoints === undefined) {
+      return "Point-pool character battle resource requires a finite cap.";
+    }
+    if (input.pointsRemaining > maxPoints) {
+      return "Point-pool character battle resource remaining points must not exceed its maximum.";
+    }
+  }
+  return resource.kind === "use_count" &&
     resource.cap.kind === "ability_modifier" &&
     input.usesRemaining === undefined &&
     input.capAbilityModifier === undefined
@@ -456,13 +608,53 @@ export function characterBattleResourceInitIssue(
     : null;
 }
 
+export function characterBattleMetamagicInitIssue(input: {
+  readonly metamagic: CharacterBattleMetamagicState | undefined;
+  readonly resources: readonly CharacterBattleResourceInit[];
+}): string | null {
+  if (input.metamagic === undefined) {
+    return null;
+  }
+  if (input.metamagic.knownOptions.length === 0) {
+    return "Metamagic battle state requires at least one known option fact.";
+  }
+  const effectKinds = new Set<
+    CharacterBattleMetamagicOptionFact["effectKind"]
+  >();
+  for (const option of input.metamagic.knownOptions) {
+    if (effectKinds.has(option.effectKind)) {
+      return "Metamagic battle option facts must not duplicate effect kinds.";
+    }
+    effectKinds.add(option.effectKind);
+    if (
+      !Number.isInteger(option.sorceryPointCost) ||
+      option.sorceryPointCost <= 0
+    ) {
+      return "Metamagic battle option facts require positive Sorcery Point costs.";
+    }
+  }
+  const sorceryPointResource = input.resources.find(
+    (resource) =>
+      resource.unit.id === input.metamagic?.sorceryPointResourceUnitId,
+  );
+  if (sorceryPointResource === undefined) {
+    return "Metamagic battle state requires its shared Sorcery Point resource.";
+  }
+  const resource = characterBattleResourceForUnitOrNull(
+    sorceryPointResource.unit,
+  );
+  return resource?.kind === "point_pool"
+    ? null
+    : "Metamagic battle state must reference a point-pool Sorcery Point resource.";
+}
+
 export function characterBattleResourceForUnit(
   unit: UnitRecord,
-): CharacterBattleActivationResource {
-  const resource = characterBattleActivationResourceForUnit(unit);
+): CharacterBattleResource {
+  const resource = characterBattleResourceForUnitOrNull(unit);
   if (resource === null) {
     throw new Error(
-      "Character battle resources must be supported limited-use Units.",
+      "Character battle resources must be supported resource Units.",
     );
   }
   return resource;
@@ -471,7 +663,7 @@ export function characterBattleResourceForUnit(
 export function characterBattleResourceSupportedForUnit(
   unit: UnitRecord,
 ): boolean {
-  return characterBattleActivationResourceForUnit(unit) !== null;
+  return characterBattleResourceForUnitOrNull(unit) !== null;
 }
 
 export function unitIsFavoredEnemyHuntersMarkFreeCastResource(
@@ -489,9 +681,9 @@ export function unitIsSupportedClassFeatureSpellFreeCastResource(
   return classFeatureSpellFreeCastResource(unit) !== null;
 }
 
-function characterBattleActivationResourceForUnit(
+function characterBattleResourceForUnitOrNull(
   unit: UnitRecord,
-): CharacterBattleActivationResource | null {
+): CharacterBattleResource | null {
   const freeCastResource = classFeatureSpellFreeCastResource(unit);
   if (freeCastResource !== null) {
     return freeCastResource;
@@ -516,6 +708,13 @@ function characterBattleActivationResourceForUnit(
         ? resource
         : null;
     }
+  }
+  if (
+    unit.kind === "class_feature" &&
+    unit.mechanics.family === "resource_pool" &&
+    pointPoolResourceIsSupportedByBattle(unit.mechanics.resource)
+  ) {
+    return unit.mechanics.resource;
   }
   if (
     unit.kind === "class_feature" &&
@@ -574,6 +773,9 @@ export function characterResourceIsFavoredEnemyFreeCast(
 export function classFeatureSpellFreeCastProfileForResource(
   resource: CharacterBattleResourceState,
 ): SupportedClassFeatureSpellFreeCastProfile | null {
+  if (!characterBattleResourceIsUseCount(resource)) {
+    return null;
+  }
   return classFeatureSpellFreeCastProfileForUnit(resource.unit);
 }
 
@@ -594,13 +796,16 @@ function classFeatureSpellFreeCastProfileForUnit(
 
 export function characterBattleResourceUsage(
   resource: CharacterBattleResourceState,
-): "limited" | "unlimited" {
+): "limited" | "unlimited" | "pointPool" {
+  if (characterBattleResourceIsPointPool(resource)) {
+    return "pointPool";
+  }
   return characterBattleResourceIsUnlimited(resource) ? "unlimited" : "limited";
 }
 
 export function characterBattleResourceIsUnlimited(
   resource: CharacterBattleResourceState,
-): resource is CharacterBattleResourceStateBase & {
+): resource is CharacterBattleUseCountResourceStateBase & {
   readonly resource: UnlimitedActivationResource;
   readonly usesRemaining?: never;
 } {
@@ -608,6 +813,18 @@ export function characterBattleResourceIsUnlimited(
     resource.resource.kind === "use_count" &&
     resource.resource.cap.kind === "unlimited"
   );
+}
+
+export function characterBattleResourceIsUseCount(
+  resource: CharacterBattleResourceState,
+): resource is CharacterBattleUseCountResourceState {
+  return resource.resource.kind === "use_count";
+}
+
+export function characterBattleResourceIsPointPool(
+  resource: CharacterBattleResourceState,
+): resource is CharacterBattlePointPoolResourceState {
+  return resource.resource.kind === "point_pool";
 }
 
 function activationResourceIsUnlimited(
@@ -649,6 +866,18 @@ function activationResourceIsSupportedByBattleForUnit(
   );
 }
 
+function pointPoolResourceIsSupportedByBattle(
+  resource: PointPoolResource,
+): resource is SupportedPointPoolResource {
+  return (
+    resource.kind === "point_pool" &&
+    (resource.cap.kind === "fixed" ||
+      resource.cap.kind === "proficiency_bonus" ||
+      resource.cap.kind === "linear_per_level" ||
+      resource.cap.kind === "threshold_tiers")
+  );
+}
+
 function unitHasSupportedAbilityModifierBattleResourceProfile(
   unit: UnitRecord,
 ): boolean {
@@ -670,21 +899,57 @@ function unitHasSupportedAbilityModifierBattleResourceProfile(
 
 export function resourceHasUsesRemaining(
   resource: CharacterBattleResourceState,
-): boolean {
+): resource is CharacterBattleUseCountResourceState {
+  if (!characterBattleResourceIsUseCount(resource)) {
+    return false;
+  }
   return (
     characterBattleResourceIsUnlimited(resource) || resource.usesRemaining > 0
   );
 }
 
 export function spendCharacterResourceUse(
-  resource: CharacterBattleResourceState,
-): CharacterBattleResourceState {
+  resource: CharacterBattleUseCountResourceState,
+): CharacterBattleUseCountResourceState {
   return characterBattleResourceIsUnlimited(resource)
     ? resource
     : {
         ...resource,
         usesRemaining: resourceCount(Number(resource.usesRemaining) - 1),
       };
+}
+
+export function spendCharacterPointPoolResource(input: {
+  readonly resource: CharacterBattleResourceState;
+  readonly points: ResourceCount;
+}): Either.Either<
+  CharacterBattlePointPoolResourceState,
+  CharacterBattlePointPoolSpendIssue
+> {
+  if (!characterBattleResourceIsPointPool(input.resource)) {
+    return Either.left({
+      tag: "characterBattlePointPoolSpendIssue",
+      message: "Only point-pool character battle resources can spend points.",
+    });
+  }
+  if (input.points <= 0) {
+    return Either.left({
+      tag: "characterBattlePointPoolSpendIssue",
+      message: "Point-pool spending requires a positive point cost.",
+    });
+  }
+  if (input.resource.pointsRemaining < input.points) {
+    return Either.left({
+      tag: "characterBattlePointPoolSpendIssue",
+      message: "Point-pool resource has insufficient remaining points.",
+    });
+  }
+  return Either.right({
+    ...input.resource,
+    pointsRemaining: resourceCount(
+      Number(input.resource.pointsRemaining) - Number(input.points),
+    ),
+  });
 }
 
 export function characterSpellcastingState(
@@ -883,8 +1148,8 @@ function spellcastingSourceClassName(
   );
 }
 
-function supportedUseCountCapForLevel(
-  resource: LimitedUseCountActivationResource,
+function supportedResourceCapForLevel(
+  resource: LimitedUseCountActivationResource | SupportedPointPoolResource,
   level: number,
   capAbilityModifier: AbilityModifier | undefined,
 ): ResourceCount {

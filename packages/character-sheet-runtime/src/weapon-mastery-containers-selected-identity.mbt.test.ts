@@ -2,6 +2,7 @@
 // UNIT-IDENTITY-MBT-REPLAY: L1D2-WEAPON-MASTERY-CONTAINERS paladin_weapon_mastery doSelectPaladinWeaponMastery doReselectPaladinWeaponMasteryOnLongRest
 // UNIT-IDENTITY-MBT-REPLAY: L1D2-WEAPON-MASTERY-CONTAINERS ranger_weapon_mastery doSelectRangerWeaponMastery doReselectRangerWeaponMasteryOnLongRest
 // UNIT-IDENTITY-MBT-REPLAY: L1D2-WEAPON-MASTERY-CONTAINERS rogue_weapon_mastery doSelectRogueWeaponMastery doReselectRogueWeaponMasteryOnLongRest
+// KERNEL-COVERAGE: parity-witness SHEET.WEAPON_MASTERY.RESELECTION
 import * as path from "node:path";
 
 import {
@@ -23,9 +24,12 @@ import { describe, expect, it } from "vitest";
 
 import {
   characterSheetId,
-  completeLongRest,
+  completeLongRest as completeLongRestCore,
   createFreshCharacterSheet,
+  finishLongRest,
+  startLongRest,
   type CharacterSheet,
+  type CharacterSheetLongRestInput,
   type CharacterSheetWeaponMasteryReselection,
 } from "./index.ts";
 
@@ -182,6 +186,21 @@ if (unitCatalogResult.tag !== "ok") {
 }
 const unitLibrary = unitCatalogResult.catalog;
 
+function completeLongRest(
+  input: Omit<CharacterSheetLongRestInput, "completion"> & {
+    readonly sheet: CharacterSheet;
+  },
+) {
+  const { sheet, ...benefits } = input;
+  const rest = requireRight(
+    startLongRest({ sheet, timing: { tag: "noPriorLongRest" } }),
+  );
+  const completion = requireRight(
+    finishLongRest({ rest, restedTicks: rest.requiredRestTicks }),
+  );
+  return completeLongRestCore({ ...benefits, completion });
+}
+
 const selectedUnitIdentityReplays = [
   {
     taskId: "L1D2-WEAPON-MASTERY-CONTAINERS",
@@ -242,9 +261,7 @@ const selectedUnitIdentityReplays = [
       {
         name: "rogue-projects-two-selected-proficient-weapon-mastery-choices",
         actions: ["doSelectRogueWeaponMastery"],
-        expected: selectedWeaponMasteryProjection(
-          ROGUE_WEAPON_MASTERY_PROFILE,
-        ),
+        expected: selectedWeaponMasteryProjection(ROGUE_WEAPON_MASTERY_PROFILE),
       },
       {
         name: "rogue-long-rest-reselects-two-weapon-mastery-choices",
@@ -505,6 +522,7 @@ function weaponMasterySheet(input: {
       maximumHp: Hp(12),
       currentHp: Hp(6),
       tempHp: Hp(2),
+      hitPointMaximumReduction: Hp(0),
       conditions: [],
       unitLibrary,
     }),
@@ -592,7 +610,9 @@ function expectFeatureUnitRefPresent(
   build: CharacterBuild,
   featureUnitId: WeaponMasteryContainerFeatureUnitId,
 ): true {
-  if (!characterBuildFeatureUnitIds(build, unitLibrary).includes(featureUnitId)) {
+  if (
+    !characterBuildFeatureUnitIds(build, unitLibrary).includes(featureUnitId)
+  ) {
     throw new Error(`Expected Character Build to own ${featureUnitId}.`);
   }
   return true;
@@ -699,7 +719,9 @@ function projectionForLastResult(
 }
 
 function assertNever(value: never): never {
-  throw new Error(`Unhandled Weapon Mastery selected identity result ${value}.`);
+  throw new Error(
+    `Unhandled Weapon Mastery selected identity result ${value}.`,
+  );
 }
 
 function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {

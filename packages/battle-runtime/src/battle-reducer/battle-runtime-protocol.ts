@@ -40,6 +40,8 @@ export const INITIAL_TURN_RESOURCES = resetTurnActionEconomy({
   currentHasBonusAction: false,
   commandHalt: null,
   spellSlotUsesThisTurn: [],
+  levelOnePlusSpellCastsThisTurn: [],
+  quickenedLevelOnePlusSpellCastsThisTurn: [],
   attackRollMadeThisTurn: false,
   attackDamageRidersUsedThisTurn: [],
   weaponDamageDiceRollChoicesUsedThisTurn: [],

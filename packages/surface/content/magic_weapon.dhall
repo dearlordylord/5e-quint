@@ -3,36 +3,27 @@
 -- RAW: "You touch a nonmagical weapon. Until the spell ends, that weapon
 -- becomes a magic weapon with a +1 bonus to attack rolls and damage rolls.
 -- The spell ends early if you cast it again."
---
--- Upcast: +2 at slot 3–5, +3 at slot 6+. DiceDelta has no slot-threshold-tier
--- variant, so the upcast scaling is NOT represented here. The +1 delta covers
--- slot 2 (base cast) only. See proposal-magic_weapon.md for the
--- surface_widening needed to express slot-scaled numeric deltas.
---
--- Note: the "nonmagical" constraint and "weapon" object type are authoring
--- intent only; ObjectFilter has no "nonmagical" or "weapon-kind" predicate.
 
-let Delta = { kind : Text, dice : Natural, dieSize : Natural, sign : Text }
+let DeltaTier = { atLevel : Natural, value : Natural }
 
--- Unified effect record: `on` is Optional because modify_damage_numeric
--- does not carry a roll-kind list while modify_roll_numeric does.
-let Op =
+let Delta =
       { kind : Text
-      , delta : Delta
-      , on : Optional (List Text)
+      , axis : Text
+      , base : Natural
+      , tiers : List DeltaTier
+      , sign : Text
       }
 
-let baseOp : Op =
-      { kind = "modify_roll_numeric"
-      , delta = { kind = "fixed_dice", dice = 1, dieSize = 1, sign = "+" }
-      , on = Some [ "attack_roll" ]
+let magicWeaponBonus : Delta =
+      { kind = "threshold_tiers"
+      , axis = "slot"
+      , base = 1
+      , tiers = [ { atLevel = 3, value = 2 }, { atLevel = 6, value = 3 } ]
+      , sign = "+"
       }
 
-let damageOp : Op =
-      { kind = "modify_damage_numeric"
-      , delta = { kind = "fixed_dice", dice = 1, dieSize = 1, sign = "+" }
-      , on = None (List Text)
-      }
+let magicWeaponEnhancement =
+      { kind = "grant_magic_weapon_enhancement", bonus = magicWeaponBonus }
 
 let magicWeapon =
       { kind = "spell"
@@ -40,7 +31,7 @@ let magicWeapon =
       , name = "Magic Weapon"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-M-R#Magic Weapon"
+          , section = "Spells/Descriptions-M-P#Magic Weapon"
           }
       , description =
           "You touch a nonmagical weapon. Until the spell ends, that weapon becomes a magic weapon with a +1 bonus to attack rolls and damage rolls. The spell ends early if you cast it again. Using a Higher-Level Spell Slot: The bonus increases to +2 with a level 3-5 spell slot. The bonus increases to +3 with a level 6+ spell slot."
@@ -58,13 +49,20 @@ let magicWeapon =
               }
           , attachment = { kind = "hole"
                          , holeId = "magic_weapon_object"
-                         , label = "target object"
+                         , label = "nonmagical weapon"
                          , value =
-                             { kind = "object", count = 1 }
+                             { kind = "object"
+                             , count = 1
+                             , filter =
+                                 { objectKind = "weapon"
+                                 , magicality = "nonmagical"
+                                 }
+                             }
                          }
           , operations =
-              [ { trigger = { kind = "passive" }, effect = baseOp }
-              , { trigger = { kind = "passive" }, effect = damageOp }
+              [ { trigger = { kind = "passive" }
+                , effect = magicWeaponEnhancement
+                }
               ]
           }
       }

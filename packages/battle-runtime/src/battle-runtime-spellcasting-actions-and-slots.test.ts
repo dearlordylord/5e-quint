@@ -447,6 +447,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
       currentHasBonusAction: true,
       commandHalt: null,
       spellSlotUsesThisTurn: [{ kind: "committed", combatantId: wizardId }],
+      levelOnePlusSpellCastsThisTurn: [wizardId],
     });
     expect(
       discoverBattleActs(afterSlotSpell).map((act) => act.subject),

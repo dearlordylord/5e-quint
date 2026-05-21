@@ -4,6 +4,7 @@ import { Either, Option, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import findFamiliarInput from "../../content/find_familiar.json";
+import magicWeaponInput from "../../content/magic_weapon.json";
 import moonbeamInput from "../../content/moonbeam.json";
 import sorcererFontOfMagicInput from "../../content/sorcerer_font_of_magic.json";
 import sorcererMetamagicInput from "../../content/sorcerer_metamagic.json";
@@ -958,7 +959,119 @@ describe("SRD Unit catalog boundary", () => {
     }
   });
 
-  test("decodes Darkness as a Concentration point-origin heavily obscuring Sphere", () => {
+  test("keeps Web's SRD area hazard shape as executable Surface facts", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const web = result.catalog.requireUnit("web");
+
+    expect(web.kind).toBe("spell");
+    if (web.kind !== "spell") return;
+    expect(web.mechanics.family).toBe("ongoing_effect");
+    if (web.mechanics.family !== "ongoing_effect") return;
+
+    expect(web.mechanics).toMatchObject({
+      level: 2,
+      school: "conjuration",
+      castingTime: { kind: "action" },
+      range: { kind: "point", feet: 60 },
+      components: { v: true, s: true, m: "a bit of spiderweb" },
+      duration: { kind: "concentration", upTo: { unit: "hour", amount: 1 } },
+      attachment: {
+        kind: "hole",
+        holeId: "web_point",
+        label: "spell origin point",
+        value: {
+          kind: "area",
+          shape: { kind: "cube", sideFeet: 20 },
+          origin: { kind: "point_within_range" },
+        },
+      },
+    });
+    expect(web.mechanics.operations).toEqual([
+      {
+        trigger: { kind: "passive" },
+        effect: { kind: "area_is_difficult_terrain" },
+      },
+      {
+        trigger: { kind: "passive" },
+        effect: { kind: "area_is_lightly_obscured" },
+      },
+      {
+        trigger: { kind: "passive" },
+        effect: {
+          kind: "area_anchor_or_layering_requirement",
+          anchor: { kind: "between_solid_masses", count: 2 },
+          layering: {
+            kind: "across_surface",
+            surfaces: ["floor", "wall", "ceiling"],
+            flatSurfaceDepthFeet: 5,
+          },
+          unmetOutcome: {
+            kind: "collapse_and_end_effect",
+            timing: "start_of_caster_next_turn",
+          },
+        },
+      },
+      {
+        trigger: { kind: "passive" },
+        effect: {
+          kind: "area_section_burns_away",
+          section: { kind: "cube", sideFeet: 5 },
+          exposure: "fire",
+          burnsAwayAfter: { unit: "round", amount: 1 },
+          creatureStartsTurnInFireDamage: {
+            damageType: "fire",
+            amount: { kind: "fixed", expr: { dice: 2, dieSize: 4 } },
+          },
+        },
+      },
+      {
+        trigger: { kind: "on_creature_enters_area" },
+        usageLimit: { kind: "once_per_turn" },
+        effect: {
+          kind: "save_gate",
+          ability: "dex",
+          dc: { kind: "caster_spell_save_dc" },
+          onFail: {
+            kind: "apply_condition_while_in_area_or_until_escape",
+            condition: "restrained",
+          },
+          onSuccess: { kind: "none" },
+        },
+      },
+      {
+        trigger: { kind: "on_creature_starts_turn_in_area" },
+        effect: {
+          kind: "save_gate",
+          ability: "dex",
+          dc: { kind: "caster_spell_save_dc" },
+          onFail: {
+            kind: "apply_condition_while_in_area_or_until_escape",
+            condition: "restrained",
+          },
+          onSuccess: { kind: "none" },
+        },
+      },
+      {
+        trigger: {
+          kind: "on_affected_creature_spends_action",
+          cost: { kind: "action" },
+        },
+        predicate: { kind: "has_condition", condition: "restrained" },
+        effect: {
+          kind: "ability_check_gate",
+          ability: "str",
+          skill: "athletics",
+          dc: { kind: "caster_spell_save_dc" },
+          onPass: { kind: "remove_condition", condition: "restrained" },
+        },
+      },
+    ]);
+  });
+
+  test("decodes Darkness as a Concentration point-origin magical Darkness Sphere", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 
     expect(result.tag).toBe("ok");
@@ -997,7 +1110,7 @@ describe("SRD Unit catalog boundary", () => {
       expect(darkness.mechanics.operations).toEqual([
         {
           trigger: { kind: "passive" },
-          effect: { kind: "area_is_heavily_obscured" },
+          effect: { kind: "area_is_magical_darkness" },
         },
       ]);
     }
@@ -1895,6 +2008,109 @@ describe("SRD Unit catalog boundary", () => {
           },
         },
       ]);
+    }
+  });
+
+  test("decodes Magic Weapon as an item-attached weapon enhancement", () => {
+    const magicWeapon = decodeUnitRecordSync(magicWeaponInput);
+
+    expect(magicWeapon.kind).toBe("spell");
+    if (
+      magicWeapon.kind !== "spell" ||
+      magicWeapon.mechanics.family !== "ongoing_effect"
+    ) {
+      throw new Error("Expected Magic Weapon to be an ongoing-effect spell.");
+    }
+
+    expect(magicWeapon.provenance).toEqual({
+      kind: "srd-5.2.1",
+      section: "Spells/Descriptions-M-P#Magic Weapon",
+    });
+    expect(magicWeapon.mechanics.castingTime).toEqual({
+      kind: "bonus_action",
+    });
+    expect(magicWeapon.mechanics.range).toEqual({ kind: "touch" });
+    expect(magicWeapon.mechanics.duration).toEqual({
+      kind: "timed",
+      value: { unit: "hour", amount: 1 },
+      earlyEnd: [{ kind: "caster_recasts_spell" }],
+    });
+    expect(magicWeapon.mechanics.attachment).toEqual({
+      kind: "hole",
+      holeId: "magic_weapon_object",
+      label: "nonmagical weapon",
+      value: {
+        kind: "object",
+        count: 1,
+        filter: { objectKind: "weapon", magicality: "nonmagical" },
+      },
+    });
+    expect(magicWeapon.mechanics.operations).toEqual([
+      {
+        trigger: { kind: "passive" },
+        effect: {
+          kind: "grant_magic_weapon_enhancement",
+          bonus: {
+            kind: "threshold_tiers",
+            axis: "slot",
+            base: 1,
+            tiers: [
+              { atLevel: 3, value: 2 },
+              { atLevel: 6, value: 3 },
+            ],
+            sign: "+",
+          },
+        },
+      },
+    ]);
+  });
+
+  test("rejects Magic Weapon enhancement bonuses outside the SRD slot tiers", () => {
+    const decode = Schema.decodeUnknownEither(EffectAtomSchema);
+    const invalidBonuses = [
+      { kind: "fixed_number", amount: 1, sign: "+" },
+      { kind: "fixed_dice", dice: 1, dieSize: 4, sign: "+" },
+      {
+        kind: "threshold_tiers",
+        axis: "character",
+        base: 1,
+        tiers: [
+          { atLevel: 3, value: 2 },
+          { atLevel: 6, value: 3 },
+        ],
+        sign: "+",
+      },
+      {
+        kind: "threshold_tiers",
+        axis: "slot",
+        base: 1,
+        tiers: [
+          { atLevel: 3, value: 2 },
+          { atLevel: 5, value: 3 },
+        ],
+        sign: "+",
+      },
+      {
+        kind: "threshold_tiers",
+        axis: "slot",
+        base: 1,
+        tiers: [
+          { atLevel: 3, value: 2 },
+          { atLevel: 6, value: 3 },
+        ],
+        sign: "-",
+      },
+    ] as const;
+
+    for (const bonus of invalidBonuses) {
+      expect(
+        Either.isLeft(
+          decode({
+            kind: "grant_magic_weapon_enhancement",
+            bonus,
+          }),
+        ),
+      ).toBe(true);
     }
   });
 

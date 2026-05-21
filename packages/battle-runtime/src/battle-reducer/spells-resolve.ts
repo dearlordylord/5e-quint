@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // Spell resolution dispatch (Cluster L). Mechanical extraction from
 // battle-reducer.ts. The largest cluster in the file: master spell-act
 // resolvers (`resolveSpellAct`, `resolveAttackBurstSaveDamageSpellAct`,
@@ -123,28 +124,42 @@ import {
   selectedAttackRollMissToHitReplacement,
 } from "./statblock-attacks.ts";
 
+import {
+  admitSpellMetamagicApplications,
+  metamagicActionCostOverride,
+} from "./metamagic.ts";
 import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 
 import { resolveChainedSpellAttackDamageAct } from "./spells-resolve-chained.ts";
 import {
   resolveFlamingSphereSpellAct,
   resolveFogCloudObscurementSpellAct,
+  resolveGustOfWindLineSpellAct,
+  resolveMagicalDarknessPointOriginSpellAct,
   resolveMoonbeamSpellAct,
+  resolveWebRestraintHazardSpellAct,
 } from "./spells-resolve-area-effects.ts";
 import { resolveSpellAttackSequenceAct } from "./spells-resolve-attack-sequence.ts";
 import {
   resolveObjectContactDamageRepeatSpellAct,
   resolveObjectContactDamageSpellAct,
 } from "./spells-resolve-object-contact-damage.ts";
+import { resolveMagicWeaponEnhancementSpellAct } from "./spells-resolve-release.ts";
+import { resolveOngoingSpellEndSpellAct } from "./spells-ongoing-spell-ending.ts";
 export {
   resolveFlamingSphereSpellAct,
   resolveFogCloudObscurementSpellAct,
+  resolveGustOfWindLineSpellAct,
+  resolveMagicalDarknessPointOriginSpellAct,
   resolveMoonbeamSpellAct,
+  resolveWebRestraintHazardSpellAct,
 } from "./spells-resolve-area-effects.ts";
 export {
   resolveObjectContactDamageRepeatSpellAct,
   resolveObjectContactDamageSpellAct,
 } from "./spells-resolve-object-contact-damage.ts";
+export { resolveMagicWeaponEnhancementSpellAct } from "./spells-resolve-release.ts";
+export { resolveOngoingSpellEndSpellAct } from "./spells-ongoing-spell-ending.ts";
 export { resolveAttackBurstSaveDamageSpellAct } from "./spells-resolve-attack-burst.ts";
 export {
   applyChainedSpellDamage,
@@ -390,6 +405,20 @@ export function resolveSpellAct(
       "Action-time spell act requires a supported prepared spell or cantrip.",
     );
   }
+  const metamagicAdmission = admitSpellMetamagicApplications({
+    state: input.state,
+    actor,
+    actorId: subject.actorId,
+    invocation,
+    subject,
+  });
+  if (metamagicAdmission.tag !== "ok") {
+    return invalidResult(
+      input.state,
+      "unsupportedSubject",
+      metamagicAdmission.message,
+    );
+  }
   if (!spellHasAvailableSpend(actor, invocation)) {
     return invalidResult(
       input.state,
@@ -425,6 +454,7 @@ export function resolveSpellAct(
     (invocation.procedure === "directHitPointRestoration" ||
       invocation.procedure === "heldLightHurl" ||
       invocation.procedure === "objectLight" ||
+      invocation.procedure === "ongoingSpellEnd" ||
       invocation.procedure === "spellHostedWeaponAttack" ||
       invocation.procedure === "weaponAttackOverride" ||
       invocation.procedure === "damageReduction" ||
@@ -447,6 +477,9 @@ export function resolveSpellAct(
       invocation.procedure === "hideousLaughter" ||
       invocation.procedure === "command" ||
       invocation.procedure === "fogCloudObscurement" ||
+      invocation.procedure === "magicalDarknessPointOrigin" ||
+      invocation.procedure === "webRestraintHazard" ||
+      invocation.procedure === "gustOfWindLine" ||
       invocation.procedure === "flamingSphere" ||
       invocation.procedure === "moonbeam" ||
       invocation.procedure === "objectContactDamage" ||
@@ -569,6 +602,14 @@ export function resolveSpellAct(
       fillSet,
     });
   }
+  if (invocation.procedure === "ongoingSpellEnd") {
+    return resolveOngoingSpellEndSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
   if (
     invocation.procedure === "dancingLightsSeparateCast" ||
     invocation.procedure === "dancingLightsCombinedCast"
@@ -652,6 +693,30 @@ export function resolveSpellAct(
       fillSet,
     });
   }
+  if (invocation.procedure === "magicalDarknessPointOrigin") {
+    return resolveMagicalDarknessPointOriginSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "webRestraintHazard") {
+    return resolveWebRestraintHazardSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "gustOfWindLine") {
+    return resolveGustOfWindLineSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
   if (invocation.procedure === "flamingSphere") {
     return resolveFlamingSphereSpellAct({
       input: { ...input, state: castingState },
@@ -698,6 +763,7 @@ export function resolveSpellAct(
       actorId: subject.actorId,
       invocation,
       fillSet,
+      metamagicApplications: metamagicAdmission.applications,
     });
   }
   if (invocation.procedure === "scalarBuff") {
@@ -1851,6 +1917,23 @@ export function resolveBonusActionSpellAct(
       "Bonus Action spell act requires a supported Bonus Action spell.",
     );
   }
+  const metamagicAdmission = admitSpellMetamagicApplications({
+    state: input.state,
+    actor,
+    actorId: subject.actorId,
+    invocation,
+    subject,
+  });
+  if (metamagicAdmission.tag !== "ok") {
+    return invalidResult(
+      input.state,
+      "unsupportedSubject",
+      metamagicAdmission.message,
+    );
+  }
+  const actionCostOverride = metamagicActionCostOverride(
+    metamagicAdmission.applications,
+  );
   if (invocation.procedure === "heldLight") {
     if (invocation.actionCost !== "bonusAction") {
       return invalidResult(
@@ -1896,7 +1979,8 @@ export function resolveBonusActionSpellAct(
     }
   } else if (
     invocation.procedure === "weaponDamageRider" ||
-    invocation.procedure === "weaponAttackOverride"
+    invocation.procedure === "weaponAttackOverride" ||
+    invocation.procedure === "magicWeaponEnhancement"
   ) {
     if (invocation.actionCost !== "bonusAction") {
       return invalidResult(
@@ -1945,10 +2029,18 @@ export function resolveBonusActionSpellAct(
         "Bonus Action spell subject requires a supported Bonus Action spell act.",
       );
     }
-  } else if (
-    invocation.procedure !== "directHitPointRestoration" ||
-    invocation.actionCost !== "bonusAction"
-  ) {
+  } else if (invocation.procedure === "directHitPointRestoration") {
+    if (
+      invocation.actionCost !== "bonusAction" &&
+      actionCostOverride !== "bonusAction"
+    ) {
+      return invalidResult(
+        input.state,
+        "unsupportedSubject",
+        "Bonus Action spell subject requires a supported Bonus Action spell act.",
+      );
+    }
+  } else {
     return invalidResult(
       input.state,
       "unsupportedSubject",
@@ -1967,6 +2059,7 @@ export function resolveBonusActionSpellAct(
       input.state.currentTurnResources,
       input.subject.actorId,
       invocation,
+      actionCostOverride === undefined ? undefined : { actionCostOverride },
     )
   ) {
     return invalidResult(
@@ -2051,6 +2144,14 @@ export function resolveBonusActionSpellAct(
       fillSet,
     });
   }
+  if (invocation.procedure === "magicWeaponEnhancement") {
+    return resolveMagicWeaponEnhancementSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
   if (invocation.procedure === "weaponAttackOverride") {
     return resolveWeaponAttackOverrideSpellAct({
       input: { ...input, state: castingState },
@@ -2104,6 +2205,8 @@ export function resolveBonusActionSpellAct(
     actorId: subject.actorId,
     invocation,
     fillSet,
+    metamagicApplications: metamagicAdmission.applications,
+    ...(actionCostOverride === undefined ? {} : { actionCostOverride }),
   });
 }
 

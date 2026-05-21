@@ -73,13 +73,13 @@
     {
       "number": 12,
       "id": "L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Heat Metal Holding Wearing Penalty Runtime"
     },
     {
       "number": 13,
       "id": "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Dispel Magic Ongoing Spell Ending"
     },
     {
@@ -96,6 +96,12 @@
     },
     {
       "number": 16,
+      "id": "L12G-FOLLOWUP-GENERIC-ONGOING-SPELL-EFFECT-DISPEL",
+      "status": "ready-for-research",
+      "title": "Generic Ongoing Spell Effect Dispel Runtime"
+    },
+    {
+      "number": 17,
       "id": "L12G-RECURSIVE-TAIL-LOOP-B",
       "status": "blocked",
       "title": "LOOP-B Recursive Next-Batch Planning Tail"
@@ -106,7 +112,7 @@
 
 This is a runnable overnight Ralph plan split out of the stale monolithic A plan and the current level-1/2 strict frontier. It owns Surface-to-runtime chains for Acid Arrow, Alter Self, Continual Flame, Flame Blade, and Heat Metal.
 
-Preplanned load: 15 real atomic implementation/planning tasks plus one recursive planning tail. The recursive tail is a fallback only; ordinary `blocked` tasks already auto-unblock when their same-plan dependencies are marked `done`.
+Preplanned load: 16 real atomic implementation/planning tasks plus one recursive planning tail. The recursive tail is a fallback only; ordinary `blocked` tasks already auto-unblock when their same-plan dependencies are marked `done`.
 
 ## Worktree Safety Prefix
 
@@ -190,11 +196,12 @@ The final task is intentionally blocked on every real task in this plan and plac
 | 9 | L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT - Flame Blade Runtime Support | done | L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE | B lane; Unit `flame_blade`; promoted spell-created held object runtime support. |
 | 10 | L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE - Heat Metal Surface Contact Escape Shape | done | completed baseline | B lane; Unit `heat_metal`. |
 | 11 | L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME - Heat Metal Contact Damage Runtime | done | L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE | B lane; Unit `heat_metal`. |
-| 12 | L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY - Heat Metal Holding Wearing Penalty Runtime | ready-for-research | L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE, L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME | B lane; Unit `heat_metal`. |
-| 13 | L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING - Dispel Magic Ongoing Spell Ending | ready-for-research | L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL | B lane split; Unit `dispel_magic`; resolves generic ongoing spell ending for object-attached Continual Flame occurrences without a spell-specific removal registry. |
+| 12 | L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY - Heat Metal Holding Wearing Penalty Runtime | done | L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE, L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME | B lane; Unit `heat_metal`; promoted held/worn save, drop witness, fallback penalty, and cleanup runtime support. |
+| 13 | L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING - Dispel Magic Ongoing Spell Ending | done | L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL | B lane split; Unit `dispel_magic`; promoted tracked spell-light ending for object-attached Continual Flame occurrences without a spell-specific removal registry. |
 | 14 | L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL - Darkness Spell-Created Light Dispel | ready-for-research | L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL | B lane split; Unit `darkness`; first author or close the missing SRD Darkness Unit, then resolve level-2-or-lower spell-created light overlap dispel. |
 | 15 | L12G-FOLLOWUP-ANTIMAGIC-FIELD-SPELL-EFFECT-SUPPRESSION - Antimagic Field Spell Effect Suppression | ready-for-research | L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL | B lane split; Unit `antimagic_field`; resolves generic ongoing spell suppression for object-attached Continual Flame occurrences without duplicating emitter state. |
-| 16 | L12G-RECURSIVE-TAIL-LOOP-B - LOOP-B Recursive Next-Batch Planning Tail | blocked | L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION, L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE, L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT, L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE, L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME, L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME, L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL, L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE, L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT, L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE, L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME, L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY, L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING, L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL, L12G-FOLLOWUP-ANTIMAGIC-FIELD-SPELL-EFFECT-SUPPRESSION | Last-resort next-batch planning safety net; auto-unblocks only after every real task in this plan is `done`. |
+| 16 | L12G-FOLLOWUP-GENERIC-ONGOING-SPELL-EFFECT-DISPEL - Generic Ongoing Spell Effect Dispel Runtime | ready-for-research | L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING | B lane follow-up; Unit `dispel_magic`; expands tracked spell-light ending to generic ongoing Spell Effect occurrences without authored spell identity dispatch. |
+| 17 | L12G-RECURSIVE-TAIL-LOOP-B - LOOP-B Recursive Next-Batch Planning Tail | blocked | L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION, L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE, L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT, L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE, L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME, L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME, L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL, L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE, L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT, L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE, L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME, L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY, L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING, L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL, L12G-FOLLOWUP-ANTIMAGIC-FIELD-SPELL-EFFECT-SUPPRESSION, L12G-FOLLOWUP-GENERIC-ONGOING-SPELL-EFFECT-DISPEL | Last-resort next-batch planning safety net; auto-unblocks only after every real task in this plan is `done`. |
 
 ## Task Details
 
@@ -642,7 +649,7 @@ Acceptance:
 
 ### Task 12 - L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY - Heat Metal Holding Wearing Penalty Runtime
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `heat_metal`.
 Origin: Follow-up split from completed `L12G-SPELL-HEAT-METAL`.
@@ -683,7 +690,7 @@ Acceptance:
 
 ### Task 13 - L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING - Dispel Magic Ongoing Spell Ending
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `dispel_magic`.
 Origin: Split from completed Task 7 `L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL`.
@@ -706,7 +713,7 @@ Inputs:
 
 Outputs:
 
-- supported Dispel Magic profile, accepted closure, or a smaller follow-up split for ongoing Spell Effect ending;
+- supported tracked spell-light Dispel Magic profile for object-attached Continual Flame cleanup plus a smaller follow-up split for generic non-light ongoing Spell Effect ending;
 - Continual Flame's deferred Dispel Magic cleanup remains represented through the generic ongoing Spell Effect owner, not through authored spell identity dispatch or a parallel per-spell removal list;
 - update only the owner files required by the task;
 - regenerate coverage artifacts.
@@ -802,13 +809,56 @@ Acceptance:
 - reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
 - battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
 
-### Task 16 - L12G-RECURSIVE-TAIL-LOOP-B - LOOP-B Recursive Next-Batch Planning Tail
+### Task 16 - L12G-FOLLOWUP-GENERIC-ONGOING-SPELL-EFFECT-DISPEL - Generic Ongoing Spell Effect Dispel Runtime
+
+Status: `ready-for-research`
+
+Unit: `dispel_magic`.
+Origin: Split from completed Task 13 `L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING`.
+Dependencies: L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING.
+
+Pre-researched scope:
+
+- Promote Dispel Magic beyond tracked spell-light emitters by representing generic ongoing Spell Effect occurrences for creature active effects, area effects, object effects, and spell-specific dispel exceptions or immunities with stable occurrence identity, source spell level, target association, and cleanup semantics. Preserve the Task 13 pattern: no authored spell identity dispatch, no per-spell remover registry, and no duplicate state when an existing active-effect owner already carries the needed source or target fact.
+
+Inputs:
+
+- `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/profiles.jsonl`;
+- `plans/unit-profile-coverage/UNIT_REPORT.md`;
+- `plans/unit-profile-coverage/unit-matrix.json`;
+- `.references/srd-5.2.1/Spells/Descriptions-A-D.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- Task 13 Dispel Magic tracked spell-light implementation and focused tests;
+- existing promoted active-effect, area-effect, and object-effect owners that carry spell source identity, source spell level, target association, and cleanup behavior.
+
+Outputs:
+
+- supported-profile or profile-subset-supported Dispel Magic claim update for generic ongoing Spell Effect occurrences, or a smaller accepted closure split for concrete spell-specific exceptions;
+- focused runtime tests cover creature, area, and object ongoing Spell Effect targets where supported, higher-slot automatic ending, higher-level spellcasting ability-check gating, and preservation of explicit spell-specific exceptions or immunities;
+- promoted Quint/runtime parity for ending generic ongoing Spell Effect occurrences;
+- update only owner files required by this task;
+- regenerate coverage artifacts.
+
+Acceptance:
+
+- RAW and ubiquitous-language checks are performed before modeling;
+- no production runtime branch dispatches on authored spell id, name, slug, provenance section, prose label, or source heading to decide Dispel Magic semantics;
+- generic ongoing Spell Effect source level and target association are threaded from the owning effect source rather than duplicated beside derivable state;
+- focused package tests cover admission, target matching, low-level automatic ending, higher-level ability-check or slot gate behavior, and cleanup for each promoted occurrence family;
+- package typecheck is run for touched packages when dependencies are available;
+- `pnpm unit-profile-coverage:check --write` and `pnpm unit-profile-coverage:check` are run;
+- `git diff --check` passes;
+- reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
+- battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
+
+### Task 17 - L12G-RECURSIVE-TAIL-LOOP-B - LOOP-B Recursive Next-Batch Planning Tail
 
 Status: `blocked`
 
 Unit: `level1_2_frontier`.
 Origin: Safety-net planning task for when this plan has no earlier runnable implementation tasks.
-Dependencies: L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION, L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE, L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT, L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE, L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME, L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME, L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL, L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE, L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT, L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE, L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME, L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY, L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING, L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL, L12G-FOLLOWUP-ANTIMAGIC-FIELD-SPELL-EFFECT-SUPPRESSION.
+Dependencies: L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION, L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE, L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT, L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE, L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME, L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME, L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL, L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE, L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT, L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE, L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME, L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY, L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING, L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL, L12G-FOLLOWUP-ANTIMAGIC-FIELD-SPELL-EFFECT-SUPPRESSION, L12G-FOLLOWUP-GENERIC-ONGOING-SPELL-EFFECT-DISPEL.
 
 Pre-researched scope:
 

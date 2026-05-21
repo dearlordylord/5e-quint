@@ -317,8 +317,15 @@ module battleRuntimeSpellAttack {
     )
 
   pure def activeEffectsGrantAttackRollDisadvantage(attackerEffects: Set[ActiveEffect]): bool =
+    activeEffectsGrantSelfAttackRollDisadvantage(attackerEffects)
+
+  pure def activeEffectsGrantSelfAttackRollDisadvantage(attackerEffects: Set[ActiveEffect]): bool =
     attackerEffects.contains(ViciousMockeryNextAttackDisadvantage)
-    or attackerEffects.exists(effect => match effect { | WeaponMasterySapNextAttackDisadvantage(_) => true | _ => false })
+    or attackerEffects.exists(effect => match effect {
+      | WeaponMasterySapNextAttackDisadvantage(_) => true
+      | HeatMetalHoldingWearingPenalty(_) => true
+      | _ => false
+    })
 
   pure def attackRollModeFromFlags(hasAdvantage: bool, hasDisadvantage: bool): SpellAttackRollMode =
     if (hasAdvantage and not(hasDisadvantage))
@@ -343,11 +350,11 @@ module battleRuntimeSpellAttack {
     objectTarget: ObjectTarget,
     attackerCanSeeObject: bool,
   ): SpellAttackRollMode =
-    if ((attackerEffects.contains(ViciousMockeryNextAttackDisadvantage) or attackerEffects.exists(effect => match effect { | WeaponMasterySapNextAttackDisadvantage(_) => true | _ => false })) and objectOutlinesGrantAttackRollAdvantage(objectOutlines, objectTarget, attackerCanSeeObject))
+    if (activeEffectsGrantSelfAttackRollDisadvantage(attackerEffects) and objectOutlinesGrantAttackRollAdvantage(objectOutlines, objectTarget, attackerCanSeeObject))
       NormalSpellAttackRoll
     else if (objectOutlinesGrantAttackRollAdvantage(objectOutlines, objectTarget, attackerCanSeeObject))
       AdvantageSpellAttackRoll
-    else if (attackerEffects.contains(ViciousMockeryNextAttackDisadvantage) or attackerEffects.exists(effect => match effect { | WeaponMasterySapNextAttackDisadvantage(_) => true | _ => false }))
+    else if (activeEffectsGrantSelfAttackRollDisadvantage(attackerEffects))
       DisadvantageSpellAttackRoll
     else
       NormalSpellAttackRoll
@@ -603,6 +610,7 @@ module battleRuntimeSpellAttack {
           attachment: attachment,
           emission: DimLightEmission({ radiusFeet: 10 }),
           opaqueCoverInteraction: LightEmitterDoesNotBlockOpaqueCover,
+          ongoingSpellTracking: UntrackedSpellLightEmitter,
           expiresAt: EndOfTurnLightEmitterExpiration({
             actor: source,
             round: endOfCasterNextTurnExpiresAtRound(state, source),
@@ -622,6 +630,7 @@ module battleRuntimeSpellAttack {
           attachment: attachment,
           emission: DimLightEmission({ radiusFeet: 10 }),
           opaqueCoverInteraction: LightEmitterDoesNotBlockOpaqueCover,
+          ongoingSpellTracking: UntrackedSpellLightEmitter,
           expiresAt: ConcentrationLightEmitterExpiration({ actor: source }),
         })
     }

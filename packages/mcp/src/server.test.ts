@@ -2770,6 +2770,7 @@ describe("MCP server route", () => {
       characterId: testCharacterId(draftId),
       build: finalized.finalization.build,
       maximumHp: 12,
+      hitPointMaximumReduction: 0,
       hitPoints: { tag: "positive", currentHp: 12, tempHp: 0 },
       conditions: [],
       spentHitDice: [],
@@ -3087,6 +3088,34 @@ describe("MCP server route", () => {
           character.displayName === "Goblin Warrior",
       ),
     ).toBe(false);
+  });
+
+  test("lists effective Character Sheet Hit Point maximum after reduction", () => {
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:mcp-reduced-maximum-list";
+    const build = createFinalizedFighterSheet(root, draftId);
+    root.sessionStore.characters.set(
+      availableCharacterSessionRight({
+        characterId: testCharacterId(draftId),
+        build,
+        maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
+        currentHp: Hp(7),
+        tempHp: Hp(0),
+        hitPointMaximumReduction: Hp(5),
+        unitLibrary: root.unitLibrary,
+      }),
+    );
+
+    const characterList = readPayload(
+      handleToolCall(root, "list_characters", {}),
+    );
+
+    expect(characterList.characters).toEqual([
+      expect.objectContaining({
+        characterId: testCharacterId(draftId),
+        hitPoints: expect.objectContaining({ current: 7, maximum: 7 }),
+      }),
+    ]);
   });
 
   test("returns Shove push outcomes through MCP battle resolution output", () => {
@@ -3485,6 +3514,7 @@ describe("MCP server route", () => {
         maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
         currentHp: Hp(1),
         tempHp: Hp(4),
+        hitPointMaximumReduction: Hp(0),
         unitLibrary: root.unitLibrary,
         positiveHpUnconscious: KNOCKED_OUT_UNCONSCIOUS,
       }),
@@ -3542,6 +3572,7 @@ describe("MCP server route", () => {
         maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
         currentHp: Hp(6),
         tempHp: Hp(0),
+        hitPointMaximumReduction: Hp(0),
         conditions: [],
         unitLibrary: root.unitLibrary,
         positiveHpUnconscious: KNOCKED_OUT_UNCONSCIOUS,
@@ -3566,6 +3597,7 @@ describe("MCP server route", () => {
         maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
         currentHp: Hp(0),
         tempHp: Hp(0),
+        hitPointMaximumReduction: Hp(0),
         unitLibrary: root.unitLibrary,
         zeroHpLifecycle: {
           tag: "stable",
@@ -3633,6 +3665,7 @@ describe("MCP server route", () => {
         maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
         currentHp: Hp(0),
         tempHp: Hp(0),
+        hitPointMaximumReduction: Hp(0),
         unitLibrary: root.unitLibrary,
         zeroHpLifecycle: {
           tag: "dead",
@@ -3703,6 +3736,7 @@ describe("MCP server route", () => {
       maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
       currentHp: Hp(0),
       tempHp: Hp(0),
+      hitPointMaximumReduction: Hp(0),
       unitLibrary: root.unitLibrary,
     };
 
@@ -3883,6 +3917,7 @@ describe("MCP server route", () => {
     const root = createMcpCompositionRoot();
     const draftId = "draft:mcp-tool-malformed-fills";
     readPayload(handleToolCall(root, "create_character_draft", { draftId }));
+    const before = root.sessionStore.drafts.get(characterDraftId(draftId));
 
     const rejected = readPayload(
       handleToolCall(root, "fill_creation_holes", {
@@ -3911,6 +3946,9 @@ describe("MCP server route", () => {
       }),
     );
 
+    expect(root.sessionStore.drafts.get(characterDraftId(draftId))).toEqual(
+      before,
+    );
     expect(rejected).toMatchObject({
       details: {
         code: "INVALID_FILLS",
@@ -4643,6 +4681,7 @@ describe("MCP server route", () => {
         maximumHp: Hp(characterBuildMaximumHp(casterBuild, root.unitLibrary)),
         currentHp: Hp(characterBuildMaximumHp(casterBuild, root.unitLibrary)),
         tempHp: Hp(0),
+        hitPointMaximumReduction: Hp(0),
         unitLibrary: root.unitLibrary,
       }),
     );
@@ -4653,6 +4692,7 @@ describe("MCP server route", () => {
         maximumHp: Hp(characterBuildMaximumHp(targetBuild, root.unitLibrary)),
         currentHp: Hp(characterBuildMaximumHp(targetBuild, root.unitLibrary)),
         tempHp: Hp(0),
+        hitPointMaximumReduction: Hp(0),
         unitLibrary: root.unitLibrary,
       }),
     );
@@ -5108,6 +5148,7 @@ describe("MCP server route", () => {
           characterBuildMaximumHp(spellcastingBuild, root.unitLibrary),
         ),
         tempHp: Hp(0),
+        hitPointMaximumReduction: Hp(0),
         unitLibrary: root.unitLibrary,
         spellSlots: [
           {
@@ -5148,6 +5189,7 @@ describe("MCP server route", () => {
           characterBuildMaximumHp(spellcastingBuild, root.unitLibrary),
         ),
         tempHp: Hp(0),
+        hitPointMaximumReduction: Hp(0),
         unitLibrary: root.unitLibrary,
         spellSlots: [
           {
@@ -5331,6 +5373,7 @@ function createFinalizedFighterSheet(
       maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
       currentHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
       tempHp: Hp(0),
+      hitPointMaximumReduction: Hp(0),
       unitLibrary: root.unitLibrary,
     }),
   );
@@ -5360,6 +5403,7 @@ function createFinalizedWizardWithFindFamiliar(
       maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
       currentHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
       tempHp: Hp(0),
+      hitPointMaximumReduction: Hp(0),
       unitLibrary: root.unitLibrary,
     }),
   );

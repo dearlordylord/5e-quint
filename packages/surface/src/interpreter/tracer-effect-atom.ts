@@ -54,6 +54,7 @@ export function traceEffectAtom(
     case "modify_ac_set_base":
     case "modify_save_dc":
     case "apply_condition":
+    case "apply_condition_while_in_area_or_until_escape":
     case "suppress_condition_self_end":
     case "restrict_action_usage":
     case "command_target_next_turn":
@@ -140,6 +141,7 @@ export function traceEffectAtom(
     case "grant_bonus_action_attack":
     case "replace_damage_die":
     case "substitute_ability_for_rolls":
+    case "grant_magic_weapon_enhancement":
     case "grant_condition_immunity":
     case "suppress_condition_benefit":
     case "grant_damage_immunity":
@@ -187,6 +189,9 @@ export function traceEffectAtom(
     case "area_emits_dim_light":
     case "area_is_lightly_obscured":
     case "area_is_heavily_obscured":
+    case "area_is_magical_darkness":
+    case "area_anchor_or_layering_requirement":
+    case "area_section_burns_away":
     case "area_has_strong_wind":
     case "prevent_ranged_weapon_attacks":
     case "area_movement_cost_multiplier":

@@ -1,5 +1,7 @@
 // -*- mode: Bluespec; -*-
 
+// KERNEL-COVERAGE: qnt-owner SHEET.HP_REST_HIT_DICE.TRANSITIONS
+
 module hitPointRecovery {
   import hitPointDamage.* from "./hit-point-damage"
   import zeroHitPointLifecycle.* from "./zero-hit-point-lifecycle"

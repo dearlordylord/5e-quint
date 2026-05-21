@@ -2,6 +2,7 @@ import {
   battleCreatureInitFromStatBlock,
   battleDruidWildShapeKnownForms,
   characterBattleResourceForUnit,
+  characterBattleResourceMaxPoints,
   characterBattleResourceMaxUses,
   characterBattleResourceSupportedForUnit,
   parseCharacterBattleClassLevels,
@@ -10,6 +11,7 @@ import {
   startBattle,
   unitIsSupportedClassFeatureSpellFreeCastResource,
   type CharacterBattleFeatureInit,
+  type CharacterBattleMetamagicState,
   type CharacterBattleResourceInit,
   type CharacterBattleSpellSlotState,
   type CharacterBattleBookOfShadowsPresence,
@@ -32,6 +34,8 @@ import {
   characterBuildFeatureUnitIds,
   characterBuildHitPoints,
   characterBuildProficiencies,
+  characterBuildSorcererFontOfMagicFacts,
+  characterBuildSorcererMetamagicFacts,
   progressionClassLevels,
   type CharacterBuild,
   type CharacterBuildDruidWildShapeFacts,
@@ -74,7 +78,8 @@ import {
   characterUnitRefsWithBattleSupportProfiles,
 } from "./battle-support-profiles.ts";
 
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.monk-focus-battle-options
+// KERNEL-COVERAGE: runtime-owner CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.monk-focus-battle-options character-sheet.metamagic-battle-resource-bridge
 
 // MCP owns cross-runtime wiring. Character creation finalizes a CharacterBuild;
 // battle accepts battle-owned creature-init inputs. This mapper is where
@@ -88,6 +93,7 @@ export type CharacterBuildCreatureInput = {
   readonly build: CharacterBuild;
   readonly initiative: InitiativeScore;
   readonly side: BattleCombatantSide;
+  readonly hitPointMaximum?: Hp;
   readonly currentHp?: Hp;
   readonly tempHp?: Hp;
   readonly conditions?: readonly Condition[];
@@ -139,7 +145,18 @@ export function battleCreatureInitFromCharacterBuild(
       hitPoints.left.map((issue) => issue.message).join("; "),
     );
   }
-  const maxHp = Hp(hitPoints.right.maximum);
+  const buildMaximumHp = Hp(hitPoints.right.maximum);
+  const maxHp = input.hitPointMaximum ?? buildMaximumHp;
+  if (maxHp > buildMaximumHp) {
+    return battleCreatureInitIssue(
+      "Character battle initialization max HP exceeds build-derived max HP.",
+    );
+  }
+  if (maxHp < Hp(1)) {
+    return battleCreatureInitIssue(
+      "Character battle initialization max HP must be positive.",
+    );
+  }
   const weaponMasteries = characterBattleWeaponMasterySelections(
     input.build,
     input.unitLibrary,
@@ -236,6 +253,13 @@ export function battleCreatureInitFromCharacterBuild(
   );
   if (Either.isLeft(resources)) {
     return battleCreatureInitIssue(resources.left.message);
+  }
+  const metamagic = characterBattleMetamagicFromBuild(
+    input.build,
+    input.unitLibrary,
+  );
+  if (Either.isLeft(metamagic)) {
+    return battleCreatureInitIssue(metamagic.left.message);
   }
   const proficiencies = characterBuildProficiencies(
     input.build,
@@ -341,6 +365,7 @@ export function battleCreatureInitFromCharacterBuild(
         : { offHandAttack: offHandAttack.right }),
       unitFeatures: unitFeatures.right,
       resources: resources.right,
+      ...(metamagic.right === undefined ? {} : { metamagic: metamagic.right }),
       ...(spellcasting === undefined
         ? {}
         : { spellcasting: spellcasting.right }),
@@ -465,6 +490,31 @@ function characterBattleClassLevels(
   return Either.right(classLevels satisfies CharacterBattleClassLevels);
 }
 
+function characterBattleMetamagicFromBuild(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+): Either.Either<
+  CharacterBattleMetamagicState | undefined,
+  BattleCreatureInitIssue
+> {
+  const facts = characterBuildSorcererMetamagicFacts({ build, unitLibrary });
+  if (Either.isLeft(facts)) {
+    return battleCreatureInitIssue(facts.left.message);
+  }
+  if (facts.right === undefined) {
+    return Either.right(undefined);
+  }
+  return Either.right({
+    sorceryPointResourceUnitId: facts.right.sorceryPointResource.resourceUnitId,
+    spellUseLimit: facts.right.spellUseLimit,
+    knownOptions: facts.right.knownOptions.map((option) => ({
+      effectKind: option.effectKind,
+      stackingMode: option.stackingMode,
+      sorceryPointCost: option.sorceryPointCost,
+    })),
+  });
+}
+
 export function characterBattleResourceInitsFromBuild(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
@@ -523,6 +573,25 @@ function characterBattleResourceInit(
   resourceExpenditures: readonly CharacterSheetResourceExpenditure[],
   classLevels: readonly CharacterBattleClassLevel[],
 ): Either.Either<CharacterBattleResourceInit, BattleCreatureInitIssue> {
+  const battleResource = characterBattleResourceForUnit(unit);
+  if (battleResource.kind === "point_pool") {
+    const persistedPointsRemaining = characterBattlePersistedPointsRemaining(
+      build,
+      unit,
+      unitLibrary,
+      resourceExpenditures,
+      classLevels,
+    );
+    if (Either.isLeft(persistedPointsRemaining)) {
+      return Either.left(persistedPointsRemaining.left);
+    }
+    return Either.right({
+      unit,
+      ...(persistedPointsRemaining.right === undefined
+        ? {}
+        : { pointsRemaining: persistedPointsRemaining.right }),
+    });
+  }
   const persistedUsesRemaining = characterBattlePersistedUsesRemaining(
     build,
     unit,
@@ -550,6 +619,40 @@ function characterBattleResourceInit(
       ? {}
       : { usesRemaining: persistedUsesRemaining.right }),
   });
+}
+
+function characterBattlePersistedPointsRemaining(
+  build: CharacterBuild,
+  unit: UnitRecord,
+  unitLibrary: UnitCatalog,
+  resourceExpenditures: readonly CharacterSheetResourceExpenditure[],
+  classLevels: readonly CharacterBattleClassLevel[],
+): Either.Either<number | undefined, BattleCreatureInitIssue> {
+  const facts = characterBuildSorcererFontOfMagicFacts({ build, unitLibrary });
+  if (Either.isLeft(facts)) {
+    return battleCreatureInitIssue(facts.left.message);
+  }
+  if (facts.right === undefined || unit.id !== facts.right.unitId) {
+    return Either.right(undefined);
+  }
+  const expended =
+    resourceExpenditures.find(
+      (expenditure) =>
+        expenditure.tag === "pointPoolResource" &&
+        expenditure.unitId === facts.right?.unitId,
+    )?.expended ?? resourceCount(0);
+  const maxPoints = characterBattleResourceMaxPoints({ unit, classLevels });
+  if (maxPoints === undefined) {
+    return battleCreatureInitIssue(
+      "Class feature point-pool expenditure requires a finite battle resource cap.",
+    );
+  }
+  if (expended > maxPoints) {
+    return battleCreatureInitIssue(
+      "Class feature point-pool expenditure exceeds its battle resource cap.",
+    );
+  }
+  return Either.right(Number(maxPoints) - Number(expended));
 }
 
 function characterBattlePersistedUsesRemaining(

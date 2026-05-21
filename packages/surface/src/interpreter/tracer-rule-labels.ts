@@ -14,6 +14,7 @@ import type {
   AreaShapeSpec,
   Attachment,
   AttachmentRangeOrigin,
+  Ability,
   CastingTime,
   ClassLevelChoiceCount,
   ClassFeatureMechanics,
@@ -37,6 +38,7 @@ import type {
   ReactionTrigger,
   ResistanceSourceFilter,
   SavingThrowSourceFilter,
+  Skill,
   SkillFilter,
   SlotScaling,
   SpellAccessMode,
@@ -230,6 +232,8 @@ export function describeHeldWeaponAttachment(
 export function describeObjectFilter(f: ObjectFilter | undefined): string {
   if (f === undefined) return "";
   const parts: string[] = [];
+  if (f.objectKind !== undefined) parts.push(f.objectKind);
+  if (f.magicality !== undefined) parts.push(f.magicality);
   if (f.material !== undefined) parts.push(f.material);
   if (f.visibility === "caster_can_see") parts.push("caster_can_see");
   if (f.manufactured === true) parts.push("manufactured");
@@ -1003,6 +1007,17 @@ export function describeSignedNumber(value: number): string {
 
 export function capitalizeWords(value: string): string {
   return value.replace(/\b[a-z]/g, (c) => c.toUpperCase());
+}
+
+export function describeAbilityCheck(
+  ability: Ability | "caster_spellcasting_ability",
+  skill: Skill | undefined,
+): string {
+  const abilityLabel =
+    ability === "caster_spellcasting_ability"
+      ? "SPELLCASTING"
+      : ability.toUpperCase();
+  return skill === undefined ? abilityLabel : `${abilityLabel} (${skill})`;
 }
 
 export function describeAbilityScoreBounds(

@@ -2,6 +2,7 @@ import type { AreaDirectEffectAtom } from "../surface/types.ts";
 import type { TraceEdge, TraceNode } from "./tracer-model.ts";
 import { Match } from "effect";
 import {
+  describeAbilityCheck,
   describeClassLevelChoiceCount,
   describeDc,
   describeDamageTypeRef,
@@ -176,7 +177,7 @@ export function traceCompositeAndCountermagicEffectAtom(
           id: acgId,
           category: "resolution",
           atomKind: "ability_check_gate",
-          label: `ability_check_gate\n${eff.ability.toUpperCase()} vs ${describeDc(eff.dc)}`,
+          label: `ability_check_gate\n${describeAbilityCheck(eff.ability, eff.skill)} vs ${describeDc(eff.dc)}`,
         });
         const passId = traceEffectAtom(eff.onPass, nodes, ids, edges);
         if (passId !== null) {

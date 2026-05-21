@@ -1,6 +1,7 @@
 // Spell cast resource spending and concentration setup shared by spell
 // resolution modules. Extracted from spells-resolve.ts to keep procedure
 // resolver modules from depending on the monolithic spell dispatcher.
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 
 import {
   spendAction,
@@ -10,19 +11,30 @@ import { Either } from "effect";
 import type {
   BattleResolutionResult,
   BattleState,
+  BattleTurnResources,
   SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import {
   resourceHasUsesRemaining,
   spendCharacterResourceUse,
+  type CharacterBattleMetamagicOptionFact,
 } from "../character-battle-resources.ts";
 import type { CombatantId } from "../identity.ts";
 import { breakBattleConcentration } from "./damage-apply.ts";
 import { snapshotBattle } from "./dispatcher.ts";
+import {
+  metamagicApplicationsIncludeQuickened,
+  spendSpellMetamagicSorceryPoints,
+} from "./metamagic.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
 import { expendSpellSlot } from "./spell-effects.ts";
-import { markSpellSlotExpendedThisTurn } from "./spells-profiles.ts";
+import {
+  markInvocationLevelOnePlusSpellCastThisTurn,
+  markQuickenedLevelOnePlusSpellCastThisTurn,
+  markSpellSlotExpendedThisTurn,
+  spellInvocationIsLevelOnePlus,
+} from "./spells-profiles.ts";
 import { clearPendingAttackRollMissToHitReplacementSelection } from "./statblock-attacks.ts";
 
 export type SpellCastResourceSpendResult =
@@ -36,7 +48,10 @@ export function spendSpellCastResources(input: {
   readonly errorState: BattleState;
   readonly startConcentration?: boolean;
   readonly skipTargetActionSpellCastEarlyEnd?: boolean;
+  readonly actionCostOverride?: "magicAction" | "bonusAction";
+  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
 }): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
+  const metamagicApplications = input.metamagicApplications ?? [];
   const spellCastState =
     input.skipTargetActionSpellCastEarlyEnd === true
       ? input.state
@@ -45,9 +60,10 @@ export function spendSpellCastResources(input: {
           input.actorId,
         );
   const actionCost =
-    "actionCost" in input.invocation
+    input.actionCostOverride ??
+    ("actionCost" in input.invocation
       ? input.invocation.actionCost
-      : "magicAction";
+      : "magicAction");
   const spent =
     actionCost === "bonusAction"
       ? spendActivationResource(spellCastState.currentTurnResources, {
@@ -72,17 +88,38 @@ export function spendSpellCastResources(input: {
     const resourced = {
       ...afterPriorConcentration,
       currentTurnResources: clearPendingAttackRollMissToHitReplacementSelection(
-        spent.right,
+        markQuickenedLevelOnePlusSpellCastForApplications(
+          markInvocationLevelOnePlusSpellCastThisTurn(
+            spent.right,
+            input.actorId,
+            input.invocation,
+          ),
+          input.actorId,
+          input.invocation,
+          metamagicApplications,
+        ),
         input.actorId,
       ),
     };
+    const metamagicSpend = spendSpellMetamagicSorceryPoints({
+      state: resourced,
+      actorId: input.actorId,
+      applications: metamagicApplications,
+    });
+    if (Either.isLeft(metamagicSpend)) {
+      return invalidResult(
+        input.errorState,
+        "staleSubject",
+        metamagicSpend.left,
+      );
+    }
     const nextState = shouldStartConcentration
       ? startSpellEffectConcentration(
-          resourced,
+          metamagicSpend.right,
           input.actorId,
           input.invocation,
         )
-      : resourced;
+      : metamagicSpend.right;
     return {
       tag: "resolved",
       state: nextState,
@@ -118,13 +155,30 @@ export function spendSpellCastResources(input: {
   const resourced = {
     ...slotted,
     currentTurnResources: clearPendingAttackRollMissToHitReplacementSelection(
-      slotTurnResources.right,
+      markQuickenedLevelOnePlusSpellCastForApplications(
+        slotTurnResources.right,
+        input.actorId,
+        input.invocation,
+        metamagicApplications,
+      ),
       input.actorId,
     ),
   };
+  const metamagicSpend = spendSpellMetamagicSorceryPoints({
+    state: resourced,
+    actorId: input.actorId,
+    applications: metamagicApplications,
+  });
+  if (Either.isLeft(metamagicSpend)) {
+    return invalidResult(input.errorState, "staleSubject", metamagicSpend.left);
+  }
   const nextState = shouldStartConcentration
-    ? startSpellEffectConcentration(resourced, input.actorId, input.invocation)
-    : resourced;
+    ? startSpellEffectConcentration(
+        metamagicSpend.right,
+        input.actorId,
+        input.invocation,
+      )
+    : metamagicSpend.right;
   return {
     tag: "resolved",
     state: nextState,
@@ -132,10 +186,23 @@ export function spendSpellCastResources(input: {
   };
 }
 
+function markQuickenedLevelOnePlusSpellCastForApplications(
+  resources: BattleTurnResources,
+  actorId: CombatantId,
+  invocation: SupportedSpellInvocation,
+  applications: readonly CharacterBattleMetamagicOptionFact[],
+): BattleTurnResources {
+  return spellInvocationIsLevelOnePlus(invocation) &&
+    metamagicApplicationsIncludeQuickened(applications)
+    ? markQuickenedLevelOnePlusSpellCastThisTurn(resources, actorId)
+    : resources;
+}
+
 export function spendClassFeatureFreeCastResource(
   state: BattleState,
   actorId: CombatantId,
   resourceUnitId: string,
+  invocation: SupportedSpellInvocation,
   errorState: BattleState,
 ): SpellCastResourceSpendResult {
   const spellCastState = battleStateAfterTargetActionEarlyEndForActor(
@@ -171,12 +238,18 @@ export function spendClassFeatureFreeCastResource(
         origin: {
           ...actor.origin,
           resources: actor.origin.resources.map((candidate) =>
-            candidate.unit.id === resourceUnitId
+            candidate.unit.id === resourceUnitId &&
+            resourceHasUsesRemaining(candidate)
               ? spendCharacterResourceUse(candidate)
               : candidate,
           ),
         },
       }),
+      currentTurnResources: markInvocationLevelOnePlusSpellCastThisTurn(
+        spellCastState.currentTurnResources,
+        actorId,
+        invocation,
+      ),
     },
   };
 }

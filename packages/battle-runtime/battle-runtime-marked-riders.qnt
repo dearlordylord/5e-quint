@@ -42,6 +42,8 @@ module battleRuntimeMarkedRiders {
       | HuntersMarkDamageRider(_) => true
       | HexDamageRider(_) => true
       | FogCloudObscurement(_) => true
+      | MagicalDarknessPointOrigin(_) => true
+      | WebRestraintHazard(_) => true
       | HeatMetalObjectContactDamage(_) => true
       | DancingLightsEffect(_) => true
       | FlameBladeEffect(_) => true
@@ -127,6 +129,12 @@ module battleRuntimeMarkedRiders {
       | EnhanceAbilityCheckAdvantage(data) => data.ability == ability
       | _ => false
     })) AdvantageAbilityCheck else NormalAbilityCheck
+
+  pure def heatMetalHoldingWearingPenaltyAbilityCheckRollMode(effects: Set[ActiveEffect]): AbilityCheckRollMode =
+    if (effects.exists(effect => match effect {
+      | HeatMetalHoldingWearingPenalty(_) => true
+      | _ => false
+    })) DisadvantageAbilityCheck else NormalAbilityCheck
 
   pure def requiredAbilityCheckRollMode(
     disadvantageMode: AbilityCheckRollMode,

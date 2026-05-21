@@ -61,6 +61,21 @@ only the current frontier context.
   exist in the `.qnt` corpus. quint-connect version matches the main repo. Likely a
   missing cache-priming step in worktree setup; blocks MBT verification outside the
   main checkout.
+- **`@dnd/app` typecheck red on light-emitter narrowing.** `pnpm -r typecheck` fails
+  only in `@dnd/app` with `TS18048 'emitter.sourceEffectId' is possibly 'undefined'` at
+  `battle-reducer/spells-active-effects.ts` (`objectLightSpellEffectOccurrenceId`).
+  `BattleProjectedSpellLightEmitter` declares `sourceEffectId?: never`, but
+  `app/tsconfig.json` omits `exactOptionalPropertyTypes` (which `battle-runtime` sets), so
+  under app's looser check the `"sourceEffectId" in emitter` guard still leaves `undefined`.
+  Reproduced on a clean `master` (afe910f6) checkout — **pre-existing**, not introduced by
+  the active-effect refactor/merge. One-line fix available (narrow on `!== undefined`, or
+  set the flag in app's tsconfig); left untouched as a master-scoped concern. Found
+  2026-05-21.
+- **`battle-runtime-mage-armor-and-armor-of-shadows` assertion failure.** "Armor of Shadows
+  casts self-only Mage Armor without expending a Spell Slot" fails a `toMatchObject` on
+  `result.snapshot.turn`. Reproduced on a clean `master` (afe910f6) checkout — **pre-existing**
+  and distinct from the init-bug above (a real `AssertionError`, not the resource-cap throw).
+  Needs triage. Found 2026-05-21.
 
 ## Ralph Task Index
 

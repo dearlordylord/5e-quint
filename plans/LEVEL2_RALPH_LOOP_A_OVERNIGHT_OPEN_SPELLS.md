@@ -73,49 +73,49 @@
     {
       "number": 12,
       "id": "L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Gust of Wind Line Runtime Support"
     },
     {
       "number": 13,
       "id": "L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Gust of Wind Gas And Flame Presentation Closure"
     },
     {
       "number": 14,
       "id": "L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Magic Weapon Surface Item Enhancement Shape"
     },
     {
       "number": 15,
       "id": "L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME",
-      "status": "blocked",
+      "status": "done",
       "title": "Magic Weapon Item Enhancement Runtime"
     },
     {
       "number": 16,
       "id": "L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Web Surface Area Hazard Shape"
     },
     {
       "number": 17,
       "id": "L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME",
-      "status": "blocked",
+      "status": "done",
       "title": "Web Restraint Hazard Runtime"
     },
     {
       "number": 18,
       "id": "L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE",
-      "status": "blocked",
+      "status": "done",
       "title": "Web Terrain Obscurement Fire Boundary"
     },
     {
       "number": 19,
       "id": "L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Darkness Point-Origin Area Runtime Support"
     },
     {
@@ -226,14 +226,14 @@ The final task is intentionally blocked on every real task in this plan and plac
 | 9 | L12G-MISSING-DARKNESS - Darkness Definition And Support Or Closure | done | completed baseline | A lane; Unit `darkness`. |
 | 10 | L12G-MISSING-DARKVISION - Darkvision Definition And Support Or Closure | done | completed baseline | A lane; Unit `darkvision`. |
 | 11 | L12G-MISSING-DETECT-THOUGHTS - Detect Thoughts Definition And Closure | done | completed baseline | A lane; Unit `detect_thoughts`. |
-| 12 | L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME - Gust of Wind Line Runtime Support | ready-for-research | completed baseline | A lane; Unit `gust_of_wind`. |
-| 13 | L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE - Gust of Wind Gas And Flame Presentation Closure | ready-for-research | completed baseline | A lane; Unit `gust_of_wind`. |
-| 14 | L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE - Magic Weapon Surface Item Enhancement Shape | ready-for-research | completed baseline | A lane; Unit `magic_weapon`. |
-| 15 | L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME - Magic Weapon Item Enhancement Runtime | blocked | L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE | A lane; Unit `magic_weapon`. |
-| 16 | L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE - Web Surface Area Hazard Shape | ready-for-research | completed baseline | A lane; Unit `web`. |
-| 17 | L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME - Web Restraint Hazard Runtime | blocked | L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE | A lane; Unit `web`. |
-| 18 | L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE - Web Terrain Obscurement Fire Boundary | blocked | L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE, L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME | A lane; Unit `web`. |
-| 19 | L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME - Darkness Point-Origin Area Runtime Support | ready-for-research | L12G-MISSING-DARKNESS | A lane; Unit `darkness`. |
+| 12 | L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME - Gust of Wind Line Runtime Support | done | completed baseline | A lane; Unit `gust_of_wind`. |
+| 13 | L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE - Gust of Wind Gas And Flame Presentation Closure | done | completed baseline | A lane; Unit `gust_of_wind`. |
+| 14 | L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE - Magic Weapon Surface Item Enhancement Shape | done | completed baseline | A lane; Unit `magic_weapon`. |
+| 15 | L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME - Magic Weapon Item Enhancement Runtime | done | L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE | A lane; Unit `magic_weapon`. |
+| 16 | L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE - Web Surface Area Hazard Shape | done | completed baseline | A lane; Unit `web`. |
+| 17 | L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME - Web Restraint Hazard Runtime | done | L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE | A lane; Unit `web`. |
+| 18 | L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE - Web Terrain Obscurement Fire Boundary | done | L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE, L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME | A lane; Unit `web`. |
+| 19 | L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME - Darkness Point-Origin Area Runtime Support | done | L12G-MISSING-DARKNESS | A lane; Unit `darkness`. |
 | 20 | L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH - Darkness Object-Origin Branch | ready-for-research | L12G-MISSING-DARKNESS | A lane; Unit `darkness`. |
 | 21 | L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL - Darkness Spell-Created Light Dispel | blocked | L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME, L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH | A lane; Unit `darkness`. |
 | 22 | L12G-RECURSIVE-TAIL-LOOP-A - LOOP-A Recursive Next-Batch Planning Tail | blocked | L12G-SPELL-LESSER-RESTORATION, L12G-SPELL-MAGIC-WEAPON, L12G-SPELL-MIND-SPIKE, L12G-SPELL-WEB, L12G-MISSING-ANIMAL-MESSENGER, L12G-MISSING-ARCANISTS-MAGIC-AURA, L12G-MISSING-AUGURY, L12G-MISSING-CALM-EMOTIONS, L12G-MISSING-DARKNESS, L12G-MISSING-DARKVISION, L12G-MISSING-DETECT-THOUGHTS, L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME, L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE, L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE, L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME, L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE, L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME, L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE, L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME, L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH, L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL | Last-resort next-batch planning safety net; auto-unblocks only after every real task in this plan is `done`. |
@@ -693,7 +693,7 @@ Acceptance:
 
 ### Task 12 - L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME - Gust of Wind Line Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `gust_of_wind`.
 Origin: Follow-up split from `gust_of_wind` unit claim and `L12G-MISSING-GUST-OF-WIND` gate task 67.
@@ -734,7 +734,7 @@ Acceptance:
 
 ### Task 13 - L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE - Gust of Wind Gas And Flame Presentation Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `gust_of_wind`.
 Origin: Follow-up split from `gust_of_wind` unit claim and `L12G-MISSING-GUST-OF-WIND` gate task 67.
@@ -775,7 +775,7 @@ Acceptance:
 
 ### Task 14 - L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE - Magic Weapon Surface Item Enhancement Shape
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `magic_weapon`.
 Origin: Follow-up split from `magic_weapon` unit claim and `L12G-SPELL-MAGIC-WEAPON`.
@@ -814,7 +814,7 @@ Acceptance:
 
 ### Task 15 - L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME - Magic Weapon Item Enhancement Runtime
 
-Status: `blocked`
+Status: `done`
 
 Unit: `magic_weapon`.
 Origin: Follow-up split from `magic_weapon` unit claim and `L12G-SPELL-MAGIC-WEAPON`.
@@ -854,7 +854,7 @@ Acceptance:
 
 ### Task 16 - L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE - Web Surface Area Hazard Shape
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `web`.
 Origin: Follow-up split from `web` unit claim and `L12G-SPELL-WEB`.
@@ -893,7 +893,7 @@ Acceptance:
 
 ### Task 17 - L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME - Web Restraint Hazard Runtime
 
-Status: `blocked`
+Status: `done`
 
 Unit: `web`.
 Origin: Follow-up split from `web` unit claim and `L12G-SPELL-WEB`.
@@ -933,7 +933,7 @@ Acceptance:
 
 ### Task 18 - L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE - Web Terrain Obscurement Fire Boundary
 
-Status: `blocked`
+Status: `done`
 
 Unit: `web`.
 Origin: Follow-up split from `web` unit claim and `L12G-SPELL-WEB`.
@@ -974,7 +974,7 @@ Acceptance:
 
 ### Task 19 - L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME - Darkness Point-Origin Area Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `darkness`.
 Origin: Follow-up split from Task 9 and the Darkness Unit claim.

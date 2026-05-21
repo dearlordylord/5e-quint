@@ -404,12 +404,14 @@ const extraAttackSelectedUnitIds = [
   "ranger_extra_attack",
 ] as const;
 type ExtraAttackSelectedUnitId = (typeof extraAttackSelectedUnitIds)[number];
-type SelectedUnitIdentityReplaySequence<ActionName extends string, Projection> =
-  {
-    readonly name: string;
-    readonly actions: readonly ActionName[];
-    readonly expected: Projection;
-  };
+type SelectedUnitIdentityReplaySequence<
+  ActionName extends string,
+  Projection,
+> = {
+  readonly name: string;
+  readonly actions: readonly ActionName[];
+  readonly expected: Projection;
+};
 type ExtraAttackSelectedUnitIdentityReplay = {
   readonly driver: "extraAttack";
   readonly taskId: "extra-attack-count-scaling";
@@ -2883,9 +2885,18 @@ function fillsWithMbtSpellCastReactionFacts(
   const spellCastReactionFactFills = holes.flatMap(
     (
       hole,
-    ): readonly Extract<BattleFill, { readonly kind: "targetSpatialFacts" }>[] =>
+    ): readonly Extract<
+      BattleFill,
+      { readonly kind: "targetSpatialFacts" }
+    >[] =>
       hole.kind === "targetSpatialFacts" && !filledHoleIds.has(hole.holeId)
-        ? [{ kind: "targetSpatialFacts", holeId: hole.holeId, spatialFacts: [] }]
+        ? [
+            {
+              kind: "targetSpatialFacts",
+              holeId: hole.holeId,
+              spatialFacts: [],
+            },
+          ]
         : [],
   );
   return spellCastReactionFactFills.length === 0
@@ -3534,7 +3545,9 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
     throw new Error("Battle runtime MBT does not model ability choice holes.");
   }
   if (hole.kind === "conditionChoice") {
-    throw new Error("Battle runtime MBT does not model condition choice holes.");
+    throw new Error(
+      "Battle runtime MBT does not model condition choice holes.",
+    );
   }
   if (hole.kind === "spellAreaChoice") {
     throw new Error("Battle runtime MBT does not model spell area holes.");
@@ -3582,78 +3595,107 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
       "Battle runtime MBT does not model object contact target holes.",
     );
   }
+  if (hole.kind === "gustOfWindLineDirectionChoice") {
+    throw new Error(
+      "Battle runtime MBT does not model Gust of Wind direction-choice holes.",
+    );
+  }
+  if (hole.kind === "objectDropResolution") {
+    throw new Error(
+      "Battle runtime MBT does not model object drop resolution holes.",
+    );
+  }
+  if (hole.kind === "magicWeaponTargetItem") {
+    throw new Error(
+      "Battle runtime MBT does not model Magic Weapon target-item holes.",
+    );
+  }
+  if (hole.kind === "ongoingSpellTargetChoice") {
+    throw new Error(
+      "Battle runtime MBT does not model ongoing spell target holes.",
+    );
+  }
+  if (hole.kind === "spellcastingAbilityCheck") {
+    throw new Error(
+      "Battle runtime MBT does not model spellcasting ability check holes.",
+    );
+  }
   return [
     Match.value(hole).pipe(
-    Match.when({ kind: "targetChoice" }, () => "TargetChoice" as const),
-    Match.when(
-      { kind: "objectTargetChoice" },
-      () => "ObjectTargetChoice" as const,
-    ),
-    Match.when(
-      { kind: "spellTargetAllocation" },
-      () => "SpellTargetAllocation" as const,
-    ),
-    Match.when({ kind: "spellTargetList" }, () => {
-      throw new Error(
-        "Battle runtime MBT does not model spell target-list holes.",
-      );
-    }),
-    Match.when({ kind: "attackRoll" }, () => {
-      return "AttackRoll" as const;
-    }),
-    Match.when({ kind: "rolledDice" }, (rolledDice) => {
-      if ("spell" in rolledDice) {
-        return "SpellDamageRoll" as const;
-      }
-      return "DamageRoll" as const;
-    }),
-    Match.when({ kind: "deathSavingThrow" }, () => {
-      return "DeathSavingThrow" as const;
-    }),
-    Match.when({ kind: "statBlockRechargeRoll" }, () => {
-      return "StatBlockRechargeRoll" as const;
-    }),
-    Match.when({ kind: "savingThrowOutcome" }, () => {
-      return "SavingThrowOutcome" as const;
-    }),
-    Match.when({ kind: "skillChoice" }, () => {
-      throw new Error("Battle runtime MBT does not model skill choice holes.");
-    }),
-    Match.when({ kind: "commandOptionChoice" }, () => {
-      throw new Error(
-        "Battle runtime MBT does not model Command option holes.",
-      );
-    }),
-    Match.when({ kind: "heldObjectFacts" }, () => {
-      throw new Error(
-        "Battle runtime MBT does not model held-object fact holes.",
-      );
-    }),
-    Match.when({ kind: "concentrationSavingThrow" }, () => {
-      throw new Error(
-        "Battle runtime MBT does not model concentration saving throw holes.",
-      );
-    }),
-    Match.when({ kind: "damageTypeChoice" }, () => {
-      throw new Error("Battle runtime MBT does not model damage type holes.");
-    }),
-    Match.when({ kind: "reactionDecision" }, () => {
-      throw new Error("Battle runtime MBT does not model reaction holes.");
-    }),
-    Match.when({ kind: "movement" }, () => {
-      throw new Error("Battle runtime MBT does not model movement holes.");
-    }),
-    Match.when({ kind: "abilityCheck" }, () => {
-      throw new Error("Battle runtime MBT does not model ability check holes.");
-    }),
-    Match.when({ kind: "grappleOutcome" }, () => {
-      throw new Error("Battle runtime MBT does not model Grapple holes.");
-    }),
-    Match.when({ kind: "attackDamageDisposition" }, () => {
-      throw new Error(
-        "Battle runtime MBT does not model attack damage disposition holes.",
-      );
-    }),
+      Match.when({ kind: "targetChoice" }, () => "TargetChoice" as const),
+      Match.when(
+        { kind: "objectTargetChoice" },
+        () => "ObjectTargetChoice" as const,
+      ),
+      Match.when(
+        { kind: "spellTargetAllocation" },
+        () => "SpellTargetAllocation" as const,
+      ),
+      Match.when({ kind: "spellTargetList" }, () => {
+        throw new Error(
+          "Battle runtime MBT does not model spell target-list holes.",
+        );
+      }),
+      Match.when({ kind: "attackRoll" }, () => {
+        return "AttackRoll" as const;
+      }),
+      Match.when({ kind: "rolledDice" }, (rolledDice) => {
+        if ("spell" in rolledDice) {
+          return "SpellDamageRoll" as const;
+        }
+        return "DamageRoll" as const;
+      }),
+      Match.when({ kind: "deathSavingThrow" }, () => {
+        return "DeathSavingThrow" as const;
+      }),
+      Match.when({ kind: "statBlockRechargeRoll" }, () => {
+        return "StatBlockRechargeRoll" as const;
+      }),
+      Match.when({ kind: "savingThrowOutcome" }, () => {
+        return "SavingThrowOutcome" as const;
+      }),
+      Match.when({ kind: "skillChoice" }, () => {
+        throw new Error(
+          "Battle runtime MBT does not model skill choice holes.",
+        );
+      }),
+      Match.when({ kind: "commandOptionChoice" }, () => {
+        throw new Error(
+          "Battle runtime MBT does not model Command option holes.",
+        );
+      }),
+      Match.when({ kind: "heldObjectFacts" }, () => {
+        throw new Error(
+          "Battle runtime MBT does not model held-object fact holes.",
+        );
+      }),
+      Match.when({ kind: "concentrationSavingThrow" }, () => {
+        throw new Error(
+          "Battle runtime MBT does not model concentration saving throw holes.",
+        );
+      }),
+      Match.when({ kind: "damageTypeChoice" }, () => {
+        throw new Error("Battle runtime MBT does not model damage type holes.");
+      }),
+      Match.when({ kind: "reactionDecision" }, () => {
+        throw new Error("Battle runtime MBT does not model reaction holes.");
+      }),
+      Match.when({ kind: "movement" }, () => {
+        throw new Error("Battle runtime MBT does not model movement holes.");
+      }),
+      Match.when({ kind: "abilityCheck" }, () => {
+        throw new Error(
+          "Battle runtime MBT does not model ability check holes.",
+        );
+      }),
+      Match.when({ kind: "grappleOutcome" }, () => {
+        throw new Error("Battle runtime MBT does not model Grapple holes.");
+      }),
+      Match.when({ kind: "attackDamageDisposition" }, () => {
+        throw new Error(
+          "Battle runtime MBT does not model attack damage disposition holes.",
+        );
+      }),
       Match.exhaustive,
     ),
   ];

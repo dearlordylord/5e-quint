@@ -40,18 +40,21 @@ import type {
   BattleDancingLight,
   BattleDancingLightList,
   BattleSpecialSpeedKind,
+  MagicWeaponEnhancementBonus,
   MarkedDamageRiderAbilityCheckBehavior,
   SpellAttackKind,
   SpellConditionRepeatSave,
 } from "../battle-reducer.ts";
 import {
   PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS,
+  SPELL_CONDITION_ABILITY_CHECK_ACTORS,
   SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS,
   type MirrorImageDuplicateCount,
   type SelfTransformationNonNaturalWeaponModeKind,
 } from "../battle-reducer/domain-constants.ts";
 import type {
   BattleAreaId,
+  BattleLineDirectionId,
   BattleObjectId,
   BattleSpellEffectOccurrenceId,
   CombatantId,
@@ -104,6 +107,8 @@ export type BattleUnitFeatureEffectBase = {
 };
 export type SpellConditionAbilityCheckSuccessEnd =
   (typeof SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS)[number];
+export type SpellConditionAbilityCheckActor =
+  (typeof SPELL_CONDITION_ABILITY_CHECK_ACTORS)[number];
 export type ProtectionFromEvilAndGoodPreventedCondition =
   (typeof PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS)[number];
 export type BattlePossessionAttemptDisposition =
@@ -132,6 +137,7 @@ export type SpellConditionEscape =
       readonly kind: "abilityCheck";
       readonly ability: "str";
       readonly skill: "athletics";
+      readonly allowedActor: SpellConditionAbilityCheckActor;
       readonly successEnds: SpellConditionAbilityCheckSuccessEnd;
     }
   | {
@@ -185,9 +191,6 @@ export type SelfTransformationModeEffectPayload = {
       readonly naturalWeaponDamageType: DamageType;
     }
 );
-
-// BattleActiveEffect: the durable per-creature effect union and its named
-// arm-payload types. Stored on BattleCreatureState.activeEffects.
 export type SpellCreatedHeldObjectState =
   | { readonly kind: "held" }
   | { readonly kind: "notHeld" };
@@ -225,6 +228,15 @@ export type SpellObjectContactDamageActiveEffect = BattleSpellEffectBase & {
     BattleActiveEffectExpiration,
     { readonly kind: "concentration" }
   > & { readonly durationTicks: ElapsedTimeTicks };
+};
+export type ObjectContactPenaltyActiveEffect = BattleSpellEffectBase & {
+  readonly kind: "selfAttackRollAndAbilityCheckRollMode";
+  readonly sourceEffectId: BattleSpellEffectOccurrenceId;
+  readonly mode: Extract<AttackRollMode, "disadvantage">;
+  readonly expiresAt: Extract<
+    BattleActiveEffectExpiration,
+    { readonly kind: "startOfTurn" }
+  >;
 };
 export type BattleActiveEffect =
   | (BattleUnitFeatureEffectBase & {
@@ -384,6 +396,21 @@ export type BattleActiveEffect =
       >;
     })
   | (BattleSpellEffectBase & {
+      readonly kind: "webRestraintHazard";
+      readonly areaId: BattleAreaId;
+      readonly sideFeet: MovementFeet;
+      readonly save: {
+        readonly ability: Extract<Ability, "dex">;
+        readonly dc: DcSource;
+      };
+      readonly entrySavedThisTurn: readonly CombatantId[];
+      readonly startTurnSavedThisTurn: readonly CombatantId[];
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "concentration" }
+      > & { readonly durationTicks: ElapsedTimeTicks };
+    })
+  | (BattleSpellEffectBase & {
       readonly kind: "flamingSphere";
       readonly areaId: BattleAreaId;
       readonly save: {
@@ -419,7 +446,39 @@ export type BattleActiveEffect =
       >;
     })
   | (BattleSpellEffectBase & {
+      readonly kind: "gustOfWindLine";
+      readonly areaId: BattleAreaId;
+      readonly directionId: BattleLineDirectionId;
+      readonly castTurn: BattleTurnAnchor;
+      readonly line: {
+        readonly lengthFeet: MovementFeet;
+        readonly widthFeet: MovementFeet;
+      };
+      readonly save: {
+        readonly ability: Extract<Ability, "str">;
+        readonly dc: DcSource;
+      };
+      readonly pushDistanceFeet: MovementFeet;
+      readonly movementCost: {
+        readonly multiplier: 2;
+        readonly appliesTo: "towardSource";
+      };
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "concentration" }
+      > & { readonly durationTicks: ElapsedTimeTicks };
+    })
+  | (BattleSpellEffectBase & {
       readonly kind: "fogCloudObscurement";
+      readonly areaId: BattleAreaId;
+      readonly radiusFeet: MovementFeet;
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "concentration" }
+      >;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "magicalDarknessPointOrigin";
       readonly areaId: BattleAreaId;
       readonly radiusFeet: MovementFeet;
       readonly expiresAt: Extract<
@@ -586,6 +645,16 @@ export type BattleActiveEffect =
       >;
     })
   | (BattleSpellEffectBase & {
+      readonly kind: "spellMagicWeaponEnhancement";
+      readonly holderCombatantId: CombatantId;
+      readonly weaponItemId: string;
+      readonly bonus: MagicWeaponEnhancementBonus;
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "duration" }
+      >;
+    })
+  | (BattleSpellEffectBase & {
       readonly kind: "spellMarkedDamageRider";
       readonly targetCombatantId: CombatantId;
       readonly transfer: MarkedDamageRiderTransferState;
@@ -639,6 +708,7 @@ export type BattleActiveEffect =
     })
   | SpellCreatedHeldObjectActiveEffect
   | SpellObjectContactDamageActiveEffect
+  | ObjectContactPenaltyActiveEffect
   | (BattleSpellEffectBase & {
       readonly kind: "dancingLights";
       readonly expiresAt: Extract<

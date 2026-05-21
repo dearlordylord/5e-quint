@@ -667,6 +667,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
               combatantId: spellCasterId,
             },
           ],
+          levelOnePlusSpellCastsThisTurn: [spellCasterId],
         },
       },
       fill: reactionDecisionFill(

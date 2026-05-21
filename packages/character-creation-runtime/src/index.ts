@@ -156,7 +156,6 @@ export {
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.eldritch-invocation-choice
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.class-feature-option-projection
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.skill-expertise-choice
-// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.class-feature-advancement-replacement
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.warlock-pact-magic-advancement
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.class-feature-resource-projection
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.class-feature-source-fact-projection
@@ -276,17 +275,21 @@ export {
   fighterClassUnitId,
   fighterLevelGainWithFightingStyleReplacement,
   fightingStyleFeatUnitId,
+  sorcererClassUnitId,
+  sorcererLevelGain,
   warlockClassUnitId,
   warlockLevelGain,
   type CharacterBuildAdvancementIssue,
   type CharacterBuildClassLevelGain,
   type CharacterBuildFighterFightingStyleReplacementLevelGain,
   type CharacterBuildPlainClassLevelGain,
+  type CharacterBuildSorcererMetamagicLevelGain,
   type CharacterBuildWarlockEldritchInvocationSelectionInput,
   type CharacterBuildWarlockLevelGain,
   type CharacterBuildWarlockPactMagicLevelGain,
   type FighterClassUnitId,
   type FightingStyleFeatUnitId,
+  type SorcererClassUnitId,
   type WarlockClassUnitId,
 } from "./character-build-advancement.ts";
 export {

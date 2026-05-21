@@ -194,7 +194,9 @@
 {"unitId":"fighter_fighting_style","evidence":{"tag":"deterministic-admission-projection","taskId":"AT-L1-03","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"fighter_fighting_style","evidence":{"tag":"selected-identity-mbt","taskId":"L1D2-FIGHTER-FIGHTING-STYLE","ownerPath":"packages/character-creation-runtime/src/fighter-fighting-style-selected-identity.mbt.test.ts"}}
 {"unitId":"fighter_weapon_mastery","evidence":{"tag":"deterministic-admission-projection","taskId":"AT-L1-04","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
+{"unitId":"fighter_weapon_mastery","evidence":{"tag":"selected-identity-mbt","taskId":"L1D2-WEAPON-MASTERY-CONTAINERS","ownerPath":"packages/character-creation-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts"}}
 {"unitId":"barbarian_weapon_mastery","evidence":{"tag":"deterministic-admission-projection","taskId":"AT-L1-04","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
+{"unitId":"barbarian_weapon_mastery","evidence":{"tag":"selected-identity-mbt","taskId":"L1D2-WEAPON-MASTERY-CONTAINERS","ownerPath":"packages/character-creation-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts"}}
 {"unitId":"paladin_weapon_mastery","evidence":{"tag":"deterministic-admission-projection","taskId":"AT-L1-04","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
 {"unitId":"paladin_weapon_mastery","evidence":{"tag":"selected-identity-mbt","taskId":"L1D2-WEAPON-MASTERY-CONTAINERS","ownerPath":"packages/character-creation-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts"}}
 {"unitId":"paladin_weapon_mastery","evidence":{"tag":"selected-identity-mbt","taskId":"L1D2-WEAPON-MASTERY-CONTAINERS","ownerPath":"packages/character-sheet-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts"}}
@@ -271,4 +273,9 @@
 {"unitId":"hold_person","evidence":{"tag":"selected-identity-mbt","taskId":"condition-saving-throw-lifecycle","ownerPath":"packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts"}}
 {"unitId":"druid_wild_shape","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME","ownerPath":"packages/battle-runtime/src/battle-runtime-druid-wild-shape.test.ts"}}
 {"unitId":"mind_spike","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-SPELL-MIND-SPIKE","ownerPath":"packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts"}}
-{"unitId":"heat_metal","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME","ownerPath":"packages/battle-runtime/src/unit-profile-admission-heat-metal.test.ts"}}
+{"unitId":"heat_metal","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY","ownerPath":"packages/battle-runtime/src/unit-profile-admission-heat-metal.test.ts"}}
+{"unitId":"gust_of_wind","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME","ownerPath":"packages/battle-runtime/src/unit-profile-admission-gust-of-wind.test.ts"}}
+{"unitId":"magic_weapon","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME","ownerPath":"packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts"}}
+{"unitId":"web","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE","ownerPath":"packages/battle-runtime/src/unit-profile-admission-web-restraint-hazard.test.ts"}}
+{"unitId":"darkness","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME","ownerPath":"packages/battle-runtime/src/unit-profile-admission-darkness.test.ts"}}
+{"unitId":"dispel_magic","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING","ownerPath":"packages/battle-runtime/src/unit-profile-admission-dispel-magic.test.ts"}}

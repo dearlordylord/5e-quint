@@ -1,5 +1,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-weapon-enhancement
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // Spell discovery (Cluster K). Mechanical extraction from battle-reducer.ts.
 // Discovers per-actor SupportedSpellInvocation acts, computes cast-summary
 // strings, classifies invocations, and synthesises the optional readied-spell
@@ -61,6 +63,7 @@ import {
   supportedSpellInvocationRef,
 } from "./spells-holes-fills.ts";
 import {
+  magicWeaponTargetItemHole,
   spellDancingLightsPlacementHole,
   spellObjectContactTargetsHole,
   targetListTargetingHasFixedMaximum,
@@ -77,6 +80,11 @@ import {
   spellCastCanTriggerCounterspell,
   type CounterspellCapableReactor,
 } from "./counterspell-reaction-discovery.ts";
+import { ongoingSpellTargetChoiceHole } from "./spells-ongoing-spell-ending.ts";
+import {
+  actorCanOfferQuickenedSpellMetamagic,
+  QUICKENED_SPELL_METAMAGIC_SELECTION,
+} from "./metamagic.ts";
 
 export function discoverSupportedSpellInvocations(
   state: BattleState,
@@ -106,13 +114,20 @@ export function discoverSupportedSpellInvocations(
       if (!spellInvocationCasterPrerequisiteIsMet(actor, invocation)) {
         return [];
       }
-      if (
-        !spellActTurnResourceAvailable(
-          state.currentTurnResources,
+      const naturalTurnResourceAvailable = spellActTurnResourceAvailable(
+        state.currentTurnResources,
+        actorId,
+        invocation,
+      );
+      const quickenedTurnResourceAvailable =
+        invocation.procedure === "directHitPointRestoration" &&
+        actorCanOfferQuickenedSpellMetamagic({
+          state,
+          actor,
           actorId,
           invocation,
-        )
-      ) {
+        });
+      if (!naturalTurnResourceAvailable && !quickenedTurnResourceAvailable) {
         return [];
       }
       if (invocation.procedure === "command") {
@@ -159,6 +174,36 @@ export function discoverSupportedSpellInvocations(
             },
             label: invocation.spell.name,
             summary: `${spellActivationInvocationCastSummary(invocation)} The table supplies the fog area identity.`,
+            initialHoles: [spellAreaChoiceHole(invocation)],
+          },
+        ];
+      }
+      if (invocation.procedure === "magicalDarknessPointOrigin") {
+        return [
+          {
+            subject: {
+              tag: "actionSpell" as const,
+              actorId,
+              invocation: supportedSpellInvocationRef(invocation),
+              mode: { tag: "cast" as const },
+            },
+            label: invocation.spell.name,
+            summary: `${spellActivationInvocationCastSummary(invocation)} The table supplies the magical Darkness area identity.`,
+            initialHoles: [spellAreaChoiceHole(invocation)],
+          },
+        ];
+      }
+      if (invocation.procedure === "webRestraintHazard") {
+        return [
+          {
+            subject: {
+              tag: "actionSpell" as const,
+              actorId,
+              invocation: supportedSpellInvocationRef(invocation),
+              mode: { tag: "cast" as const },
+            },
+            label: invocation.spell.name,
+            summary: `${spellActivationInvocationCastSummary(invocation)} The table supplies the Web cube area identity.`,
             initialHoles: [spellAreaChoiceHole(invocation)],
           },
         ];
@@ -253,7 +298,8 @@ export function discoverSupportedSpellInvocations(
         invocation.procedure === "saveGatedAttackRollAdvantage" ||
         invocation.procedure === "sleepTargetAdmission" ||
         invocation.procedure === "hideousLaughter" ||
-        invocation.procedure === "greaseGroundHazard"
+        invocation.procedure === "greaseGroundHazard" ||
+        invocation.procedure === "gustOfWindLine"
       ) {
         if (
           invocation.targeting.kind === "singleCombatant" ||
@@ -291,7 +337,8 @@ export function discoverSupportedSpellInvocations(
               initialHoles: [targetHole, ...conditionChoiceHoles],
             },
           ];
-          return invocation.procedure === "greaseGroundHazard"
+          return invocation.procedure === "greaseGroundHazard" ||
+            invocation.procedure === "gustOfWindLine"
             ? castActs
             : [...castActs, ...readiedSpellAct(state, actorId, invocation)];
         }
@@ -318,7 +365,8 @@ export function discoverSupportedSpellInvocations(
             initialHoles: [initialHole, ...conditionChoiceHoles],
           },
         ];
-        return invocation.procedure === "greaseGroundHazard"
+        return invocation.procedure === "greaseGroundHazard" ||
+          invocation.procedure === "gustOfWindLine"
           ? castActs
           : [...castActs, ...readiedSpellAct(state, actorId, invocation)];
       }
@@ -587,6 +635,23 @@ export function discoverSupportedSpellInvocations(
           },
         ];
       }
+      if (invocation.procedure === "ongoingSpellEnd") {
+        return [
+          {
+            subject: {
+              tag: "actionSpell" as const,
+              actorId,
+              invocation: supportedSpellInvocationRef(invocation),
+              mode: { tag: "cast" as const },
+            },
+            label: invocation.spell.name,
+            summary: spellInvocationCastSummary(invocation),
+            initialHoles: [
+              ongoingSpellTargetChoiceHole(state, actorId, invocation),
+            ],
+          },
+        ];
+      }
       if (invocation.procedure === "weaponDamageRider") {
         return [
           {
@@ -599,6 +664,21 @@ export function discoverSupportedSpellInvocations(
             label: invocation.spell.name,
             summary: spellInvocationCastSummary(invocation),
             initialHoles: [],
+          },
+        ];
+      }
+      if (invocation.procedure === "magicWeaponEnhancement") {
+        return [
+          {
+            subject: {
+              tag: "bonusActionSpell" as const,
+              actorId,
+              invocation: supportedSpellInvocationRef(invocation),
+              mode: { tag: "cast" as const },
+            },
+            label: invocation.spell.name,
+            summary: spellInvocationCastSummary(invocation),
+            initialHoles: [magicWeaponTargetItemHole(invocation)],
           },
         ];
       }
@@ -900,7 +980,7 @@ export function discoverSupportedSpellInvocations(
             ? spellTargetListHole(state, actorId, invocation)
             : spellTargetHole(state, actorId, invocation);
       const castActs =
-        targetHole.choices.length === 0
+        targetHole.choices.length === 0 || !naturalTurnResourceAvailable
           ? []
           : [
               {
@@ -915,7 +995,28 @@ export function discoverSupportedSpellInvocations(
                 initialHoles: [targetHole],
               },
             ];
-      return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
+      const quickenedCastActs =
+        targetHole.choices.length === 0 || !quickenedTurnResourceAvailable
+          ? []
+          : [
+              {
+                subject: {
+                  tag: "bonusActionSpell" as const,
+                  actorId,
+                  invocation: supportedSpellInvocationRef(invocation),
+                  mode: { tag: "cast" as const },
+                  metamagic: QUICKENED_SPELL_METAMAGIC_SELECTION,
+                },
+                label: `${invocation.spell.name} (Quickened Spell)`,
+                summary: `Cast ${invocation.spell.name} with Quickened Spell as a Bonus Action.`,
+                initialHoles: [targetHole],
+              },
+            ];
+      return [
+        ...castActs,
+        ...quickenedCastActs,
+        ...readiedSpellAct(state, actorId, invocation),
+      ];
     },
   );
   return acts.map((act) =>
@@ -989,6 +1090,9 @@ export function spellInvocationCastSummary(
       ? `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`
       : `Cast ${invocation.spell.name} as a cantrip.`;
   }
+  if (invocation.procedure === "ongoingSpellEnd") {
+    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+  }
   if (invocation.procedure === "heldLightHurl") {
     return `Take a Magic action to hurl ${invocation.spell.name}.`;
   }
@@ -1061,6 +1165,9 @@ export function spellInvocationCastSummary(
   }
   if (invocation.procedure === "weaponDamageRider") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+  }
+  if (invocation.procedure === "magicWeaponEnhancement") {
+    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot on a nonmagical weapon.`;
   }
   if (invocation.procedure === "afterHitDamage") {
     return invocation.resource.tag === "classFeatureFreeCast"
@@ -1151,7 +1258,10 @@ export function spellActivationInvocationCastSummary(
         | "hideousLaughter"
         | "command"
         | "greaseGroundHazard"
+        | "webRestraintHazard"
+        | "gustOfWindLine"
         | "fogCloudObscurement"
+        | "magicalDarknessPointOrigin"
         | "flamingSphere"
         | "moonbeam"
         | "objectContactDamage"
@@ -1203,6 +1313,9 @@ export function spellSubjectTagForInvocation(
     return "bonusActionSpell";
   }
   if (invocation.procedure === "weaponDamageRider") {
+    return "bonusActionSpell";
+  }
+  if (invocation.procedure === "magicWeaponEnhancement") {
     return "bonusActionSpell";
   }
   if (invocation.procedure === "weaponAttackOverride") {
@@ -1311,6 +1424,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "dancingLightsCombinedCast" &&
     invocation.procedure !== "dancingLightsReposition" &&
     invocation.procedure !== "objectLight" &&
+    invocation.procedure !== "ongoingSpellEnd" &&
     invocation.procedure !== "heldLightHurl" &&
     invocation.procedure !== "spellHostedWeaponAttack" &&
     invocation.procedure !== "weaponAttackOverride" &&
@@ -1327,6 +1441,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "scalarBuff" &&
     invocation.procedure !== "selfTransformationMode" &&
     invocation.procedure !== "weaponDamageRider" &&
+    invocation.procedure !== "magicWeaponEnhancement" &&
     invocation.procedure !== "afterHitDamage" &&
     invocation.procedure !== "afterHitSaveGatedCondition" &&
     invocation.procedure !== "afterHitTimedDamageAndSave" &&
@@ -1344,7 +1459,10 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "hideousLaughter" &&
     invocation.procedure !== "command" &&
     invocation.procedure !== "greaseGroundHazard" &&
+    invocation.procedure !== "webRestraintHazard" &&
+    invocation.procedure !== "gustOfWindLine" &&
     invocation.procedure !== "fogCloudObscurement" &&
+    invocation.procedure !== "magicalDarknessPointOrigin" &&
     invocation.procedure !== "flamingSphere" &&
     invocation.procedure !== "spellAttackSequence" &&
     invocation.procedure !== "shieldReaction"
@@ -1370,6 +1488,7 @@ export function readiedSpellAct(
     invocation.procedure === "scalarBuff" ||
     invocation.procedure === "selfTransformationMode" ||
     invocation.procedure === "weaponDamageRider" ||
+    invocation.procedure === "magicWeaponEnhancement" ||
     invocation.procedure === "weaponAttackOverride" ||
     invocation.procedure === "markedDamageRider" ||
     invocation.procedure === "expeditiousRetreatDash" ||
@@ -1384,6 +1503,7 @@ export function readiedSpellAct(
     invocation.procedure === "afterHitDamageAndIllumination" ||
     invocation.procedure === "heldLight" ||
     invocation.procedure === "heldLightHurl" ||
+    invocation.procedure === "ongoingSpellEnd" ||
     invocation.procedure === "rollModifier" ||
     invocation.procedure === "creatureTypeProtection" ||
     invocation.procedure === "blurAttackRollDefense" ||
@@ -1398,7 +1518,10 @@ export function readiedSpellAct(
     invocation.procedure === "hideousLaughter" ||
     invocation.procedure === "command" ||
     invocation.procedure === "greaseGroundHazard" ||
+    invocation.procedure === "webRestraintHazard" ||
+    invocation.procedure === "gustOfWindLine" ||
     invocation.procedure === "fogCloudObscurement" ||
+    invocation.procedure === "magicalDarknessPointOrigin" ||
     invocation.procedure === "flamingSphere" ||
     invocation.procedure === "shieldReaction" ||
     (invocation.procedure === "spellAttackDamage" &&

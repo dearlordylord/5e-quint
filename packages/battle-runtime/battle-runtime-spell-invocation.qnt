@@ -21,6 +21,24 @@ module battleRuntimeSpellInvocation {
   pure def canActorExpendSpellSlotThisTurn(state: BattleState, actor: Actor): bool =
     not(battleActorHasSpellSlotUse(state, actor))
 
+  pure def battleActorHasCastLevelOnePlusSpellThisTurn(state: BattleState, actor: Actor): bool =
+    state.levelOnePlusSpellCastsThisTurn.contains(actor)
+
+  pure def battleActorHasQuickenedLevelOnePlusSpellThisTurn(state: BattleState, actor: Actor): bool =
+    state.quickenedLevelOnePlusSpellCastsThisTurn.contains(actor)
+
+  pure def commitActorLevelOnePlusSpellCast(state: BattleState, actor: Actor): BattleState =
+    if (battleActorHasCastLevelOnePlusSpellThisTurn(state, actor))
+      state
+    else
+      { ...state, levelOnePlusSpellCastsThisTurn: state.levelOnePlusSpellCastsThisTurn.union(Set(actor)) }
+
+  pure def commitActorQuickenedLevelOnePlusSpellCast(state: BattleState, actor: Actor): BattleState =
+    if (battleActorHasQuickenedLevelOnePlusSpellThisTurn(state, actor))
+      state
+    else
+      { ...state, quickenedLevelOnePlusSpellCastsThisTurn: state.quickenedLevelOnePlusSpellCastsThisTurn.union(Set(actor)) }
+
   pure def claimPendingActorSpellSlotUse(state: BattleState, actor: Actor): BattleState =
     if (battleActorHasSpellSlotUse(state, actor))
       state
@@ -35,10 +53,10 @@ module battleRuntimeSpellInvocation {
       state
     else {
       val released = releasePendingActorSpellSlotUse(state, actor)
-      {
+      commitActorLevelOnePlusSpellCast({
         ...released,
         spellSlotUsesThisTurn: released.spellSlotUsesThisTurn.union(Set(BattleCommittedSpellSlotUse(actor))),
-      }
+      }, actor)
     }
 
   pure def expendedSlotsAfterInvocation(
@@ -102,6 +120,7 @@ module battleRuntimeSpellInvocation {
       | DivineSmite => true
       | HuntersMark => true
       | Hex => true
+      | MagicWeapon => true
       | ShockingGrasp => false
       | GuidingBolt => true
       | RayOfSickness => true
@@ -114,6 +133,8 @@ module battleRuntimeSpellInvocation {
       | TrueStrike => false
       | Grease => true
       | FogCloud => true
+      | Darkness => true
+      | Web => true
       | Command => true
       | DissonantWhispers => true
       | FeatherFall => true

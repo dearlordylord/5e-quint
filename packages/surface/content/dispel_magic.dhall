@@ -38,9 +38,13 @@ let dispelMagic =
                     , holeId = "dispel_magic_target"
                     , label = "target"
                     , value =
-                        { kind = "target"
-                        , selection = { mode = "one" }
-                        }
+                      { kind = "target"
+                      , selection =
+                          { mode = "one"
+                          , targetKinds =
+                              [ "creature", "object", "magical_effect" ]
+                          }
+                      }
                     }
                 , effects =
                     Some
@@ -59,13 +63,17 @@ let dispelMagic =
                     , holeId = "dispel_magic_target"
                     , label = "target"
                     , value =
-                        { kind = "target"
-                        , selection = { mode = "one" }
-                        }
+                      { kind = "target"
+                      , selection =
+                          { mode = "one"
+                          , targetKinds =
+                              [ "creature", "object", "magical_effect" ]
+                          }
+                      }
                     }
                 , effects =
                     None (List { kind : Text, maxSpellLevel : Optional Text })
-                , ability = Some "int"
+                , ability = Some "caster_spellcasting_ability"
                 , dc = Some 10
                 , onPass =
                     Some

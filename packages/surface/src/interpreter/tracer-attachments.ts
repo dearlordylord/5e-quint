@@ -126,6 +126,8 @@ export function describeOngoingActionCost(
   cost: import("../surface/types.ts").OngoingActionCost,
 ): string {
   switch (cost.kind) {
+    case "action":
+      return "Action";
     case "bonus_action":
       return "Bonus Action";
     case "standard_action":

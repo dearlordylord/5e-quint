@@ -1,11 +1,18 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form spell.invocation-flaming-sphere-hazard-ram spell.invocation-self-transformation-mode spell.invocation-spell-created-held-object
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE
 
 import { Match, Schema } from "effect";
 import { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
 import { SpellSlotLevel, spellSlotLevel } from "@dnd/shared/types";
 import { DamageTypeSchema } from "@dnd/surface/surface/schema";
-import { CombatantId, SpellId, spellId as makeSpellId } from "./identity.ts";
+import {
+  BattleLineDirectionId,
+  CombatantId,
+  SpellId,
+  spellId as makeSpellId,
+} from "./identity.ts";
 import {
   BATTLE_REACTION_TRIGGERS,
   BATTLE_READIED_SPELL_TRIGGERS,
@@ -14,6 +21,10 @@ import {
   SELF_TRANSFORMATION_NATURAL_WEAPONS_MODE_KIND,
   SELF_TRANSFORMATION_NON_NATURAL_WEAPON_MODE_KINDS,
 } from "./battle-reducer/domain-constants.ts";
+import {
+  CHARACTER_BATTLE_METAMAGIC_EFFECT_KINDS,
+  type CharacterBattleMetamagicEffectKind,
+} from "./character-battle-resources.ts";
 
 export const BATTLE_SUBJECT_ACTIONS = [
   "attack",
@@ -52,6 +63,11 @@ export const BATTLE_RUNTIME_COMMANDS = [
   "releaseGrapple",
   "opportunityAttack",
   "greaseGroundHazardSave",
+  "webRestraintSave",
+  "webRestrainedNoLongerInArea",
+  "webAreaRemoved",
+  "gustOfWindLineSave",
+  "gustOfWindLineDirectionChange",
   "movableZoneSave",
   "movableZoneReposition",
   "movableZoneRam",
@@ -122,7 +138,10 @@ export const SPELL_SLOT_PROCEDURES = [
   "sleepTargetAdmission",
   "hideousLaughter",
   "greaseGroundHazard",
+  "webRestraintHazard",
+  "gustOfWindLine",
   "fogCloudObscurement",
+  "magicalDarknessPointOrigin",
   "flamingSphere",
   "moonbeam",
   "objectContactDamage",
@@ -141,6 +160,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "conditionRemovalProtection",
   "directConditionRemoval",
   "weaponDamageRider",
+  "magicWeaponEnhancement",
   "afterHitDamage",
   "afterHitSaveGatedCondition",
   "afterHitTimedDamageAndSave",
@@ -155,6 +175,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "shieldReaction",
   "counterspell",
   "objectLight",
+  "ongoingSpellEnd",
   "featherFallMitigation",
 ] as const;
 export type SpellSlotProcedure = (typeof SPELL_SLOT_PROCEDURES)[number];
@@ -271,6 +292,15 @@ export const SpellSubjectModeSchema = Schema.Union(
   }),
 );
 export type SpellSubjectMode = typeof SpellSubjectModeSchema.Type;
+
+export const SpellMetamagicSelectionSchema = Schema.Struct({
+  effectKind: Schema.Literal(...CHARACTER_BATTLE_METAMAGIC_EFFECT_KINDS),
+});
+export type SpellMetamagicSelection = typeof SpellMetamagicSelectionSchema.Type;
+
+const SpellMetamagicSelectionsSchema = Schema.NonEmptyArray(
+  SpellMetamagicSelectionSchema,
+);
 
 // BattleSubject is a replay key returned by discoverBattleActs and copied back
 // by callers. It identifies one discovered runtime act; it is not Surface
@@ -466,6 +496,9 @@ export const BattleSubjectSchema = Schema.Union(
     actorId: CombatantId,
     invocation: SpellInvocationRefSchema,
     mode: SpellSubjectModeSchema,
+    metamagic: Schema.optionalWith(SpellMetamagicSelectionsSchema, {
+      exact: true,
+    }),
     componentWeaponItemId: Schema.optionalWith(BattleSubjectTextSchema, {
       exact: true,
     }),
@@ -476,6 +509,9 @@ export const BattleSubjectSchema = Schema.Union(
     invocation: SpellInvocationRefSchema,
     mode: Schema.Struct({
       tag: Schema.Literal("cast"),
+    }),
+    metamagic: Schema.optionalWith(SpellMetamagicSelectionsSchema, {
+      exact: true,
     }),
     componentWeaponItemId: Schema.optionalWith(BattleSubjectTextSchema, {
       exact: true,
@@ -572,6 +608,50 @@ export const BattleSubjectSchema = Schema.Union(
     sourceSpellId: SpellId,
     areaId: BattleSubjectTextSchema,
     trigger: Schema.Literal("entersArea", "endsTurnInArea"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("webRestraintSave"),
+    sourceCombatantId: CombatantId,
+    sourceSpellId: SpellId,
+    areaId: BattleSubjectTextSchema,
+    trigger: Schema.Literal("entersArea", "startsTurnInArea"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("webRestrainedNoLongerInArea"),
+    sourceCombatantId: CombatantId,
+    sourceSpellId: SpellId,
+    areaId: BattleSubjectTextSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("webAreaRemoved"),
+    sourceCombatantId: CombatantId,
+    sourceSpellId: SpellId,
+    areaId: BattleSubjectTextSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("gustOfWindLineSave"),
+    sourceCombatantId: CombatantId,
+    sourceSpellId: SpellId,
+    areaId: BattleSubjectTextSchema,
+    directionId: BattleLineDirectionId,
+    trigger: Schema.Literal("endsTurnInLine"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("gustOfWindLineDirectionChange"),
+    sourceCombatantId: CombatantId,
+    sourceSpellId: SpellId,
+    areaId: BattleSubjectTextSchema,
+    directionId: BattleLineDirectionId,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
@@ -775,6 +855,16 @@ function spellSubjectModeKey(mode: SpellSubjectMode): readonly unknown[] {
   return mode.tag === "cast" ? [mode.tag] : [mode.tag, mode.trigger];
 }
 
+function spellMetamagicSelectionKey(
+  selections:
+    | readonly { readonly effectKind: CharacterBattleMetamagicEffectKind }[]
+    | undefined,
+): readonly unknown[] {
+  return selections === undefined
+    ? []
+    : [...selections].map((selection) => selection.effectKind).sort();
+}
+
 function battleSubjectKey(subject: BattleSubject): string {
   if (subject.tag === "action" && subject.action === "shakeAwakeFromSleep") {
     return JSON.stringify([subject.tag, subject.actorId, subject.action]);
@@ -948,6 +1038,7 @@ function battleSubjectKey(subject: BattleSubject): string {
         spell.actorId,
         spellInvocationRefKey(spell.invocation),
         spellSubjectModeKey(spell.mode),
+        spellMetamagicSelectionKey(spell.metamagic),
         spell.componentWeaponItemId ?? null,
       ]),
     ),
@@ -957,6 +1048,7 @@ function battleSubjectKey(subject: BattleSubject): string {
         spell.actorId,
         spellInvocationRefKey(spell.invocation),
         spellSubjectModeKey(spell.mode),
+        spellMetamagicSelectionKey(spell.metamagic),
         spell.componentWeaponItemId ?? null,
       ]),
     ),

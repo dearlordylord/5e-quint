@@ -33,9 +33,9 @@ It is a source/key isomorphism over an equipment item slot (`armor`, `shield`,
 and not an inferred weapon Unit id.
 
 Character Build Spellcasting Source - one spellcasting source retained by a
-build. It records the source Unit, spellcasting ability, cantrips, spellbook
-spells, prepared spells, and focus permissions for that source. It does not
-merge cantrips or prepared spells across classes.
+build. It records the source Unit, spellcasting ability, cantrip Spell Access,
+spellbook Spell Access, prepared Spell Access, and focus permissions for that
+source. It does not merge Spell Access across classes.
 
 Character Build Spell Slot Pool - durable slot-capacity evidence on a build.
 Ordinary `spellcasting` slots and `pactMagic` slots are separate pools because

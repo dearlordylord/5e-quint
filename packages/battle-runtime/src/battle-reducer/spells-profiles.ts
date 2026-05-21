@@ -1,5 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ongoing-spell-ending
 // Spell profile predicates and projections (Cluster O). Mechanical extraction
 // from battle-reducer.ts. Aggregates: per-procedure `supported*Profile`
 // predicates, spell-specific authoring bodies (faerieFire, animalFriendship,
@@ -12,6 +13,9 @@
 // (resolve), and F (turn).
 
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
 
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import {
@@ -83,10 +87,20 @@ import {
 } from "./spells-profiles-attack-damage.ts";
 export * from "./spells-profiles-attack-damage.ts";
 
+const DISPEL_MAGIC_TARGET_KINDS = [
+  "creature",
+  "object",
+  "magical_effect",
+] as const;
+
 type OngoingOperationEffect = Extract<
   SpellRecord["mechanics"],
   { readonly family: "ongoing_effect" }
 >["operations"][number]["effect"];
+type OngoingOperation = Extract<
+  SpellRecord["mechanics"],
+  { readonly family: "ongoing_effect" }
+>["operations"][number];
 type OngoingInitialEffect = NonNullable<
   Extract<
     NonNullable<
@@ -98,6 +112,10 @@ type OngoingInitialEffect = NonNullable<
     { readonly kind: "direct" }
   >["effects"]
 >[number];
+type OngoingInitialPhase = Extract<
+  SpellRecord["mechanics"],
+  { readonly family: "ongoing_effect" }
+>["initialPhase"];
 type OngoingSaveGateEffect = Extract<
   OngoingOperationEffect,
   { readonly kind: "save_gate" }
@@ -106,6 +124,18 @@ type FlamingSphereSaveEffect = OngoingSaveGateEffect & {
   readonly onFail: Extract<
     OngoingSaveGateEffect["onFail"],
     { readonly kind: "damage" }
+  >;
+};
+type GustOfWindLineSaveEffect = OngoingSaveGateEffect & {
+  readonly onFail: Extract<
+    OngoingSaveGateEffect["onFail"],
+    { readonly kind: "force_move" }
+  >;
+};
+type WebRestraintSaveEffect = OngoingSaveGateEffect & {
+  readonly onFail: Extract<
+    OngoingSaveGateEffect["onFail"],
+    { readonly kind: "apply_condition_while_in_area_or_until_escape" }
   >;
 };
 import {
@@ -124,6 +154,7 @@ import {
   supportedPreparedJumpMovementReplacementSpellProfile,
   supportedPreparedHealingSpellProfile,
   supportedPreparedMarkedDamageRiderSpellProfile,
+  supportedPreparedMagicWeaponEnhancementSpellProfile,
   supportedPreparedMirrorImageHitInterceptionSpellProfile,
   supportedPreparedRollModifierSpellProfile,
   supportedPreparedScalarBuffSpellProfile,
@@ -304,7 +335,16 @@ export function supportedSpellActs(
       ),
     ),
     ...preparedSpells.flatMap((spell) =>
+      supportedPreparedGustOfWindLineProfile(spell, spellcasting.spellSlots),
+    ),
+    ...preparedSpells.flatMap((spell) =>
       supportedPreparedFogCloudObscurementProfile(
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      supportedPreparedMagicalDarknessPointOriginProfile(
         spell,
         spellcasting.spellSlots,
       ),
@@ -314,6 +354,12 @@ export function supportedSpellActs(
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedMoonbeamProfile(spell, spellcasting.spellSlots),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      supportedPreparedWebRestraintHazardProfile(
+        spell,
+        spellcasting.spellSlots,
+      ),
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedObjectContactDamageProfile(
@@ -389,6 +435,12 @@ export function supportedSpellActs(
       supportedPreparedObjectLightSpellProfile(spell, spellcasting.spellSlots),
     ),
     ...preparedSpells.flatMap((spell) =>
+      supportedPreparedOngoingSpellEndSpellProfile(
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
+    ...preparedSpells.flatMap((spell) =>
       supportedPreparedSpellCreatedHeldObjectProfile(
         actor.combatantId,
         spell,
@@ -411,6 +463,12 @@ export function supportedSpellActs(
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedWeaponDamageRiderSpellProfile(
         actor.combatantId,
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      supportedPreparedMagicWeaponEnhancementSpellProfile(
         spell,
         spellcasting.spellSlots,
       ),
@@ -856,6 +914,113 @@ function isTouchedObjectLightDirectPhase(
   );
 }
 
+export function supportedPreparedOngoingSpellEndSpellProfile(
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  const range =
+    spell.mechanics.family === "activation" ? spell.mechanics.range : null;
+  const rangeFeet =
+    range?.kind === "point" && typeof range.feet === "number"
+      ? range.feet
+      : null;
+  if (
+    spell.mechanics.family !== "activation" ||
+    range === null ||
+    spell.mechanics.level !== 3 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    rangeFeet !== 120 ||
+    spell.mechanics.duration.kind !== "instantaneous" ||
+    spell.mechanics.components.v !== true ||
+    spell.mechanics.components.s !== true ||
+    spell.mechanics.components.m !== false
+  ) {
+    return [];
+  }
+  const directPhase = spell.mechanics.phases[0];
+  const abilityCheckPhase = spell.mechanics.phases[1];
+  if (
+    spell.mechanics.phases.length !== 2 ||
+    directPhase === undefined ||
+    abilityCheckPhase === undefined ||
+    !isOngoingSpellEndDirectPhase(directPhase) ||
+    !isOngoingSpellEndAbilityCheckPhase(abilityCheckPhase) ||
+    ongoingSpellEndTargetHoleId(directPhase) !==
+      ongoingSpellEndTargetHoleId(abilityCheckPhase)
+  ) {
+    return [];
+  }
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] =>
+    Number(slot.spellLevel) < spell.mechanics.level
+      ? []
+      : [
+          {
+            access: { tag: "prepared" },
+            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+            procedure: "ongoingSpellEnd",
+            spell,
+            actionCost: "magicAction",
+            rangeFeet: movementFeet(rangeFeet),
+          },
+        ],
+  );
+}
+
+function isOngoingSpellEndDirectPhase(phase: ActivationPhase): boolean {
+  return (
+    phase.kind === "direct" &&
+    isOngoingSpellEndTargetAttachment(phase.attachment) &&
+    phase.effects?.length === 1 &&
+    phase.effects[0]?.kind === "end_ongoing_spells" &&
+    phase.effects[0]?.maxSpellLevel === "caster_slot_level"
+  );
+}
+
+function isOngoingSpellEndAbilityCheckPhase(phase: ActivationPhase): boolean {
+  return (
+    phase.kind === "ability_check_gate" &&
+    String(phase.ability) === "caster_spellcasting_ability" &&
+    phase.dc === 10 &&
+    phase.autoSuccessIfCasterSlotGte === "target_spell_level" &&
+    phase.onPass.kind === "end_ongoing_spells" &&
+    phase.onPass.maxSpellLevel === "contested_spell_level" &&
+    phase.onFail === undefined &&
+    isOngoingSpellEndTargetAttachment(phase.attachment)
+  );
+}
+
+function isOngoingSpellEndTargetAttachment(
+  attachment: Extract<
+    ActivationPhase,
+    { readonly attachment: unknown }
+  >["attachment"],
+): boolean {
+  const targetKinds =
+    attachment.kind === "hole" &&
+    attachment.value.kind === "target" &&
+    "targetKinds" in attachment.value.selection
+      ? attachment.value.selection.targetKinds
+      : undefined;
+  return (
+    attachment.kind === "hole" &&
+    attachment.value.kind === "target" &&
+    attachment.value.selection.mode === "one" &&
+    targetKinds !== undefined &&
+    sameStringSet(targetKinds, DISPEL_MAGIC_TARGET_KINDS)
+  );
+}
+
+function ongoingSpellEndTargetHoleId(phase: ActivationPhase): string | null {
+  if (phase.kind !== "direct" && phase.kind !== "ability_check_gate") {
+    return null;
+  }
+  const attachment = phase.attachment;
+  return attachment.kind === "hole" &&
+    isOngoingSpellEndTargetAttachment(attachment)
+    ? attachment.holeId
+    : null;
+}
+
 export function supportedCantripMakeStableSpellProfile(
   spell: SpellRecord,
   characterLevel: number,
@@ -987,6 +1152,206 @@ export function supportedPreparedFogCloudObscurementProfile(
       },
     ];
   });
+}
+
+export function supportedPreparedMagicalDarknessPointOriginProfile(
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  if (spell.mechanics.family !== "ongoing_effect") {
+    return [];
+  }
+  const attachment = spell.mechanics.attachment;
+  const operation = spell.mechanics.operations[0];
+  const durationTicks =
+    spell.mechanics.duration.kind === "concentration"
+      ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.upTo)
+      : null;
+  const earlyEnd =
+    spell.mechanics.duration.kind === "concentration"
+      ? (spell.mechanics.duration.earlyEnd ?? [])
+      : [];
+  const rangeFeet =
+    spell.mechanics.range.kind === "point" ? spell.mechanics.range.feet : null;
+  const area =
+    attachment.kind === "hole" &&
+    attachment.value.kind === "area" &&
+    "shape" in attachment.value
+      ? attachment.value
+      : null;
+  const radius = area?.shape.kind === "sphere" ? area.shape.radiusFeet : null;
+  if (
+    spell.mechanics.level !== 2 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    rangeFeet !== 60 ||
+    spell.mechanics.duration.kind !== "concentration" ||
+    spell.mechanics.duration.upTo.unit !== "minute" ||
+    spell.mechanics.duration.upTo.amount !== 10 ||
+    earlyEnd.length !== 0 ||
+    spell.mechanics.operations.length !== 1 ||
+    operation?.trigger.kind !== "passive" ||
+    operation.effect.kind !== "area_is_magical_darkness" ||
+    area?.origin.kind !== "point_within_range" ||
+    radius !== 15 ||
+    durationTicks === null ||
+    Either.isLeft(durationTicks)
+  ) {
+    return [];
+  }
+
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+    if (Number(slot.spellLevel) < spell.mechanics.level) {
+      return [];
+    }
+    return [
+      {
+        access: { tag: "prepared" },
+        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+        procedure: "magicalDarknessPointOrigin",
+        spell,
+        targeting: {
+          kind: "pointOriginSphere",
+          radiusFeet: movementFeet(radius),
+        },
+        durationTicks: durationTicks.right,
+        rangeFeet: movementFeet(rangeFeet),
+      },
+    ];
+  });
+}
+
+export function supportedPreparedGustOfWindLineProfile(
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  const line = gustOfWindLineSpell(spell);
+  if (line === null) {
+    return [];
+  }
+
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+    if (Number(slot.spellLevel) < spell.mechanics.level) {
+      return [];
+    }
+    return [
+      {
+        access: { tag: "prepared" },
+        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+        procedure: "gustOfWindLine",
+        spell,
+        ability: "str",
+        dc: { kind: "caster_spell_save_dc" },
+        targeting: {
+          kind: "selfOriginLine",
+          lengthFeet: movementFeet(line.lengthFeet),
+          widthFeet: movementFeet(line.widthFeet),
+        },
+        durationTicks: line.durationTicks,
+        rangeFeet: movementFeet(0),
+        pushDistanceFeet: movementFeet(line.pushDistanceFeet),
+        movementCost: {
+          multiplier: 2,
+          appliesTo: "towardSource",
+        },
+      },
+    ];
+  });
+}
+
+function gustOfWindLineSpell(spell: SpellRecord) {
+  if (spell.mechanics.family !== "ongoing_effect") {
+    return null;
+  }
+  const durationTicks =
+    spell.mechanics.duration.kind === "concentration"
+      ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.upTo)
+      : null;
+  const attachment = spell.mechanics.attachment;
+  const lineHole =
+    attachment.kind === "hole" && attachment.value.kind === "area"
+      ? attachment
+      : null;
+  const lineArea = lineHole?.value ?? null;
+  const initialPhase = spell.mechanics.initialPhase;
+  const initialSave = isGustOfWindLineSaveGate(initialPhase, lineHole?.holeId)
+    ? initialPhase
+    : null;
+  const strongWindOperation = spell.mechanics.operations.find(
+    (operation) =>
+      operation.trigger.kind === "passive" &&
+      operation.effect.kind === "area_has_strong_wind",
+  );
+  const movementCostOperation = spell.mechanics.operations.find(
+    (operation) =>
+      operation.trigger.kind === "passive" &&
+      operation.effect.kind === "area_movement_cost_multiplier",
+  );
+  const endTurnOperation = spell.mechanics.operations.find(
+    (operation) => operation.trigger.kind === "on_creature_ends_turn_in_area",
+  );
+  const directionOperation = spell.mechanics.operations.find(
+    (operation) =>
+      operation.trigger.kind === "on_caster_spends_action" &&
+      operation.trigger.cost.kind === "bonus_action" &&
+      operation.effect.kind === "reposition_attachment",
+  );
+
+  if (
+    spell.mechanics.level !== 2 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "self" ||
+    spell.mechanics.duration.kind !== "concentration" ||
+    spell.mechanics.duration.upTo.unit !== "minute" ||
+    spell.mechanics.duration.upTo.amount !== 1 ||
+    spell.mechanics.operations.length !== 4 ||
+    durationTicks === null ||
+    Either.isLeft(durationTicks) ||
+    lineArea?.kind !== "area" ||
+    lineArea.origin.kind !== "self" ||
+    lineArea.shape.kind !== "line" ||
+    lineArea.shape.lengthFeet !== 60 ||
+    lineArea.shape.widthFeet !== 10 ||
+    initialSave === null ||
+    !isGustOfWindLineSaveGate(endTurnOperation?.effect, lineHole?.holeId) ||
+    strongWindOperation?.effect.kind !== "area_has_strong_wind" ||
+    movementCostOperation?.effect.kind !== "area_movement_cost_multiplier" ||
+    movementCostOperation.effect.multiplier !== 2 ||
+    movementCostOperation.effect.appliesTo !== "toward_source" ||
+    directionOperation?.effect.kind !== "reposition_attachment" ||
+    directionOperation.effect.maxMoveFeet !== undefined
+  ) {
+    return null;
+  }
+  return {
+    durationTicks: durationTicks.right,
+    lengthFeet: lineArea.shape.lengthFeet,
+    widthFeet: lineArea.shape.widthFeet,
+    pushDistanceFeet: initialSave.onFail.distanceFeet,
+  };
+}
+
+function isGustOfWindLineSaveGate(
+  effect: OngoingOperationEffect | OngoingInitialPhase | undefined,
+  areaHoleId: string | undefined,
+): effect is GustOfWindLineSaveEffect {
+  return (
+    effect?.kind === "save_gate" &&
+    areaHoleId !== undefined &&
+    effect.attachment?.kind === "hole" &&
+    effect.attachment.holeId === areaHoleId &&
+    effect.attachment.value.kind === "area" &&
+    effect.attachment.value.origin.kind === "self" &&
+    effect.attachment.value.shape.kind === "line" &&
+    effect.attachment.value.shape.lengthFeet === 60 &&
+    effect.attachment.value.shape.widthFeet === 10 &&
+    effect.ability === "str" &&
+    effect.dc.kind === "caster_spell_save_dc" &&
+    effect.onSuccess.kind === "none" &&
+    effect.onFail.kind === "force_move" &&
+    effect.onFail.movementKind === "push" &&
+    effect.onFail.originDirection === "away_from_caster" &&
+    effect.onFail.distanceFeet === 15
+  );
 }
 
 export function supportedPreparedFlamingSphereProfile(
@@ -1286,6 +1651,150 @@ function isMoonbeamSaveGate(
   return damage;
 }
 
+export function supportedPreparedWebRestraintHazardProfile(
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  const web = webRestraintHazardSpell(spell);
+  if (web === null) {
+    return [];
+  }
+
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+    if (Number(slot.spellLevel) < spell.mechanics.level) {
+      return [];
+    }
+    return [
+      {
+        access: { tag: "prepared" },
+        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+        procedure: "webRestraintHazard",
+        spell,
+        ability: "dex",
+        dc: { kind: "caster_spell_save_dc" },
+        targeting: {
+          kind: "pointOriginCube",
+          sideFeet: movementFeet(web.sideFeet),
+        },
+        durationTicks: web.durationTicks,
+        rangeFeet: movementFeet(web.rangeFeet),
+      },
+    ];
+  });
+}
+
+function webRestraintHazardSpell(spell: SpellRecord): {
+  readonly durationTicks: ElapsedTimeTicks;
+  readonly rangeFeet: number;
+  readonly sideFeet: number;
+} | null {
+  if (spell.mechanics.family !== "ongoing_effect") {
+    return null;
+  }
+  const durationTicks =
+    spell.mechanics.duration.kind === "concentration"
+      ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.upTo)
+      : null;
+  const attachment = spell.mechanics.attachment;
+  const area =
+    attachment.kind === "hole" && attachment.value.kind === "area"
+      ? attachment.value
+      : null;
+  const enterOperation = spell.mechanics.operations.find(
+    (operation) => operation.trigger.kind === "on_creature_enters_area",
+  );
+  const startTurnOperation = spell.mechanics.operations.find(
+    (operation) => operation.trigger.kind === "on_creature_starts_turn_in_area",
+  );
+  const escapeOperation = spell.mechanics.operations.find(
+    (operation) =>
+      operation.trigger.kind === "on_affected_creature_spends_action",
+  );
+  const difficultTerrainOperation = spell.mechanics.operations.find(
+    (operation) =>
+      operation.trigger.kind === "passive" &&
+      operation.effect.kind === "area_is_difficult_terrain",
+  );
+  const lightlyObscuredOperation = spell.mechanics.operations.find(
+    (operation) =>
+      operation.trigger.kind === "passive" &&
+      operation.effect.kind === "area_is_lightly_obscured",
+  );
+  const anchorOperation = spell.mechanics.operations.find(
+    (operation) =>
+      operation.trigger.kind === "passive" &&
+      operation.effect.kind === "area_anchor_or_layering_requirement",
+  );
+  const burnAwayOperation = spell.mechanics.operations.find(
+    (operation) =>
+      operation.trigger.kind === "passive" &&
+      operation.effect.kind === "area_section_burns_away",
+  );
+
+  if (
+    spell.mechanics.level !== 2 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "point" ||
+    spell.mechanics.range.feet !== 60 ||
+    spell.mechanics.duration.kind !== "concentration" ||
+    spell.mechanics.duration.upTo.unit !== "hour" ||
+    spell.mechanics.duration.upTo.amount !== 1 ||
+    spell.mechanics.operations.length !== 7 ||
+    durationTicks === null ||
+    Either.isLeft(durationTicks) ||
+    area?.kind !== "area" ||
+    area.origin.kind !== "point_within_range" ||
+    area.shape.kind !== "cube" ||
+    area.shape.sideFeet !== 20 ||
+    !isWebRestraintSaveGate(enterOperation?.effect) ||
+    enterOperation?.usageLimit?.kind !== "once_per_turn" ||
+    !isWebRestraintSaveGate(startTurnOperation?.effect) ||
+    !isWebRestraintEscapeOperation(escapeOperation) ||
+    difficultTerrainOperation === undefined ||
+    lightlyObscuredOperation === undefined ||
+    anchorOperation?.effect.kind !== "area_anchor_or_layering_requirement" ||
+    burnAwayOperation?.effect.kind !== "area_section_burns_away"
+  ) {
+    return null;
+  }
+
+  return {
+    durationTicks: durationTicks.right,
+    rangeFeet: spell.mechanics.range.feet,
+    sideFeet: area.shape.sideFeet,
+  };
+}
+
+function isWebRestraintSaveGate(
+  effect: OngoingOperationEffect | undefined,
+): effect is WebRestraintSaveEffect {
+  return (
+    effect?.kind === "save_gate" &&
+    effect.ability === "dex" &&
+    effect.dc.kind === "caster_spell_save_dc" &&
+    effect.onSuccess.kind === "none" &&
+    effect.onFail.kind === "apply_condition_while_in_area_or_until_escape" &&
+    effect.onFail.condition === "restrained"
+  );
+}
+
+function isWebRestraintEscapeOperation(
+  operation: OngoingOperation | undefined,
+): boolean {
+  return (
+    operation?.trigger.kind === "on_affected_creature_spends_action" &&
+    operation.trigger.cost.kind === "action" &&
+    operation.predicate?.kind === "has_condition" &&
+    operation.predicate.condition === "restrained" &&
+    operation.effect.kind === "ability_check_gate" &&
+    operation.effect.ability === "str" &&
+    operation.effect.skill === "athletics" &&
+    operation.effect.dc.kind === "caster_spell_save_dc" &&
+    operation.effect.onPass.kind === "remove_condition" &&
+    operation.effect.onPass.condition === "restrained"
+  );
+}
+
 export function supportedPreparedObjectContactDamageProfile(
   spell: SpellRecord,
   spellSlots: CharacterBattleSpellcastingState["spellSlots"],
@@ -1509,7 +2018,8 @@ function isObjectContactDamageEffect(
     effect.contact.kind ===
       "table_witnessed_physical_contact_with_spell_object" &&
     effect.damageType === "fire" &&
-    isSupportedHeatMetalDamageAmount(amount)
+    isSupportedHeatMetalDamageAmount(amount) &&
+    isSupportedObjectContactHoldingOrWearingSave(effect.holdingOrWearingSave)
   );
 }
 
@@ -1547,7 +2057,35 @@ function sameObjectContactDamageEffect(
     left.amount.perLevel.dice === right.amount.perLevel.dice &&
     left.amount.perLevel.dieSize === right.amount.perLevel.dieSize &&
     left.amount.perLevel.flat === right.amount.perLevel.flat &&
-    left.contact.kind === right.contact.kind
+    left.contact.kind === right.contact.kind &&
+    isSupportedObjectContactHoldingOrWearingSave(right.holdingOrWearingSave)
+  );
+}
+
+function isSupportedObjectContactHoldingOrWearingSave(
+  save: ObjectContactDamageEffect["holdingOrWearingSave"],
+): boolean {
+  const fallbackRolls = save.onFailure.fallback.on;
+  return (
+    save.appliesIf.kind === "table_witnessed_holding_or_wearing_spell_object" &&
+    save.ability === "con" &&
+    save.dc.kind === "caster_spell_save_dc" &&
+    save.onSuccess.kind === "none" &&
+    save.onFailure.kind === "drop_if_possible_else_disadvantage" &&
+    save.onFailure.dropCapabilityWitness.kind ===
+      "table_witnessed_drop_capability" &&
+    save.onFailure.dropCapabilityWitness.subject === "damaged_creature" &&
+    save.onFailure.dropCapabilityWitness.object === "spell_object" &&
+    save.onFailure.dropResultWitness.kind === "table_witnessed_drop_result" &&
+    save.onFailure.dropResultWitness.subject === "damaged_creature" &&
+    save.onFailure.dropResultWitness.object === "spell_object" &&
+    save.onFailure.fallbackWhen === "object_not_dropped" &&
+    save.onFailure.fallback.kind === "modify_roll_advantage" &&
+    save.onFailure.fallback.mode === "disadvantage" &&
+    fallbackRolls.length === 2 &&
+    fallbackRolls.includes("attack_roll") &&
+    fallbackRolls.includes("ability_check") &&
+    save.onFailure.fallback.expiresOn.kind === "caster_turn_start"
   );
 }
 
@@ -2106,20 +2644,81 @@ export function spellActTurnResourceAvailable(
   resources: BattleTurnResources,
   actorId: CombatantId,
   invocation: SupportedSpellInvocation,
+  options?: {
+    readonly actionCostOverride?: "magicAction" | "bonusAction";
+  },
 ): boolean {
+  if (
+    spellInvocationIsLevelOnePlus(invocation) &&
+    combatantHasQuickenedLevelOnePlusSpellCastThisTurn(resources, actorId)
+  ) {
+    return false;
+  }
   if (
     invocation.resource.tag === "spellSlot" &&
     combatantHasSpellSlotUseThisTurn(resources, actorId)
   ) {
     return false;
   }
-  if ("actionCost" in invocation && invocation.actionCost === "bonusAction") {
+  const actionCost =
+    options?.actionCostOverride ??
+    ("actionCost" in invocation ? invocation.actionCost : "magicAction");
+  if (actionCost === "bonusAction") {
     return resources.currentHasBonusAction;
   }
   if (invocation.resource.tag === "none") {
     return canSpendAction(resources, "magic");
   }
   return canSpendAction(resources, "magic");
+}
+
+export function spellInvocationIsLevelOnePlus(
+  invocation: SupportedSpellInvocation,
+): boolean {
+  return invocation.spell.mechanics.level >= 1;
+}
+
+export function markLevelOnePlusSpellCastThisTurn(
+  resources: BattleTurnResources,
+  combatantId: CombatantId,
+): BattleTurnResources {
+  return combatantHasLevelOnePlusSpellCastThisTurn(resources, combatantId)
+    ? resources
+    : {
+        ...resources,
+        levelOnePlusSpellCastsThisTurn: [
+          ...resources.levelOnePlusSpellCastsThisTurn,
+          combatantId,
+        ],
+      };
+}
+
+export function markInvocationLevelOnePlusSpellCastThisTurn(
+  resources: BattleTurnResources,
+  combatantId: CombatantId,
+  invocation: SupportedSpellInvocation,
+): BattleTurnResources {
+  return spellInvocationIsLevelOnePlus(invocation)
+    ? markLevelOnePlusSpellCastThisTurn(resources, combatantId)
+    : resources;
+}
+
+export function markQuickenedLevelOnePlusSpellCastThisTurn(
+  resources: BattleTurnResources,
+  combatantId: CombatantId,
+): BattleTurnResources {
+  return combatantHasQuickenedLevelOnePlusSpellCastThisTurn(
+    resources,
+    combatantId,
+  )
+    ? resources
+    : {
+        ...resources,
+        quickenedLevelOnePlusSpellCastsThisTurn: [
+          ...resources.quickenedLevelOnePlusSpellCastsThisTurn,
+          combatantId,
+        ],
+      };
 }
 
 export function markSpellSlotExpendedThisTurn(
@@ -2136,16 +2735,21 @@ export function markSpellSlotExpendedThisTurn(
     kind: "committed",
     combatantId,
   };
-  return Either.right({
-    ...resources,
-    spellSlotUsesThisTurn: pending
-      ? resources.spellSlotUsesThisTurn.map((use) =>
-          use.kind === "pending" && use.combatantId === combatantId
-            ? nextUse
-            : use,
-        )
-      : [...resources.spellSlotUsesThisTurn, nextUse],
-  });
+  return Either.right(
+    markLevelOnePlusSpellCastThisTurn(
+      {
+        ...resources,
+        spellSlotUsesThisTurn: pending
+          ? resources.spellSlotUsesThisTurn.map((use) =>
+              use.kind === "pending" && use.combatantId === combatantId
+                ? nextUse
+                : use,
+            )
+          : [...resources.spellSlotUsesThisTurn, nextUse],
+      },
+      combatantId,
+    ),
+  );
 }
 
 export function claimPendingSpellSlotUseThisTurn(
@@ -2190,5 +2794,21 @@ export function combatantHasCommittedSpellSlotUseThisTurn(
 ): boolean {
   return resources.spellSlotUsesThisTurn.some(
     (use) => use.kind === "committed" && use.combatantId === combatantId,
+  );
+}
+
+export function combatantHasLevelOnePlusSpellCastThisTurn(
+  resources: BattleTurnResources,
+  combatantId: CombatantId,
+): boolean {
+  return resources.levelOnePlusSpellCastsThisTurn.includes(combatantId);
+}
+
+export function combatantHasQuickenedLevelOnePlusSpellCastThisTurn(
+  resources: BattleTurnResources,
+  combatantId: CombatantId,
+): boolean {
+  return resources.quickenedLevelOnePlusSpellCastsThisTurn.includes(
+    combatantId,
   );
 }

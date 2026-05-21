@@ -21,10 +21,17 @@ import {
   characterSheetId,
   characterSheetPactSlots,
   characterSheetSpellSlots,
-  completeLongRest,
-  completeShortRest,
+  CHARACTER_SHEET_SHORT_REST_TICKS,
+  completeLongRest as completeLongRestCore,
+  completeShortRest as completeShortRestCore,
   createFreshCharacterSheet,
+  finishLongRest,
+  finishShortRest,
+  startLongRest,
+  startShortRest,
   type CharacterSheet,
+  type CharacterSheetLongRestInput,
+  type CharacterSheetShortRestInput,
 } from "./index.ts";
 
 const WIZARD_ARCANE_RECOVERY_UNIT_ID = "wizard_arcane_recovery";
@@ -109,6 +116,34 @@ if (unitCatalogResult.tag !== "ok") {
   );
 }
 const unitLibrary = unitCatalogResult.catalog;
+
+function completeShortRest(
+  input: Omit<CharacterSheetShortRestInput, "completion"> & {
+    readonly sheet: CharacterSheet;
+  },
+) {
+  const { sheet, ...benefits } = input;
+  const rest = requireRight(startShortRest({ sheet }));
+  const completion = requireRight(
+    finishShortRest({ rest, restedTicks: CHARACTER_SHEET_SHORT_REST_TICKS }),
+  );
+  return completeShortRestCore({ ...benefits, completion });
+}
+
+function completeLongRest(
+  input: Omit<CharacterSheetLongRestInput, "completion"> & {
+    readonly sheet: CharacterSheet;
+  },
+) {
+  const { sheet, ...benefits } = input;
+  const rest = requireRight(
+    startLongRest({ sheet, timing: { tag: "noPriorLongRest" } }),
+  );
+  const completion = requireRight(
+    finishLongRest({ rest, restedTicks: rest.requiredRestTicks }),
+  );
+  return completeLongRestCore({ ...benefits, completion });
+}
 
 const selectedUnitIdentityReplays = [
   {
@@ -264,7 +299,7 @@ function resetArcaneRecoveryOnLongRestProjection(): Extract<
     pactSlotsExpended: 1,
     arcaneRecoveryUsedSinceLongRest: true,
   });
-  const rested = requireRight(completeLongRest({ sheet }));
+  const rested = requireRight(completeLongRest({ sheet, unitLibrary }));
   return {
     lastResult: "long_rest_reset",
     featureUnitId: wizardArcaneRecoveryFeatureUnitId(rested),
@@ -337,6 +372,7 @@ function arcaneRecoverySheet(input: {
       maximumHp: Hp(18),
       currentHp: Hp(18),
       tempHp: Hp(0),
+      hitPointMaximumReduction: Hp(0),
       conditions: [],
       unitLibrary,
       spellSlots: [
@@ -351,11 +387,7 @@ function arcaneRecoverySheet(input: {
           expended: resourceCount(input.secondLevelSpellSlotsExpended),
         },
       ],
-      pactSlots: {
-        slotLevel: spellSlotLevel(1),
-        count: resourceCount(1),
-        expended: resourceCount(input.pactSlotsExpended),
-      },
+      pactSlots: { expended: resourceCount(input.pactSlotsExpended) },
       restFeatureUses: input.arcaneRecoveryUsedSinceLongRest
         ? [{ tag: "arcaneRecovery", usedSinceLongRest: true }]
         : [],

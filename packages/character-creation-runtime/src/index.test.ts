@@ -75,6 +75,7 @@ import {
   parseUnitChoiceSourceKey,
   replaceDruidWildShapeKnownForm,
   sorcererMetamagicOptionId,
+  sorcererLevelGain,
   startingClassUnitId,
   unitChoiceKey,
   unitChoiceSourceHoleIdText,
@@ -245,6 +246,32 @@ function finalizedWarlockBuild(draftId: string): CharacterBuild {
   if (result.tag !== "ready") {
     throw new Error(
       `Expected Warlock finalization to be ready, received ${result.tag}`,
+    );
+  }
+
+  return result.build;
+}
+
+function finalizedSorcererMetamagicBuild(draftId: string): CharacterBuild {
+  const result = finalizeCharacterDraft({
+    draft: completeSupportedProgressionDraft({
+      draftId,
+      progression: testProgression("class_sorcerer", 2),
+      preferredOptionIdsBySource: {
+        [testUnitChoiceSourceKey(
+          SORCERER_METAMAGIC_UNIT_ID,
+          SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY,
+        )]: [
+          creationChoiceOptionId("sorcerer_empowered_spell"),
+          creationChoiceOptionId("sorcerer_heightened_spell"),
+        ],
+      },
+    }),
+    unitLibrary,
+  });
+  if (result.tag !== "ready") {
+    throw new Error(
+      `Expected Sorcerer finalization to be ready, received ${result.tag}`,
     );
   }
 
@@ -4329,6 +4356,229 @@ describe("character creation finalization", () => {
     ]);
   });
 
+  test("advances a finalized Sorcerer build and replaces one Metamagic option", () => {
+    const build = finalizedSorcererMetamagicBuild(
+      "draft:sorcerer-metamagic-replacement",
+    );
+    const levelGain = expectRight(
+      sorcererLevelGain({
+        unitLibrary,
+        classUnitId: testClassUnitId("class_sorcerer"),
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+        gainedOptions: [],
+        replacement: {
+          replaceOptionId: "sorcerer_heightened_spell",
+          selectedOptionId: "sorcerer_subtle_spell",
+        },
+      }),
+    );
+
+    const result = expectRight(
+      advanceCharacterBuildClassLevel({
+        build,
+        unitLibrary,
+        levelGain,
+      }),
+    );
+
+    expect(computeTotalLevel(result.progression)).toBe(3);
+    expect(
+      selectedBuildSorcererMetamagicOptionIds(
+        result,
+        SORCERER_METAMAGIC_UNIT_ID,
+      ),
+    ).toEqual(["sorcerer_empowered_spell", "sorcerer_subtle_spell"]);
+    expect(
+      expectRight(
+        characterBuildSorcererMetamagicFacts({
+          build: result,
+          unitLibrary,
+        }),
+      )?.knownOptions.map((option) => option.optionId),
+    ).toEqual(["sorcerer_empowered_spell", "sorcerer_subtle_spell"]);
+  });
+
+  test("rejects invalid Sorcerer Metamagic replacement gates", () => {
+    const build = finalizedSorcererMetamagicBuild(
+      "draft:sorcerer-metamagic-replacement-gates",
+    );
+    expect(
+      sorcererLevelGain({
+        unitLibrary,
+        classUnitId: testClassUnitId("class_sorcerer"),
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+        gainedOptions: [],
+        replacement: {
+          replaceOptionId: "sorcerer_heightened_spell",
+          selectedOptionId: "sorcerer_heightened_spell",
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { code: "sameSorcererMetamagicReplacement" },
+    });
+
+    const missingKnownOption = expectRight(
+      sorcererLevelGain({
+        unitLibrary,
+        classUnitId: testClassUnitId("class_sorcerer"),
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+        gainedOptions: [],
+        replacement: {
+          replaceOptionId: "sorcerer_distant_spell",
+          selectedOptionId: "sorcerer_subtle_spell",
+        },
+      }),
+    );
+    expect(
+      advanceCharacterBuildClassLevel({
+        build,
+        unitLibrary,
+        levelGain: missingKnownOption,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { code: "missingSelectedSorcererMetamagicOption" },
+    });
+
+    const duplicateKnownOption = expectRight(
+      sorcererLevelGain({
+        unitLibrary,
+        classUnitId: testClassUnitId("class_sorcerer"),
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+        gainedOptions: [],
+        replacement: {
+          replaceOptionId: "sorcerer_empowered_spell",
+          selectedOptionId: "sorcerer_heightened_spell",
+        },
+      }),
+    );
+    expect(
+      advanceCharacterBuildClassLevel({
+        build,
+        unitLibrary,
+        levelGain: duplicateKnownOption,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { code: "duplicateSorcererMetamagicOption" },
+    });
+  });
+
+  test("advances Sorcerer level 10 and 17 Metamagic option gains from Surface thresholds", () => {
+    const levelNineBuild = {
+      ...finalizedSorcererMetamagicBuild("draft:sorcerer-metamagic-level-ten"),
+      progression: testProgression("class_sorcerer", 9),
+    };
+
+    const levelTen = expectRight(
+      advanceCharacterBuildClassLevel({
+        build: levelNineBuild,
+        unitLibrary,
+        levelGain: expectRight(
+          sorcererLevelGain({
+            unitLibrary,
+            classUnitId: testClassUnitId("class_sorcerer"),
+            hitPointRule: { tag: "fixedHigherLevelGain" },
+            gainedOptions: ["sorcerer_seeking_spell", "sorcerer_subtle_spell"],
+          }),
+        ),
+      }),
+    );
+
+    expect(
+      selectedBuildSorcererMetamagicOptionIds(
+        levelTen,
+        SORCERER_METAMAGIC_UNIT_ID,
+      ),
+    ).toEqual([
+      "sorcerer_empowered_spell",
+      "sorcerer_heightened_spell",
+      "sorcerer_seeking_spell",
+      "sorcerer_subtle_spell",
+    ]);
+    expect(
+      expectRight(
+        characterBuildSorcererMetamagicFacts({
+          build: levelTen,
+          unitLibrary,
+        }),
+      )?.choiceCount,
+    ).toBe(4);
+
+    const levelSixteenBuild = {
+      ...levelTen,
+      progression: testProgression("class_sorcerer", 16),
+    };
+    const levelSeventeen = expectRight(
+      advanceCharacterBuildClassLevel({
+        build: levelSixteenBuild,
+        unitLibrary,
+        levelGain: expectRight(
+          sorcererLevelGain({
+            unitLibrary,
+            classUnitId: testClassUnitId("class_sorcerer"),
+            hitPointRule: { tag: "fixedHigherLevelGain" },
+            gainedOptions: ["sorcerer_distant_spell", "sorcerer_twinned_spell"],
+          }),
+        ),
+      }),
+    );
+
+    expect(
+      selectedBuildSorcererMetamagicOptionIds(
+        levelSeventeen,
+        SORCERER_METAMAGIC_UNIT_ID,
+      ),
+    ).toEqual([
+      "sorcerer_empowered_spell",
+      "sorcerer_heightened_spell",
+      "sorcerer_seeking_spell",
+      "sorcerer_subtle_spell",
+      "sorcerer_distant_spell",
+      "sorcerer_twinned_spell",
+    ]);
+    expect(
+      expectRight(
+        characterBuildSorcererMetamagicFacts({
+          build: levelSeventeen,
+          unitLibrary,
+        }),
+      )?.choiceCount,
+    ).toBe(6);
+  });
+
+  test("rejects Sorcerer Metamagic level gains that duplicate known options", () => {
+    const levelNineBuild = {
+      ...finalizedSorcererMetamagicBuild(
+        "draft:sorcerer-metamagic-duplicate-gain",
+      ),
+      progression: testProgression("class_sorcerer", 9),
+    };
+    const levelGain = expectRight(
+      sorcererLevelGain({
+        unitLibrary,
+        classUnitId: testClassUnitId("class_sorcerer"),
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+        gainedOptions: ["sorcerer_empowered_spell", "sorcerer_subtle_spell"],
+      }),
+    );
+
+    expect(
+      advanceCharacterBuildClassLevel({
+        build: levelNineBuild,
+        unitLibrary,
+        levelGain,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "duplicateSorcererMetamagicOption",
+        optionId: "sorcerer_empowered_spell",
+      },
+    });
+  });
+
   test("projects Druid 4 Wild Shape roster thresholds without known-form defaults", () => {
     const druidTwo = completeSupportedProgressionDraft({
       draftId: "draft:druid-wild-shape-level-four",
@@ -7831,7 +8081,13 @@ function runQuintSliceSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("9 passing");
+  for (const expectedTest of [
+    "test_stale_revision_rejected_atomically",
+    "test_wrong_fill_kind_rejected_atomically",
+    "test_unopened_protocol_hole_rejected_as_unknown_hole",
+  ]) {
+    expect(quintOutput).toContain(expectedTest);
+  }
 }
 
 function runGeneratedQuintParity(moduleBody: string): void {

@@ -8,6 +8,7 @@ import type {
 } from "../surface/types.ts";
 import type { TraceEdge, TraceNode } from "./tracer-model.ts";
 import {
+  describeAbilityCheck,
   describeDc,
   describeOngoingPredicate,
   describeTransferEvent,
@@ -357,6 +358,17 @@ export function traceOngoingTrigger(
       edges.push({ from: procId, to: winId, relation: "opens_window" });
       return { hostId: winId, hostRelation: "grants" };
     }
+    case "on_creature_starts_turn_in_area": {
+      const winId = ids("win");
+      nodes.push({
+        id: winId,
+        category: "window",
+        atomKind: "turn_start_window",
+        label: "turn_start_window\n(creature in area)",
+      });
+      edges.push({ from: procId, to: winId, relation: "opens_window" });
+      return { hostId: winId, hostRelation: "grants" };
+    }
     case "on_creature_moves_through_area": {
       const winId = ids("win");
       nodes.push({
@@ -441,7 +453,8 @@ export function traceOngoingTrigger(
     case "on_caster_spends_action": {
       const winId = ids("win");
       const atomKind = ongoingActionWindowAtomKind(trigger.cost);
-      const laterSuffix = trigger.laterTurnsOnly === true ? ", later turns only" : "";
+      const laterSuffix =
+        trigger.laterTurnsOnly === true ? ", later turns only" : "";
       nodes.push({
         id: winId,
         category: "window",
@@ -459,6 +472,18 @@ export function traceOngoingTrigger(
         category: "window",
         atomKind,
         label: `${atomKind}\n(attached creature spends ${describeOngoingActionCost(trigger.cost)})`,
+      });
+      edges.push({ from: procId, to: winId, relation: "opens_window" });
+      return { hostId: winId, hostRelation: "grants" };
+    }
+    case "on_affected_creature_spends_action": {
+      const winId = ids("win");
+      const atomKind = ongoingActionWindowAtomKind(trigger.cost);
+      nodes.push({
+        id: winId,
+        category: "window",
+        atomKind,
+        label: `${atomKind}\n(affected creature spends ${describeOngoingActionCost(trigger.cost)})`,
       });
       edges.push({ from: procId, to: winId, relation: "opens_window" });
       return { hostId: winId, hostRelation: "grants" };
@@ -655,7 +680,7 @@ export function traceOngoingOpEffect(
         id: acgId,
         category: "resolution",
         atomKind: "ability_check_gate",
-        label: `ability_check_gate\n${eff.ability.toUpperCase()} vs ${describeDc(eff.dc)}`,
+        label: `ability_check_gate\n${describeAbilityCheck(eff.ability, eff.skill)} vs ${describeDc(eff.dc)}`,
       });
       edges.push({ from: hostId, to: acgId, relation: hostRelation });
       edges.push({ from: acgId, to: attId, relation: "attaches_to" });

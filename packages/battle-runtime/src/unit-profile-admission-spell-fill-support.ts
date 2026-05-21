@@ -13,6 +13,7 @@ import {
   type BattleAreaId,
   type BattleFill,
   type BattleHole,
+  type BattleLineDirectionId,
   type BattleObjectDamageDisposition,
   type BattleObjectIgnitionDisposition,
   type BattleSpellAreaChoice,
@@ -31,11 +32,15 @@ import type {
 import {
   flamingSphereAreaId,
   greaseAreaId,
+  gustOfWindAreaId,
+  gustOfWindEastDirectionId,
+  gustOfWindNorthDirectionId,
   moonbeamAreaId,
   resistanceUnitId,
   spellCasterId,
   spellTargetId,
   thunderwaveObjectId,
+  webAreaId,
 } from "./unit-profile-admission-catalog-support.ts";
 import { requireCombatant } from "./unit-profile-admission-creature-fixture-support.ts";
 
@@ -70,6 +75,7 @@ export function maybeSpellAct(input: {
 export function bonusSpellAct(input: {
   readonly state: BattleState;
   readonly spellId: string;
+  readonly slotLevel?: number;
 }): BonusActionSpellAct {
   const act = maybeBonusSpellAct(input);
   expect(act).toBeDefined();
@@ -82,11 +88,15 @@ export function bonusSpellAct(input: {
 export function maybeBonusSpellAct(input: {
   readonly state: BattleState;
   readonly spellId: string;
+  readonly slotLevel?: number;
 }): BonusActionSpellAct | undefined {
   return discoverBattleActs(input.state).find(
     (candidate): candidate is BonusActionSpellAct =>
       candidate.subject.tag === "bonusActionSpell" &&
-      candidate.subject.invocation.spellId === input.spellId,
+      candidate.subject.invocation.spellId === input.spellId &&
+      (input.slotLevel === undefined ||
+        (candidate.subject.invocation.tag === "spellSlot" &&
+          Number(candidate.subject.invocation.slotLevel) === input.slotLevel)),
   );
 }
 
@@ -108,6 +118,24 @@ export function bonusSpellActForItem(input: {
     );
   }
   return act;
+}
+
+export function magicWeaponTargetItemFill(
+  hole: Extract<BattleHole, { readonly kind: "magicWeaponTargetItem" }>,
+  target: {
+    readonly holderCombatantId: CombatantId;
+    readonly itemId: string;
+  },
+): Extract<BattleFill, { readonly kind: "magicWeaponTargetItem" }> {
+  return {
+    kind: "magicWeaponTargetItem",
+    holeId: hole.holeId,
+    value: {
+      kind: "nonmagicalWeaponItem",
+      holderCombatantId: target.holderCombatantId,
+      itemId: target.itemId,
+    },
+  };
 }
 
 export function bonusActionDashSpellAct(input: {
@@ -272,12 +300,7 @@ export function wardingBondSpellTargetFill(
   casterId: CombatantId,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
-  const base = knownWillingSpellTargetFill(
-    hole,
-    spellId,
-    casterId,
-    targetId,
-  );
+  const base = knownWillingSpellTargetFill(hole, spellId, casterId, targetId);
   return {
     ...base,
     spatialFacts: [
@@ -403,6 +426,7 @@ export function spellManufacturedMetalObjectTargetFill(input: {
 export function spellObjectContactTargetsFill(input: {
   readonly hole: Extract<BattleHole, { readonly kind: "objectContactTargets" }>;
   readonly targetIds: readonly CombatantId[];
+  readonly holdingOrWearing?: ReadonlyMap<CombatantId, "holding" | "wearing">;
 }): Extract<BattleFill, { readonly kind: "objectContactTargets" }> {
   return {
     kind: "objectContactTargets",
@@ -427,7 +451,36 @@ export function spellObjectContactTargetsFill(input: {
         objectId: input.hole.objectContact.objectId,
         targetId,
       })),
+      ...input.targetIds.flatMap((targetId) => {
+        const relation = input.holdingOrWearing?.get(targetId);
+        return relation === undefined
+          ? []
+          : [
+              {
+                kind: "spellObjectHoldingOrWearing" as const,
+                sourceCombatantId: input.hole.objectContact.sourceCombatantId,
+                sourceSpellId: input.hole.objectContact.sourceSpellId,
+                objectId: input.hole.objectContact.objectId,
+                targetId,
+                relation,
+              },
+            ];
+      }),
     ],
+  };
+}
+
+export function objectDropResolutionFill(
+  hole: Extract<BattleHole, { readonly kind: "objectDropResolution" }>,
+  outcomes: Extract<
+    BattleFill,
+    { readonly kind: "objectDropResolution" }
+  >["value"]["outcomes"],
+): Extract<BattleFill, { readonly kind: "objectDropResolution" }> {
+  return {
+    kind: "objectDropResolution",
+    holeId: hole.holeId,
+    value: { outcomes },
   };
 }
 
@@ -689,6 +742,64 @@ export function greaseSavingThrowOutcomeFill(
   };
 }
 
+export function gustOfWindLineSavingThrowOutcomeFill(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+  outcomes: readonly {
+    readonly targetId: CombatantId;
+    readonly succeeded: boolean;
+  }[],
+  options: {
+    readonly areaId?: BattleAreaId;
+    readonly directionId?: BattleLineDirectionId;
+    readonly creaturePushes?: Extract<
+      BattleSpellAreaChoice,
+      { readonly kind: "gustOfWindLineArea" }
+    >["creaturePushes"];
+  } = {},
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  const failedTargetIds = outcomes.flatMap((outcome) =>
+    outcome.succeeded ? [] : [outcome.targetId],
+  );
+  return {
+    kind: "savingThrowOutcome",
+    holeId: hole.holeId,
+    value: {
+      area: {
+        kind: "gustOfWindLineArea",
+        areaId: options.areaId ?? gustOfWindAreaId,
+        directionId: options.directionId ?? gustOfWindNorthDirectionId,
+        originAnchorId: spellCasterId,
+        affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
+        creaturePushes:
+          options.creaturePushes ??
+          failedTargetIds.map((targetId) => ({
+            targetId,
+            disposition: {
+              kind: "pushed" as const,
+              distanceFeet: movementFeet(15),
+              destinationId: battleTablePositionId(
+                `pushed:gust-of-wind:${targetId}`,
+              ),
+              provokesOpportunityAttacks: false as const,
+            },
+          })),
+      },
+      outcomes,
+    },
+  };
+}
+
+export function gustOfWindLineDirectionChoiceFill(
+  hole: Extract<BattleHole, { readonly kind: "gustOfWindLineDirectionChoice" }>,
+  directionId: BattleLineDirectionId = gustOfWindEastDirectionId,
+): Extract<BattleFill, { readonly kind: "gustOfWindLineDirectionChoice" }> {
+  return {
+    kind: "gustOfWindLineDirectionChoice",
+    holeId: hole.holeId,
+    value: { directionId },
+  };
+}
+
 export function flamingSphereAreaFill(
   hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>,
   areaId = flamingSphereAreaId,
@@ -711,6 +822,17 @@ export function moonbeamAreaFill(
   };
 }
 
+export function webAreaFill(
+  hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>,
+  areaId = webAreaId,
+): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
+  return {
+    kind: "spellAreaChoice",
+    holeId: hole.holeId,
+    value: { kind: "webCubeArea", areaId },
+  };
+}
+
 export function flamingSphereRamMovementFill(
   hole: Extract<BattleHole, { readonly kind: "movableZoneRamMovement" }>,
   moveFeet = 30,
@@ -723,15 +845,9 @@ export function flamingSphereRamMovementFill(
 }
 
 export function flamingSphereRepositionMovementFill(
-  hole: Extract<
-    BattleHole,
-    { readonly kind: "movableZoneRepositionMovement" }
-  >,
+  hole: Extract<BattleHole, { readonly kind: "movableZoneRepositionMovement" }>,
   moveFeet = 30,
-): Extract<
-  BattleFill,
-  { readonly kind: "movableZoneRepositionMovement" }
-> {
+): Extract<BattleFill, { readonly kind: "movableZoneRepositionMovement" }> {
   return {
     kind: "movableZoneRepositionMovement",
     holeId: hole.holeId,
@@ -839,6 +955,187 @@ export function greaseGroundHazardEndTurnAct(
   actorId: CombatantId,
 ): ReturnType<typeof greaseGroundHazardSaveAct> {
   return greaseGroundHazardSaveAct(state, actorId, "endsTurnInArea");
+}
+
+export function webRestraintSaveAct(
+  state: BattleState,
+  actorId: CombatantId,
+  trigger: "entersArea" | "startsTurnInArea",
+): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "webRestraintSave";
+    }
+  >;
+} {
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "webRestraintSave";
+        }
+      >;
+    } =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "webRestraintSave" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.trigger === trigger &&
+      candidate.subject.areaId === webAreaId,
+  );
+  if (act === undefined) {
+    throw new Error(`Expected Web ${trigger} save act.`);
+  }
+  return act;
+}
+
+export function webRestrainedNoLongerInAreaAct(
+  state: BattleState,
+  actorId: CombatantId,
+): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "webRestrainedNoLongerInArea";
+    }
+  >;
+} {
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "webRestrainedNoLongerInArea";
+        }
+      >;
+    } =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "webRestrainedNoLongerInArea" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.areaId === webAreaId,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Web no-longer-in-area cleanup act.");
+  }
+  return act;
+}
+
+export function webAreaRemovedAct(
+  state: BattleState,
+): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "webAreaRemoved";
+    }
+  >;
+} {
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "webAreaRemoved";
+        }
+      >;
+    } =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "webAreaRemoved" &&
+      candidate.subject.areaId === webAreaId,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Web area removal act.");
+  }
+  return act;
+}
+
+export function gustOfWindLineEndTurnSaveAct(
+  state: BattleState,
+  actorId: CombatantId = spellTargetId,
+  areaId: BattleAreaId = gustOfWindAreaId,
+  directionId: BattleLineDirectionId = gustOfWindNorthDirectionId,
+): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "gustOfWindLineSave";
+    }
+  >;
+} {
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "gustOfWindLineSave";
+        }
+      >;
+    } =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "gustOfWindLineSave" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.areaId === areaId &&
+      candidate.subject.directionId === directionId,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Gust of Wind Line end-turn save act.");
+  }
+  return act;
+}
+
+export function gustOfWindLineDirectionChangeAct(
+  state: BattleState,
+  actorId: CombatantId = spellCasterId,
+  areaId: BattleAreaId = gustOfWindAreaId,
+  directionId: BattleLineDirectionId = gustOfWindNorthDirectionId,
+): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "gustOfWindLineDirectionChange";
+    }
+  >;
+} {
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "gustOfWindLineDirectionChange";
+        }
+      >;
+    } =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "gustOfWindLineDirectionChange" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.areaId === areaId &&
+      candidate.subject.directionId === directionId,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Gust of Wind Line direction-change act.");
+  }
+  return act;
 }
 
 export function flamingSphereEndTurnAct(

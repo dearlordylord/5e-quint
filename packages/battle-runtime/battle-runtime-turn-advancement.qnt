@@ -32,6 +32,8 @@ module battleRuntimeTurnAdvancement {
       actionAvailable: nextActorStep.actionAvailable,
       bonusActionAvailable: nextActorStep.bonusActionAvailable,
       spellSlotUsesThisTurn: Set(),
+      levelOnePlusSpellCastsThisTurn: Set(),
+      quickenedLevelOnePlusSpellCastsThisTurn: Set(),
       attackRollMadeThisTurn: false,
       dashMovementBonus: nextActorStep.dashMovementBonus,
       disengaged: nextActorStep.disengaged,

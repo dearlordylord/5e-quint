@@ -4,117 +4,57 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import {
-AbilityModifier,
-DifficultyClass,
-difficultyClass,
-type DamageDieSize
+  AbilityModifier,
+  DifficultyClass,
+  difficultyClass,
+  type DamageDieSize,
 } from "@dnd/shared/types";
 
 import {
-rolledDiceTotal,
-validateRolledDiceForDiceExpr
+  rolledDiceTotal,
+  validateRolledDiceForDiceExpr,
 } from "@dnd/shared-algebras/runtime-dice-algebra";
 
-
-import type {
-DamageType,
-UnitRecord
-} from "@dnd/surface/surface/types";
-
+import type { DamageType, UnitRecord } from "@dnd/surface/surface/types";
 
 import { Match } from "effect";
 
-
-
-
-
-
-
-
 import {
-resourceHasUsesRemaining,
-spendCharacterResourceUse
+  resourceHasUsesRemaining,
+  spendCharacterResourceUse,
 } from "../character-battle-resources.ts";
 
-
-
-import {
-CombatantId
-} from "../identity.ts";
+import { CombatantId } from "../identity.ts";
 
 import {
-type ReactionReductionResourceDie,
-type ReactionReductionResourceSpend,
-type ReactionRollOrDamageReductionProfile,
-type SupportedUnitFeatureProfile
+  type ReactionReductionResourceDie,
+  type ReactionReductionResourceSpend,
+  type ReactionRollOrDamageReductionProfile,
+  type SupportedUnitFeatureProfile,
 } from "../unit-feature-support.ts";
 
+import { combatantCanSee } from "./creature-state-leaves.ts";
 
+import { combatantCanTakeReactions } from "./creature-state.ts";
 
+import { combatantProficiencyBonus } from "./movement-speed.ts";
 
-
-import {
-combatantCanSee
-} from "./creature-state-leaves.ts";
-
-import {
-combatantCanTakeReactions
-} from "./creature-state.ts";
-
-
-
-
-
-
-import {
-combatantProficiencyBonus
-} from "./movement-speed.ts";
-
-
-
-
-
-
-
-
-
-import {
-signedModifier
-} from "./statblock-attacks.ts";
-
-
-
+import { signedModifier } from "./statblock-attacks.ts";
 
 import type {
-BattleCreatureState,
-BattleFill,
-BattleHole,
-BattleReactionFrameInput,
-BattleReactionModifierChoice,
-BattleReactionProcedureChoice,
-BattleRolledDiceFill,
-BattleState
+  BattleCreatureState,
+  BattleFill,
+  BattleHole,
+  BattleReactionFrameInput,
+  BattleReactionModifierChoice,
+  BattleReactionProcedureChoice,
+  BattleRolledDiceFill,
+  BattleState,
 } from "../battle-reducer.ts";
 import {
-REACTION_MODIFIER_ROLL_HOLE_ID,
-REACTION_MODIFIER_ROLL_HOLE_INSTANCE
+  REACTION_MODIFIER_ROLL_HOLE_ID,
+  REACTION_MODIFIER_ROLL_HOLE_INSTANCE,
 } from "../battle-reducer.ts";
 export function spendReactionModifierResource(
   state: BattleState,
@@ -136,7 +76,8 @@ export function spendReactionModifierResource(
       origin: {
         ...reactor.origin,
         resources: reactor.origin.resources.map((resource) =>
-          resource.unit.id === reactionModifierResourceUnitId(choice)
+          resource.unit.id === reactionModifierResourceUnitId(choice) &&
+          resourceHasUsesRemaining(resource)
             ? spendCharacterResourceUse(resource)
             : resource,
         ),

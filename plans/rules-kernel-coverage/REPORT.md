@@ -4,27 +4,27 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Summary
 
-- Total obligations: 60
-- Covered obligations: 33
-- Open transitional obligations: 23
-- Boundary or unsupported obligations: 4
+- Total obligations: 72
+- Covered obligations: 46
+- Open transitional obligations: 21
+- Boundary or unsupported obligations: 5
 
 | Status | Count |
 | --- | ---: |
-| covered | 33 |
-| needs-qnt-owner | 3 |
+| covered | 46 |
+| needs-qnt-owner | 1 |
 | needs-parity-witness | 19 |
 | needs-surface-evidence | 1 |
-| boundary-only | 3 |
+| boundary-only | 4 |
 | unsupported-by-admission | 1 |
 
 | Runtime | Count |
 | --- | ---: |
 | shared-algebras | 1 |
-| battle | 53 |
-| character-creation | 3 |
-| character-sheet | 2 |
-| character-battle | 1 |
+| battle | 54 |
+| character-creation | 8 |
+| character-sheet | 6 |
+| character-battle | 3 |
 
 ## Obligations
 
@@ -34,7 +34,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY` | battle | covered | _direct reducer entrypoint_ |
 | `BATTLE.REACTION.OFFER_DECLINE_RESUME` | battle | covered | `spell.invocation-feather-fall-mitigation`, `spell.invocation-forced-reaction-movement`, `spell.reaction-counterspell`, `spell.reaction-hellish-rebuke`, `spell.reaction-shield`, `spell.readied-action-time-spell`, `unit-feature.attack-damage-reduction-zero-damage-redirect`, `unit-feature.reaction-roll-or-damage-reduction` |
 | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` | battle | covered | `unit-feature.action-surge-resource`, `unit-feature.alternate-action-cost`, `unit-feature.attack-action-attack-count-scaling`, `unit-feature.attack-damage-reduction-zero-damage-redirect`, `unit-feature.attack-damage-rider`, `unit-feature.attack-roll-miss-to-hit-replacement`, `unit-feature.bardic-inspiration-failed-d20-test`, `unit-feature.bardic-inspiration-grant`, `unit-feature.bonus-action-dash-temporary-hit-points`, `unit-feature.bonus-action-ongoing-rage`, `unit-feature.failed-ability-check-resource-boost`, `unit-feature.first-attack-roll-reckless-advantage`, `unit-feature.innate-sorcery-activation`, `unit-feature.martial-arts-attack-projection`, `unit-feature.monk-focus-battle-options`, `unit-feature.passive-armor-class-bonus`, `unit-feature.passive-ranged-attack-roll-bonus`, `unit-feature.passive-saving-throw-roll-mode`, `unit-feature.passive-speed-bonus`, `unit-feature.passive-speed-kind-grants`, `unit-feature.reaction-roll-or-damage-reduction`, `unit-feature.save-damage-replacement`, `unit-feature.self-bonus-action-healing`, `unit-feature.weapon-critical-range-19`, `unit-feature.weapon-damage-dice-roll-choice`, `unit-feature.weapon-mastery-cleave`, `unit-feature.weapon-mastery-sap`, `unit-feature.weapon-mastery-topple`, `unit-feature.zero-hit-point-replacement` |
-| `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | battle | covered | `spell.invocation-damage-save-or-attack`, `spell.reaction-shield`, `spell.readied-action-time-spell` |
+| `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | battle | covered | `spell.invocation-damage-save-or-attack`, `spell.invocation-web-restraint-hazard`, `spell.reaction-shield`, `spell.readied-action-time-spell` |
 | `BATTLE.SPELL.HIT_POINT_RESTORATION` | battle | covered | `spell.hit-point-restoration` |
 | `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE` | battle | needs-parity-witness | `spell.invocation-direct-condition` |
 | `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` | battle | needs-parity-witness | `spell.invocation-condition-save`, `spell.invocation-hideous-laughter-repeat-save-lifecycle` |
@@ -42,6 +42,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE` | battle | covered | `spell.invocation-sleep-repeat-save-lifecycle`, `spell.invocation-sleep-target-admission` |
 | `BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE` | battle | covered | `spell.invocation-grease-ground-hazard` |
 | `BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE` | battle | covered | `spell.invocation-fog-cloud-obscurement` |
+| `BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE` | battle | covered | `spell.invocation-magical-darkness-point-origin` |
 | `BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE` | battle | covered | `spell.invocation-object-light` |
 | `BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE` | battle | covered | `spell.invocation-flaming-sphere-hazard-ram` |
 | `BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE` | battle | covered | `spell.invocation-held-light-emitter` |
@@ -63,7 +64,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.SPELL.SELF_TRANSFORMATION_MODE` | battle | needs-parity-witness | `spell.invocation-self-transformation-mode` |
 | `BATTLE.SPELL.REACTION_CASTING_TIME` | battle | needs-parity-witness | `spell.reaction-counterspell`, `spell.reaction-hellish-rebuke` |
 | `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` | battle | needs-parity-witness | `spell.invocation-after-hit-damage`, `spell.invocation-after-hit-damage-illumination`, `spell.invocation-after-hit-restraint-turn-start-damage`, `spell.invocation-after-hit-timed-damage-save` |
-| `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` | battle | needs-parity-witness | `spell.invocation-spell-hosted-weapon-attack`, `spell.invocation-weapon-attack-override`, `spell.invocation-weapon-damage-rider` |
+| `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` | battle | needs-parity-witness | `spell.invocation-magic-weapon-enhancement`, `spell.invocation-spell-hosted-weapon-attack`, `spell.invocation-weapon-attack-override`, `spell.invocation-weapon-damage-rider` |
 | `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` | battle | needs-parity-witness | `spell.invocation-marked-damage-rider` |
 | `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE` | battle | needs-parity-witness | `spell.invocation-chained-attack-damage` |
 | `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE` | battle | needs-parity-witness | `spell.invocation-independent-attack-sequence` |
@@ -80,31 +81,42 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE` | battle | covered | _direct reducer entrypoint_ |
 | `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY` | character-creation | covered | _direct reducer entrypoint_ |
 | `CREATION.CHOICE_DISCOVERY_CARDINALITY` | character-creation | covered | _direct reducer entrypoint_ |
+| `CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT` | character-creation | covered | `character-creation.fighter-fighting-style-advancement-replacement` |
+| `CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION` | character-creation | covered | `character-creation.warlock-pact-magic-advancement` |
+| `CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE` | character-creation | covered | `character-creation.eldritch-invocation-choice` |
 | `SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE` | character-sheet | covered | `character-sheet.armor-class-base-formula` |
 | `BATTLE.HOLE.SEMANTIC_FRONTIER_CLASSIFICATION` | battle | boundary-only | _outside reducer semantics_ |
 | `BATTLE.SURFACE.EXECUTABLE_PROFILE_JOIN` | battle | needs-surface-evidence | _surface join pending_ |
-| `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` | character-creation | needs-qnt-owner | `character-creation.class-feature-advancement-replacement`, `character-creation.class-feature-feat-choice`, `character-creation.eldritch-invocation-choice`, `character-creation.warlock-pact-magic-advancement`, `character-creation.weapon-mastery-choice` |
-| `SHEET.REST_AND_RESOURCE.TRANSITIONS` | character-sheet | needs-qnt-owner | _profile mapping pending_ |
-| `CHARACTER.BATTLE.HANDOFF.SETTLEMENT` | character-battle | needs-qnt-owner | _profile mapping pending_ |
+| `CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION` | character-creation | covered | `character-creation.class-feature-feat-choice` |
+| `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION` | character-creation | covered | `character-creation.weapon-mastery-choice` |
+| `SHEET.FEATURE_RESOURCES.TRANSITIONS` | character-sheet | covered | `character-sheet.class-feature-long-rest-use-state`, `character-sheet.class-feature-point-pool-resource`, `character-sheet.class-feature-use-count-resource`, `character-sheet.font-of-magic-slot-to-sorcery-points`, `character-sheet.font-of-magic-sorcery-points-to-spell-slot`, `character-sheet.healing-resource-action`, `character-sheet.metamagic-battle-resource-bridge`, `character-sheet.monk-uncanny-metabolism-initiative-recovery` |
+| `CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION` | character-battle | covered | _direct reducer entrypoint_ |
+| `CHARACTER.BATTLE.HANDOFF.SETTLEMENT` | character-battle | covered | _direct reducer entrypoint_ |
+| `CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS` | character-battle | needs-qnt-owner | _profile mapping pending_ |
 | `BATTLE.PROTOCOL.MALFORMED_PAYLOAD_REJECTION` | battle | boundary-only | _outside reducer semantics_ |
+| `CREATION.PROTOCOL.MALFORMED_FILL_REJECTION` | character-creation | boundary-only | _outside reducer semantics_ |
 | `BATTLE.SURFACE.CATALOG_ONLY_RECORDS` | battle | unsupported-by-admission | _outside reducer semantics_ |
 | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | battle | boundary-only | _outside reducer semantics_ |
 | `SHARED.HIT_POINTS.POSITIVE_DAMAGE` | shared-algebras | covered | `spell.invocation-flaming-sphere-hazard-ram`, `spell.invocation-moonbeam-movable-zone`, `spell.invocation-spell-created-held-object` |
+| `SHEET.HP_REST_HIT_DICE.TRANSITIONS` | character-sheet | covered | _direct reducer entrypoint_ |
+| `SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS` | character-sheet | covered | `character-sheet.pact-slot-recovery`, `character-sheet.short-rest-spell-slot-recovery` |
+| `SHEET.WEAPON_MASTERY.RESELECTION` | character-sheet | covered | `character-sheet.weapon-mastery-reselection` |
+| `SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION` | character-sheet | covered | `character-sheet.spellbook-ritual-invocation` |
 
 ## Battle Hole Frontier
 
-- Total classified rows: 85
+- Total classified rows: 97
 
 | Subject | Count |
 | --- | ---: |
-| battle-hole-family | 52 |
-| battle-fill-kind | 33 |
+| battle-hole-family | 60 |
+| battle-fill-kind | 37 |
 
 | Classification | Count |
 | --- | ---: |
-| semantic-frontier | 64 |
+| semantic-frontier | 74 |
 | deterministic-boundary-projection | 0 |
-| table-owned-fact | 21 |
+| table-owned-fact | 23 |
 | unsupported-dead-branch | 0 |
 
 | Subject | Id | Kind | Classification | Coverage | Follow-up |
@@ -194,6 +206,18 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | battle-fill-kind | `selfTransformationModeChoice` | `selfTransformationModeChoice` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | `RKBC-SPELL-SELF-TRANSFORMATION-PARITY` |
 | battle-hole-family | `BattleObjectContactTargetsHole` | `objectContactTargets` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
 | battle-fill-kind | `objectContactTargets` | `objectContactTargets` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
+| battle-hole-family | `BattleGustOfWindLineSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-hole-family | `BattleGustOfWindLineDirectionChoiceHole` | `gustOfWindLineDirectionChoice` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-fill-kind | `gustOfWindLineDirectionChoice` | `gustOfWindLineDirectionChoice` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-hole-family | `BattleObjectContactSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | _none_ |
+| battle-hole-family | `BattleObjectDropResolutionHole` | `objectDropResolution` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | _none_ |
+| battle-fill-kind | `objectDropResolution` | `objectDropResolution` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | _none_ |
+| battle-hole-family | `BattleMagicWeaponTargetItemHole` | `magicWeaponTargetItem` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES`, `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` | _none_ |
+| battle-fill-kind | `magicWeaponTargetItem` | `magicWeaponTargetItem` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES`, `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` | _none_ |
+| battle-hole-family | `BattleWebRestraintSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-hole-family | `BattleOngoingSpellTargetChoiceHole` | `ongoingSpellTargetChoice` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-hole-family | `BattleSpellcastingAbilityCheckHole` | `spellcastingAbilityCheck` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` | _none_ |
+| battle-fill-kind | `ongoingSpellTargetChoice` | `ongoingSpellTargetChoice` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
 
 ## Generator Readiness
 
@@ -223,9 +247,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 - `BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION` (needs-parity-witness; follow-up: `RKBC-SPELL-MIRROR-IMAGE-PARITY`): Battle Mirror Image duplicate pool, attack-hit interception roll, duplicate destruction, bypass witnesses, and normal damage continuation
 - `BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING` (needs-parity-witness; follow-up: `RKBC-SPELL-LINKED-EFFECT-PARITY`): Battle linked spell effects for Warding Bond defenses, all-damage Resistance, same-amount damage sharing, and source-zero, separation, recast, or duration cleanup
 - `BATTLE.SURFACE.EXECUTABLE_PROFILE_JOIN` (needs-surface-evidence; follow-up: `RKBC-FINAL-B-CLOSURE-GATE`): Prove each currently admitted executable battle Surface profile points to a covered semantic obligation
-- `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner; follow-up: `RKBC-CREATION-FILL-VALIDATION-BATCH`, `RKBC-CREATION-ADVANCEMENT-REPLACEMENT`, `RKBC-CREATION-SPELLCASTING-PROGRESSION`, `RKBC-CREATION-WEAPON-MASTERY-FEAT`): Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses
-- `SHEET.REST_AND_RESOURCE.TRANSITIONS` (needs-qnt-owner; follow-up: `RKBC-SHEET-HP-REST-HIT-DICE`, `RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS`, `RKBC-SHEET-FEATURE-RESOURCES`): Audit current Character Sheet HP, rest, spell-slot, pact-slot, Hit Dice, and feature-resource transitions into QNT-connected obligations
-- `CHARACTER.BATTLE.HANDOFF.SETTLEMENT` (needs-qnt-owner; follow-up: `RKBC-HANDOFF-BATTLE-SETTLEMENT`): Audit Character Sheet to battle init and battle handoff settlement for HP, zero-HP lifecycle, conditions, spell slots, and identity checks
+- `CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS` (needs-qnt-owner; follow-up: `RKBC-HANDOFF-IDENTITY-CONFLICTS`): Character battle handoff identity, max-HP drift, active Wild Shape, and zero-HP lifecycle conflict handling
 
 ## Checker Issues
 

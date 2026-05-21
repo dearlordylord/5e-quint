@@ -26,6 +26,7 @@ module battleRuntimeTimedEffects {
   ): Set[ActiveEffect] =
     effects.filter(effect => match effect {
       | WeaponMasterySapNextAttackDisadvantage(data) => data.source != actor
+      | HeatMetalHoldingWearingPenalty(data) => data.expiresAtActor != actor
       | _ => true
     })
 
@@ -47,7 +48,7 @@ module battleRuntimeTimedEffects {
   }
 
   pure def expireStartOfTurnEffectsForActiveActor(effects: Set[ActiveEffect]): Set[ActiveEffect] = {
-    val resetEffects = resetResistanceDamageReductions(effects)
+    val resetEffects = resetWebSavedThisTurnEffects(resetResistanceDamageReductions(effects))
     if (battleRuntimeOneRoundShieldArmorClassBonusExpiresAtStartOfNextTurn)
       resetEffects.exclude(Set(ShieldArmorClassBonus))
     else
@@ -55,7 +56,7 @@ module battleRuntimeTimedEffects {
   }
 
   pure def expireStartOfTurnEffectsForNonActiveActor(effects: Set[ActiveEffect], actor: Actor): Set[ActiveEffect] =
-    activeEffectsWithoutExpiredSapStartOfTurnRiders(effects, actor)
+    activeEffectsWithoutExpiredSapStartOfTurnRiders(resetWebSavedThisTurnEffects(effects), actor)
 
   pure def expireStartOfTurnSpellEffects(state: BattleState, nextActor: Actor): BattleState =
     match nextActor {
@@ -98,6 +99,16 @@ module battleRuntimeTimedEffects {
       | JumpMovementReplacement(data) => JumpMovementReplacement({
           ...data,
           usedThisTurn: battleRuntimeOncePerTurnSpellEffectUsedAtTurnStart,
+        })
+      | _ => effect
+    })
+
+  pure def resetWebSavedThisTurnEffects(effects: Set[ActiveEffect]): Set[ActiveEffect] =
+    effects.map(effect => match effect {
+      | WebRestraintHazard(data) => WebRestraintHazard({
+          ...data,
+          entrySavedThisTurn: Set(),
+          startTurnSavedThisTurn: Set(),
         })
       | _ => effect
     })
@@ -160,6 +171,13 @@ module battleRuntimeTimedEffects {
             target: data.target,
             ability: data.ability,
             transfer: data.transfer,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
+        | MagicWeaponEnhancement(data) => MagicWeaponEnhancement({
+            source: data.source,
+            target: data.target,
+            weaponItem: data.weaponItem,
+            bonus: data.bonus,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
         | ThaumaturgyBoomingVoice(data) => ThaumaturgyBoomingVoice({
@@ -272,11 +290,27 @@ module battleRuntimeTimedEffects {
             radiusFeet: data.radiusFeet,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
+        | MagicalDarknessPointOrigin(data) => MagicalDarknessPointOrigin({
+            areaId: data.areaId,
+            radiusFeet: data.radiusFeet,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
         | FlamingSphere(data) => FlamingSphere({
             areaId: data.areaId,
             damageDice: data.damageDice,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
             ramMaxMoveFeet: data.ramMaxMoveFeet,
+          })
+        | WebRestraintHazard(data) => WebRestraintHazard({
+            areaId: data.areaId,
+            sideFeet: data.sideFeet,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+            entrySavedThisTurn: data.entrySavedThisTurn,
+            startTurnSavedThisTurn: data.startTurnSavedThisTurn,
+          })
+        | WebRestrained(data) => WebRestrained({
+            source: data.source,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
         | HeatMetalObjectContactDamage(data) => HeatMetalObjectContactDamage({
             objectId: data.objectId,
@@ -298,6 +332,7 @@ module battleRuntimeTimedEffects {
         | DivineFavorWeaponDamageRider(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | HuntersMarkDamageRider(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | HexDamageRider(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | MagicWeaponEnhancement(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | ThaumaturgyBoomingVoice(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | SearingSmiteBurning(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | ShiningSmiteIllumination(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
@@ -323,7 +358,10 @@ module battleRuntimeTimedEffects {
         | HideousLaughterEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | GreaseGroundHazard(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | FogCloudObscurement(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | MagicalDarknessPointOrigin(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | FlamingSphere(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | WebRestraintHazard(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | WebRestrained(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | HeatMetalObjectContactDamage(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | BardicInspirationDie(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | _ => true

@@ -1351,6 +1351,7 @@ export function entangleSaveGateConditionSpell(
         kind: "abilityCheck",
         ability: "str",
         skill: "athletics",
+        allowedActor: "target",
         successEnds: "condition",
       },
       turnStartDamage: null,
@@ -1589,10 +1590,15 @@ export function areaSaveGateSpellRangeFeet(
     Match.when({ kind: "selfOriginCone" }, () =>
       range.kind === "self" ? movementFeet(0) : null,
     ),
+    Match.when({ kind: "selfOriginLine" }, () =>
+      range.kind === "self" ? movementFeet(0) : null,
+    ),
     Match.when({ kind: "primaryTargetOriginEmanation" }, () =>
       fixedPointRangeFeet(range),
     ),
-    Match.when({ kind: "pointOriginCylinder" }, () => fixedPointRangeFeet(range)),
+    Match.when({ kind: "pointOriginCylinder" }, () =>
+      fixedPointRangeFeet(range),
+    ),
     Match.when({ kind: "targetList" }, () => fixedPointRangeFeet(range)),
     Match.exhaustive,
   );
@@ -1827,9 +1833,8 @@ export function supportedSaveGateFailedSaveEffects(
   }
   if (
     postSaveAreaEffect?.kind === "thunderwave" &&
-    riders.filter((rider) =>
-      isThunderwaveCreaturePushRiderShape(phase, rider),
-    ).length !== 1
+    riders.filter((rider) => isThunderwaveCreaturePushRiderShape(phase, rider))
+      .length !== 1
   ) {
     return null;
   }
@@ -2247,8 +2252,7 @@ export function supportedDamageAmountExpr(input: {
       amount.startingAtLevel === input.spellLevel + 1) &&
     amount.base.dieSize !== undefined
   ) {
-    const firstIncreasedSlot =
-      amount.startingAtLevel === input.spellLevel + 1;
+    const firstIncreasedSlot = amount.startingAtLevel === input.spellLevel + 1;
     const slotDelta = Math.max(
       0,
       Number(input.slotLevel) -

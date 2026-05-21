@@ -22,6 +22,7 @@ import {
   goblinId,
   unitLibrary,
   battleId,
+  characterBattleResourceIsUseCount,
   characterBattleResourceIsUnlimited,
   characterBattleResourceSupportedForUnit,
   classFeatureFreeCastSpellInvocationRef,
@@ -111,6 +112,9 @@ describe("battle runtime: Favored Enemy", () => {
         (use) => use.kind === "committed",
       ),
     ).toBe(false);
+    expect(
+      marked.state.currentTurnResources.levelOnePlusSpellCastsThisTurn,
+    ).toContain(fighterId);
     expect(ranger.concentration).toEqual({
       sourceSpellId: "hunters_mark",
       effectKind: "spellEffect",
@@ -195,6 +199,7 @@ describe("battle runtime: Favored Enemy", () => {
     const [favoredEnemyResource] = ranger.origin.resources;
     if (
       favoredEnemyResource === undefined ||
+      !characterBattleResourceIsUseCount(favoredEnemyResource) ||
       characterBattleResourceIsUnlimited(favoredEnemyResource)
     ) {
       throw new Error("Expected Favored Enemy to be a limited resource.");
@@ -500,6 +505,9 @@ describe("battle runtime: Paladin's Smite", () => {
         (use) => use.kind === "committed",
       ),
     ).toBe(false);
+    expect(
+      resolved.state.currentTurnResources.levelOnePlusSpellCastsThisTurn,
+    ).toContain(fighterId);
   });
 
   test("Paladin's Smite falls back to ordinary Divine Smite Spell Slot casting when the free cast is exhausted", () => {
@@ -562,6 +570,7 @@ describe("battle runtime: Paladin's Smite", () => {
       currentTurnResources: {
         ...baseState.currentTurnResources,
         spellSlotUsesThisTurn: [{ kind: "committed", combatantId: fighterId }],
+        levelOnePlusSpellCastsThisTurn: [fighterId],
       },
     };
     const subject = paladinLongswordAttackSubject();

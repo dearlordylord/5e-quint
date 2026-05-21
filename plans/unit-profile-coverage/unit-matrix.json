@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 396,
-      "numerator": 187,
-      "percent": "47.2%"
+      "numerator": 190,
+      "percent": "48%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 468,
-      "numerator": 219,
-      "percent": "46.8%"
+      "numerator": 222,
+      "percent": "47.4%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,62 +59,62 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 220
+      "value": 223
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 132,
-      "numerator": 132,
+      "denominator": 135,
+      "numerator": 135,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 220,
-      "numerator": 220,
+      "denominator": 223,
+      "numerator": 223,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 80,
-      "numerator": 80,
+      "denominator": 85,
+      "numerator": 85,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 80,
-      "numerator": 79,
+      "denominator": 85,
+      "numerator": 84,
       "percent": "98.8%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 109,
-      "numerator": 56,
-      "percent": "51.4%"
+      "denominator": 117,
+      "numerator": 75,
+      "percent": "64.1%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 109,
-      "numerator": 89,
-      "percent": "81.7%"
+      "denominator": 117,
+      "numerator": 104,
+      "percent": "88.9%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 132,
-      "numerator": 75,
-      "percent": "56.8%"
+      "denominator": 135,
+      "numerator": 85,
+      "percent": "63%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 80,
-      "numerator": 80,
+      "denominator": 85,
+      "numerator": 85,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 80,
-      "numerator": 80,
+      "denominator": 85,
+      "numerator": 85,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 132,
+      "denominator": 135,
       "numerator": 105,
-      "percent": "79.5%"
+      "percent": "77.8%"
     },
     "supportedProfileCoverage": {
-      "denominator": 188,
-      "numerator": 132,
-      "percent": "70.2%"
+      "denominator": 191,
+      "numerator": 135,
+      "percent": "70.7%"
     }
   },
   "metricSemantics": [
@@ -1402,6 +1402,34 @@
       ]
     },
     {
+      "id": "spell.invocation-magical-darkness-point-origin",
+      "profileKind": "table-caller",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
+      ],
+      "sourceBoundary": "The runtime consumes a typed table-supplied point-origin magical Darkness area identity and exposes magical Darkness visibility/light witness consequences for that area. Runtime owns Magic Action and level-2-or-higher Spell Slot spend, 15-foot Sphere radius, caster-owned Concentration up to 10 minutes, active zone projection, ordinary-sight and Darkvision Heavily Obscured consequence, nonmagical-light denial as a witness consequence, and cleanup. Object-origin Emanation, opaque-cover blocking, automatic area membership, line-of-sight drawing, map illumination, and spell-created-light overlap dispel remain outside this profile.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME"
+      ],
+      "title": "Spell invocation creates a Concentration-owned magical Darkness point-origin Sphere",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-darkness.test.ts"
+        }
+      ]
+    },
+    {
       "id": "spell.invocation-object-light",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -2492,19 +2520,36 @@
       "profileKind": "character-creation",
       "qntOwners": [],
       "runtimeOwners": [
-        "packages/character-creation-runtime/src/index.ts"
+        "packages/character-creation-runtime/src/character-build-advancement.ts"
       ],
-      "sourceBoundary": "CharacterBuild progression plus Surface class-feature and class spellcasting facts; replacement and gain choices are accepted only as part of a class-level gain and rewrite existing CharacterBuild feature refs, selected invocation ownership, or Warlock Pact Magic spellcasting facts without parallel selected-option state.",
+      "sourceBoundary": "CharacterBuild Sorcerer progression plus Surface Metamagic class-feature facts; replacement and gain choices are accepted only as part of a Sorcerer class-level gain and rewrite selected Sorcerer Metamagic option ownership without parallel selected-option state.",
       "taskRefs": [
-        "L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE",
-        "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE",
-        "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
+        "L12G-FOLLOWUP-SORCERER-METAMAGIC-ADVANCEMENT-REPLACEMENT"
       ],
-      "title": "Character Creation advances CharacterBuild class levels with class-feature replacement and gain choices",
+      "title": "Character Creation advances Sorcerer Metamagic option ownership during class-level gains",
       "verificationOwners": [
         {
           "kind": "runtime-test",
           "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-creation.fighter-fighting-style-advancement-replacement",
+      "profileKind": "character-creation",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/character-build-advancement.ts"
+      ],
+      "sourceBoundary": "CharacterBuild Fighter progression plus the retained Surface Fighting Style feature ref; replacement is accepted only as part of a Fighter level gain and rewrites the selected Fighting Style feat ref without retaining draft state or duplicating selected feat execution.",
+      "taskRefs": [
+        "L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE"
+      ],
+      "title": "Character Creation advances Fighter levels with Fighting Style feat replacement",
+      "verificationOwners": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/fighter-fighting-style-selected-identity.mbt.test.ts"
         }
       ]
     },
@@ -2554,13 +2599,13 @@
       "runtimeOwners": [
         "packages/character-creation-runtime/src/index.ts"
       ],
-      "sourceBoundary": "Warlock Eldritch Invocations class-feature choice, Surface Warlock invocation count facts, current CharacterBuild Warlock Pact Magic cantrip facts, and the runtime SRD invocation option catalog; CharacterBuild stores selected invocation ownership plus Repeatable associated choice identity while selected invocation execution remains owned by selected invocation profiles.",
+      "sourceBoundary": "Warlock Eldritch Invocations class-feature choice, Surface Warlock Eldritch Invocation count facts, current CharacterBuild Warlock Pact Magic cantrip Spell Access facts, and the runtime SRD Eldritch Invocation option catalog; CharacterBuild stores selected Eldritch Invocation ownership plus Repeatable associated choice identity while selected Eldritch Invocation execution remains owned by selected Eldritch Invocation runtime profiles.",
       "taskRefs": [
         "AT-L1-03S",
         "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE",
         "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
       ],
-      "title": "Character Creation finalizes and advances Eldritch Invocation choices as selected invocation ownership",
+      "title": "Character Creation finalizes and advances Eldritch Invocation choices as selected Eldritch Invocation ownership",
       "verificationOwners": [
         {
           "kind": "runtime-test",
@@ -2635,8 +2680,9 @@
       "runtimeOwners": [
         "packages/character-creation-runtime/src/index.ts"
       ],
-      "sourceBoundary": "Surface class-feature records retained by class progression can project source links to other owned facts, such as Uncanny Metabolism linking to the shared Monk's Focus resource and existing Martial Arts die source, without storing duplicate resource caps, die tiers, or class progression state.",
+      "sourceBoundary": "Surface class-feature records retained by class progression can project source links to other owned facts, such as Wild Companion retaining the sibling Druid feature ref set or Uncanny Metabolism linking to the shared Monk's Focus resource and existing Martial Arts die source, without storing duplicate resource caps, die tiers, or class progression state.",
       "taskRefs": [
+        "L12G-AUTHOR-DRUID-WILD-COMPANION",
         "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS"
       ],
       "title": "Character Creation projects retained class-feature source links into CharacterBuild facts",
@@ -2806,6 +2852,37 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-sheet.metamagic-battle-resource-bridge",
+      "profileKind": "character-sheet",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/index.ts",
+        "packages/character-battle-runtime/src/index.ts",
+        "packages/character-battle-runtime/src/battle-creature-init.ts",
+        "packages/battle-runtime/src/character-battle-resources.ts",
+        "packages/battle-runtime/src/battle-reducer/creature-state.ts"
+      ],
+      "sourceBoundary": "Character Sheet preserves selected Metamagic option facts and validates that they match the retained Sorcerer Metamagic feature before Character Battle consumes those CharacterBuild facts and the existing Font of Magic point-pool resource projection. Battle state stores only the shared Sorcery Point point-pool remaining points plus Metamagic effectKind, stackingMode, and cost facts; it does not create a Metamagic-local pool or execute cast-time Metamagic options. Character Sheet handoff persists battle point-pool spending back as the Font of Magic pointPoolResource expenditure.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-SORCERER-METAMAGIC-BATTLE-RESOURCE-BRIDGE"
+      ],
+      "title": "Character Battle carries Metamagic facts with the shared Sorcery Point pool",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
         }
       ]
     },
@@ -3140,15 +3217,22 @@
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/hole-helpers.ts",
         "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
         "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-resolve-object-contact-damage.ts"
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-object-contact-damage.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
       ],
-      "sourceBoundary": "The runtime consumes the authored Heat Metal object-contact Surface shape plus caller-supplied visible manufactured-metal object identity, physical-contact creature witnesses, and later-turn object-within-range witnesses. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration up to 1 minute, durable spell-object contact occurrence identity, immediate Fire damage to selected contact creatures, later-turn Bonus Action repeat damage, slot-scaled damage dice, damage lifecycle integration for Concentration saves and zero-HP dispositions, and cleanup through existing Concentration and duration mechanisms. Holding/wearing Constitution save, drop outcome, and fallback Attack Roll or Ability Check Disadvantage remain split to the object holding/wearing penalty owner.",
+      "sourceBoundary": "The runtime consumes the authored Heat Metal object-contact Surface shape plus caller-supplied visible manufactured-metal object identity, physical-contact creature witnesses, holding-or-wearing spell-object witnesses, later-turn object-within-range witnesses, Saving Throw outcomes, and typed object-drop resolution fills. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration up to 1 minute, durable spell-object contact occurrence identity, immediate Fire damage to selected contact creatures, later-turn Bonus Action repeat damage, slot-scaled damage dice, damage lifecycle integration for Concentration saves and zero-HP dispositions, Constitution saves for damaged holding-or-wearing targets against the caster Spell Save DC, drop-if-possible outcomes without inventory simulation, fallback self Attack Roll and Ability Check Disadvantage until the start of the caster's next turn when the object is not dropped, same-occurrence fallback penalty replacement, and cleanup through Concentration, duration, and caster-turn-start mechanisms.",
       "taskRefs": [
-        "L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME"
+        "L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME",
+        "L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY"
       ],
       "title": "Spell invocation attaches damage to a table-witnessed object contact boundary",
       "verificationOwners": [
@@ -3161,20 +3245,166 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-heat-metal.test.ts"
         }
       ]
+    },
+    {
+      "id": "spell.invocation-gust-of-wind-line",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-gust-of-wind.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts"
+      ],
+      "sourceBoundary": "The runtime consumes the authored Gust of Wind spell, caller-supplied self-origin Line area identity, Line direction, affected creatures, failed-save push dispositions, and closer-to-caster movement facts. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration, active directional Line effect state, initial and end-turn Strength Saving Throw commands, failed-save 15-foot push fact validation, 2-for-1 Movement cost validation for movement closer to the caster through the Line, Bonus Action direction replacement, and cleanup on Concentration or duration end. Automatic geometry, pathfinding, area membership derivation, gas or vapor dispersal, and flame presentation remain outside this profile subset.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME"
+      ],
+      "title": "Spell invocation creates a directional Gust of Wind Line with table-supplied area witnesses",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-gust-of-wind.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gust-of-wind.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.invocation-magic-weapon-enhancement",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-release.ts"
+      ],
+      "sourceBoundary": "The runtime consumes the authored Magic Weapon item-enhancement Surface shape plus caller-supplied exact holder-plus-item identity and nonmagical weapon witness facts. It owns Bonus Action level-2-or-higher Spell Slot spending, one caster-owned item-attached Spell Effect, one-hour duration cleanup, same-caster recast replacement, other-caster active Magic Weapon rejection for the selected holder-plus-item weapon, magic-weapon status projection, and exact holder-plus-item +1/+2/+3 attack-roll and weapon damage-roll projection without mutating authored weapon records or adding spell-owned loadout state. Touch range, physical item selection, and nonmagical target verification remain table/caller witness facts at the fill boundary.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME"
+      ],
+      "title": "Spell invocation attaches a timed magic-weapon enhancement to an exact weapon item",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.invocation-web-restraint-hazard",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-subjects.ts"
+      ],
+      "sourceBoundary": "The runtime consumes the authored Web spell, caller-supplied point-origin Cube area identity, table-triggered enters-area and starts-turn-in-area save subjects, table-supplied no-longer-in-webs or area-removed cleanup subjects, and caller-supplied movement path facts for travel through active Web Difficult Terrain. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration, active Web area effect state with side length, once-per-creature-per-turn entry-save limiting, failed-save Restrained application, Strength (Athletics) escape cleanup, noncumulative Difficult Terrain movement-cost validation for active Web areas, Lightly Obscured Cube projection for sight/perception consumers, and cleanup on Concentration or duration end. Automatic geometry, area membership, pathfinding, anchoring/layering collapse, flat-surface depth presentation, and fire-exposed 5-foot Cube burn-away/damage derivation remain table/spatial/environment facts rather than parallel runtime map state.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME",
+        "L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE"
+      ],
+      "title": "Spell invocation creates a Web area hazard with table-triggered restraint, movement, and obscurement projections",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-web-restraint-hazard.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.invocation-ongoing-spell-ending",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-ongoing-spell-ending.ts"
+      ],
+      "sourceBoundary": "The runtime consumes the authored Dispel Magic ongoing-spell-ending Surface shape, caller-selected creature/object/magical-effect target identity, caller-supplied target-within-range facts, tracked ongoing Spell Effect facts carried by BattleSpellLightEmitter source spell level, and caller-supplied spellcasting ability check totals for higher-level contested spells. It owns Magic Action and Spell Slot spending, target-scoped removal of tracked spell-light emitters whose source spell level is at or below the Dispel Magic slot level, DC 10 plus source spell level check gating for higher-level tracked emitters, and generic object-attached Continual Flame cleanup without dispatching on Continual Flame identity. Broader non-light active spell effects, spell-specific dispel immunities, automatic geometry, and table selection of magical-effect identity remain outside this subset boundary.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING"
+      ],
+      "title": "Spell invocation ends tracked ongoing spell effects on a selected target",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dispel-magic.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.metamagic-cast-governor-quickened",
+      "profileKind": "bonus-action",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-resources.ts",
+        "packages/battle-runtime/src/battle-subjects.ts"
+      ],
+      "sourceBoundary": "The runtime consumes Character Battle Metamagic effectKind, stackingMode, Sorcery Point cost facts, and the existing Font of Magic point-pool resource. It admits selected Quickened Spell facts for supported direct Hit Point restoration action-casting Spell Invocation shapes, enforces known-option and Sorcery Point affordability gates, enforces one-option-per-spell before option-specific support, rejects unsupported second-option effects instead of charging inert Metamagic, spends Bonus Action, Spell Slot, and Sorcery Point resources, and applies the same-turn level-1-plus spell-cast prohibition through a level-1-plus spell turn fact rather than a Spell Slot-only proxy. Quickened action-casting spell procedures beyond direct Hit Point restoration remain tracked by L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS, and this profile does not claim Sorcery Incarnate, Arcane Apotheosis, or non-Quickened option effects.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED"
+      ],
+      "title": "Unit feature admits Metamagic selections and rewrites Quickened action spells to Bonus Action",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 109,
-        "numerator": 56,
-        "percent": "51.4%"
+        "denominator": 117,
+        "numerator": 75,
+        "percent": "64.1%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 109,
-        "numerator": 89,
-        "percent": "81.7%"
+        "denominator": 117,
+        "numerator": 104,
+        "percent": "88.9%"
       }
     },
     "profileKinds": [
@@ -3569,26 +3799,54 @@
         "profileKind": "bonus-action"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+            "runtime": "character-sheet",
+            "status": "covered",
+            "title": "Character Sheet non-slot feature-resource spend, recovery, reset, conversion, and battle bridge transitions"
+          }
+        ],
         "profileId": "character-sheet.healing-resource-action",
         "profileKind": "character-sheet"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS",
+            "runtime": "character-sheet",
+            "status": "covered",
+            "title": "Character Sheet Spell Slot, created Spell Slot, Pact Slot, Arcane Recovery, and Magical Cunning transitions"
+          }
+        ],
         "profileId": "character-sheet.short-rest-spell-slot-recovery",
         "profileKind": "character-sheet"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION",
+            "runtime": "character-sheet",
+            "status": "covered",
+            "title": "Character Sheet spellbook Ritual invocation projects from existing spellbook Spell Access and Ritual-tagged Spell Definitions"
+          }
+        ],
         "profileId": "character-sheet.spellbook-ritual-invocation",
         "profileKind": "character-sheet"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "SHEET.WEAPON_MASTERY.RESELECTION",
+            "runtime": "character-sheet",
+            "status": "covered",
+            "title": "Character Sheet Long Rest Weapon Mastery reselection replaces selected class-choice refs from Surface feature eligibility"
+          }
+        ],
         "profileId": "character-sheet.weapon-mastery-reselection",
         "profileKind": "character-sheet"
       },
@@ -3719,6 +3977,19 @@
           }
         ],
         "profileId": "spell.invocation-fog-cloud-obscurement",
+        "profileKind": "table-caller"
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Darkness point-origin magical Darkness area identity, visibility/light witness consequences, Concentration ownership, and cleanup"
+          }
+        ],
+        "profileId": "spell.invocation-magical-darkness-point-origin",
         "profileKind": "table-caller"
       },
       {
@@ -4305,65 +4576,71 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
-            "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+            "obligationId": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
             "runtime": "character-creation",
-            "status": "needs-qnt-owner",
-            "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+            "status": "covered",
+            "title": "Character Creation finalizes class-feature feat choices as selected CharacterBuild class-choice refs without owning selected feat behavior"
           }
         ],
         "profileId": "character-creation.class-feature-feat-choice",
         "profileKind": "character-creation"
       },
       {
-        "joinStatus": "mapped-open",
-        "obligations": [
-          {
-            "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
-            "runtime": "character-creation",
-            "status": "needs-qnt-owner",
-            "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
-          }
-        ],
+        "joinStatus": "unmapped",
+        "obligations": [],
         "profileId": "character-creation.class-feature-advancement-replacement",
         "profileKind": "character-creation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
-            "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+            "obligationId": "CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT",
             "runtime": "character-creation",
-            "status": "needs-qnt-owner",
-            "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+            "status": "covered",
+            "title": "Character Creation Fighter class-level gain replacement rewrites durable CharacterBuild progression and selected Fighting Style ownership without draft state"
+          }
+        ],
+        "profileId": "character-creation.fighter-fighting-style-advancement-replacement",
+        "profileKind": "character-creation"
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION",
+            "runtime": "character-creation",
+            "status": "covered",
+            "title": "Character Creation Warlock Pact Magic Spell Access and Pact Slot progression from Surface class facts through build finalization and Warlock class-level gains"
           }
         ],
         "profileId": "character-creation.warlock-pact-magic-advancement",
         "profileKind": "character-creation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
-            "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+            "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
             "runtime": "character-creation",
-            "status": "needs-qnt-owner",
-            "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+            "status": "covered",
+            "title": "Character Creation finalizes Weapon Mastery weapon choices as selected CharacterBuild class-choice refs without owning selected mastery-property behavior"
           }
         ],
         "profileId": "character-creation.weapon-mastery-choice",
         "profileKind": "character-creation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
-            "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+            "obligationId": "CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE",
             "runtime": "character-creation",
-            "status": "needs-qnt-owner",
-            "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+            "status": "covered",
+            "title": "Character Creation Warlock Eldritch Invocation selection, level-gain count, prerequisite, repeatable choice, replacement, and duplicate-selection lifecycle without owning selected Eldritch Invocation runtime behavior"
           }
         ],
         "profileId": "character-creation.eldritch-invocation-choice",
@@ -4413,44 +4690,106 @@
         "profileKind": "character-sheet"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS",
+            "runtime": "character-sheet",
+            "status": "covered",
+            "title": "Character Sheet Spell Slot, created Spell Slot, Pact Slot, Arcane Recovery, and Magical Cunning transitions"
+          }
+        ],
         "profileId": "character-sheet.pact-slot-recovery",
         "profileKind": "character-sheet"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+            "runtime": "character-sheet",
+            "status": "covered",
+            "title": "Character Sheet non-slot feature-resource spend, recovery, reset, conversion, and battle bridge transitions"
+          }
+        ],
         "profileId": "character-sheet.class-feature-use-count-resource",
         "profileKind": "character-sheet"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+            "runtime": "character-sheet",
+            "status": "covered",
+            "title": "Character Sheet non-slot feature-resource spend, recovery, reset, conversion, and battle bridge transitions"
+          }
+        ],
         "profileId": "character-sheet.class-feature-point-pool-resource",
         "profileKind": "character-sheet"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+            "runtime": "character-sheet",
+            "status": "covered",
+            "title": "Character Sheet non-slot feature-resource spend, recovery, reset, conversion, and battle bridge transitions"
+          }
+        ],
         "profileId": "character-sheet.font-of-magic-slot-to-sorcery-points",
         "profileKind": "character-sheet"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+            "runtime": "character-sheet",
+            "status": "covered",
+            "title": "Character Sheet non-slot feature-resource spend, recovery, reset, conversion, and battle bridge transitions"
+          }
+        ],
         "profileId": "character-sheet.font-of-magic-sorcery-points-to-spell-slot",
         "profileKind": "character-sheet"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+            "runtime": "character-sheet",
+            "status": "covered",
+            "title": "Character Sheet non-slot feature-resource spend, recovery, reset, conversion, and battle bridge transitions"
+          }
+        ],
+        "profileId": "character-sheet.metamagic-battle-resource-bridge",
+        "profileKind": "character-sheet"
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+            "runtime": "character-sheet",
+            "status": "covered",
+            "title": "Character Sheet non-slot feature-resource spend, recovery, reset, conversion, and battle bridge transitions"
+          }
+        ],
         "profileId": "character-sheet.class-feature-long-rest-use-state",
         "profileKind": "character-sheet"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+            "runtime": "character-sheet",
+            "status": "covered",
+            "title": "Character Sheet non-slot feature-resource spend, recovery, reset, conversion, and battle bridge transitions"
+          }
+        ],
         "profileId": "character-sheet.monk-uncanny-metabolism-initiative-recovery",
         "profileKind": "character-sheet"
       },
@@ -4600,6 +4939,50 @@
         "obligations": [],
         "profileId": "spell.invocation-object-contact-damage",
         "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-gust-of-wind-line",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
+            "runtime": "battle",
+            "status": "needs-parity-witness",
+            "title": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders"
+          }
+        ],
+        "profileId": "spell.invocation-magic-weapon-enhancement",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+          }
+        ],
+        "profileId": "spell.invocation-web-restraint-hazard",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-ongoing-spell-ending",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "unit-feature.metamagic-cast-governor-quickened",
+        "profileKind": "bonus-action"
       }
     ],
     "sourceArtifacts": {
@@ -4610,9 +4993,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 132,
-          "numerator": 75,
-          "percent": "56.8%"
+          "denominator": 135,
+          "numerator": 85,
+          "percent": "63%"
         }
       },
       "units": [
@@ -5626,32 +6009,32 @@
           "unitId": "fighter_extra_attack"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                  "obligationId": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
                   "runtime": "character-creation",
-                  "status": "needs-qnt-owner",
-                  "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+                  "status": "covered",
+                  "title": "Character Creation finalizes class-feature feat choices as selected CharacterBuild class-choice refs without owning selected feat behavior"
                 }
               ],
               "profileId": "character-creation.class-feature-feat-choice",
               "profileKind": "character-creation"
             },
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                  "obligationId": "CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT",
                   "runtime": "character-creation",
-                  "status": "needs-qnt-owner",
-                  "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+                  "status": "covered",
+                  "title": "Character Creation Fighter class-level gain replacement rewrites durable CharacterBuild progression and selected Fighting Style ownership without draft state"
                 }
               ],
-              "profileId": "character-creation.class-feature-advancement-replacement",
+              "profileId": "character-creation.fighter-fighting-style-advancement-replacement",
               "profileKind": "character-creation"
             }
           ],
@@ -5938,6 +6321,18 @@
             }
           ],
           "unitId": "healing_word"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-object-contact-damage",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "heat_metal"
         },
         {
           "joinStatus": "mapped-open",
@@ -6337,6 +6732,25 @@
           "unitId": "magic_missile"
         },
         {
+          "joinStatus": "mapped-open",
+          "profiles": [
+            {
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
+                  "runtime": "battle",
+                  "status": "needs-parity-witness",
+                  "title": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders"
+                }
+              ],
+              "profileId": "spell.invocation-magic-weapon-enhancement",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "magic_weapon"
+        },
+        {
           "joinStatus": "covered",
           "profiles": [
             {
@@ -6561,14 +6975,28 @@
               "profileKind": "character-creation"
             },
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+                  "runtime": "character-sheet",
+                  "status": "covered",
+                  "title": "Character Sheet non-slot feature-resource spend, recovery, reset, conversion, and battle bridge transitions"
+                }
+              ],
               "profileId": "character-sheet.class-feature-long-rest-use-state",
               "profileKind": "character-sheet"
             },
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+                  "runtime": "character-sheet",
+                  "status": "covered",
+                  "title": "Character Sheet non-slot feature-resource spend, recovery, reset, conversion, and battle bridge transitions"
+                }
+              ],
               "profileId": "character-sheet.monk-uncanny-metabolism-initiative-recovery",
               "profileKind": "character-sheet"
             }
@@ -6652,11 +7080,18 @@
           "unitId": "paladin_extra_attack"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+                  "runtime": "character-sheet",
+                  "status": "covered",
+                  "title": "Character Sheet non-slot feature-resource spend, recovery, reset, conversion, and battle bridge transitions"
+                }
+              ],
               "profileId": "character-sheet.healing-resource-action",
               "profileKind": "character-sheet"
             }
@@ -6683,24 +7118,31 @@
           "unitId": "paladin_paladins_smite"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                  "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
                   "runtime": "character-creation",
-                  "status": "needs-qnt-owner",
-                  "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+                  "status": "covered",
+                  "title": "Character Creation finalizes Weapon Mastery weapon choices as selected CharacterBuild class-choice refs without owning selected mastery-property behavior"
                 }
               ],
               "profileId": "character-creation.weapon-mastery-choice",
               "profileKind": "character-creation"
             },
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "SHEET.WEAPON_MASTERY.RESELECTION",
+                  "runtime": "character-sheet",
+                  "status": "covered",
+                  "title": "Character Sheet Long Rest Weapon Mastery reselection replaces selected class-choice refs from Surface feature eligibility"
+                }
+              ],
               "profileId": "character-sheet.weapon-mastery-reselection",
               "profileKind": "character-sheet"
             }
@@ -6878,24 +7320,31 @@
           "unitId": "ranger_roving"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                  "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
                   "runtime": "character-creation",
-                  "status": "needs-qnt-owner",
-                  "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+                  "status": "covered",
+                  "title": "Character Creation finalizes Weapon Mastery weapon choices as selected CharacterBuild class-choice refs without owning selected mastery-property behavior"
                 }
               ],
               "profileId": "character-creation.weapon-mastery-choice",
               "profileKind": "character-creation"
             },
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "SHEET.WEAPON_MASTERY.RESELECTION",
+                  "runtime": "character-sheet",
+                  "status": "covered",
+                  "title": "Character Sheet Long Rest Weapon Mastery reselection replaces selected class-choice refs from Surface feature eligibility"
+                }
+              ],
               "profileId": "character-sheet.weapon-mastery-reselection",
               "profileKind": "character-sheet"
             }
@@ -7104,24 +7553,31 @@
           "unitId": "rogue_uncanny_dodge"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                  "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
                   "runtime": "character-creation",
-                  "status": "needs-qnt-owner",
-                  "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+                  "status": "covered",
+                  "title": "Character Creation finalizes Weapon Mastery weapon choices as selected CharacterBuild class-choice refs without owning selected mastery-property behavior"
                 }
               ],
               "profileId": "character-creation.weapon-mastery-choice",
               "profileKind": "character-creation"
             },
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "SHEET.WEAPON_MASTERY.RESELECTION",
+                  "runtime": "character-sheet",
+                  "status": "covered",
+                  "title": "Character Sheet Long Rest Weapon Mastery reselection replaces selected class-choice refs from Surface feature eligibility"
+                }
+              ],
               "profileId": "character-sheet.weapon-mastery-reselection",
               "profileKind": "character-sheet"
             }
@@ -7627,42 +8083,29 @@
           "unitId": "warding_bond"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                  "obligationId": "CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE",
                   "runtime": "character-creation",
-                  "status": "needs-qnt-owner",
-                  "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+                  "status": "covered",
+                  "title": "Character Creation Warlock Eldritch Invocation selection, level-gain count, prerequisite, repeatable choice, replacement, and duplicate-selection lifecycle without owning selected Eldritch Invocation runtime behavior"
                 }
               ],
               "profileId": "character-creation.eldritch-invocation-choice",
               "profileKind": "character-creation"
             },
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                  "obligationId": "CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION",
                   "runtime": "character-creation",
-                  "status": "needs-qnt-owner",
-                  "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
-                }
-              ],
-              "profileId": "character-creation.class-feature-advancement-replacement",
-              "profileKind": "character-creation"
-            },
-            {
-              "joinStatus": "mapped-open",
-              "obligations": [
-                {
-                  "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
-                  "runtime": "character-creation",
-                  "status": "needs-qnt-owner",
-                  "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+                  "status": "covered",
+                  "title": "Character Creation Warlock Pact Magic Spell Access and Pact Slot progression from Surface class facts through build finalization and Warlock class-level gains"
                 }
               ],
               "profileId": "character-creation.warlock-pact-magic-advancement",
@@ -7672,11 +8115,18 @@
           "unitId": "warlock_eldritch_invocations"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS",
+                  "runtime": "character-sheet",
+                  "status": "covered",
+                  "title": "Character Sheet Spell Slot, created Spell Slot, Pact Slot, Arcane Recovery, and Magical Cunning transitions"
+                }
+              ],
               "profileId": "character-sheet.pact-slot-recovery",
               "profileKind": "character-sheet"
             }
@@ -7684,11 +8134,37 @@
           "unitId": "warlock_magical_cunning"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.invocation-web-restraint-hazard",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "web"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS",
+                  "runtime": "character-sheet",
+                  "status": "covered",
+                  "title": "Character Sheet Spell Slot, created Spell Slot, Pact Slot, Arcane Recovery, and Magical Cunning transitions"
+                }
+              ],
               "profileId": "character-sheet.short-rest-spell-slot-recovery",
               "profileKind": "character-sheet"
             }
@@ -7696,11 +8172,18 @@
           "unitId": "wizard_arcane_recovery"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION",
+                  "runtime": "character-sheet",
+                  "status": "covered",
+                  "title": "Character Sheet spellbook Ritual invocation projects from existing spellbook Spell Access and Ritual-tagged Spell Definitions"
+                }
+              ],
               "profileId": "character-sheet.spellbook-ritual-invocation",
               "profileKind": "character-sheet"
             }
@@ -9386,9 +9869,9 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused character-creation runtime tests cover CharacterBuild class-level gain with Fighter Fighting Style replacement as one advancement operation.",
+      "note": "Focused character-creation selected-identity MBT covers CharacterBuild class-level gain with Fighter Fighting Style replacement as one advancement operation.",
       "profileIds": [
-        "character-creation.class-feature-advancement-replacement"
+        "character-creation.fighter-fighting-style-advancement-replacement"
       ],
       "taskId": "L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE"
     },
@@ -9396,8 +9879,7 @@
       "claimKind": "completed-runtime-parity",
       "note": "Focused character-creation runtime tests cover Warlock level gains that add invocations from the Surface invocation count table, optional Warlock-level replacement with prerequisite gating, prerequisite-retention lockout, Repeatable invocation associated-choice identity, and duplicate-selection enforcement.",
       "profileIds": [
-        "character-creation.eldritch-invocation-choice",
-        "character-creation.class-feature-advancement-replacement"
+        "character-creation.eldritch-invocation-choice"
       ],
       "taskId": "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE"
     },
@@ -9406,8 +9888,7 @@
       "note": "Focused character-creation runtime tests cover Warlock Pact Magic advancement from Surface progression facts, including cantrip and prepared-spell gains, Warlock-level cantrip and prepared-spell replacement, Pact Slot count and slot-level projection, and invocation prerequisite checks against freshly updated Warlock cantrip facts.",
       "profileIds": [
         "character-creation.warlock-pact-magic-advancement",
-        "character-creation.eldritch-invocation-choice",
-        "character-creation.class-feature-advancement-replacement"
+        "character-creation.eldritch-invocation-choice"
       ],
       "taskId": "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
     },
@@ -9445,6 +9926,14 @@
     },
     {
       "claimKind": "completed-runtime-parity",
+      "note": "Focused Character Creation runtime tests cover Druid level 2 Wild Companion feature-retention source facts from the Surface class feature while companion lifecycle execution stays owned by Find Familiar and Druid Wild Shape follow-up boundaries.",
+      "profileIds": [
+        "character-creation.class-feature-source-fact-projection"
+      ],
+      "taskId": "L12G-AUTHOR-DRUID-WILD-COMPANION"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
       "note": "Focused Character Creation, Character Sheet, app, MCP session, and Character Sheet battle handoff tests cover Druid level 2 and level 4 Wild Shape resource and character-fact projection from the installed Surface feature, Druid-class threshold tiers, partial Short Rest/full Long Rest reset facts, rounded-down duration, known-form count thresholds, Beast-form eligibility, explicit selected known Beast form identities, sheet expended-use and known-form tracking, typed rejection of omitted known-form identities, one-use Short Rest recovery, Long Rest reset, one eligible known-form replacement on Long Rest, and preservation of known-form state across battle handoff. Shape-shifting execution remains split to follow-up runtime and promoted parity work.",
       "profileIds": [
         "character-creation.class-feature-resource-projection",
@@ -9469,6 +9958,28 @@
         "character-sheet.class-feature-point-pool-resource"
       ],
       "taskId": "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Character Creation tests cover Sorcerer level gains that consume the installed Metamagic class-level replacement fact, replace exactly one currently known Metamagic option with one currently unknown option while preserving known-option count, reject same-option, unknown replacement-source, and duplicate replacement or gain choices, and derive level 10 and 17 option gains from the Surface choice-count thresholds without duplicating class progression or option roster state. Cast-time Metamagic option execution remains split to the resource bridge, cast governor/Quickened, save-option, cast-property, damage-shape, and reroll follow-up tasks recorded on the sorcerer_metamagic Unit claim.",
+      "profileIds": [
+        "character-creation.class-feature-advancement-replacement"
+      ],
+      "taskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-ADVANCEMENT-REPLACEMENT"
+    },
+    {
+      "claimKind": "accepted-follow-up-split",
+      "note": "Task 10 closes the monolithic Sorcerer Metamagic cast-time execution follow-up by synchronizing the sorcerer_metamagic Unit claim and runnable Loop C plan around six executable follow-up tasks: L12G-FOLLOWUP-SORCERER-METAMAGIC-BATTLE-RESOURCE-BRIDGE, L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED, L12G-FOLLOWUP-SORCERER-METAMAGIC-SAVE-OPTIONS, L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-PROPERTY-OPTIONS, L12G-FOLLOWUP-SORCERER-METAMAGIC-DAMAGE-SHAPE-OPTIONS, and L12G-FOLLOWUP-SORCERER-METAMAGIC-REROLL-OPTIONS. No runtime profile is claimed by this closure task; the Unit remains profile-subset-supported and blocked by the executable split.",
+      "profileIds": [],
+      "taskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Character Battle projects selected Sorcerer Metamagic facts as effectKind, stackingMode, and Sorcery Point cost facts, carries the shared Font of Magic Sorcery Point point-pool resource into battle state, exposes typed point-pool spending without a Metamagic-local resource pool, and persists battle point-pool spending back to Character Sheet pointPoolResource expenditure. Cast-time Metamagic admission and option effects remain deferred to the narrower Metamagic follow-up profiles.",
+      "profileIds": [
+        "character-sheet.metamagic-battle-resource-bridge"
+      ],
+      "taskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-BATTLE-RESOURCE-BRIDGE"
     },
     {
       "claimKind": "completed-runtime-parity",
@@ -9698,7 +10209,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests and package-local QNT self-tests cover Heat Metal catalog admission, manufactured metal object target fill validation, contact-creature witness fill validation, Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration, durable object-contact spell occurrence state, immediate Fire damage with slot scaling, later-turn Bonus Action repeat damage requiring object-within-range and contact witnesses, no same-turn repeat discovery, Concentration cleanup, and no-contact casts without damage-roll holes. Holding/wearing saves, drop outcomes, and fallback Disadvantage remain split to L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY.",
+      "note": "Focused battle-runtime tests and package-local QNT self-tests cover the Heat Metal contact-damage slice: catalog admission, manufactured metal object target fill validation, contact-creature witness fill validation, Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration, durable object-contact spell occurrence state, immediate Fire damage with slot scaling, later-turn Bonus Action repeat damage requiring object-within-range and contact witnesses, no same-turn repeat discovery, Concentration cleanup, and no-contact casts without damage-roll holes.",
       "profileIds": [
         "spell.invocation-object-contact-damage"
       ],
@@ -9711,6 +10222,134 @@
         "spell.invocation-object-contact-damage"
       ],
       "taskId": "L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Package-local promoted Quint facts cover Gust of Wind's Magic Action and level-2-or-higher Spell Slot spend, caster-owned Concentration, caller-supplied self-origin Line identity and direction, table-supplied initial and end-turn save facts, failed-save 15-foot non-Opportunity-Attack push validation, closer-to-caster 2-for-1 Movement cost, Bonus Action Line direction replacement, and end-turn advancement.",
+      "profileIds": [
+        "spell.invocation-gust-of-wind-line"
+      ],
+      "taskId": "L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Gust of Wind Surface admission, self-origin Line targeting projection, cast-time Line area and direction fill validation, Magic Action and Spell Slot spending, active Concentration Line effect recording, failed initial-save push fact validation, end-turn save command discovery and resolution, 2-for-1 Movement cost validation for movement closer to the caster through the Line, Bonus Action direction replacement, and Concentration cleanup.",
+      "profileIds": [
+        "spell.invocation-gust-of-wind-line"
+      ],
+      "taskId": "L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests cover Heat Metal holding-or-wearing support-profile admission, caller-supplied spell-object holding/wearing witnesses, Constitution Saving Throw holes against the caster Spell Save DC, successful saves with no drop or penalty, failed-save typed drop resolution, dropped-object outcomes without inventory simulation, fallback Attack Roll and Ability Check Disadvantage when the object is not dropped, same-occurrence penalty replacement, caster-turn-start expiry, and Concentration cleanup.",
+      "profileIds": [
+        "spell.invocation-object-contact-damage"
+      ],
+      "taskId": "L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Package-local battle-runtime Quint self-tests model Heat Metal failed holding/wearing saves with not-dropped fallback penalties, Attack Roll and Ability Check Disadvantage projections, target-turn persistence, caster-turn-start expiry, Concentration cleanup, dropped-object outcomes with no fallback penalty, and successful saves with no drop or penalty.",
+      "profileIds": [
+        "spell.invocation-object-contact-damage"
+      ],
+      "taskId": "L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Package-local promoted Quint facts cover Magic Weapon's Bonus Action and level-2-or-higher Spell Slot spend, nonmagical weapon target witness, exact weapon item enhancement state, +1/+2/+3 slot-tiered attack and damage bonuses, same-caster recast replacement, other-caster active-effect rejection, and duration cleanup.",
+      "profileIds": [
+        "spell.invocation-magic-weapon-enhancement"
+      ],
+      "taskId": "L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests cover Magic Weapon Surface admission, target item fill validation, Bonus Action and Spell Slot spending, exact item magic status projection, exact item attack-roll and weapon damage-roll bonuses, same-caster recast replacement, other-caster active-effect rejection, and duration cleanup.",
+      "profileIds": [
+        "spell.invocation-magic-weapon-enhancement"
+      ],
+      "taskId": "L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Package-local promoted Quint facts cover Web's Magic Action and level-2-or-higher Spell Slot spend, caller-supplied Cube area identity, caster-owned Concentration hazard, first-entry-on-a-turn Dexterity save ledger and reset, start-turn Dexterity saves, failed-save Restrained effect, Strength (Athletics) escape, no-longer-in-area cleanup, area removal, and duration cleanup.",
+      "profileIds": [
+        "spell.invocation-web-restraint-hazard"
+      ],
+      "taskId": "L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Web Surface admission, Web Cube area fill validation, Magic Action and Spell Slot spending, active Concentration area effect recording, table-triggered entry and start-turn save commands, once-per-turn entry-save limiting, failed-save Restrained application, Strength (Athletics) escape, no-longer-in-area cleanup, area-removal Concentration cleanup, and duration cleanup.",
+      "profileIds": [
+        "spell.invocation-web-restraint-hazard"
+      ],
+      "taskId": "L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Package-local promoted Quint facts cover Web's 20-foot active Cube side length, the shared active-area Difficult Terrain movement-cost helper used by Grease and Web, and removal of Web movement cost when the active Web area is removed. Anchoring/depth/fire-section clauses are closed as table/spatial/environment witnesses without independent map-section state.",
+      "profileIds": [
+        "spell.invocation-web-restraint-hazard"
+      ],
+      "taskId": "L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Web active-effect side length, areaDifficultTerrain movement validation for active Web areas, noncumulative Difficult Terrain cost rejection and acceptance, Lightly Obscured point-origin Cube obscurement projection, and Lightly Obscured Perception Disadvantage projection. Anchoring/layering, flat-surface depth, and fire-exposed 5-foot Cube damage remain table/environment-owned closures.",
+      "profileIds": [
+        "spell.invocation-web-restraint-hazard"
+      ],
+      "taskId": "L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Package-local promoted Quint facts cover Darkness's Magic Action and level-2-or-higher Spell Slot spend, caller-supplied 15-foot point-origin Sphere identity, caster-owned Concentration up to 10 minutes, magical Darkness area projection that blocks ordinary sight and Darkvision, nonmagical-light denial as a witness consequence, and Concentration plus duration cleanup.",
+      "profileIds": [
+        "spell.invocation-magical-darkness-point-origin"
+      ],
+      "taskId": "L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Darkness Surface-profile admission, level-2-or-higher Spell Slot filtering, spell-area fill validation, Magic Action and Spell Slot spending, active caster-owned magical Darkness zone projection, ordinary-sight and Darkvision Heavily Obscured consequences, nonmagical-light denial through caller-supplied area facts, and Concentration plus duration cleanup. Object-origin and spell-created-light overlap dispel behavior remain deferred follow-ups.",
+      "profileIds": [
+        "spell.invocation-magical-darkness-point-origin"
+      ],
+      "taskId": "L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Dispel Magic catalog admission, ongoing creature/object/magical-effect target hole admission, target-within-range fact validation, automatic ending for tracked ongoing spell-light effects at or below the Dispel Magic slot level, DC 10 plus spell level spellcasting ability checks for higher-level tracked effects, higher-slot automatic ending, and generic object-attached Continual Flame cleanup without a spell-specific remover registry.",
+      "profileIds": [
+        "spell.invocation-ongoing-spell-ending"
+      ],
+      "taskId": "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint light facts model per-emitter tracked ongoing spell-light occurrences with sourceEffectId and sourceSpellLevel, plus the generic Dispel Magic ending gate: automatic ending at or below the Dispel Magic slot level, DC 10 plus source spell level check success for higher-level tracked emitters, failed-check retention, higher-slot automatic ending, mixed-level object-target emitter sets, magical-effect targeting by sourceEffectId, and object-attached Continual Flame cleanup through generic tracked light-emitter facts.",
+      "profileIds": [
+        "spell.invocation-ongoing-spell-ending"
+      ],
+      "taskId": "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Package-local battle-runtime Quint facts model typed Metamagic option admission, known-option and Sorcery Point gates, one-option-per-spell plus stacking exception facts, Quickened Spell rewriting supported direct Hit Point restoration action spells to Bonus Action, rejection of unsupported second-option effects before Sorcery Point spending, Bonus Action rather than Magic Action spending, Spell Slot turn ledger commit, level-1-plus spell cast turn fact commit, and rejection after a same-turn level-1-plus spell cast including a non-slot prior cast witness.",
+      "profileIds": [
+        "unit-feature.metamagic-cast-governor-quickened"
+      ],
+      "taskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Quickened Spell discovery as a Bonus Action subject for supported direct Hit Point restoration action spells, known-option selection, Sorcery Point affordability and spending through the shared Font of Magic point-pool resource, one-option-per-spell enforcement, stacking-exception facts without admitting unsupported second-option effects, Bonus Action plus Spell Slot spending with Magic Action preserved, same-turn level-1-plus spell-cast prohibition through a turn fact that is not a Spell Slot-only proxy, and rejection of unsupported non-Quickened Metamagic selections.",
+      "profileIds": [
+        "unit-feature.metamagic-cast-governor-quickened"
+      ],
+      "taskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED"
     }
   ],
   "units": [
@@ -10106,7 +10745,7 @@
         },
         "profileIds": [
           "character-creation.class-feature-feat-choice",
-          "character-creation.class-feature-advancement-replacement"
+          "character-creation.fighter-fighting-style-advancement-replacement"
         ],
         "supportedMechanics": [
           "Level 1 Fighter character creation discovers the Fighting Style feat choice from the Surface class-feature record",
@@ -10152,23 +10791,21 @@
           ]
         },
         {
-          "id": "character-creation.class-feature-advancement-replacement",
+          "id": "character-creation.fighter-fighting-style-advancement-replacement",
           "profileKind": "character-creation",
           "qntOwners": [],
           "runtimeOwners": [
-            "packages/character-creation-runtime/src/index.ts"
+            "packages/character-creation-runtime/src/character-build-advancement.ts"
           ],
-          "sourceBoundary": "CharacterBuild progression plus Surface class-feature and class spellcasting facts; replacement and gain choices are accepted only as part of a class-level gain and rewrite existing CharacterBuild feature refs, selected invocation ownership, or Warlock Pact Magic spellcasting facts without parallel selected-option state.",
+          "sourceBoundary": "CharacterBuild Fighter progression plus the retained Surface Fighting Style feature ref; replacement is accepted only as part of a Fighter level gain and rewrites the selected Fighting Style feat ref without retaining draft state or duplicating selected feat execution.",
           "taskRefs": [
-            "L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE",
-            "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE",
-            "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
+            "L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE"
           ],
-          "title": "Character Creation advances CharacterBuild class levels with class-feature replacement and gain choices",
+          "title": "Character Creation advances Fighter levels with Fighting Style feat replacement",
           "verificationOwners": [
             {
-              "kind": "runtime-test",
-              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+              "kind": "focused-mbt",
+              "ownerPath": "packages/character-creation-runtime/src/fighter-fighting-style-selected-identity.mbt.test.ts"
             }
           ]
         }
@@ -10272,6 +10909,11 @@
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "AT-L1-04"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1D2-WEAPON-MASTERY-CONTAINERS"
         }
       ],
       "executableMechanics": true,
@@ -10895,6 +11537,11 @@
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "AT-L1-04"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1D2-WEAPON-MASTERY-CONTAINERS"
         }
       ],
       "executableMechanics": true,
@@ -11624,7 +12271,7 @@
           }
         ],
         "profileIds": [
-          "character-creation.class-feature-advancement-replacement"
+          "character-creation.class-feature-source-fact-projection"
         ],
         "supportedMechanics": [
           "Wild Companion is authored as a Druid level-2 Surface class-feature record that requires a Magic action, links to the existing Find Familiar Spell Definition, names the SRD spend choices as a Spell Slot or one use of the existing Wild Shape feature resource, removes Material components, fixes the familiar mode to Fey, and adds the caster-finished-Long-Rest disappearance boundary.",
@@ -11638,19 +12285,18 @@
       "kind": "class_feature",
       "profiles": [
         {
-          "id": "character-creation.class-feature-advancement-replacement",
+          "id": "character-creation.class-feature-source-fact-projection",
           "profileKind": "character-creation",
           "qntOwners": [],
           "runtimeOwners": [
             "packages/character-creation-runtime/src/index.ts"
           ],
-          "sourceBoundary": "CharacterBuild progression plus Surface class-feature and class spellcasting facts; replacement and gain choices are accepted only as part of a class-level gain and rewrite existing CharacterBuild feature refs, selected invocation ownership, or Warlock Pact Magic spellcasting facts without parallel selected-option state.",
+          "sourceBoundary": "Surface class-feature records retained by class progression can project source links to other owned facts, such as Wild Companion retaining the sibling Druid feature ref set or Uncanny Metabolism linking to the shared Monk's Focus resource and existing Martial Arts die source, without storing duplicate resource caps, die tiers, or class progression state.",
           "taskRefs": [
-            "L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE",
-            "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE",
-            "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
+            "L12G-AUTHOR-DRUID-WILD-COMPANION",
+            "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS"
           ],
-          "title": "Character Creation advances CharacterBuild class levels with class-feature replacement and gain choices",
+          "title": "Character Creation projects retained class-feature source links into CharacterBuild facts",
           "verificationOwners": [
             {
               "kind": "runtime-test",
@@ -12082,8 +12728,9 @@
           "runtimeOwners": [
             "packages/character-creation-runtime/src/index.ts"
           ],
-          "sourceBoundary": "Surface class-feature records retained by class progression can project source links to other owned facts, such as Uncanny Metabolism linking to the shared Monk's Focus resource and existing Martial Arts die source, without storing duplicate resource caps, die tiers, or class progression state.",
+          "sourceBoundary": "Surface class-feature records retained by class progression can project source links to other owned facts, such as Wild Companion retaining the sibling Druid feature ref set or Uncanny Metabolism linking to the shared Monk's Focus resource and existing Martial Arts die source, without storing duplicate resource caps, die tiers, or class progression state.",
           "taskRefs": [
+            "L12G-AUTHOR-DRUID-WILD-COMPANION",
             "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS"
           ],
           "title": "Character Creation projects retained class-feature source links into CharacterBuild facts",
@@ -12871,14 +13518,16 @@
           "character-creation.class-feature-resource-projection",
           "character-sheet.class-feature-point-pool-resource",
           "character-sheet.font-of-magic-slot-to-sorcery-points",
-          "character-sheet.font-of-magic-sorcery-points-to-spell-slot"
+          "character-sheet.font-of-magic-sorcery-points-to-spell-slot",
+          "character-sheet.metamagic-battle-resource-bridge"
         ],
         "supportedMechanics": [
           "Character Creation projects Sorcerer level 2 Font of Magic retained feature and shared Sorcery Point point-pool facts from the installed Surface feature",
           "Character Sheet tracks Sorcery Point expenditure, derives the Sorcerer-level cap, and restores expended Sorcery Points on Long Rest",
           "Character Sheet converts a source-aware ordinary or created Spell Slot into Sorcery Points, requiring explicit source selection when both sources of the same level are available",
           "Character Sheet transforms Sorcery Points into created Spell Slot delta state from the Creating Spell Slots table, enforcing point cost, minimum Sorcerer level, and level-5 cap",
-          "Created Spell Slot delta state is aggregated for Character Battle init, preserved exactly when handoff is source-unambiguous, rejected when handoff is source-ambiguous, and cleared on Long Rest"
+          "Created Spell Slot delta state is aggregated for Character Battle init, preserved exactly when handoff is source-unambiguous, rejected when handoff is source-ambiguous, and cleared on Long Rest",
+          "Character Battle carries the existing Font of Magic Sorcery Point point-pool into battle state for Metamagic, exposes remaining points without a Metamagic-local pool, and persists battle point spending back to the Character Sheet pointPoolResource expenditure"
         ],
         "tag": "profile-subset-supported"
       },
@@ -12982,6 +13631,37 @@
               "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
             }
           ]
+        },
+        {
+          "id": "character-sheet.metamagic-battle-resource-bridge",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/index.ts",
+            "packages/character-battle-runtime/src/index.ts",
+            "packages/character-battle-runtime/src/battle-creature-init.ts",
+            "packages/battle-runtime/src/character-battle-resources.ts",
+            "packages/battle-runtime/src/battle-reducer/creature-state.ts"
+          ],
+          "sourceBoundary": "Character Sheet preserves selected Metamagic option facts and validates that they match the retained Sorcerer Metamagic feature before Character Battle consumes those CharacterBuild facts and the existing Font of Magic point-pool resource projection. Battle state stores only the shared Sorcery Point point-pool remaining points plus Metamagic effectKind, stackingMode, and cost facts; it does not create a Metamagic-local pool or execute cast-time Metamagic options. Character Sheet handoff persists battle point-pool spending back as the Font of Magic pointPoolResource expenditure.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-SORCERER-METAMAGIC-BATTLE-RESOURCE-BRIDGE"
+          ],
+          "title": "Character Battle carries Metamagic facts with the shared Sorcery Point pool",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+            }
+          ]
         }
       ],
       "sourceRecordPath": "packages/surface/content/sorcerer_font_of_magic.json",
@@ -12996,38 +13676,77 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-ADVANCEMENT-REPLACEMENT",
-            "mechanic": "Sorcerer-level Metamagic advancement replacement and later option gains: consume the class-level replacement source fact during Sorcerer level gain, replace exactly one known option with one unknown option, and add the two new known options at Sorcerer levels 10 and 17 without duplicating progression or option roster state."
+            "followUpTaskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS",
+            "mechanic": "Quickened Spell for action-casting Spell Invocation procedures beyond the supported direct Hit Point restoration slice: apply the Bonus Action rewrite and level-1-plus spell turn fact to every supported action-casting spell procedure rather than only direct Hit Point restoration."
           },
           {
-            "followUpTaskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION",
-            "mechanic": "Cast-time Metamagic option execution: spend the shared Sorcery Point resource, enforce one-option-per-Spell-Invocation plus Empowered and Seeking exceptions, enforce Quickened level-1-plus spell turn limits, and apply Careful, Distant, Empowered, Extended, Heightened, Quickened, Seeking, Subtle, Transmuted, and Twinned spell modifications."
+            "followUpTaskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-SAVE-OPTIONS",
+            "mechanic": "Careful and Heightened Spell saving throw modifiers: protect a Charisma-modifier-limited selected creature set with automatic save success and no half-damage-on-success, and give one target Disadvantage on saves against the spell."
+          },
+          {
+            "followUpTaskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-PROPERTY-OPTIONS",
+            "mechanic": "Distant, Extended, and Subtle Spell cast-property modifiers: double range only for spells with a range of at least 5 feet or make Touch range 30 feet, double eligible duration to a 24-hour cap plus Concentration save Advantage, and suppress eligible spell components while preserving consumed or priced Material components."
+          },
+          {
+            "followUpTaskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-DAMAGE-SHAPE-OPTIONS",
+            "mechanic": "Transmuted and Twinned Spell shape modifiers: substitute only Acid, Cold, Fire, Lightning, Poison, or Thunder spell damage among that closed set, and increase effective spell level by 1 only for spells whose higher-slot shape targets one additional creature."
+          },
+          {
+            "followUpTaskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-REROLL-OPTIONS",
+            "mechanic": "Empowered and Seeking Spell reroll modifiers: reroll damage dice up to Charisma modifier minimum one and reroll a missed spell attack d20, using the new rolls and preserving the options' different-Metamagic stacking exception."
           }
         ],
         "followUpTasks": [
           {
-            "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-ADVANCEMENT-REPLACEMENT",
-            "mechanic": "Consume the Metamagic replacement source fact during Sorcerer level gain, preserving the known-option count, replacing exactly one known option with one unknown option, and adding the two new known options at Sorcerer levels 10 and 17 from the Surface choice-count thresholds without duplicating progression or option roster state.",
-            "owner": "character-creation-runtime advancement workflow",
-            "requiredOutput": "Production CharacterBuild advancement workflow and focused tests for Sorcerer Metamagic option replacement and level-10/17 option gains, with coverage updated to claim the advancement replacement only after the workflow consumes it.",
-            "title": "Sorcerer Metamagic Advancement Replacement"
+            "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS",
+            "mechanic": "Promote Quickened Spell from direct Hit Point restoration to every supported action-casting Spell Invocation procedure, using typed procedure support gates and the level-1-plus spell cast turn fact for slot and free-cast resources.",
+            "owner": "battle-runtime Spell Invocation discovery and resolution profiles plus package-local Quint parity",
+            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim with focused runtime tests and promoted Quint/runtime parity for Quickened action-to-Bonus-Action rewrite across each supported spell profile without option authored identity dispatch.",
+            "title": "Sorcerer Metamagic Quickened All Action Spells"
           },
           {
-            "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION",
-            "mechanic": "Execute known Metamagic options at spell-cast time by spending the shared Sorcery Point resource projected from Font of Magic, enforcing the one-option-per-spell rule plus Empowered and Seeking stacking exceptions, Quickened level-1-plus spell turn limits, and the option-specific spell modifications for Careful, Distant, Empowered, Extended, Heightened, Quickened, Seeking, Subtle, Transmuted, and Twinned Spell.",
-            "owner": "character-battle-runtime plus battle-runtime spell invocation hooks",
-            "requiredOutput": "Supported runtime profile and owner evidence for Metamagic option execution that consumes the shared Sorcery Point resource rather than a synthetic Metamagic-local point pool.",
-            "title": "Sorcerer Metamagic Cast-Time Option Execution"
+            "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-SAVE-OPTIONS",
+            "mechanic": "Promote Careful Spell and Heightened Spell against supported save-for-half and save-gated spell procedures, including protected-target automatic success with no successful-save damage and one-target Disadvantage on saves against the spell.",
+            "owner": "battle-runtime saving throw spell resolution hooks",
+            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim with typed holes/fills, focused runtime tests, and promoted Quint/runtime parity for Careful and Heightened without option identity dispatch.",
+            "title": "Sorcerer Metamagic Save Options"
+          },
+          {
+            "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-PROPERTY-OPTIONS",
+            "mechanic": "Promote Distant, Extended, and Subtle Spell for supported spell procedures by rewriting range, duration, Concentration-save roll mode, and component requirements from typed spell facts and caller-supplied component/material witnesses.",
+            "owner": "battle-runtime spell invocation profile projection plus concentration and component witness boundaries",
+            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim with focused tests for Distant range changes, Extended duration and Concentration-save Advantage, and Subtle component suppression while preserving consumed or priced Material components.",
+            "title": "Sorcerer Metamagic Cast Property Options"
+          },
+          {
+            "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-DAMAGE-SHAPE-OPTIONS",
+            "mechanic": "Promote Transmuted Spell and Twinned Spell for supported spell procedures by substituting only Acid, Cold, Fire, Lightning, Poison, or Thunder spell damage types and increasing effective spell level by 1 only for spells whose higher-slot profile targets one additional creature.",
+            "owner": "battle-runtime spell damage profile and upcast targeting projection",
+            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim with focused runtime tests and promoted Quint/runtime parity for typed damage-type substitution and higher-slot target-count projection without duplicating spell slot state.",
+            "title": "Sorcerer Metamagic Damage Shape Options"
+          },
+          {
+            "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-REROLL-OPTIONS",
+            "mechanic": "Promote Empowered Spell and Seeking Spell rerolls after damage rolls or missed spell attacks, consuming typed reroll fills, enforcing Charisma-modifier dice limits where applicable, and using the new rolls.",
+            "owner": "battle-runtime damage-roll and spell-attack miss lifecycle",
+            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim with focused runtime tests and promoted Quint/runtime parity for post-roll damage dice rerolls and missed spell attack d20 rerolls while preserving the options' different-Metamagic stacking exception.",
+            "title": "Sorcerer Metamagic Reroll Options"
           }
         ],
         "profileIds": [
           "character-creation.class-feature-option-projection",
-          "character-creation.class-feature-source-fact-projection"
+          "character-creation.class-feature-source-fact-projection",
+          "character-creation.class-feature-advancement-replacement",
+          "character-sheet.metamagic-battle-resource-bridge",
+          "unit-feature.metamagic-cast-governor-quickened"
         ],
         "supportedMechanics": [
           "Character Creation admits same-class Sorcerer level-2 progression, discovers the Metamagic choice container from the installed Surface feature, and finalizes exactly two unique selected Metamagic option ids as CharacterBuild option facts instead of retained option Unit refs",
           "Character Creation projects Metamagic source facts from the retained Surface feature and Sorcerer class level: known-option count thresholds at Sorcerer levels 2, 10, and 17; unique known-option roster; option Sorcery Point costs; Empowered and Seeking stacking exceptions; the one-option-per-spell default; and the shared Font of Magic Sorcery Point resource link without duplicating the Sorcery Point pool",
-          "Character Sheet parsing preserves the selected CharacterBuild Metamagic option facts and rejects stored Metamagic option selections that do not match the retained feature and Sorcerer-level option count"
+          "Character Creation consumes the Metamagic class-level replacement fact in the Sorcerer level-gain workflow, replacing exactly one currently known Metamagic option with one currently unknown option while preserving the known-option count, and derives Sorcerer level 10 and 17 option gains from the installed Surface choice-count thresholds without duplicating class progression or option roster state",
+          "Character Sheet parsing preserves the selected CharacterBuild Metamagic option facts and rejects stored Metamagic option selections that do not match the retained feature and Sorcerer-level option count",
+          "Character Battle projects selected Metamagic option facts into battle as typed effectKind, stackingMode, and Sorcery Point cost facts, links them to the shared Font of Magic point-pool resource, and hands battle point-pool spending back through Character Sheet resourceExpenditures without dispatching on option authored identity",
+          "The Metamagic Spell Invocation boundary admits selected typed effectKind facts from known options, enforces affordability against the shared Sorcery Point pool, enforces one option per spell before option-specific support, rejects unsupported second-option effects instead of charging inert Metamagic, and promotes Quickened Spell for supported direct Hit Point restoration action-casting Spell Invocation shapes by discovering and resolving a Bonus Action subject that spends the Bonus Action, Sorcery Points, and Spell Slot while rejecting same-turn level-1-plus spell casts through a turn fact that covers slot and free-cast resource paths"
         ],
         "tag": "profile-subset-supported"
       },
@@ -13073,8 +13792,9 @@
           "runtimeOwners": [
             "packages/character-creation-runtime/src/index.ts"
           ],
-          "sourceBoundary": "Surface class-feature records retained by class progression can project source links to other owned facts, such as Uncanny Metabolism linking to the shared Monk's Focus resource and existing Martial Arts die source, without storing duplicate resource caps, die tiers, or class progression state.",
+          "sourceBoundary": "Surface class-feature records retained by class progression can project source links to other owned facts, such as Wild Companion retaining the sibling Druid feature ref set or Uncanny Metabolism linking to the shared Monk's Focus resource and existing Martial Arts die source, without storing duplicate resource caps, die tiers, or class progression state.",
           "taskRefs": [
+            "L12G-AUTHOR-DRUID-WILD-COMPANION",
             "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS"
           ],
           "title": "Character Creation projects retained class-feature source links into CharacterBuild facts",
@@ -13082,6 +13802,86 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-creation.class-feature-advancement-replacement",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/character-build-advancement.ts"
+          ],
+          "sourceBoundary": "CharacterBuild Sorcerer progression plus Surface Metamagic class-feature facts; replacement and gain choices are accepted only as part of a Sorcerer class-level gain and rewrite selected Sorcerer Metamagic option ownership without parallel selected-option state.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-SORCERER-METAMAGIC-ADVANCEMENT-REPLACEMENT"
+          ],
+          "title": "Character Creation advances Sorcerer Metamagic option ownership during class-level gains",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-sheet.metamagic-battle-resource-bridge",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/index.ts",
+            "packages/character-battle-runtime/src/index.ts",
+            "packages/character-battle-runtime/src/battle-creature-init.ts",
+            "packages/battle-runtime/src/character-battle-resources.ts",
+            "packages/battle-runtime/src/battle-reducer/creature-state.ts"
+          ],
+          "sourceBoundary": "Character Sheet preserves selected Metamagic option facts and validates that they match the retained Sorcerer Metamagic feature before Character Battle consumes those CharacterBuild facts and the existing Font of Magic point-pool resource projection. Battle state stores only the shared Sorcery Point point-pool remaining points plus Metamagic effectKind, stackingMode, and cost facts; it does not create a Metamagic-local pool or execute cast-time Metamagic options. Character Sheet handoff persists battle point-pool spending back as the Font of Magic pointPoolResource expenditure.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-SORCERER-METAMAGIC-BATTLE-RESOURCE-BRIDGE"
+          ],
+          "title": "Character Battle carries Metamagic facts with the shared Sorcery Point pool",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "unit-feature.metamagic-cast-governor-quickened",
+          "profileKind": "bonus-action",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-metamagic.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-resources.ts",
+            "packages/battle-runtime/src/battle-subjects.ts"
+          ],
+          "sourceBoundary": "The runtime consumes Character Battle Metamagic effectKind, stackingMode, Sorcery Point cost facts, and the existing Font of Magic point-pool resource. It admits selected Quickened Spell facts for supported direct Hit Point restoration action-casting Spell Invocation shapes, enforces known-option and Sorcery Point affordability gates, enforces one-option-per-spell before option-specific support, rejects unsupported second-option effects instead of charging inert Metamagic, spends Bonus Action, Spell Slot, and Sorcery Point resources, and applies the same-turn level-1-plus spell-cast prohibition through a level-1-plus spell turn fact rather than a Spell Slot-only proxy. Quickened action-casting spell procedures beyond direct Hit Point restoration remain tracked by L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS, and this profile does not claim Sorcery Incarnate, Arcane Apotheosis, or non-Quickened option effects.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED"
+          ],
+          "title": "Unit feature admits Metamagic selections and rewrites Quickened action spells to Bonus Action",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-metamagic.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
             }
           ]
         }
@@ -13103,7 +13903,6 @@
         },
         "profileIds": [
           "character-creation.eldritch-invocation-choice",
-          "character-creation.class-feature-advancement-replacement",
           "character-creation.warlock-pact-magic-advancement"
         ],
         "supportedMechanics": [
@@ -13144,34 +13943,13 @@
           "runtimeOwners": [
             "packages/character-creation-runtime/src/index.ts"
           ],
-          "sourceBoundary": "Warlock Eldritch Invocations class-feature choice, Surface Warlock invocation count facts, current CharacterBuild Warlock Pact Magic cantrip facts, and the runtime SRD invocation option catalog; CharacterBuild stores selected invocation ownership plus Repeatable associated choice identity while selected invocation execution remains owned by selected invocation profiles.",
+          "sourceBoundary": "Warlock Eldritch Invocations class-feature choice, Surface Warlock Eldritch Invocation count facts, current CharacterBuild Warlock Pact Magic cantrip Spell Access facts, and the runtime SRD Eldritch Invocation option catalog; CharacterBuild stores selected Eldritch Invocation ownership plus Repeatable associated choice identity while selected Eldritch Invocation execution remains owned by selected Eldritch Invocation runtime profiles.",
           "taskRefs": [
             "AT-L1-03S",
             "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE",
             "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
           ],
-          "title": "Character Creation finalizes and advances Eldritch Invocation choices as selected invocation ownership",
-          "verificationOwners": [
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
-            }
-          ]
-        },
-        {
-          "id": "character-creation.class-feature-advancement-replacement",
-          "profileKind": "character-creation",
-          "qntOwners": [],
-          "runtimeOwners": [
-            "packages/character-creation-runtime/src/index.ts"
-          ],
-          "sourceBoundary": "CharacterBuild progression plus Surface class-feature and class spellcasting facts; replacement and gain choices are accepted only as part of a class-level gain and rewrite existing CharacterBuild feature refs, selected invocation ownership, or Warlock Pact Magic spellcasting facts without parallel selected-option state.",
-          "taskRefs": [
-            "L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE",
-            "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE",
-            "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
-          ],
-          "title": "Character Creation advances CharacterBuild class levels with class-feature replacement and gain choices",
+          "title": "Character Creation finalizes and advances Eldritch Invocation choices as selected Eldritch Invocation ownership",
           "verificationOwners": [
             {
               "kind": "runtime-test",
@@ -16464,14 +17242,17 @@
         "status": "installed"
       },
       "claim": {
-        "followUpTasks": [
+        "deferredMechanics": [
           {
-            "id": "L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME",
-            "mechanic": "Promote Darkness's point-origin Sphere branch: Magic Action and level-2-or-higher Spell Slot spend, caster-owned Concentration up to 10 minutes, caller-supplied 15-foot point-origin Sphere area identity, active magical Darkness/Heavily Obscured zone projection that ordinary sight and Darkvision cannot see through, nonmagical light denial as a light/obscurement witness consequence rather than deletion of existing light emitters, and cleanup when Concentration or duration ends.",
-            "owner": "battle-runtime spell invocation/effect lifecycle plus table/spatial visibility witness boundary",
-            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for point-origin magical Darkness without object-origin or spell-created-light-dispel behavior.",
-            "title": "Darkness Point-Origin Area Runtime Support"
+            "followUpTaskId": "L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH",
+            "mechanic": "Object-origin branch: target object not worn or carried, 15-foot Emanation originating from that object, movement with the object, and opaque-cover blocking remain blocked on the object-origin spell-area and opaque-cover witness owner."
           },
+          {
+            "followUpTaskId": "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL",
+            "mechanic": "Overlap-triggered dispel of level-2-or-lower spell-created Bright Light or Dim Light remains blocked on a generic spell-created light overlap owner; this point-origin profile does not dispatch on spell identity or delete light emitters."
+          }
+        ],
+        "followUpTasks": [
           {
             "id": "L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH",
             "mechanic": "Represent and promote or close Darkness's object branch: target object not worn or carried, 15-foot Emanation originating from that object, object-origin area identity, and opaque-cover blocking, consuming existing object and opaque-cover witness facts without adding duplicate map or cover state.",
@@ -16487,15 +17268,63 @@
             "title": "Darkness Spell-Created Light Dispel"
           }
         ],
-        "futureProfileOwner": "battle-runtime spell-area obscurement owner plus light/visibility witness boundary and spell-created light overlap owner",
-        "reason": "Darkness is authored as an SRD Surface Spell Definition for the point-origin branch, including Magic Action level-2 Spell Slot casting, Concentration up to 10 minutes, 60-foot range, a 15-foot-radius magical Darkness Sphere, and an executable Heavily Obscured area source fact. Task 9 claims no promoted battle-runtime profile yet because runtime has no Darkness-owned active spell-area admission that distinguishes magical Darkness from ordinary Heavy Obscurement for nonmagical-light denial, no object-origin Emanation and opaque-cover witness branch, and no overlap dispel owner for spell-created Bright Light or Dim Light without dispatching on spell identity.",
-        "tag": "unsupported-profile"
+        "futureProfileOwner": "battle-runtime object-origin spell-area and opaque-cover witness boundary plus spell-created light overlap owner",
+        "profileIds": [
+          "spell.invocation-magical-darkness-point-origin"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action prepared spell cast with a level-2-or-higher Spell Slot",
+          "caller-supplied point-origin 15-foot-radius Sphere area identity",
+          "caster-owned Concentration up to 10 minutes",
+          "active magical Darkness zone projection whose sight consequence is Heavily Obscured for ordinary sight and Darkvision",
+          "nonmagical light denial exposed as a magical-Darkness area witness consequence without deleting existing light emitters",
+          "Concentration and duration cleanup remove the active magical Darkness zone"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-darkness.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-magical-darkness-point-origin",
+          "profileKind": "table-caller",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
+          ],
+          "sourceBoundary": "The runtime consumes a typed table-supplied point-origin magical Darkness area identity and exposes magical Darkness visibility/light witness consequences for that area. Runtime owns Magic Action and level-2-or-higher Spell Slot spend, 15-foot Sphere radius, caster-owned Concentration up to 10 minutes, active zone projection, ordinary-sight and Darkvision Heavily Obscured consequence, nonmagical-light denial as a witness consequence, and cleanup. Object-origin Emanation, opaque-cover blocking, automatic area membership, line-of-sight drawing, map illumination, and spell-created-light overlap dispel remain outside this profile.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME"
+          ],
+          "title": "Spell invocation creates a Concentration-owned magical Darkness point-origin Sphere",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-darkness.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/darkness.json",
       "unitId": "darkness"
     },
@@ -16521,6 +17350,94 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/darkvision.json",
       "unitId": "darkvision"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "L12G-FOLLOWUP-GENERIC-ONGOING-SPELL-EFFECT-DISPEL",
+            "mechanic": "ongoing spell effects not yet represented as tracked BattleSpellLightEmitter occurrences, including broader creature active effects, area effects, and spell-specific dispel exceptions or immunities such as force barriers"
+          },
+          {
+            "battleReadinessClosure": {
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "table spatial witness and magical-effect identity owner",
+              "reason": "The battle runtime consumes typed target-within-range facts supplied by the table boundary; it does not infer map geometry or choose table-visible magical-effect identities automatically."
+            },
+            "mechanic": "automatic target geometry, object location, and magical-effect identity derivation"
+          }
+        ],
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-GENERIC-ONGOING-SPELL-EFFECT-DISPEL",
+            "mechanic": "Promote Dispel Magic beyond tracked spell-light emitters by representing generic ongoing Spell Effect occurrences for creature active effects, area effects, object effects, and spell-specific dispel exceptions or immunities with stable occurrence identity, source spell level, target association, and cleanup semantics.",
+            "owner": "battle-runtime Spell Effect occurrence model plus promoted Quint/runtime parity",
+            "requiredOutput": "Supported-profile or profile-subset-supported Dispel Magic claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for ending generic ongoing Spell Effect occurrences while preserving explicit closures for spell-specific exceptions and table-owned target identity/range derivation.",
+            "title": "Generic Ongoing Spell Effect Dispel Runtime"
+          }
+        ],
+        "futureProfileOwner": "generic ongoing Spell Effect occurrence model plus spell-specific dispel exception owner",
+        "profileIds": [
+          "spell.invocation-ongoing-spell-ending"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action prepared spell cast with a level-3-or-higher Spell Slot",
+          "caller-selected creature, object, or magical-effect target identity with caller-supplied within-120-feet target fact",
+          "target-scoped ending of tracked ongoing spell-light effects whose source spell level is at or below the Dispel Magic slot level",
+          "higher-level tracked ongoing spell-light effects require a spellcasting ability check total against DC 10 plus the tracked source spell level",
+          "higher-level slot gate automatically ends tracked ongoing spell-light effects whose source spell level is equal to or below the slot level used",
+          "object-attached Continual Flame cleanup is handled through generic tracked spell-light emitter facts, not a Continual Flame-specific remover registry"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dispel-magic.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-ongoing-spell-ending",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-ongoing-spell-ending.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the authored Dispel Magic ongoing-spell-ending Surface shape, caller-selected creature/object/magical-effect target identity, caller-supplied target-within-range facts, tracked ongoing Spell Effect facts carried by BattleSpellLightEmitter source spell level, and caller-supplied spellcasting ability check totals for higher-level contested spells. It owns Magic Action and Spell Slot spending, target-scoped removal of tracked spell-light emitters whose source spell level is at or below the Dispel Magic slot level, DC 10 plus source spell level check gating for higher-level tracked emitters, and generic object-attached Continual Flame cleanup without dispatching on Continual Flame identity. Broader non-light active spell effects, spell-specific dispel immunities, automatic geometry, and table selection of magical-effect identity remain outside this subset boundary.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING"
+          ],
+          "title": "Spell invocation ends tracked ongoing spell effects on a selected target",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dispel-magic.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/dispel_magic.json",
+      "unitId": "dispel_magic"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -18087,31 +19004,87 @@
         "status": "installed"
       },
       "claim": {
-        "followUpTasks": [
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "table/spatial owner",
+          "reason": "Automatic Line geometry, area membership derivation, pathfinding, route selection, and push destinations remain runtime-detached table/spatial derivations outside this profile."
+        },
+        "deferredMechanics": [
           {
-            "id": "L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME",
-            "mechanic": "Promote Gust of Wind's battle-visible Line profile: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caller-supplied self-origin Line area identity and direction, initial and end-turn Strength Saving Throws for caller-supplied creatures in the Line, failed-save 15-foot push facts away from the caster along the Line, active 2-for-1 Movement cost when a creature in the Line moves closer to the caster using table-supplied movement facts, Bonus Action Line direction replacement, and cleanup when Concentration or duration ends.",
-            "owner": "battle-runtime spell invocation/effect lifecycle plus table/spatial area and movement-cost witness boundary",
-            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the Line save, push, movement-cost, direction-change, and cleanup subset without automatic geometry or pathfinding.",
-            "title": "Gust of Wind Line Runtime Support"
+            "battleReadinessClosure": {
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "table/environmental-effect interaction owner",
+              "reason": "Gust of Wind's Line records the authored strong-wind area fact, and promoted Fog Cloud owns strong-wind dispersal as a caller/table-supplied cleanup command. The Gust profile does not derive overlap with gas, vapor, fog, smoke, or other cloud effects; those gas/vapor area owners consume the same table-supplied strong-wind witness at their own effect boundary instead of adding spell-local gas state"
+            },
+            "mechanic": "Gust-owned automatic gas or vapor overlap and dispersal beyond table-supplied strong-wind area witnesses"
           },
           {
-            "id": "L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE",
-            "mechanic": "Decide whether Gust of Wind's strong-wind gas or vapor dispersal should execute against promoted Fog Cloud, Stinking Cloud, Cloudkill, or other active gas/vapor areas, and close or support the candle, unprotected-flame, protected-flame dancing, and 50 percent protected-flame extinguishing clauses without adding a duplicate environmental state model.",
-            "owner": "table/spatial presentation and environmental-effect interaction owner",
-            "requiredOutput": "Focused Surface/runtime owner decision with tests or accepted runtime-detached closure for gas/vapor dispersal and flame presentation, reusing the authored area_has_strong_wind fact rather than duplicating wind state.",
-            "title": "Gust of Wind Gas And Flame Presentation Closure"
+            "battleReadinessClosure": {
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "runtime-detached object/environment presentation owner",
+              "reason": "Candle and lantern flame state, protected versus unprotected flame classification, wild flame presentation, and the 50 percent extinguishing chance are object/environment presentation facts with no promoted battle-runtime owner; Gust of Wind does not add duplicate flame, candle, lantern, or environmental wind state."
+            },
+            "mechanic": "candle, similar unprotected-flame, protected-flame dancing, and 50 percent protected-flame extinguishing presentation clauses"
           }
         ],
-        "futureProfileOwner": "battle-runtime spell invocation/effect lifecycle plus table/spatial area and movement-cost witness boundary",
-        "reason": "Gust of Wind is authored and installed as an SRD Surface Spell Definition with a self-origin 60-foot by 10-foot Line, Magic Action Spell Slot casting, caster-owned Concentration up to 1 minute, initial and end-turn Strength Saving Throws, failed-save 15-foot push away from the caster along the Line, directional 2-for-1 Movement cost when a creature in the Line moves closer to the caster, strong-wind gas or vapor dispersal, flame presentation clauses, and a later-turn Bonus Action direction change. Task 65 claims no promoted battle-runtime profile yet because runtime has no persistent self-origin Line direction state, no repeated area-save force-move profile without damage, no directional Movement cost witness keyed to moving closer to the source, no Bonus Action Line reorientation owner, and no gas/vapor plus flame-presentation owner.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "spell.invocation-gust-of-wind-line"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action level-2-or-higher Spell Slot casting",
+          "caller-supplied self-origin Line (60 feet by 10 feet) area identity and direction via gustOfWindLineArea saving throw facts",
+          "caster-owned Concentration with active Gust of Wind Line effect state and duration cleanup",
+          "initial Strength Saving Throws for caller-supplied creatures in the Line",
+          "end-turn Gust of Wind Line save command for table-triggered creatures ending a turn in the Line",
+          "failed-save 15-foot push fact validation away from the caster along the Line without Opportunity Attacks",
+          "caller-supplied Gust of Wind Line movement facts that validate active Line identity and spend total Movement distance plus one extra foot per foot moved closer to the caster through the Line",
+          "Bonus Action direction replacement using a typed table-supplied Line direction"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gust-of-wind.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-gust-of-wind-line",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-gust-of-wind.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-discovery.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the authored Gust of Wind spell, caller-supplied self-origin Line area identity, Line direction, affected creatures, failed-save push dispositions, and closer-to-caster movement facts. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration, active directional Line effect state, initial and end-turn Strength Saving Throw commands, failed-save 15-foot push fact validation, 2-for-1 Movement cost validation for movement closer to the caster through the Line, Bonus Action direction replacement, and cleanup on Concentration or duration end. Automatic geometry, pathfinding, area membership derivation, gas or vapor dispersal, and flame presentation remain outside this profile subset.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME"
+          ],
+          "title": "Spell invocation creates a directional Gust of Wind Line with table-supplied area witnesses",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-gust-of-wind.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gust-of-wind.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/gust_of_wind.json",
       "unitId": "gust_of_wind"
     },
@@ -18122,22 +19095,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "followUpTaskId": "L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY",
-            "mechanic": "holding/wearing Constitution save, drop-if-possible outcome, and fallback Attack Roll or Ability Check Disadvantage until the caster's next turn after a creature takes Heat Metal damage from a held or worn spell object"
-          }
-        ],
-        "followUpTasks": [
-          {
-            "id": "L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY",
-            "mechanic": "Promote the holding/wearing penalty for creatures that take Heat Metal damage from the object: caller-supplied held-or-worn object facts, Constitution Saving Throw against caster Spell Save DC, drop-if-possible through the existing dropped-object outcome boundary without introducing inventory simulation, fallback Disadvantage on Attack Rolls and Ability Checks until the start of the caster's next turn when the object is not dropped, and cleanup/replacement behavior tied to the same Heat Metal spell occurrence.",
-            "owner": "battle-runtime object holding/wearing drop boundary plus D20 roll-mode projection",
-            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the save, drop outcome, fallback roll-mode projection, caster-turn-start expiry, and Concentration cleanup.",
-            "title": "Heat Metal Holding Wearing Penalty Runtime"
-          }
-        ],
-        "futureProfileOwner": "battle-runtime object holding/wearing drop boundary plus D20 roll-mode projection",
         "profileIds": [
           "spell.invocation-object-contact-damage"
         ],
@@ -18150,16 +19107,20 @@
           "caller-supplied physical-contact creature witnesses for cast-time Fire damage and later-turn repeat damage",
           "immediate 2d8 Fire damage to selected contact creatures, scaling by +1d8 per slot level above 2",
           "later-turn Bonus Action repeat damage on the caster turn when the caller supplies the selected object-within-range witness and contact-creature witnesses",
-          "damage lifecycle integration for Concentration saves and zero-HP damage dispositions while preserving no-contact casts without damage-roll holes"
+          "damage lifecycle integration for Concentration saves and zero-HP damage dispositions while preserving no-contact casts without damage-roll holes",
+          "caller-supplied holding-or-wearing spell-object witnesses for damaged contact creatures, followed by Constitution Saving Throws against the caster Spell Save DC",
+          "failed holding-or-wearing saves require typed drop-capability/drop-result witnesses, emit the existing held-object dropped outcome when the object can be dropped, and do not introduce inventory simulation state",
+          "failed saves where the object is not dropped apply Disadvantage on the damaged creature's Attack Rolls and Ability Checks until the start of the caster's next turn",
+          "holding/wearing fallback penalties are replaced for the same Heat Metal spell-object occurrence and are removed when that occurrence ends through Concentration cleanup"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-heat-metal.test.ts",
           "tag": "deterministic-admission-projection",
-          "taskId": "L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME"
+          "taskId": "L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY"
         }
       ],
       "executableMechanics": true,
@@ -18173,15 +19134,22 @@
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+            "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+            "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+            "packages/battle-runtime/src/battle-reducer/hole-helpers.ts",
             "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
             "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
             "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
-            "packages/battle-runtime/src/battle-reducer/spells-resolve-object-contact-damage.ts"
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-object-contact-damage.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
           ],
-          "sourceBoundary": "The runtime consumes the authored Heat Metal object-contact Surface shape plus caller-supplied visible manufactured-metal object identity, physical-contact creature witnesses, and later-turn object-within-range witnesses. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration up to 1 minute, durable spell-object contact occurrence identity, immediate Fire damage to selected contact creatures, later-turn Bonus Action repeat damage, slot-scaled damage dice, damage lifecycle integration for Concentration saves and zero-HP dispositions, and cleanup through existing Concentration and duration mechanisms. Holding/wearing Constitution save, drop outcome, and fallback Attack Roll or Ability Check Disadvantage remain split to the object holding/wearing penalty owner.",
+          "sourceBoundary": "The runtime consumes the authored Heat Metal object-contact Surface shape plus caller-supplied visible manufactured-metal object identity, physical-contact creature witnesses, holding-or-wearing spell-object witnesses, later-turn object-within-range witnesses, Saving Throw outcomes, and typed object-drop resolution fills. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration up to 1 minute, durable spell-object contact occurrence identity, immediate Fire damage to selected contact creatures, later-turn Bonus Action repeat damage, slot-scaled damage dice, damage lifecycle integration for Concentration saves and zero-HP dispositions, Constitution saves for damaged holding-or-wearing targets against the caster Spell Save DC, drop-if-possible outcomes without inventory simulation, fallback self Attack Roll and Ability Check Disadvantage until the start of the caster's next turn when the object is not dropped, same-occurrence fallback penalty replacement, and cleanup through Concentration, duration, and caster-turn-start mechanisms.",
           "taskRefs": [
-            "L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME"
+            "L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME",
+            "L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY"
           ],
           "title": "Spell invocation attaches damage to a table-witnessed object contact boundary",
           "verificationOwners": [
@@ -21147,6 +22115,75 @@
         "status": "installed"
       },
       "claim": {
+        "profileIds": [
+          "spell.invocation-magic-weapon-enhancement"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Bonus Action level-2-or-higher Spell Slot casting using the SRD Surface item-enhancement spell shape",
+          "caller-supplied target item holder identity, item identity, and nonmagical weapon witness facts at the battle-runtime fill boundary",
+          "one caster-owned item-attached Spell Effect carrying exact holder-plus-item identity, source spell identity, +1/+2/+3 slot-tiered enhancement bonus, and one-hour duration",
+          "magic-weapon status projection from the active item-attached Spell Effect without mutating authored weapon records or adding spell-owned loadout state",
+          "exact holder-plus-item attack-roll and weapon damage-roll bonus projection for attacks made with the affected item only",
+          "same-caster recast replacement of the prior Magic Weapon effect",
+          "invalid-fill rejection when another caster's active Magic Weapon effect already makes the selected holder-plus-item weapon magical",
+          "duration cleanup through the shared timed Spell Effect lifecycle"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-magic-weapon-enhancement",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-release.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the authored Magic Weapon item-enhancement Surface shape plus caller-supplied exact holder-plus-item identity and nonmagical weapon witness facts. It owns Bonus Action level-2-or-higher Spell Slot spending, one caster-owned item-attached Spell Effect, one-hour duration cleanup, same-caster recast replacement, other-caster active Magic Weapon rejection for the selected holder-plus-item weapon, magic-weapon status projection, and exact holder-plus-item +1/+2/+3 attack-roll and weapon damage-roll projection without mutating authored weapon records or adding spell-owned loadout state. Touch range, physical item selection, and nonmagical target verification remain table/caller witness facts at the fill boundary.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME"
+          ],
+          "title": "Spell invocation attaches a timed magic-weapon enhancement to an exact weapon item",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/magic_weapon.json",
+      "unitId": "magic_weapon"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "deferredMechanics": [
           {
             "battleReadinessClosure": {
@@ -22711,6 +23748,87 @@
         "status": "installed"
       },
       "claim": {
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "table/spatial/environment owner",
+          "reason": "Automatic Web area membership, path geometry, first-entry detection, start-turn area membership, no-longer-in-webs facts, per-path distance through Difficult Terrain, anchoring or layering collapse, flat-surface 5-foot depth presentation, and fire-exposed 5-foot section burn-away with creature-in-fire damage remain caller-supplied table/spatial/environment witnesses. Battle runtime consumes typed movement/area/removal witnesses, owns the active area effect, movement-cost validation, obscurement projection, Restrained lifecycle, and cleanup, and does not store independent Web map sections or burning squares."
+        },
+        "profileIds": [
+          "spell.invocation-web-restraint-hazard"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action level-2-or-higher Spell Slot casting",
+          "caller-supplied point-origin 20-foot Cube area identity via webCubeArea fill",
+          "Concentration-owned active Web area hazard on the caster with areaId, side length, Dexterity save profile, one-hour duration, and first-entry-on-a-turn save ledger",
+          "table-triggered entersArea and startsTurnInArea Dexterity saves against the caster's spell save DC",
+          "failed Web saves apply spell-owned Restrained to the target",
+          "action Strength (Athletics) escape check against the caster's spell save DC removes only the Web-owned Restrained condition",
+          "active Web area projects a noncumulative Difficult Terrain movement-cost witness through areaDifficultTerrain sources",
+          "active Web area projects a Lightly Obscured point-origin Cube obscurement zone using the spell Cube side length",
+          "sight-based Wisdom (Perception) checks can consume Lightly Obscured obscurement as Disadvantage",
+          "table-supplied no-longer-in-webs cleanup removes the Web-owned Restrained condition while leaving the active Web area intact",
+          "Web area removal, Concentration break, and duration expiration remove the active Web area and Web-owned Restrained effects"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-web-restraint-hazard.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-web-restraint-hazard",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+            "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+            "packages/battle-runtime/src/battle-subjects.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the authored Web spell, caller-supplied point-origin Cube area identity, table-triggered enters-area and starts-turn-in-area save subjects, table-supplied no-longer-in-webs or area-removed cleanup subjects, and caller-supplied movement path facts for travel through active Web Difficult Terrain. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration, active Web area effect state with side length, once-per-creature-per-turn entry-save limiting, failed-save Restrained application, Strength (Athletics) escape cleanup, noncumulative Difficult Terrain movement-cost validation for active Web areas, Lightly Obscured Cube projection for sight/perception consumers, and cleanup on Concentration or duration end. Automatic geometry, area membership, pathfinding, anchoring/layering collapse, flat-surface depth presentation, and fire-exposed 5-foot Cube burn-away/damage derivation remain table/spatial/environment facts rather than parallel runtime map state.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME",
+            "L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE"
+          ],
+          "title": "Spell invocation creates a Web area hazard with table-triggered restraint, movement, and obscurement projections",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-web-restraint-hazard.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/web.json",
+      "unitId": "web"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "profileIds": [
           "spell.invocation-condition-save"
         ],
@@ -24131,24 +25249,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/disintegrate.json",
       "unitId": "disintegrate"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/dispel_magic.json",
-      "unitId": "dispel_magic"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -26259,46 +27359,6 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
-      "claim": {
-        "followUpTasks": [
-          {
-            "id": "L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE",
-            "mechanic": "Replace Magic Weapon's lossy Surface mechanics with a lossless SRD shape for Bonus Action level-2-or-higher casting, Touch range, one nonmagical weapon target, one-hour non-Concentration duration, target magic-weapon status, slot-tiered +1/+2/+3 bonuses to attack rolls and damage rolls made with that weapon, and same-caster recast early ending.",
-            "owner": "surface Spell Definition authoring",
-            "requiredOutput": "Magic Weapon Dhall and JSON content, plus schema/tracer support where required, represent the nonmagical weapon target, item-attached magic-weapon status, slot-tiered attack and damage bonuses, and recast ending as executable source facts rather than comments or prose-only description.",
-            "title": "Magic Weapon Surface Item Enhancement Shape"
-          },
-          {
-            "id": "L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME",
-            "mechanic": "Promote Magic Weapon as a level-2-or-higher Bonus Action Spell Invocation that spends the Bonus Action and Spell Slot, consumes caller-supplied target item identity and nonmagical weapon witness facts, records one caster-owned item-attached spell effect, projects magic-weapon status plus the slot-tiered attack-roll and damage-roll bonuses only for attacks and damage made with that item, and ends on duration expiry or same-caster recast without rewriting authored weapon records or adding a parallel spell-owned loadout table.",
-            "owner": "battle-runtime item-attached spell effect lifecycle plus weapon attack/damage projection",
-            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for spell discovery, resource spending, item-attached effect state, exact-item attack and damage projections, magic-weapon status projection, duration cleanup, and same-caster recast replacement.",
-            "title": "Magic Weapon Item Enhancement Runtime"
-          }
-        ],
-        "futureProfileOwner": "surface Spell Definition item-enhancement shape plus battle-runtime item-attached spell effect lifecycle and weapon attack/damage projection",
-        "reason": "Magic Weapon is authored as an SRD Surface Spell Definition with Bonus Action Spell Slot casting, Touch range, one-hour non-Concentration duration, a nonmagical weapon target, magic-weapon status for that target, slot-tiered +1/+2/+3 bonuses to attack rolls and damage rolls made with that weapon, and same-caster recast early ending. Task 2 claims no promoted battle-runtime profile because the authored executable shape has a generic object hole plus base +1 modifiers but lacks executable nonmagical-weapon target and slot-tier facts, while promoted runtime has no item-attached spell effect owner, no exact-item attack and damage projection, and no magic-weapon status projection without mutating authored weapon records or copying loadout state into a spell-owned table.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/magic_weapon.json",
-      "unitId": "magic_weapon"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -27869,53 +28929,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/weapon_whip.json",
       "unitId": "weapon_whip"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "followUpTasks": [
-          {
-            "id": "L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE",
-            "mechanic": "Replace Web's partial Surface mechanics with a lossless SRD shape for Magic Action level-2 Spell Slot casting, point-origin 20-foot Cube, Concentration up to 1 hour, Difficult Terrain, Lightly Obscured area, anchoring or flat-surface layering, flat-surface 5-foot depth, start-of-next-caster-turn collapse, first-entry-on-a-turn creature-entry Dexterity save trigger, and separate turn-start Dexterity save trigger, failed-save Restrained while in the webs or until escape, action Strength (Athletics) escape against caster spell save DC, and flammable 5-foot Cube burn-away with 2d4 Fire damage to creatures that start turns in the fire.",
-            "owner": "surface Spell Definition authoring",
-            "requiredOutput": "Web Dhall and JSON content, plus schema/tracer support where required, make area identity, first-entry-on-a-turn and turn-start save triggers, Restrained lifecycle, escape, terrain/obscurement, anchor collapse, flat-surface depth, and flammable cube cleanup executable source facts instead of comments or prose-only description.",
-            "title": "Web Surface Area Hazard Shape"
-          },
-          {
-            "id": "L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME",
-            "mechanic": "Promote Web's battle-visible restraint hazard: Magic Action and level-2-or-higher Spell Slot spend, caller-supplied point-origin 20-foot Cube area identity, Concentration-owned active Web area, table-triggered affected-creature facts for first-entry-on-a-turn saves and separate start-turn in-area saves, failed-save spell-owned Restrained condition tied to table-witnessed still-in-webs state, action Strength (Athletics) escape against caster spell save DC, and cleanup when escape succeeds, the target is no longer in the webs, Concentration or duration ends, or table supplies collapse or removal.",
-            "owner": "battle-runtime spell invocation/effect lifecycle plus table/spatial owner",
-            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for resource spending, active area identity, first-entry-on-a-turn and start-turn save triggers, Restrained application, escape, and cleanup without automatic geometry, pathfinding, or area membership derivation.",
-            "title": "Web Restraint Hazard Runtime"
-          },
-          {
-            "id": "L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE",
-            "mechanic": "Decide and promote or close Web's area projection and flammable-cube clauses: active Web area as Difficult Terrain movement-cost facts, Lightly Obscured sight or perception projection, anchoring or layering collapse boundary, flat-surface 5-foot depth projection, and fire-exposed 5-foot Cube burn-away after 1 round with 2d4 Fire damage to creatures starting turns in the fire, consuming table-supplied fire exposure and affected-creature witnesses rather than storing independent map squares.",
-            "owner": "battle-runtime spell area projection plus table/spatial/environment owner",
-            "requiredOutput": "Focused Surface/runtime owner decision with tests or accepted runtime-detached closure for Difficult Terrain, Lightly Obscured, anchor collapse, flat-surface depth, and burning-cube damage and cleanup, reusing existing light/obscurement, movement, damage, and table/spatial witness owners without duplicating area state.",
-            "title": "Web Terrain Obscurement Fire Boundary"
-          }
-        ],
-        "futureProfileOwner": "surface Spell Definition authoring plus battle-runtime spell invocation/effect lifecycle and table/spatial/environment owner",
-        "reason": "Existing Surface record authors Web as a partial SRD Spell Definition: executable mechanics carry the Magic Action Spell Slot shell, Concentration up to 1 hour, point-origin 20-foot Cube attachment, and attached turn-start Dexterity save that applies Restrained on failure; the record prose also carries Difficult Terrain, Lightly Obscured, first-entry or start-turn save text, and Strength (Athletics) escape. The local SRD additionally defines anchoring or layering collapse, flat-surface 5-foot depth, and flammable 5-foot Cube burn-away plus 2d4 Fire damage, which are not yet executable Surface facts. Task 4 claims no promoted battle-runtime profile yet because existing promoted runtime shapes have Grease-specific ground-hazard Difficult Terrain and Fog Cloud heavy-obscurement area effects, but no Web-owned area hazard that combines Concentration area identity, entry saves limited to the first time a creature enters the webs on a turn, a separate start-turn save trigger, spell-owned Restrained tied to table-witnessed area membership, Strength (Athletics) escape, table-supplied anchor/collapse cleanup, Lightly Obscured area projection, flat-surface 5-foot depth, and burning-cube cleanup/damage without duplicating table spatial or environmental state.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/web.json",
-      "unitId": "web"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

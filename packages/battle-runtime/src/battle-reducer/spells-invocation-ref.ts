@@ -102,12 +102,36 @@ export function supportedSpellInvocationRef(
       procedure: "greaseGroundHazard",
     };
   }
+  if (invocation.procedure === "gustOfWindLine") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "gustOfWindLine",
+    };
+  }
   if (invocation.procedure === "fogCloudObscurement") {
     return {
       tag: "spellSlot",
       spellId: spellId(invocation.spell.id),
       slotLevel: invocation.resource.slotLevel,
       procedure: "fogCloudObscurement",
+    };
+  }
+  if (invocation.procedure === "magicalDarknessPointOrigin") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "magicalDarknessPointOrigin",
+    };
+  }
+  if (invocation.procedure === "webRestraintHazard") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "webRestraintHazard",
     };
   }
   if (invocation.procedure === "flamingSphere") {
@@ -273,6 +297,14 @@ export function supportedSpellInvocationRef(
       procedure: "objectLight",
     };
   }
+  if (invocation.procedure === "ongoingSpellEnd") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "ongoingSpellEnd",
+    };
+  }
   if (invocation.procedure === "dancingLightsSeparateCast") {
     return {
       tag: "cantrip",
@@ -338,6 +370,14 @@ export function supportedSpellInvocationRef(
       spellId: spellId(invocation.spell.id),
       slotLevel: invocation.resource.slotLevel,
       procedure: "saveGatedConditionImmunity",
+    };
+  }
+  if (invocation.procedure === "magicWeaponEnhancement") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "magicWeaponEnhancement",
     };
   }
   return Match.value(invocation).pipe(

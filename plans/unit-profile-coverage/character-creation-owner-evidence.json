@@ -2411,7 +2411,7 @@
     },
     "srd521:classes/druid:level-2:class-feature-grant:druid_wild_companion": {
       "taskId": "L12G-AUTHOR-DRUID-WILD-COMPANION",
-      "profile": "character-creation.class-feature-advancement-replacement support profile",
+      "profile": "character-creation.class-feature-source-fact-projection support profile",
       "summary": "Druid Wild Companion is retained from the level-2 Druid class feature grant alongside Wild Shape; Character Creation admits same-class Druid level 2, projects level-2 Druid prepared-spell and Spell Slot table facts from the class record, and retains both sibling feature Unit refs without claiming companion lifecycle or Wild Shape shape-shifting execution.",
       "discovery": [
         "packages/character-creation-runtime/src/discovery.ts:discoverInitialDraftHoles"
@@ -2674,8 +2674,8 @@
     },
     "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_metamagic": {
       "taskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS",
-      "profile": "character-creation.class-feature-option-projection and character-creation.class-feature-source-fact-projection support profiles",
-      "summary": "Metamagic is discovered from the level-2 Sorcerer class feature grant, filled from the installed SRD Metamagic option roster, finalized as selected CharacterBuild Metamagic option facts, and projected with Sorcerer-level known-option counts, option costs, stacking modes, spell-use limit, and the shared Font of Magic Sorcery Point resource link.",
+      "profile": "character-creation.class-feature-option-projection, character-creation.class-feature-source-fact-projection, and character-creation.class-feature-advancement-replacement support profiles",
+      "summary": "Metamagic is discovered from the level-2 Sorcerer class feature grant, filled from the installed SRD Metamagic option roster, finalized as selected CharacterBuild Metamagic option facts, projected with Sorcerer-level known-option counts, option costs, stacking modes, spell-use limit, and the shared Font of Magic Sorcery Point resource link, and advanced through Sorcerer level gains that replace one known option with one unknown option or add level-10 and level-17 options from the Surface choice-count thresholds.",
       "discovery": [
         "packages/character-creation-runtime/src/discovery.ts:classFeatureGrantChoiceHoles",
         "packages/character-creation-runtime/src/discovery.ts:sorcererMetamagicChoiceHoles"
@@ -2690,10 +2690,16 @@
       ],
       "buildProjection": [
         "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds",
-        "packages/character-creation-runtime/src/sorcerer-metamagic.ts:characterBuildSorcererMetamagicFacts"
+        "packages/character-creation-runtime/src/sorcerer-metamagic.ts:characterBuildSorcererMetamagicFacts",
+        "packages/character-creation-runtime/src/character-build-advancement.ts:sorcererLevelGain",
+        "packages/character-creation-runtime/src/character-build-advancement.ts:advanceCharacterBuildClassLevel"
       ],
       "tests": [
-        "packages/character-creation-runtime/src/index.test.ts:projects Sorcerer Metamagic known option facts from finalized CharacterBuild selections"
+        "packages/character-creation-runtime/src/index.test.ts:projects Sorcerer Metamagic known option facts from finalized CharacterBuild selections",
+        "packages/character-creation-runtime/src/index.test.ts:advances a finalized Sorcerer build and replaces one Metamagic option",
+        "packages/character-creation-runtime/src/index.test.ts:rejects invalid Sorcerer Metamagic replacement gates",
+        "packages/character-creation-runtime/src/index.test.ts:advances Sorcerer level 10 and 17 Metamagic option gains from Surface thresholds",
+        "packages/character-creation-runtime/src/index.test.ts:rejects Sorcerer Metamagic level gains that duplicate known options"
       ]
     },
     "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations": {

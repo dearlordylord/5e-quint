@@ -25,7 +25,8 @@
           "value": {
             "kind": "target",
             "selection": {
-              "mode": "one"
+              "mode": "one",
+              "targetKinds": ["creature", "object", "magical_effect"]
             }
           }
         },
@@ -38,7 +39,7 @@
         "kind": "direct"
       },
       {
-        "ability": "int",
+        "ability": "caster_spellcasting_ability",
         "attachment": {
           "holeId": "dispel_magic_target",
           "kind": "hole",
@@ -46,7 +47,8 @@
           "value": {
             "kind": "target",
             "selection": {
-              "mode": "one"
+              "mode": "one",
+              "targetKinds": ["creature", "object", "magical_effect"]
             }
           }
         },

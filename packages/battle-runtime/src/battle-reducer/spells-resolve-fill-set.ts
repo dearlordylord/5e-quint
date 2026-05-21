@@ -23,7 +23,9 @@ import {
   type BattleSpellTargetAllocationSpatialFact,
   type BattleSpellTargetListSpatialFact,
   type BattleSpellCastReactionFact,
+  type BattleMagicWeaponTargetItemFact,
   type BattleObjectContactTargetSpatialFact,
+  type BattleOngoingSpellTargetWithinRangeFact,
   type SelfTransformationModeKind,
   type BattleTargetSpatialFact,
   type SpellTargeting,
@@ -59,7 +61,10 @@ import {
   spellTargetAllocationHoleId,
   spellTargetListHoleId,
 } from "./spells-holes-fills.ts";
-import { spellDancingLightsPlacementHoleId } from "./spells-targeting.ts";
+import {
+  magicWeaponTargetItemHoleId,
+  spellDancingLightsPlacementHoleId,
+} from "./spells-targeting.ts";
 import { THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID } from "./domain-constants.ts";
 
 export type SpellAttackSequencePartTargetFill =
@@ -129,6 +134,32 @@ export type SpellFillSet =
             readonly spatialFacts: readonly BattleObjectContactTargetSpatialFact[];
           }
         | undefined;
+      readonly objectContactSavingThrowOutcome:
+        | Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>
+        | undefined;
+      readonly objectDropResolution:
+        | Extract<BattleFill, { readonly kind: "objectDropResolution" }>
+        | undefined;
+      readonly magicWeaponTargetItem:
+        | {
+            readonly holeId: BattleHoleId;
+            readonly value: BattleMagicWeaponTargetItemFact;
+          }
+        | undefined;
+      readonly ongoingSpellTarget:
+        | {
+            readonly holeId: BattleHoleId;
+            readonly target: Extract<
+              BattleFill,
+              { readonly kind: "ongoingSpellTargetChoice" }
+            >["value"];
+            readonly spatialFacts: readonly BattleOngoingSpellTargetWithinRangeFact[];
+          }
+        | undefined;
+      readonly ongoingSpellAbilityChecks: readonly Extract<
+        BattleFill,
+        { readonly kind: "abilityCheck" }
+      >[];
       readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
       readonly reactionSpellTargetFacts: readonly SpellCastReactionFact[];
       readonly targetAllocation:
@@ -234,6 +265,32 @@ export function spellFillSet(
         readonly spatialFacts: readonly BattleObjectContactTargetSpatialFact[];
       }
     | undefined;
+  let objectContactSavingThrowOutcome:
+    | Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>
+    | undefined;
+  let objectDropResolution:
+    | Extract<BattleFill, { readonly kind: "objectDropResolution" }>
+    | undefined;
+  let magicWeaponTargetItem:
+    | {
+        readonly holeId: BattleHoleId;
+        readonly value: BattleMagicWeaponTargetItemFact;
+      }
+    | undefined;
+  let ongoingSpellTarget:
+    | {
+        readonly holeId: BattleHoleId;
+        readonly target: Extract<
+          BattleFill,
+          { readonly kind: "ongoingSpellTargetChoice" }
+        >["value"];
+        readonly spatialFacts: readonly BattleOngoingSpellTargetWithinRangeFact[];
+      }
+    | undefined;
+  const ongoingSpellAbilityChecks: Extract<
+    BattleFill,
+    { readonly kind: "abilityCheck" }
+  >[] = [];
   let targetSpatialFacts: readonly BattleTargetSpatialFact[] = [];
   let reactionSpellTargetFacts: readonly SpellCastReactionFact[] = [];
   let reactionSpellTargetFactsFilled = false;
@@ -478,6 +535,27 @@ export function spellFillSet(
       continue;
     }
 
+    if (fill.kind === "ongoingSpellTargetChoice") {
+      if (invocation.procedure !== "ongoingSpellEnd") {
+        return {
+          tag: "invalid",
+          message: "Ongoing spell target fill does not match this spell act.",
+        };
+      }
+      if (ongoingSpellTarget !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Ongoing spell target was filled twice.",
+        };
+      }
+      ongoingSpellTarget = {
+        holeId: fill.holeId,
+        target: fill.value,
+        spatialFacts: fill.spatialFacts,
+      };
+      continue;
+    }
+
     if (fill.kind === "objectContactTargets") {
       if (
         invocation.procedure !== "objectContactDamage" &&
@@ -502,11 +580,60 @@ export function spellFillSet(
       continue;
     }
 
+    if (fill.kind === "objectDropResolution") {
+      if (
+        invocation.procedure !== "objectContactDamage" &&
+        invocation.procedure !== "objectContactDamageRepeat"
+      ) {
+        return {
+          tag: "invalid",
+          message: "Object drop resolution does not match this spell act.",
+        };
+      }
+      if (objectDropResolution !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Object drop resolution was filled twice.",
+        };
+      }
+      objectDropResolution = fill;
+      continue;
+    }
+
+    if (fill.kind === "magicWeaponTargetItem") {
+      if (invocation.procedure !== "magicWeaponEnhancement") {
+        return {
+          tag: "invalid",
+          message: "Magic Weapon item target does not match this spell act.",
+        };
+      }
+      if (fill.holeId !== magicWeaponTargetItemHoleId(invocation)) {
+        return {
+          tag: "invalid",
+          message:
+            "Magic Weapon item target must use the selected spell act item-target hole.",
+        };
+      }
+      if (magicWeaponTargetItem !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Magic Weapon item target was filled twice.",
+        };
+      }
+      magicWeaponTargetItem = {
+        holeId: fill.holeId,
+        value: fill.value,
+      };
+      continue;
+    }
+
     if (fill.kind === "spellAreaChoice") {
       if (
         invocation.procedure !== "fogCloudObscurement" &&
+        invocation.procedure !== "magicalDarknessPointOrigin" &&
         invocation.procedure !== "flamingSphere" &&
-        invocation.procedure !== "moonbeam"
+        invocation.procedure !== "moonbeam" &&
+        invocation.procedure !== "webRestraintHazard"
       ) {
         return {
           tag: "invalid",
@@ -721,6 +848,19 @@ export function spellFillSet(
         continue;
       }
       if (
+        invocation.procedure === "objectContactDamage" ||
+        invocation.procedure === "objectContactDamageRepeat"
+      ) {
+        if (objectContactSavingThrowOutcome !== undefined) {
+          return {
+            tag: "invalid",
+            message: "Object-contact saving throw outcome was filled twice.",
+          };
+        }
+        objectContactSavingThrowOutcome = fill;
+        continue;
+      }
+      if (
         invocation.procedure !== "attackBurstSaveDamage" &&
         invocation.procedure !== "saveGatedDamage" &&
         invocation.procedure !== "saveGatedCondition" &&
@@ -732,6 +872,7 @@ export function spellFillSet(
         invocation.procedure !== "hideousLaughter" &&
         invocation.procedure !== "command" &&
         invocation.procedure !== "greaseGroundHazard" &&
+        invocation.procedure !== "gustOfWindLine" &&
         !(
           invocation.procedure === "rollModifier" &&
           invocation.saveGate !== null
@@ -1214,6 +1355,24 @@ export function spellFillSet(
       continue;
     }
 
+    if (
+      fill.kind === "abilityCheck" &&
+      invocation.procedure === "ongoingSpellEnd"
+    ) {
+      if (
+        ongoingSpellAbilityChecks.some(
+          (candidate) => candidate.holeId === fill.holeId,
+        )
+      ) {
+        return {
+          tag: "invalid",
+          message: "Ongoing spell ending ability check was filled twice.",
+        };
+      }
+      ongoingSpellAbilityChecks.push(fill);
+      continue;
+    }
+
     return {
       tag: "invalid",
       message: `Fill ${fill.kind} does not match the spell replay holes.`,
@@ -1225,6 +1384,11 @@ export function spellFillSet(
     targetId,
     objectTarget,
     objectContactTargets,
+    objectContactSavingThrowOutcome,
+    objectDropResolution,
+    magicWeaponTargetItem,
+    ongoingSpellTarget,
+    ongoingSpellAbilityChecks,
     targetSpatialFacts,
     reactionSpellTargetFacts,
     targetAllocation,
@@ -1262,6 +1426,11 @@ export function spellFillSetContainsOnlySpellCastReactionFacts(
     fillSet.targetId === undefined &&
     fillSet.objectTarget === undefined &&
     fillSet.objectContactTargets === undefined &&
+    fillSet.objectContactSavingThrowOutcome === undefined &&
+    fillSet.objectDropResolution === undefined &&
+    fillSet.magicWeaponTargetItem === undefined &&
+    fillSet.ongoingSpellTarget === undefined &&
+    fillSet.ongoingSpellAbilityChecks.length === 0 &&
     fillSet.targetSpatialFacts.length === 0 &&
     fillSet.targetAllocation === undefined &&
     fillSet.targetList === undefined &&
@@ -1368,7 +1537,8 @@ export function spellFillSetSavingThrowTargeting(
         invocation.procedure === "sleepTargetAdmission" ||
         invocation.procedure === "hideousLaughter" ||
         invocation.procedure === "command" ||
-        invocation.procedure === "greaseGroundHazard"
+        invocation.procedure === "greaseGroundHazard" ||
+        invocation.procedure === "gustOfWindLine"
       ? invocation.targeting
       : { kind: "singleCombatant" };
 }

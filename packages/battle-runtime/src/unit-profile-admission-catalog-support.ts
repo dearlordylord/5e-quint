@@ -13,6 +13,7 @@ import {
   ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
   battleAreaId,
   battleCombatantSide,
+  battleLineDirectionId,
   battleObjectId,
   combatantId,
   PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
@@ -105,6 +106,8 @@ export const colorSprayUnitId = "color_spray";
 export const continualFlameUnitId = "continual_flame";
 
 export const counterspellUnitId = "counterspell";
+
+export const dispelMagicUnitId = "dispel_magic";
 
 export const entangleUnitId = "entangle";
 
@@ -202,11 +205,15 @@ export const flamingSphereUnitId = "flaming_sphere";
 
 export const moonbeamUnitId = "moonbeam";
 
+export const webUnitId = "web";
+
 export const guidingBoltUnitId = "guiding_bolt";
 
 export const guidanceUnitId = "guidance";
 
 export const greaseUnitId = "grease";
+
+export const gustOfWindUnitId = "gust_of_wind";
 
 export const heatMetalUnitId = "heat_metal";
 
@@ -218,6 +225,8 @@ export const inflictWoundsUnitId = "inflict_wounds";
 
 export const lightUnitId = "light";
 
+export const darknessUnitId = "darkness";
+
 export const longstriderUnitId = "longstrider";
 
 export const mageArmorUnitId = "mage_armor";
@@ -227,6 +236,10 @@ export const magicMissileUnitId = "magic_missile";
 export const mindSpikeUnitId = "mind_spike";
 
 export const mindSpikeDurationTicks = elapsedTimeTicks(600);
+
+export const magicWeaponUnitId = "magic_weapon";
+
+export const magicWeaponDurationTicks = elapsedTimeTicks(600);
 
 export const passWithoutTraceUnitId = "pass_without_trace";
 
@@ -317,9 +330,25 @@ export const ensnaringStrikeHelperId = combatantId(
 
 export const greaseAreaId = battleAreaId("unit-profile-grease-ground-area");
 
-export const flamingSphereAreaId = battleAreaId("unit-profile-flaming-sphere-area");
+export const flamingSphereAreaId = battleAreaId(
+  "unit-profile-flaming-sphere-area",
+);
 
 export const moonbeamAreaId = battleAreaId("unit-profile-moonbeam-area");
+
+export const webAreaId = battleAreaId("unit-profile-web-area");
+
+export const gustOfWindAreaId = battleAreaId(
+  "unit-profile-gust-of-wind-line-area",
+);
+
+export const gustOfWindNorthDirectionId = battleLineDirectionId(
+  "unit-profile-gust-of-wind-direction-north",
+);
+
+export const gustOfWindEastDirectionId = battleLineDirectionId(
+  "unit-profile-gust-of-wind-direction-east",
+);
 
 export const thunderwaveObjectId = battleObjectId(
   "unit-profile-thunderwave-object",

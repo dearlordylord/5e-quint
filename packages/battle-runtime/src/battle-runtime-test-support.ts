@@ -89,6 +89,7 @@ import {
   type SpellInvocationRef,
 } from "./index.ts";
 import {
+  characterBattleResourceIsUseCount,
   characterBattleResourceIsUnlimited,
   parseCharacterBattleClassLevels,
 } from "./character-battle-resources.ts";
@@ -406,6 +407,11 @@ export function subjectName(
   | "castAttackHitBonusActionSpell"
   | "opportunityAttack"
   | "greaseGroundHazardSave"
+  | "webRestraintSave"
+  | "webRestrainedNoLongerInArea"
+  | "webAreaRemoved"
+  | "gustOfWindLineSave"
+  | "gustOfWindLineDirectionChange"
   | "movableZoneSave"
   | "movableZoneReposition"
   | "movableZoneRam"
@@ -1616,10 +1622,10 @@ export function movementFill(
       readonly reactorId: CombatantId;
       readonly attackName: string;
     }[];
-    readonly greaseGroundDifficultTerrain?: Extract<
+    readonly areaDifficultTerrain?: Extract<
       BattleFill,
       { readonly kind: "movement" }
-    >["value"]["greaseGroundDifficultTerrain"];
+    >["value"]["areaDifficultTerrain"];
   },
 ): Extract<BattleFill, { readonly kind: "movement" }> {
   if (hole.kind !== "movement") {
@@ -1632,14 +1638,16 @@ export function movementFill(
       speedKind: value.speedKind ?? "walk",
       movementCostFeet: movementFeet(value.movementCostFeet),
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
-      ...(value.greaseGroundDifficultTerrain === undefined
+      ...(value.areaDifficultTerrain === undefined
         ? {}
-        : { greaseGroundDifficultTerrain: value.greaseGroundDifficultTerrain }),
+        : { areaDifficultTerrain: value.areaDifficultTerrain }),
     },
   };
 }
 
-export function castGroundHazardForMovementTest(areaId: BattleAreaId): BattleState {
+export function castGroundHazardForMovementTest(
+  areaId: BattleAreaId,
+): BattleState {
   const battleState = startBattleRight({
     battleId: battleId(`battle-grease-movement-${areaId}`),
     combatants: [
@@ -1948,6 +1956,10 @@ export function characterSeed(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["resources"];
+  readonly metamagic?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["metamagic"];
   readonly unitFeatures?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -2075,6 +2087,7 @@ export function characterSeed(input: {
         ? {}
         : { invocationFeatures: input.invocationFeatures }),
       ...(input.resources === undefined ? {} : { resources: input.resources }),
+      ...(input.metamagic === undefined ? {} : { metamagic: input.metamagic }),
       ...(parsedDruidWildShapeKnownForms === undefined
         ? {}
         : { druidWildShapeKnownForms: parsedDruidWildShapeKnownForms }),
@@ -4011,6 +4024,7 @@ export {
   battleUnitSupportProfilesForUnit,
   breakBattleConcentration,
   cantripSpellInvocationRef,
+  characterBattleResourceIsUseCount,
   characterBattleResourceIsUnlimited,
   characterBattleResourceSupportedForUnit,
   characterBattleResourceUsage,

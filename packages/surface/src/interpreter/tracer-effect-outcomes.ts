@@ -35,6 +35,7 @@ export type OutcomeEffectAtom = Extract<
       | "modify_ac_set_base"
       | "modify_save_dc"
       | "apply_condition"
+      | "apply_condition_while_in_area_or_until_escape"
       | "suppress_condition_self_end"
       | "restrict_action_usage"
       | "command_target_next_turn"
@@ -348,6 +349,16 @@ export function traceOutcomeEffectAtom(
         category: "effect",
         atomKind: "apply_condition",
         label,
+      });
+      return id;
+    }
+    case "apply_condition_while_in_area_or_until_escape": {
+      const id = ids("cond");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "apply_condition",
+        label: `apply_condition\n${e.condition}\nuntil: area exit or escape`,
       });
       return id;
     }

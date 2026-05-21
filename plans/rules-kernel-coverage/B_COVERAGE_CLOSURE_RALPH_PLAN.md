@@ -79,67 +79,67 @@
     {
       "number": 13,
       "id": "RKBC-CREATION-FILL-VALIDATION-BATCH",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Character Creation Fill Validation And Atomic Batch"
     },
     {
       "number": 14,
       "id": "RKBC-CREATION-ADVANCEMENT-REPLACEMENT",
-      "status": "blocked",
+      "status": "done",
       "title": "Character Creation Advancement And Replacement"
     },
     {
       "number": 15,
       "id": "RKBC-CREATION-SPELLCASTING-PROGRESSION",
-      "status": "blocked",
+      "status": "done",
       "title": "Character Creation Spell Access Progression And Eldritch Invocation Choices"
     },
     {
       "number": 16,
       "id": "RKBC-CREATION-WEAPON-MASTERY-FEAT",
-      "status": "blocked",
+      "status": "done",
       "title": "Character Creation Weapon Mastery And Feat Choice"
     },
     {
       "number": 17,
       "id": "RKBC-SHEET-HP-REST-HIT-DICE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Character Sheet HP Rest And Hit Dice Transitions"
     },
     {
       "number": 18,
       "id": "RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS",
-      "status": "blocked",
+      "status": "done",
       "title": "Character Sheet Spell Slot And Pact Slot Transitions"
     },
     {
       "number": 19,
       "id": "RKBC-SHEET-FEATURE-RESOURCES",
-      "status": "blocked",
+      "status": "done",
       "title": "Character Sheet Feature Resource Transitions"
     },
     {
       "number": 20,
       "id": "RKBC-SHEET-WEAPON-MASTERY-RITUAL",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Character Sheet Weapon Mastery And Ritual Projection"
     },
     {
       "number": 21,
       "id": "RKBC-HANDOFF-BATTLE-INIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Character Battle Initialization Projection"
     },
     {
       "number": 22,
       "id": "RKBC-HANDOFF-BATTLE-SETTLEMENT",
-      "status": "blocked",
+      "status": "done",
       "title": "Character Battle Settlement Back To Sheet"
     },
     {
       "number": 23,
       "id": "RKBC-HANDOFF-IDENTITY-CONFLICTS",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Character Battle Identity And Max HP Conflict Handling"
     },
     {
@@ -249,8 +249,8 @@ Current B status:
 | Metric | Current |
 | --- | ---: |
 | Rules-kernel obligations | 15 |
-| Covered obligations | 8 |
-| Open transitional obligations | 5 |
+| Covered obligations | 9 |
+| Open transitional obligations | 4 |
 | Boundary/unsupported obligations | 2 |
 | Rules-kernel profile join coverage | 25/95 (26.3%) |
 | Rules-kernel covered profile coverage | 20/95 (21.1%) |
@@ -261,8 +261,7 @@ Open transitional obligations:
 - `BATTLE.HOLE.SEMANTIC_FRONTIER_CLASSIFICATION`
 - `BATTLE.SURFACE.EXECUTABLE_PROFILE_JOIN`
 - `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT`
-- `SHEET.REST_AND_RESOURCE.TRANSITIONS`
-- `CHARACTER.BATTLE.HANDOFF.SETTLEMENT`
+- `CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS`
 
 ## Done State
 
@@ -407,17 +406,17 @@ Reviewers should reject:
 | 10 | RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION - Spell After Hit Reaction And Marked Effect Profile Join | done | baseline | After-hit, reaction-casting-time, weapon-hosted, marked, attack-sequence, Mirror Image, and linked-effect spell profiles are mapped to precise covered or mapped-open obligations. |
 | 11 | RKBC-PROFILE-JOIN-TABLE-CALLER - Table Caller Profile Join And Boundary Classification | done | RKBC-BATTLE-HOLE-INVENTORY, RKBC-BATTLE-HOLE-TARGETS-AREAS, RKBC-BATTLE-HOLE-MOVEMENT-ROUTE | Table-caller and spatial spell profiles are mapped to covered reducer obligations, boundary-only table facts, or precise mapped-open parity obligations without expanding MBT state space. |
 | 12 | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY - Character Creation Choice Discovery And Cardinality | done | baseline | Choice-hole availability, cardinality, and option legality are split into covered `CREATION.CHOICE_DISCOVERY_CARDINALITY`; remaining creation profile families stay visible in Tasks 13-16. |
-| 13 | RKBC-CREATION-FILL-VALIDATION-BATCH - Character Creation Fill Validation And Atomic Batch | ready-for-research | baseline | Cover fill validation, batch atomicity, rediscovery, and finalization deltas beyond the existing slice. |
-| 14 | RKBC-CREATION-ADVANCEMENT-REPLACEMENT - Character Creation Advancement And Replacement | blocked | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH | Cover advancement replacement semantics and class-feature replacement profiles. |
-| 15 | RKBC-CREATION-SPELLCASTING-PROGRESSION - Character Creation Spell Access Progression And Eldritch Invocation Choices | blocked | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH | Cover Pact Magic progression, Spell Access/progression facts, and Eldritch Invocation choices. |
-| 16 | RKBC-CREATION-WEAPON-MASTERY-FEAT - Character Creation Weapon Mastery And Feat Choice | blocked | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH | Cover Weapon Mastery and feat-choice profiles without duplicating selected Unit behavior. |
-| 17 | RKBC-SHEET-HP-REST-HIT-DICE - Character Sheet HP Rest And Hit Dice Transitions | ready-for-research | baseline | Split HP, healing, Short Rest, Long Rest, and Hit Dice semantics into covered obligations. |
-| 18 | RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS - Character Sheet Spell Slot And Pact Slot Transitions | blocked | RKBC-SHEET-HP-REST-HIT-DICE | Cover spell-slot and pact-slot spend/recovery transitions while reusing `RKBC-SHEET-HP-REST-HIT-DICE` rest timing/benefit semantics. |
-| 19 | RKBC-SHEET-FEATURE-RESOURCES - Character Sheet Feature Resource Transitions | blocked | RKBC-SHEET-HP-REST-HIT-DICE | Cover Lay On Hands, Arcane Recovery, class feature use counts, and similar sheet-owned resources while reusing `RKBC-SHEET-HP-REST-HIT-DICE` HP/rest algebra. |
-| 20 | RKBC-SHEET-WEAPON-MASTERY-RITUAL - Character Sheet Weapon Mastery And Ritual Projection | ready-for-research | baseline | Cover weapon mastery reselection and spellbook/ritual projection semantics. |
-| 21 | RKBC-HANDOFF-BATTLE-INIT - Character Battle Initialization Projection | ready-for-research | baseline | Cover Character Sheet/build projection into battle initialization. |
-| 22 | RKBC-HANDOFF-BATTLE-SETTLEMENT - Character Battle Settlement Back To Sheet | blocked | RKBC-SHEET-HP-REST-HIT-DICE, RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS, RKBC-HANDOFF-BATTLE-INIT | Cover HP, condition, spell-slot, and resource settlement from battle back to sheet. |
-| 23 | RKBC-HANDOFF-IDENTITY-CONFLICTS - Character Battle Identity And Max HP Conflict Handling | blocked | RKBC-SHEET-HP-REST-HIT-DICE, RKBC-HANDOFF-BATTLE-INIT | Cover identity checks, max-HP conflicts, and zero-HP lifecycle handoff. |
+| 13 | RKBC-CREATION-FILL-VALIDATION-BATCH - Character Creation Fill Validation And Atomic Batch | done | baseline | Typed fill validation, batch atomicity, rediscovery, and finalization status remain covered by `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY`; malformed fill payloads are split into boundary-only `CREATION.PROTOCOL.MALFORMED_FILL_REJECTION`. |
+| 14 | RKBC-CREATION-ADVANCEMENT-REPLACEMENT - Character Creation Advancement And Replacement | done | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH | Covered Fighter Fighting Style advancement replacement as `CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT`; Warlock spellcasting/invocation is closed by Task 15, and weapon mastery/feat creation is closed by Task 16. |
+| 15 | RKBC-CREATION-SPELLCASTING-PROGRESSION - Character Creation Spell Access Progression And Eldritch Invocation Choices | done | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH | Covered Warlock Pact Magic Spell Access/Pact Slot progression and Eldritch Invocation choice lifecycle as split obligations. |
+| 16 | RKBC-CREATION-WEAPON-MASTERY-FEAT - Character Creation Weapon Mastery And Feat Choice | done | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH | Covered class-feature feat finalization and Weapon Mastery choice finalization as split character-creation obligations; selected feat/mastery behavior remains owned by selected Unit runtime profiles, and sheet Weapon Mastery reselection remains Task 20. |
+| 17 | RKBC-SHEET-HP-REST-HIT-DICE - Character Sheet HP Rest And Hit Dice Transitions | done | baseline | Covered HP healing, Short Rest, Long Rest, interruption, Hit Point Dice spend/restore, and max-HP reduction reset as `SHEET.HP_REST_HIT_DICE.TRANSITIONS`. |
+| 18 | RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS - Character Sheet Spell Slot And Pact Slot Transitions | done | RKBC-SHEET-HP-REST-HIT-DICE | Covered Spell Slot, created Spell Slot, Pact Slot, Arcane Recovery, and Magical Cunning transitions as `SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS`. |
+| 19 | RKBC-SHEET-FEATURE-RESOURCES - Character Sheet Feature Resource Transitions | done | RKBC-SHEET-HP-REST-HIT-DICE | Covered non-slot feature-resource spend, recovery, reset, conversion, and battle bridge transitions as `SHEET.FEATURE_RESOURCES.TRANSITIONS`. |
+| 20 | RKBC-SHEET-WEAPON-MASTERY-RITUAL - Character Sheet Weapon Mastery And Ritual Projection | done | baseline | Covered Character Sheet Weapon Mastery reselection and spellbook Ritual Spell Access projection with deterministic selected-identity replays. |
+| 21 | RKBC-HANDOFF-BATTLE-INIT - Character Battle Initialization Projection | done | baseline | Covered Character Sheet/build projection into battle initialization as `CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION`. |
+| 22 | RKBC-HANDOFF-BATTLE-SETTLEMENT - Character Battle Settlement Back To Sheet | done | RKBC-SHEET-HP-REST-HIT-DICE, RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS, RKBC-HANDOFF-BATTLE-INIT | Covered HP, Temporary Hit Points, non-Unconscious conditions, ordinary Spell Slots, preserved Pact Slots, and feature-resource settlement as `CHARACTER.BATTLE.HANDOFF.SETTLEMENT`. |
+| 23 | RKBC-HANDOFF-IDENTITY-CONFLICTS - Character Battle Identity And Max HP Conflict Handling | ready-for-research | RKBC-SHEET-HP-REST-HIT-DICE, RKBC-HANDOFF-BATTLE-INIT | Cover `CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS` for identity checks, max-HP conflicts, active Wild Shape, and zero-HP lifecycle handoff. |
 | 24 | RKBC-FINAL-B-CLOSURE-GATE - Final Rules Kernel B Closure Gate | blocked | RKBC-BATTLE-HOLE-INVENTORY, RKBC-BATTLE-HOLE-TARGETS-AREAS, RKBC-BATTLE-HOLE-MOVEMENT-ROUTE, RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION, RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND, RKBC-BATTLE-HOLE-REACTION-CONCENTRATION, RKBC-PROFILE-JOIN-FEATURE-PASSIVE-RESOURCE, RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS, RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION, RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION, RKBC-PROFILE-JOIN-TABLE-CALLER, RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH, RKBC-CREATION-ADVANCEMENT-REPLACEMENT, RKBC-CREATION-SPELLCASTING-PROGRESSION, RKBC-CREATION-WEAPON-MASTERY-FEAT, RKBC-SHEET-HP-REST-HIT-DICE, RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS, RKBC-SHEET-FEATURE-RESOURCES, RKBC-SHEET-WEAPON-MASTERY-RITUAL, RKBC-HANDOFF-BATTLE-INIT, RKBC-HANDOFF-BATTLE-SETTLEMENT, RKBC-HANDOFF-IDENTITY-CONFLICTS, RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY, RKBC-SPELL-SAVE-GATED-CONDITION-PARITY, RKBC-SPELL-ROLL-SCALAR-PARITY, RKBC-SPELL-MAKE-STABLE-PARITY, RKBC-SPELL-SELF-TRANSFORMATION-PARITY, RKBC-SPELL-REACTION-CASTING-PARITY, RKBC-SPELL-AFTER-HIT-RIDERS-PARITY, RKBC-SPELL-WEAPON-HOSTED-PARITY, RKBC-SPELL-MARKED-RIDER-PARITY, RKBC-SPELL-ATTACK-SEQUENCES-PARITY, RKBC-SPELL-MIRROR-IMAGE-PARITY, RKBC-SPELL-LINKED-EFFECT-PARITY, RKBC-SPELL-MOONBEAM-MOVABLE-ZONE-PARITY | Remove merge-acceptable `needs-*` statuses, wire quality gate, and prove reports show B closure. |
 | 25 | RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY - Spell Direct Condition Removal And Protection Parity Witnesses | ready-for-research | RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION | Add focused parity witnesses for direct spell condition application, creature-type protection/charm prevention, condition-immunity Temporary Hit Point refresh, and condition removal/protection obligations. |
 | 26 | RKBC-SPELL-SAVE-GATED-CONDITION-PARITY - Spell Save-Gated Condition Parity Witnesses | ready-for-research | RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION | Add focused parity witnesses for save-gated condition lifecycle, condition-choice holes, non-Sleep repeat saves, and save-gated attack-roll Advantage effects. |
@@ -713,7 +712,7 @@ Acceptance:
 
 ### Task 13 - RKBC-CREATION-FILL-VALIDATION-BATCH - Character Creation Fill Validation And Atomic Batch
 
-Status: `ready-for-research`
+Status: `done`
 
 Scope: cover fill validation, atomic batch behavior, rediscovery after fills,
 and finalization status for current TS-supported creation flows.
@@ -728,7 +727,7 @@ Acceptance:
 
 ### Task 14 - RKBC-CREATION-ADVANCEMENT-REPLACEMENT - Character Creation Advancement And Replacement
 
-Status: `blocked`
+Status: `done`
 
 Depends on: `RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY` and `RKBC-CREATION-FILL-VALIDATION-BATCH`.
 
@@ -741,9 +740,14 @@ Acceptance:
 - Durable character facts are not polluted with transient draft/session state.
 - New obligations have QNT owner and parity witness.
 
+Result: `CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT` covers Fighter
+level-gain replacement for the selected Fighting Style feat through the existing
+focused selected-identity MBT. Warlock Pact Magic/Eldritch Invocation follow-up
+is closed by Task 15; weapon mastery/feat creation is closed by Task 16.
+
 ### Task 15 - RKBC-CREATION-SPELLCASTING-PROGRESSION - Character Creation Spell Access Progression And Eldritch Invocation Choices
 
-Status: `blocked`
+Status: `done`
 
 Depends on: `RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY` and `RKBC-CREATION-FILL-VALIDATION-BATCH`.
 
@@ -757,9 +761,17 @@ Acceptance:
   Spell Invocation is used only for concrete runtime cast attempts.
 - No selected spell behavior is duplicated in the class progression owner.
 
+Result: `CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION` covers Warlock Pact
+Magic Spell Access and Pact Slot progression through build finalization and
+Warlock level gains. `CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE` covers
+Warlock Eldritch Invocation selection count, prerequisite, repeatable-choice,
+replacement, and duplicate-selection lifecycle. Both obligations use the
+existing Warlock selected-identity MBT as the parity witness; Task 16 closes
+the remaining class-feature feat and Weapon Mastery creation profiles.
+
 ### Task 16 - RKBC-CREATION-WEAPON-MASTERY-FEAT - Character Creation Weapon Mastery And Feat Choice
 
-Status: `blocked`
+Status: `done`
 
 Depends on: `RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY` and `RKBC-CREATION-FILL-VALIDATION-BATCH`.
 
@@ -773,9 +785,16 @@ Acceptance:
 - Surface admission evidence is linked but not treated as semantic coverage by
   itself.
 
+Result: `CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION` covers class-feature
+feat choice finalization, and `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION`
+covers Weapon Mastery choice finalization. The focused Fighter Fighting Style
+and Weapon Mastery selected-identity MBTs provide QNT parity witnesses, selected
+Unit behavior remains owned by the selected Unit runtime profiles, and sheet
+Weapon Mastery reselection remains dependency-ordered in Task 20.
+
 ### Task 17 - RKBC-SHEET-HP-REST-HIT-DICE - Character Sheet HP Rest And Hit Dice Transitions
 
-Status: `ready-for-research`
+Status: `done`
 
 Scope: split HP lifecycle, healing, Short Rest, Long Rest, and Hit Dice
 transitions out of `SHEET.REST_AND_RESOURCE.TRANSITIONS`.
@@ -793,9 +812,17 @@ Acceptance:
   interrupted Short Rest no-benefit outcome.
 - Rest-triggered and calendar-time-triggered semantics stay separated.
 
+Result: `SHEET.HP_REST_HIT_DICE.TRANSITIONS` covers Character Sheet Hit Point
+healing, Short Rest and Long Rest start gates, duration completion gates,
+interruption outcomes, Hit Point Dice spending and restoration, and max-HP
+reduction reset. The remaining `SHEET.REST_AND_RESOURCE.TRANSITIONS`
+aggregate now names only slot and feature-resource follow-ups, so Tasks 18 and
+19 are runnable against the shared rest timing/benefit API instead of
+re-modeling rest procedure logic.
+
 ### Task 18 - RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS - Character Sheet Spell Slot And Pact Slot Transitions
 
-Status: `blocked`
+Status: `done`
 
 Depends on: `RKBC-SHEET-HP-REST-HIT-DICE`.
 
@@ -812,14 +839,26 @@ Acceptance:
   outcomes rather than re-modeling rest procedure logic.
 - Covered obligations connect QNT to production sheet runtime behavior.
 
+Result: `SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS` covers ordinary Spell Slot
+capacity/current expenditure, created Spell Slot expiry, Pact Slot expenditure
+derived from Pact Magic capacity, Short Rest Pact Slot recovery, Long Rest
+ordinary/Pact Slot recovery, Arcane Recovery ordinary Spell Slot refund, and
+Magical Cunning Pact Slot recovery. The deterministic QNT replay reuses the
+Task 17 rest completion/interruption API for slot benefit timing, and the
+remaining `SHEET.REST_AND_RESOURCE.TRANSITIONS` aggregate now names only Task
+19's non-slot feature-resource follow-up.
+
 ### Task 19 - RKBC-SHEET-FEATURE-RESOURCES - Character Sheet Feature Resource Transitions
 
-Status: `blocked`
+Status: `done`
 
 Depends on: `RKBC-SHEET-HP-REST-HIT-DICE`.
 
-Scope: cover Lay On Hands, Arcane Recovery, class feature use-count resources,
-healing-resource actions, and related sheet-owned resources. Reuse
+Scope: cover remaining non-slot sheet feature resources: Lay On Hands,
+healing-resource actions, class feature use-count resources, class feature
+point-pool resources, Font of Magic slot/sorcery point conversions, Metamagic
+battle resource bridge, class-feature Long Rest use state, Monk Uncanny
+Metabolism initiative recovery, and related sheet-owned resources. Reuse
 `RKBC-SHEET-HP-REST-HIT-DICE` for HP mutation and rest eligibility/benefit
 timing; this task owns feature-resource spend, recovery, and reset semantics.
 
@@ -831,9 +870,17 @@ Acceptance:
   duplicating HP algebra.
 - Surface/profile rows map through covered obligations.
 
+Result: `SHEET.FEATURE_RESOURCES.TRANSITIONS` covers Lay On Hands spend and
+Long Rest pool reset, class-feature use-count Short Rest recovery,
+class-feature point-pool Long Rest reset, Font of Magic Spell Slot/Sorcery
+Point conversions and gates, Uncanny Metabolism Long Rest use state plus
+Initiative recovery, and the Metamagic shared Sorcery Point battle bridge. The
+deterministic QNT replay uses fixed sheet-resource fixtures because the risk is
+resource ownership/projection, not random interleavings.
+
 ### Task 20 - RKBC-SHEET-WEAPON-MASTERY-RITUAL - Character Sheet Weapon Mastery And Ritual Projection
 
-Status: `ready-for-research`
+Status: `done`
 
 Scope: cover weapon mastery reselection and spellbook/ritual projection
 semantics currently supported by the sheet runtime.
@@ -845,9 +892,17 @@ Acceptance:
 - Creation-time choice state is not duplicated in durable sheet state.
 - Deterministic replay is used only for fixed projection fixtures.
 
+Result: `SHEET.WEAPON_MASTERY.RESELECTION` covers Character Sheet Long Rest
+Weapon Mastery reselection from Surface feature eligibility, rewriting selected
+CharacterBuild class-choice refs without adding durable sheet-local Weapon
+Mastery state. `SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION` covers Wizard
+Ritual Adept Spell Access projection for spellbook Ritual invocation and
+prepared-only rejection. Both use deterministic QNT replay fixtures because the
+covered risk is fixed projection behavior, not random interleavings.
+
 ### Task 21 - RKBC-HANDOFF-BATTLE-INIT - Character Battle Initialization Projection
 
-Status: `ready-for-research`
+Status: `done`
 
 Scope: cover projection from character build/sheet facts into battle
 initialization, including identity, HP, AC, conditions, spellcasting facts, and
@@ -860,9 +915,16 @@ Acceptance:
   boundary makes the duplication executable.
 - Covered obligations connect QNT to production handoff behavior.
 
+Result: `CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION` covers Character Sheet and
+Character Build projection into battle initialization for identity, Hit Points,
+Temporary Hit Points, Armor Class, Conditions, Spell Slots, Metamagic facts, and
+supported Unit profile refs. The witness uses deterministic QNT replay because
+the covered risk is a fixed runtime-boundary projection, not random battle
+action interleavings.
+
 ### Task 22 - RKBC-HANDOFF-BATTLE-SETTLEMENT - Character Battle Settlement Back To Sheet
 
-Status: `blocked`
+Status: `done`
 
 Depends on: `RKBC-SHEET-HP-REST-HIT-DICE`, `RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS`, and `RKBC-HANDOFF-BATTLE-INIT`.
 
@@ -875,14 +937,23 @@ Acceptance:
 - Runtime encounter state is not stored as durable character creation output.
 - Covered obligations and witnesses prove current TS-supported settlement.
 
+Result: `CHARACTER.BATTLE.HANDOFF.SETTLEMENT` covers current TS-supported
+settlement for battle-owned HP, Temporary Hit Points, non-Unconscious
+conditions, ordinary Spell Slot expenditure, preserved Pact Slot state,
+feature-resource expenditure, source-ambiguous created Spell Slot rejection, and
+unchanged `CharacterBuild` output. The witness uses deterministic QNT replay
+because the covered risk is fixed handoff-boundary settlement, not random battle
+action interleavings.
+
 ### Task 23 - RKBC-HANDOFF-IDENTITY-CONFLICTS - Character Battle Identity And Max HP Conflict Handling
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `RKBC-SHEET-HP-REST-HIT-DICE` and `RKBC-HANDOFF-BATTLE-INIT`.
 
-Scope: cover identity checks, stale combatant/session conflict handling, max HP
-changes, and zero-HP lifecycle edges across sheet/battle handoff.
+Scope: cover `CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS` for identity checks,
+stale combatant/session conflict handling, max HP changes, active Wild Shape,
+and zero-HP lifecycle edges across sheet/battle handoff.
 
 Acceptance:
 

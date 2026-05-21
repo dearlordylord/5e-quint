@@ -616,6 +616,56 @@ module characterCreationRuntimeSlice {
     }
   }
 
+  run test_stale_revision_rejected_atomically = {
+    match fillCreationHoles(emptyDraft, 1, []) {
+      | Accepted(_) => assert(false)
+      | Rejected(v) =>
+          all {
+            assert(v.draft == emptyDraft),
+            assert(v.holes == initialHoleIds),
+            assert(v.issues.batch == Set(StaleRevision)),
+            assert(v.issues.fills == Set()),
+            assert(v.finalization == Incomplete),
+          }
+    }
+  }
+
+  run test_wrong_fill_kind_rejected_atomically = {
+    match fillCreationHoles(emptyDraft, 0, [
+      FAbilityScores({
+        hole: HProgression,
+        method: StandardArray,
+        scores: fighterStandardArray,
+      }),
+    ]) {
+      | Accepted(_) => assert(false)
+      | Rejected(v) =>
+          all {
+            assert(v.draft == emptyDraft),
+            assert(v.holes == initialHoleIds),
+            assert(v.issues.batch == Set()),
+            assert(v.issues.fills == Set({ fillIndex: 0, hole: HProgression, code: WrongFillKind })),
+            assert(v.finalization == Incomplete),
+          }
+    }
+  }
+
+  run test_unopened_protocol_hole_rejected_as_unknown_hole = {
+    match fillCreationHoles(emptyDraft, 0, [
+      FChoice({ hole: HLoadoutArmor, options: [OLoadoutWorn] }),
+    ]) {
+      | Accepted(_) => assert(false)
+      | Rejected(v) =>
+          all {
+            assert(v.draft == emptyDraft),
+            assert(v.holes == initialHoleIds),
+            assert(v.issues.batch == Set()),
+            assert(v.issues.fills == Set({ fillIndex: 0, hole: HLoadoutArmor, code: UnknownHole })),
+            assert(v.finalization == Incomplete),
+          }
+    }
+  }
+
   run test_unsupported_language_fill_rejected_atomically = {
     match fillCreationHoles(emptyDraft, 0, [
       FChoice({ hole: HLanguages, options: [OLanguageDwarvish, OLanguageElvish] }),

@@ -21,10 +21,16 @@ module battleRuntimeGroundCommand {
   pure val fogCloudAreaId = 2
   pure val fogCloudBaseRadiusFeet = 20
   pure val fogCloudRadiusFeetPerSlotAboveFirst = 20
+  pure val darknessDurationTicks = 100
+  pure val darknessAreaId = 5
+  pure val darknessRadiusFeet = 15
   pure val flamingSphereDurationTicks = 10
   pure val flamingSphereAreaId = 3
   pure val flamingSphereDiameterFeet = 5
   pure val flamingSphereRamMaxMoveFeet = 30
+  pure val webDurationTicks = 600
+  pure val webAreaId = 4
+  pure val webSideFeet = 20
 
   pure def activeEffectsWithoutGreaseGroundHazard(effects: Set[ActiveEffect], areaId: int): Set[ActiveEffect] =
     effects.filter(effect => match effect {
@@ -63,14 +69,23 @@ module battleRuntimeGroundCommand {
       | _ => false
     })
 
-  pure def greaseGroundDifficultTerrainMovementCost(state: BattleState, areaId: int, totalDistanceFeet: int, greaseDistanceFeet: int): int =
-    if (greaseGroundHazardActive(state, areaId) and totalDistanceFeet > 0 and greaseDistanceFeet > 0 and greaseDistanceFeet <= totalDistanceFeet)
-      totalDistanceFeet + greaseDistanceFeet
+  pure def webAreaHazardActiveForTerrain(state: BattleState, areaId: int): bool =
+    state.fighter.activeEffects.exists(effect => match effect {
+      | WebRestraintHazard(data) => data.areaId == areaId
+      | _ => false
+    })
+
+  pure def areaDifficultTerrainActive(state: BattleState, areaId: int): bool =
+    greaseGroundHazardActive(state, areaId) or webAreaHazardActiveForTerrain(state, areaId)
+
+  pure def areaDifficultTerrainMovementCost(state: BattleState, areaId: int, totalDistanceFeet: int, difficultTerrainDistanceFeet: int): int =
+    if (areaDifficultTerrainActive(state, areaId) and totalDistanceFeet > 0 and difficultTerrainDistanceFeet > 0 and difficultTerrainDistanceFeet <= totalDistanceFeet)
+      totalDistanceFeet + difficultTerrainDistanceFeet
     else
       0
 
   pure def moveFighterThroughGreaseGroundDifficultTerrain(state: BattleState, areaId: int, totalDistanceFeet: int, greaseDistanceFeet: int, provokedByTable: bool): BattleState = {
-    val movementCost = greaseGroundDifficultTerrainMovementCost(state, areaId, totalDistanceFeet, greaseDistanceFeet)
+    val movementCost = areaDifficultTerrainMovementCost(state, areaId, totalDistanceFeet, greaseDistanceFeet)
     if (movementCost == 0)
       state
     else
@@ -145,6 +160,55 @@ module battleRuntimeGroundCommand {
       breakConcentrationSpellEffects(state, Fighter)
     else
       state
+
+  pure def activeEffectsWithoutMagicalDarknessPointOrigin(effects: Set[ActiveEffect], areaId: int): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | MagicalDarknessPointOrigin(data) => data.areaId != areaId
+      | _ => true
+    })
+
+  pure def resolveDarknessPointOrigin(
+    state: BattleState,
+    areaId: int,
+    slotLevel: int,
+  ): BattleState =
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)) or slotLevel < 2)
+      state
+    else {
+      val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
+      commitActorSpellSlotUse({
+        ...withoutPrior,
+        fighter: {
+          ...withoutPrior.fighter,
+          concentrating: true,
+          activeEffects: activeEffectsWithoutMagicalDarknessPointOrigin(withoutPrior.fighter.activeEffects, areaId)
+            .union(Set(MagicalDarknessPointOrigin({
+              areaId: areaId,
+              radiusFeet: darknessRadiusFeet,
+              durationTicks: darknessDurationTicks,
+            }))),
+        },
+        actionAvailable: false,
+      }, Fighter)
+    }
+
+  pure def magicalDarknessPointOriginActive(state: BattleState, areaId: int): bool =
+    state.fighter.activeEffects.exists(effect => match effect {
+      | MagicalDarknessPointOrigin(data) => data.areaId == areaId
+      | _ => false
+    })
+
+  pure def magicalDarknessPointOriginSightObscurement(state: BattleState, areaId: int, observer: SightObserver): SightObscurement =
+    if (magicalDarknessPointOriginActive(state, areaId))
+      HeavilyObscuredSight
+    else
+      UnobscuredSight
+
+  pure def magicalDarknessPointOriginNonmagicalLightIllumination(state: BattleState, areaId: int, baseIllumination: Illumination): Illumination =
+    if (magicalDarknessPointOriginActive(state, areaId))
+      DarknessIllumination
+    else
+      baseIllumination
 
   pure def flamingSphereDamageDice(slotLevel: int): int =
     2 + (slotLevel - 2)
@@ -293,6 +357,161 @@ module battleRuntimeGroundCommand {
       state
     else
       { ...state, bonusActionAvailable: false }
+
+  pure def activeEffectsWithoutWebRestraintHazard(effects: Set[ActiveEffect], areaId: int): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | WebRestraintHazard(data) => data.areaId != areaId
+      | _ => true
+    })
+
+  pure def activeEffectsWithoutWebRestrainedFrom(effects: Set[ActiveEffect], source: Actor): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | WebRestrained(data) => data.source != source
+      | _ => true
+    })
+
+  pure def webRestraintHazardActive(state: BattleState, areaId: int): bool =
+    webAreaHazardActiveForTerrain(state, areaId)
+
+  pure def webRestraintHazardDurationTicks(state: BattleState, areaId: int): int =
+    state.fighter.activeEffects
+      .map(effect => match effect {
+        | WebRestraintHazard(data) => if (data.areaId == areaId) data.durationTicks else 0
+        | _ => 0
+      })
+      .fold(0, (highest, durationTicks) => if (highest > durationTicks) highest else durationTicks)
+
+  pure def webEntrySaveAlreadyResolved(state: BattleState, targetActor: Actor, areaId: int): bool =
+    state.fighter.activeEffects.exists(effect => match effect {
+      | WebRestraintHazard(data) => data.areaId == areaId and data.entrySavedThisTurn.contains(targetActor)
+      | _ => false
+    })
+
+  pure def webStartTurnSaveAlreadyResolved(state: BattleState, targetActor: Actor, areaId: int): bool =
+    state.fighter.activeEffects.exists(effect => match effect {
+      | WebRestraintHazard(data) => data.areaId == areaId and data.startTurnSavedThisTurn.contains(targetActor)
+      | _ => false
+    })
+
+  pure def webRestraintSaveAlreadyResolved(state: BattleState, targetActor: Actor, areaId: int, triggerIsEntry: bool): bool =
+    if (triggerIsEntry)
+      webEntrySaveAlreadyResolved(state, targetActor, areaId)
+    else
+      webStartTurnSaveAlreadyResolved(state, targetActor, areaId)
+
+  pure def markWebSavedThisTurn(state: BattleState, targetActor: Actor, areaId: int, triggerIsEntry: bool): BattleState =
+    {
+      ...state,
+      fighter: {
+        ...state.fighter,
+        activeEffects: state.fighter.activeEffects.map(effect => match effect {
+          | WebRestraintHazard(data) =>
+              if (data.areaId == areaId)
+                if (triggerIsEntry)
+                  WebRestraintHazard({ ...data, entrySavedThisTurn: data.entrySavedThisTurn.union(Set(targetActor)) })
+                else
+                  WebRestraintHazard({ ...data, startTurnSavedThisTurn: data.startTurnSavedThisTurn.union(Set(targetActor)) })
+              else
+                effect
+          | _ => effect
+        }),
+      },
+    }
+
+  pure def resolveWeb(
+    state: BattleState,
+    areaId: int,
+    slotLevel: int,
+  ): BattleState =
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)) or slotLevel < 2)
+      state
+    else {
+      val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
+      commitActorSpellSlotUse({
+        ...withoutPrior,
+        fighter: {
+          ...withoutPrior.fighter,
+          concentrating: true,
+          activeEffects: activeEffectsWithoutWebRestraintHazard(withoutPrior.fighter.activeEffects, areaId)
+            .union(Set(WebRestraintHazard({
+              areaId: areaId,
+              sideFeet: webSideFeet,
+              durationTicks: webDurationTicks,
+              entrySavedThisTurn: Set(),
+              startTurnSavedThisTurn: Set(),
+            }))),
+        },
+        actionAvailable: false,
+      }, Fighter)
+    }
+
+  pure def combatantAfterWebRestraintSave(
+    state: BattleState,
+    target: Combatant,
+    savingThrowSucceeded: bool,
+    areaId: int,
+  ): Combatant =
+    if (savingThrowSucceeded)
+      target
+    else {
+      val durationTicks = webRestraintHazardDurationTicks(state, areaId)
+      {
+        ...target,
+        activeEffects: activeEffectsWithoutWebRestrainedFrom(target.activeEffects, Fighter)
+          .union(Set(WebRestrained({ source: Fighter, durationTicks: durationTicks }))),
+      }
+    }
+
+  pure def resolveWebRestraintSave(
+    state: BattleState,
+    targetActor: Actor,
+    areaId: int,
+    triggerIsEntry: bool,
+    savingThrowSucceeded: bool,
+  ): BattleState =
+    if (not(webRestraintHazardActive(state, areaId)) or webRestraintSaveAlreadyResolved(state, targetActor, areaId, triggerIsEntry))
+      state
+    else {
+      val marked = markWebSavedThisTurn(state, targetActor, areaId, triggerIsEntry)
+      match targetActor {
+        | Fighter => { ...marked, fighter: combatantAfterWebRestraintSave(marked, marked.fighter, savingThrowSucceeded, areaId) }
+        | Goblin => { ...marked, goblin: combatantAfterWebRestraintSave(marked, marked.goblin, savingThrowSucceeded, areaId) }
+      }
+    }
+
+  pure def escapeWebRestrained(state: BattleState, targetActor: Actor, checkSucceeded: bool): BattleState =
+    if (currentActor(state) != targetActor or not(state.actionAvailable))
+      state
+    else {
+      match targetActor {
+        | Fighter => {
+            ...state,
+            fighter: if (checkSucceeded) { ...state.fighter, activeEffects: activeEffectsWithoutWebRestrainedFrom(state.fighter.activeEffects, Fighter) } else state.fighter,
+            actionAvailable: false,
+          }
+        | Goblin => {
+            ...state,
+            goblin: if (checkSucceeded) { ...state.goblin, activeEffects: activeEffectsWithoutWebRestrainedFrom(state.goblin.activeEffects, Fighter) } else state.goblin,
+            actionAvailable: false,
+          }
+      }
+    }
+
+  pure def webRestrainedNoLongerInArea(state: BattleState, targetActor: Actor, areaId: int): BattleState =
+    if (not(webRestraintHazardActive(state, areaId)))
+      state
+    else {
+      match targetActor {
+        | Fighter => { ...state, fighter: { ...state.fighter, activeEffects: activeEffectsWithoutWebRestrainedFrom(state.fighter.activeEffects, Fighter) } }
+        | Goblin => { ...state, goblin: { ...state.goblin, activeEffects: activeEffectsWithoutWebRestrainedFrom(state.goblin.activeEffects, Fighter) } }
+      }
+    }
+
+  pure def removeWebArea(state: BattleState, areaId: int): BattleState =
+    if (webRestraintHazardActive(state, areaId))
+      breakConcentrationSpellEffects(state, Fighter)
+    else
+      state
 
   pure def commandMaxTargets(slotLevel: int): int =
     slotLevel

@@ -1,13 +1,14 @@
 // -*- mode: Bluespec; -*-
 
 // KERNEL-COVERAGE: qnt-owner BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
-// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-mirror-image-hit-interception
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-self-transformation-mode
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-object-contact-damage
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-ongoing-spell-ending
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-object-contact-damage
-// UNIT-PROFILE-COVERAGE: qnt-owner spell.creature-type-protection-and-charm spell.find-familiar-lifecycle spell.invocation-after-hit-damage spell.invocation-after-hit-damage-illumination spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-blur-attack-roll-defense spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-removal-protection spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-dancing-lights-movable-dim-light spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-flaming-sphere-hazard-ram spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-independent-attack-sequence spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-save-gated-condition-immunity spell.invocation-self-ability-check-advantage spell.invocation-self-teleport spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-created-held-object spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.scalar-buff unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-failed-d20-test unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.passive-saving-throw-roll-mode unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.creature-type-protection-and-charm spell.find-familiar-lifecycle spell.invocation-after-hit-damage spell.invocation-after-hit-damage-illumination spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-blur-attack-roll-defense spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-removal-protection spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-dancing-lights-movable-dim-light spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-flaming-sphere-hazard-ram spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-independent-attack-sequence spell.invocation-jump-movement-replacement spell.invocation-magical-darkness-point-origin spell.invocation-magic-weapon-enhancement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-save-gated-condition-immunity spell.invocation-self-ability-check-advantage spell.invocation-self-teleport spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-created-held-object spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.scalar-buff unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-failed-d20-test unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.passive-saving-throw-roll-mode unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.monk-focus-battle-options
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-mirror-image-hit-interception
@@ -18,7 +19,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-self-ability-check-advantage
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-condition-immunity-turn-start-temporary-hit-points
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-chained-attack-damage
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-damage spell.invocation-after-hit-damage-illumination spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-damage spell.invocation-after-hit-damage-illumination spell.invocation-magic-weapon-enhancement spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-marked-damage-rider
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-attack-roll-advantage-save
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-save-gated-condition-immunity
@@ -33,6 +34,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-hideous-laughter-repeat-save-lifecycle
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-grease-ground-hazard
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-fog-cloud-obscurement
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-magical-darkness-point-origin
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-flaming-sphere-hazard-ram
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-command-halt-grovel
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-command-drop-held-object
@@ -47,6 +49,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.creature-type-protection-and-charm
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-condition-removal-protection
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-object-light
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-ongoing-spell-ending
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-held-light-emitter spell.invocation-dancing-lights-movable-dim-light spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-make-stable
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.find-familiar-lifecycle
@@ -57,9 +60,16 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-direct-condition-removal
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-moonbeam-movable-zone
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-web-restraint-hazard
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-direct-condition-removal
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-self-transformation-mode
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.druid-wild-shape-known-form
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-web-restraint-hazard
+// RAW trace: SRD 5.2.1 Spells/Descriptions-A-D#Darkness says magical
+// Darkness spreads from a point within range, fills a 15-foot-radius Sphere,
+// Darkvision cannot see through it, and nonmagical light cannot illuminate it.
+// This profile models only that point-origin branch. The object-origin branch
+// and spell-created-light overlap dispel rule remain separate follow-ups.
 module battleRuntime {
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
@@ -391,6 +401,21 @@ module battleRuntime {
   //   a creature's space for the same save and damage. Barrier, pit, exact
   //   area membership, object ignition, and light-rendering witnesses remain
   //   table/presentation facts outside this promoted hazard/ram subset.
+  //   Spells/Descriptions-S-Z.md lines 1264-1279, Rules-Glossary.md lines
+  //   395-397, 656-658, and 832-840, Playing-the-Game.md lines 374-376
+  //   and 533-551, and
+  //   UBIQUITOUS_LANGUAGE.md: Web is a level-2 Action spell that creates a
+  //   caller-supplied 20-foot Cube for up to 1 hour of Concentration, forces
+  //   Dexterity Saving Throws when a creature first enters on a turn or starts
+  //   a turn there, applies Restrained on failure, and lets the restrained
+  //   creature spend an action on a Strength (Athletics) check to escape. This
+  //   subset models active area identity, table-triggered save witnesses,
+  //   spell-owned Restrained, escape, no-longer-in-area cleanup, active-area
+  //   Difficult Terrain movement-cost witnesses, Lightly Obscured Cube
+  //   projection, and area removal/concentration cleanup. Anchoring/layering
+  //   collapse, flat-surface depth, and fire-exposed 5-foot Cube burn-away and
+  //   damage remain table/spatial/environment witnesses instead of duplicated
+  //   runtime map-section state.
   //   Spells/Descriptions-A-D.md lines 820-835, Playing-the-Game.md lines
   //   533-551 and 634-640, Rules-Glossary.md lines 738-740 and 904-910,
   //   and UBIQUITOUS_LANGUAGE.md: Command is a level-1 Action spell whose

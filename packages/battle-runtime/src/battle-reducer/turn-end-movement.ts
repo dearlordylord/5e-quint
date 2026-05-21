@@ -3,16 +3,20 @@
 // intended.
 
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram spell.invocation-moonbeam-movable-zone
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE BATTLE.COMMAND.OPTION_AND_NEXT_TURN BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
-import { Either } from "effect";
+import { Either, Match } from "effect";
 
 import {
   resetTurnActionEconomy,
   spendAction,
+  spendActivationResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
 
 import {
@@ -50,6 +54,7 @@ import {
   type BattleMovementSpeedKind,
   type BattleSubject,
 } from "../battle-subjects.ts";
+import { characterBattleResourceIsUseCount } from "../character-battle-resources.ts";
 
 import { type BattleReactionTrigger } from "../battle-reaction-triggers.ts";
 
@@ -70,12 +75,16 @@ import { attackActionOptionsForActor } from "./attack-damage-apply.ts";
 
 import { currentActorId } from "./creature-state-leaves.ts";
 
-import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state.ts";
+import {
+  battleCreatureStateWithKnockOutPreservedConditions,
+  combatantCanTakeActions,
+} from "./creature-state.ts";
 
 import {
   applyStartTurnDeathSavingThrow,
   applyHitPointMaximumIncreaseExpiration,
   applyTemporaryHitPoints,
+  breakBattleConcentration,
   breakCombatantConcentration,
   concentrationSavingThrowHole,
   damageLifecycleConcentrationSavingThrowHoles,
@@ -141,11 +150,17 @@ import {
 import {
   applyCommandGrovelProneToTarget,
   applyGreaseProneToTarget,
+  applyWebRestrainedCondition,
   expireBattleLightEmitters,
+  markWebSavedThisTurn,
   markMoonbeamSavedThisTurn,
+  removeWebRestrainedCondition,
+  replaceGustOfWindLineDirection,
   resetAllMoonbeamSavedThisTurn,
+  resetAllWebSavedThisTurn,
   tickDurationBattleLightEmitters,
 } from "./spells-active-effects.ts";
+import { validateGustOfWindLineAreaPushFacts } from "./spells-resolve-save-gates.ts";
 
 import {
   attackActionOptionName,
@@ -172,24 +187,32 @@ import type {
   BattleFlamingSphereRamMovementHole,
   BattleFlamingSphereSavingThrowOutcomeHole,
   BattleFlamingSphereTrigger,
+  BattleAreaDifficultTerrainMovementFact,
+  BattleAreaDifficultTerrainSource,
+  BattleGustOfWindLineDirectionChoiceHole,
+  BattleGustOfWindLineMovementFact,
+  BattleGustOfWindLineSavingThrowOutcomeHole,
   BattleMoonbeamDamageRollHole,
   BattleMoonbeamSaveTrigger,
   BattleMoonbeamSavingThrowOutcomeHole,
   BattleMovableZoneRepositionMovementHole,
-  BattleGreaseGroundDifficultTerrainMovementFact,
   BattleGrappleLink,
   BattleGreaseGroundHazardSavingThrowOutcomeHole,
+  BattleWebRestraintSavingThrowOutcomeHole,
+  BattleWebRestraintTrigger,
   BattleHideousLaughterRepeatSavingThrowOutcomeHole,
   BattleHeldObjectFactsHole,
   BattleHoleId,
   BattleJumpMovementReplacementFact,
   BattleMovementHole,
+  BattleMovementFillValue,
   BattleOpportunityAttackThreat,
   BattleResolutionInput,
   BattleResolutionInputForSubject,
   BattleResolutionResult,
   BattleResolvedMovement,
   BattleSleepRepeatSavingThrowOutcomeHole,
+  BattleSpellAreaChoice,
   BattleSpellConditionEndTurnSavingThrowOutcomeHole,
   BattleSpellTurnStartDamageRollHole,
   BattleSpellTurnStartSavingThrowOutcomeHole,
@@ -338,8 +361,11 @@ export function resolveEndTurn(
   const combatantsAfterMoonbeamReset = resetAllMoonbeamSavedThisTurn(
     combatantsAfterStartEffects,
   );
-  const combatantsAfterStartTurnEffects = applyStartOfTurnActiveEffects(
+  const combatantsAfterWebSaveReset = resetAllWebSavedThisTurn(
     combatantsAfterMoonbeamReset,
+  );
+  const combatantsAfterStartTurnEffects = applyStartOfTurnActiveEffects(
+    combatantsAfterWebSaveReset,
     nextActorId,
   );
   const combatantsAfterSpellTurnStartDamage = applyStartTurnSpellDamageFills(
@@ -884,6 +910,10 @@ export type GreaseGroundHazardEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "greaseGroundHazard" }
 >;
+export type WebRestraintHazardEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "webRestraintHazard" }
+>;
 export type FlamingSphereEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "flamingSphere" }
@@ -891,6 +921,10 @@ export type FlamingSphereEffect = Extract<
 export type MoonbeamEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "moonbeam" }
+>;
+export type GustOfWindLineEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "gustOfWindLine" }
 >;
 export type CommandPendingEffect = Extract<
   BattleActiveEffect,
@@ -1731,6 +1765,279 @@ function resolveGreaseGroundHazardEntrySaveCommand(
   };
 }
 
+function webRestraintHazardEffectFor(
+  state: BattleState,
+  subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command:
+        | "webRestraintSave"
+        | "webRestrainedNoLongerInArea"
+        | "webAreaRemoved";
+    }
+  >,
+): WebRestraintHazardEffect | undefined {
+  const source = state.combatants.get(subject.sourceCombatantId);
+  return source?.activeEffects.find(
+    (effect): effect is WebRestraintHazardEffect =>
+      effect.kind === "webRestraintHazard" &&
+      effect.sourceSpellId === subject.sourceSpellId &&
+      effect.sourceCombatantId === subject.sourceCombatantId &&
+      effect.areaId === subject.areaId,
+  );
+}
+
+export function webRestraintSavingThrowOutcomeHole(
+  state: BattleState,
+  targetId: CombatantId,
+  effect: WebRestraintHazardEffect,
+  trigger: BattleWebRestraintTrigger,
+): BattleWebRestraintSavingThrowOutcomeHole {
+  const key = `battle:web-restraint-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}:${trigger}`;
+  return {
+    kind: "savingThrowOutcome",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: `${effect.sourceSpellId} ${trigger === "entersArea" ? "entry" : "start-turn"} DEX save`,
+    webRestraint: {
+      targetId,
+      sourceSpellId: effect.sourceSpellId,
+      sourceCombatantId: effect.sourceCombatantId,
+      areaId: effect.areaId,
+      trigger,
+      save: effect.save,
+    },
+    ability: effect.save.ability,
+    dc: effect.save.dc,
+    areaChoices: [],
+    targetRollModes: savingThrowRollModeProjections(
+      state,
+      effect.save.ability,
+    ).filter((projection) => projection.targetId === targetId),
+    targetFlatBonuses: savingThrowFlatBonusProjections(state).filter(
+      (projection) => projection.targetId === targetId,
+    ),
+  };
+}
+
+function validateWebRestraintSavingThrowOutcome(
+  value: BattleSavingThrowOutcomeValue,
+  targetId: CombatantId,
+): string | null {
+  if ("area" in value) {
+    return "Web Restraint Saving Throw outcome must not include area facts.";
+  }
+  return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
+    ? null
+    : "Web Restraint Saving Throw outcome must match the triggering target.";
+}
+
+function webRestraintSaveAlreadyResolved(
+  effect: WebRestraintHazardEffect,
+  targetId: CombatantId,
+  trigger: BattleWebRestraintTrigger,
+): boolean {
+  return trigger === "entersArea"
+    ? effect.entrySavedThisTurn.includes(targetId)
+    : effect.startTurnSavedThisTurn.includes(targetId);
+}
+
+export function resolveWebRestraintSaveCommand(
+  input: BattleResolutionInput & {
+    readonly subject: Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "webRestraintSave";
+      }
+    >;
+    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+  },
+): BattleResolutionResult {
+  if (
+    input.fills.some((fill) => fill.kind !== "savingThrowOutcome") ||
+    input.fills.length > 1
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Web Restraint save accepts exactly one Saving Throw outcome fill.",
+    );
+  }
+  const effect = webRestraintHazardEffectFor(input.state, input.subject);
+  if (
+    effect === undefined ||
+    !input.state.combatants.has(input.subject.actorId)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Web Restraint save is no longer available.",
+    );
+  }
+  if (
+    webRestraintSaveAlreadyResolved(
+      effect,
+      input.subject.actorId,
+      input.subject.trigger,
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Web Restraint save was already resolved for this target this turn.",
+    );
+  }
+  const hole = webRestraintSavingThrowOutcomeHole(
+    input.state,
+    input.subject.actorId,
+    effect,
+    input.subject.trigger,
+  );
+  const [savingThrowFill] = input.fills;
+  if (savingThrowFill === undefined) {
+    return needsHolesResult(input.state, input.subject, [hole]);
+  }
+  if (savingThrowFill.kind !== "savingThrowOutcome") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Web Restraint save requires a Saving Throw outcome fill.",
+    );
+  }
+  if (savingThrowFill.holeId !== hole.holeId) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Web Restraint save requires the matching Saving Throw outcome fill.",
+    );
+  }
+  const validation = validateWebRestraintSavingThrowOutcome(
+    savingThrowFill.value,
+    input.subject.actorId,
+  );
+  if (validation !== null) {
+    return invalidResult(input.state, "invalidFill", validation);
+  }
+  const outcome = savingThrowFill.value.outcomes[0]!;
+  if (!outcome.succeeded) {
+    const saveFailedReactionWindow = maybeOpenReactionWindow(
+      input.state,
+      {
+        trigger: "saveFailed",
+        targetId: input.subject.actorId,
+        sourceSpellId: effect.sourceSpellId,
+        continuation: {
+          kind: "replay",
+          subject: input.subject,
+          fills: input.fills,
+        },
+      },
+      input.suppressedReactionTrigger,
+    );
+    if (saveFailedReactionWindow !== null) {
+      return saveFailedReactionWindow;
+    }
+  }
+  const marked = markWebSavedThisTurn(
+    input.state,
+    input.subject.actorId,
+    effect,
+    input.subject.trigger,
+  );
+  const nextEffect = webRestraintHazardEffectFor(marked, input.subject);
+  const nextState =
+    !outcome.succeeded && nextEffect !== undefined
+      ? applyWebRestrainedCondition(marked, input.subject.actorId, nextEffect)
+      : marked;
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+export function resolveWebRestrainedNoLongerInAreaCommand(
+  input: BattleResolutionInput & {
+    readonly subject: Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "webRestrainedNoLongerInArea";
+      }
+    >;
+  },
+): BattleResolutionResult {
+  if (input.fills.length > 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Web no-longer-in-area cleanup uses no fills.",
+    );
+  }
+  if (webRestraintHazardEffectFor(input.state, input.subject) === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Web Restraint cleanup is no longer available.",
+    );
+  }
+  const nextState = removeWebRestrainedCondition({
+    state: input.state,
+    targetId: input.subject.actorId,
+    sourceCombatantId: input.subject.sourceCombatantId,
+    sourceSpellId: input.subject.sourceSpellId,
+  });
+  return nextState === input.state
+    ? invalidResult(
+        input.state,
+        "staleSubject",
+        "Web Restraint cleanup is no longer available.",
+      )
+    : {
+        tag: "resolved",
+        state: nextState,
+        snapshot: snapshotBattle(nextState),
+      };
+}
+
+export function resolveWebAreaRemovedCommand(
+  input: BattleResolutionInput & {
+    readonly subject: Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "webAreaRemoved";
+      }
+    >;
+  },
+): BattleResolutionResult {
+  if (input.fills.length > 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Web area removal uses no fills.",
+    );
+  }
+  if (webRestraintHazardEffectFor(input.state, input.subject) === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Web area is no longer active.",
+    );
+  }
+  const nextState = breakBattleConcentration(
+    input.state,
+    input.subject.sourceCombatantId,
+  );
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
 function resolveGreaseGroundHazardEndTurnSaveCommand(
   input: BattleResolutionInput & {
     readonly subject: Extract<
@@ -1848,6 +2155,319 @@ function resolveGreaseGroundHazardEndTurnSaveCommand(
   return endTurnResult.tag === "needsHoles"
     ? { ...endTurnResult, subject: input.subject }
     : endTurnResult;
+}
+
+function gustOfWindLineEffectFor(
+  state: BattleState,
+  subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "gustOfWindLineSave" | "gustOfWindLineDirectionChange";
+    }
+  >,
+): GustOfWindLineEffect | undefined {
+  const source = state.combatants.get(subject.sourceCombatantId);
+  return source?.activeEffects.find(
+    (effect): effect is GustOfWindLineEffect =>
+      effect.kind === "gustOfWindLine" &&
+      effect.sourceSpellId === subject.sourceSpellId &&
+      effect.sourceCombatantId === subject.sourceCombatantId &&
+      effect.areaId === subject.areaId &&
+      effect.directionId === subject.directionId,
+  );
+}
+
+export function gustOfWindLineSavingThrowOutcomeHole(
+  state: BattleState,
+  targetId: CombatantId,
+  effect: GustOfWindLineEffect,
+  trigger: "endsTurnInLine",
+): BattleGustOfWindLineSavingThrowOutcomeHole {
+  const key = `battle:gust-of-wind-line-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}:${effect.directionId}:${trigger}`;
+  return {
+    kind: "savingThrowOutcome",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: `${effect.sourceSpellId} end-turn STR save`,
+    gustOfWindLine: {
+      targetId,
+      sourceSpellId: effect.sourceSpellId,
+      sourceCombatantId: effect.sourceCombatantId,
+      areaId: effect.areaId,
+      directionId: effect.directionId,
+      trigger,
+      save: effect.save,
+      pushDistanceFeet: effect.pushDistanceFeet,
+    },
+    ability: effect.save.ability,
+    dc: effect.save.dc,
+    areaChoices: [],
+    targetRollModes: savingThrowRollModeProjections(
+      state,
+      effect.save.ability,
+    ).filter((projection) => projection.targetId === targetId),
+    targetFlatBonuses: savingThrowFlatBonusProjections(state).filter(
+      (projection) => projection.targetId === targetId,
+    ),
+  };
+}
+
+export function gustOfWindLineDirectionChoiceHole(
+  effect: GustOfWindLineEffect,
+): BattleGustOfWindLineDirectionChoiceHole {
+  const key = `battle:gust-of-wind-line-direction:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}:${effect.directionId}`;
+  return {
+    kind: "gustOfWindLineDirectionChoice",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: `${effect.sourceSpellId} Line direction`,
+    sourceCombatantId: effect.sourceCombatantId,
+    sourceSpellId: effect.sourceSpellId,
+    areaId: effect.areaId,
+    directionId: effect.directionId,
+    requiresTableSpatialFact: true,
+  };
+}
+
+function validateGustOfWindLineSavingThrowOutcome(
+  value: BattleSavingThrowOutcomeValue,
+  targetId: CombatantId,
+  effect: GustOfWindLineEffect,
+): string | null {
+  if (!("area" in value)) {
+    return "Gust of Wind Line Saving Throw outcome requires Line area facts.";
+  }
+  const area: BattleSpellAreaChoice = value.area;
+  if (
+    area.kind !== "gustOfWindLineArea" ||
+    area.areaId !== effect.areaId ||
+    area.directionId !== effect.directionId ||
+    area.originAnchorId !== effect.sourceCombatantId
+  ) {
+    return "Gust of Wind Line Saving Throw outcome must match the active Line area.";
+  }
+  if (
+    area.affectedTargetIds.length !== 1 ||
+    area.affectedTargetIds[0] !== targetId ||
+    value.outcomes.length !== 1 ||
+    value.outcomes[0]?.targetId !== targetId
+  ) {
+    return "Gust of Wind Line Saving Throw outcome must match the ending-turn target.";
+  }
+  return validateGustOfWindLineAreaPushFacts({
+    area,
+    failedTargetIds: value.outcomes[0]?.succeeded === true ? [] : [targetId],
+    pushDistanceFeet: effect.pushDistanceFeet,
+  });
+}
+
+export function resolveGustOfWindLineSaveCommand(
+  input: BattleResolutionInput & {
+    readonly subject: Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "gustOfWindLineSave";
+      }
+    >;
+    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+  },
+): BattleResolutionResult {
+  const effect = gustOfWindLineEffectFor(input.state, input.subject);
+  if (
+    effect === undefined ||
+    !input.state.combatants.has(input.subject.actorId)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Gust of Wind Line save is no longer available.",
+    );
+  }
+  const hole = gustOfWindLineSavingThrowOutcomeHole(
+    input.state,
+    input.subject.actorId,
+    effect,
+    input.subject.trigger,
+  );
+  const matchingGustFills = input.fills.filter(
+    (fill) => fill.holeId === hole.holeId,
+  );
+  if (matchingGustFills.length > 1) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "End Turn in Gust of Wind received duplicate Gust of Wind Saving Throw outcome fills.",
+    );
+  }
+  const [matchingGustFill] = matchingGustFills;
+  if (
+    matchingGustFill !== undefined &&
+    matchingGustFill.kind !== "savingThrowOutcome"
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "End Turn in Gust of Wind requires a Gust of Wind Saving Throw outcome fill.",
+    );
+  }
+  const endTurnSubject = {
+    tag: "runtimeCommand" as const,
+    actorId: input.subject.actorId,
+    command: "endTurn" as const,
+  };
+  const endTurnFills = input.fills.filter(
+    (fill) => fill.holeId !== hole.holeId,
+  );
+  const endTurnProbe = resolveEndTurnCommand({
+    state: input.state,
+    subject: endTurnSubject,
+    fills: endTurnFills,
+  });
+  if (matchingGustFill === undefined) {
+    return endTurnProbe.tag === "needsHoles"
+      ? needsHolesResult(input.state, input.subject, [
+          hole,
+          ...endTurnProbe.holes,
+        ])
+      : endTurnProbe.tag === "invalid"
+        ? endTurnProbe
+        : needsHolesResult(input.state, input.subject, [hole]);
+  }
+  const validation = validateGustOfWindLineSavingThrowOutcome(
+    matchingGustFill.value,
+    input.subject.actorId,
+    effect,
+  );
+  if (validation !== null) {
+    return invalidResult(input.state, "invalidFill", validation);
+  }
+  if (endTurnProbe.tag === "needsHoles") {
+    return { ...endTurnProbe, subject: input.subject };
+  }
+  if (endTurnProbe.tag === "invalid") {
+    return endTurnProbe;
+  }
+  const outcome = matchingGustFill.value.outcomes[0]!;
+  if (!outcome.succeeded) {
+    const saveFailedReactionWindow = maybeOpenReactionWindow(
+      input.state,
+      {
+        trigger: "saveFailed",
+        targetId: input.subject.actorId,
+        sourceSpellId: effect.sourceSpellId,
+        continuation: {
+          kind: "replay",
+          subject: input.subject,
+          fills: input.fills,
+        },
+      },
+      input.suppressedReactionTrigger,
+    );
+    if (saveFailedReactionWindow !== null) {
+      return saveFailedReactionWindow;
+    }
+  }
+  const endTurnResult = resolveEndTurnCommand({
+    state: input.state,
+    subject: endTurnSubject,
+    fills: endTurnFills,
+  });
+  return endTurnResult.tag === "needsHoles"
+    ? { ...endTurnResult, subject: input.subject }
+    : endTurnResult;
+}
+
+export function resolveGustOfWindLineDirectionChangeCommand(
+  input: BattleResolutionInputForSubject<
+    Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "gustOfWindLineDirectionChange";
+      }
+    >
+  >,
+): BattleResolutionResult {
+  const effect = gustOfWindLineEffectFor(input.state, input.subject);
+  const actor = input.state.combatants.get(input.subject.actorId);
+  if (
+    effect === undefined ||
+    actor === undefined ||
+    input.subject.actorId !== input.subject.sourceCombatantId ||
+    input.subject.actorId !== currentActorId(input.state) ||
+    (effect.castTurn.actorId === input.subject.actorId &&
+      effect.castTurn.round === input.state.initiative.round) ||
+    !combatantCanTakeActions(actor)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Gust of Wind Line direction change is no longer available.",
+    );
+  }
+  if (
+    input.fills.some((fill) => fill.kind !== "gustOfWindLineDirectionChoice")
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Gust of Wind Line direction change accepts only direction-choice fills.",
+    );
+  }
+  const hole = gustOfWindLineDirectionChoiceHole(effect);
+  const directionFills = input.fills.filter(
+    (
+      fill,
+    ): fill is Extract<
+      BattleFill,
+      { readonly kind: "gustOfWindLineDirectionChoice" }
+    > => fill.kind === "gustOfWindLineDirectionChoice",
+  );
+  if (!everyFillUsesHoleId(directionFills, hole.holeId)) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Gust of Wind Line direction change received a fill for an unrelated hole.",
+    );
+  }
+  if (directionFills.length > 1) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Gust of Wind Line direction change received duplicate fills.",
+    );
+  }
+  const directionFill = directionFills[0];
+  if (directionFill === undefined) {
+    return needsHolesResult(input.state, input.subject, [hole]);
+  }
+  const spent = spendActivationResource(input.state.currentTurnResources, {
+    kind: "bonusAction",
+  });
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Gust of Wind Line direction change requires an available Bonus Action.",
+    );
+  }
+  const nextState = replaceGustOfWindLineDirection({
+    state: {
+      ...input.state,
+      currentTurnResources: spent.right,
+    },
+    sourceCombatantId: effect.sourceCombatantId,
+    sourceSpellId: effect.sourceSpellId,
+    areaId: effect.areaId,
+    directionId: directionFill.value.directionId,
+  });
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
 }
 
 function flamingSphereEffectFor(
@@ -2051,10 +2671,7 @@ function validateFlamingSphereRamMovement(
 }
 
 function validateFlamingSphereRepositionMovement(
-  fill: Extract<
-    BattleFill,
-    { readonly kind: "movableZoneRepositionMovement" }
-  >,
+  fill: Extract<BattleFill, { readonly kind: "movableZoneRepositionMovement" }>,
   hole: BattleMovableZoneRepositionMovementHole,
 ): string | null {
   if (fill.holeId !== hole.holeId) {
@@ -2156,8 +2773,8 @@ export function resolveFlamingSphereSaveCommand(
     );
   }
   // Dispatcher only routes here when trigger === "endsTurnWithinFiveFeetOfSphere".
-  const flamingSphereTrigger =
-    input.subject.trigger as BattleFlamingSphereTrigger;
+  const flamingSphereTrigger = input.subject
+    .trigger as BattleFlamingSphereTrigger;
   const saveHole = flamingSphereSavingThrowOutcomeHole(
     input.state,
     input.subject.actorId,
@@ -2669,7 +3286,11 @@ function moonbeamEffectFor(
 
 function moonbeamTriggerLabel(
   trigger: BattleMoonbeamSaveTrigger,
-): "appears-in-area" | "area-moves-into-space" | "enters-area" | "ends-turn-in-area" {
+):
+  | "appears-in-area"
+  | "area-moves-into-space"
+  | "enters-area"
+  | "ends-turn-in-area" {
   if (trigger === "appearsInArea") {
     return "appears-in-area";
   }
@@ -2780,7 +3401,10 @@ function validateMoonbeamDamageRoll(
   if (fill.holeId !== hole.holeId) {
     return "Movable zone save damage must use the selected damage hole.";
   }
-  const validation = validateRolledDiceForDiceExpr(fill.value, hole.movableZone.damage.expr);
+  const validation = validateRolledDiceForDiceExpr(
+    fill.value,
+    hole.movableZone.damage.expr,
+  );
   return validation === null ? null : validation.reason;
 }
 
@@ -2791,7 +3415,10 @@ function validateMoonbeamRepositionMovement(
   if (fill.holeId !== hole.holeId) {
     return "Movable zone reposition movement must use the selected movement hole.";
   }
-  if (Number(fill.value.moveFeet) <= 0 || !Number.isInteger(fill.value.moveFeet)) {
+  if (
+    Number(fill.value.moveFeet) <= 0 ||
+    !Number.isInteger(fill.value.moveFeet)
+  ) {
     return "Movable zone reposition movement distance must be a positive integer.";
   }
   return Number(fill.value.moveFeet) <= Number(hole.movableZone.maxMoveFeet)
@@ -2806,7 +3433,8 @@ function moonbeamAdjustedDamage(input: {
   readonly saveSucceeded: boolean;
 }): number {
   const rolledDamage =
-    rolledDiceTotal(input.damageFill.value) + (input.effect.damage.expr.flat ?? 0);
+    rolledDiceTotal(input.damageFill.value) +
+    (input.effect.damage.expr.flat ?? 0);
   const saveAdjustedDamage = input.saveSucceeded
     ? Math.floor(rolledDamage / 2)
     : rolledDamage;
@@ -2920,7 +3548,9 @@ export function resolveMoonbeamSaveCommand(
     moonbeamTrigger,
   );
   const saveFills = input.fills.filter(
-    (fill): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
+    (
+      fill,
+    ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
       fill.kind === "savingThrowOutcome" && fill.holeId === saveHole.holeId,
   );
   const damageFills = input.fills.filter(
@@ -3007,12 +3637,17 @@ export function resolveMoonbeamSaveCommand(
     damageFill,
     saveSucceeded: saveOutcome.succeeded,
   });
-  const concentrationHole = concentrationSavingThrowHole(target, adjustedDamage);
+  const concentrationHole = concentrationSavingThrowHole(
+    target,
+    adjustedDamage,
+  );
   const concentrationFills =
     concentrationHole === null
       ? []
       : input.fills.filter(
-          (fill): fill is Extract<
+          (
+            fill,
+          ): fill is Extract<
             BattleFill,
             { readonly kind: "concentrationSavingThrow" }
           > =>
@@ -3053,7 +3688,11 @@ export function resolveMoonbeamSaveCommand(
     saveSucceeded: saveOutcome.succeeded,
     concentrationSavingThrow: concentrationFill,
   });
-  const afterMark = markMoonbeamSavedThisTurn(afterDamage, input.subject.actorId, effect);
+  const afterMark = markMoonbeamSavedThisTurn(
+    afterDamage,
+    input.subject.actorId,
+    effect,
+  );
   if (isEndTurn) {
     const endTurnResult = resolveEndTurnCommand({
       state: afterMark,
@@ -3082,7 +3721,9 @@ export function resolveMoonbeamRepositionCommand(
     >;
   },
 ): BattleResolutionResult {
-  if (input.fills.some((fill) => fill.kind !== "movableZoneRepositionMovement")) {
+  if (
+    input.fills.some((fill) => fill.kind !== "movableZoneRepositionMovement")
+  ) {
     return invalidResult(
       input.state,
       "invalidFill",
@@ -3103,7 +3744,9 @@ export function resolveMoonbeamRepositionCommand(
   }
   const movementHole = moonbeamRepositionMovementHole(effect);
   const movementFills = input.fills.filter(
-    (fill): fill is Extract<
+    (
+      fill,
+    ): fill is Extract<
       BattleFill,
       { readonly kind: "movableZoneRepositionMovement" }
     > => fill.kind === "movableZoneRepositionMovement",
@@ -3668,13 +4311,8 @@ function expireConcentrationDurationSource(
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
   return new Map(
     [...combatants].map(([id, combatant]) => {
-      const expiring = combatant.activeEffects.filter(
-        (effect) =>
-          effect.sourceCombatantId === source.combatantId &&
-          "sourceSpellId" in effect &&
-          effect.sourceSpellId === source.sourceSpellId &&
-          "expiresAt" in effect &&
-          effect.expiresAt.kind === "concentration",
+      const expiring = combatant.activeEffects.filter((effect) =>
+        activeEffectExpiresWithConcentrationSource(effect, source),
       );
       const activeEffects = combatant.activeEffects.filter(
         (effect) => !expiring.includes(effect),
@@ -3712,6 +4350,23 @@ function expireConcentrationDurationSource(
       );
       return [id, nextCombatant];
     }),
+  );
+}
+
+function activeEffectExpiresWithConcentrationSource(
+  effect: BattleActiveEffect,
+  source: ConcentrationEffectSource,
+): boolean {
+  if (
+    effect.sourceCombatantId !== source.combatantId ||
+    !("sourceSpellId" in effect) ||
+    effect.sourceSpellId !== source.sourceSpellId
+  ) {
+    return false;
+  }
+  return (
+    ("expiresAt" in effect && effect.expiresAt.kind === "concentration") ||
+    effect.kind === "selfAttackRollAndAbilityCheckRollMode"
   );
 }
 
@@ -3802,6 +4457,8 @@ export function resetBattleTurnResources(
     ...base,
     commandHalt: null,
     spellSlotUsesThisTurn: [],
+    levelOnePlusSpellCastsThisTurn: [],
+    quickenedLevelOnePlusSpellCastsThisTurn: [],
     attackRollMadeThisTurn: false,
     attackDamageRidersUsedThisTurn: [],
     weaponDamageDiceRollChoicesUsedThisTurn: [],
@@ -4843,16 +5500,14 @@ export function parseBattleMovement(
       message: "Movement cost must be a positive integer.",
     };
   }
-  const greaseGroundDifficultTerrainValidation =
-    validateGreaseGroundDifficultTerrainMovementFact(
-      state,
-      fill.value.greaseGroundDifficultTerrain,
-      fill.value.movementCostFeet,
-    );
-  if (greaseGroundDifficultTerrainValidation !== null) {
+  const areaMovementCostValidation = validateAreaMovementCostFacts(
+    state,
+    fill.value,
+  );
+  if (areaMovementCostValidation !== null) {
     return {
       tag: "invalid",
-      message: greaseGroundDifficultTerrainValidation,
+      message: areaMovementCostValidation,
     };
   }
   const jumpMovementValidation = validateJumpMovementReplacementFact(
@@ -4956,49 +5611,250 @@ export function parseBattleMovement(
   };
 }
 
-function validateGreaseGroundDifficultTerrainMovementFact(
+const byAreaDifficultTerrainSourceKind = Match.discriminator("kind");
+
+function activeAreaDifficultTerrainSourceMatches(
   state: BattleState,
-  fact: BattleGreaseGroundDifficultTerrainMovementFact | undefined,
-  movementCostFeet: MovementFeet,
-): string | null {
+  source: BattleAreaDifficultTerrainSource,
+): boolean {
+  const sourceCombatant = state.combatants.get(source.sourceCombatantId);
+  return Match.value(source).pipe(
+    byAreaDifficultTerrainSourceKind(
+      "greaseGroundHazard",
+      (terrainSource) =>
+        sourceCombatant?.activeEffects.some(
+          (effect) =>
+            effect.kind === "greaseGroundHazard" &&
+            effect.sourceCombatantId === terrainSource.sourceCombatantId &&
+            effect.sourceSpellId === terrainSource.sourceSpellId &&
+            effect.areaId === terrainSource.areaId,
+        ) === true,
+    ),
+    byAreaDifficultTerrainSourceKind(
+      "webAreaHazard",
+      (terrainSource) =>
+        sourceCombatant?.activeEffects.some(
+          (effect) =>
+            effect.kind === "webRestraintHazard" &&
+            effect.sourceCombatantId === terrainSource.sourceCombatantId &&
+            effect.sourceSpellId === terrainSource.sourceSpellId &&
+            effect.areaId === terrainSource.areaId,
+        ) === true,
+    ),
+    Match.exhaustive,
+  );
+}
+
+function areaDifficultTerrainSourceKey(
+  source: BattleAreaDifficultTerrainSource,
+): string {
+  return `${source.kind}\u0000${source.sourceCombatantId}\u0000${source.sourceSpellId}\u0000${source.areaId}`;
+}
+
+function validateAreaDifficultTerrainMovementFact(
+  state: BattleState,
+  fact: BattleAreaDifficultTerrainMovementFact | undefined,
+): AreaMovementCostFactResult {
   if (fact === undefined) {
-    return null;
+    return { tag: "notApplicable" };
   }
-  if (fact.kind !== "greaseGroundDifficultTerrain") {
-    return "Grease Difficult Terrain movement fact has the wrong kind.";
+  if (fact.kind !== "areaDifficultTerrain") {
+    return {
+      tag: "invalid",
+      message: "Area Difficult Terrain movement fact has the wrong kind.",
+    };
+  }
+  if (fact.sources.length === 0) {
+    return {
+      tag: "invalid",
+      message: "Area Difficult Terrain movement fact requires a source.",
+    };
   }
   if (
     !Number.isInteger(fact.totalDistanceFeet) ||
     fact.totalDistanceFeet <= 0
   ) {
-    return "Grease Difficult Terrain total distance must be a positive integer.";
+    return {
+      tag: "invalid",
+      message:
+        "Area Difficult Terrain total distance must be a positive integer.",
+    };
   }
   if (
-    !Number.isInteger(fact.greaseDistanceFeet) ||
-    fact.greaseDistanceFeet <= 0
+    !Number.isInteger(fact.difficultTerrainDistanceFeet) ||
+    fact.difficultTerrainDistanceFeet <= 0
   ) {
-    return "Grease Difficult Terrain distance must be a positive integer.";
+    return {
+      tag: "invalid",
+      message: "Area Difficult Terrain distance must be a positive integer.",
+    };
   }
-  if (Number(fact.greaseDistanceFeet) > Number(fact.totalDistanceFeet)) {
-    return "Grease Difficult Terrain distance cannot exceed total Movement distance.";
+  if (
+    Number(fact.difficultTerrainDistanceFeet) > Number(fact.totalDistanceFeet)
+  ) {
+    return {
+      tag: "invalid",
+      message:
+        "Area Difficult Terrain distance cannot exceed total Movement distance.",
+    };
+  }
+  const sourceKeys = new Set<string>();
+  for (const source of fact.sources) {
+    const key = areaDifficultTerrainSourceKey(source);
+    if (sourceKeys.has(key)) {
+      return {
+        tag: "invalid",
+        message: "Area Difficult Terrain movement fact repeats a source.",
+      };
+    }
+    sourceKeys.add(key);
+    if (!activeAreaDifficultTerrainSourceMatches(state, source)) {
+      return {
+        tag: "invalid",
+        message:
+          "Area Difficult Terrain movement fact does not match an active Difficult Terrain area.",
+      };
+    }
+  }
+  return {
+    tag: "ok",
+    totalDistanceFeet: fact.totalDistanceFeet,
+    extraCostFeet: fact.difficultTerrainDistanceFeet,
+  };
+}
+
+function validateGustOfWindLineMovementFact(
+  state: BattleState,
+  fact: BattleGustOfWindLineMovementFact | undefined,
+): AreaMovementCostFactResult {
+  if (fact === undefined) {
+    return { tag: "notApplicable" };
+  }
+  if (fact.kind !== "gustOfWindLineMovement") {
+    return {
+      tag: "invalid",
+      message: "Gust of Wind Line movement fact has the wrong kind.",
+    };
+  }
+  if (
+    !Number.isInteger(fact.totalDistanceFeet) ||
+    fact.totalDistanceFeet <= 0
+  ) {
+    return {
+      tag: "invalid",
+      message: "Gust of Wind Line total distance must be a positive integer.",
+    };
+  }
+  if (
+    !Number.isInteger(fact.closerDistanceFeet) ||
+    fact.closerDistanceFeet <= 0
+  ) {
+    return {
+      tag: "invalid",
+      message: "Gust of Wind Line closer distance must be a positive integer.",
+    };
+  }
+  if (Number(fact.closerDistanceFeet) > Number(fact.totalDistanceFeet)) {
+    return {
+      tag: "invalid",
+      message:
+        "Gust of Wind Line closer distance cannot exceed total Movement distance.",
+    };
   }
   const source = state.combatants.get(fact.sourceCombatantId);
-  const activeGrease = source?.activeEffects.some(
-    (effect) =>
-      effect.kind === "greaseGroundHazard" &&
-      effect.sourceCombatantId === fact.sourceCombatantId &&
-      effect.sourceSpellId === fact.sourceSpellId &&
-      effect.areaId === fact.areaId,
+  const effect = source?.activeEffects.find(
+    (candidate): candidate is GustOfWindLineEffect =>
+      candidate.kind === "gustOfWindLine" &&
+      candidate.sourceCombatantId === fact.sourceCombatantId &&
+      candidate.sourceSpellId === fact.sourceSpellId &&
+      candidate.areaId === fact.areaId &&
+      candidate.directionId === fact.directionId,
   );
-  if (activeGrease !== true) {
-    return "Grease Difficult Terrain movement fact does not match an active Grease ground hazard.";
+  if (effect === undefined) {
+    return {
+      tag: "invalid",
+      message:
+        "Gust of Wind Line movement fact does not match an active Gust of Wind Line.",
+    };
+  }
+  return {
+    tag: "ok",
+    totalDistanceFeet: fact.totalDistanceFeet,
+    extraCostFeet: movementFeet(
+      Number(fact.closerDistanceFeet) * (effect.movementCost.multiplier - 1),
+    ),
+  };
+}
+
+type AreaMovementCostFactResult =
+  | { readonly tag: "notApplicable" }
+  | { readonly tag: "invalid"; readonly message: string }
+  | {
+      readonly tag: "ok";
+      readonly totalDistanceFeet: MovementFeet;
+      readonly extraCostFeet: MovementFeet;
+    };
+
+function validateAreaMovementCostFacts(
+  state: BattleState,
+  value: BattleMovementFillValue,
+): string | null {
+  const difficultTerrain = validateAreaDifficultTerrainMovementFact(
+    state,
+    value.areaDifficultTerrain,
+  );
+  if (difficultTerrain.tag === "invalid") {
+    return difficultTerrain.message;
+  }
+  const gust = validateGustOfWindLineMovementFact(
+    state,
+    value.gustOfWindLineMovement,
+  );
+  if (gust.tag === "invalid") {
+    return gust.message;
+  }
+  const areaCosts = [difficultTerrain, gust].filter(
+    (
+      result,
+    ): result is Extract<AreaMovementCostFactResult, { readonly tag: "ok" }> =>
+      result.tag === "ok",
+  );
+  if (areaCosts.length === 0) {
+    return null;
+  }
+  if (value.jumpMovementReplacement !== undefined) {
+    return "Area movement-cost facts cannot be combined with Jump movement replacement.";
+  }
+  const firstAreaCost = areaCosts[0];
+  if (firstAreaCost === undefined) {
+    return null;
+  }
+  const remainingAreaCosts = areaCosts.slice(1);
+  if (
+    remainingAreaCosts.some(
+      (areaCost) =>
+        Number(areaCost.totalDistanceFeet) !==
+        Number(firstAreaCost.totalDistanceFeet),
+    )
+  ) {
+    return "Area movement-cost facts must agree on total Movement distance.";
   }
   const expectedCostFeet = movementFeet(
-    Number(fact.totalDistanceFeet) + Number(fact.greaseDistanceFeet),
+    Number(firstAreaCost.totalDistanceFeet) +
+      areaCosts.reduce(
+        (total, areaCost) => total + Number(areaCost.extraCostFeet),
+        0,
+      ),
   );
-  return Number(movementCostFeet) === Number(expectedCostFeet)
-    ? null
-    : "Grease Difficult Terrain movement must spend total distance plus 1 extra foot for every foot moved through the area.";
+  if (Number(value.movementCostFeet) === Number(expectedCostFeet)) {
+    return null;
+  }
+  if (difficultTerrain.tag === "ok" && gust.tag === "ok") {
+    return "Combined area Difficult Terrain and Gust of Wind movement must spend total distance plus 1 extra foot for every foot moved through Difficult Terrain and 1 extra foot for every foot moved closer to the caster through the Line.";
+  }
+  return difficultTerrain.tag === "ok"
+    ? "Area Difficult Terrain movement must spend total distance plus 1 extra foot for every foot moved through Difficult Terrain."
+    : "Gust of Wind Line movement must spend total distance plus 1 extra foot for every foot moved closer to the caster through the Line.";
 }
 
 function validateJumpMovementReplacementFact(
@@ -5117,10 +5973,11 @@ export function resetPerTurnCharacterResources(
     ...combatant,
     origin: {
       ...combatant.origin,
-      resources: combatant.origin.resources.map((resource) => ({
-        ...resource,
-        usedThisTurn: false,
-      })),
+      resources: combatant.origin.resources.map((resource) =>
+        characterBattleResourceIsUseCount(resource)
+          ? { ...resource, usedThisTurn: false }
+          : resource,
+      ),
     },
   };
 }

@@ -690,6 +690,32 @@ const OnePerSpellMetamagicStackingSchema = Schema.Literal("one_per_spell");
 const CanCombineMetamagicStackingSchema = Schema.Literal(
   "can_combine_with_different_metamagic",
 );
+const CAREFUL_SPELL_METAMAGIC_EFFECT_KIND = "saving_throw_protection";
+const DISTANT_SPELL_METAMAGIC_EFFECT_KIND = "spell_range_increase";
+const EMPOWERED_SPELL_METAMAGIC_EFFECT_KIND = "damage_dice_reroll";
+const EXTENDED_SPELL_METAMAGIC_EFFECT_KIND =
+  "duration_extension_and_concentration_save_advantage";
+const HEIGHTENED_SPELL_METAMAGIC_EFFECT_KIND = "saving_throw_disadvantage";
+const QUICKENED_SPELL_METAMAGIC_EFFECT_KIND =
+  "action_casting_time_to_bonus_action_with_spell_turn_limit";
+const SEEKING_SPELL_METAMAGIC_EFFECT_KIND = "missed_spell_attack_reroll";
+const SUBTLE_SPELL_METAMAGIC_EFFECT_KIND = "component_suppression";
+const TRANSMUTED_SPELL_METAMAGIC_EFFECT_KIND = "damage_type_substitution";
+const TWINNED_SPELL_METAMAGIC_EFFECT_KIND =
+  "effective_spell_level_increase_for_extra_target";
+
+export const SORCERER_METAMAGIC_EFFECT_KINDS = [
+  CAREFUL_SPELL_METAMAGIC_EFFECT_KIND,
+  DISTANT_SPELL_METAMAGIC_EFFECT_KIND,
+  EMPOWERED_SPELL_METAMAGIC_EFFECT_KIND,
+  EXTENDED_SPELL_METAMAGIC_EFFECT_KIND,
+  HEIGHTENED_SPELL_METAMAGIC_EFFECT_KIND,
+  QUICKENED_SPELL_METAMAGIC_EFFECT_KIND,
+  SEEKING_SPELL_METAMAGIC_EFFECT_KIND,
+  SUBTLE_SPELL_METAMAGIC_EFFECT_KIND,
+  TRANSMUTED_SPELL_METAMAGIC_EFFECT_KIND,
+  TWINNED_SPELL_METAMAGIC_EFFECT_KIND,
+] as const;
 
 const MetamagicOptionSchema = Schema.Union(
   Schema.Struct({
@@ -697,76 +723,70 @@ const MetamagicOptionSchema = Schema.Union(
     displayName: Schema.Literal("Careful Spell"),
     sorceryPointCost: Schema.Literal(1),
     stackingMode: OnePerSpellMetamagicStackingSchema,
-    effectKind: Schema.Literal("saving_throw_protection"),
+    effectKind: Schema.Literal(CAREFUL_SPELL_METAMAGIC_EFFECT_KIND),
   }),
   Schema.Struct({
     id: Schema.Literal("sorcerer_distant_spell"),
     displayName: Schema.Literal("Distant Spell"),
     sorceryPointCost: Schema.Literal(1),
     stackingMode: OnePerSpellMetamagicStackingSchema,
-    effectKind: Schema.Literal("spell_range_increase"),
+    effectKind: Schema.Literal(DISTANT_SPELL_METAMAGIC_EFFECT_KIND),
   }),
   Schema.Struct({
     id: Schema.Literal("sorcerer_empowered_spell"),
     displayName: Schema.Literal("Empowered Spell"),
     sorceryPointCost: Schema.Literal(1),
     stackingMode: CanCombineMetamagicStackingSchema,
-    effectKind: Schema.Literal("damage_dice_reroll"),
+    effectKind: Schema.Literal(EMPOWERED_SPELL_METAMAGIC_EFFECT_KIND),
   }),
   Schema.Struct({
     id: Schema.Literal("sorcerer_extended_spell"),
     displayName: Schema.Literal("Extended Spell"),
     sorceryPointCost: Schema.Literal(1),
     stackingMode: OnePerSpellMetamagicStackingSchema,
-    effectKind: Schema.Literal(
-      "duration_extension_and_concentration_save_advantage",
-    ),
+    effectKind: Schema.Literal(EXTENDED_SPELL_METAMAGIC_EFFECT_KIND),
   }),
   Schema.Struct({
     id: Schema.Literal("sorcerer_heightened_spell"),
     displayName: Schema.Literal("Heightened Spell"),
     sorceryPointCost: Schema.Literal(2),
     stackingMode: OnePerSpellMetamagicStackingSchema,
-    effectKind: Schema.Literal("saving_throw_disadvantage"),
+    effectKind: Schema.Literal(HEIGHTENED_SPELL_METAMAGIC_EFFECT_KIND),
   }),
   Schema.Struct({
     id: Schema.Literal("sorcerer_quickened_spell"),
     displayName: Schema.Literal("Quickened Spell"),
     sorceryPointCost: Schema.Literal(2),
     stackingMode: OnePerSpellMetamagicStackingSchema,
-    effectKind: Schema.Literal(
-      "action_casting_time_to_bonus_action_with_spell_turn_limit",
-    ),
+    effectKind: Schema.Literal(QUICKENED_SPELL_METAMAGIC_EFFECT_KIND),
   }),
   Schema.Struct({
     id: Schema.Literal("sorcerer_seeking_spell"),
     displayName: Schema.Literal("Seeking Spell"),
     sorceryPointCost: Schema.Literal(1),
     stackingMode: CanCombineMetamagicStackingSchema,
-    effectKind: Schema.Literal("missed_spell_attack_reroll"),
+    effectKind: Schema.Literal(SEEKING_SPELL_METAMAGIC_EFFECT_KIND),
   }),
   Schema.Struct({
     id: Schema.Literal("sorcerer_subtle_spell"),
     displayName: Schema.Literal("Subtle Spell"),
     sorceryPointCost: Schema.Literal(1),
     stackingMode: OnePerSpellMetamagicStackingSchema,
-    effectKind: Schema.Literal("component_suppression"),
+    effectKind: Schema.Literal(SUBTLE_SPELL_METAMAGIC_EFFECT_KIND),
   }),
   Schema.Struct({
     id: Schema.Literal("sorcerer_transmuted_spell"),
     displayName: Schema.Literal("Transmuted Spell"),
     sorceryPointCost: Schema.Literal(1),
     stackingMode: OnePerSpellMetamagicStackingSchema,
-    effectKind: Schema.Literal("damage_type_substitution"),
+    effectKind: Schema.Literal(TRANSMUTED_SPELL_METAMAGIC_EFFECT_KIND),
   }),
   Schema.Struct({
     id: Schema.Literal("sorcerer_twinned_spell"),
     displayName: Schema.Literal("Twinned Spell"),
     sorceryPointCost: Schema.Literal(1),
     stackingMode: OnePerSpellMetamagicStackingSchema,
-    effectKind: Schema.Literal(
-      "effective_spell_level_increase_for_extra_target",
-    ),
+    effectKind: Schema.Literal(TWINNED_SPELL_METAMAGIC_EFFECT_KIND),
   }),
 );
 

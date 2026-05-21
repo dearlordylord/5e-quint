@@ -41,6 +41,7 @@ export type CharacterWeaponAttackActionOption = {
   readonly abilityModifier: AbilityModifier;
   readonly attackBonus?: AttackBonus;
   readonly damageAbilityModifier?: AbilityModifier;
+  readonly damageBonus?: number;
   readonly damageTypeChoices?: CharacterWeaponAttackDamageTypeChoices;
   readonly alternateAbilityChoices?: ReadonlyNonEmptyArray<CharacterWeaponAttackAbilityChoice>;
 };

@@ -55,7 +55,10 @@ import {
   type BattleSubject,
 } from "../battle-subjects.ts";
 
-import { spendCharacterResourceUse } from "../character-battle-resources.ts";
+import {
+  resourceHasUsesRemaining,
+  spendCharacterResourceUse,
+} from "../character-battle-resources.ts";
 
 import { CombatantId } from "../identity.ts";
 
@@ -464,7 +467,8 @@ export function resolveBonusActionDashTemporaryHitPoints(
       origin: {
         ...actor.origin,
         resources: actor.origin.resources.map((candidate) =>
-          candidate.unit.id === sourceUnitId
+          candidate.unit.id === sourceUnitId &&
+          resourceHasUsesRemaining(candidate)
             ? spendCharacterResourceUse(candidate)
             : candidate,
         ),
@@ -1504,6 +1508,23 @@ export function resolveEscapeSpellRestraint(
       "No spell-imposed Restraint is available to escape.",
     );
   }
+  if (effect.escape?.kind !== "abilityCheck") {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Spell-imposed Restraint escape is no longer available.",
+    );
+  }
+  if (
+    effect.escape.allowedActor === "target" &&
+    input.subject.actorId !== input.subject.targetId
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "This spell-imposed Restraint can only be escaped by the restrained target.",
+    );
+  }
   if (
     actorHasStatBlockMultiattackActionResource(
       input.state,
@@ -1542,6 +1563,7 @@ export function resolveEscapeSpellRestraint(
   }
   if (
     input.subject.actorId !== input.subject.targetId &&
+    effect.escape.allowedActor === "targetOrCreatureWithinReach" &&
     !spellRestraintEscapeActorWithinTargetReach(
       check.value.spatialFacts ?? [],
       input.subject.actorId,

@@ -8,6 +8,7 @@ import {
   type CharacterDraft,
   type CharacterDraftId,
 } from "@dnd/character-creation-runtime";
+import { characterSheetHitPointMaximum } from "@dnd/character-sheet-runtime";
 import { Hp } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Either, Match } from "effect";
@@ -180,6 +181,7 @@ export function handleCharacterToolCall(
           maximumHp: Hp(hitPoints.right.maximum),
           currentHp: Hp(hitPoints.right.maximum),
           tempHp: Hp(0),
+          hitPointMaximumReduction: Hp(0),
           conditions: [],
           unitLibrary: root.unitLibrary,
           ...(matched.args.druidWildShapeKnownFormStatBlockIds === undefined
@@ -292,7 +294,7 @@ function characterListRow(
       build: session.build,
       hitPoints: {
         current: characterSessionCurrentHp(session),
-        maximum: session.maximumHp,
+        maximum: characterSheetHitPointMaximum(session),
         state: session.hitPoints,
       },
       ...(characterBattleSpellSlots(session) === undefined

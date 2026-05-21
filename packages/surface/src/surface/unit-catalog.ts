@@ -52,6 +52,7 @@ import cureWoundsInput from "../../content/cure_wounds.json";
 import dancingLightsInput from "../../content/dancing_lights.json";
 import darknessInput from "../../content/darkness.json";
 import darkvisionInput from "../../content/darkvision.json";
+import dispelMagicInput from "../../content/dispel_magic.json";
 import divineFavorInput from "../../content/divine_favor.json";
 import divineSmiteInput from "../../content/divine_smite.json";
 import druidDruidicInput from "../../content/druid_druidic.json";
@@ -119,6 +120,7 @@ import longstriderInput from "../../content/longstrider.json";
 import mageArmorInput from "../../content/mage_armor.json";
 import magicMissileInput from "../../content/magic_missile.json";
 import magicMouthInput from "../../content/magic_mouth.json";
+import magicWeaponInput from "../../content/magic_weapon.json";
 import mindSpikeInput from "../../content/mind_spike.json";
 import massCureWoundsInput from "../../content/mass_cure_wounds.json";
 import massHealingWordInput from "../../content/mass_healing_word.json";
@@ -208,6 +210,7 @@ import warlockEldritchInvocationsInput from "../../content/warlock_eldritch_invo
 import warlockMagicalCunningInput from "../../content/warlock_magical_cunning.json";
 import viciousMockeryInput from "../../content/vicious_mockery.json";
 import wardingBondInput from "../../content/warding_bond.json";
+import webInput from "../../content/web.json";
 import weaponClubInput from "../../content/weapon_club.json";
 import weaponDaggerInput from "../../content/weapon_dagger.json";
 import weaponFlailInput from "../../content/weapon_flail.json";
@@ -452,6 +455,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     dancingLightsInput,
     darknessInput,
     darkvisionInput,
+    dispelMagicInput,
     dissonantWhispersInput,
     divineFavorInput,
     divineSmiteInput,
@@ -519,6 +523,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     mageArmorInput,
     magicMissileInput,
     magicMouthInput,
+    magicWeaponInput,
     mindSpikeInput,
     mirrorImageInput,
     moonbeamInput,
@@ -540,6 +545,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     hellishRebukeInput,
     hideousLaughterInput,
     wardingBondInput,
+    webInput,
     holdPersonInput,
     armorChainMailInput,
     equipmentShieldInput,

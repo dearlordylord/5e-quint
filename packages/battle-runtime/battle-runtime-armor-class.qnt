@@ -59,6 +59,7 @@ module battleRuntimeArmorClass {
         | DivineFavorWeaponDamageRider(_) => false
         | HuntersMarkDamageRider(_) => false
         | HexDamageRider(_) => false
+        | MagicWeaponEnhancement(_) => false
         | RayOfSicknessPoisoned => false
         | ChillTouchHitPointRegainPrevented(_) => false
         | StarryWispInvisibleBenefitDenied(_) => false
@@ -98,8 +99,12 @@ module battleRuntimeArmorClass {
         | HideousLaughterEffect(_) => false
         | GreaseGroundHazard(_) => false
         | FogCloudObscurement(_) => false
+        | MagicalDarknessPointOrigin(_) => false
         | FlamingSphere(_) => false
+        | WebRestraintHazard(_) => false
+        | WebRestrained(_) => false
         | HeatMetalObjectContactDamage(_) => false
+        | HeatMetalHoldingWearingPenalty(_) => false
         | CommandPending(_) => false
         | SelfTransformationModeEffect(_) => false
       })) 13 + dexMod else baseAc

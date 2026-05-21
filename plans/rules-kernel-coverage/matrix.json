@@ -1,22 +1,22 @@
 {
   "summary": {
-    "total": 60,
-    "covered": 33,
-    "open": 23,
-    "nonSemantic": 4,
+    "total": 72,
+    "covered": 46,
+    "open": 21,
+    "nonSemantic": 5,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 53,
-      "character-creation": 3,
-      "character-sheet": 2,
-      "character-battle": 1
+      "battle": 54,
+      "character-creation": 8,
+      "character-sheet": 6,
+      "character-battle": 3
     },
     "byStatus": {
-      "covered": 33,
-      "needs-qnt-owner": 3,
+      "covered": 46,
+      "needs-qnt-owner": 1,
       "needs-parity-witness": 19,
       "needs-surface-evidence": 1,
-      "boundary-only": 3,
+      "boundary-only": 4,
       "unsupported-by-admission": 1
     }
   },
@@ -24,15 +24,15 @@
     "obligations[].profiles": "Derived from profileObligations by obligation id; authored obligations.jsonl rows must not contain profiles."
   },
   "battleHoleFrontierSummary": {
-    "total": 85,
+    "total": 97,
     "bySubject": {
-      "battle-hole-family": 52,
-      "battle-fill-kind": 33
+      "battle-hole-family": 60,
+      "battle-fill-kind": 37
     },
     "byClassification": {
-      "semantic-frontier": 64,
+      "semantic-frontier": 74,
       "deterministic-boundary-projection": 0,
-      "table-owned-fact": 21,
+      "table-owned-fact": 23,
       "unsupported-dead-branch": 0
     }
   },
@@ -195,6 +195,7 @@
       ],
       "profiles": [
         "spell.invocation-damage-save-or-attack",
+        "spell.invocation-web-restraint-hazard",
         "spell.reaction-shield",
         "spell.readied-action-time-spell"
       ],
@@ -388,6 +389,34 @@
         ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Fog Cloud"
       ],
       "title": "Battle Fog Cloud area identity, slot-scaled Heavily Obscured projection, Concentration ownership, strong-wind cleanup, and table-spatial boundary"
+    },
+    {
+      "id": "BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-darkness.test.ts"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-magical-darkness-point-origin"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Darkness"
+      ],
+      "title": "Battle Darkness point-origin magical Darkness area identity, visibility/light witness consequences, Concentration ownership, and cleanup"
     },
     {
       "id": "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
@@ -941,6 +970,7 @@
       "kind": "active-effect-lifecycle",
       "parityWitnesses": [],
       "profiles": [
+        "spell.invocation-magic-weapon-enhancement",
         "spell.invocation-spell-hosted-weapon-attack",
         "spell.invocation-weapon-attack-override",
         "spell.invocation-weapon-damage-rider"
@@ -1422,6 +1452,100 @@
       "title": "Character Creation choice-hole availability, cardinality, and option legality for the existing Fighter manifest path"
     },
     {
+      "id": "CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/fighter-fighting-style-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "character-creation.fighter-fighting-style-advancement-replacement"
+      ],
+      "qntOwners": [
+        "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt"
+      ],
+      "runtime": "character-creation",
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/character-build-advancement.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Character-Creation.md#Gaining a Level",
+        ".references/srd-5.2.1/Classes/Fighter.md#Level 1: Fighting Style",
+        ".references/srd-5.2.1/Feats.md#Fighting Style Feats"
+      ],
+      "title": "Character Creation Fighter class-level gain replacement rewrites durable CharacterBuild progression and selected Fighting Style ownership without draft state"
+    },
+    {
+      "id": "CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/warlock-eldritch-invocations-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "character-creation.warlock-pact-magic-advancement"
+      ],
+      "qntOwners": [
+        "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt"
+      ],
+      "runtime": "character-creation",
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/discovery.ts",
+        "packages/character-creation-runtime/src/finalization.ts",
+        "packages/character-creation-runtime/src/class-spellcasting.ts",
+        "packages/character-creation-runtime/src/character-build-advancement.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Character-Creation.md#Gaining a Level",
+        ".references/srd-5.2.1/Character-Creation.md#Spell Slots, Cantrips, and Prepared Spells",
+        ".references/srd-5.2.1/Classes/Warlock.md#Level 1: Pact Magic",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Gaining Spells"
+      ],
+      "title": "Character Creation Warlock Pact Magic Spell Access and Pact Slot progression from Surface class facts through build finalization and Warlock class-level gains"
+    },
+    {
+      "id": "CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/warlock-eldritch-invocations-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "character-creation.eldritch-invocation-choice"
+      ],
+      "qntOwners": [
+        "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt"
+      ],
+      "runtime": "character-creation",
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/discovery.ts",
+        "packages/character-creation-runtime/src/finalization.ts",
+        "packages/character-creation-runtime/src/eldritch-invocations.ts",
+        "packages/character-creation-runtime/src/character-build-advancement.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Character-Creation.md#Gaining a Level",
+        ".references/srd-5.2.1/Classes/Warlock.md#Level 1: Eldritch Invocations",
+        ".references/srd-5.2.1/Classes/Warlock.md#Eldritch Invocation Options"
+      ],
+      "title": "Character Creation Warlock Eldritch Invocation selection, level-gain count, prerequisite, repeatable choice, replacement, and duplicate-selection lifecycle without owning selected Eldritch Invocation runtime behavior"
+    },
+    {
       "id": "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
       "kind": "projection-scalar",
       "parityWitnesses": [
@@ -1481,55 +1605,182 @@
       "title": "Prove each currently admitted executable battle Surface profile points to a covered semantic obligation"
     },
     {
-      "followUpTaskIds": [
-        "RKBC-CREATION-FILL-VALIDATION-BATCH",
-        "RKBC-CREATION-ADVANCEMENT-REPLACEMENT",
-        "RKBC-CREATION-SPELLCASTING-PROGRESSION",
-        "RKBC-CREATION-WEAPON-MASTERY-FEAT"
+      "id": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/fighter-fighting-style-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
       ],
-      "id": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
-      "kind": "composition",
-      "parityWitnesses": [],
       "profiles": [
-        "character-creation.class-feature-advancement-replacement",
-        "character-creation.class-feature-feat-choice",
-        "character-creation.eldritch-invocation-choice",
-        "character-creation.warlock-pact-magic-advancement",
-        "character-creation.weapon-mastery-choice"
+        "character-creation.class-feature-feat-choice"
       ],
-      "qntOwners": [],
+      "qntOwners": [
+        "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt"
+      ],
       "runtime": "character-creation",
       "runtimeOwners": [
-        "packages/character-creation-runtime/src/index.ts"
+        "packages/character-creation-runtime/src/finalization.ts"
       ],
-      "status": "needs-qnt-owner",
-      "surfaceEvidence": [],
-      "title": "Audit remaining current Character Creation fill, finalization, advancement, replacement, spellcasting progression, and selected-choice projection profiles into semantic obligations and parity witnesses"
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Character-Creation.md#Gaining a Level",
+        ".references/srd-5.2.1/Classes/Fighter.md#Level 1: Fighting Style",
+        ".references/srd-5.2.1/Classes/Paladin.md#Level 2: Fighting Style",
+        ".references/srd-5.2.1/Classes/Ranger.md#Level 2: Fighting Style",
+        ".references/srd-5.2.1/Feats.md#Fighting Style Feats"
+      ],
+      "title": "Character Creation finalizes class-feature feat choices as selected CharacterBuild class-choice refs without owning selected feat behavior"
     },
     {
-      "followUpTaskIds": [
-        "RKBC-SHEET-HP-REST-HIT-DICE",
-        "RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS",
-        "RKBC-SHEET-FEATURE-RESOURCES"
-      ],
-      "id": "SHEET.REST_AND_RESOURCE.TRANSITIONS",
+      "id": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
       "kind": "state-transition",
-      "parityWitnesses": [],
-      "profiles": [],
-      "qntOwners": [],
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "character-creation.weapon-mastery-choice"
+      ],
+      "qntOwners": [
+        "packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt"
+      ],
+      "runtime": "character-creation",
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/finalization.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Character-Creation.md#Gaining a Level",
+        ".references/srd-5.2.1/Classes/Fighter.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/Classes/Barbarian.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/Classes/Paladin.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/Classes/Ranger.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/Classes/Rogue.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/Equipment.md#Mastery Properties"
+      ],
+      "title": "Character Creation finalizes Weapon Mastery weapon choices as selected CharacterBuild class-choice refs without owning selected mastery-property behavior"
+    },
+    {
+      "id": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "deterministicReplayRationale": "Character Sheet feature-resource replay is a closed fixture for named resource cases: Lay On Hands spend and Long Rest pool reset, class-feature use-count Short Rest recovery, point-pool Long Rest reset, Font of Magic slot/Sorcery Point conversions and gates, Uncanny Metabolism use-state reset plus Initiative recovery, and Metamagic shared point-pool battle bridge handoff. Random interleavings are not the risk at this sheet resource boundary.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/character-battle-runtime/src/character-sheet-feature-resources.mbt.test.ts",
+          "qntSpecPath": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "character-sheet.class-feature-long-rest-use-state",
+        "character-sheet.class-feature-point-pool-resource",
+        "character-sheet.class-feature-use-count-resource",
+        "character-sheet.font-of-magic-slot-to-sorcery-points",
+        "character-sheet.font-of-magic-sorcery-points-to-spell-slot",
+        "character-sheet.healing-resource-action",
+        "character-sheet.metamagic-battle-resource-bridge",
+        "character-sheet.monk-uncanny-metabolism-initiative-recovery"
+      ],
+      "qntOwners": [
+        "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt"
+      ],
       "runtime": "character-sheet",
       "runtimeOwners": [
-        "packages/character-sheet-runtime/src/index.ts"
+        "packages/character-sheet-runtime/src/index.ts",
+        "packages/character-battle-runtime/src/index.ts"
       ],
-      "status": "needs-qnt-owner",
-      "surfaceEvidence": [],
-      "title": "Audit current Character Sheet HP, rest, spell-slot, pact-slot, Hit Dice, and feature-resource transitions into QNT-connected obligations"
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Classes/Paladin.md#Level 1: Lay On Hands",
+        ".references/srd-5.2.1/Classes/Druid.md#Level 2: Wild Shape",
+        ".references/srd-5.2.1/Classes/Monk.md#Level 2: Monk's Focus",
+        ".references/srd-5.2.1/Classes/Monk.md#Level 2: Uncanny Metabolism",
+        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Font of Magic",
+        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic"
+      ],
+      "title": "Character Sheet non-slot feature-resource spend, recovery, reset, conversion, and battle bridge transitions"
+    },
+    {
+      "id": "CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION",
+      "kind": "composition",
+      "parityWitnesses": [
+        {
+          "deterministicReplayRationale": "Character Battle initialization replay is a fixed projection fixture for sheet HP, Temporary Hit Points, Armor Class, conditions, Spell Slot counts and expenditures, Metamagic facts, supported Unit profile refs, and max-HP rejection. The risk is deterministic projection across runtime boundaries, not random action interleavings.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/character-battle-runtime/src/character-battle-init-projection.mbt.test.ts",
+          "qntSpecPath": "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt"
+      ],
+      "runtime": "character-battle",
+      "runtimeOwners": [
+        "packages/character-battle-runtime/src/index.ts",
+        "packages/character-battle-runtime/src/battle-creature-init.ts",
+        "packages/character-battle-runtime/src/battle-character-build-projection.ts",
+        "packages/character-battle-runtime/src/battle-support-profiles.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Character-Creation.md#Fill In Numbers",
+        ".references/srd-5.2.1/Playing-the-Game.md#The Order of Combat",
+        ".references/srd-5.2.1/Playing-the-Game.md#Armor Class",
+        ".references/srd-5.2.1/Playing-the-Game.md#Hit Points",
+        ".references/srd-5.2.1/Rules-Glossary.md#Character Sheet",
+        ".references/srd-5.2.1/Rules-Glossary.md#Condition",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Spell Slots"
+      ],
+      "title": "Character Sheet and Character Build projection into Battle initialization for identity, HP, Armor Class, conditions, Spell Slots, and supported Unit profiles"
+    },
+    {
+      "id": "CHARACTER.BATTLE.HANDOFF.SETTLEMENT",
+      "kind": "composition",
+      "parityWitnesses": [
+        {
+          "deterministicReplayRationale": "Character Battle settlement replay is a fixed handoff-boundary fixture for battle-owned HP, Temporary Hit Points, conditions, ordinary Spell Slot expenditure, source-ambiguous created-slot rejection, preserved sheet-owned Pact Slot state, preserved rest-owned sheet state, feature-resource expenditure, and unchanged CharacterBuild output. The risk is deterministic settlement and conflict projection across runtime boundaries, not random battle action interleavings.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/character-battle-runtime/src/character-battle-settlement.mbt.test.ts",
+          "qntSpecPath": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/character-battle-runtime/character-battle-settlement.mbt.qnt"
+      ],
+      "runtime": "character-battle",
+      "runtimeOwners": [
+        "packages/character-battle-runtime/src/index.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Rules-Glossary.md#Character Sheet",
+        ".references/srd-5.2.1/Playing-the-Game.md#Hit Points",
+        ".references/srd-5.2.1/Playing-the-Game.md#Temporary Hit Points",
+        ".references/srd-5.2.1/Rules-Glossary.md#Condition",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Spell Slots",
+        ".references/srd-5.2.1/Classes/Warlock.md#Level 1: Pact Magic",
+        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Font of Magic"
+      ],
+      "title": "Character battle settlement back to Character Sheet for HP, Temporary Hit Points, conditions, ordinary Spell Slots, preserved Pact Slots, and feature resources"
     },
     {
       "followUpTaskIds": [
-        "RKBC-HANDOFF-BATTLE-SETTLEMENT"
+        "RKBC-HANDOFF-IDENTITY-CONFLICTS"
       ],
-      "id": "CHARACTER.BATTLE.HANDOFF.SETTLEMENT",
+      "id": "CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS",
       "kind": "composition",
       "parityWitnesses": [],
       "profiles": [],
@@ -1539,8 +1790,12 @@
         "packages/character-battle-runtime/src/index.ts"
       ],
       "status": "needs-qnt-owner",
-      "surfaceEvidence": [],
-      "title": "Audit Character Sheet to battle init and battle handoff settlement for HP, zero-HP lifecycle, conditions, spell slots, and identity checks"
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Rules-Glossary.md#Character Sheet",
+        ".references/srd-5.2.1/Playing-the-Game.md#Hit Points",
+        ".references/srd-5.2.1/Playing-the-Game.md#Dropping to 0 Hit Points"
+      ],
+      "title": "Character battle handoff identity, max-HP drift, active Wild Shape, and zero-HP lifecycle conflict handling"
     },
     {
       "id": "BATTLE.PROTOCOL.MALFORMED_PAYLOAD_REJECTION",
@@ -1554,6 +1809,21 @@
       "status": "boundary-only",
       "surfaceEvidence": [],
       "title": "Malformed client payload, unreadable fill shape, and unknown public ids are parser/protocol failures rather than reducer semantics"
+    },
+    {
+      "id": "CREATION.PROTOCOL.MALFORMED_FILL_REJECTION",
+      "kind": "boundary-protocol",
+      "parityWitnesses": [],
+      "profiles": [],
+      "qntOwners": [],
+      "reason": "These failures cannot produce a typed CreationFill or CreationHoleId, so they stay at the public MCP/input parser boundary. CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY owns typed fill batches evaluated against the current draft frontier.",
+      "runtime": "character-creation",
+      "runtimeOwners": [
+        "packages/mcp/src/character-tool-input.ts"
+      ],
+      "status": "boundary-only",
+      "surfaceEvidence": [],
+      "title": "Malformed creation fill payloads, unreadable creation hole ids, and unparsed ability-score assignments are parser/protocol failures rather than reducer semantics"
     },
     {
       "id": "BATTLE.SURFACE.CATALOG_ONLY_RECORDS",
@@ -1608,6 +1878,138 @@
       "status": "covered",
       "surfaceEvidence": [],
       "title": "Shared resolved positive-Hit-Point damage procedure and its TS parity route through consuming reducers"
+    },
+    {
+      "id": "SHEET.HP_REST_HIT_DICE.TRANSITIONS",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "deterministicReplayRationale": "Character Sheet HP/rest/Hit Dice replay is a closed fixture covering the named gate and benefit cases: Short Rest and Long Rest start HP gates, 16-hour Long Rest calendar wait rejection, Short Rest and Long Rest duration-proof rejections at the benefit boundary, one-die and two-die sequential Short Rest Hit Point Dice spends, interrupted Short Rest no-benefit, Long Rest HP/Hit Point Dice/max-HP-reduction reset, interrupted Long Rest before/after the one-hour Short Rest benefit threshold, and Long Rest physical-exertion threshold rejection. Random interleavings are not the risk at this sheet boundary.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/character-sheet-runtime/src/hp-rest-hit-dice.mbt.test.ts",
+          "qntSpecPath": "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/hit-point-recovery.qnt",
+        "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt"
+      ],
+      "runtime": "character-sheet",
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/index.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Playing-the-Game.md#Healing",
+        ".references/srd-5.2.1/Rules-Glossary.md#Short Rest",
+        ".references/srd-5.2.1/Rules-Glossary.md#Long Rest",
+        ".references/srd-5.2.1/Character-Creation.md#Hit Points and Hit Point Dice"
+      ],
+      "title": "Character Sheet Hit Point healing, Short Rest, Long Rest, interruption, and Hit Point Dice transitions"
+    },
+    {
+      "id": "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "deterministicReplayRationale": "Character Sheet Spell Slot/Pact Slot replay is a closed fixture for slot-capacity validation, ordinary Spell Slot current expenditure, Pact Slot current expenditure, Short Rest Pact Slot recovery, Arcane Recovery ordinary Spell Slot refund, Long Rest ordinary/Pact Slot restoration and created-slot expiry, interrupted-rest no-benefit versus Short Rest benefit outcomes imported from the HP/rest owner, and Magical Cunning Pact Slot recovery. Random interleavings are not the risk at this sheet state boundary.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts",
+          "qntSpecPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "character-sheet.pact-slot-recovery",
+        "character-sheet.short-rest-spell-slot-recovery"
+      ],
+      "qntOwners": [
+        "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt"
+      ],
+      "runtime": "character-sheet",
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/index.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Spell Slots",
+        ".references/srd-5.2.1/Rules-Glossary.md#Short Rest",
+        ".references/srd-5.2.1/Rules-Glossary.md#Long Rest",
+        ".references/srd-5.2.1/Classes/Wizard.md#Level 1: Arcane Recovery",
+        ".references/srd-5.2.1/Classes/Warlock.md#Level 1: Pact Magic",
+        ".references/srd-5.2.1/Classes/Warlock.md#Level 2: Magical Cunning",
+        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Font of Magic"
+      ],
+      "title": "Character Sheet Spell Slot, created Spell Slot, Pact Slot, Arcane Recovery, and Magical Cunning transitions"
+    },
+    {
+      "id": "SHEET.WEAPON_MASTERY.RESELECTION",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "deterministicReplayRationale": "Character Sheet Weapon Mastery replay is a closed selected-identity fixture for Paladin, Ranger, and Rogue two-choice projection plus Long Rest reselection. The runtime reads eligible weapon facts and Long Rest change counts from the installed Surface feature and rewrites CharacterBuild selected class-choice refs without adding durable sheet-local Weapon Mastery state; random branch interleavings are not the risk at this projection boundary.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/character-sheet-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "character-sheet.weapon-mastery-reselection"
+      ],
+      "qntOwners": [
+        "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt"
+      ],
+      "runtime": "character-sheet",
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/index.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Classes/Fighter.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/Classes/Barbarian.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/Classes/Paladin.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/Classes/Ranger.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/Classes/Rogue.md#Level 1: Weapon Mastery",
+        ".references/srd-5.2.1/Equipment.md#Mastery Properties",
+        ".references/srd-5.2.1/Rules-Glossary.md#Long Rest"
+      ],
+      "title": "Character Sheet Long Rest Weapon Mastery reselection replaces selected class-choice refs from Surface feature eligibility"
+    },
+    {
+      "id": "SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION",
+      "kind": "projection-scalar",
+      "parityWitnesses": [
+        {
+          "deterministicReplayRationale": "Character Sheet spellbook Ritual replay is a fixed projection fixture for the accepted spellbook Ritual case and the prepared-only rejection case. The runtime projects the invocation from existing CharacterBuild spellbook Spell Access, the installed spellbook Ritual Access feature, and the Surface Spell Definition Ritual tag; it records no separate Ritual list and spends no Spell Slot, so random branch interleavings are not the risk at this projection boundary.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/character-sheet-runtime/src/spellbook-ritual-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "character-sheet.spellbook-ritual-invocation"
+      ],
+      "qntOwners": [
+        "packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt"
+      ],
+      "runtime": "character-sheet",
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/index.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Classes/Wizard.md#Level 1: Spellcasting",
+        ".references/srd-5.2.1/Classes/Wizard.md#Level 1: Ritual Adept",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Gaining Spells",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Casting without Slots",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Longer Casting Times",
+        ".references/srd-5.2.1/Rules-Glossary.md#Ritual"
+      ],
+      "title": "Character Sheet spellbook Ritual invocation projects from existing spellbook Spell Access and Ritual-tagged Spell Definitions"
     }
   ],
   "battleHoleFrontier": [
@@ -2643,6 +3045,147 @@
       "id": "objectContactTargets",
       "reason": "Object-contact target fills supply selected contact creatures plus table-witnessed physical-contact and object-within-range facts for Heat Metal. Contact and range derivation stay at the caller/table boundary while reducer damage semantics are handled by the spell invocation profile.",
       "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "savingThrowOutcome",
+      "id": "BattleGustOfWindLineSavingThrowOutcomeHole",
+      "reason": "Gust of Wind Line save outcomes consume table-supplied area membership and push facts while reducer-visible semantics validate failed-save 15-foot non-Opportunity-Attack push facts and end-turn save advancement through the supported spell profile.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "gustOfWindLineDirectionChoice",
+      "id": "BattleGustOfWindLineDirectionChoiceHole",
+      "reason": "Gust of Wind Line direction is a table-supplied direction identity that changes the active Line effect and later movement/save fact validation without deriving map geometry in the reducer.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "fillKind": "gustOfWindLineDirectionChoice",
+      "followUpTaskIds": [],
+      "id": "gustOfWindLineDirectionChoice",
+      "reason": "Gust of Wind Line direction-choice fills supply a typed table direction identity and update reducer-owned active Line direction state without introducing automatic geometry or pathfinding.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "savingThrowOutcome",
+      "id": "BattleObjectContactSavingThrowOutcomeHole",
+      "reason": "Heat Metal holding-or-wearing Saving Throw outcomes decide whether the object-contact target proceeds to the drop-or-penalty branch after taking damage; table-owned holding/wearing facts remain separate object-contact witnesses.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "objectDropResolution",
+      "id": "BattleObjectDropResolutionHole",
+      "reason": "Heat Metal drop resolution combines caller/table drop capability evidence with the reducer-visible choice between a dropped heated object outcome and the fallback attack-roll and Ability Check Disadvantage effect.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "fillKind": "objectDropResolution",
+      "followUpTaskIds": [],
+      "id": "objectDropResolution",
+      "reason": "Object drop resolution fills select the RAW Heat Metal branch after a failed holding-or-wearing save: drop the object when possible, or retain it and apply the caster-turn-start-limited fallback penalty.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES",
+        "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "magicWeaponTargetItem",
+      "id": "BattleMagicWeaponTargetItemHole",
+      "reason": "Magic Weapon target holder identity, item identity, and nonmagical-weapon witness are caller/table inventory facts. The reducer consumes the exact holder-plus-item identity for the spell-owned active effect and later attack/damage projection without deriving inventory, range, or item magicality from duplicated state.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES",
+        "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS"
+      ],
+      "fillKind": "magicWeaponTargetItem",
+      "followUpTaskIds": [],
+      "id": "magicWeaponTargetItem",
+      "reason": "Magic Weapon target-item fills supply the table-verified exact holder-plus-item identity for a nonmagical weapon; the weapon-hosted spell obligation owns the item-attached effect, same-caster replacement, other-caster rejection, and exact holder-plus-item attack/damage projection.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "savingThrowOutcome",
+      "id": "BattleWebRestraintSavingThrowOutcomeHole",
+      "reason": "Web restraint Saving Throw outcomes consume table-triggered entry or start-turn area membership witnesses and drive reducer-owned spell-condition application plus first-entry ledger updates. Automatic geometry and area membership derivation remain table-owned boundary facts.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "ongoingSpellTargetChoice",
+      "id": "BattleOngoingSpellTargetChoiceHole",
+      "reason": "Dispel Magic ongoing-spell target holes select the creature, object, or magical effect whose tracked ongoing spell effects are considered; target-within-range facts remain caller/table evidence.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "spellcastingAbilityCheck",
+      "id": "BattleSpellcastingAbilityCheckHole",
+      "reason": "Spellcasting Ability Check holes resolve Dispel Magic higher-level contested ongoing spell effects using the caller-supplied check total against the derived DC.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "fillKind": "ongoingSpellTargetChoice",
+      "followUpTaskIds": [],
+      "id": "ongoingSpellTargetChoice",
+      "reason": "Ongoing spell target fills carry the selected Dispel Magic target plus table-supplied within-range facts; the selected target scopes which tracked ongoing spell effects can end.",
+      "subject": "battle-fill-kind"
     }
   ],
   "profileObligations": [
@@ -2876,6 +3419,12 @@
     },
     {
       "obligationIds": [
+        "BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE"
+      ],
+      "profileId": "spell.invocation-magical-darkness-point-origin"
+    },
+    {
+      "obligationIds": [
         "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE"
       ],
       "profileId": "spell.invocation-object-light"
@@ -3102,6 +3651,12 @@
     },
     {
       "obligationIds": [
+        "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS"
+      ],
+      "profileId": "spell.invocation-magic-weapon-enhancement"
+    },
+    {
+      "obligationIds": [
         "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER"
       ],
       "profileId": "spell.invocation-marked-damage-rider"
@@ -3174,33 +3729,111 @@
     },
     {
       "obligationIds": [
-        "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT"
+        "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS"
+      ],
+      "profileId": "character-sheet.short-rest-spell-slot-recovery"
+    },
+    {
+      "obligationIds": [
+        "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS"
+      ],
+      "profileId": "character-sheet.pact-slot-recovery"
+    },
+    {
+      "obligationIds": [
+        "SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION"
+      ],
+      "profileId": "character-sheet.spellbook-ritual-invocation"
+    },
+    {
+      "obligationIds": [
+        "SHEET.WEAPON_MASTERY.RESELECTION"
+      ],
+      "profileId": "character-sheet.weapon-mastery-reselection"
+    },
+    {
+      "obligationIds": [
+        "SHEET.FEATURE_RESOURCES.TRANSITIONS"
+      ],
+      "profileId": "character-sheet.healing-resource-action"
+    },
+    {
+      "obligationIds": [
+        "SHEET.FEATURE_RESOURCES.TRANSITIONS"
+      ],
+      "profileId": "character-sheet.class-feature-use-count-resource"
+    },
+    {
+      "obligationIds": [
+        "SHEET.FEATURE_RESOURCES.TRANSITIONS"
+      ],
+      "profileId": "character-sheet.class-feature-point-pool-resource"
+    },
+    {
+      "obligationIds": [
+        "SHEET.FEATURE_RESOURCES.TRANSITIONS"
+      ],
+      "profileId": "character-sheet.font-of-magic-slot-to-sorcery-points"
+    },
+    {
+      "obligationIds": [
+        "SHEET.FEATURE_RESOURCES.TRANSITIONS"
+      ],
+      "profileId": "character-sheet.font-of-magic-sorcery-points-to-spell-slot"
+    },
+    {
+      "obligationIds": [
+        "SHEET.FEATURE_RESOURCES.TRANSITIONS"
+      ],
+      "profileId": "character-sheet.metamagic-battle-resource-bridge"
+    },
+    {
+      "obligationIds": [
+        "SHEET.FEATURE_RESOURCES.TRANSITIONS"
+      ],
+      "profileId": "character-sheet.class-feature-long-rest-use-state"
+    },
+    {
+      "obligationIds": [
+        "SHEET.FEATURE_RESOURCES.TRANSITIONS"
+      ],
+      "profileId": "character-sheet.monk-uncanny-metabolism-initiative-recovery"
+    },
+    {
+      "obligationIds": [
+        "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION"
       ],
       "profileId": "character-creation.class-feature-feat-choice"
     },
     {
       "obligationIds": [
-        "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT"
+        "CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT"
       ],
-      "profileId": "character-creation.class-feature-advancement-replacement"
+      "profileId": "character-creation.fighter-fighting-style-advancement-replacement"
     },
     {
       "obligationIds": [
-        "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT"
+        "CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION"
       ],
       "profileId": "character-creation.warlock-pact-magic-advancement"
     },
     {
       "obligationIds": [
-        "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT"
+        "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION"
       ],
       "profileId": "character-creation.weapon-mastery-choice"
     },
     {
       "obligationIds": [
-        "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT"
+        "CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE"
       ],
       "profileId": "character-creation.eldritch-invocation-choice"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "spell.invocation-web-restraint-hazard"
     }
   ],
   "generatorReadiness": [
@@ -3239,6 +3872,7 @@
     "character-creation.class-feature-resource-projection",
     "character-creation.class-feature-source-fact-projection",
     "character-creation.eldritch-invocation-choice",
+    "character-creation.fighter-fighting-style-advancement-replacement",
     "character-creation.skill-expertise-choice",
     "character-creation.warlock-pact-magic-advancement",
     "character-creation.weapon-mastery-choice",
@@ -3248,7 +3882,9 @@
     "character-sheet.class-feature-point-pool-resource",
     "character-sheet.class-feature-use-count-resource",
     "character-sheet.font-of-magic-slot-to-sorcery-points",
+    "character-sheet.font-of-magic-sorcery-points-to-spell-slot",
     "character-sheet.healing-resource-action",
+    "character-sheet.metamagic-battle-resource-bridge",
     "character-sheet.monk-uncanny-metabolism-initiative-recovery",
     "character-sheet.pact-slot-recovery",
     "character-sheet.short-rest-spell-slot-recovery",
@@ -3282,16 +3918,20 @@
     "spell.invocation-fog-cloud-obscurement",
     "spell.invocation-forced-reaction-movement",
     "spell.invocation-grease-ground-hazard",
+    "spell.invocation-gust-of-wind-line",
     "spell.invocation-held-light-emitter",
     "spell.invocation-hideous-laughter-repeat-save-lifecycle",
     "spell.invocation-independent-attack-sequence",
     "spell.invocation-jump-movement-replacement",
+    "spell.invocation-magic-weapon-enhancement",
+    "spell.invocation-magical-darkness-point-origin",
     "spell.invocation-make-stable",
     "spell.invocation-marked-damage-rider",
     "spell.invocation-mirror-image-hit-interception",
     "spell.invocation-moonbeam-movable-zone",
     "spell.invocation-object-contact-damage",
     "spell.invocation-object-light",
+    "spell.invocation-ongoing-spell-ending",
     "spell.invocation-roll-modifier",
     "spell.invocation-sanctuary-targeting-interdiction",
     "spell.invocation-save-gated-condition-immunity",
@@ -3305,6 +3945,7 @@
     "spell.invocation-warding-bond-linked-effect",
     "spell.invocation-weapon-attack-override",
     "spell.invocation-weapon-damage-rider",
+    "spell.invocation-web-restraint-hazard",
     "spell.reaction-counterspell",
     "spell.reaction-hellish-rebuke",
     "spell.reaction-shield",
@@ -3326,6 +3967,7 @@
     "unit-feature.first-attack-roll-reckless-advantage",
     "unit-feature.innate-sorcery-activation",
     "unit-feature.martial-arts-attack-projection",
+    "unit-feature.metamagic-cast-governor-quickened",
     "unit-feature.monk-focus-battle-options",
     "unit-feature.passive-armor-class-bonus",
     "unit-feature.passive-ranged-attack-roll-bonus",

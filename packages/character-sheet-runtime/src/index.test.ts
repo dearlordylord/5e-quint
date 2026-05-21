@@ -15,7 +15,11 @@ import {
   sorcererMetamagicOptionId,
 } from "@dnd/character-creation-runtime";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
-import { elapsedTimeTicks, timeSpanDuration } from "@dnd/shared/elapsed-time";
+import {
+  elapsedTimeTicks,
+  timeSpanDuration,
+  type ElapsedTimeTicks,
+} from "@dnd/shared/elapsed-time";
 import {
   DieRollResult,
   Hp,
@@ -32,12 +36,17 @@ import { describe, expect, test } from "vitest";
 import {
   CHARACTER_SHEET_NO_OTHER_PROFICIENCY_BONUS,
   CHARACTER_SHEET_OTHER_PROFICIENCY_BONUS_APPLIES,
+  CHARACTER_SHEET_LONG_REST_BASE_TICKS,
+  CHARACTER_SHEET_LONG_REST_WAIT_TICKS,
+  CHARACTER_SHEET_SHORT_REST_TICKS,
   applyLayOnHands,
   characterSheetAbilityCheckProficiencyBonus,
   characterSheetArmorClassState,
   characterSheetCurrentHp,
   characterSheetDruidWildShapeKnownForms,
   characterSheetHitDice,
+  characterSheetHitPointMaximum,
+  characterSheetLongRestCalendarGate,
   characterSheetMonkUncannyMetabolismUseState,
   characterSheetMonksFocusSaveDc,
   characterSheetPactSlots,
@@ -45,19 +54,30 @@ import {
   characterSheetSpellInvocation,
   characterSheetSpellSlotSourceState,
   characterSheetSpellSlots,
-  completeLongRest,
+  completeLongRest as completeLongRestCore,
   completeMagicalCunningRite,
-  completeShortRest,
+  completeShortRest as completeShortRestCore,
   convertFontOfMagicSpellSlotToSorceryPoints,
   convertFontOfMagicSorceryPointsToSpellSlot,
   createFreshCharacterSheet as createFreshCharacterSheetCore,
+  finishLongRest,
+  finishShortRest,
   characterSheetId,
   characterSheetTempHp,
+  interruptLongRest as interruptLongRestCore,
+  interruptShortRest as interruptShortRestCore,
   parseCharacterSheet,
+  startLongRest,
+  startShortRest,
   timePassed,
   useMonkUncannyMetabolismWhenRollingInitiative,
   type CharacterSheet,
   type CharacterSheetInput,
+  type CharacterSheetLongRestInput,
+  type CharacterSheetLongRestInterruption,
+  type CharacterSheetLongRestStartTiming,
+  type CharacterSheetShortRestInterruption,
+  type CharacterSheetShortRestInput,
   type CharacterSheetWeaponMasteryReselection,
 } from "./index.ts";
 
@@ -73,6 +93,7 @@ import {
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-point-pool-resource
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.font-of-magic-slot-to-sorcery-points
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.font-of-magic-sorcery-points-to-spell-slot
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.metamagic-battle-resource-bridge
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.monk-uncanny-metabolism-initiative-recovery
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B barbarian_unarmored_defense monk_unarmored_defense paladin_lay_on_hands wizard_arcane_recovery wizard_ritual_adept
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-04 fighter_weapon_mastery barbarian_weapon_mastery paladin_weapon_mastery ranger_weapon_mastery rogue_weapon_mastery
@@ -133,6 +154,10 @@ const sorcererFontOfMagicSlotCreationTestName =
   "Font of Magic creates Spell Slots from Sorcery Points";
 const sorcererFontOfMagicSlotCreationGateTestName =
   "Font of Magic Spell Slot creation enforces Sorcery Point and level gates";
+const sorcererMetamagicKnownOptionsSheetParsingTestName =
+  "round-trips stored Sorcerer Metamagic known options through sheet parsing";
+const sorcererMetamagicKnownOptionsGateTestName =
+  "rejects stored Sorcerer Metamagic selections that do not match Sorcerer level";
 const uncannyMetabolismLongRestUseStateTestName =
   "tracks Uncanny Metabolism Long Rest use state separately from Focus Points";
 const uncannyMetabolismInitiativeRecoveryTestName =
@@ -149,12 +174,97 @@ const druidWildShapeFixtureKnownFormStatBlockIds = [
 ] as const;
 
 function createFreshCharacterSheet(
-  input: Omit<CharacterSheetInput, "conditions"> &
-    Partial<Pick<CharacterSheetInput, "conditions">>,
+  input: Omit<CharacterSheetInput, "conditions" | "hitPointMaximumReduction"> &
+    Partial<
+      Pick<CharacterSheetInput, "conditions" | "hitPointMaximumReduction">
+    >,
 ) {
   return createFreshCharacterSheetCore({
     conditions: [],
+    hitPointMaximumReduction: Hp(0),
     ...input,
+  });
+}
+
+function completeShortRest(
+  input: Omit<CharacterSheetShortRestInput, "completion"> & {
+    readonly sheet: CharacterSheet;
+    readonly restedTicks?: ElapsedTimeTicks;
+  },
+) {
+  const { sheet, restedTicks, ...benefits } = input;
+  const rest = requireRight(startShortRest({ sheet }));
+  const completion = requireRight(
+    finishShortRest({
+      rest,
+      restedTicks: restedTicks ?? CHARACTER_SHEET_SHORT_REST_TICKS,
+    }),
+  );
+  return completeShortRestCore({
+    ...benefits,
+    completion,
+  });
+}
+
+function completeLongRest(
+  input: Omit<CharacterSheetLongRestInput, "completion"> & {
+    readonly sheet: CharacterSheet;
+    readonly restedTicks?: ElapsedTimeTicks;
+    readonly timing?: CharacterSheetLongRestStartTiming;
+  },
+) {
+  const { sheet, restedTicks, timing, ...benefits } = input;
+  const rest = requireRight(
+    startLongRest({
+      sheet,
+      timing: timing ?? { tag: "noPriorLongRest" },
+    }),
+  );
+  const completion = requireRight(
+    finishLongRest({
+      rest,
+      restedTicks: restedTicks ?? rest.requiredRestTicks,
+    }),
+  );
+  return completeLongRestCore({
+    ...benefits,
+    completion,
+  });
+}
+
+function interruptShortRest(input: {
+  readonly sheet: CharacterSheet;
+  readonly interruption: CharacterSheetShortRestInterruption;
+}) {
+  return interruptShortRestCore({
+    rest: requireRight(startShortRest({ sheet: input.sheet })),
+    interruption: input.interruption,
+  });
+}
+
+function interruptLongRest(
+  input: Omit<Parameters<typeof interruptLongRestCore>[0], "rest"> & {
+    readonly sheet: CharacterSheet;
+    readonly timing?: CharacterSheetLongRestStartTiming;
+    readonly interruptionsIncludingThisOne?: unknown;
+    readonly interruption: CharacterSheetLongRestInterruption;
+  },
+) {
+  const {
+    sheet,
+    timing,
+    interruptionsIncludingThisOne: _unused,
+    ...interruption
+  } = input;
+  void _unused;
+  return interruptLongRestCore({
+    ...interruption,
+    rest: requireRight(
+      startLongRest({
+        sheet,
+        timing: timing ?? { tag: "noPriorLongRest" },
+      }),
+    ),
   });
 }
 
@@ -240,6 +350,7 @@ describe("Character Sheet runtime", () => {
           equipment: {},
         },
         maximumHp: 12,
+        hitPointMaximumReduction: 0,
         hitPoints: { tag: "positive", currentHp: 12 },
         spentHitDice: [],
       },
@@ -550,7 +661,7 @@ describe("Character Sheet runtime", () => {
           },
         }),
         spellSlotExpenditures: [],
-        pactSlotExpenditure: { slotLevel: 1, count: 1, expended: 0 },
+        pactSlotExpenditure: { expended: 0 },
       },
       unitLibrary,
     );
@@ -586,7 +697,7 @@ describe("Character Sheet runtime", () => {
     );
   });
 
-  test("round-trips stored Sorcerer Metamagic known options through sheet parsing", () => {
+  test(sorcererMetamagicKnownOptionsSheetParsingTestName, () => {
     const sheet = parseCharacterSheet(
       {
         ...storedAvailableSheetInput({
@@ -628,7 +739,7 @@ describe("Character Sheet runtime", () => {
     });
   });
 
-  test("rejects stored Sorcerer Metamagic selections that do not match Sorcerer level", () => {
+  test(sorcererMetamagicKnownOptionsGateTestName, () => {
     const build = sorcererFontOfMagicBuild();
     const sheet = parseCharacterSheet(
       storedAvailableSheetInput({
@@ -842,13 +953,14 @@ describe("Character Sheet runtime", () => {
           },
         },
         maximumHp: 12,
+        hitPointMaximumReduction: 0,
         hitPoints: { tag: "positive", currentHp: 12, tempHp: 0 },
         bookOfShadowsPresence: { tag: "notOnPerson" },
         conditions: [],
         spentHitDice: [],
         resourceExpenditures: [],
         spellSlotExpenditures: [],
-        pactSlotExpenditure: { slotLevel: 1, count: 1, expended: 0 },
+        pactSlotExpenditure: { expended: 0 },
       },
       unitLibrary,
     );
@@ -1248,7 +1360,136 @@ describe("Character Sheet runtime", () => {
     expect(result).toEqual({ tag: "none", bonus: 0 });
   });
 
-  test("Long Rest restores HP, Spell Slots, Pact Slots, and Arcane Recovery use", () => {
+  test("rest start gates keep calendar wait separate from rest benefits", () => {
+    const sheet = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:rest-start"),
+        build,
+        maximumHp: Hp(12),
+        currentHp: Hp(12),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const zeroHp = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:rest-start-zero"),
+        build,
+        maximumHp: Hp(12),
+        currentHp: Hp(0),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+
+    expect(startShortRest({ sheet })).toMatchObject({
+      _tag: "Right",
+      right: {
+        tag: "shortRestStarted",
+        requiredRestTicks: CHARACTER_SHEET_SHORT_REST_TICKS,
+      },
+    });
+    const shortRest = requireRight(startShortRest({ sheet }));
+    expect(
+      finishShortRest({
+        rest: shortRest,
+        restedTicks: elapsedTimeTicks(
+          Number(CHARACTER_SHEET_SHORT_REST_TICKS) - 1,
+        ),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: "Short Rest requires 1 hour before benefits can be received.",
+      },
+    });
+    expect(startShortRest({ sheet: zeroHp })).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Short Rest requires the Character Sheet to have at least 1 HP.",
+      },
+    });
+    expect(
+      startLongRest({ sheet: zeroHp, timing: { tag: "noPriorLongRest" } }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Long Rest requires the Character Sheet to have at least 1 HP.",
+      },
+    });
+
+    const oneTickBeforeWait = elapsedTimeTicks(
+      Number(CHARACTER_SHEET_LONG_REST_WAIT_TICKS) - 1,
+    );
+    expect(
+      characterSheetLongRestCalendarGate({
+        tag: "elapsedSinceLastLongRest",
+        elapsedTicks: oneTickBeforeWait,
+      }),
+    ).toEqual({
+      tag: "mustWait",
+      requiredWaitTicks: CHARACTER_SHEET_LONG_REST_WAIT_TICKS,
+      remainingTicks: elapsedTimeTicks(1),
+    });
+    expect(
+      startLongRest({
+        sheet,
+        timing: {
+          tag: "elapsedSinceLastLongRest",
+          elapsedTicks: oneTickBeforeWait,
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Long Rest requires waiting 16 hours after finishing the previous Long Rest.",
+      },
+    });
+    expect(
+      startLongRest({
+        sheet,
+        timing: {
+          tag: "elapsedSinceLastLongRest",
+          elapsedTicks: CHARACTER_SHEET_LONG_REST_WAIT_TICKS,
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Right",
+      right: {
+        tag: "longRestStarted",
+        requiredRestTicks: CHARACTER_SHEET_LONG_REST_BASE_TICKS,
+        nextLongRestStartWaitTicks: CHARACTER_SHEET_LONG_REST_WAIT_TICKS,
+      },
+    });
+    const longRest = requireRight(
+      startLongRest({
+        sheet,
+        timing: {
+          tag: "elapsedSinceLastLongRest",
+          elapsedTicks: CHARACTER_SHEET_LONG_REST_WAIT_TICKS,
+        },
+      }),
+    );
+    expect(
+      finishLongRest({
+        rest: longRest,
+        restedTicks: elapsedTimeTicks(
+          Number(CHARACTER_SHEET_LONG_REST_BASE_TICKS) - 1,
+        ),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Long Rest requires the full required duration before benefits can be received.",
+      },
+    });
+  });
+
+  test("Long Rest restores HP, Hit Point Dice, maximum reduction, Spell Slots, Pact Slots, and Arcane Recovery use", () => {
     const sheet = requireRight(
       createFreshCharacterSheet({
         characterId: characterSheetId("character:long-rest"),
@@ -1256,6 +1497,7 @@ describe("Character Sheet runtime", () => {
         maximumHp: Hp(12),
         currentHp: Hp(4),
         tempHp: Hp(3),
+        hitPointMaximumReduction: Hp(4),
         unitLibrary,
         spentHitDice: [
           { classUnitId: "class_wizard", spent: resourceCount(1) },
@@ -1267,11 +1509,7 @@ describe("Character Sheet runtime", () => {
             expended: resourceCount(2),
           },
         ],
-        pactSlots: {
-          slotLevel: spellSlotLevel(1),
-          count: resourceCount(1),
-          expended: resourceCount(1),
-        },
+        pactSlots: { expended: resourceCount(1) },
         restFeatureUses: [
           {
             tag: "arcaneRecovery",
@@ -1281,13 +1519,15 @@ describe("Character Sheet runtime", () => {
       }),
     );
 
-    const rested = requireRight(completeLongRest({ sheet }));
+    const rested = requireRight(completeLongRest({ sheet, unitLibrary }));
 
     expect(rested.hitPoints).toEqual({
       tag: "positive",
       currentHp: 12,
       tempHp: 0,
     });
+    expect(rested.hitPointMaximumReduction).toBe(0);
+    expect(characterSheetHitPointMaximum(rested)).toBe(12);
     expect(requireRight(characterSheetHitDice(rested, unitLibrary))).toEqual([
       { classUnitId: "class_wizard", dieSize: 6, total: 1, spent: 0 },
     ]);
@@ -1525,7 +1765,9 @@ describe("Character Sheet runtime", () => {
       }),
     ).source;
 
-    const rested = requireRight(completeLongRest({ sheet: spent }));
+    const rested = requireRight(
+      completeLongRest({ sheet: spent, unitLibrary }),
+    );
 
     expect(rested.resourceExpenditures).toEqual([]);
     expect(characterSheetResources(rested, unitLibrary)).toMatchObject({
@@ -1569,7 +1811,9 @@ describe("Character Sheet runtime", () => {
       ],
     });
 
-    const rested = requireRight(completeLongRest({ sheet: spent }));
+    const rested = requireRight(
+      completeLongRest({ sheet: spent, unitLibrary }),
+    );
 
     expect(rested.resourceExpenditures).toEqual([]);
     expect(characterSheetResources(rested, unitLibrary)).toMatchObject({
@@ -1616,7 +1860,9 @@ describe("Character Sheet runtime", () => {
       ]),
     });
 
-    const rested = requireRight(completeLongRest({ sheet: spent }));
+    const rested = requireRight(
+      completeLongRest({ sheet: spent, unitLibrary }),
+    );
 
     expect(rested.resourceExpenditures).toEqual([]);
     expect(characterSheetResources(rested, unitLibrary)).toMatchObject({
@@ -2660,11 +2906,7 @@ describe("Character Sheet runtime", () => {
             expended: resourceCount(1),
           },
         ],
-        pactSlots: {
-          slotLevel: spellSlotLevel(1),
-          count: resourceCount(1),
-          expended: resourceCount(1),
-        },
+        pactSlots: { expended: resourceCount(1) },
       }),
     );
 
@@ -2718,6 +2960,157 @@ describe("Character Sheet runtime", () => {
     expect(characterSheetSpellSlots(rested)).toEqual([
       { spellLevel: 1, count: 3, expended: 1 },
     ]);
+  });
+
+  test("rest interruptions apply only the RAW rest benefits they grant", () => {
+    const sheet = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:rest-interruption"),
+        build: wizardBuild({ wizardAdvancements: 1 }),
+        maximumHp: Hp(18),
+        currentHp: Hp(7),
+        tempHp: Hp(0),
+        unitLibrary,
+        spellSlots: [
+          {
+            spellLevel: spellSlotLevel(1),
+            count: resourceCount(3),
+            expended: resourceCount(1),
+          },
+        ],
+      }),
+    );
+
+    expect(interruptShortRest({ sheet, interruption: "takeDamage" })).toEqual({
+      tag: "shortRestInterruptedNoBenefit",
+      sheet,
+      interruption: "takeDamage",
+    });
+
+    const earlyLongRestInterruption = requireRight(
+      interruptLongRest({
+        sheet,
+        unitLibrary,
+        restedTicks: elapsedTimeTicks(
+          Number(CHARACTER_SHEET_SHORT_REST_TICKS) - 1,
+        ),
+        interruption: "castNonCantripSpell",
+        interruptionsIncludingThisOne: resourceCount(1),
+      }),
+    );
+    expect(earlyLongRestInterruption).toMatchObject({
+      tag: "longRestInterruptedNoBenefit",
+      interruption: "castNonCantripSpell",
+      requiredLongRestTicks: elapsedTimeTicks(
+        Number(CHARACTER_SHEET_LONG_REST_BASE_TICKS) +
+          Number(CHARACTER_SHEET_SHORT_REST_TICKS),
+      ),
+    });
+    expect(earlyLongRestInterruption.rest).toMatchObject({
+      tag: "longRestStarted",
+      sheet,
+      requiredRestTicks: earlyLongRestInterruption.requiredLongRestTicks,
+    });
+    expect(
+      interruptLongRest({
+        sheet,
+        unitLibrary,
+        restedTicks: elapsedTimeTicks(
+          Number(CHARACTER_SHEET_SHORT_REST_TICKS) - 1,
+        ),
+        interruption: "takeDamage",
+        interruptionsIncludingThisOne: resourceCount(1),
+        spendHitDice: [{ classUnitId: "class_wizard", roll: DieRollResult(4) }],
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Interrupted Long Rest before 1 hour cannot receive Short Rest benefit inputs.",
+      },
+    });
+    expect(
+      interruptLongRest({
+        sheet,
+        unitLibrary,
+        restedTicks: CHARACTER_SHEET_SHORT_REST_TICKS,
+        interruption: {
+          tag: "physicalExertion",
+          durationTicks: elapsedTimeTicks(
+            Number(CHARACTER_SHEET_SHORT_REST_TICKS) - 1,
+          ),
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Long Rest physical exertion interruption requires at least 1 hour.",
+      },
+    });
+    for (const restedTicks of [
+      CHARACTER_SHEET_LONG_REST_BASE_TICKS,
+      elapsedTimeTicks(Number(CHARACTER_SHEET_LONG_REST_BASE_TICKS) + 1),
+    ]) {
+      expect(
+        interruptLongRest({
+          sheet,
+          unitLibrary,
+          restedTicks,
+          interruption: "takeDamage",
+          interruptionsIncludingThisOne: resourceCount(1),
+        }),
+      ).toMatchObject({
+        _tag: "Left",
+        left: {
+          message:
+            "Long Rest interruption requires rested time before the required Long Rest duration.",
+        },
+      });
+    }
+
+    const lateLongRestInterruption = requireRight(
+      interruptLongRest({
+        sheet,
+        unitLibrary,
+        restedTicks: CHARACTER_SHEET_SHORT_REST_TICKS,
+        interruption: {
+          tag: "physicalExertion",
+          durationTicks: CHARACTER_SHEET_SHORT_REST_TICKS,
+        },
+        interruptionsIncludingThisOne: resourceCount(1),
+        spendHitDice: [{ classUnitId: "class_wizard", roll: DieRollResult(4) }],
+      }),
+    );
+
+    expect(lateLongRestInterruption.tag).toBe(
+      "longRestInterruptedWithShortRestBenefits",
+    );
+    expect(lateLongRestInterruption.interruption).toEqual({
+      tag: "physicalExertion",
+      durationTicks: CHARACTER_SHEET_SHORT_REST_TICKS,
+    });
+    expect(lateLongRestInterruption.requiredLongRestTicks).toBe(
+      Number(CHARACTER_SHEET_LONG_REST_BASE_TICKS) +
+        Number(CHARACTER_SHEET_SHORT_REST_TICKS),
+    );
+    expect(lateLongRestInterruption.rest).toMatchObject({
+      tag: "longRestStarted",
+      requiredRestTicks: lateLongRestInterruption.requiredLongRestTicks,
+    });
+    expect(characterSheetCurrentHp(lateLongRestInterruption.rest.sheet)).toBe(
+      12,
+    );
+    expect(
+      requireRight(
+        characterSheetHitDice(lateLongRestInterruption.rest.sheet, unitLibrary),
+      ),
+    ).toEqual([
+      { classUnitId: "class_wizard", dieSize: 6, total: 2, spent: 1 },
+    ]);
+    expect(characterSheetSpellSlots(lateLongRestInterruption.rest.sheet)).toEqual(
+      [{ spellLevel: 1, count: 3, expended: 1 }],
+    );
   });
 
   test("Short Rest applies minimum healing to each spent Hit Die", () => {
@@ -2943,11 +3336,7 @@ describe("Character Sheet runtime", () => {
         currentHp: Hp(14),
         tempHp: Hp(0),
         unitLibrary,
-        pactSlots: {
-          slotLevel: spellSlotLevel(1),
-          count: resourceCount(2),
-          expended: resourceCount(2),
-        },
+        pactSlots: { expended: resourceCount(2) },
       }),
     );
 
@@ -2972,7 +3361,9 @@ describe("Character Sheet runtime", () => {
       },
     });
 
-    const rested = requireRight(completeLongRest({ sheet: recovered }));
+    const rested = requireRight(
+      completeLongRest({ sheet: recovered, unitLibrary }),
+    );
 
     expect(characterSheetPactSlots(rested)).toEqual({
       slotLevel: 1,
@@ -2995,11 +3386,7 @@ describe("Character Sheet runtime", () => {
         currentHp: Hp(70),
         tempHp: Hp(0),
         unitLibrary,
-        pactSlots: {
-          slotLevel: spellSlotLevel(5),
-          count: resourceCount(3),
-          expended: resourceCount(3),
-        },
+        pactSlots: { expended: resourceCount(3) },
       }),
     );
 
@@ -3027,11 +3414,7 @@ describe("Character Sheet runtime", () => {
         currentHp: Hp(10),
         tempHp: Hp(0),
         unitLibrary,
-        pactSlots: {
-          slotLevel: spellSlotLevel(1),
-          count: resourceCount(1),
-          expended: resourceCount(1),
-        },
+        pactSlots: { expended: resourceCount(1) },
       }),
     );
 
@@ -3220,6 +3603,7 @@ function storedAvailableSheetInput(input: {
     characterId: input.characterId,
     build: input.build,
     maximumHp: 12,
+    hitPointMaximumReduction: 0,
     hitPoints: { tag: "positive", currentHp: 12, tempHp: 0 },
     conditions: [],
     spentHitDice: [],

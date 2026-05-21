@@ -1,10 +1,13 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84H shillelagh
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31A divine_favor
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME magic_weapon
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider spell.invocation-magic-weapon-enhancement
 import { describe, expect, test } from "vitest";
 import {
   divineFavorDurationTicks,
   divineFavorUnitId,
+  magicWeaponDurationTicks,
+  magicWeaponUnitId,
   rayOfFrostUnitId,
   shillelaghUnitId,
   spellCasterId,
@@ -18,6 +21,7 @@ import {
   requireHole,
   requireResultHole,
   statBlockAttackAct,
+  weaponAttackRollHole,
   weaponAttackSubject,
   withSameClubMainAndOffHand,
   zeroAbilityWeaponAttack,
@@ -26,6 +30,7 @@ import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   bonusSpellAct,
   bonusSpellActForItem,
+  magicWeaponTargetItemFill,
   spellAct,
   spellTargetFill,
 } from "./unit-profile-admission-spell-fill-support.ts";
@@ -33,6 +38,8 @@ import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
   abilityModifier,
   attackBonus,
+  battleWeaponItemHasMagicWeaponEnhancement,
+  battleWeaponItemMagicWeaponEnhancementBonus,
   cantripSpellInvocationRef,
   discoverBattleActs,
   elapsedTimeTicks,
@@ -661,5 +668,443 @@ describe("SRDINV31A deterministic weapon damage rider Spell Unit admission", () 
         ],
       },
     });
+  });
+});
+
+describe("L12G deterministic Magic Weapon item enhancement admission", () => {
+  test("magic_weapon is admitted as a level 2 Bonus Action item-target Spell Slot cast", () => {
+    const magicWeapon = spellRecord(magicWeaponUnitId);
+    const state = spellBattle({
+      preparedSpells: [magicWeapon],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      attack: zeroAbilityWeaponAttack("weapon_longsword"),
+    });
+    const act = bonusSpellAct({
+      state,
+      spellId: magicWeaponUnitId,
+      slotLevel: 2,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "bonusActionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(
+        magicWeaponUnitId,
+        2,
+        "magicWeaponEnhancement",
+      ),
+      mode: { tag: "cast" },
+    });
+    const targetHole = requireHole(act.initialHoles, "magicWeaponTargetItem");
+    expect(targetHole).toEqual(
+      expect.objectContaining({
+        label: "Magic Weapon target item",
+        requiresTableItemFact: true,
+      }),
+    );
+
+    const cast = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        magicWeaponTargetItemFill(targetHole, {
+          holderCombatantId: spellCasterId,
+          itemId: "main:weapon_longsword",
+        }),
+      ],
+    });
+
+    expect(cast).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        turn: {
+          bonusActionAvailable: false,
+          spellSlotUsesThisTurn: [
+            { kind: "committed", combatantId: spellCasterId },
+          ],
+        },
+      },
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Magic Weapon to resolve.");
+    }
+    expect(
+      cast.state.combatants.get(spellCasterId)?.activeEffects,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "spellMagicWeaponEnhancement",
+        sourceSpellId: magicWeaponUnitId,
+        sourceCombatantId: spellCasterId,
+        holderCombatantId: spellCasterId,
+        weaponItemId: "main:weapon_longsword",
+        bonus: 1,
+        expiresAt: {
+          kind: "duration",
+          durationTicks: magicWeaponDurationTicks,
+        },
+      }),
+    );
+    expect(
+      battleWeaponItemHasMagicWeaponEnhancement(
+        cast.state,
+        spellCasterId,
+        "main:weapon_longsword",
+      ),
+    ).toBe(true);
+    expect(
+      battleWeaponItemMagicWeaponEnhancementBonus(
+        cast.state,
+        spellCasterId,
+        "main:weapon_longsword",
+      ),
+    ).toBe(1);
+  });
+
+  test("magic_weapon projects slot-tiered attack and damage bonuses only for the targeted item", () => {
+    const magicWeapon = spellRecord(magicWeaponUnitId);
+    const state = spellBattle({
+      preparedSpells: [magicWeapon],
+      spellSlots: [{ spellLevel: 6, count: 1 }],
+      attack: zeroAbilityWeaponAttack("weapon_longsword"),
+    });
+    const act = bonusSpellAct({
+      state,
+      spellId: magicWeaponUnitId,
+      slotLevel: 6,
+    });
+    const targetHole = requireHole(act.initialHoles, "magicWeaponTargetItem");
+    const cast = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        magicWeaponTargetItemFill(targetHole, {
+          holderCombatantId: spellCasterId,
+          itemId: "main:weapon_longsword",
+        }),
+      ],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected level 6 Magic Weapon to resolve.");
+    }
+
+    const subject = weaponAttackSubject("Longsword");
+    const target = requireResultHole(
+      resolveBattleSubject({ state: cast.state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const targetFill = attackTargetFill(
+      target,
+      spellCasterId,
+      spellTargetId,
+      "Longsword",
+    );
+    const roll = requireResultHole(
+      resolveBattleSubject({
+        state: cast.state,
+        subject,
+        fills: [targetFill],
+      }),
+      "attackRoll",
+    );
+    expect(roll.attackBonus).toBe(attackBonus(3));
+    const rollFill = attackRollFill(roll, { total: 15, naturalD20: 10 });
+    const weaponDamage = requireResultHole(
+      resolveBattleSubject({
+        state: cast.state,
+        subject,
+        fills: [targetFill, rollFill],
+      }),
+      "rolledDice",
+    );
+    const weaponResolved = resolveBattleSubject({
+      state: cast.state,
+      subject,
+      fills: [
+        targetFill,
+        rollFill,
+        damageRollFillWithGroups(weaponDamage, [[4]]),
+      ],
+    });
+    expect(weaponResolved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          expect.anything(),
+          expect.objectContaining({ combatantId: spellTargetId, hp: 5 }),
+        ],
+      },
+    });
+
+    const caster = requireCombatant(state, spellCasterId);
+    const otherItemState: BattleState = {
+      ...state,
+      combatants: new Map(state.combatants).set(spellCasterId, {
+        ...caster,
+        activeEffects: [
+          ...caster.activeEffects,
+          {
+            kind: "spellMagicWeaponEnhancement",
+            sourceSpellId: magicWeaponUnitId,
+            sourceCombatantId: spellCasterId,
+            holderCombatantId: spellCasterId,
+            weaponItemId: "other:weapon_longsword",
+            bonus: 3,
+            expiresAt: {
+              kind: "duration",
+              durationTicks: magicWeaponDurationTicks,
+            },
+          },
+        ],
+      }),
+    };
+    const otherTarget = requireResultHole(
+      resolveBattleSubject({ state: otherItemState, subject, fills: [] }),
+      "targetChoice",
+    );
+    const otherTargetFill = attackTargetFill(
+      otherTarget,
+      spellCasterId,
+      spellTargetId,
+      "Longsword",
+    );
+    const otherRoll = requireResultHole(
+      resolveBattleSubject({
+        state: otherItemState,
+        subject,
+        fills: [otherTargetFill],
+      }),
+      "attackRoll",
+    );
+    expect(otherRoll.attackBonus).toBe(attackBonus(0));
+  });
+
+  test("magic_weapon exact item identity includes the holder combatant", () => {
+    const magicWeapon = spellRecord(magicWeaponUnitId);
+    const state = spellBattle({
+      preparedSpells: [magicWeapon],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      attack: zeroAbilityWeaponAttack("weapon_longsword"),
+      targetAttack: zeroAbilityWeaponAttack("weapon_longsword"),
+    });
+    const act = bonusSpellAct({
+      state,
+      spellId: magicWeaponUnitId,
+      slotLevel: 2,
+    });
+    const targetHole = requireHole(act.initialHoles, "magicWeaponTargetItem");
+    const cast = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        magicWeaponTargetItemFill(targetHole, {
+          holderCombatantId: spellTargetId,
+          itemId: "main:weapon_longsword",
+        }),
+      ],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Magic Weapon to resolve.");
+    }
+
+    expect(
+      weaponAttackRollHole({
+        state: cast.state,
+        attackName: "Longsword",
+        actorId: spellCasterId,
+        targetId: spellTargetId,
+      }).attackBonus,
+    ).toBe(attackBonus(0));
+    const targetTurn = endTurn({
+      state: cast.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected Magic Weapon caster end turn to resolve.");
+    }
+    expect(
+      weaponAttackRollHole({
+        state: targetTurn.state,
+        attackName: "Longsword",
+        actorId: spellTargetId,
+        targetId: spellCasterId,
+      }).attackBonus,
+    ).toBe(attackBonus(1));
+  });
+
+  test("magic_weapon same-caster recast replaces the prior item-attached effect", () => {
+    const magicWeapon = spellRecord(magicWeaponUnitId);
+    const state = spellBattle({
+      preparedSpells: [magicWeapon],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+      attack: zeroAbilityWeaponAttack("weapon_longsword"),
+    });
+    const caster = requireCombatant(state, spellCasterId);
+    const priorState: BattleState = {
+      ...state,
+      combatants: new Map(state.combatants).set(spellCasterId, {
+        ...caster,
+        activeEffects: [
+          ...caster.activeEffects,
+          {
+            kind: "spellMagicWeaponEnhancement",
+            sourceSpellId: magicWeaponUnitId,
+            sourceCombatantId: spellCasterId,
+            holderCombatantId: spellCasterId,
+            weaponItemId: "prior:weapon_longsword",
+            bonus: 1,
+            expiresAt: {
+              kind: "duration",
+              durationTicks: elapsedTimeTicks(1),
+            },
+          },
+        ],
+      }),
+    };
+    const act = bonusSpellAct({
+      state: priorState,
+      spellId: magicWeaponUnitId,
+      slotLevel: 3,
+    });
+    const targetHole = requireHole(act.initialHoles, "magicWeaponTargetItem");
+    const recast = resolveBattleSubject({
+      state: priorState,
+      subject: act.subject,
+      fills: [
+        magicWeaponTargetItemFill(targetHole, {
+          holderCombatantId: spellCasterId,
+          itemId: "main:weapon_longsword",
+        }),
+      ],
+    });
+    if (recast.tag !== "resolved") {
+      throw new Error("Expected Magic Weapon recast to resolve.");
+    }
+    const effects = requireCombatant(
+      recast.state,
+      spellCasterId,
+    ).activeEffects.filter(
+      (effect) => effect.kind === "spellMagicWeaponEnhancement",
+    );
+    expect(effects).toEqual([
+      expect.objectContaining({
+        holderCombatantId: spellCasterId,
+        weaponItemId: "main:weapon_longsword",
+        bonus: 2,
+      }),
+    ]);
+  });
+
+  test("magic_weapon rejects an item already made magical by another caster and expires on duration", () => {
+    const magicWeapon = spellRecord(magicWeaponUnitId);
+    const state = spellBattle({
+      preparedSpells: [magicWeapon],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      attack: zeroAbilityWeaponAttack("weapon_longsword"),
+    });
+    const target = requireCombatant(state, spellTargetId);
+    const alreadyMagicalState: BattleState = {
+      ...state,
+      combatants: new Map(state.combatants).set(spellTargetId, {
+        ...target,
+        activeEffects: [
+          ...target.activeEffects,
+          {
+            kind: "spellMagicWeaponEnhancement",
+            sourceSpellId: magicWeaponUnitId,
+            sourceCombatantId: spellTargetId,
+            holderCombatantId: spellCasterId,
+            weaponItemId: "main:weapon_longsword",
+            bonus: 1,
+            expiresAt: {
+              kind: "duration",
+              durationTicks: magicWeaponDurationTicks,
+            },
+          },
+        ],
+      }),
+    };
+    const rejectedAct = bonusSpellAct({
+      state: alreadyMagicalState,
+      spellId: magicWeaponUnitId,
+      slotLevel: 2,
+    });
+    const rejectedHole = requireHole(
+      rejectedAct.initialHoles,
+      "magicWeaponTargetItem",
+    );
+    expect(
+      resolveBattleSubject({
+        state: alreadyMagicalState,
+        subject: rejectedAct.subject,
+        fills: [
+          magicWeaponTargetItemFill(rejectedHole, {
+            holderCombatantId: spellCasterId,
+            itemId: "main:weapon_longsword",
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+
+    const act = bonusSpellAct({
+      state,
+      spellId: magicWeaponUnitId,
+      slotLevel: 2,
+    });
+    const targetHole = requireHole(act.initialHoles, "magicWeaponTargetItem");
+    const cast = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        magicWeaponTargetItemFill(targetHole, {
+          holderCombatantId: spellCasterId,
+          itemId: "main:weapon_longsword",
+        }),
+      ],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Magic Weapon to resolve before expiry.");
+    }
+    const caster = requireCombatant(cast.state, spellCasterId);
+    const oneTickState: BattleState = {
+      ...cast.state,
+      combatants: new Map(cast.state.combatants).set(spellCasterId, {
+        ...caster,
+        activeEffects: caster.activeEffects.map((effect) =>
+          effect.kind === "spellMagicWeaponEnhancement"
+            ? {
+                ...effect,
+                expiresAt: {
+                  ...effect.expiresAt,
+                  durationTicks: elapsedTimeTicks(1),
+                },
+              }
+            : effect,
+        ),
+      }),
+    };
+    const casterTurn = endTurn({
+      state: oneTickState,
+      actorId: spellCasterId,
+    });
+    if (casterTurn.tag !== "resolved") {
+      throw new Error("Expected Magic Weapon caster end turn to resolve.");
+    }
+    const expired = endTurn({
+      state: casterTurn.state,
+      actorId: spellTargetId,
+    });
+    if (expired.tag !== "resolved") {
+      throw new Error("Expected Magic Weapon duration tick to resolve.");
+    }
+    expect(
+      battleWeaponItemHasMagicWeaponEnhancement(
+        expired.state,
+        spellCasterId,
+        "main:weapon_longsword",
+      ),
+    ).toBe(false);
   });
 });

@@ -296,6 +296,125 @@ module battleRuntimeLightConcentrationMovementReactionTests {
     }
   }
 
+  run test_dispel_magic_object_target_ends_tracked_continual_flame = {
+    val emitters = Set(continualFlameObjectEmitter(LightObjectTarget))
+    val dispelled = dispelMagicObjectTargetLightEmitters(emitters, LightObjectTarget, 3, Set())
+    all {
+      assert(dispelled == Set()),
+      assert(dispelMagicEndsTrackedOngoingSpell(
+        3,
+        Set(),
+        continualFlameSourceEffectId,
+        continualFlameSpellLevel,
+      )),
+    }
+  }
+
+  run test_dispel_magic_higher_level_check_gate_for_tracked_light_emitter = {
+    val higherSpellLevel = 4
+    val higherEmitter =
+      spellLightEmitterWithOngoingSpellTracking(
+        continualFlameObjectEmitter(LightObjectTarget),
+        alternateContinualFlameSourceEffectId,
+        higherSpellLevel,
+      )
+    val emitters = Set(higherEmitter)
+    val failedCheckIds =
+      dispelMagicSuccessfulAbilityCheckEffectIds(
+        alternateContinualFlameSourceEffectId,
+        13,
+        higherSpellLevel,
+      )
+    val succeededCheckIds =
+      dispelMagicSuccessfulAbilityCheckEffectIds(
+        alternateContinualFlameSourceEffectId,
+        14,
+        higherSpellLevel,
+      )
+    val failed = dispelMagicObjectTargetLightEmitters(emitters, LightObjectTarget, 3, failedCheckIds)
+    val succeeded = dispelMagicObjectTargetLightEmitters(emitters, LightObjectTarget, 3, succeededCheckIds)
+    val higherSlot = dispelMagicObjectTargetLightEmitters(emitters, LightObjectTarget, 4, Set())
+    all {
+      assert(failed == emitters),
+      assert(succeeded == Set()),
+      assert(higherSlot == Set()),
+      assert(failedCheckIds == Set()),
+      assert(succeededCheckIds == Set(alternateContinualFlameSourceEffectId)),
+      assert(not(dispelMagicEndsTrackedOngoingSpell(
+        3,
+        failedCheckIds,
+        alternateContinualFlameSourceEffectId,
+        higherSpellLevel,
+      ))),
+      assert(dispelMagicEndsTrackedOngoingSpell(
+        3,
+        succeededCheckIds,
+        alternateContinualFlameSourceEffectId,
+        higherSpellLevel,
+      )),
+      assert(dispelMagicEndsTrackedOngoingSpell(
+        4,
+        Set(),
+        alternateContinualFlameSourceEffectId,
+        higherSpellLevel,
+      )),
+      assert(not(dispelMagicCheckSucceeds(13, higherSpellLevel))),
+      assert(dispelMagicCheckSucceeds(14, higherSpellLevel)),
+    }
+  }
+
+  run test_dispel_magic_object_target_resolves_mixed_tracked_spell_levels_per_emitter = {
+    val lowEmitter = continualFlameObjectEmitter(LightObjectTarget)
+    val higherEmitter =
+      spellLightEmitterWithOngoingSpellTracking(
+        continualFlameObjectEmitter(LightObjectTarget),
+        alternateContinualFlameSourceEffectId,
+        4,
+      )
+    val emitters = Set(lowEmitter, higherEmitter)
+    val failedHigher = dispelMagicObjectTargetLightEmitters(emitters, LightObjectTarget, 3, Set())
+    val succeededHigher =
+      dispelMagicObjectTargetLightEmitters(
+        emitters,
+        LightObjectTarget,
+        3,
+        Set(alternateContinualFlameSourceEffectId),
+      )
+    all {
+      assert(failedHigher == Set(higherEmitter)),
+      assert(succeededHigher == Set()),
+    }
+  }
+
+  run test_dispel_magic_magical_effect_target_uses_tracked_source_effect_id = {
+    val selectedEmitter = continualFlameObjectEmitter(LightObjectTarget)
+    val otherEmitter =
+      spellLightEmitterWithOngoingSpellTracking(
+        continualFlameObjectEmitter(LightObjectTarget),
+        alternateContinualFlameSourceEffectId,
+        continualFlameSpellLevel,
+      )
+    val emitters = Set(selectedEmitter, otherEmitter)
+    val selectedDispelled =
+      dispelMagicMagicalEffectTargetLightEmitters(
+        emitters,
+        continualFlameSourceEffectId,
+        3,
+        Set(),
+      )
+    val otherDispelled =
+      dispelMagicMagicalEffectTargetLightEmitters(
+        emitters,
+        alternateContinualFlameSourceEffectId,
+        3,
+        Set(),
+      )
+    all {
+      assert(selectedDispelled == Set(otherEmitter)),
+      assert(otherDispelled == Set(selectedEmitter)),
+    }
+  }
+
   run test_light_visibility_projection = {
     val lit = resolveLightObject(initialState, LightObjectTarget, ObjectLarge, ObjectNotWornOrCarriedBySomeoneElse)
     val brightFact = ObjectLightEmitterProjectionFact({
@@ -373,6 +492,10 @@ module battleRuntimeLightConcentrationMovementReactionTests {
           dimAdditionalFeet: lightDimLightAdditionalFeet,
         }),
         opaqueCoverInteraction: LightEmitterBlocksOpaqueCover,
+        ongoingSpellTracking: TrackedOngoingSpellLightEmitter({
+          sourceEffectId: lightObjectSourceEffectId,
+          sourceSpellLevel: lightSpellLevel,
+        }),
         expiresAt: DurationLightEmitterExpiration({ durationTicks: 1 }),
       })),
     }

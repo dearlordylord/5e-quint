@@ -16,6 +16,8 @@ import type {
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Either, Option } from "effect";
 
+// KERNEL-COVERAGE: runtime-owner CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION
+
 type CharacterBattleWeaponMasterySelection = NonNullable<
   CharacterBattleCreatureInit["weaponMasteries"]
 >[number];

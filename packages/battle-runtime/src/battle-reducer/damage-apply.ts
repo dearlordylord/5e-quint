@@ -1,6 +1,7 @@
 // Damage application + HP lifecycle + concentration helpers extracted from
 // RAW-COVERAGE: runtime-owner RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // battle-reducer.ts. Cluster M (damage_apply). Mechanical extraction — no
 // behavior change. Pass 9 also absorbs:
 //   - breakBattleConcentration, breakBattleConcentrationAfterDamage,
@@ -1112,7 +1113,7 @@ function applyZeroHitPointReplacement(
     origin: {
       ...nextCombatant.origin,
       resources: nextCombatant.origin.resources.map((resource) =>
-        resource.unit.id === unitId
+        resource.unit.id === unitId && resourceHasUsesRemaining(resource)
           ? spendCharacterResourceUse(resource)
           : resource,
       ),
@@ -1489,12 +1490,18 @@ function withoutConcentration(
   if (combatant.concentration === null) {
     return combatant;
   }
+  const concentration = combatant.concentration;
   return {
     ...combatant,
     concentration: null,
     activeEffects: combatant.activeEffects.filter(
       (effect) =>
         !("expiresAt" in effect && effect.expiresAt.kind === "concentration") &&
+        !nonConcentrationEffectFromBrokenSpellConcentration(
+          effect,
+          combatant.combatantId,
+          concentration,
+        ) &&
         (effect.kind !== "spellBaseArmorClass" ||
           !effect.earlyEnds.some(
             (earlyEnd) => earlyEnd.kind === "concentrationBroken",
@@ -1568,8 +1575,30 @@ function concentrationBrokenEffectFrom(
   ) {
     return true;
   }
+  if (
+    nonConcentrationEffectFromBrokenSpellConcentration(
+      effect,
+      combatantId,
+      concentration,
+    )
+  ) {
+    return true;
+  }
   return (
     effect.kind === "spellBaseArmorClass" &&
     effect.earlyEnds.some((earlyEnd) => earlyEnd.kind === "concentrationBroken")
+  );
+}
+
+function nonConcentrationEffectFromBrokenSpellConcentration(
+  effect: BattleActiveEffect,
+  combatantId: CombatantId,
+  concentration: BattleConcentration | null,
+): boolean {
+  return (
+    concentration?.effectKind === "spellEffect" &&
+    effect.kind === "selfAttackRollAndAbilityCheckRollMode" &&
+    effect.sourceCombatantId === combatantId &&
+    effect.sourceSpellId === concentration.sourceSpellId
   );
 }
