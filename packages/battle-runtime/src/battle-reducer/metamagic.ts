@@ -36,12 +36,20 @@ export const EXTENDED_METAMAGIC_EFFECT_KIND =
   "duration_extension_and_concentration_save_advantage" satisfies CharacterBattleMetamagicEffectKind;
 export const SUBTLE_METAMAGIC_EFFECT_KIND =
   "component_suppression" satisfies CharacterBattleMetamagicEffectKind;
+export const TRANSMUTED_METAMAGIC_EFFECT_KIND =
+  "damage_type_substitution" satisfies CharacterBattleMetamagicEffectKind;
+export const TWINNED_METAMAGIC_EFFECT_KIND =
+  "effective_spell_level_increase_for_extra_target" satisfies CharacterBattleMetamagicEffectKind;
 export const DISTANT_METAMAGIC_UNSUPPORTED_MESSAGE =
   "Distant Spell is not supported until spell target witnesses carry range facts that can be rewritten without trusting authored spell identity.";
 export const EXTENDED_METAMAGIC_UNSUPPORTED_MESSAGE =
   "Extended Spell is not supported until spell duration and Concentration-saving-throw roll mode are owned by a generic cast-property boundary.";
 export const SUBTLE_METAMAGIC_UNSUPPORTED_MESSAGE =
   "Subtle Spell is not supported until spell-cast component witnesses can suppress Verbal and Somatic components while preserving consumed or priced Material components.";
+export const TRANSMUTED_METAMAGIC_UNSUPPORTED_MESSAGE =
+  "Transmuted Spell is not supported until spell damage procedure facts carry a cast-time damage-type substitution boundary that rewrites only Acid, Cold, Fire, Lightning, Poison, or Thunder damage without duplicating damage dice.";
+export const TWINNED_METAMAGIC_UNSUPPORTED_MESSAGE =
+  "Twinned Spell is not supported until upcast target-count projection can increase effective spell level by 1 only for procedures whose higher-slot shape targets one additional creature without duplicating spell slot state.";
 
 export const QUICKENED_SPELL_METAMAGIC_SELECTION = [
   { effectKind: QUICKENED_METAMAGIC_EFFECT_KIND },
@@ -338,6 +346,10 @@ function spellMetamagicSupportIssue(input: {
   if (castPropertyIssue !== null) {
     return castPropertyIssue;
   }
+  const damageShapeIssue = damageShapeMetamagicSupportIssue(effectKinds);
+  if (damageShapeIssue !== null) {
+    return damageShapeIssue;
+  }
   const saveMetamagicOnly =
     effectKinds.size > 0 &&
     [...effectKinds].every(
@@ -380,6 +392,17 @@ function castPropertyMetamagicSupportIssue(
   }
   return effectKinds.has(SUBTLE_METAMAGIC_EFFECT_KIND)
     ? SUBTLE_METAMAGIC_UNSUPPORTED_MESSAGE
+    : null;
+}
+
+function damageShapeMetamagicSupportIssue(
+  effectKinds: ReadonlySet<CharacterBattleMetamagicEffectKind>,
+): string | null {
+  if (effectKinds.has(TRANSMUTED_METAMAGIC_EFFECT_KIND)) {
+    return TRANSMUTED_METAMAGIC_UNSUPPORTED_MESSAGE;
+  }
+  return effectKinds.has(TWINNED_METAMAGIC_EFFECT_KIND)
+    ? TWINNED_METAMAGIC_UNSUPPORTED_MESSAGE
     : null;
 }
 

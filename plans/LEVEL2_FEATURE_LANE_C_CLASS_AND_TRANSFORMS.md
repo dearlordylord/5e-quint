@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-DAMAGE-SHAPE-OPTIONS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Sorcerer Metamagic Damage Shape Options"
     },
     {

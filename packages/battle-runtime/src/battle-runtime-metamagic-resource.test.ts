@@ -25,6 +25,10 @@ import {
   QUICKENED_SPELL_METAMAGIC_SELECTION,
   SUBTLE_METAMAGIC_EFFECT_KIND,
   SUBTLE_METAMAGIC_UNSUPPORTED_MESSAGE,
+  TRANSMUTED_METAMAGIC_EFFECT_KIND,
+  TRANSMUTED_METAMAGIC_UNSUPPORTED_MESSAGE,
+  TWINNED_METAMAGIC_EFFECT_KIND,
+  TWINNED_METAMAGIC_UNSUPPORTED_MESSAGE,
 } from "./battle-reducer/metamagic.ts";
 import {
   characterSeed,
@@ -317,6 +321,39 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
           state,
           subject: {
             ...cureWoundsActionSubject(),
+            metamagic: [{ effectKind: closure.effectKind }],
+          },
+          fills: [],
+        }),
+      ).toMatchObject({
+        tag: "invalid",
+        message: closure.message,
+      });
+    }
+
+    expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
+  });
+
+  test("explicitly closes damage-shape Metamagic options before Sorcery Point spending", () => {
+    const state = saveMetamagicBattle({
+      knownOptions: [transmutedMetamagicOption(), twinnedMetamagicOption()],
+    });
+
+    for (const closure of [
+      {
+        effectKind: TRANSMUTED_METAMAGIC_EFFECT_KIND,
+        message: TRANSMUTED_METAMAGIC_UNSUPPORTED_MESSAGE,
+      },
+      {
+        effectKind: TWINNED_METAMAGIC_EFFECT_KIND,
+        message: TWINNED_METAMAGIC_UNSUPPORTED_MESSAGE,
+      },
+    ] as const) {
+      expect(
+        resolveBattleSubject({
+          state,
+          subject: {
+            ...burningHandsActionSubject(),
             metamagic: [{ effectKind: closure.effectKind }],
           },
           fills: [],
@@ -1019,6 +1056,22 @@ function subtleMetamagicOption(): MetamagicOptionFixture {
   };
 }
 
+function transmutedMetamagicOption(): MetamagicOptionFixture {
+  return {
+    effectKind: TRANSMUTED_METAMAGIC_EFFECT_KIND,
+    stackingMode: "one_per_spell",
+    sorceryPointCost: resourceCount(1),
+  };
+}
+
+function twinnedMetamagicOption(): MetamagicOptionFixture {
+  return {
+    effectKind: TWINNED_METAMAGIC_EFFECT_KIND,
+    stackingMode: "one_per_spell",
+    sorceryPointCost: resourceCount(1),
+  };
+}
+
 function cureWoundsActionSubject(): Extract<
   AvailableBattleAct["subject"],
   { readonly tag: "actionSpell" }
@@ -1031,6 +1084,18 @@ function cureWoundsActionSubject(): Extract<
       1,
       "directHitPointRestoration",
     ),
+    mode: { tag: "cast" },
+  };
+}
+
+function burningHandsActionSubject(): Extract<
+  AvailableBattleAct["subject"],
+  { readonly tag: "actionSpell" }
+> {
+  return {
+    tag: "actionSpell",
+    actorId: wizardId,
+    invocation: spellSlotInvocationRef("burning_hands", 1, "saveGatedDamage"),
     mode: { tag: "cast" },
   };
 }
