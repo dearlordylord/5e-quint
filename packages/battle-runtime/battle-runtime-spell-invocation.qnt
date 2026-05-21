@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.REACTION_CASTING_TIME
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
 
 module battleRuntimeSpellInvocation {
   import battleRuntimeFeatureBridge.* from "./battle-runtime-feature-bridge"

@@ -11,7 +11,7 @@
     {"number":5,"id":"RKBC-SPELL-MAKE-STABLE-PARITY","status":"done","title":"Spell Make Stable Parity Witness"},
     {"number":6,"id":"RKBC-SPELL-SELF-TRANSFORMATION-PARITY","status":"done","title":"Spell Self Transformation Mode Parity Witness"},
     {"number":7,"id":"RKBC-SPELL-REACTION-CASTING-PARITY","status":"done","title":"Spell Reaction Casting Parity Witnesses"},
-    {"number":8,"id":"RKBC-SPELL-AFTER-HIT-RIDERS-PARITY","status":"ready-for-research","title":"Spell After-Hit Rider Parity Witnesses"},
+    {"number":8,"id":"RKBC-SPELL-AFTER-HIT-RIDERS-PARITY","status":"done","title":"Spell After-Hit Rider Parity Witnesses"},
     {"number":9,"id":"RKBC-SPELL-WEAPON-HOSTED-PARITY","status":"ready-for-research","title":"Spell Weapon-Hosted Attack And Rider Parity Witnesses"},
     {"number":10,"id":"RKBC-SPELL-MARKED-RIDER-PARITY","status":"ready-for-research","title":"Spell Marked Damage Rider Parity Witnesses"},
     {"number":11,"id":"RKBC-SPELL-ATTACK-SEQUENCES-PARITY","status":"ready-for-research","title":"Spell Attack Sequence Parity Witnesses"},
@@ -100,7 +100,7 @@ Output:
 
 ### Task 8 - RKBC-SPELL-AFTER-HIT-RIDERS-PARITY - Spell After-Hit Rider Parity Witnesses
 
-Status: `ready-for-research`
+Status: `done`
 
 Output:
 - Parity witnesses for supported after-hit damage, illumination, restraint, and timed-save riders.

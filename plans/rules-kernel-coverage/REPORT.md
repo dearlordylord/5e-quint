@@ -5,15 +5,15 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 ## Summary
 
 - Total obligations: 72
-- Covered obligations: 53
-- Open transitional obligations: 14
+- Covered obligations: 54
+- Open transitional obligations: 13
 - Boundary or unsupported obligations: 5
 
 | Status | Count |
 | --- | ---: |
-| covered | 53 |
+| covered | 54 |
 | needs-qnt-owner | 0 |
-| needs-parity-witness | 13 |
+| needs-parity-witness | 12 |
 | needs-surface-evidence | 1 |
 | boundary-only | 4 |
 | unsupported-by-admission | 1 |
@@ -63,7 +63,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` | battle | needs-parity-witness | `spell.invocation-condition-removal-protection`, `spell.invocation-direct-condition-removal` |
 | `BATTLE.SPELL.SELF_TRANSFORMATION_MODE` | battle | covered | `spell.invocation-self-transformation-mode` |
 | `BATTLE.SPELL.REACTION_CASTING_TIME` | battle | covered | `spell.reaction-counterspell`, `spell.reaction-hellish-rebuke` |
-| `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` | battle | needs-parity-witness | `spell.invocation-after-hit-damage`, `spell.invocation-after-hit-damage-illumination`, `spell.invocation-after-hit-restraint-turn-start-damage`, `spell.invocation-after-hit-timed-damage-save` |
+| `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` | battle | covered | `spell.invocation-after-hit-damage`, `spell.invocation-after-hit-damage-illumination`, `spell.invocation-after-hit-restraint-turn-start-damage`, `spell.invocation-after-hit-timed-damage-save` |
 | `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` | battle | needs-parity-witness | `spell.invocation-magic-weapon-enhancement`, `spell.invocation-spell-hosted-weapon-attack`, `spell.invocation-weapon-attack-override`, `spell.invocation-weapon-damage-rider` |
 | `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` | battle | needs-parity-witness | `spell.invocation-marked-damage-rider` |
 | `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE` | battle | needs-parity-witness | `spell.invocation-chained-attack-damage` |
@@ -233,7 +233,6 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 - `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION` (needs-parity-witness; follow-up: `RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY`): Battle creature-type protection, Charmed/Frightened/possession prevention, and relevant-effect Saving Throw Advantage
 - `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS` (needs-parity-witness; follow-up: `RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY`): Battle spell condition immunity with start-turn Temporary Hit Point refresh and concentration cleanup
 - `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` (needs-parity-witness; follow-up: `RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY`): Battle direct condition removal, poison protection condition removal, poison resistance, and poison Saving Throw Advantage
-- `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` (needs-parity-witness; follow-up: `RKBC-SPELL-AFTER-HIT-RIDERS-PARITY`): Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup
 - `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` (needs-parity-witness; follow-up: `RKBC-SPELL-WEAPON-HOSTED-PARITY`): Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders
 - `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` (needs-parity-witness; follow-up: `RKBC-SPELL-MARKED-RIDER-PARITY`): Battle marked-damage spell riders for attack-roll damage, Ability Check roll-mode projection, Concentration duration, and zero-Hit-Point transfer timing
 - `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE` (needs-parity-witness; follow-up: `RKBC-SPELL-ATTACK-SEQUENCES-PARITY`): Battle chained spell attack sequence for damage-type choice, duplicate-die leap admission, target history, per-step attack and damage rolls, and slot-level leap limits

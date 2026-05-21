@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
 
 module battleRuntimeConcentration {
   import battleRuntimeConcentrationBridge.* from "./battle-runtime-concentration-bridge"
