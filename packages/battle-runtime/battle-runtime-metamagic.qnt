@@ -15,6 +15,7 @@ module battleRuntimeMetamagic {
   type BattleRuntimeMetamagicEffectKind =
     | QuickenedActionCastingTimeToBonusActionWithSpellTurnLimit
     | DamageDiceRerollStackingException
+    | SavingThrowProtection
     | SavingThrowDisadvantage
 
   type BattleRuntimeMetamagicStackingMode =
@@ -32,6 +33,12 @@ module battleRuntimeMetamagic {
     sorceryPointsRemaining: int,
   }
 
+  type BattleRuntimeSaveMetamagicProcedure =
+    | SaveGatedDamageProcedure({ success: SaveGatedDamageSuccess })
+    | SaveGatedNonDamageProcedure
+    | SleepTargetAdmissionProcedure
+    | NonSaveMetamagicProcedure
+
   pure val quickenedSpellMetamagicFact: BattleRuntimeMetamagicOptionFact = {
     effectKind: QuickenedActionCastingTimeToBonusActionWithSpellTurnLimit,
     stackingMode: OnePerSpell,
@@ -41,6 +48,12 @@ module battleRuntimeMetamagic {
   pure val empoweredSpellMetamagicFact: BattleRuntimeMetamagicOptionFact = {
     effectKind: DamageDiceRerollStackingException,
     stackingMode: CanCombineWithDifferentMetamagic,
+    sorceryPointCost: 1,
+  }
+
+  pure val carefulSpellMetamagicFact: BattleRuntimeMetamagicOptionFact = {
+    effectKind: SavingThrowProtection,
+    stackingMode: OnePerSpell,
     sorceryPointCost: 1,
   }
 
@@ -75,6 +88,104 @@ module battleRuntimeMetamagic {
     selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
   ): bool =
     selectedOptions == Set(quickenedSpellMetamagicFact)
+
+  pure def selectedMetamagicOptionsSupportedBySaveSpell(
+    procedure: BattleRuntimeSaveMetamagicProcedure,
+    selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
+  ): bool =
+    (
+      selectedOptions == Set(carefulSpellMetamagicFact) or
+      selectedOptions == Set(heightenedSpellMetamagicFact)
+    ) and saveMetamagicProcedureSupportsSaveMetamagic(procedure)
+
+  pure def saveMetamagicProcedureSupportsSaveMetamagic(
+    procedure: BattleRuntimeSaveMetamagicProcedure,
+  ): bool =
+    match procedure {
+      | SaveGatedDamageProcedure(_) => true
+      | SaveGatedNonDamageProcedure => true
+      | SleepTargetAdmissionProcedure => false
+      | NonSaveMetamagicProcedure => false
+    }
+
+  pure def saveMetamagicCanModifySaveSpell(
+    procedure: BattleRuntimeSaveMetamagicProcedure,
+    knownOptions: Set[BattleRuntimeMetamagicOptionFact],
+    selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
+    sorceryPointsRemaining: int,
+  ): bool =
+    selectedOptions.size() > 0 and
+    selectedMetamagicOptionsKnown(knownOptions, selectedOptions) and
+    selectedMetamagicOptionsCanStack(selectedOptions) and
+    selectedMetamagicOptionsSupportedBySaveSpell(procedure, selectedOptions) and
+    sorceryPointsRemaining >= selectedMetamagicSorceryPointCost(selectedOptions)
+
+  pure def carefulSpellMaxProtectedTargets(charismaModifier: int): int =
+    if (charismaModifier < 1) 1 else charismaModifier
+
+  pure def carefulSpellProtectedTargetSelectionValid(
+    spellTargets: Set[Actor],
+    protectedTargets: Set[Actor],
+    charismaModifier: int,
+  ): bool =
+    protectedTargets.size() >= 1 and
+    protectedTargets.size() <= carefulSpellMaxProtectedTargets(charismaModifier) and
+    protectedTargets.forall(target => spellTargets.contains(target))
+
+  pure def heightenedSpellTargetSelectionValid(
+    spellTargets: Set[Actor],
+    target: Actor,
+  ): bool =
+    spellTargets.contains(target)
+
+  pure def savingThrowRollModeWithHeightenedSpell(
+    baseMode: SavingThrowRollMode,
+    selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
+    target: Actor,
+    heightenedTarget: Actor,
+  ): SavingThrowRollMode =
+    if (
+      selectedOptions.contains(heightenedSpellMetamagicFact) and
+      target == heightenedTarget
+    )
+      combineSavingThrowRollModes(baseMode, DisadvantageSavingThrow)
+    else
+      baseMode
+
+  pure def combineSavingThrowRollModes(
+    baseMode: SavingThrowRollMode,
+    addedMode: SavingThrowRollMode,
+  ): SavingThrowRollMode =
+    if (baseMode == NormalSavingThrow)
+      addedMode
+    else if (addedMode == NormalSavingThrow)
+      baseMode
+    else if (baseMode == addedMode)
+      baseMode
+    else
+      NormalSavingThrow
+
+  pure def carefulSpellSuppressesSuccessfulHalfDamage(
+    procedure: BattleRuntimeSaveMetamagicProcedure,
+    selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
+    protectedTargets: Set[Actor],
+    target: Actor,
+    saveSucceeded: bool,
+  ): bool =
+    selectedOptions.contains(carefulSpellMetamagicFact) and
+    saveSucceeded and
+    protectedTargets.contains(target) and
+    saveMetamagicProcedureHasHalfDamageSuccess(procedure)
+
+  pure def saveMetamagicProcedureHasHalfDamageSuccess(
+    procedure: BattleRuntimeSaveMetamagicProcedure,
+  ): bool =
+    match procedure {
+      | SaveGatedDamageProcedure(data) => data.success == HalfDamageOnSaveSuccess
+      | SaveGatedNonDamageProcedure => false
+      | SleepTargetAdmissionProcedure => false
+      | NonSaveMetamagicProcedure => false
+    }
 
   pure def quickenedSpellCanModifyDirectRestoration(
     state: BattleState,
@@ -249,6 +360,93 @@ module battleRuntimeMetamagic {
         known,
         Set(quickenedSpellMetamagicFact),
         2,
+      ))),
+    }
+  }
+
+  run test_save_affecting_metamagic_admission_and_sleep_closure = {
+    val known = Set(carefulSpellMetamagicFact, heightenedSpellMetamagicFact)
+    all {
+      assert(saveMetamagicCanModifySaveSpell(
+        SaveGatedDamageProcedure({ success: HalfDamageOnSaveSuccess }),
+        known,
+        Set(carefulSpellMetamagicFact),
+        1,
+      )),
+      assert(saveMetamagicCanModifySaveSpell(
+        SaveGatedNonDamageProcedure,
+        known,
+        Set(heightenedSpellMetamagicFact),
+        2,
+      )),
+      assert(not(saveMetamagicCanModifySaveSpell(
+        SleepTargetAdmissionProcedure,
+        known,
+        Set(heightenedSpellMetamagicFact),
+        2,
+      ))),
+      assert(not(saveMetamagicCanModifySaveSpell(
+        SaveGatedDamageProcedure({ success: HalfDamageOnSaveSuccess }),
+        known,
+        Set(carefulSpellMetamagicFact, heightenedSpellMetamagicFact),
+        3,
+      ))),
+      assert(not(saveMetamagicCanModifySaveSpell(
+        SaveGatedDamageProcedure({ success: HalfDamageOnSaveSuccess }),
+        Set(carefulSpellMetamagicFact),
+        Set(heightenedSpellMetamagicFact),
+        2,
+      ))),
+    }
+  }
+
+  run test_save_affecting_metamagic_projects_save_boundary_facts = {
+    val targets = Set(Fighter, Goblin)
+    all {
+      assert(carefulSpellProtectedTargetSelectionValid(targets, Set(Fighter), 3)),
+      assert(carefulSpellProtectedTargetSelectionValid(targets, Set(Fighter), 0)),
+      assert(not(carefulSpellProtectedTargetSelectionValid(targets, Set(Fighter, Goblin), 1))),
+      assert(not(carefulSpellProtectedTargetSelectionValid(targets, Set(), 3))),
+      assert(heightenedSpellTargetSelectionValid(targets, Goblin)),
+      assert(not(heightenedSpellTargetSelectionValid(Set(Fighter), Goblin))),
+      assert(savingThrowRollModeWithHeightenedSpell(
+        NormalSavingThrow,
+        Set(heightenedSpellMetamagicFact),
+        Goblin,
+        Goblin,
+      ) == DisadvantageSavingThrow),
+      assert(savingThrowRollModeWithHeightenedSpell(
+        NormalSavingThrow,
+        Set(heightenedSpellMetamagicFact),
+        Fighter,
+        Goblin,
+      ) == NormalSavingThrow),
+      assert(savingThrowRollModeWithHeightenedSpell(
+        AdvantageSavingThrow,
+        Set(heightenedSpellMetamagicFact),
+        Goblin,
+        Goblin,
+      ) == NormalSavingThrow),
+      assert(carefulSpellSuppressesSuccessfulHalfDamage(
+        SaveGatedDamageProcedure({ success: HalfDamageOnSaveSuccess }),
+        Set(carefulSpellMetamagicFact),
+        Set(Fighter),
+        Fighter,
+        true,
+      )),
+      assert(not(carefulSpellSuppressesSuccessfulHalfDamage(
+        SaveGatedDamageProcedure({ success: HalfDamageOnSaveSuccess }),
+        Set(carefulSpellMetamagicFact),
+        Set(Fighter),
+        Fighter,
+        false,
+      ))),
+      assert(not(carefulSpellSuppressesSuccessfulHalfDamage(
+        SaveGatedDamageProcedure({ success: NoDamageOnSaveSuccess }),
+        Set(carefulSpellMetamagicFact),
+        Set(Fighter),
+        Fighter,
+        true,
       ))),
     }
   }

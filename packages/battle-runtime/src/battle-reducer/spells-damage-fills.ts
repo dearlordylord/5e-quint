@@ -72,6 +72,7 @@ import {
   type BattleSpellSkillChoiceHole,
   type BattleThaumaturgyActiveOneMinuteEffectCountHole,
   type BattleSpellTargetAllocation,
+  type BattleSpellTargetListHole,
   type BattleState,
   type BattleTargetChoiceHole,
   type BattleTargetSpatialFact,
@@ -808,6 +809,7 @@ export function spellSavingThrowOutcomeHole(
         | "gustOfWindLine";
     }
   >,
+  heightenedSpellTargetId?: CombatantId,
 ): BattleSpellSavingThrowOutcomeHole {
   const holeKey = `battle:spell:saving-throw-outcome:${invocation.spell.id}`;
   return {
@@ -857,8 +859,83 @@ export function spellSavingThrowOutcomeHole(
               : {}),
           }
         : undefined,
+      heightenedRollModeProjection(heightenedSpellTargetId),
     ),
     targetFlatBonuses: savingThrowFlatBonusProjections(state),
+  };
+}
+
+function heightenedRollModeProjection(
+  heightenedSpellTargetId: CombatantId | undefined,
+): BattleSavingThrowRollModeProjection | undefined {
+  return heightenedSpellTargetId === undefined
+    ? undefined
+    : {
+        targetId: heightenedSpellTargetId,
+        rollMode: "disadvantage",
+      };
+}
+
+export function carefulSpellProtectedTargetsHoleId(
+  invocation: SupportedSpellInvocation,
+): BattleHoleId {
+  return holeId(
+    `battle:spell:careful-spell:protected-targets:${invocation.spell.id}`,
+  );
+}
+
+export function carefulSpellProtectedTargetsHole(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: BattleSpellTargetListHole["spell"],
+): BattleSpellTargetListHole {
+  const actor = state.combatants.get(actorId);
+  const maxProtectedTargets =
+    actor?.origin.kind === "character" &&
+    actor.origin.spellcasting !== undefined
+      ? Math.max(
+          1,
+          Number(actor.origin.spellcasting.spellcastingAbilityModifier),
+        )
+      : 1;
+  return {
+    kind: "spellTargetList",
+    holeId: carefulSpellProtectedTargetsHoleId(invocation),
+    holeInstanceKey: holeInstanceKey(
+      `battle:spell:careful-spell:protected-targets:${invocation.spell.id}`,
+    ),
+    label: `${invocation.spell.name} Careful Spell protected targets`,
+    spell: invocation,
+    minTargets: 1,
+    maxTargets: maxProtectedTargets,
+    choices: [...state.combatants.keys()].filter(
+      (targetId) => targetId !== actorId,
+    ),
+    requiresTableSpatialFact: true,
+  };
+}
+
+export function heightenedSpellTargetChoiceHoleId(
+  invocation: SupportedSpellInvocation,
+): BattleHoleId {
+  return holeId(`battle:spell:heightened-spell:target:${invocation.spell.id}`);
+}
+
+export function heightenedSpellTargetChoiceHole(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: SupportedSpellInvocation,
+): BattleTargetChoiceHole {
+  return {
+    kind: "targetChoice",
+    holeId: heightenedSpellTargetChoiceHoleId(invocation),
+    holeInstanceKey: holeInstanceKey(
+      `battle:spell:heightened-spell:target:${invocation.spell.id}`,
+    ),
+    label: `${invocation.spell.name} Heightened Spell target`,
+    choices: [...state.combatants.keys()].filter(
+      (targetId) => targetId !== actorId,
+    ),
   };
 }
 
@@ -939,10 +1016,7 @@ export function spellAreaTargetingLabel(
     Match.when({ kind: "selfOriginCube" }, () => "self-origin Cube"),
     Match.when({ kind: "selfOriginCone" }, () => "self-origin Cone"),
     Match.when({ kind: "selfOriginLine" }, () => "self-origin Line"),
-    Match.when(
-      { kind: "selfOriginEmanation" },
-      () => "self-origin Emanation",
-    ),
+    Match.when({ kind: "selfOriginEmanation" }, () => "self-origin Emanation"),
     Match.when(
       { kind: "primaryTargetOriginEmanation" },
       () => "primary-target-origin Emanation",
@@ -957,6 +1031,7 @@ export function savingThrowRollModeProjections(
   state: BattleState,
   ability: Ability,
   rollModeContext?: SavingThrowRollModeContext,
+  extraProjection?: BattleSavingThrowRollModeProjection,
 ): readonly BattleSavingThrowRollModeProjection[] {
   const dodgeProjections =
     ability === "dex"
@@ -1006,6 +1081,7 @@ export function savingThrowRollModeProjections(
           targetId,
           rollMode: saveRollModeRule.mode,
         })),
+      ...(extraProjection === undefined ? [] : [extraProjection]),
     ]);
   }
   if (
@@ -1033,9 +1109,13 @@ export function savingThrowRollModeProjections(
           targetId,
           rollMode: saveRollModeRule.mode,
         })),
+      ...(extraProjection === undefined ? [] : [extraProjection]),
     ]);
   }
-  return uniqueSavingThrowRollModeProjections(baseProjections);
+  return uniqueSavingThrowRollModeProjections([
+    ...baseProjections,
+    ...(extraProjection === undefined ? [] : [extraProjection]),
+  ]);
 }
 
 type SavingThrowRollModeContext =
@@ -1125,13 +1205,35 @@ function passiveSavingThrowRollModeProjection(
 function uniqueSavingThrowRollModeProjections(
   projections: readonly BattleSavingThrowRollModeProjection[],
 ): readonly BattleSavingThrowRollModeProjection[] {
-  const seen = new Set<CombatantId>();
-  return projections.filter((projection) => {
-    if (seen.has(projection.targetId)) {
-      return false;
+  const targetOrder: CombatantId[] = [];
+  const rollModeSources = new Map<
+    CombatantId,
+    { readonly advantage: boolean; readonly disadvantage: boolean }
+  >();
+  for (const projection of projections) {
+    const existing = rollModeSources.get(projection.targetId);
+    if (existing === undefined) {
+      targetOrder.push(projection.targetId);
     }
-    seen.add(projection.targetId);
-    return true;
+    rollModeSources.set(projection.targetId, {
+      advantage:
+        existing?.advantage === true || projection.rollMode === "advantage",
+      disadvantage:
+        existing?.disadvantage === true ||
+        projection.rollMode === "disadvantage",
+    });
+  }
+  return targetOrder.flatMap((targetId) => {
+    const sources = rollModeSources.get(targetId);
+    if (sources === undefined || sources.advantage === sources.disadvantage) {
+      return [];
+    }
+    return [
+      {
+        targetId,
+        rollMode: sources.advantage ? "advantage" : "disadvantage",
+      },
+    ] satisfies readonly BattleSavingThrowRollModeProjection[];
   });
 }
 
@@ -1796,7 +1898,15 @@ export function saveGateDamageResultForOutcome(
     { readonly procedure: "saveGatedDamage" }
   >,
   savingThrowSucceeded: boolean,
+  carefulSpellProtectedTargetIds: readonly CombatantId[] = [],
 ): SaveDamageResult {
+  if (
+    savingThrowSucceeded &&
+    invocation.successDamage === "half" &&
+    carefulSpellProtectedTargetIds.includes(targetId)
+  ) {
+    return "none";
+  }
   const target = state.combatants.get(targetId);
   const baseResult: SaveDamageResult = savingThrowSucceeded
     ? invocation.successDamage

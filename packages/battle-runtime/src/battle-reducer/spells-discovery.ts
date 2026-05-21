@@ -16,6 +16,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES BATTLE.COMMAND.OPTION_AND_NEXT_TURN
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import type { CombatantId } from "../identity.ts";
+import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resources.ts";
 import { BATTLE_READIED_SPELL_TRIGGERS } from "../battle-reaction-triggers.ts";
 import {
   activeOngoingFeaturesPreventSpellcasting,
@@ -39,8 +40,10 @@ import {
 import { spellAttackSequencePartName } from "./spells-profile-shared.ts";
 import { representedMovementSpeedKinds } from "./movement-speed.ts";
 import {
+  carefulSpellProtectedTargetsHole,
   scalarBuffInitialHoles,
   commandOptionChoiceHole,
+  heightenedSpellTargetChoiceHole,
   saveGatedConditionHasConditionChoice,
   spellAbilityChoiceHole,
   spellConditionChoiceHole,
@@ -52,6 +55,7 @@ import {
   spellRollModifierAbilityChoiceHole,
   spellRollModifierSkillChoiceHole,
   spellSavingThrowAbility,
+  spellSavingThrowTargeting,
   spellSavingThrowOutcomeHole,
   selfTransformationModeChoiceHole,
   spellTargetAllocationHole,
@@ -83,6 +87,9 @@ import {
 import { ongoingSpellTargetChoiceHole } from "./spells-ongoing-spell-ending.ts";
 import {
   actorCanOfferQuickenedSpellMetamagic,
+  CAREFUL_METAMAGIC_EFFECT_KIND,
+  discoverSpellMetamagicSelections,
+  HEIGHTENED_METAMAGIC_EFFECT_KIND,
   QUICKENED_SPELL_METAMAGIC_SELECTION,
 } from "./metamagic.ts";
 
@@ -132,21 +139,43 @@ export function discoverSupportedSpellInvocations(
       }
       if (invocation.procedure === "command") {
         const targetHole = spellTargetListHole(state, actorId, invocation);
-        return targetHole.choices.length === 0
-          ? []
-          : [
-              {
-                subject: {
-                  tag: "actionSpell" as const,
-                  actorId,
-                  invocation: supportedSpellInvocationRef(invocation),
-                  mode: { tag: "cast" as const },
-                },
-                label: invocation.spell.name,
-                summary: `${spellActivationInvocationCastSummary(invocation)} Failed targets follow the selected command on their next turns.`,
-                initialHoles: [targetHole, commandOptionChoiceHole(invocation)],
-              },
-            ];
+        if (targetHole.choices.length === 0) {
+          return [];
+        }
+        const baseCastAct = {
+          subject: {
+            tag: "actionSpell" as const,
+            actorId,
+            invocation: supportedSpellInvocationRef(invocation),
+            mode: { tag: "cast" as const },
+          },
+          label: invocation.spell.name,
+          summary: `${spellActivationInvocationCastSummary(invocation)} Failed targets follow the selected command on their next turns.`,
+          initialHoles: [targetHole, commandOptionChoiceHole(invocation)],
+        };
+        const metamagicCastActs = discoverSpellMetamagicSelections({
+          actor,
+          invocation,
+        }).map((metamagic) => ({
+          ...baseCastAct,
+          subject: {
+            ...baseCastAct.subject,
+            metamagic,
+          },
+          initialHoles: [
+            targetHole,
+            ...saveMetamagicInitialHoles(
+              state,
+              actorId,
+              invocation,
+              spellMetamagicApplications(actor, metamagic),
+            ),
+            commandOptionChoiceHole(invocation),
+          ],
+          label: `${invocation.spell.name} (${spellMetamagicLabel(metamagic)})`,
+          summary: `${baseCastAct.summary} Cast with ${spellMetamagicLabel(metamagic)}.`,
+        }));
+        return [baseCastAct, ...metamagicCastActs];
       }
       if (invocation.procedure === "selfTransformationMode") {
         return [
@@ -339,19 +368,40 @@ export function discoverSupportedSpellInvocations(
             saveGatedConditionHasConditionChoice(invocation)
               ? [spellConditionChoiceHole(invocation)]
               : [];
-          const castActs = [
-            {
-              subject: {
-                tag: "actionSpell" as const,
-                actorId,
-                invocation: supportedSpellInvocationRef(invocation),
-                mode: { tag: "cast" as const },
-              },
-              label: invocation.spell.name,
-              summary: `${spellActivationInvocationCastSummary(invocation)} Table-supplied affected targets make ${spellSavingThrowAbility(invocation).toUpperCase()} Saving Throws.`,
-              initialHoles: [targetHole, ...conditionChoiceHoles],
+          const baseCastAct = {
+            subject: {
+              tag: "actionSpell" as const,
+              actorId,
+              invocation: supportedSpellInvocationRef(invocation),
+              mode: { tag: "cast" as const },
             },
-          ];
+            label: invocation.spell.name,
+            summary: `${spellActivationInvocationCastSummary(invocation)} Table-supplied affected targets make ${spellSavingThrowAbility(invocation).toUpperCase()} Saving Throws.`,
+            initialHoles: [targetHole, ...conditionChoiceHoles],
+          };
+          const metamagicCastActs = discoverSpellMetamagicSelections({
+            actor,
+            invocation,
+          }).map((metamagic) => ({
+            ...baseCastAct,
+            subject: {
+              ...baseCastAct.subject,
+              metamagic,
+            },
+            initialHoles: [
+              targetHole,
+              ...saveMetamagicInitialHoles(
+                state,
+                actorId,
+                invocation,
+                spellMetamagicApplications(actor, metamagic),
+              ),
+              ...conditionChoiceHoles,
+            ],
+            label: `${invocation.spell.name} (${spellMetamagicLabel(metamagic)})`,
+            summary: `${baseCastAct.summary} Cast with ${spellMetamagicLabel(metamagic)}.`,
+          }));
+          const castActs = [baseCastAct, ...metamagicCastActs];
           return invocation.procedure === "greaseGroundHazard" ||
             invocation.procedure === "gustOfWindLine"
             ? castActs
@@ -367,19 +417,48 @@ export function discoverSupportedSpellInvocations(
           saveGatedConditionHasConditionChoice(invocation)
             ? [spellConditionChoiceHole(invocation)]
             : [];
-        const castActs = [
-          {
-            subject: {
-              tag: "actionSpell" as const,
-              actorId,
-              invocation: supportedSpellInvocationRef(invocation),
-              mode: { tag: "cast" as const },
-            },
-            label: invocation.spell.name,
-            summary: `${spellActivationInvocationCastSummary(invocation)} Table-supplied affected targets make ${spellSavingThrowAbility(invocation).toUpperCase()} Saving Throws.`,
-            initialHoles: [initialHole, ...conditionChoiceHoles],
+        const baseCastAct = {
+          subject: {
+            tag: "actionSpell" as const,
+            actorId,
+            invocation: supportedSpellInvocationRef(invocation),
+            mode: { tag: "cast" as const },
           },
-        ];
+          label: invocation.spell.name,
+          summary: `${spellActivationInvocationCastSummary(invocation)} Table-supplied affected targets make ${spellSavingThrowAbility(invocation).toUpperCase()} Saving Throws.`,
+          initialHoles: [initialHole, ...conditionChoiceHoles],
+        };
+        const metamagicCastActs = discoverSpellMetamagicSelections({
+          actor,
+          invocation,
+        }).map((metamagic) => ({
+          ...baseCastAct,
+          subject: {
+            ...baseCastAct.subject,
+            metamagic,
+          },
+          initialHoles: (() => {
+            const metamagicApplications = spellMetamagicApplications(
+              actor,
+              metamagic,
+            );
+            const metamagicSelectionHoles = saveMetamagicInitialHoles(
+              state,
+              actorId,
+              invocation,
+              metamagicApplications,
+            );
+            return metamagicSelectionHoles.length === 0
+              ? [
+                  spellSavingThrowOutcomeHole(state, actorId, invocation),
+                  ...conditionChoiceHoles,
+                ]
+              : [...metamagicSelectionHoles, ...conditionChoiceHoles];
+          })(),
+          label: `${invocation.spell.name} (${spellMetamagicLabel(metamagic)})`,
+          summary: `${baseCastAct.summary} Cast with ${spellMetamagicLabel(metamagic)}.`,
+        }));
+        const castActs = [baseCastAct, ...metamagicCastActs];
         return invocation.procedure === "greaseGroundHazard" ||
           invocation.procedure === "gustOfWindLine"
           ? castActs
@@ -1037,6 +1116,100 @@ export function discoverSupportedSpellInvocations(
   return acts.map((act) =>
     spellCastReactionFactsAct(actorId, invocations, counterspellReactors, act),
   );
+}
+
+function spellMetamagicApplications(
+  actor: BattleCreatureState,
+  metamagic: readonly {
+    readonly effectKind: CharacterBattleMetamagicOptionFact["effectKind"];
+  }[],
+): readonly CharacterBattleMetamagicOptionFact[] {
+  if (
+    actor.origin.kind !== "character" ||
+    actor.origin.metamagic === undefined
+  ) {
+    return [];
+  }
+  const knownOptions = actor.origin.metamagic.knownOptions;
+  return metamagic.flatMap((selection) =>
+    knownOptions.filter((option) => option.effectKind === selection.effectKind),
+  );
+}
+
+type SaveMetamagicSupportedInvocation = Extract<
+  SupportedSpellInvocation,
+  {
+    readonly procedure:
+      | "saveGatedDamage"
+      | "saveGatedCondition"
+      | "saveGatedConditionImmunity"
+      | "saveGatedAttackRollAdvantage"
+      | "hideousLaughter"
+      | "command"
+      | "greaseGroundHazard"
+      | "gustOfWindLine";
+  }
+>;
+
+function saveMetamagicInitialHoles(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: SupportedSpellInvocation,
+  metamagicApplications: readonly CharacterBattleMetamagicOptionFact[],
+): readonly BattleHole[] {
+  const saveInvocation = saveMetamagicInvocationOrNull(invocation);
+  if (saveInvocation === null) {
+    return [];
+  }
+  const targeting = spellSavingThrowTargeting(saveInvocation);
+  const holes: BattleHole[] = [];
+  if (
+    targeting.kind !== "singleCombatant" &&
+    metamagicApplications.some(
+      (application) => application.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
+    )
+  ) {
+    holes.push(
+      carefulSpellProtectedTargetsHole(state, actorId, saveInvocation),
+    );
+  }
+  if (
+    targeting.kind !== "singleCombatant" &&
+    metamagicApplications.some(
+      (application) =>
+        application.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
+    )
+  ) {
+    holes.push(heightenedSpellTargetChoiceHole(state, actorId, saveInvocation));
+  }
+  return holes;
+}
+
+function saveMetamagicInvocationOrNull(
+  invocation: SupportedSpellInvocation,
+): SaveMetamagicSupportedInvocation | null {
+  return invocation.procedure === "saveGatedDamage" ||
+    invocation.procedure === "saveGatedCondition" ||
+    invocation.procedure === "saveGatedConditionImmunity" ||
+    invocation.procedure === "saveGatedAttackRollAdvantage" ||
+    invocation.procedure === "hideousLaughter" ||
+    invocation.procedure === "command" ||
+    invocation.procedure === "greaseGroundHazard" ||
+    invocation.procedure === "gustOfWindLine"
+    ? invocation
+    : null;
+}
+
+function spellMetamagicLabel(
+  metamagic: readonly {
+    readonly effectKind: CharacterBattleMetamagicOptionFact["effectKind"];
+  }[],
+): string {
+  return metamagic[0]?.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND
+    ? "Careful Spell"
+    : metamagic[0]?.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND
+      ? "Heightened Spell"
+      : "Quickened Spell";
 }
 
 function spellCastReactionFactsAct(

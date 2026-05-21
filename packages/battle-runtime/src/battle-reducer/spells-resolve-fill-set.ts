@@ -51,7 +51,9 @@ import {
   spellConditionChoices,
   spellInvocationHasConditionChoice,
   spellAreaChoiceHoleId,
+  carefulSpellProtectedTargetsHoleId,
   spellConditionChoiceHoleId,
+  heightenedSpellTargetChoiceHoleId,
   spellObjectTargetHoleId,
   spellAbilityChoiceHoleId,
   spellRollModifierAbilityChoiceHoleId,
@@ -380,6 +382,17 @@ export function spellFillSet(
       targetSpatialFacts = fill.spatialFacts ?? [];
       const sightFactValidation = attackSightFactValidation(targetSpatialFacts);
       if (sightFactValidation !== null) return sightFactValidation;
+      continue;
+    }
+
+    if (fill.holeId === heightenedSpellTargetChoiceHoleId(invocation)) {
+      if (fill.kind !== "targetChoice") {
+        return {
+          tag: "invalid",
+          message:
+            "Heightened Spell target must use the Heightened Spell target hole.",
+        };
+      }
       continue;
     }
 
@@ -731,6 +744,9 @@ export function spellFillSet(
     }
 
     if (fill.kind === "spellTargetList") {
+      if (fill.holeId === carefulSpellProtectedTargetsHoleId(invocation)) {
+        continue;
+      }
       if (
         invocation.procedure !== "directHitPointRestoration" &&
         invocation.procedure !== "scalarBuff" &&

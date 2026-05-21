@@ -638,6 +638,7 @@ export function resolveSpellAct(
       actorId: subject.actorId,
       invocation,
       fillSet,
+      metamagicApplications: metamagicAdmission.applications,
     });
   }
   if (invocation.procedure === "saveGatedCondition") {
@@ -646,6 +647,7 @@ export function resolveSpellAct(
       actorId: subject.actorId,
       invocation,
       fillSet,
+      metamagicApplications: metamagicAdmission.applications,
     });
   }
   if (invocation.procedure === "saveGatedConditionImmunity") {
@@ -654,6 +656,7 @@ export function resolveSpellAct(
       actorId: subject.actorId,
       invocation,
       fillSet,
+      metamagicApplications: metamagicAdmission.applications,
     });
   }
   if (invocation.procedure === "saveGatedAttackRollAdvantage") {
@@ -662,6 +665,7 @@ export function resolveSpellAct(
       actorId: subject.actorId,
       invocation,
       fillSet,
+      metamagicApplications: metamagicAdmission.applications,
     });
   }
   if (invocation.procedure === "sleepTargetAdmission") {
@@ -678,6 +682,7 @@ export function resolveSpellAct(
       actorId: subject.actorId,
       invocation,
       fillSet,
+      metamagicApplications: metamagicAdmission.applications,
     });
   }
   if (invocation.procedure === "greaseGroundHazard") {
@@ -686,6 +691,7 @@ export function resolveSpellAct(
       actorId: subject.actorId,
       invocation,
       fillSet,
+      metamagicApplications: metamagicAdmission.applications,
     });
   }
   if (invocation.procedure === "fogCloudObscurement") {
@@ -726,6 +732,7 @@ export function resolveSpellAct(
       actorId: subject.actorId,
       invocation,
       fillSet,
+      metamagicApplications: metamagicAdmission.applications,
     });
   }
   if (invocation.procedure === "flamingSphere") {
@@ -758,6 +765,7 @@ export function resolveSpellAct(
       actorId: subject.actorId,
       invocation,
       fillSet,
+      metamagicApplications: metamagicAdmission.applications,
     });
   }
   if (invocation.procedure === "repeatedDamageAllocation") {

@@ -6,6 +6,8 @@ import { Either } from "effect";
 import { describe, expect, test } from "vitest";
 import {
   type AvailableBattleAct,
+  type BattleFill,
+  type BattleHole,
   type BattleState,
   type CharacterBattleMetamagicOptionFact,
   characterBattleResourceIsPointPool,
@@ -28,6 +30,7 @@ import {
   partySide,
   requireResolved,
   resolveBattleSubject,
+  skeletonId,
   startBattleRight,
   statBlockCreatureInit,
   targetFill,
@@ -305,6 +308,369 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
   });
 });
 
+describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
+  test("discovers Heightened Burning Hands and spends Sorcery Points after choosing one disadvantaged target", () => {
+    const state = saveMetamagicBattle({
+      knownOptions: [heightenedMetamagicOption()],
+    });
+    const act = heightenedBurningHandsAct(state);
+    const heightenedHole = findHole(act.initialHoles, "targetChoice");
+
+    expect(heightenedHole).toMatchObject({
+      label: "Burning Hands Heightened Spell target",
+      choices: expect.arrayContaining([fighterId, skeletonId]),
+    });
+    const heightenedTarget = targetFill(heightenedHole, skeletonId);
+    const awaitingSave = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [heightenedTarget],
+    });
+    const saveHole = findHole(
+      awaitingSave.tag === "needsHoles" ? awaitingSave.holes : [],
+      "savingThrowOutcome",
+    );
+    if (saveHole.kind !== "savingThrowOutcome") {
+      throw new Error("Expected Heightened Spell saving throw hole.");
+    }
+    expect(saveHole.targetRollModes).toContainEqual({
+      targetId: skeletonId,
+      rollMode: "disadvantage",
+    });
+
+    const awaitingDamage = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        heightenedTarget,
+        {
+          kind: "savingThrowOutcome",
+          holeId: saveHole.holeId,
+          value: {
+            area: {
+              originAnchorId: wizardId,
+              affectedTargetIds: [fighterId, skeletonId],
+            },
+            outcomes: [
+              { targetId: fighterId, succeeded: true },
+              { targetId: skeletonId, succeeded: false },
+            ],
+          },
+        },
+      ],
+    });
+    const damageHole = findHole(
+      awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+      "rolledDice",
+    );
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          heightenedTarget,
+          {
+            kind: "savingThrowOutcome",
+            holeId: saveHole.holeId,
+            value: {
+              area: {
+                originAnchorId: wizardId,
+                affectedTargetIds: [fighterId, skeletonId],
+              },
+              outcomes: [
+                { targetId: fighterId, succeeded: true },
+                { targetId: skeletonId, succeeded: false },
+              ],
+            },
+          },
+          damageRollFillWithGroups(damageHole, [[4, 3, 2]]),
+        ],
+      }),
+    );
+
+    expect(sorceryPointsRemaining(resolved.state)).toBe(resourceCount(2));
+  });
+
+  test("Heightened Spell Disadvantage cancels an existing save Advantage source", () => {
+    const base = saveMetamagicBattle({
+      knownOptions: [heightenedMetamagicOption()],
+    });
+    const skeleton = base.combatants.get(skeletonId);
+    if (skeleton === undefined) {
+      throw new Error("Expected Skeleton combatant.");
+    }
+    const state: BattleState = {
+      ...base,
+      combatants: new Map(base.combatants).set(skeletonId, {
+        ...skeleton,
+        dodging: true,
+      }),
+    };
+    const act = heightenedBurningHandsAct(state);
+    const heightenedHole = findHole(act.initialHoles, "targetChoice");
+    const heightenedTarget = targetFill(heightenedHole, skeletonId);
+    const awaitingSave = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [heightenedTarget],
+    });
+    const saveHole = findHole(
+      awaitingSave.tag === "needsHoles" ? awaitingSave.holes : [],
+      "savingThrowOutcome",
+    );
+    if (saveHole.kind !== "savingThrowOutcome") {
+      throw new Error("Expected Heightened Spell saving throw hole.");
+    }
+
+    expect(
+      saveHole.targetRollModes.find(
+        (projection) => projection.targetId === skeletonId,
+      ),
+    ).toBeUndefined();
+  });
+
+  test("Careful Spell turns a protected successful half-damage save into no damage", () => {
+    const state = saveMetamagicBattle({
+      knownOptions: [carefulMetamagicOption()],
+    });
+    const act = carefulBurningHandsAct(state);
+    const protectedTargetsHole = findHole(act.initialHoles, "spellTargetList");
+
+    expect(protectedTargetsHole).toMatchObject({
+      label: "Burning Hands Careful Spell protected targets",
+      maxTargets: 3,
+    });
+    const protectedTargetsFill = {
+      kind: "spellTargetList" as const,
+      holeId: protectedTargetsHole.holeId,
+      value: { targetIds: [fighterId] },
+      spatialFacts: [],
+    };
+    const awaitingSave = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [protectedTargetsFill],
+    });
+    const saveHole = findHole(
+      awaitingSave.tag === "needsHoles" ? awaitingSave.holes : [],
+      "savingThrowOutcome",
+    );
+    if (saveHole.kind !== "savingThrowOutcome") {
+      throw new Error("Expected Careful Spell saving throw hole.");
+    }
+
+    const awaitingDamage = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        protectedTargetsFill,
+        {
+          kind: "savingThrowOutcome",
+          holeId: saveHole.holeId,
+          value: {
+            area: {
+              originAnchorId: wizardId,
+              affectedTargetIds: [fighterId, skeletonId],
+            },
+            outcomes: [
+              { targetId: fighterId, succeeded: true },
+              { targetId: skeletonId, succeeded: false },
+            ],
+          },
+        },
+      ],
+    });
+    const damageHole = findHole(
+      awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+      "rolledDice",
+    );
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          protectedTargetsFill,
+          {
+            kind: "savingThrowOutcome",
+            holeId: saveHole.holeId,
+            value: {
+              area: {
+                originAnchorId: wizardId,
+                affectedTargetIds: [fighterId, skeletonId],
+              },
+              outcomes: [
+                { targetId: fighterId, succeeded: true },
+                { targetId: skeletonId, succeeded: false },
+              ],
+            },
+          },
+          damageRollFillWithGroups(damageHole, [[4, 3, 2]]),
+        ],
+      }),
+    );
+
+    expect(resolved.state.combatants.get(fighterId)?.hp).toBe(12);
+    expect(resolved.state.combatants.get(skeletonId)?.hp).toBeLessThan(7);
+    expect(sorceryPointsRemaining(resolved.state)).toBe(resourceCount(3));
+  });
+
+  test("Careful Spell is admitted for target-list save spells such as Command", () => {
+    const state = commandMetamagicBattle({
+      knownOptions: [carefulMetamagicOption()],
+    });
+    const act = carefulCommandAct(state);
+    const targetHole = requireSpellTargetListHole(
+      act.initialHoles,
+      "Command targets",
+    );
+    const protectedTargetsHole = requireSpellTargetListHole(
+      act.initialHoles,
+      "Command Careful Spell protected targets",
+    );
+    const commandOptionHole = findHole(act.initialHoles, "commandOptionChoice");
+
+    expect(targetHole.label).toBe("Command targets");
+    expect(protectedTargetsHole).toMatchObject({
+      label: "Command Careful Spell protected targets",
+      maxTargets: 3,
+    });
+
+    const targetFill = spellTargetListFill(targetHole, "command", [skeletonId]);
+    const protectedTargetsFill = spellTargetListFill(
+      protectedTargetsHole,
+      "command",
+      [skeletonId],
+    );
+    const optionFill: Extract<
+      BattleFill,
+      { readonly kind: "commandOptionChoice" }
+    > = {
+      kind: "commandOptionChoice",
+      holeId: commandOptionHole.holeId,
+      value: "halt",
+    };
+    const awaitingSave = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill, protectedTargetsFill, optionFill],
+    });
+    const saveHole = findHole(
+      awaitingSave.tag === "needsHoles" ? awaitingSave.holes : [],
+      "savingThrowOutcome",
+    );
+    if (saveHole.kind !== "savingThrowOutcome") {
+      throw new Error("Expected Careful Command saving throw hole.");
+    }
+
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          targetFill,
+          protectedTargetsFill,
+          optionFill,
+          {
+            kind: "savingThrowOutcome",
+            holeId: saveHole.holeId,
+            value: {
+              outcomes: [{ targetId: skeletonId, succeeded: true }],
+            },
+          },
+        ],
+      }),
+    );
+
+    expect(sorceryPointsRemaining(resolved.state)).toBe(resourceCount(3));
+  });
+
+  test("Heightened Spell is explicitly closed for repeat-save spell lifecycles", () => {
+    const state = gustOfWindMetamagicBattle({
+      knownOptions: [heightenedMetamagicOption()],
+    });
+    const act = gustOfWindActionAct(state);
+
+    expect(
+      discoverBattleActs(state).some(
+        (candidate) =>
+          candidate.subject.tag === "actionSpell" &&
+          candidate.subject.invocation.spellId === "gust_of_wind" &&
+          candidate.subject.metamagic?.some(
+            (selection) => selection.effectKind === "saving_throw_disadvantage",
+          ) === true,
+      ),
+    ).toBe(false);
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: {
+          ...act.subject,
+          metamagic: [{ effectKind: "saving_throw_disadvantage" }],
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Heightened Spell is not supported for spell procedures with repeat Saving Throws until the selected target is carried through later save holes.",
+    });
+  });
+
+  test("save-affecting Metamagic is explicitly closed for Ready spell mode", () => {
+    const state = saveMetamagicBattle({
+      knownOptions: [heightenedMetamagicOption()],
+    });
+    const readyAct = readyBurningHandsAct(state);
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: {
+          ...readyAct.subject,
+          metamagic: [{ effectKind: "saving_throw_disadvantage" }],
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Save-affecting Metamagic is supported only for action-time spell casts.",
+    });
+  });
+
+  test("save-affecting Metamagic is explicitly closed for Sleep target admission", () => {
+    const state = sleepMetamagicBattle({
+      knownOptions: [heightenedMetamagicOption()],
+    });
+    const sleepAct = sleepActionAct(state);
+
+    expect(
+      discoverBattleActs(state).some(
+        (candidate) =>
+          candidate.subject.tag === "actionSpell" &&
+          candidate.subject.invocation.spellId === "sleep" &&
+          candidate.subject.metamagic?.some(
+            (selection) => selection.effectKind === "saving_throw_disadvantage",
+          ) === true,
+      ),
+    ).toBe(false);
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: {
+          ...sleepAct.subject,
+          metamagic: [{ effectKind: "saving_throw_disadvantage" }],
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Save-affecting Metamagic is not supported for Sleep target admission because Sleep uses a two-stage admission and repeat-save lifecycle.",
+    });
+  });
+});
+
 function expectRight<T, E>(result: Either.Either<T, E>): T {
   if (Either.isLeft(result)) {
     throw new Error(`Expected Right, got ${JSON.stringify(result.left)}`);
@@ -360,6 +726,194 @@ function metamagicBattle(input?: {
   });
 }
 
+function saveMetamagicBattle(input: {
+  readonly knownOptions: readonly MetamagicOptionFixture[];
+}): BattleState {
+  return startBattleRight({
+    battleId: battleId("battle:sorcerer-metamagic-save"),
+    combatants: [
+      characterSeed({
+        combatantId: wizardId,
+        displayName: "Sorcerer",
+        initiative: 20,
+        side: partySide,
+        attack: null,
+        classLevels: [{ className: "sorcerer", level: 5 }],
+        currentHp: 18,
+        maxHp: 18,
+        resources: [
+          {
+            unit: unitLibrary.requireUnit("sorcerer_font_of_magic"),
+            pointsRemaining: resourceCount(4),
+          },
+        ],
+        metamagic: {
+          sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+          spellUseLimit: "one_per_spell_unless_option_allows_stacking",
+          knownOptions: input.knownOptions,
+        },
+        spellcasting: {
+          ...wizardSpellcasting({
+            preparedSpells: [spellRecord("burning_hands")],
+            spellSlots: [{ spellLevel: 1, count: 2 }],
+          }),
+          sourceClassName: "sorcerer",
+        },
+      }),
+      characterSeed({
+        combatantId: fighterId,
+        displayName: "Nearby Ally",
+        initiative: 12,
+        side: partySide,
+        currentHp: 12,
+        maxHp: 20,
+      }),
+      statBlockCreatureInit({
+        combatantId: skeletonId,
+        displayName: "Skeleton",
+        initiative: 10,
+      }),
+    ],
+  });
+}
+
+function commandMetamagicBattle(input: {
+  readonly knownOptions: readonly MetamagicOptionFixture[];
+}): BattleState {
+  return startBattleRight({
+    battleId: battleId("battle:sorcerer-metamagic-command"),
+    combatants: [
+      characterSeed({
+        combatantId: wizardId,
+        displayName: "Sorcerer",
+        initiative: 20,
+        side: partySide,
+        attack: null,
+        classLevels: [{ className: "sorcerer", level: 5 }],
+        currentHp: 18,
+        maxHp: 18,
+        resources: [
+          {
+            unit: unitLibrary.requireUnit("sorcerer_font_of_magic"),
+            pointsRemaining: resourceCount(4),
+          },
+        ],
+        metamagic: {
+          sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+          spellUseLimit: "one_per_spell_unless_option_allows_stacking",
+          knownOptions: input.knownOptions,
+        },
+        spellcasting: {
+          ...wizardSpellcasting({
+            preparedSpells: [spellRecord("command")],
+            spellSlots: [{ spellLevel: 1, count: 2 }],
+          }),
+          sourceClassName: "sorcerer",
+        },
+      }),
+      characterSeed({
+        combatantId: fighterId,
+        displayName: "Nearby Ally",
+        initiative: 12,
+        side: partySide,
+        currentHp: 12,
+        maxHp: 20,
+      }),
+      statBlockCreatureInit({
+        combatantId: skeletonId,
+        displayName: "Skeleton",
+        initiative: 10,
+      }),
+    ],
+  });
+}
+
+function gustOfWindMetamagicBattle(input: {
+  readonly knownOptions: readonly MetamagicOptionFixture[];
+}): BattleState {
+  return startBattleRight({
+    battleId: battleId("battle:sorcerer-metamagic-gust-of-wind"),
+    combatants: [
+      characterSeed({
+        combatantId: wizardId,
+        displayName: "Sorcerer",
+        initiative: 20,
+        side: partySide,
+        attack: null,
+        classLevels: [{ className: "sorcerer", level: 5 }],
+        currentHp: 18,
+        maxHp: 18,
+        resources: [
+          {
+            unit: unitLibrary.requireUnit("sorcerer_font_of_magic"),
+            pointsRemaining: resourceCount(4),
+          },
+        ],
+        metamagic: {
+          sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+          spellUseLimit: "one_per_spell_unless_option_allows_stacking",
+          knownOptions: input.knownOptions,
+        },
+        spellcasting: {
+          ...wizardSpellcasting({
+            preparedSpells: [spellRecord("gust_of_wind")],
+            spellSlots: [{ spellLevel: 2, count: 1 }],
+          }),
+          sourceClassName: "sorcerer",
+        },
+      }),
+      statBlockCreatureInit({
+        combatantId: skeletonId,
+        displayName: "Skeleton",
+        initiative: 10,
+      }),
+    ],
+  });
+}
+
+function sleepMetamagicBattle(input: {
+  readonly knownOptions: readonly MetamagicOptionFixture[];
+}): BattleState {
+  return startBattleRight({
+    battleId: battleId("battle:sorcerer-metamagic-sleep"),
+    combatants: [
+      characterSeed({
+        combatantId: wizardId,
+        displayName: "Sorcerer",
+        initiative: 20,
+        side: partySide,
+        attack: null,
+        classLevels: [{ className: "sorcerer", level: 5 }],
+        currentHp: 18,
+        maxHp: 18,
+        resources: [
+          {
+            unit: unitLibrary.requireUnit("sorcerer_font_of_magic"),
+            pointsRemaining: resourceCount(4),
+          },
+        ],
+        metamagic: {
+          sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+          spellUseLimit: "one_per_spell_unless_option_allows_stacking",
+          knownOptions: input.knownOptions,
+        },
+        spellcasting: {
+          ...wizardSpellcasting({
+            preparedSpells: [spellRecord("sleep")],
+            spellSlots: [{ spellLevel: 1, count: 2 }],
+          }),
+          sourceClassName: "sorcerer",
+        },
+      }),
+      statBlockCreatureInit({
+        combatantId: skeletonId,
+        displayName: "Skeleton",
+        initiative: 10,
+      }),
+    ],
+  });
+}
+
 type MetamagicOptionFixture = CharacterBattleMetamagicOptionFact;
 
 function quickenedMetamagicOption(): MetamagicOptionFixture {
@@ -383,6 +937,14 @@ function heightenedMetamagicOption(): MetamagicOptionFixture {
     effectKind: "saving_throw_disadvantage",
     stackingMode: "one_per_spell",
     sorceryPointCost: resourceCount(2),
+  };
+}
+
+function carefulMetamagicOption(): MetamagicOptionFixture {
+  return {
+    effectKind: "saving_throw_protection",
+    stackingMode: "one_per_spell",
+    sorceryPointCost: resourceCount(1),
   };
 }
 
@@ -431,6 +993,131 @@ function quickenedCureWoundsAct(
     throw new Error("Expected Quickened Cure Wounds act.");
   }
   return act;
+}
+
+type ActionSpellAct = AvailableBattleAct & {
+  readonly subject: Extract<
+    AvailableBattleAct["subject"],
+    { tag: "actionSpell" }
+  >;
+};
+
+function heightenedBurningHandsAct(state: BattleState): ActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is ActionSpellAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.spellId === "burning_hands" &&
+      candidate.subject.metamagic?.some(
+        (selection) => selection.effectKind === "saving_throw_disadvantage",
+      ) === true,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Heightened Burning Hands act.");
+  }
+  return act;
+}
+
+function carefulBurningHandsAct(state: BattleState): ActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is ActionSpellAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.spellId === "burning_hands" &&
+      candidate.subject.metamagic?.some(
+        (selection) => selection.effectKind === "saving_throw_protection",
+      ) === true,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Careful Burning Hands act.");
+  }
+  return act;
+}
+
+function carefulCommandAct(state: BattleState): ActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is ActionSpellAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.spellId === "command" &&
+      candidate.subject.metamagic?.some(
+        (selection) => selection.effectKind === "saving_throw_protection",
+      ) === true,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Careful Command act.");
+  }
+  return act;
+}
+
+function gustOfWindActionAct(state: BattleState): ActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is ActionSpellAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.spellId === "gust_of_wind" &&
+      candidate.subject.metamagic === undefined,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Gust of Wind action spell act.");
+  }
+  return act;
+}
+
+function readyBurningHandsAct(state: BattleState): ActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is ActionSpellAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.spellId === "burning_hands" &&
+      candidate.subject.mode.tag === "ready",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Ready Burning Hands act.");
+  }
+  return act;
+}
+
+function sleepActionAct(state: BattleState): ActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is ActionSpellAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.spellId === "sleep" &&
+      candidate.subject.metamagic === undefined,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Sleep action spell act.");
+  }
+  return act;
+}
+
+function spellTargetListFill(
+  hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
+  spellId: "burning_hands" | "command",
+  targetIds: readonly ReturnType<typeof combatantId>[],
+): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
+  return {
+    kind: "spellTargetList",
+    holeId: hole.holeId,
+    value: { targetIds },
+    spatialFacts: targetIds.map((targetId) => ({
+      kind: "spellTarget" as const,
+      casterId: wizardId,
+      targetId,
+      spellId,
+    })),
+  };
+}
+
+function requireSpellTargetListHole(
+  holes: readonly BattleHole[],
+  label: string,
+): Extract<BattleHole, { readonly kind: "spellTargetList" }> {
+  const hole = holes.find(
+    (
+      candidate,
+    ): candidate is Extract<BattleHole, { readonly kind: "spellTargetList" }> =>
+      candidate.kind === "spellTargetList" && candidate.label === label,
+  );
+  if (hole === undefined) {
+    throw new Error(`Expected spellTargetList hole ${label}.`);
+  }
+  return hole;
 }
 
 function resolveQuickenedCureWounds(

@@ -4579,7 +4579,10 @@ export type BattleSpellTargetListHole = {
       readonly procedure:
         | "directHitPointRestoration"
         | "rollModifier"
+        | "saveGatedDamage"
         | "saveGatedCondition"
+        | "saveGatedConditionImmunity"
+        | "saveGatedAttackRollAdvantage"
         | "hideousLaughter"
         | "creatureTypeProtection"
         | "conditionRemovalProtection"
@@ -4591,7 +4594,9 @@ export type BattleSpellTargetListHole = {
         | "sanctuaryTargetingInterdiction"
         | "directCondition"
         | "directConditionRemoval"
-        | "command";
+        | "command"
+        | "greaseGroundHazard"
+        | "gustOfWindLine";
     }
   >;
   readonly minTargets: 1;

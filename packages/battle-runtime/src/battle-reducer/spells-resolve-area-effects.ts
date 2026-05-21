@@ -31,10 +31,12 @@ import { spellAreaChoiceHole } from "./spells-holes-fills.ts";
 import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 import { maybeOpenReactionWindow, snapshotBattle } from "./dispatcher.ts";
 import {
+  saveMetamagicSelectionState,
   validateGustOfWindLineAreaPushFacts,
   validateSavingThrowOutcomes,
 } from "./spells-resolve-save-gates.ts";
 import type { SpellFillSet } from "./spells-resolve-fill-set.ts";
+import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resources.ts";
 
 export function resolveFogCloudObscurementSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
@@ -559,6 +561,7 @@ export function resolveGustOfWindLineSpellAct(input: {
     { readonly procedure: "gustOfWindLine" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
 }): BattleResolutionResult {
   if (
     input.fillSet.targetId !== undefined ||
@@ -586,10 +589,33 @@ export function resolveGustOfWindLineSpellAct(input: {
     );
   }
 
+  const metamagicSelections = saveMetamagicSelectionState({
+    state: input.input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    fills: input.input.fills,
+    metamagicApplications: input.metamagicApplications,
+    targetId: undefined,
+  });
+  if (metamagicSelections.tag === "invalid") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      metamagicSelections.message,
+    );
+  }
+  if (metamagicSelections.tag === "needsHoles") {
+    return needsHolesResult(
+      input.input.state,
+      input.input.subject,
+      metamagicSelections.holes,
+    );
+  }
   const savingThrowHole = spellSavingThrowOutcomeHole(
     input.input.state,
     input.actorId,
     input.invocation,
+    metamagicSelections.heightenedSpellTargetId,
   );
   if (input.fillSet.savingThrowOutcomes === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
@@ -604,6 +630,8 @@ export function resolveGustOfWindLineSpellAct(input: {
     input.actorId,
     undefined,
     undefined,
+    metamagicSelections.carefulSpellProtectedTargetIds,
+    metamagicSelections.heightenedSpellTargetId,
   );
   if (savingThrowValidation !== null) {
     return invalidResult(
@@ -663,6 +691,9 @@ export function resolveGustOfWindLineSpellAct(input: {
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
+    ...(input.metamagicApplications === undefined
+      ? {}
+      : { metamagicApplications: input.metamagicApplications }),
   });
   if (resourced.tag === "invalid") {
     return resourced;
