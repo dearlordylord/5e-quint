@@ -427,6 +427,13 @@ Benefits:
 
 ### 8. Battle Reducer Type and Codec Surface
 
+> **SUPERSEDED (2026-05-20) for the active-effects portion.** The
+> `battle-reducer/active-effects.ts` type extraction proposed here is replaced by
+> the deeper co-located domain module in `plans/ACTIVE_EFFECT_DEEP_MODULE.md`
+> (types + lifecycle + perception behind a small interface, with an effect-centric
+> seam). The remaining codec/state/reaction-protocol splits in this section
+> (`battle-state.ts`, `reaction-protocol.ts`, `battle-codec-*`) still stand.
+
 Files:
 
 - `packages/battle-runtime/src/battle-reducer.ts` at 4,378 lines.
@@ -468,6 +475,16 @@ This is a high-coupling split. Do it after the test split so regression tests
 are easier to run and review.
 
 ### 9. Dispatcher and Turn/Movement Modules
+
+> **PARTIALLY SUPERSEDED (2026-05-20).** The `turn-active-effects.ts` extraction
+> proposed below (start/end/tick active effects, concentration duration cleanup)
+> is replaced by the `lifecycle.ts` half of `plans/ACTIVE_EFFECT_DEEP_MODULE.md`,
+> which co-locates effect tick/expire with the effect types and runtime. Everything
+> else in this section — the `dispatcher.ts` internal split (reaction windows,
+> continuations, snapshot, subject resolution) and the non-effect
+> `turn-end-movement.ts` splits (`turn-boundary.ts`, `spell-repeat-saves.ts`,
+> `command-options.ts`, `ground-hazards.ts`, `movement-resolution.ts`) — still
+> stands.
 
 Files:
 

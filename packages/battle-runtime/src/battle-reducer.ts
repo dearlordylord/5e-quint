@@ -136,6 +136,23 @@ import {
   type SupportedUnitFeatureProfile,
 } from "./unit-feature-support.ts";
 import type { ZeroHpLifecycle } from "./zero-hp-lifecycle.ts";
+import type {
+  BattleActiveEffectExpiration,
+  BattleConcentrationBrokenEarlyEnd,
+  BattleSpellEffectBase,
+  BattleTargetDonsArmorEarlyEnd,
+  BattleTurnAnchor,
+  BattleUnitFeatureEffectBase,
+  MarkedDamageRiderRetargetTiming,
+  MarkedDamageRiderTransferState,
+  ProtectionFromEvilAndGoodPreventedCondition,
+  SelfTransformationModeEffectPayload,
+  SelfTransformationNaturalWeaponFacts,
+  SpellConditionEscape,
+  SpellTurnStartDamage,
+  SpellTurnStartDamageSave,
+  TurnAnchoredBattleActiveEffectExpiration,
+} from "./active-effect/types.ts";
 
 import { type DamageAmountByTypeEntry } from "./battle-reducer/damage-helpers.ts";
 import {
@@ -149,11 +166,8 @@ import {
   HUNTERS_MARK_FINDING_SKILLS,
   type MirrorImageDuplicateCount,
   type MirrorImageUnaffectedSense,
-  PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS,
   type ScorchingRayRayCount,
   type SelfTransformationModeKind,
-  type SelfTransformationNonNaturalWeaponModeKind,
-  SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS,
   THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
 } from "./battle-reducer/domain-constants.ts";
 export {
@@ -490,134 +504,21 @@ export type BattlePassiveSpeedProfile =
   | BattlePassiveSpeedBonusSupportProfile
   | BattlePassiveSpeedKindGrantsSupportProfile;
 
-export type BattleActiveEffectExpiration =
-  | {
-      readonly kind: "startOfTurn";
-      readonly combatantId: CombatantId;
-    }
-  | {
-      readonly kind: "endOfTurn";
-      readonly combatantId: CombatantId;
-      readonly round: RoundType;
-    }
-  | {
-      readonly kind: "concentration";
-      readonly combatantId: CombatantId;
-      readonly durationTicks?: ElapsedTimeTicks;
-    }
-  | {
-      readonly kind: "duration";
-      readonly durationTicks: ElapsedTimeTicks;
-    }
-  | {
-      readonly kind: "untilDispelled";
-    };
-type TurnAnchoredBattleActiveEffectExpiration = Extract<
+export type {
   BattleActiveEffectExpiration,
-  { readonly kind: "startOfTurn" } | { readonly kind: "endOfTurn" }
->;
-export type BattleSpellEffectEarlyEnd =
-  | { readonly kind: "targetDonsArmor" }
-  | { readonly kind: "concentrationBroken" };
-type BattleTargetDonsArmorEarlyEnd = Extract<
+  BattlePossessionAttemptDisposition,
   BattleSpellEffectEarlyEnd,
-  { readonly kind: "targetDonsArmor" }
->;
-type BattleConcentrationBrokenEarlyEnd = Extract<
-  BattleSpellEffectEarlyEnd,
-  { readonly kind: "concentrationBroken" }
->;
-type BattleSpellEffectBase = {
-  readonly sourceSpellId: SpellRecord["id"];
-  readonly sourceCombatantId: CombatantId;
-};
-type BattleUnitFeatureEffectBase = {
-  readonly sourceUnitId: UnitRecord["id"];
-  readonly sourceCombatantId: CombatantId;
-};
-export type SpellConditionAbilityCheckSuccessEnd =
-  (typeof SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS)[number];
-export type ProtectionFromEvilAndGoodPreventedCondition =
-  (typeof PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS)[number];
-export type BattlePossessionAttemptDisposition =
-  | {
-      readonly tag: "prevented";
-      readonly prevention: "creatureTypeProtection";
-      readonly sourceCombatantId: CombatantId;
-      readonly targetId: CombatantId;
-    }
-  | {
-      readonly tag: "unprevented";
-      readonly sourceCombatantId: CombatantId;
-      readonly targetId: CombatantId;
-    }
-  | {
-      readonly tag: "invalid";
-      readonly reason:
-        | "unknownSourceCombatant"
-        | "unknownSourceCreatureType"
-        | "unknownTargetCombatant";
-      readonly sourceCombatantId: CombatantId;
-      readonly targetId: CombatantId;
-    };
-export type SpellConditionEscape =
-  | {
-      readonly kind: "abilityCheck";
-      readonly ability: "str";
-      readonly skill: "athletics";
-      readonly successEnds: SpellConditionAbilityCheckSuccessEnd;
-    }
-  | {
-      readonly kind: "targetDamagedByCasterOrAlly";
-    };
-export type SpellTurnStartDamage = {
-  readonly expr: DiceExpr;
-  readonly damageType: DamageType;
-};
-export type SpellTurnStartDamageSave = {
-  readonly ability: Ability;
-  readonly dc: DcSource;
-  readonly successEnds: "spell";
-};
-export type MarkedDamageRiderRetargetTiming = "sameTurn" | "laterTurn";
-export type BattleTurnAnchor = {
-  readonly actorId: CombatantId;
-  readonly round: RoundType;
-};
-export type MarkedDamageRiderTransferState =
-  | {
-      readonly kind: "awaitingTargetDrop";
-      readonly retargetTiming: MarkedDamageRiderRetargetTiming;
-    }
-  | {
-      readonly kind: "available";
-      readonly retargetTiming: "sameTurn";
-    }
-  | {
-      readonly kind: "availableAfterTurn";
-      readonly retargetTiming: "laterTurn";
-      readonly droppedOnTurn: BattleTurnAnchor;
-    };
-export type SelfTransformationNaturalWeaponFacts = {
-  readonly damage: {
-    readonly dice: 1;
-    readonly dieSize: DamageDieSize;
-    readonly damageTypeChoices: readonly [DamageType, ...DamageType[]];
-  };
-  readonly spellcastingAbilityModifier: AbilityModifier;
-  readonly attackBonus: AttackBonus;
-};
-export type SelfTransformationModeEffectPayload = {
-  readonly naturalWeaponFacts: SelfTransformationNaturalWeaponFacts;
-} & (
-  | {
-      readonly mode: SelfTransformationNonNaturalWeaponModeKind;
-    }
-  | {
-      readonly mode: "naturalWeapons";
-      readonly naturalWeaponDamageType: DamageType;
-    }
-);
+  BattleTurnAnchor,
+  MarkedDamageRiderRetargetTiming,
+  MarkedDamageRiderTransferState,
+  ProtectionFromEvilAndGoodPreventedCondition,
+  SelfTransformationModeEffectPayload,
+  SelfTransformationNaturalWeaponFacts,
+  SpellConditionAbilityCheckSuccessEnd,
+  SpellConditionEscape,
+  SpellTurnStartDamage,
+  SpellTurnStartDamageSave,
+} from "./active-effect/types.ts";
 export type SpellCreatedHeldObjectState =
   | { readonly kind: "held" }
   | { readonly kind: "notHeld" };
