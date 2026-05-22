@@ -169,7 +169,7 @@
     {
       "number": 28,
       "id": "L3-SPELL-TONGUES-CLOSURE-SURVEY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Level 3 Tongues Closure Survey"
     },
     {
@@ -530,7 +530,7 @@ Acceptance:
 
 ### Task 28 - L3-SPELL-TONGUES-CLOSURE-SURVEY - Level 3 Tongues Closure Survey
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 

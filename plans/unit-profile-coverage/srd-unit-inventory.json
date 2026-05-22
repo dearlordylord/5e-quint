@@ -208,13 +208,13 @@
     },
     "levelThreeSpellBattleReadiness": {
       "denominator": 128,
-      "numerator": 11,
-      "percent": "8.6%",
+      "numerator": 16,
+      "percent": "12.5%",
       "rowsByStatus": {
         "battle-runtime-required": 58,
-        "accepted-no-battle-effect": 4,
+        "accepted-no-battle-effect": 9,
         "partial-battle-runtime": 8,
-        "owner-evidence-required": 51,
+        "owner-evidence-required": 46,
         "accepted": 7
       }
     },
@@ -233,9 +233,9 @@
       "catalog-installed-owner-evidence-present": 413,
       "non-runtime": 24,
       "catalog-installed-owner-evidence-required": 9,
-      "catalog-only/dead-for-now": 124,
+      "catalog-only/dead-for-now": 129,
       "missing-authored-record": 58,
-      "catalog-authored-review-required": 51,
+      "catalog-authored-review-required": 46,
       "catalog-authored-executable-follow-up": 4,
       "catalog-installed-needs-owner-evidence": 1
     },
@@ -247,9 +247,9 @@
     },
     "levelThreeSpellPressureRowsByDisposition": {
       "missing-authored-record": 58,
-      "catalog-only/dead-for-now": 4,
+      "catalog-only/dead-for-now": 9,
       "catalog-installed-owner-evidence-present": 15,
-      "catalog-authored-review-required": 51
+      "catalog-authored-review-required": 46
     },
     "levelThreeInstalledSpellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 15
@@ -7672,7 +7672,7 @@
       "detail": "Tongues (Divination; —)",
       "candidateUnitId": "tongues",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -7683,10 +7683,17 @@
         "state": "not-installed",
         "unitId": "tongues"
       },
-      "finalDisposition": "catalog-authored-review-required",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached language/communication owner",
+        "reason": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell."
+      },
       "ownerEvidence": [],
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/cleric:level-1:class-container:cleric_class_container",
@@ -10574,7 +10581,7 @@
       "detail": "Tongues (Divination; —)",
       "candidateUnitId": "tongues",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -10585,10 +10592,17 @@
         "state": "not-installed",
         "unitId": "tongues"
       },
-      "finalDisposition": "catalog-authored-review-required",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached language/communication owner",
+        "reason": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell."
+      },
       "ownerEvidence": [],
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_water_walk",
@@ -24563,7 +24577,7 @@
       "detail": "Tongues (Divination; —)",
       "candidateUnitId": "tongues",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -24574,10 +24588,17 @@
         "state": "not-installed",
         "unitId": "tongues"
       },
-      "finalDisposition": "catalog-authored-review-required",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached language/communication owner",
+        "reason": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell."
+      },
       "ownerEvidence": [],
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_vampiric_touch",
@@ -26844,7 +26865,7 @@
       "detail": "Tongues (Divination; —)",
       "candidateUnitId": "tongues",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -26855,10 +26876,17 @@
         "state": "not-installed",
         "unitId": "tongues"
       },
-      "finalDisposition": "catalog-authored-review-required",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached language/communication owner",
+        "reason": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell."
+      },
       "ownerEvidence": [],
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_vampiric_touch",
@@ -31821,7 +31849,7 @@
       "detail": "Tongues (Divination; —)",
       "candidateUnitId": "tongues",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -31832,10 +31860,17 @@
         "state": "not-installed",
         "unitId": "tongues"
       },
-      "finalDisposition": "catalog-authored-review-required",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached language/communication owner",
+        "reason": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell."
+      },
       "ownerEvidence": [],
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_vampiric_touch",
