@@ -73,7 +73,7 @@
     {
       "number": 12,
       "id": "L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Moonbeam Shape-Shifting Rider Recheck"
     },
     {
@@ -111,6 +111,18 @@
       "id": "L3-SPELL-PROTECTION-FROM-ENERGY-RUNTIME-SURVEY",
       "status": "ready-for-research",
       "title": "Level 3 Protection From Energy Runtime Survey"
+    },
+    {
+      "number": 19,
+      "id": "L12G-FOLLOWUP-SHAPESHIFT-TRUE-FORM-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Shared Shape-Shifted True-Form Runtime State"
+    },
+    {
+      "number": 20,
+      "id": "L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-AREA-SUPPRESSION",
+      "status": "blocked",
+      "title": "Moonbeam Shape-Shift Area Suppression Rider"
     }
   ]
 }
@@ -260,7 +272,7 @@ Output:
 
 ### Task 12 - L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER - Moonbeam Shape-Shifting Rider Recheck
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -279,6 +291,17 @@ Acceptance:
 - The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
 - No companion AI/autonomous-control behavior is introduced.
 - No authored identity dispatch is introduced in runtime code.
+
+Result:
+
+- Rechecked SRD Moonbeam and Druid Wild Shape against the promoted Moonbeam movable-zone runtime and the Druid Wild Shape runtime subset.
+- Closed this task as a smaller precise follow-up split: Moonbeam already has supported movable-zone damage/lifecycle coverage, but its failed-save shape-shift rider must wait for a source-neutral shape-shifted true-form runtime owner before Moonbeam can consume the fact without Druid-only or authored-identity dispatch.
+- Added `L12G-FOLLOWUP-SHAPESHIFT-TRUE-FORM-RUNTIME` and `L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-AREA-SUPPRESSION` as executable follow-up tasks.
+
+Verification notes:
+
+- RAW/ubiquitous-language check: SRD 5.2.1 `Spells/Descriptions-M-P.md#Moonbeam` says a failed-save shape-shifted creature reverts to its true form and cannot shape-shift until it leaves the Cylinder; SRD 5.2.1 `Classes/Druid.md#Level 2: Wild Shape` says Wild Shape shape-shifts into a learned Beast form; `UBIQUITOUS_LANGUAGE.md` keeps Cylinder/Area of Effect terminology and companion-control wording distinct. No companion control behavior is introduced.
+- Reviewer-loop convergence: round 1 found the split only in generated coverage artifacts; round 2 records Task 12 as done and materializes the two follow-up IDs in this Ralph plan and the mirrored in-repo lane plan. No runtime or Quint behavior changed, so MBT is not applicable.
 
 ### Task 13 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-RETAINED-STATISTICS - Druid Wild Shape Retained Statistics Recheck
 
@@ -405,6 +428,57 @@ Output:
 - Read SRD Protection From Energy and existing resistance active-effect support; close or split runtime work for chosen damage resistance.
 - Updated plan/profile/evidence/report artifacts only when they are the correct owner.
 - Focused verification, `git diff --check`, and reviewer-loop convergence.
+
+Acceptance:
+
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
+
+### Task 19 - L12G-FOLLOWUP-SHAPESHIFT-TRUE-FORM-RUNTIME - Shared Shape-Shifted True-Form Runtime State
+
+Status: `ready-for-research`
+
+Input:
+
+- Local RAW under `.references/srd-5.2.1/` for shape-shifting sources such as Wild Shape, Polymorph-style spell transformations, and stat-block shapechangers.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Existing Druid Wild Shape runtime subset, self-transformation support, stat-block controls, and Moonbeam shape-shift rider claim.
+
+Output:
+
+- Promote a source-neutral battle-visible shape-shifted state that records enough true-form and replacement-form facts for runtime consumers to test whether a creature is shape-shifted and revert it to its true form.
+- Do not branch on authored Unit ids, spell ids, names, or provenance sections.
+- Avoid duplicating true-form facts beside their source state; make the reversion owner derive or project from one canonical shape-shift state.
+- Focused Wild Shape and synthetic transformation tests, package-local promoted Quint/runtime parity for reversion, generated coverage artifacts, `git diff --check`, and reviewer-loop convergence.
+
+Acceptance:
+
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
+
+### Task 20 - L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-AREA-SUPPRESSION - Moonbeam Shape-Shift Area Suppression Rider
+
+Status: `blocked`
+
+Depends on:
+
+- Task 19.
+
+Input:
+
+- Task 19 shared shape-shifted true-form runtime owner.
+- Local RAW under `.references/srd-5.2.1/Spells/Descriptions-M-P.md#Moonbeam`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Promoted Moonbeam movable-zone runtime, table/spatial trigger boundary, and coverage artifacts.
+
+Output:
+
+- Execute Moonbeam's failed-save shape-shift rider using the shared shape-shift state: failed save reverts a shape-shifted target, successful save does not, and reversion applies across all Moonbeam save triggers.
+- Suppress shape-shifting only while the target remains in that Moonbeam Cylinder.
+- Clear suppression on explicit caller/table-supplied Cylinder exit and when the Moonbeam spell ends.
+- Focused runtime tests for failed save, successful save, once-per-turn duplicate behavior, exit cleanup, and spell cleanup; package-local promoted Quint/runtime parity; generated coverage artifacts; `git diff --check`; and reviewer-loop convergence.
 
 Acceptance:
 

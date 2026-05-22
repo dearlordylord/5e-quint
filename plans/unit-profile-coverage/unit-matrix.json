@@ -23048,17 +23048,28 @@
         },
         "deferredMechanics": [
           {
-            "followUpTaskId": "L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER",
-            "mechanic": "failed-save shape-shift reversion and shape-shifting suppression while in the Cylinder"
+            "followUpTaskId": "L12G-FOLLOWUP-SHAPESHIFT-TRUE-FORM-RUNTIME",
+            "mechanic": "Generic battle-visible shape-shifted true-form state and reversion operation across Wild Shape, Polymorph-style spell transformations, and stat-block shapechangers; the Druid Wild Shape runtime subset has a subset-specific active form but no shared shape-shift owner that Moonbeam can consume without authored-identity or Druid-only dispatch."
+          },
+          {
+            "followUpTaskId": "L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-AREA-SUPPRESSION",
+            "mechanic": "Moonbeam failed-save shape-shift rider after the generic shape-shift owner exists: revert a failed-save shape-shifted target to its true form, prevent that target from shape-shifting while it remains in the Moonbeam Cylinder, clear prevention on caller-supplied Cylinder exit, and clear it when the Moonbeam spell ends."
           }
         ],
         "followUpTasks": [
           {
-            "id": "L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER",
-            "mechanic": "Execute the failed-save shape-shift rider by consuming a battle-visible shape-shifted and true-form state, reverting a shape-shifted target to its true form when it fails the Moonbeam Constitution Saving Throw, preventing that creature from shape-shifting again while it remains in the Moonbeam Cylinder, and clearing the prevention when it leaves the Cylinder or the spell ends without duplicating the shape-shifting source state.",
-            "owner": "stat-block-control shape-shifting runtime plus battle-runtime spell effect lifecycle",
-            "requiredOutput": "Supported runtime profile or profile-subset evidence for Moonbeam's shape-shift reversion and suppression rider integrated with the promoted shape-shifting owner, including focused tests and Quint/runtime parity for failed save, successful save, exit cleanup, and spell cleanup.",
-            "title": "Moonbeam Shape-Shifting Rider Runtime"
+            "id": "L12G-FOLLOWUP-SHAPESHIFT-TRUE-FORM-RUNTIME",
+            "mechanic": "Promote a source-neutral shape-shifted state that records enough true-form and replacement-form facts for runtime consumers to test whether a creature is shape-shifted and to revert it to its true form without branching on authored Unit ids, spell ids, or provenance sections.",
+            "owner": "shared shape-shifting runtime plus battle-runtime and package-local Quint parity",
+            "requiredOutput": "Supported shape-shift runtime profile with focused Wild Shape and synthetic transformation tests, promoted Quint/runtime parity for reversion, and no duplicated true-form facts beside their source state.",
+            "title": "Shared Shape-Shifted True-Form Runtime State"
+          },
+          {
+            "id": "L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-AREA-SUPPRESSION",
+            "mechanic": "Execute Moonbeam failed-save rider using the shared shape-shift state: failed save reverts a shape-shifted target, successful save does not, reversion applies across all Moonbeam save triggers, shape-shifting is suppressed only while the target remains in that Cylinder, and suppression clears on explicit table-supplied Cylinder exit or spell cleanup.",
+            "owner": "battle-runtime spell effect lifecycle integrated with the shared shape-shifting owner and table/spatial exit witness boundary",
+            "requiredOutput": "Supported runtime profile or profile-subset evidence for Moonbeam rider integration, focused tests for failed save, successful save, duplicate once-per-turn behavior, exit cleanup, and spell cleanup, plus package-local promoted Quint/runtime parity.",
+            "title": "Moonbeam Shape-Shift Area Suppression Rider"
           }
         ],
         "profileIds": [
