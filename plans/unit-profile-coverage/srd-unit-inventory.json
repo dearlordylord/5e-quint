@@ -239,10 +239,10 @@
       "numerator": 20,
       "percent": "15.6%",
       "rowsByStatus": {
-        "battle-runtime-required": 58,
+        "battle-runtime-required": 61,
         "accepted-no-battle-effect": 13,
         "partial-battle-runtime": 8,
-        "owner-evidence-required": 42,
+        "owner-evidence-required": 39,
         "accepted": 7
       }
     },
@@ -276,9 +276,9 @@
       "catalog-installed-owner-evidence-required": 2,
       "catalog-only/dead-for-now": 137,
       "missing-authored-record": 58,
-      "catalog-authored-review-required": 42,
+      "catalog-authored-review-required": 39,
       "catalog-installed-needs-owner-evidence": 1,
-      "catalog-authored-executable-follow-up": 1
+      "catalog-authored-executable-follow-up": 4
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 243,
@@ -290,7 +290,8 @@
       "missing-authored-record": 58,
       "catalog-only/dead-for-now": 13,
       "catalog-installed-owner-evidence-present": 15,
-      "catalog-authored-review-required": 42
+      "catalog-authored-review-required": 39,
+      "catalog-authored-executable-follow-up": 3
     },
     "levelThreeInstalledSpellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 15
@@ -26047,10 +26048,11 @@
         "state": "not-installed",
         "unitId": "fly"
       },
-      "finalDisposition": "catalog-authored-review-required",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Promote follow-up split L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR, L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME, L3-FOLLOWUP-FLY-END-FALL-WITNESS: L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR owns Repair the Fly Surface target shape so the existing SRD spell definition, fixed 60-foot Fly Speed grant, hover flag, Concentration, and slot-scaled target count structurally encode a touched willing creature target with the same targetKinds and disposition vocabulary used by sibling touched willing creature spells. Required output: Updated Dhall and generated JSON content plus focused Surface/unit-catalog tests proving Fly round-trips with typed touched willing creature target eligibility before runtime admission.; L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME owns Promote Fly's active Speed grant after Surface target repair by admitting the repaired record into the Unit catalog; spending the Magic Action and level-3-or-higher Spell Slot; owning Concentration up to 10 minutes; applying fixed 60-foot Fly Speed and hover to each selected willing touched creature with slot-scaled targets; widening promoted runtime and package-local Quint movement kind vocabulary to include Fly Speed; and projecting effective movement and Dash budgets without duplicating walk Speed or spent Movement state. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, generated coverage artifacts, and promoted Quint/runtime parity for cast admission, Spell Slot spend, Concentration ownership, fixed Fly Speed, hover projection, slot scaling, and cleanup.; L3-FOLLOWUP-FLY-END-FALL-WITNESS owns Connect Fly effect cleanup to a caller-supplied still-aloft and can-stop-fall witness boundary that either opens the existing creatureFalls reaction window for affected targets or records why the target can stop the fall, while preserving Feather Fall's falling-trigger and landing owner and avoiding battle-owned elevation simulation. Required output: Focused tests and promoted Quint/runtime parity for Concentration break, duration expiration, recast or replacement cleanup, hover-relevant fall prevention, and handoff to the existing falling reaction/landing pipeline.",
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_gaseous_form",
@@ -28634,10 +28636,11 @@
         "state": "not-installed",
         "unitId": "fly"
       },
-      "finalDisposition": "catalog-authored-review-required",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Promote follow-up split L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR, L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME, L3-FOLLOWUP-FLY-END-FALL-WITNESS: L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR owns Repair the Fly Surface target shape so the existing SRD spell definition, fixed 60-foot Fly Speed grant, hover flag, Concentration, and slot-scaled target count structurally encode a touched willing creature target with the same targetKinds and disposition vocabulary used by sibling touched willing creature spells. Required output: Updated Dhall and generated JSON content plus focused Surface/unit-catalog tests proving Fly round-trips with typed touched willing creature target eligibility before runtime admission.; L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME owns Promote Fly's active Speed grant after Surface target repair by admitting the repaired record into the Unit catalog; spending the Magic Action and level-3-or-higher Spell Slot; owning Concentration up to 10 minutes; applying fixed 60-foot Fly Speed and hover to each selected willing touched creature with slot-scaled targets; widening promoted runtime and package-local Quint movement kind vocabulary to include Fly Speed; and projecting effective movement and Dash budgets without duplicating walk Speed or spent Movement state. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, generated coverage artifacts, and promoted Quint/runtime parity for cast admission, Spell Slot spend, Concentration ownership, fixed Fly Speed, hover projection, slot scaling, and cleanup.; L3-FOLLOWUP-FLY-END-FALL-WITNESS owns Connect Fly effect cleanup to a caller-supplied still-aloft and can-stop-fall witness boundary that either opens the existing creatureFalls reaction window for affected targets or records why the target can stop the fall, while preserving Feather Fall's falling-trigger and landing owner and avoiding battle-owned elevation simulation. Required output: Focused tests and promoted Quint/runtime parity for Concentration break, duration expiration, recast or replacement cleanup, hover-relevant fall prevention, and handoff to the existing falling reaction/landing pipeline.",
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_gaseous_form",
@@ -33420,10 +33423,11 @@
         "state": "not-installed",
         "unitId": "fly"
       },
-      "finalDisposition": "catalog-authored-review-required",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Promote follow-up split L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR, L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME, L3-FOLLOWUP-FLY-END-FALL-WITNESS: L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR owns Repair the Fly Surface target shape so the existing SRD spell definition, fixed 60-foot Fly Speed grant, hover flag, Concentration, and slot-scaled target count structurally encode a touched willing creature target with the same targetKinds and disposition vocabulary used by sibling touched willing creature spells. Required output: Updated Dhall and generated JSON content plus focused Surface/unit-catalog tests proving Fly round-trips with typed touched willing creature target eligibility before runtime admission.; L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME owns Promote Fly's active Speed grant after Surface target repair by admitting the repaired record into the Unit catalog; spending the Magic Action and level-3-or-higher Spell Slot; owning Concentration up to 10 minutes; applying fixed 60-foot Fly Speed and hover to each selected willing touched creature with slot-scaled targets; widening promoted runtime and package-local Quint movement kind vocabulary to include Fly Speed; and projecting effective movement and Dash budgets without duplicating walk Speed or spent Movement state. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, generated coverage artifacts, and promoted Quint/runtime parity for cast admission, Spell Slot spend, Concentration ownership, fixed Fly Speed, hover projection, slot scaling, and cleanup.; L3-FOLLOWUP-FLY-END-FALL-WITNESS owns Connect Fly effect cleanup to a caller-supplied still-aloft and can-stop-fall witness boundary that either opens the existing creatureFalls reaction window for affected targets or records why the target can stop the fall, while preserving Feather Fall's falling-trigger and landing owner and avoiding battle-owned elevation simulation. Required output: Focused tests and promoted Quint/runtime parity for Concentration break, duration expiration, recast or replacement cleanup, hover-relevant fall prevention, and handoff to the existing falling reaction/landing pipeline.",
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_gaseous_form",

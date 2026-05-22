@@ -115,7 +115,7 @@
     {
       "number": 19,
       "id": "L3-SPELL-FLY-RUNTIME-SURVEY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Level 3 Fly Runtime Survey And Task Split"
     },
     {
@@ -129,6 +129,24 @@
       "id": "L3-SPELL-HYPNOTIC-PATTERN-RUNTIME-SURVEY",
       "status": "ready-for-research",
       "title": "Level 3 Hypnotic Pattern Runtime Survey And Task Split"
+    },
+    {
+      "number": 22,
+      "id": "L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR",
+      "status": "ready-for-research",
+      "title": "Fly Surface Target Repair"
+    },
+    {
+      "number": 23,
+      "id": "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME",
+      "status": "blocked",
+      "title": "Fly Special Speed Runtime"
+    },
+    {
+      "number": 24,
+      "id": "L3-FOLLOWUP-FLY-END-FALL-WITNESS",
+      "status": "blocked",
+      "title": "Fly End Fall Witness"
     }
   ]
 }
@@ -175,6 +193,12 @@ Every task must include:
 | 14 | L12G-RECURSIVE-TAIL-LANE-A-2 - Lane A Recursive Planning Tail 2 | done | L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH, L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME, L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH | L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL, L12G-FOLLOWUP-SPIKE-GROWTH-PROFILE-ACCOUNTING, L12G-FOLLOWUP-PRAYER-OF-HEALING-PROFILE-ACCOUNTING, L12G-FOLLOWUP-FIND-STEED-COMPANION-BOUNDARY, L3-SPELL-FLY-RUNTIME-SURVEY, L3-SPELL-LIGHTNING-BOLT-RUNTIME-SURVEY, L3-SPELL-HYPNOTIC-PATTERN-RUNTIME-SURVEY | Refreshed level-2 feature metrics after this appended batch | Completed by confirming generated metrics and keeping the already-appended Level 2 completion / Level 3 kickoff refill tasks as the concrete frontier. |
 | 17 | L12G-FOLLOWUP-PRAYER-OF-HEALING-PROFILE-ACCOUNTING - Prayer Of Healing Profile Accounting Closure | done | L12G-RECURSIVE-TAIL-LANE-A-2 | none | Current Prayer of Healing Surface content, Character Sheet rest profile claim, owner evidence, and focused tests | Completed by confirming existing profile artifacts already classify Prayer of Healing as `profile-subset-supported` with Character Sheet owner evidence and outside-battle-runtime closure for automatic casting progress, range maintenance, and interruption tracking. |
 | 18 | L12G-FOLLOWUP-FIND-STEED-COMPANION-BOUNDARY - Find Steed Companion Boundary Closure | done | L12G-RECURSIVE-TAIL-LANE-A-2 | none | Find Steed Surface content, mounted-combat text, Unit/profile claims, owner evidence, and focused tests | Completed by recording `find_steed` as an `unsupported-profile` closed at the companion-control boundary, without Unit catalog admission, companion AI, autonomous control behavior, or authored-identity dispatch. |
+| 19 | L3-SPELL-FLY-RUNTIME-SURVEY - Level 3 Fly Runtime Survey And Task Split | done | L12G-RECURSIVE-TAIL-LANE-A-2 | L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR | Fly Surface content, Speed and Movement language, current Unit/profile claims, and falling witness boundaries | Completed by recording Fly as an unsupported-profile follow-up split; no runtime support, companion behavior, or authored-identity dispatch is claimed. |
+| 20 | L3-SPELL-LIGHTNING-BOLT-RUNTIME-SURVEY - Level 3 Lightning Bolt Runtime Survey And Task Split | ready-for-research | L12G-RECURSIVE-TAIL-LANE-A-2 | none | Lightning Bolt Surface content, line/area damage support, Unit/profile claims, and focused tests | Next level-3 spell runtime survey. |
+| 21 | L3-SPELL-HYPNOTIC-PATTERN-RUNTIME-SURVEY - Level 3 Hypnotic Pattern Runtime Survey And Task Split | ready-for-research | L12G-RECURSIVE-TAIL-LANE-A-2 | none | Hypnotic Pattern Surface content, condition-save/incapacitation support, Unit/profile claims, and focused tests | Next level-3 spell runtime survey. |
+| 22 | L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR - Fly Surface Target Repair | ready-for-research | L3-SPELL-FLY-RUNTIME-SURVEY | L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME | Fly Surface target shape and sibling touched willing creature spell selection vocabulary | Repair target eligibility shape before runtime admission. |
+| 23 | L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME - Fly Special Speed Runtime | blocked | L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR | L3-FOLLOWUP-FLY-END-FALL-WITNESS | Fly fixed special Speed, hover, movement kind vocabulary, active-effect cleanup, and promoted Quint parity | Promote the active Fly Speed grant after the Surface target repair lands. |
+| 24 | L3-FOLLOWUP-FLY-END-FALL-WITNESS - Fly End Fall Witness | blocked | L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME | none | Fly spell-end falling clause, caller-supplied aloft/can-stop-fall witnesses, and existing falling reaction/landing pipeline | Promote the spell-end fall handoff after the active Fly effect exists. |
 
 ## Tasks
 
@@ -491,6 +515,87 @@ Acceptance:
 - No companion AI/autonomous-control behavior is introduced.
 - No authored identity dispatch is introduced in runtime code.
 
+### Task 22 - L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR - Fly Surface Target Repair
+
+Status: `ready-for-research`
+
+Depends on: L3-SPELL-FLY-RUNTIME-SURVEY
+
+Blocks: L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME
+
+Input:
+
+- SRD Fly text under `.references/srd-5.2.1/Spells/Descriptions-E-L.md`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Fly Surface Dhall/JSON content.
+- Sibling touched willing creature target shapes for Jump and Spider Climb.
+
+Output:
+
+- Repair the Fly Surface target shape while preserving the existing SRD spell definition, fixed 60-foot Fly Speed grant, hover flag, Concentration up to 10 minutes, and slot-scaled target count.
+- Structurally encode a touched willing creature target with `targetKinds: ["creature"]` and `disposition: "willing"` using the existing selection vocabulary instead of authored spell identity.
+- Update generated Surface JSON and focused Surface/unit-catalog tests proving Fly round-trips with typed target eligibility before runtime admission.
+
+Acceptance:
+
+- Fly Surface target eligibility is checker-visible and matches the SRD touched willing creature requirement.
+- No spell-end falling runtime behavior is claimed by this task.
+- No authored identity dispatch is introduced in runtime code.
+
+### Task 23 - L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME - Fly Special Speed Runtime
+
+Status: `blocked`
+
+Depends on: L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR
+
+Blocks: L3-FOLLOWUP-FLY-END-FALL-WITNESS
+
+Input:
+
+- Completed Fly Surface target repair.
+- Current scalar-buff, special-Speed active effect, movement/Dash projection, and package-local Quint movement vocabulary.
+- SRD Speed, Movement, Fly Speed, hover, Concentration, and Spell Slot language.
+
+Output:
+
+- Admit the repaired Fly record into the Unit catalog through a typed spell invocation profile.
+- Support Magic Action level-3-or-higher Spell Slot casting, touched willing target-list targeting, caster-owned Concentration up to 10 minutes, fixed 60-foot Fly Speed, hover, slot-scaled target count, and cleanup on Concentration or duration end.
+- Widen promoted runtime and package-local Quint movement kind vocabulary to include Fly Speed, and make effective movement and Dash budget projection consume the fixed special Speed without duplicating walk Speed or spent Movement state.
+- Update Unit claims, deterministic admission/projection evidence, focused runtime tests, generated coverage artifacts, and promoted Quint/runtime parity.
+
+Acceptance:
+
+- Fly is supported or profile-subset-supported for the active Speed grant only.
+- Automatic pathfinding, map elevation, aloft status, landing legality, and spell-end falling stay caller/table-supplied until Task 24.
+- No companion AI/autonomous-control behavior or authored-identity runtime dispatch is introduced.
+
+### Task 24 - L3-FOLLOWUP-FLY-END-FALL-WITNESS - Fly End Fall Witness
+
+Status: `blocked`
+
+Depends on: L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME
+
+Blocks: none
+
+Input:
+
+- Completed active Fly Speed runtime support.
+- SRD Fly spell-end falling clause and Rules Glossary flying/falling language.
+- Existing Feather Fall, `creatureFalls`, and landing/reaction witness boundaries.
+
+Output:
+
+- Connect Fly effect cleanup to caller-supplied still-aloft and can-stop-fall witnesses.
+- Either open the existing `creatureFalls` reaction window for affected targets or record why the target can stop the fall.
+- Preserve Feather Fall's existing falling-trigger and landing owner; do not add battle-owned elevation simulation or treat hover as a generic immunity to every fall source.
+- Add focused tests for Concentration break, duration expiration, recast or replacement cleanup, hover-relevant fall prevention, and handoff to the existing falling reaction/landing pipeline, plus promoted Quint/runtime parity.
+
+Acceptance:
+
+- Spell-end falling is represented as an explicit witness boundary tied to Fly effect cleanup.
+- Existing falling reaction and landing ownership is reused rather than duplicated.
+- No authored identity dispatch is introduced in runtime code.
+
 ### Task 16 - L12G-FOLLOWUP-SPIKE-GROWTH-PROFILE-ACCOUNTING - Spike Growth Profile Accounting Closure
 
 Status: `done`
@@ -613,7 +718,7 @@ Acceptance:
 
 ### Task 19 - L3-SPELL-FLY-RUNTIME-SURVEY - Level 3 Fly Runtime Survey And Task Split
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -623,8 +728,15 @@ Input:
 
 Output:
 
-- Read SRD Fly, current Surface content, Unit/profile claims, and existing movement/witness language; either close as table/runtime-detached or create a precise runtime task split.
-- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Read SRD Fly, current Surface content, Unit/profile claims, and existing movement/witness language.
+- Completed as an unsupported-profile follow-up split instead of support or runtime-detached closure because Fly has executable battle-facing work that is broader than current scalar-buff support: target-list admission, fixed Fly Speed, hover, Concentration cleanup, and spell-end falling witness handoff.
+- Added `plans/unit-profile-coverage/L3_FLY_RUNTIME_SURVEY.md` as the survey evidence.
+- Updated `plans/unit-profile-coverage/unit-claims.jsonl` so the generated inventory/report classify Fly as a checker-visible follow-up split rather than an unowned `srd-candidate`.
+- Added the schedulable follow-up tasks:
+  `L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR`,
+  `L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME`, and
+  `L3-FOLLOWUP-FLY-END-FALL-WITNESS`.
+- No companion AI/autonomous-control behavior or authored-identity runtime dispatch is introduced.
 - Focused verification, `git diff --check`, and reviewer-loop convergence.
 
 Acceptance:

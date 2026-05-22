@@ -67,9 +67,9 @@ function followUpTaskIssues(unitId, tasks) {
     }
     if (
       typeof task.id === "string" &&
-      !/^L12G-[A-Z0-9-]+$/.test(task.id)
+      !/^(?:L12G|L3)-[A-Z0-9-]+$/.test(task.id)
     ) {
-      issues.push(`${context}.id must be an L12G task id.`);
+      issues.push(`${context}.id must be an L12G or L3 task id.`);
     }
   }
   return issues;
