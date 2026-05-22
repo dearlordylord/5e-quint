@@ -114,7 +114,9 @@ export function describeOnHitTrigger(
     case "weapon_hit_with_damage":
       return "(weapon hit with damage)";
     case "hit_with_attack_roll":
-      return `(hit with attack roll, ${t.weaponFilter}, ${t.eligibility})`;
+      return "weaponFilter" in t
+        ? `(hit with attack roll, ${t.weaponFilter}, ${t.eligibility})`
+        : `(hit with attack roll, ${t.attackFilter}, ${t.prerequisite}, ${t.hitLimit})`;
     default: {
       const _: never = t;
       throw new Error(`unhandled on-hit trigger: ${String(_)}`);

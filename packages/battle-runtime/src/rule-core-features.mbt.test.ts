@@ -3,6 +3,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS BATTLE.DAMAGE.ATTACK_BRANCHES BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt QMBT7 fighter_second_wind
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt QMBT9 fighter_action_surge fighter_improved_critical barbarian_rage barbarian_reckless_attack rogue_cunning_action rogue_evasion rogue_uncanny_dodge rogue_sneak_attack
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3-FOLLOWUP-BARBARIAN-FRENZY barbarian_frenzy
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt QMBT31 feat_savage_attacker
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt passive-and-zero-hp-features defense feat_archery orc_relentless_endurance
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt reaction-interruption bard_cutting_words monk_deflect_attacks
@@ -18,6 +19,7 @@
 // UNIT-IDENTITY-MBT-REPLAY: QMBT9 rogue_evasion doEvasionSuccess doEvasionFailure
 // UNIT-IDENTITY-MBT-REPLAY: QMBT9 rogue_uncanny_dodge doUncannyDodge
 // UNIT-IDENTITY-MBT-REPLAY: QMBT9 rogue_sneak_attack doSneakAttack
+// UNIT-IDENTITY-MBT-REPLAY: L3-FOLLOWUP-BARBARIAN-FRENZY barbarian_frenzy doFrenzy
 // UNIT-IDENTITY-MBT-REPLAY: QMBT31 feat_savage_attacker doSavageAttackerDamage
 // UNIT-IDENTITY-MBT-REPLAY: passive-and-zero-hp-features defense doDefenseArmorClass
 // UNIT-IDENTITY-MBT-REPLAY: passive-and-zero-hp-features feat_archery doArcheryAttackRollBonus
@@ -191,6 +193,7 @@ const driverSchema = {
   doRageActivateAndDamage: {},
   doRecklessAttack: {},
   doSneakAttack: {},
+  doFrenzy: {},
   doImprovedCritical: {},
   doEvasionSuccess: {},
   doEvasionFailure: {},
@@ -222,7 +225,8 @@ type SelectedUnitIdentityReplay = {
     | "reaction-interruption"
     | "L1H-FIGHTER-TACTICAL-MIND"
     | "L1H-BOON-COMBAT-PROWESS"
-    | "L1H-MYCELIUM-STEP";
+    | "L1H-MYCELIUM-STEP"
+    | "L3-FOLLOWUP-BARBARIAN-FRENZY";
   readonly unitId: string;
   readonly actions: readonly RuleCoreFeatureDriverAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
@@ -445,6 +449,28 @@ const selectedUnitIdentityReplays = [
           targetHp: 2,
           sneakAttackUsedThisTurn: true,
           lastDamageAmount: 1,
+          lastResult: "resolved",
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "L3-FOLLOWUP-BARBARIAN-FRENZY",
+    unitId: "barbarian_frenzy",
+    actions: ["doFrenzy"],
+    sequences: [
+      {
+        name: "rage-reckless-strength-hit",
+        actions: ["doFrenzy"],
+        expected: expectedProjection({
+          actionAvailable: false,
+          bonusActionAvailable: false,
+          featureUsesRemaining: 0,
+          targetHp: 7,
+          rageActive: true,
+          recklessActive: true,
+          incomingAttackAdvantage: true,
+          lastDamageAmount: 2,
           lastResult: "resolved",
         }),
       },
@@ -965,6 +991,28 @@ function createRuleCoreFeatureDriver() {
           ],
         });
         lastDamageAmount = 1;
+      },
+      doFrenzy: () => {
+        state = frenzyBattle();
+        resetProjection();
+        const raging = resolveBattleSubject({
+          state,
+          subject: unitFeatureSubject("barbarian_rage"),
+          fills: [],
+        });
+        recordResult(raging);
+        if (raging.tag !== "resolved") return;
+        resolveActorAttack({
+          state: raging.state,
+          damageRoll: 1,
+          damageGroups: [[1], [1, 1]],
+          rollMode: "advantage",
+          activatedOngoingFeatureUnitId: recordSelectedUnitRuntimeBoundaryId(
+            "barbarian_reckless_attack",
+          ),
+        });
+        featureUsesRemaining = resourceUsesRemaining(state, "barbarian_rage");
+        lastDamageAmount = 2;
       },
       doImprovedCritical: () => {
         state = improvedCriticalBattle();
@@ -1693,6 +1741,35 @@ function sneakAttackBattle(): BattleState {
         characterUnitRefs: [
           {
             unitId: recordSelectedUnitRuntimeBoundaryId("rogue_sneak_attack"),
+            supportProfiles: [ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE],
+          },
+        ],
+      }),
+      featureTarget(10),
+    ],
+  });
+}
+
+function frenzyBattle(): BattleState {
+  const frenzyUnitId = recordSelectedUnitRuntimeBoundaryId("barbarian_frenzy");
+  return startBattleRight({
+    battleId: battleId("rule-core-frenzy"),
+    combatants: [
+      featureActor({
+        initiative: 20,
+        classLevels: [{ className: "barbarian", level: 3 }],
+        resources: [unitResource("barbarian_rage")],
+        unitFeatures: [
+          { unit: unitLibrary.requireUnit(frenzyUnitId) },
+          {
+            unit: unitLibrary.requireUnit(
+              recordSelectedUnitRuntimeBoundaryId("barbarian_reckless_attack"),
+            ),
+          },
+        ],
+        characterUnitRefs: [
+          {
+            unitId: frenzyUnitId,
             supportProfiles: [ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE],
           },
         ],

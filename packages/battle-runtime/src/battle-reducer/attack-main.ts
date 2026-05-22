@@ -543,7 +543,9 @@ export function resolveSelectedAttackProcedure(
           fillSet.damageRoll.selectedAttackDamageRiderUnitIds,
         ) ?? []);
   const fixedDamageByTypeBeforeTargetAdjustments = hit
-    ? spellMarkedDamageRiders.length > 0 || spellWeaponDamageRiders.length > 0
+    ? eligibleDamageRiders.length > 0 ||
+      spellMarkedDamageRiders.length > 0 ||
+      spellWeaponDamageRiders.length > 0
       ? null
       : fixedAttackDamageByTypeEntries(
           attackRolledState.combatants.get(attackerId),

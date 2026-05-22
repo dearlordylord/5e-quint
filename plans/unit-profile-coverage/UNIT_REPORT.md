@@ -8,25 +8,25 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Metric | Value |
 | --- | ---: |
-| Installed collection inventory count | 246 Units |
+| Installed collection inventory count | 247 Units |
 
 ## Coverage Metrics
 
 | Metric | Covered | Percent |
 | --- | ---: | ---: |
-| Authored Surface Unit catalog admission | 245/485 | 50.5% |
-| Authored Surface executable catalog admission | 203/403 | 50.4% |
-| Installed Unit profile classification coverage | 246/246 | 100% |
-| Supported executable Unit coverage | 139/204 | 68.1% |
+| Authored Surface Unit catalog admission | 246/486 | 50.6% |
+| Authored Surface executable catalog admission | 204/404 | 50.5% |
+| Installed Unit profile classification coverage | 247/247 | 100% |
+| Supported executable Unit coverage | 140/205 | 68.3% |
 | QNT profile modeling coverage | 95/95 | 100% |
 | QNT proof coverage | 95/95 | 100% |
 | Runtime mapping coverage | 95/95 | 100% |
 | Runtime parity coverage | 95/95 | 100% |
 | Rules-kernel profile join coverage | 125/130 | 96.2% |
 | Rules-kernel covered profile coverage | 124/130 | 95.4% |
-| Supported Unit rules-kernel chain coverage | 137/140 | 97.9% |
-| Deterministic admission/projection coverage | 139/139 | 100% |
-| Selected identity replay coverage | 108/139 | 77.7% |
+| Supported Unit rules-kernel chain coverage | 138/141 | 97.9% |
+| Deterministic admission/projection coverage | 140/140 | 100% |
+| Selected identity replay coverage | 109/140 | 77.9% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -61,7 +61,7 @@ The Unit matrix owns authored-content breadth. `plans/rules-kernel-coverage/prof
 
 | Supported Unit join status | Unit count | Units |
 | --- | ---: | --- |
-| covered | 137 | `acid_splash`, `aid`, `alter_self`, `animal_friendship`, `bane`, `barbarian_danger_sense`, `barbarian_fast_movement`, `barbarian_rage`, `barbarian_reckless_attack`, `barbarian_unarmored_defense`, `bard_bardic_inspiration`, `bard_cutting_words`, `bard_jack_of_all_trades`, `barkskin`, `bless`, `blindness_deafness`, `blur`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_channel_divinity`, `cleric_divine_order`, `color_spray`, `command`, `counterspell`, `cure_wounds`, `dancing_lights`, `defense`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `druid_primal_order`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `faerie_fire`, `false_life`, `feat_archery`, `feat_boon_of_combat_prowess`, `feat_savage_attacker`, `feather_fall`, `fighter_action_surge`, `fighter_extra_attack`, `fighter_fighting_style`, `fighter_improved_critical`, `fighter_second_wind`, `fighter_tactical_mind`, `fire_bolt`, `flame_blade`, `flaming_sphere`, `fog_cloud`, `grease`, `guidance`, `guiding_bolt`, `healing_word`, `heat_metal`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `hold_person`, `hunters_mark`, `ice_knife`, `inflict_wounds`, `invisibility`, `jump`, `lesser_restoration`, `light`, `lightning_bolt`, `longstrider`, `mage_armor`, `magic_missile`, `magic_weapon`, `mass_cure_wounds`, `mass_healing_word`, `mastery_cleave`, `mastery_sap`, `mastery_topple`, `mirror_image`, `misty_step`, `monk_deflect_attacks`, `monk_martial_arts`, `monk_unarmored_defense`, `monk_unarmored_movement`, `monk_uncanny_metabolism`, `mycelium_step`, `orc_adrenaline_rush`, `orc_relentless_endurance`, `paladin_extra_attack`, `paladin_lay_on_hands`, `paladin_paladins_smite`, `paladin_weapon_mastery`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `protection_from_poison`, `ranger_deft_explorer`, `ranger_extra_attack`, `ranger_roving`, `ranger_weapon_mastery`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_cunning_action`, `rogue_evasion`, `rogue_expertise`, `rogue_sneak_attack`, `rogue_uncanny_dodge`, `rogue_weapon_mastery`, `sacred_flame`, `sanctuary`, `scorching_ray`, `searing_smite`, `see_invisibility`, `shatter`, `shield`, `shield_of_faith`, `shillelagh`, `shining_smite`, `shocking_grasp`, `sleep`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `spider_climb`, `starry_wisp`, `thunderwave`, `true_strike`, `vicious_mockery`, `warding_bond`, `warlock_eldritch_invocations`, `warlock_magical_cunning`, `web`, `wizard_arcane_recovery`, `wizard_ritual_adept`, `wizard_scholar` |
+| covered | 138 | `acid_splash`, `aid`, `alter_self`, `animal_friendship`, `bane`, `barbarian_danger_sense`, `barbarian_fast_movement`, `barbarian_frenzy`, `barbarian_rage`, `barbarian_reckless_attack`, `barbarian_unarmored_defense`, `bard_bardic_inspiration`, `bard_cutting_words`, `bard_jack_of_all_trades`, `barkskin`, `bless`, `blindness_deafness`, `blur`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_channel_divinity`, `cleric_divine_order`, `color_spray`, `command`, `counterspell`, `cure_wounds`, `dancing_lights`, `defense`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `druid_primal_order`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `faerie_fire`, `false_life`, `feat_archery`, `feat_boon_of_combat_prowess`, `feat_savage_attacker`, `feather_fall`, `fighter_action_surge`, `fighter_extra_attack`, `fighter_fighting_style`, `fighter_improved_critical`, `fighter_second_wind`, `fighter_tactical_mind`, `fire_bolt`, `flame_blade`, `flaming_sphere`, `fog_cloud`, `grease`, `guidance`, `guiding_bolt`, `healing_word`, `heat_metal`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `hold_person`, `hunters_mark`, `ice_knife`, `inflict_wounds`, `invisibility`, `jump`, `lesser_restoration`, `light`, `lightning_bolt`, `longstrider`, `mage_armor`, `magic_missile`, `magic_weapon`, `mass_cure_wounds`, `mass_healing_word`, `mastery_cleave`, `mastery_sap`, `mastery_topple`, `mirror_image`, `misty_step`, `monk_deflect_attacks`, `monk_martial_arts`, `monk_unarmored_defense`, `monk_unarmored_movement`, `monk_uncanny_metabolism`, `mycelium_step`, `orc_adrenaline_rush`, `orc_relentless_endurance`, `paladin_extra_attack`, `paladin_lay_on_hands`, `paladin_paladins_smite`, `paladin_weapon_mastery`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `protection_from_poison`, `ranger_deft_explorer`, `ranger_extra_attack`, `ranger_roving`, `ranger_weapon_mastery`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_cunning_action`, `rogue_evasion`, `rogue_expertise`, `rogue_sneak_attack`, `rogue_uncanny_dodge`, `rogue_weapon_mastery`, `sacred_flame`, `sanctuary`, `scorching_ray`, `searing_smite`, `see_invisibility`, `shatter`, `shield`, `shield_of_faith`, `shillelagh`, `shining_smite`, `shocking_grasp`, `sleep`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `spider_climb`, `starry_wisp`, `thunderwave`, `true_strike`, `vicious_mockery`, `warding_bond`, `warlock_eldritch_invocations`, `warlock_magical_cunning`, `web`, `wizard_arcane_recovery`, `wizard_ritual_adept`, `wizard_scholar` |
 | mapped-open | 1 | `spiritual_weapon` |
 | unmapped | 2 | `druid_circle_of_the_land_spells`, `ray_of_enfeeblement` |
 
@@ -94,6 +94,7 @@ The Unit matrix owns authored-content breadth. `plans/rules-kernel-coverage/prof
 | `fighter_extra_attack` | srd-5.2.1 | `unit-feature.attack-action-attack-count-scaling` |
 | `fighter_tactical_mind` | srd-5.2.1 | `unit-feature.failed-ability-check-resource-boost` |
 | `fighter_improved_critical` | srd-5.2.1 | `unit-feature.weapon-critical-range-19` |
+| `barbarian_frenzy` | srd-5.2.1 | `unit-feature.attack-damage-rider` |
 | `barbarian_rage` | srd-5.2.1 | `unit-feature.bonus-action-ongoing-rage` |
 | `barbarian_unarmored_defense` | srd-5.2.1 | `character-sheet.armor-class-base-formula` |
 | `barbarian_reckless_attack` | srd-5.2.1 | `unit-feature.first-attack-roll-reckless-advantage` |
@@ -792,6 +793,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `fighter_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | QMBT37 | `packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts` |
 | `fighter_tactical_mind` | `unit-feature.failed-ability-check-resource-boost` | QMBT62 | `packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts` |
 | `fighter_improved_critical` | `unit-feature.weapon-critical-range-19` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts` |
+| `barbarian_frenzy` | `unit-feature.attack-damage-rider` | L3-FOLLOWUP-BARBARIAN-FRENZY | `packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts` |
 | `barbarian_rage` | `unit-feature.bonus-action-ongoing-rage` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts` |
 | `barbarian_unarmored_defense` | `character-sheet.armor-class-base-formula` | SRDINV91B | `packages/character-sheet-runtime/src/index.test.ts` |
 | `barbarian_reckless_attack` | `unit-feature.first-attack-roll-reckless-advantage` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts` |
@@ -984,6 +986,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `fighter_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | extra-attack-count-scaling | `packages/battle-runtime/src/battle-runtime.mbt.test.ts` |
 | `fighter_tactical_mind` | `unit-feature.failed-ability-check-resource-boost` | L1H-FIGHTER-TACTICAL-MIND | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `fighter_improved_critical` | `unit-feature.weapon-critical-range-19` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `barbarian_frenzy` | `unit-feature.attack-damage-rider` | L3-FOLLOWUP-BARBARIAN-FRENZY | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `barbarian_rage` | `unit-feature.bonus-action-ongoing-rage` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `barbarian_unarmored_defense` | `character-sheet.armor-class-base-formula` | armor-class-base-formula | `packages/character-sheet-runtime/src/armor-class-base-selected-identity.mbt.test.ts` |
 | `barbarian_reckless_attack` | `unit-feature.first-attack-roll-reckless-advantage` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |

@@ -1,10 +1,12 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT8 fighter_action_surge fighter_improved_critical barbarian_rage rogue_cunning_action rogue_uncanny_dodge rogue_sneak_attack
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT59 monk_deflect_attacks
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS monk_monks_focus
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-BARBARIAN-FRENZY barbarian_frenzy
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV73A monk_martial_arts
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.reaction-roll-or-damage-reduction
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.reaction-roll-or-damage-reduction
 import { describe, expect, test } from "vitest";
 import {
+  barbarianFrenzyUnitId,
   barbarianRageUnitId,
   fighterActionSurgeUnitId,
   fighterImprovedCriticalUnitId,
@@ -585,23 +587,53 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
         unit,
         optional: true,
         usageLimit: "oncePerTurn",
-        weaponFilter: "finesseOrRanged",
+        trigger: "finesseOrRangedAttackWithAdvantageOrAlly",
         eligibility:
           "advantageOrNonIncapacitatedAllyWithin5ftOfTargetWithoutDisadvantage",
         classLevel: classLevel(1),
-        dieSize: 6,
-        diceByLevel: [
-          { atLevel: 1, count: 1 },
-          { atLevel: 3, count: 2 },
-          { atLevel: 5, count: 3 },
-          { atLevel: 7, count: 4 },
-          { atLevel: 9, count: 5 },
-          { atLevel: 11, count: 6 },
-          { atLevel: 13, count: 7 },
-          { atLevel: 15, count: 8 },
-          { atLevel: 17, count: 9 },
-          { atLevel: 19, count: 10 },
-        ],
+        dice: {
+          kind: "classLevelTable",
+          dieSize: 6,
+          diceByLevel: [
+            { atLevel: 1, count: 1 },
+            { atLevel: 3, count: 2 },
+            { atLevel: 5, count: 3 },
+            { atLevel: 7, count: 4 },
+            { atLevel: 9, count: 5 },
+            { atLevel: 11, count: 6 },
+            { atLevel: 13, count: 7 },
+            { atLevel: 15, count: 8 },
+            { atLevel: 17, count: 9 },
+            { atLevel: 19, count: 10 },
+          ],
+        },
+      }),
+    );
+  });
+
+  test("barbarian_frenzy is admitted as a mandatory Rage/Reckless damage rider", () => {
+    const unit = unitLibrary.requireUnit(barbarianFrenzyUnitId);
+    const profile = parseSupportedUnitFeatureProfile(unit, [
+      { className: "barbarian", level: classLevel(3) },
+    ]);
+
+    expect(
+      battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
+    ).toEqual(
+      Either.right({
+        unitId: barbarianFrenzyUnitId,
+        supportProfiles: [ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE],
+      }),
+    );
+    expect(profile).toEqual(
+      expect.objectContaining({
+        kind: "attackDamageRider",
+        unit,
+        optional: false,
+        usageLimit: "oncePerTurn",
+        trigger: "rageActiveRecklessStrengthWeaponOrUnarmedStrikeFirstHit",
+        classLevel: classLevel(3),
+        dice: { kind: "rageDamageBonus", dieSize: 6 },
       }),
     );
   });

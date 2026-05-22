@@ -3,6 +3,7 @@
 
 module battleRuntimeFeatureBridge {
   import actionTurnProcedures.* from "../shared-algebras/proofs/rule-core/action-turn-procedures"
+  import damageComponentAdjustments.* from "../shared-algebras/proofs/rule-core/damage-component-adjustments"
   import reactionsContinuationsConcentration.* from "../shared-algebras/proofs/rule-core/reactions-continuations-concentration"
   import unitFeatureProcedureProfiles.* from "../shared-algebras/proofs/rule-core/unit-feature-procedure-profiles"
 
@@ -128,6 +129,26 @@ module battleRuntimeFeatureBridge {
 
   pure def battleRuntimeRecklessAttackGrantsIncomingAttackAdvantage(active: bool): bool =
     recklessAttackGrantsIncomingAttackAdvantage(battleRuntimeRecklessAttackState(active, true))
+
+  pure def battleRuntimeFrenzyDamageDice(
+    rageActive: bool,
+    recklessAttackUsedWhileRagingThisTurn: bool,
+    hitWithAttackRoll: bool,
+    strengthBasedAttack: bool,
+    attackForm: RageAttackForm,
+    usedThisTurn: bool,
+    barbarianLevel: int
+  ): int =
+    resolveFrenzy({
+      rageActive: rageActive,
+      recklessAttackUsedWhileRagingThisTurn: recklessAttackUsedWhileRagingThisTurn,
+      hitWithAttackRoll: hitWithAttackRoll,
+      strengthBasedAttack: strengthBasedAttack,
+      attackForm: attackForm,
+      usedThisTurn: usedThisTurn,
+      barbarianLevel: barbarianLevel,
+      attackDamageType: BludgeoningDamage,
+    }).damageDice
 
   pure def battleRuntimePassiveSavingThrowRollMode(
     ability: SavingThrowAbilityFact,
@@ -325,6 +346,17 @@ module battleRuntimeFeatureBridge {
       assert(not(battleRuntimeRecklessAttackActivates(false, true, true, true))),
       assert(battleRuntimeRecklessAttackGrantsIncomingAttackAdvantage(true)),
       assert(not(battleRuntimeRecklessAttackGrantsIncomingAttackAdvantage(false))),
+    }
+  }
+
+  run test_frenzy_runtime_projection_uses_rage_and_reckless_profiles = {
+    all {
+      assert(battleRuntimeFrenzyDamageDice(true, true, true, true, RageUnarmedStrikeAttack, false, 3) == 2),
+      assert(battleRuntimeFrenzyDamageDice(true, true, true, true, RageWeaponAttack, false, 16) == 4),
+      assert(battleRuntimeFrenzyDamageDice(false, true, true, true, RageWeaponAttack, false, 3) == 0),
+      assert(battleRuntimeFrenzyDamageDice(true, false, true, true, RageWeaponAttack, false, 3) == 0),
+      assert(battleRuntimeFrenzyDamageDice(true, true, true, true, RageSpellAttack, false, 3) == 0),
+      assert(battleRuntimeFrenzyDamageDice(true, true, true, true, RageWeaponAttack, true, 3) == 0),
     }
   }
 

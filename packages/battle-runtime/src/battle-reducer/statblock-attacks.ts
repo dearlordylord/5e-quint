@@ -38,6 +38,7 @@ import {
   type AttackRollMissToHitReplacement,
   type BattleAttackRollHole,
   type BattleAttackRollResult,
+  type CharacterBattleCreatureState,
   type BattleCreatureState,
   type BattleState,
   type BattleTargetSpatialFact,
@@ -47,8 +48,12 @@ import {
   type SpellAttackDamageComponent,
   type WeaponDamageDiceRollChoiceFill,
 } from "../battle-reducer.ts";
-import { combatantsAreAllies } from "./creature-state-leaves.ts";
+import { combatantsAreAllies, currentActorId } from "./creature-state-leaves.ts";
 import { isCharacterBattleCreatureState } from "./creature-state.ts";
+import {
+  activeRageDamageBonusForFrenzy,
+  ongoingFeatureProfileIsRecklessAttackForFrenzy,
+} from "./barbarian-frenzy.ts";
 
 export function supportedStatBlockAttackDamage(
   attack: SupportedCreatureNamedAttackRoll,
@@ -388,14 +393,17 @@ export function attackDamageRiderDiceCount(
     SupportedUnitFeatureProfile,
     { readonly kind: "attackDamageRider" }
   >,
+  rageDamageBonus: number,
 ): number {
-  return profile.diceByLevel.reduce(
-    (current, tier) =>
-      Number(profile.classLevel) >= tier.atLevel
-        ? Math.max(current, tier.count)
-        : current,
-    0,
-  );
+  return profile.dice.kind === "rageDamageBonus"
+    ? rageDamageBonus
+    : profile.dice.diceByLevel.reduce(
+        (current, tier) =>
+          Number(profile.classLevel) >= tier.atLevel
+            ? Math.max(current, tier.count)
+            : current,
+        0,
+      );
 }
 
 export function attackDamageRiderForProfile(
@@ -405,16 +413,18 @@ export function attackDamageRiderForProfile(
   >,
   attackerId: CombatantId,
   damageType: DamageType,
+  rageDamageBonus: number,
 ): AttackDamageRider | null {
-  const dice = attackDamageRiderDiceCount(profile);
+  const dice = attackDamageRiderDiceCount(profile, rageDamageBonus);
   return dice > 0
     ? {
         attackerId,
         unitId: profile.unit.id,
         label: profile.unit.name,
+        optional: profile.optional,
         damage: {
           dice,
-          dieSize: profile.dieSize,
+          dieSize: profile.dice.dieSize,
           damageType,
         },
       }
@@ -431,6 +441,23 @@ export function weaponAttackSupportsFinesseOrRanged(
         (property) => property.kind === "finesse",
       ))
   );
+}
+
+function attackUsesStrengthWeaponOrUnarmedStrike(
+  attack: SupportedAttackActionOption,
+): attack is CharacterWeaponAttackActionOption | CharacterUnarmedStrikeActionOption {
+  return (
+    (attack.kind === "weapon" && attack.ability === "str") ||
+    (attack.kind === "unarmedStrike" && attack.attackAbility === "str")
+  );
+}
+
+function selectedAttackDamageType(
+  attack: CharacterWeaponAttackActionOption | CharacterUnarmedStrikeActionOption,
+): DamageType {
+  return attack.kind === "weapon"
+    ? selectedWeaponDamage(attack.weapon).damageType
+    : attack.effect.damage.damageType;
 }
 
 export function targetHasAdjacentNonIncapacitatedAlly(
@@ -467,22 +494,7 @@ export function eligibleAttackDamageRiders(
   targetSpatialFacts: readonly BattleTargetSpatialFact[],
 ): readonly AttackDamageRider[] {
   const attacker = state.combatants.get(attackerId);
-  if (
-    !isCharacterBattleCreatureState(attacker) ||
-    !weaponAttackSupportsFinesseOrRanged(attack)
-  ) {
-    return [];
-  }
-  const hasRequiredRollContext =
-    attackRoll.rollMode === "advantage" ||
-    (targetHasAdjacentNonIncapacitatedAlly(
-      state,
-      attackerId,
-      targetId,
-      targetSpatialFacts,
-    ) &&
-      attackRoll.rollMode !== "disadvantage");
-  if (!hasRequiredRollContext) {
+  if (!isCharacterBattleCreatureState(attacker)) {
     return [];
   }
   return [...attacker.origin.attackDamageRiderProfiles.values()].flatMap(
@@ -495,30 +507,130 @@ export function eligibleAttackDamageRiders(
       ) {
         return [];
       }
+      const damageType = selectedAttackDamageTypeForProfile({
+        state,
+        attacker,
+        attackerId,
+        attack,
+        attackRoll,
+        targetId,
+        targetSpatialFacts,
+        profile,
+      });
+      if (damageType === null) {
+        return [];
+      }
       const rider = attackDamageRiderForProfile(
         profile,
         attackerId,
-        selectedWeaponDamage(attack.weapon).damageType,
+        damageType,
+        profile.trigger ===
+          "rageActiveRecklessStrengthWeaponOrUnarmedStrikeFirstHit" &&
+          attackUsesStrengthWeaponOrUnarmedStrike(attack)
+          ? (activeRageDamageBonusForFrenzy(attacker, attack)?.damageBonus ?? 0)
+          : 0,
       );
       return rider === null ? [] : [rider];
     },
   );
 }
 
+function selectedAttackDamageTypeForProfile(input: {
+  readonly state: BattleState;
+  readonly attacker: CharacterBattleCreatureState;
+  readonly attackerId: CombatantId;
+  readonly targetId: CombatantId;
+  readonly attack: SupportedAttackActionOption;
+  readonly attackRoll: AttackRollResult;
+  readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
+  readonly profile: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "attackDamageRider" }
+  >;
+}): DamageType | null {
+  if (input.profile.trigger === "finesseOrRangedAttackWithAdvantageOrAlly") {
+    if (!weaponAttackSupportsFinesseOrRanged(input.attack)) {
+      return null;
+    }
+    const hasRequiredRollContext =
+      input.attackRoll.rollMode === "advantage" ||
+      (targetHasAdjacentNonIncapacitatedAlly(
+        input.state,
+        input.attackerId,
+        input.targetId,
+        input.targetSpatialFacts,
+      ) &&
+        input.attackRoll.rollMode !== "disadvantage");
+    return hasRequiredRollContext
+      ? selectedWeaponDamage(input.attack.weapon).damageType
+      : null;
+  }
+  if (
+    input.profile.trigger ===
+    "rageActiveRecklessStrengthWeaponOrUnarmedStrikeFirstHit"
+  ) {
+    if (currentActorId(input.state) !== input.attackerId) {
+      return null;
+    }
+    if (!attackUsesStrengthWeaponOrUnarmedStrike(input.attack)) {
+      return null;
+    }
+    const attack = input.attack;
+    if (
+      !frenzyRecklessAttackWhileRagingUsedThisTurn({
+        state: input.state,
+        attacker: input.attacker,
+        attackerId: input.attackerId,
+        attack,
+      })
+    ) {
+      return null;
+    }
+    return selectedAttackDamageType(attack);
+  }
+  return null;
+}
+
+function frenzyRecklessAttackWhileRagingUsedThisTurn(input: {
+  readonly state: BattleState;
+  readonly attacker: CharacterBattleCreatureState;
+  readonly attackerId: CombatantId;
+  readonly attack: CharacterWeaponAttackActionOption | CharacterUnarmedStrikeActionOption;
+}): boolean {
+  const activeRage = activeRageDamageBonusForFrenzy(input.attacker, input.attack);
+  if (activeRage === null || activeRage.damageBonus <= 0) {
+    return false;
+  }
+  return [...input.attacker.activeOngoingFeatureOccurrences.keys()].some((key) => {
+    const profile = input.attacker.origin.ongoingFeatureProfiles.get(key);
+    return (
+      profile?.kind === "ongoingFeature" &&
+      ongoingFeatureProfileIsRecklessAttackForFrenzy(profile) &&
+      input.state.currentTurnResources.recklessAttackWhileRagingUsedThisTurn.some(
+        (usage) =>
+          usage.attackerId === input.attackerId &&
+          usage.recklessAttackSourceKey === key &&
+          usage.rageSourceKey === activeRage.sourceKey,
+      )
+    );
+  });
+}
+
 export function selectedAttackDamageRiders(
   eligibleRiders: readonly AttackDamageRider[],
   selectedUnitIds: readonly UnitRecord["id"][] | undefined,
 ): readonly AttackDamageRider[] | null {
+  const mandatoryRiders = eligibleRiders.filter((rider) => !rider.optional);
   if (selectedUnitIds === undefined || selectedUnitIds.length === 0) {
-    return [];
+    return mandatoryRiders;
   }
   if (new Set(selectedUnitIds).size !== selectedUnitIds.length) {
     return null;
   }
-  const selected: AttackDamageRider[] = [];
+  const selected: AttackDamageRider[] = [...mandatoryRiders];
   for (const unitId of selectedUnitIds) {
     const rider = eligibleRiders.find(
-      (candidate) => candidate.unitId === unitId,
+      (candidate) => candidate.unitId === unitId && candidate.optional,
     );
     if (rider === undefined) {
       return null;

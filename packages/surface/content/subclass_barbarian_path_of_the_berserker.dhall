@@ -2,7 +2,7 @@ let pathOfTheBerserker =
       { className = "barbarian"
       , description =
           "The Path of the Berserker Barbarian subclass choice. Subclass feature Units are modeled separately from the choice boundary."
-      , featureGrants = [] : List { level : Natural, unitId : Text }
+      , featureGrants = [ { level = 3, unitId = "barbarian_frenzy" } ]
       , id = "subclass_barbarian_path_of_the_berserker"
       , kind = "subclass"
       , name = "Path of the Berserker"

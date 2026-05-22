@@ -104,6 +104,7 @@ describe("battle runtime: setup and discovery", () => {
         quickenedLevelOnePlusSpellCastsThisTurn: [],
         attackRollMadeThisTurn: false,
         attackDamageRidersUsedThisTurn: [],
+        recklessAttackWhileRagingUsedThisTurn: [],
         weaponDamageDiceRollChoicesUsedThisTurn: [],
         weaponMasteryCleaveAttackersUsedThisTurn: [],
         dashMovementBonusFeet: movementFeet(0),

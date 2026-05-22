@@ -139,14 +139,6 @@ const catalogOnlyClosures = new Map([
 
 const levelThreeClassFeatureOwnerSplits = new Map([
   [
-    "srd521:classes/barbarian:level-3:class-feature-grant:barbarian_frenzy",
-    {
-      owner: "battle-runtime Rage and Reckless Attack damage-rider owner",
-      requirement:
-        "Promote Frenzy as a Rage-gated, Reckless Attack-gated first-hit damage rider: selected Berserker subclass ownership, active Rage state, Reckless Attack use on the turn, first target hit by a Strength-based weapon or Unarmed Strike attack, Rage Damage bonus d6 count, same damage type as the triggering attack, focused runtime tests, and promoted Quint parity.",
-    },
-  ],
-  [
     "srd521:classes/barbarian:level-3:class-feature-grant:barbarian_primal_knowledge",
     {
       owner:

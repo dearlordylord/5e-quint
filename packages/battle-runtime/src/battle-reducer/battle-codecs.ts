@@ -2643,6 +2643,7 @@ export const BattleHoleSchema = Schema.Union(
           attackerId: Schema.String,
           unitId: Schema.String,
           label: Schema.String,
+          optional: Schema.Boolean,
           damage: Schema.Struct({
             dice: Schema.Number,
             dieSize: Schema.Number,
@@ -4975,6 +4976,13 @@ const BattleTurnSnapshotSchema = Schema.Struct({
     Schema.Struct({
       attackerId: CombatantId,
       unitId: Schema.String,
+    }),
+  ),
+  recklessAttackWhileRagingUsedThisTurn: Schema.Array(
+    Schema.Struct({
+      attackerId: CombatantId,
+      recklessAttackSourceKey: Schema.String,
+      rageSourceKey: Schema.String,
     }),
   ),
   weaponDamageDiceRollChoicesUsedThisTurn: Schema.Array(

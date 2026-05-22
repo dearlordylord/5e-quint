@@ -226,12 +226,12 @@
     },
     "levelThreeClassBattleReadiness": {
       "denominator": 51,
-      "numerator": 34,
-      "percent": "66.7%",
+      "numerator": 35,
+      "percent": "68.6%",
       "rowsByStatus": {
-        "owner-evidence-required": 17,
-        "accepted-no-battle-effect": 14,
-        "accepted": 20
+        "accepted": 21,
+        "owner-evidence-required": 16,
+        "accepted-no-battle-effect": 14
       }
     },
     "levelThreeSpellBattleReadiness": {
@@ -258,9 +258,9 @@
       "catalog-installed-needs-owner-evidence": 1
     },
     "levelThreeClassRowsByDisposition": {
-      "level-3-follow-up-required": 17,
+      "catalog-installed-owner-evidence-present": 21,
+      "level-3-follow-up-required": 16,
       "non-runtime": 12,
-      "catalog-installed-owner-evidence-present": 20,
       "catalog-only/dead-for-now": 2
     },
     "levelThreeClassRowsByCategory": {
@@ -270,9 +270,9 @@
       "spell access/list pressure": 5
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 447,
+      "catalog-installed-owner-evidence-present": 448,
       "non-runtime": 36,
-      "level-3-follow-up-required": 17,
+      "level-3-follow-up-required": 16,
       "catalog-installed-owner-evidence-required": 1,
       "catalog-only/dead-for-now": 137,
       "missing-authored-record": 58,
@@ -4122,16 +4122,30 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "barbarian_frenzy",
+        "sourceRecordPath": "packages/surface/content/barbarian_frenzy.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "barbarian_frenzy"
       },
-      "finalDisposition": "level-3-follow-up-required",
-      "ownerEvidence": [],
-      "nextAction": "Promote Frenzy as a Rage-gated, Reckless Attack-gated first-hit damage rider: selected Berserker subclass ownership, active Rage state, Reckless Attack use on the turn, first target hit by a Strength-based weapon or Unarmed Strike attack, Rage Damage bonus d6 count, same damage type as the triggering attack, focused runtime tests, and promoted Quint parity.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit barbarian_frenzy is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-FOLLOWUP-BARBARIAN-FRENZY at packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/barbarian:level-3:class-feature-grant:barbarian_primal_knowledge",

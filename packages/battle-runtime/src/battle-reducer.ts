@@ -3504,6 +3504,11 @@ export type WeaponDamageDiceRollChoiceUsage = {
   readonly attackerId: CombatantId;
   readonly unitId: UnitRecord["id"];
 };
+export type RecklessAttackWhileRagingUsage = {
+  readonly attackerId: CombatantId;
+  readonly recklessAttackSourceKey: OngoingFeatureSourceKey;
+  readonly rageSourceKey: OngoingFeatureSourceKey;
+};
 type AttackRollMissToHitReplacementUsage = {
   readonly unitId: UnitRecord["id"];
 };
@@ -3534,6 +3539,7 @@ export type BattleTurnResources = ActionEconomyState & {
   readonly quickenedLevelOnePlusSpellCastsThisTurn: readonly CombatantId[];
   readonly attackRollMadeThisTurn: boolean;
   readonly attackDamageRidersUsedThisTurn: readonly AttackDamageRiderUsage[];
+  readonly recklessAttackWhileRagingUsedThisTurn: readonly RecklessAttackWhileRagingUsage[];
   readonly weaponDamageDiceRollChoicesUsedThisTurn: readonly WeaponDamageDiceRollChoiceUsage[];
   readonly weaponMasteryCleaveAttackersUsedThisTurn: readonly CombatantId[];
   readonly pendingAttackRollMissToHitReplacementSelection?: PendingAttackRollMissToHitReplacementSelection;
@@ -3572,6 +3578,7 @@ export type AttackDamageRider = {
   readonly attackerId: CombatantId;
   readonly unitId: UnitRecord["id"];
   readonly label: UnitRecord["name"];
+  readonly optional: boolean;
   readonly damage: {
     readonly dice: number;
     readonly dieSize: number;
@@ -5848,6 +5855,7 @@ export type BattleTurnSnapshot = {
   readonly quickenedLevelOnePlusSpellCastsThisTurn: readonly CombatantId[];
   readonly attackRollMadeThisTurn: boolean;
   readonly attackDamageRidersUsedThisTurn: readonly AttackDamageRiderUsage[];
+  readonly recklessAttackWhileRagingUsedThisTurn: readonly RecklessAttackWhileRagingUsage[];
   readonly weaponDamageDiceRollChoicesUsedThisTurn: readonly WeaponDamageDiceRollChoiceUsage[];
   readonly weaponMasteryCleaveAttackersUsedThisTurn: readonly CombatantId[];
   readonly lightWeaponAttackMade?: {

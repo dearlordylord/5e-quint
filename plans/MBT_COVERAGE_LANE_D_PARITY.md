@@ -217,7 +217,7 @@
     {
       "number": 36,
       "id": "L3-FOLLOWUP-BARBARIAN-FRENZY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Barbarian Frenzy Runtime Follow-Up"
     },
     {
@@ -954,7 +954,7 @@ Acceptance:
 
 ### Task 36 - L3-FOLLOWUP-BARBARIAN-FRENZY - Barbarian Frenzy Runtime Follow-Up
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
