@@ -4131,7 +4131,13 @@ function removeAbilityD20TestRollModeEffectFromCombatants(
     new Map(combatants).set(targetId, {
       ...target,
       activeEffects: target.activeEffects.filter(
-        (effect) => effect !== expiringEffect,
+        (effect) =>
+          effect !== expiringEffect &&
+          !(
+            effect.kind === "sourceDamageRollPenalty" &&
+            effect.sourceSpellId === expiringEffect.sourceSpellId &&
+            effect.sourceCombatantId === expiringEffect.sourceCombatantId
+          ),
       ),
     }),
     expiringEffect,
