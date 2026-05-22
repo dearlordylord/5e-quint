@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "L12BG-FULL-SUPPORT-GATE-CLOSURE",
-      "status": "blocked",
+      "status": "done",
       "title": "Close Background Full-Support Claim Gate"
     }
   ]
@@ -153,7 +153,7 @@ Acceptance:
 
 ### Task 3 - L12BG-FULL-SUPPORT-GATE-CLOSURE - Close Background Full-Support Claim Gate
 
-Status: `blocked`
+Status: `done`
 
 Depends on:
 
