@@ -1681,7 +1681,13 @@ export function applySpellDamage(
           damageRoll.holeId,
           sourceDamageRollPenaltyRoll,
         )
-      : { tag: "ok" as const, damageByType: sourcePenaltyDamageByType };
+      : {
+          tag: "ok" as const,
+          damageByType: damageAmountByTypeAfterSaveDamageResult(
+            sourcePenaltyDamageByType,
+            saveDamageResult,
+          ),
+        };
   if (sourcePenalty.tag !== "ok") return state;
   const reduction = applyAvailableSpellDamageReduction(
     target,
