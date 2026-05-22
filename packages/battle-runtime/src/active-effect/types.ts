@@ -42,6 +42,7 @@ import type {
   BattleD20RollModifierKind,
   BattleDancingLight,
   BattleDancingLightList,
+  BattleOngoingSpellEffectRef,
   BattleSpecialSpeedKind,
   MagicWeaponEnhancementBonus,
   MarkedDamageRiderAbilityCheckBehavior,
@@ -62,6 +63,7 @@ import type {
   BattleSpellEffectOccurrenceId,
   CombatantId,
 } from "../identity.ts";
+import type { BattleSpellEffectLevel } from "../battle-reducer/spells-effective-level.ts";
 
 export type BattleActiveEffectExpiration =
   | {
@@ -239,6 +241,7 @@ export type SpellCreatedHeldObjectActiveEffect = BattleSpellEffectBase & {
 export type SpellObjectContactDamageActiveEffect = BattleSpellEffectBase & {
   readonly kind: "spellObjectContactDamage";
   readonly effectId: BattleSpellEffectOccurrenceId;
+  readonly sourceSpellLevel: BattleSpellEffectLevel;
   readonly objectId: BattleObjectId;
   readonly rangeFeet: MovementFeet;
   readonly damage: {
@@ -461,6 +464,19 @@ export type BattleActiveEffect =
       >;
     })
   | (BattleSpellEffectBase & {
+      readonly kind: "spikeGrowthHazard";
+      readonly areaId: BattleAreaId;
+      readonly damage: {
+        readonly expr: DiceExpr;
+        readonly damageType: Extract<DamageType, "piercing">;
+      };
+      readonly damagePerFeet: MovementFeet;
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "concentration" }
+      > & { readonly durationTicks: ElapsedTimeTicks };
+    })
+  | (BattleSpellEffectBase & {
       readonly kind: "moonbeam";
       readonly areaId: BattleAreaId;
       readonly save: {
@@ -523,7 +539,7 @@ export type BattleActiveEffect =
       readonly kind: "antimagicFieldOngoingSpellSuppression";
       readonly areaId: BattleAreaId;
       readonly radiusFeet: MovementFeet;
-      readonly suppressedSpellLightEffectIds: readonly BattleSpellEffectOccurrenceId[];
+      readonly suppressedOngoingSpellEffects: readonly BattleOngoingSpellEffectRef[];
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,
         { readonly kind: "concentration" }
@@ -579,6 +595,13 @@ export type BattleActiveEffect =
   | (BattleSpellEffectBase & {
       readonly kind: "invisibleBenefitDenied";
       readonly expiresAt: BattleActiveEffectExpiration;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "seeInvisibleAndEthereal";
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "duration" }
+      >;
     })
   | (BattleSpellEffectBase & {
       readonly kind: "spellConcentrationDuration";
