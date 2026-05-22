@@ -963,8 +963,8 @@
     },
     "rulesKernelCoveredProfileJoin": {
       "denominator": 58,
-      "numerator": 55,
-      "percent": "94.8%"
+      "numerator": 56,
+      "percent": "96.6%"
     },
     "rulesKernelProfileJoin": {
       "denominator": 58,
@@ -973,8 +973,8 @@
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 78,
-      "numerator": 74,
-      "percent": "94.9%"
+      "numerator": 75,
+      "percent": "96.2%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 94,
@@ -3246,8 +3246,8 @@
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
         "denominator": 78,
-        "numerator": 74,
-        "percent": "94.9%"
+        "numerator": 75,
+        "percent": "96.2%"
       }
     },
     "units": [
@@ -4167,15 +4167,15 @@
         "unitId": "hellish_rebuke"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
                 "obligationId": "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
                 "runtime": "battle",
-                "status": "needs-parity-witness",
+                "status": "covered",
                 "title": "Battle spell condition immunity with start-turn Temporary Hit Point refresh and concentration cleanup"
               }
             ],

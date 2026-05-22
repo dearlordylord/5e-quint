@@ -83,8 +83,8 @@
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 123,
-      "numerator": 102,
-      "percent": "82.9%"
+      "numerator": 105,
+      "percent": "85.4%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 123,
@@ -93,8 +93,8 @@
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 136,
-      "numerator": 123,
-      "percent": "90.4%"
+      "numerator": 126,
+      "percent": "92.6%"
     },
     "runtimeMappingCoverage": {
       "denominator": 90,
@@ -3578,8 +3578,8 @@
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 123,
-        "numerator": 102,
-        "percent": "82.9%"
+        "numerator": 105,
+        "percent": "85.4%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 123,
@@ -4666,12 +4666,12 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle spell condition immunity with start-turn Temporary Hit Point refresh and concentration cleanup"
           }
         ],
@@ -5013,12 +5013,12 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle direct condition removal, poison protection condition removal, poison resistance, and poison Saving Throw Advantage"
           }
         ],
@@ -5058,12 +5058,12 @@
         "profileKind": "stat-block-control"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle direct condition removal, poison protection condition removal, poison resistance, and poison Saving Throw Advantage"
           }
         ],
@@ -5217,8 +5217,8 @@
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
           "denominator": 136,
-          "numerator": 123,
-          "percent": "90.4%"
+          "numerator": 126,
+          "percent": "92.6%"
         }
       },
       "units": [
@@ -6602,15 +6602,15 @@
           "unitId": "hellish_rebuke"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle spell condition immunity with start-turn Temporary Hit Point refresh and concentration cleanup"
                 }
               ],
@@ -6810,15 +6810,15 @@
           "unitId": "jump"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle direct condition removal, poison protection condition removal, poison resistance, and poison Saving Throw Advantage"
                 }
               ],
@@ -7474,15 +7474,15 @@
           "unitId": "protection_from_evil_and_good"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle direct condition removal, poison protection condition removal, poison resistance, and poison Saving Throw Advantage"
                 }
               ],

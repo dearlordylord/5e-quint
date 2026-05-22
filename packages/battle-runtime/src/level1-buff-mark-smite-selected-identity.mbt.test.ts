@@ -1,4 +1,4 @@
-// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-DIVINE-FAVOR divine_favor
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-DIVINE-SMITE divine_smite
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-ENSNARING-STRIKE ensnaring_strike
@@ -14,7 +14,7 @@
 // UNIT-IDENTITY-MBT-REPLAY: L1E-DIVINE-SMITE divine_smite doDivineSmiteAfterHitDamage
 // UNIT-IDENTITY-MBT-REPLAY: L1E-ENSNARING-STRIKE ensnaring_strike doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape
 // UNIT-IDENTITY-MBT-REPLAY: L1E-FALSE-LIFE false_life doFalseLifeTemporaryHitPoints
-// UNIT-IDENTITY-MBT-REPLAY: L1E-HEROISM heroism doHeroismFrightenedImmunityTurnStartTemporaryHitPoints
+// UNIT-IDENTITY-MBT-REPLAY: L1E-HEROISM heroism doHeroismFrightenedImmunityTurnStartTemporaryHitPoints doHeroismFrightenedImmunityTurnStartTemporaryHitPointsCleanup
 // UNIT-IDENTITY-MBT-REPLAY: L1E-HUNTERS-MARK hunters_mark doHuntersMarkMarkedDamageRiderConcentrationAndSameTurnTransfer
 // UNIT-IDENTITY-MBT-REPLAY: L1E-HEX hex doHexMarkedDamageRiderAndLaterTurnTransfer
 // UNIT-IDENTITY-MBT-REPLAY: L1E-LONGSTRIDER longstrider doLongstriderSpeedIncrease
@@ -84,7 +84,10 @@ import type {
   BattleSpellTurnStartSavingThrowOutcomeHole,
 } from "./battle-reducer.ts";
 import { KnockedOutConditionState } from "./battle-reducer.ts";
-import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
+import {
+  applyBattleHitPointDamage,
+  breakBattleConcentration,
+} from "./battle-reducer/damage-apply.ts";
 
 const level1BuffMarkSmiteSelectedIdentityDriverSchema = {
   init: {},
@@ -93,6 +96,7 @@ const level1BuffMarkSmiteSelectedIdentityDriverSchema = {
   doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape: {},
   doFalseLifeTemporaryHitPoints: {},
   doHeroismFrightenedImmunityTurnStartTemporaryHitPoints: {},
+  doHeroismFrightenedImmunityTurnStartTemporaryHitPointsCleanup: {},
   doHuntersMarkMarkedDamageRiderConcentrationAndSameTurnTransfer: {},
   doHexMarkedDamageRiderAndLaterTurnTransfer: {},
   doLongstriderSpeedIncrease: {},
@@ -580,7 +584,10 @@ const selectedUnitIdentityReplays = [
   {
     taskId: "L1E-HEROISM",
     unitId: "heroism",
-    actions: ["doHeroismFrightenedImmunityTurnStartTemporaryHitPoints"],
+    actions: [
+      "doHeroismFrightenedImmunityTurnStartTemporaryHitPoints",
+      "doHeroismFrightenedImmunityTurnStartTemporaryHitPointsCleanup",
+    ],
     sequences: [
       {
         name: "frightened-immunity-and-turn-start-temporary-hit-points",
@@ -594,6 +601,23 @@ const selectedUnitIdentityReplays = [
           frightenedImmunityCondition: "frightened",
           turnStartTemporaryHitPointsSourceSpellId: "heroism",
           turnStartTemporaryHitPointsAmount: 3,
+          lastResult: "heroism",
+        }),
+      },
+      {
+        name: "frightened-immunity-turn-start-temporary-hit-points-cleanup",
+        actions: [
+          "doHeroismFrightenedImmunityTurnStartTemporaryHitPointsCleanup",
+        ],
+        expected: expectedProjection({
+          casterTempHp: 3,
+          casterFrightened: true,
+          level1SlotsRemaining: 1,
+          casterConcentrating: false,
+          frightenedImmunitySourceSpellId: "none",
+          frightenedImmunityCondition: "none",
+          turnStartTemporaryHitPointsSourceSpellId: "none",
+          turnStartTemporaryHitPointsAmount: 0,
           lastResult: "heroism",
         }),
       },
@@ -886,6 +910,53 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
       lastResult = "init";
     }
 
+    function resolveHeroismThroughCasterStartTurn(): void {
+      state = level1BuffMarkSmiteBattle({
+        preparedSpells: [spellRecord(heroismUnitId)],
+      });
+      const caster = state.combatants.get(casterId);
+      if (caster === undefined) {
+        throw new Error("Expected Heroism caster.");
+      }
+      state = {
+        ...state,
+        combatants: new Map(state.combatants).set(casterId, {
+          ...caster,
+          conditions: KnockedOutConditionState(
+            applyCondition(caster.conditions, "frightened"),
+          ),
+        }),
+      };
+      resetProcedureProjections();
+
+      const act = actionSpellAct(state, heroismUnitId);
+      const target = requireHole(act.initialHoles, "targetChoice");
+      const cast = resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [spellTargetFill(target, heroismUnitId, casterId, casterId)],
+      });
+      if (cast.tag !== "resolved") {
+        throw new Error(`Expected Heroism to resolve, got ${cast.tag}.`);
+      }
+
+      const targetTurn = endTurn({
+        state: cast.state,
+        actorId: casterId,
+      });
+      if (targetTurn.tag !== "resolved") {
+        throw new Error(
+          `Expected Heroism caster turn to end, got ${targetTurn.tag}.`,
+        );
+      }
+      const refreshed = endTurn({
+        state: targetTurn.state,
+        actorId: targetId,
+      });
+      recordResolvedResult(refreshed, "heroism");
+      heroismEffects = heroismEffectsProjection(state);
+    }
+
     function recordResolvedResult(
       result: BattleResolutionResult,
       resultKind: Exclude<
@@ -1100,51 +1171,11 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
         );
       },
       doHeroismFrightenedImmunityTurnStartTemporaryHitPoints: () => {
-        state = level1BuffMarkSmiteBattle({
-          preparedSpells: [spellRecord(heroismUnitId)],
-        });
-        const caster = state.combatants.get(casterId);
-        if (caster === undefined) {
-          throw new Error("Expected Heroism caster.");
-        }
-        state = {
-          ...state,
-          combatants: new Map(state.combatants).set(casterId, {
-            ...caster,
-            conditions: KnockedOutConditionState(
-              applyCondition(caster.conditions, "frightened"),
-            ),
-          }),
-        };
-        resetProcedureProjections();
-
-        const act = actionSpellAct(state, heroismUnitId);
-        const target = requireHole(act.initialHoles, "targetChoice");
-        const cast = resolveBattleSubject({
-          state,
-          subject: act.subject,
-          fills: [spellTargetFill(target, heroismUnitId, casterId, casterId)],
-        });
-        if (cast.tag !== "resolved") {
-          throw new Error(`Expected Heroism to resolve, got ${cast.tag}.`);
-        }
-
-        const targetTurn = endTurn({
-          state: cast.state,
-          actorId: casterId,
-        });
-        if (targetTurn.tag !== "resolved") {
-          throw new Error(
-            `Expected Heroism caster turn to end, got ${targetTurn.tag}.`,
-          );
-        }
-        recordResolvedResult(
-          endTurn({
-            state: targetTurn.state,
-            actorId: targetId,
-          }),
-          "heroism",
-        );
+        resolveHeroismThroughCasterStartTurn();
+      },
+      doHeroismFrightenedImmunityTurnStartTemporaryHitPointsCleanup: () => {
+        resolveHeroismThroughCasterStartTurn();
+        state = breakBattleConcentration(state, casterId);
         heroismEffects = heroismEffectsProjection(state);
       },
       doHuntersMarkMarkedDamageRiderConcentrationAndSameTurnTransfer: () => {

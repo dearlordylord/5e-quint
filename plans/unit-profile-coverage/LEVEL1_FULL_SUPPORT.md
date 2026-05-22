@@ -12,8 +12,8 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | Strict target closure | 94/94 (100%) |
 | Product readiness | 367/367 (100%) |
 | Rules-kernel profile join | 56/58 (96.6%) |
-| Rules-kernel covered profile join | 55/58 (94.8%) |
-| Supported Unit rules-kernel chain | 74/78 (94.9%) |
+| Rules-kernel covered profile join | 56/58 (96.6%) |
+| Supported Unit rules-kernel chain | 75/78 (96.2%) |
 
 ## Scope
 
@@ -49,7 +49,6 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | --- | --- | --- |
 | `cleric_divine_order` | unmapped | `character-creation.class-feature-option-projection` (unmapped: no obligation mapping) |
 | `druid_primal_order` | unmapped | `character-creation.class-feature-option-projection` (unmapped: no obligation mapping) |
-| `heroism` | mapped-open | `spell.invocation-condition-immunity-turn-start-temporary-hit-points` (mapped-open: `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS` (needs-parity-witness)) |
 | `rogue_expertise` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
 
 ## Non-Supported Frontier Detail

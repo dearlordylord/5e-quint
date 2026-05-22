@@ -2969,8 +2969,8 @@
     },
     "rulesKernelCoveredProfileJoin": {
       "denominator": 85,
-      "numerator": 75,
-      "percent": "88.2%"
+      "numerator": 78,
+      "percent": "91.8%"
     },
     "rulesKernelProfileJoin": {
       "denominator": 85,
@@ -2979,8 +2979,8 @@
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 113,
-      "numerator": 100,
-      "percent": "88.5%"
+      "numerator": 103,
+      "percent": "91.2%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 171,
@@ -5414,8 +5414,8 @@
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
         "denominator": 113,
-        "numerator": 100,
-        "percent": "88.5%"
+        "numerator": 103,
+        "percent": "91.2%"
       }
     },
     "units": [
@@ -6616,15 +6616,15 @@
         "unitId": "hellish_rebuke"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
                 "obligationId": "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
                 "runtime": "battle",
-                "status": "needs-parity-witness",
+                "status": "covered",
                 "title": "Battle spell condition immunity with start-turn Temporary Hit Point refresh and concentration cleanup"
               }
             ],
@@ -6824,15 +6824,15 @@
         "unitId": "jump"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
                 "obligationId": "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
                 "runtime": "battle",
-                "status": "needs-parity-witness",
+                "status": "covered",
                 "title": "Battle direct condition removal, poison protection condition removal, poison resistance, and poison Saving Throw Advantage"
               }
             ],
@@ -7292,15 +7292,15 @@
         "unitId": "protection_from_evil_and_good"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
                 "obligationId": "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
                 "runtime": "battle",
-                "status": "needs-parity-witness",
+                "status": "covered",
                 "title": "Battle direct condition removal, poison protection condition removal, poison resistance, and poison Saving Throw Advantage"
               }
             ],

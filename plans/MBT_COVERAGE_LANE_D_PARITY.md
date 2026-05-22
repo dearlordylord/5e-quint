@@ -115,13 +115,13 @@
     {
       "number": 19,
       "id": "RKBC-NONFEATURE-CONDITION-IMMUNITY-THP-WITNESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Condition Immunity Temporary Hit Point Coverage Witness"
     },
     {
       "number": 20,
       "id": "RKBC-NONFEATURE-CONDITION-REMOVAL-PROTECTION-WITNESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Condition Removal And Protection Coverage Witness"
     },
     {
@@ -129,6 +129,54 @@
       "id": "RKBC-NONFEATURE-SURFACE-PROFILE-JOIN-EVIDENCE",
       "status": "ready-for-research",
       "title": "Surface Profile Join Evidence Closure"
+    },
+    {
+      "number": 22,
+      "id": "L3-METRIC-SCOPE-EXPANSION-PRECHECK",
+      "status": "ready-for-research",
+      "title": "Level 3 Metric Scope Expansion Precheck"
+    },
+    {
+      "number": 23,
+      "id": "L3-SPELL-UNIT-INVENTORY-SEED",
+      "status": "ready-for-research",
+      "title": "Level 3 Spell Unit Inventory Seed"
+    },
+    {
+      "number": 24,
+      "id": "L3-RULES-KERNEL-JOIN-PRECHECK",
+      "status": "ready-for-research",
+      "title": "Level 3 Rules-Kernel Join Precheck"
+    },
+    {
+      "number": 25,
+      "id": "L3-SPELL-COUNTERSPELL-ACCOUNTING-AUDIT",
+      "status": "ready-for-research",
+      "title": "Level 3 Counterspell Accounting Audit"
+    },
+    {
+      "number": 26,
+      "id": "L3-SPELL-DISPEL-MAGIC-ACCOUNTING-AUDIT",
+      "status": "ready-for-research",
+      "title": "Level 3 Dispel Magic Accounting Audit"
+    },
+    {
+      "number": 27,
+      "id": "L3-SPELL-CLAIRVOYANCE-CLOSURE-SURVEY",
+      "status": "ready-for-research",
+      "title": "Level 3 Clairvoyance Closure Survey"
+    },
+    {
+      "number": 28,
+      "id": "L3-SPELL-TONGUES-CLOSURE-SURVEY",
+      "status": "ready-for-research",
+      "title": "Level 3 Tongues Closure Survey"
+    },
+    {
+      "number": 29,
+      "id": "L3-SPELL-WATER-BREATHING-CLOSURE-SURVEY",
+      "status": "ready-for-research",
+      "title": "Level 3 Water Breathing Closure Survey"
     }
   ]
 }
@@ -305,7 +353,7 @@ Output:
 
 ### Task 19 - RKBC-NONFEATURE-CONDITION-IMMUNITY-THP-WITNESS - Condition Immunity Temporary Hit Point Coverage Witness
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 - Task 14.
@@ -315,7 +363,7 @@ Output:
 
 ### Task 20 - RKBC-NONFEATURE-CONDITION-REMOVAL-PROTECTION-WITNESS - Condition Removal And Protection Coverage Witness
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 - Task 14.
@@ -332,3 +380,183 @@ Depends on:
 
 Output:
 - Prove every currently admitted executable battle Surface profile points to a covered rules-kernel semantic obligation, or record explicit non-runtime or boundary dispositions.
+
+## Overnight Backlog Refill
+
+## Level 2 Completion And Level 3 Kickoff Refill
+
+### Task 22 - L3-METRIC-SCOPE-EXPANSION-PRECHECK - Level 3 Metric Scope Expansion Precheck
+
+Status: `ready-for-research`
+
+Input:
+
+- Local RAW under `.references/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface content, Unit/profile claims, owner evidence, and focused tests.
+
+Output:
+
+- Survey how level 1-2 inventory/report metrics are generated and propose the smallest safe extension for spell-level-3/class-level-3 pressure without breaking existing level 1-2 reporting.
+- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Focused verification, `git diff --check`, and reviewer-loop convergence.
+
+Acceptance:
+
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
+
+### Task 23 - L3-SPELL-UNIT-INVENTORY-SEED - Level 3 Spell Unit Inventory Seed
+
+Status: `ready-for-research`
+
+Input:
+
+- Local RAW under `.references/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface content, Unit/profile claims, owner evidence, and focused tests.
+
+Output:
+
+- Seed or plan level-3 spell-pressure inventory rows from installed SRD Surface spell content, with level-3 rows clearly separated from level 1-2 metrics.
+- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Focused verification, `git diff --check`, and reviewer-loop convergence.
+
+Acceptance:
+
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
+
+### Task 24 - L3-RULES-KERNEL-JOIN-PRECHECK - Level 3 Rules-Kernel Join Precheck
+
+Status: `ready-for-research`
+
+Input:
+
+- Local RAW under `.references/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface content, Unit/profile claims, owner evidence, and focused tests.
+
+Output:
+
+- Survey level-3 supported or likely-supported profiles and identify rules-kernel obligation mappings needed before broad implementation.
+- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Focused verification, `git diff --check`, and reviewer-loop convergence.
+
+Acceptance:
+
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
+
+### Task 25 - L3-SPELL-COUNTERSPELL-ACCOUNTING-AUDIT - Level 3 Counterspell Accounting Audit
+
+Status: `ready-for-research`
+
+Input:
+
+- Local RAW under `.references/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface content, Unit/profile claims, owner evidence, and focused tests.
+
+Output:
+
+- Check existing Counterspell support against level-3 metric expansion and add any missing profile/evidence/rules-kernel accounting without changing already-correct runtime behavior.
+- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Focused verification, `git diff --check`, and reviewer-loop convergence.
+
+Acceptance:
+
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
+
+### Task 26 - L3-SPELL-DISPEL-MAGIC-ACCOUNTING-AUDIT - Level 3 Dispel Magic Accounting Audit
+
+Status: `ready-for-research`
+
+Input:
+
+- Local RAW under `.references/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface content, Unit/profile claims, owner evidence, and focused tests.
+
+Output:
+
+- Check existing Dispel Magic support against level-3 metric expansion and add any missing profile/evidence/rules-kernel accounting without duplicating ongoing spell ending logic.
+- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Focused verification, `git diff --check`, and reviewer-loop convergence.
+
+Acceptance:
+
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
+
+### Task 27 - L3-SPELL-CLAIRVOYANCE-CLOSURE-SURVEY - Level 3 Clairvoyance Closure Survey
+
+Status: `ready-for-research`
+
+Input:
+
+- Local RAW under `.references/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface content, Unit/profile claims, owner evidence, and focused tests.
+
+Output:
+
+- Read SRD Clairvoyance and current content; close runtime-detached sensor/table ownership or split any actual runtime/profile work.
+- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Focused verification, `git diff --check`, and reviewer-loop convergence.
+
+Acceptance:
+
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
+
+### Task 28 - L3-SPELL-TONGUES-CLOSURE-SURVEY - Level 3 Tongues Closure Survey
+
+Status: `ready-for-research`
+
+Input:
+
+- Local RAW under `.references/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface content, Unit/profile claims, owner evidence, and focused tests.
+
+Output:
+
+- Read SRD Tongues and current language-access policy; close runtime-detached language/table ownership or split any actual runtime/profile work.
+- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Focused verification, `git diff --check`, and reviewer-loop convergence.
+
+Acceptance:
+
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
+
+### Task 29 - L3-SPELL-WATER-BREATHING-CLOSURE-SURVEY - Level 3 Water Breathing Closure Survey
+
+Status: `ready-for-research`
+
+Input:
+
+- Local RAW under `.references/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface content, Unit/profile claims, owner evidence, and focused tests.
+
+Output:
+
+- Read SRD Water Breathing and current environmental/table policy; close runtime-detached environment ownership or split any actual runtime/profile work.
+- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Focused verification, `git diff --check`, and reviewer-loop convergence.
+
+Acceptance:
+
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
