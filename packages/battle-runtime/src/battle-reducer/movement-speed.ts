@@ -77,6 +77,17 @@ import {
   combatantEffectiveSize,
 } from "./druid-wild-shape.ts";
 
+type BattleSpecialSpeedCandidate =
+  | {
+      readonly kind: "fixed";
+      readonly speedType: BattleSpecialSpeedKind;
+      readonly speedFeet: MovementFeet;
+    }
+  | {
+      readonly kind: "equalToSpeed";
+      readonly speedType: BattleSpecialSpeedKind;
+    };
+
 export function battleMovementBudget(
   combatant: BattleCreatureState | undefined,
   grapples: readonly BattleGrappleLink[] = [],
@@ -225,14 +236,14 @@ export function battleSpeedChanges(
 export function battleSpecialSpeedCandidates(
   combatant: BattleCreatureState,
 ): readonly SpecialSpeedCandidate[] {
-  const candidates: SpecialSpeedCandidate[] = [];
+  const candidates: BattleSpecialSpeedCandidate[] = [];
   if (combatant.origin.kind === "character") {
     for (const speedType of passiveSpeedKindGrantKinds(combatant)) {
       candidates.push({ kind: "equalToSpeed", speedType });
     }
   }
   for (const speedType of activeSpecialSpeedGrantKinds(combatant)) {
-    candidates.push({ kind: "equalToSpeed", speedType });
+    candidates.push(speedType);
   }
   const statBlockSpeedSource =
     activeDruidWildShapeForm(combatant) ??
@@ -272,8 +283,8 @@ export function representedMovementSpeedKinds(
   for (const kind of passiveSpeedKindGrantKinds(combatant)) {
     kinds.add(kind);
   }
-  for (const kind of activeSpecialSpeedGrantKinds(combatant)) {
-    kinds.add(kind);
+  for (const candidate of activeSpecialSpeedGrantKinds(combatant)) {
+    kinds.add(candidate.speedType);
   }
   const statBlockSpeedSource =
     activeDruidWildShapeForm(combatant) ??
@@ -290,32 +301,50 @@ export function representedMovementSpeedKinds(
 
 function activeSpecialSpeedGrantKinds(
   combatant: BattleCreatureState,
-): readonly BattleSpecialSpeedKind[] {
-  const kinds = new Set<BattleSpecialSpeedKind>();
+): readonly BattleSpecialSpeedCandidate[] {
+  const candidates: BattleSpecialSpeedCandidate[] = [];
+  const selfTransformationKinds = new Set<BattleSpecialSpeedKind>();
   for (const effect of combatant.activeEffects) {
     if (effect.kind === "specialSpeedGrant") {
-      kinds.add(effect.speedKind);
+      candidates.push(
+        effect.speed.kind === "equalToSpeed"
+          ? { kind: "equalToSpeed", speedType: effect.speedKind }
+          : {
+              kind: "fixed",
+              speedType: effect.speedKind,
+              speedFeet: effect.speed.speedFeet,
+            },
+      );
     }
     const selfTransformationSpeedKind =
       selfTransformationModeSpecialSpeedKind(effect);
     if (selfTransformationSpeedKind !== null) {
-      kinds.add(selfTransformationSpeedKind);
+      selfTransformationKinds.add(selfTransformationSpeedKind);
     }
   }
-  return BATTLE_SPECIAL_SPEED_KINDS.filter((kind) => kinds.has(kind));
+  return [
+    ...candidates,
+    ...BATTLE_SPECIAL_SPEED_KINDS.filter((kind) =>
+      selfTransformationKinds.has(kind),
+    ).map((kind) => ({ kind: "equalToSpeed" as const, speedType: kind })),
+  ];
 }
 
 export function isBattleLiteralSpecialSpeed(speed: {
   readonly kind: SpeedType;
   readonly feet: { readonly kind: string };
 }): speed is {
-  readonly kind: (typeof BATTLE_SPECIAL_SPEED_KINDS)[number];
+  readonly kind: BattleSpecialSpeedKind;
   readonly feet: { readonly kind: "literal"; readonly value: number };
 } {
   return (
     speed.feet.kind === "literal" &&
-    BATTLE_SPECIAL_SPEED_KINDS.some((kind) => kind === speed.kind)
+    isBattleSpecialSpeedKind(speed.kind)
   );
+}
+
+function isBattleSpecialSpeedKind(kind: SpeedType): kind is BattleSpecialSpeedKind {
+  return BATTLE_SPECIAL_SPEED_KINDS.some((candidate) => candidate === kind);
 }
 
 export function passiveSpeedKindGrantKinds(

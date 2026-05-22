@@ -91,50 +91,83 @@
     {
       "number": 15,
       "id": "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Darkness Spell-Created Light Dispel"
     },
     {
       "number": 16,
       "id": "L12G-FOLLOWUP-SPIKE-GROWTH-PROFILE-ACCOUNTING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Spike Growth Profile Accounting Closure"
     },
     {
       "number": 17,
       "id": "L12G-FOLLOWUP-PRAYER-OF-HEALING-PROFILE-ACCOUNTING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Prayer Of Healing Profile Accounting Closure"
     },
     {
       "number": 18,
       "id": "L12G-FOLLOWUP-FIND-STEED-COMPANION-BOUNDARY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Find Steed Companion Boundary Closure"
     },
     {
       "number": 19,
       "id": "L3-SPELL-FLY-RUNTIME-SURVEY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Level 3 Fly Runtime Survey And Task Split"
     },
     {
       "number": 20,
       "id": "L3-SPELL-LIGHTNING-BOLT-RUNTIME-SURVEY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Level 3 Lightning Bolt Runtime Survey And Task Split"
     },
     {
       "number": 21,
       "id": "L3-SPELL-HYPNOTIC-PATTERN-RUNTIME-SURVEY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Level 3 Hypnotic Pattern Runtime Survey And Task Split"
+    },
+    {
+      "number": 22,
+      "id": "L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR",
+      "status": "done",
+      "title": "Fly Surface Target Repair"
+    },
+    {
+      "number": 23,
+      "id": "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME",
+      "status": "done",
+      "title": "Fly Special Speed Runtime"
+    },
+    {
+      "number": 24,
+      "id": "L3-FOLLOWUP-FLY-END-FALL-WITNESS",
+      "status": "ready-for-research",
+      "title": "Fly End Fall Witness"
+    },
+    {
+      "number": 25,
+      "id": "L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR",
+      "status": "deferred",
+      "title": "Hypnotic Pattern Surface Escape Repair"
+    },
+    {
+      "number": 26,
+      "id": "L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME",
+      "status": "blocked",
+      "title": "Hypnotic Pattern Control Runtime"
     }
   ]
 }
 -->
 
 This is an active Ralph execution plan for level-2 feature/runtime coverage. It replaces the stale A/B/C/Claude level-2 loop files.
+
+
+Planning policy update, 2026-05-22: until the owner explicitly reopens level-3 expansion, recursive tails and deciders must add only level-1/level-2 closure tasks. Park not-yet-started level-3 tasks as `deferred` instead of expanding this lane with more level-3 work.
 
 Every Ralph prompt for this lane must include:
 
@@ -173,6 +206,16 @@ Every task must include:
 | 12 | L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME - Levitate Creature Runtime Support | done | L12G-RECURSIVE-TAIL-LANE-A | L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH, L12G-RECURSIVE-TAIL-LANE-A-2 | SRD Levitate creature branch; movement and table/spatial witness boundaries | Completed Levitate creature runtime subset with active levitated-target state and altitude-control witness boundaries. |
 | 13 | L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH - Levitate Loose Object Branch | done | L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME | L12G-RECURSIVE-TAIL-LANE-A-2 | SRD Levitate loose object branch; shared object lifecycle or table/spatial witness owner | Completed as accepted runtime-detached closure for loose-object lifecycle and table/spatial vertical movement residuals. |
 | 14 | L12G-RECURSIVE-TAIL-LANE-A-2 - Lane A Recursive Planning Tail 2 | done | L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH, L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME, L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH | L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL, L12G-FOLLOWUP-SPIKE-GROWTH-PROFILE-ACCOUNTING, L12G-FOLLOWUP-PRAYER-OF-HEALING-PROFILE-ACCOUNTING, L12G-FOLLOWUP-FIND-STEED-COMPANION-BOUNDARY, L3-SPELL-FLY-RUNTIME-SURVEY, L3-SPELL-LIGHTNING-BOLT-RUNTIME-SURVEY, L3-SPELL-HYPNOTIC-PATTERN-RUNTIME-SURVEY | Refreshed level-2 feature metrics after this appended batch | Completed by confirming generated metrics and keeping the already-appended Level 2 completion / Level 3 kickoff refill tasks as the concrete frontier. |
+| 17 | L12G-FOLLOWUP-PRAYER-OF-HEALING-PROFILE-ACCOUNTING - Prayer Of Healing Profile Accounting Closure | done | L12G-RECURSIVE-TAIL-LANE-A-2 | none | Current Prayer of Healing Surface content, Character Sheet rest profile claim, owner evidence, and focused tests | Completed by confirming existing profile artifacts already classify Prayer of Healing as `profile-subset-supported` with Character Sheet owner evidence and outside-battle-runtime closure for automatic casting progress, range maintenance, and interruption tracking. |
+| 18 | L12G-FOLLOWUP-FIND-STEED-COMPANION-BOUNDARY - Find Steed Companion Boundary Closure | done | L12G-RECURSIVE-TAIL-LANE-A-2 | none | Find Steed Surface content, mounted-combat text, Unit/profile claims, owner evidence, and focused tests | Completed by recording `find_steed` as an `unsupported-profile` closed at the companion-control boundary, without Unit catalog admission, companion AI, autonomous control behavior, or authored-identity dispatch. |
+| 19 | L3-SPELL-FLY-RUNTIME-SURVEY - Level 3 Fly Runtime Survey And Task Split | done | L12G-RECURSIVE-TAIL-LANE-A-2 | L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR | Fly Surface content, Speed and Movement language, current Unit/profile claims, and falling witness boundaries | Completed by recording Fly as an unsupported-profile follow-up split; no runtime support, companion behavior, or authored-identity dispatch is claimed. |
+| 20 | L3-SPELL-LIGHTNING-BOLT-RUNTIME-SURVEY - Level 3 Lightning Bolt Runtime Survey And Task Split | done | L12G-RECURSIVE-TAIL-LANE-A-2 | none | Lightning Bolt Surface content, line/area damage support, Unit/profile claims, and focused tests | Completed by admitting Lightning Bolt as a supported self-origin Line save-gated damage profile while leaving Line direction, Total Cover blocking, point-of-origin inclusion choice, affected-creature derivation, and map geometry table-owned. |
+| 21 | L3-SPELL-HYPNOTIC-PATTERN-RUNTIME-SURVEY - Level 3 Hypnotic Pattern Runtime Survey And Task Split | done | L12G-RECURSIVE-TAIL-LANE-A-2 | L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR | Hypnotic Pattern Surface content, condition-save/incapacitation support, Unit/profile claims, and focused tests | Completed by recording Hypnotic Pattern as an unsupported-profile follow-up split for Surface sight/escape repair and battle control runtime support; no companion behavior or authored-identity dispatch is claimed. |
+| 22 | L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR - Fly Surface Target Repair | done | L3-SPELL-FLY-RUNTIME-SURVEY | L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME | Fly Surface target shape and sibling touched willing creature spell selection vocabulary | Completed by structurally encoding Fly's touched willing creature target eligibility before runtime admission. |
+| 23 | L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME - Fly Special Speed Runtime | done | L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR | L3-FOLLOWUP-FLY-END-FALL-WITNESS | Fly fixed special Speed, hover, movement kind vocabulary, active-effect cleanup, and promoted Quint parity | Completed by admitting Fly through the scalar-buff runtime profile with fixed Fly Speed, hover retention, slot-scaled willing targets, movement/Dash projection, cleanup, and promoted Quint parity while leaving spell-end falling to Task 24. |
+| 24 | L3-FOLLOWUP-FLY-END-FALL-WITNESS - Fly End Fall Witness | ready-for-research | L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME | none | Fly spell-end falling clause, caller-supplied aloft/can-stop-fall witnesses, and existing falling reaction/landing pipeline | Promote the spell-end fall handoff now that the active Fly effect exists. |
+| 25 | L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR - Hypnotic Pattern Surface Escape Repair | deferred | L3-SPELL-HYPNOTIC-PATTERN-RUNTIME-SURVEY | L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME | Hypnotic Pattern sight-gated area targeting and target-specific escape facts | Repair typed Surface facts before runtime admission. |
+| 26 | L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME - Hypnotic Pattern Control Runtime | blocked | L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR | none | Hypnotic Pattern linked Charmed/Incapacitated/Speed 0 target effect, damage cleanup, shake-awake action, and promoted Quint parity | Promote the battle control lifecycle after the Surface escape repair lands. |
 
 ## Tasks
 
@@ -469,7 +512,7 @@ RAW/ubiquitous-language planning check against local SRD spell entries and
 
 ### Task 15 - L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL - Darkness Spell-Created Light Dispel
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -479,8 +522,8 @@ Input:
 
 Output:
 
-- Promote or precisely close Darkness overlap dispel of level-2-or-lower spell-created Bright/Dim Light, consuming generic spell-created light facts such as Continual Flame without spell identity dispatch.
-- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Supported Darkness overlap dispel of level-2-or-lower spell-created Bright/Dim Light through generic tracked spell-light source effect id and source spell level facts, without authored spell identity dispatch.
+- Updated Darkness and Continual Flame profile/evidence/report artifacts to remove this follow-up while keeping Dispel Magic and object-origin Darkness as separate visible boundaries.
 - Focused verification, `git diff --check`, and reviewer-loop convergence.
 
 Acceptance:
@@ -489,9 +532,94 @@ Acceptance:
 - No companion AI/autonomous-control behavior is introduced.
 - No authored identity dispatch is introduced in runtime code.
 
-### Task 16 - L12G-FOLLOWUP-SPIKE-GROWTH-PROFILE-ACCOUNTING - Spike Growth Profile Accounting Closure
+### Task 22 - L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR - Fly Surface Target Repair
+
+Status: `done`
+
+Depends on: L3-SPELL-FLY-RUNTIME-SURVEY
+
+Blocks: L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME
+
+Input:
+
+- SRD Fly text under `.references/srd-5.2.1/Spells/Descriptions-E-L.md`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Fly Surface Dhall/JSON content.
+- Sibling touched willing creature target shapes for Jump and Spider Climb.
+
+Output:
+
+- Repair the Fly Surface target shape while preserving the existing SRD spell definition, fixed 60-foot Fly Speed grant, hover flag, Concentration up to 10 minutes, and slot-scaled target count.
+- Structurally encode a touched willing creature target with `targetKinds: ["creature"]` and `disposition: "willing"` using the existing selection vocabulary instead of authored spell identity.
+- Update generated Surface JSON and focused Surface/unit-catalog tests proving Fly round-trips with typed target eligibility before runtime admission.
+
+Acceptance:
+
+- Fly Surface target eligibility is checker-visible and matches the SRD touched willing creature requirement.
+- No spell-end falling runtime behavior is claimed by this task.
+- No authored identity dispatch is introduced in runtime code.
+
+Completed by structurally encoding Fly's touched willing creature target eligibility in Surface Dhall/JSON and adding a focused catalog-boundary round-trip test before runtime admission.
+
+### Task 23 - L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME - Fly Special Speed Runtime
+
+Status: `done`
+
+Depends on: L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR
+
+Blocks: L3-FOLLOWUP-FLY-END-FALL-WITNESS
+
+Input:
+
+- Completed Fly Surface target repair.
+- Current scalar-buff, special-Speed active effect, movement/Dash projection, and package-local Quint movement vocabulary.
+- SRD Speed, Movement, Fly Speed, hover, Concentration, and Spell Slot language.
+
+Output:
+
+- Admit the repaired Fly record into the Unit catalog through a typed spell invocation profile.
+- Support Magic Action level-3-or-higher Spell Slot casting, touched willing target-list targeting, caster-owned Concentration up to 10 minutes, fixed 60-foot Fly Speed, hover, slot-scaled target count, and cleanup on Concentration or duration end.
+- Widen promoted runtime and package-local Quint movement kind vocabulary to include Fly Speed, and make effective movement and Dash budget projection consume the fixed special Speed without duplicating walk Speed or spent Movement state.
+- Update Unit claims, deterministic admission/projection evidence, focused runtime tests, generated coverage artifacts, and promoted Quint/runtime parity.
+
+Acceptance:
+
+- Fly is supported or profile-subset-supported for the active Speed grant only.
+- Automatic pathfinding, map elevation, aloft status, landing legality, and spell-end falling stay caller/table-supplied until Task 24.
+- No companion AI/autonomous-control behavior or authored-identity runtime dispatch is introduced.
+
+Completed by admitting Fly through the scalar-buff runtime profile with fixed Fly Speed, hover retention, slot-scaled willing targets, movement/Dash projection, cleanup, deterministic coverage evidence, and promoted Quint parity while leaving spell-end falling to Task 24.
+
+### Task 24 - L3-FOLLOWUP-FLY-END-FALL-WITNESS - Fly End Fall Witness
 
 Status: `ready-for-research`
+
+Depends on: L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME
+
+Blocks: none
+
+Input:
+
+- Completed active Fly Speed runtime support.
+- SRD Fly spell-end falling clause and Rules Glossary flying/falling language.
+- Existing Feather Fall, `creatureFalls`, and landing/reaction witness boundaries.
+
+Output:
+
+- Connect Fly effect cleanup to caller-supplied still-aloft and can-stop-fall witnesses.
+- Either open the existing `creatureFalls` reaction window for affected targets or record why the target can stop the fall.
+- Preserve Feather Fall's existing falling-trigger and landing owner; do not add battle-owned elevation simulation or treat hover as a generic immunity to every fall source.
+- Add focused tests for Concentration break, duration expiration, recast or replacement cleanup, hover-relevant fall prevention, and handoff to the existing falling reaction/landing pipeline, plus promoted Quint/runtime parity.
+
+Acceptance:
+
+- Spell-end falling is represented as an explicit witness boundary tied to Fly effect cleanup.
+- Existing falling reaction and landing ownership is reused rather than duplicated.
+- No authored identity dispatch is introduced in runtime code.
+
+### Task 16 - L12G-FOLLOWUP-SPIKE-GROWTH-PROFILE-ACCOUNTING - Spike Growth Profile Accounting Closure
+
+Status: `done`
 
 Input:
 
@@ -501,9 +629,28 @@ Input:
 
 Output:
 
-- Resolve the remaining open-profile-accounting status for Spike Growth after movement hazard and recognition work: update claims/evidence/reports so the metric is supported, target-closed, or split into a smaller concrete follow-up.
-- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
-- Focused verification, `git diff --check`, and reviewer-loop convergence.
+- Accepted target-closed/profile-accounting closure for Spike Growth:
+  `plans/unit-profile-coverage/unit-claims.jsonl` records
+  `profile-subset-supported` for `spell.invocation-spike-growth-movement-hazard`,
+  `plans/unit-profile-coverage/unit-evidence.jsonl` records deterministic
+  admission/projection evidence, and the generated strict report classifies
+  `spike_growth` as `closed-runtime-detached-table-adjudication` rather than
+  `open-profile-accounting`.
+- The supported profile remains Magic Action and level-2-or-higher Spell Slot
+  casting, caller-supplied 20-foot-radius Sphere area identity, caster-owned
+  Concentration up to 10 minutes, active Difficult Terrain movement-cost
+  projection from caller-supplied movement distance, 2d4 Piercing damage per
+  5 feet traveled into or within the area, and Concentration/duration cleanup.
+- The camouflaged-terrain recognition clause remains an accepted
+  runtime-detached table Search/perception witness boundary: visibility at cast
+  time, Search Action declaration before entry, Wisdom (Perception or Survival)
+  check result against the caster's Spell Save DC, and recognized-hazard
+  witness are not duplicated in promoted battle runtime.
+- No smaller Spike Growth follow-up is needed for this lane; automatic geometry,
+  pathfinding, and per-observer terrain-knowledge derivation remain table-owned.
+- Verification completed with local RAW/ubiquitous-language review,
+  `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop
+  convergence.
 
 Acceptance:
 
@@ -513,7 +660,7 @@ Acceptance:
 
 ### Task 17 - L12G-FOLLOWUP-PRAYER-OF-HEALING-PROFILE-ACCOUNTING - Prayer Of Healing Profile Accounting Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -523,9 +670,26 @@ Input:
 
 Output:
 
-- Resolve the remaining open-profile-accounting status for Prayer of Healing after Surface and Character Sheet rest runtime work: update claims/evidence/reports so the metric is supported, target-closed, or split into a smaller concrete follow-up.
-- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
-- Focused verification, `git diff --check`, and reviewer-loop convergence.
+- Accepted profile-subset-supported closure for Prayer of Healing:
+  `plans/unit-profile-coverage/unit-claims.jsonl` records the
+  `character-sheet.spell-rest-benefit-application` supported subset,
+  `plans/unit-profile-coverage/unit-evidence.jsonl` records deterministic
+  admission/projection evidence, and the generated strict report classifies
+  `prayer_of_healing` as supported rather than open profile accounting.
+- The supported profile remains completed-cast Character Sheet application:
+  the runtime spends a level-2-or-higher Spell Slot at completion, applies the
+  existing Short Rest benefit per caller-selected recipient, applies
+  slot-scaled healing capped by Hit Point maximum, records the same-spell
+  recipient Long Rest lockout, and clears that lockout through existing Long
+  Rest state.
+- Automatic 10-minute casting progress, range maintenance tracking, and
+  encounter-time interruption detection remain accepted outside-battle-runtime
+  caller/table witness responsibilities; no parallel Character Sheet or battle
+  runtime state is introduced for them.
+- No smaller Prayer of Healing follow-up is needed for this lane.
+- Verification completed with local RAW/ubiquitous-language review,
+  `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop
+  convergence.
 
 Acceptance:
 
@@ -535,7 +699,7 @@ Acceptance:
 
 ### Task 18 - L12G-FOLLOWUP-FIND-STEED-COMPANION-BOUNDARY - Find Steed Companion Boundary Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -545,9 +709,27 @@ Input:
 
 Output:
 
-- Resolve the open-runtime-behavior row for Find Steed by documenting whether it is covered by the companion-control boundary or by adding the smallest non-companion runtime/accounting support needed without implementing autonomous companion AI.
-- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
-- Focused verification, `git diff --check`, and reviewer-loop convergence.
+- Accepted unsupported-profile closure for Find Steed:
+  `plans/unit-profile-coverage/unit-claims.jsonl` records a top-level
+  `companion-control-boundary` battle-readiness closure, and the generated
+  strict report classifies `find_steed` as
+  `closed-companion-control-boundary` rather than `open-runtime-behavior`.
+- The Surface record remains partial structured input for a future
+  mount companion owner: it records SRD provenance, core casting facts, inline
+  Otherworldly Steed stat-block facts, caster-chosen creature type mode,
+  slot-scaled AC and Hit Points, Life Bond, shared-Initiative control metadata,
+  and disappearance metadata, but does not claim promoted runtime support.
+- Future mount companion ownership must model summoned mount lifecycle,
+  rider/control state, stat-block projection and actions, disappearance, and
+  item-drop boundaries without autonomous companion action selection or
+  authored-identity dispatch in generic runtime code.
+- No smaller Find Steed follow-up is needed for this lane; the remaining work
+  belongs to a future mount companion lifecycle/control owner rather than this
+  level-2 strict closure task.
+- Verification completed with local mounted-combat RAW and ubiquitous-language
+  review, local Surface-content review,
+  `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop
+  convergence.
 
 Acceptance:
 
@@ -557,7 +739,7 @@ Acceptance:
 
 ### Task 19 - L3-SPELL-FLY-RUNTIME-SURVEY - Level 3 Fly Runtime Survey And Task Split
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -567,8 +749,15 @@ Input:
 
 Output:
 
-- Read SRD Fly, current Surface content, Unit/profile claims, and existing movement/witness language; either close as table/runtime-detached or create a precise runtime task split.
-- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Read SRD Fly, current Surface content, Unit/profile claims, and existing movement/witness language.
+- Completed as an unsupported-profile follow-up split instead of support or runtime-detached closure because Fly has executable battle-facing work that is broader than current scalar-buff support: target-list admission, fixed Fly Speed, hover, Concentration cleanup, and spell-end falling witness handoff.
+- Added `plans/unit-profile-coverage/L3_FLY_RUNTIME_SURVEY.md` as the survey evidence.
+- Updated `plans/unit-profile-coverage/unit-claims.jsonl` so the generated inventory/report classify Fly as a checker-visible follow-up split rather than an unowned `srd-candidate`.
+- Added the schedulable follow-up tasks:
+  `L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR`,
+  `L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME`, and
+  `L3-FOLLOWUP-FLY-END-FALL-WITNESS`.
+- No companion AI/autonomous-control behavior or authored-identity runtime dispatch is introduced.
 - Focused verification, `git diff --check`, and reviewer-loop convergence.
 
 Acceptance:
@@ -579,7 +768,7 @@ Acceptance:
 
 ### Task 20 - L3-SPELL-LIGHTNING-BOLT-RUNTIME-SURVEY - Level 3 Lightning Bolt Runtime Survey And Task Split
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -599,9 +788,15 @@ Acceptance:
 - No companion AI/autonomous-control behavior is introduced.
 - No authored identity dispatch is introduced in runtime code.
 
+Completed:
+
+- Lightning Bolt is supported through `spell.invocation-damage-save-or-attack`: Magic Action level-3-or-higher Spell Slot casting, caller-supplied self-origin 100-foot-long, 5-foot-wide Line affected-creature boundary, Dexterity save-gated Lightning damage with half damage on success, and slot-scaled damage dice.
+- Line direction, Total Cover blocking, point-of-origin inclusion choice, affected-creature derivation, and map geometry remain table/spatial owner facts outside the promoted runtime profile.
+- Survey and generated coverage artifacts are recorded in `plans/unit-profile-coverage/L3_LIGHTNING_BOLT_RUNTIME_SURVEY.md`, `unit-claims.jsonl`, `unit-evidence.jsonl`, `SRD_UNIT_INVENTORY.md`, `UNIT_REPORT.md`, `srd-unit-inventory.json`, and `unit-matrix.json`.
+
 ### Task 21 - L3-SPELL-HYPNOTIC-PATTERN-RUNTIME-SURVEY - Level 3 Hypnotic Pattern Runtime Survey And Task Split
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -620,3 +815,99 @@ Acceptance:
 - The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
 - No companion AI/autonomous-control behavior is introduced.
 - No authored identity dispatch is introduced in runtime code.
+
+Completed:
+
+- Hypnotic Pattern closes as an unsupported-profile follow-up split rather than
+  support or runtime-detached closure. The installed Surface record captures the
+  SRD spell's Action cast, 120-foot range, 30-foot Cube, Wisdom Saving Throw,
+  Charmed plus Incapacitated plus Speed 0 failed-save bundle, Concentration, and
+  target-damage early end, but exact runtime support still needs typed
+  sight-gated area target facts and the action-spend shake-awake escape.
+- Added the schedulable follow-up tasks:
+  `L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR` and
+  `L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME`.
+- Automatic Cube geometry, Total Cover, point-of-origin inclusion, area
+  membership, and sight derivation remain table/spatial witness facts.
+- No companion AI/autonomous-control behavior or authored-identity runtime
+  dispatch is introduced.
+- Survey and generated coverage artifacts are recorded in
+  `plans/unit-profile-coverage/L3_HYPNOTIC_PATTERN_RUNTIME_SURVEY.md`,
+  `unit-claims.jsonl`, `SRD_UNIT_INVENTORY.md`, `UNIT_REPORT.md`,
+  `srd-unit-inventory.json`, and `unit-matrix.json`.
+
+### Task 25 - L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR - Hypnotic Pattern Surface Escape Repair
+
+Status: `deferred`
+
+Deferred Detail: Owner instruction on 2026-05-22: park not-yet-started level-3 work while the level-1/level-2 closure frontier remains active.
+
+Depends on: L3-SPELL-HYPNOTIC-PATTERN-RUNTIME-SURVEY
+
+Blocks: L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME
+
+Input:
+
+- SRD Hypnotic Pattern text and current
+  `packages/surface/content/hypnotic_pattern.dhall` / generated JSON.
+- Existing Surface spell area, composite effect, and duration escape vocabulary.
+- `L3_HYPNOTIC_PATTERN_RUNTIME_SURVEY.md`.
+
+Output:
+
+- Repair Hypnotic Pattern's Surface shape so the 30-foot Cube, sight-gated
+  affected-creature predicate, Charmed plus Incapacitated plus Speed 0
+  failed-save bundle, target-takes-damage early end, and another-creature
+  action-spend shake-awake escape are represented as typed procedure facts
+  instead of prose-only runtime behavior.
+- Updated Dhall and generated JSON content plus focused Surface/unit-catalog
+  tests proving the repaired record round-trips before runtime admission.
+
+Acceptance:
+
+- The repaired Surface record preserves exact SRD provenance and does not
+  represent sight, area membership, Total Cover, or Cube geometry as duplicated
+  battle state.
+- The shake-awake escape is target-specific and requires someone other than the
+  affected target to spend an action.
+- No runtime support is claimed from Surface admission alone.
+
+### Task 26 - L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME - Hypnotic Pattern Control Runtime
+
+Status: `blocked`
+
+Depends on: L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR
+
+Blocks: none
+
+Input:
+
+- Repaired Hypnotic Pattern Surface record from
+  `L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR`.
+- Existing condition-save, Hideous Laughter damage lifecycle, action-resource,
+  Concentration, and area witness support.
+- `packages/battle-runtime/battle-runtime.qnt` promoted runtime authority.
+
+Output:
+
+- Promote Hypnotic Pattern by admitting the repaired record into the Unit
+  catalog; spending the Magic Action and level-3-or-higher Spell Slot; owning
+  caster Concentration up to 1 minute; consuming caller-supplied Cube
+  affected-creature and sight witnesses; resolving Wisdom Saving Throws;
+  applying one source-owned target effect that projects Charmed, Incapacitated,
+  and Speed 0; removing only the spell-owned target effect on affected-target
+  damage or another creature's shake-awake action; and cleaning up on
+  Concentration or duration end.
+- Supported-profile or profile-subset-supported Unit claim, deterministic
+  admission/projection evidence, focused runtime tests, generated coverage
+  artifacts, and promoted Quint/runtime parity.
+
+Acceptance:
+
+- Charmed, Incapacitated, and Speed 0 cannot diverge for the same spell-owned
+  Hypnotic Pattern target effect, and independent condition or Speed sources are
+  preserved.
+- Automatic Cube geometry, Total Cover, point-of-origin inclusion, area
+  membership, and sight derivation remain caller/table-owned.
+- No companion AI/autonomous-control behavior or authored-identity runtime
+  dispatch is introduced.

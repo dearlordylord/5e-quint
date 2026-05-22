@@ -278,6 +278,11 @@ function hasOnlyLaterLevelResiduals(claim) {
 }
 
 function hasOnlyCompanionControlBoundaryResiduals(claim) {
+  if (claim?.tag === "unsupported-profile") {
+    return (
+      claim.battleReadinessClosure?.kind === companionControlBoundaryClosureKind
+    );
+  }
   return (
     claim?.tag === "profile-subset-supported" &&
     claim.deferredMechanics.length > 0 &&

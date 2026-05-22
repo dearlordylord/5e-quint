@@ -3,6 +3,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-AID aid
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-BARKSKIN barkskin
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-SPIDER-CLIMB spider_climb
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME fly
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.scalar-buff spell.invocation-condition-immunity-turn-start-temporary-hit-points
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
@@ -11,6 +12,7 @@ import {
   aidUnitId,
   barkskinUnitId,
   falseLifeUnitId,
+  flyUnitId,
   heroismUnitId,
   longstriderUnitId,
   shieldOfFaithUnitId,
@@ -43,6 +45,7 @@ import {
   endTurn,
   holeId,
   movementDeltaFeet,
+  movementFeet,
   resolveBattleSubject,
   snapshotBattle,
   spellSlotInvocationRef,
@@ -726,6 +729,275 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
         }),
       ]),
     );
+  });
+
+  test("fly is admitted as a fixed Fly Speed and hover grant with slot-scaled willing targets", () => {
+    const spell = spellRecord(flyUnitId);
+    const secondTargetId = combatantId("unit-profile-fly-target-2");
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [
+        { spellLevel: 3, count: 1 },
+        { spellLevel: 4, count: 1 },
+      ],
+      extraTargetIds: [secondTargetId],
+    });
+    const levelThreeAct = spellAct({
+      state,
+      spellId: flyUnitId,
+      slotLevel: 3,
+    });
+    const levelThreeTargetHole = requireHole(
+      levelThreeAct.initialHoles,
+      "targetChoice",
+    );
+    const levelFourAct = spellAct({
+      state,
+      spellId: flyUnitId,
+      slotLevel: 4,
+    });
+    const targetListHole = requireHole(
+      levelFourAct.initialHoles,
+      "spellTargetList",
+    );
+
+    expect(levelThreeAct.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(flyUnitId, 3, "scalarBuff"),
+      mode: { tag: "cast" },
+    });
+    expect(levelThreeTargetHole.choices).toEqual([spellCasterId]);
+    expect(targetListHole).toEqual(
+      expect.objectContaining({
+        minTargets: 1,
+        maxTargets: 2,
+        choices: [spellCasterId],
+      }),
+    );
+
+    const unwillingTarget = resolveBattleSubject({
+      state,
+      subject: levelFourAct.subject,
+      fills: [
+        spellTargetListFill(targetListHole, spellCasterId, flyUnitId, [
+          secondTargetId,
+        ]),
+      ],
+    });
+    expect(unwillingTarget).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: levelFourAct.subject,
+      fills: [
+        knownWillingSpellTargetListFill(
+          targetListHole,
+          spellCasterId,
+          flyUnitId,
+          [spellCasterId, secondTargetId],
+        ),
+      ],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          expect.objectContaining({
+            combatantId: spellCasterId,
+            concentrating: true,
+            movement: expect.objectContaining({
+              speedKinds: expect.arrayContaining([
+                expect.objectContaining({
+                  kind: "fly",
+                  speedFeet: 60,
+                  remainingFeet: 60,
+                }),
+              ]),
+            }),
+          }),
+          expect.anything(),
+          expect.objectContaining({
+            combatantId: secondTargetId,
+            movement: expect.objectContaining({
+              speedKinds: expect.arrayContaining([
+                expect.objectContaining({
+                  kind: "fly",
+                  speedFeet: 60,
+                  remainingFeet: 60,
+                }),
+              ]),
+            }),
+          }),
+        ],
+      },
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Fly to resolve.");
+    }
+    const expectedEffect = expect.objectContaining({
+      kind: "specialSpeedGrant",
+      sourceSpellId: flyUnitId,
+      sourceCombatantId: spellCasterId,
+      speedKind: "fly",
+      speed: { kind: "fixed", speedFeet: movementFeet(60) },
+      hover: true,
+      expiresAt: {
+        kind: "concentration",
+        combatantId: spellCasterId,
+        durationTicks: elapsedTimeTicks(100),
+      },
+    });
+    expect(
+      resolved.state.combatants.get(spellCasterId)?.activeEffects,
+    ).toContainEqual(expectedEffect);
+    expect(
+      resolved.state.combatants.get(secondTargetId)?.activeEffects,
+    ).toContainEqual(expectedEffect);
+  });
+
+  test("fly concentration, duration, and Dash projections use the fixed Fly Speed grant", () => {
+    const spell = spellRecord(flyUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+    });
+    const act = spellAct({ state, spellId: flyUnitId, slotLevel: 3 });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        knownWillingSpellTargetFill(
+          targetHole,
+          flyUnitId,
+          spellCasterId,
+          spellCasterId,
+        ),
+      ],
+    });
+
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Fly to resolve.");
+    }
+    const targetTurn = endTurn({
+      state: resolved.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected Fly caster end turn.");
+    }
+    const nextCasterTurn = endTurn({
+      state: targetTurn.state,
+      actorId: spellTargetId,
+    });
+    if (nextCasterTurn.tag !== "resolved") {
+      throw new Error("Expected Fly target end turn.");
+    }
+    const flyDashAct = resolveBattleSubject({
+      state: nextCasterTurn.state,
+      subject: {
+        tag: "action",
+        actorId: spellCasterId,
+        action: "dash",
+        speedKind: "fly",
+      },
+      fills: [],
+    });
+    expect(flyDashAct).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        turn: {
+          dashMovementBonusFeet: 60,
+        },
+        combatants: [
+          expect.objectContaining({
+            combatantId: spellCasterId,
+            movement: expect.objectContaining({
+              speedKinds: expect.arrayContaining([
+                expect.objectContaining({
+                  kind: "fly",
+                  speedFeet: 60,
+                  remainingFeet: 120,
+                }),
+              ]),
+            }),
+          }),
+          expect.anything(),
+        ],
+      },
+    });
+
+    const broken = breakBattleConcentration(resolved.state, spellCasterId);
+    expect(broken.combatants.get(spellCasterId)?.activeEffects).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "specialSpeedGrant",
+          sourceSpellId: flyUnitId,
+        }),
+      ]),
+    );
+    const brokenCaster = snapshotBattle(broken).combatants.find(
+      (combatant) => combatant.combatantId === spellCasterId,
+    );
+    expect(brokenCaster?.movement.speedKinds).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ kind: "fly" })]),
+    );
+
+    const caster = resolved.state.combatants.get(spellCasterId);
+    if (caster === undefined) {
+      throw new Error("Expected Fly caster.");
+    }
+    const nearlyExpiredState: BattleState = {
+      ...resolved.state,
+      combatants: new Map(resolved.state.combatants).set(spellCasterId, {
+        ...caster,
+        activeEffects: caster.activeEffects.map((effect) =>
+          effect.kind === "specialSpeedGrant" &&
+          effect.sourceSpellId === flyUnitId
+            ? {
+                ...effect,
+                expiresAt: {
+                  kind: "concentration" as const,
+                  combatantId: spellCasterId,
+                  durationTicks: elapsedTimeTicks(1),
+                },
+              }
+            : effect,
+        ),
+      }),
+    };
+    const expiredTargetTurn = endTurn({
+      state: nearlyExpiredState,
+      actorId: spellCasterId,
+    });
+    if (expiredTargetTurn.tag !== "resolved") {
+      throw new Error("Expected nearly expired Fly caster end turn.");
+    }
+    const expired = endTurn({
+      state: expiredTargetTurn.state,
+      actorId: spellTargetId,
+    });
+    expect(expired).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          expect.objectContaining({
+            combatantId: spellCasterId,
+            movement: expect.objectContaining({
+              speedKinds: expect.not.arrayContaining([
+                expect.objectContaining({ kind: "fly" }),
+              ]),
+            }),
+          }),
+          expect.anything(),
+        ],
+      },
+    });
   });
 
   test("aid is admitted as timed maximum and current Hit Point increases for up to three targets", () => {

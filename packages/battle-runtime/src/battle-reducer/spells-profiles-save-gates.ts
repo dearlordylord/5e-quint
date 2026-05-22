@@ -183,6 +183,8 @@ const FIREBALL_AREA_RADIUS_FEET = 20;
 const FIREBALL_BASE_DAMAGE_DICE = 8;
 const FIREBALL_DAMAGE_DIE_SIZE = 6;
 const FIREBALL_SLOT_DAMAGE_DICE_INCREMENT = 1;
+const LIGHTNING_BOLT_LINE_LENGTH_FEET = 100;
+const LIGHTNING_BOLT_LINE_WIDTH_FEET = 5;
 const SHATTER_BASE_SPELL_LEVEL = 2;
 const SHATTER_RANGE_FEET = 60;
 const SHATTER_AREA_RADIUS_FEET = 10;
@@ -1720,6 +1722,19 @@ export function saveGateTargeting(
     return {
       kind: "selfOriginCone",
       lengthFeet: movementFeet(value.shape.lengthFeet),
+    };
+  }
+  if (
+    value.kind === "area" &&
+    value.origin.kind === "self" &&
+    value.shape.kind === "line" &&
+    value.shape.lengthFeet === LIGHTNING_BOLT_LINE_LENGTH_FEET &&
+    value.shape.widthFeet === LIGHTNING_BOLT_LINE_WIDTH_FEET
+  ) {
+    return {
+      kind: "selfOriginLine",
+      lengthFeet: movementFeet(value.shape.lengthFeet),
+      widthFeet: movementFeet(value.shape.widthFeet),
     };
   }
   return null;

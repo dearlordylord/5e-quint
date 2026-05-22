@@ -43,6 +43,7 @@ module battleRuntimeConcentration {
         | ExpeditiousRetreatDashBonusAction => false
         | HeroismTurnStartTemporaryHitPoints(_) => false
         | SpiderClimbClimbSpeedGrant(_) => false
+        | FlySpeedHoverGrant(_) => false
         | GuidanceAbilityCheckBonus(_) => false
         | EnhanceAbilityCheckAdvantage(_) => false
         | EnthrallPerceptionPenalty => false

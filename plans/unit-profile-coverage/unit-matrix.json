@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 403,
-      "numerator": 201,
-      "percent": "49.9%"
+      "numerator": 203,
+      "percent": "50.4%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 485,
-      "numerator": 243,
-      "percent": "50.1%"
+      "numerator": 245,
+      "percent": "50.5%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 244
+      "value": 246
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 137,
-      "numerator": 137,
+      "denominator": 138,
+      "numerator": 138,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 244,
-      "numerator": 244,
+      "denominator": 246,
+      "numerator": 246,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -92,8 +92,8 @@
       "percent": "96.1%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 138,
-      "numerator": 136,
+      "denominator": 139,
+      "numerator": 137,
       "percent": "98.6%"
     },
     "runtimeMappingCoverage": {
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 137,
+      "denominator": 138,
       "numerator": 108,
-      "percent": "78.8%"
+      "percent": "78.3%"
     },
     "supportedProfileCoverage": {
-      "denominator": 202,
-      "numerator": 137,
-      "percent": "67.8%"
+      "denominator": 204,
+      "numerator": 138,
+      "percent": "67.6%"
     }
   },
   "metricSemantics": [
@@ -1414,9 +1414,10 @@
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
       ],
-      "sourceBoundary": "The runtime consumes a typed table-supplied point-origin magical Darkness area identity and exposes magical Darkness visibility/light witness consequences for that area. Runtime owns Magic Action and level-2-or-higher Spell Slot spend, 15-foot Sphere radius, caster-owned Concentration up to 10 minutes, active zone projection, ordinary-sight and Darkvision Heavily Obscured consequence, nonmagical-light denial as a witness consequence, and cleanup. Object-origin Emanation, opaque-cover blocking, automatic area membership, line-of-sight drawing, map illumination, and spell-created-light overlap dispel remain outside this profile.",
+      "sourceBoundary": "The runtime consumes a typed table-supplied point-origin magical Darkness area identity and typed caller-supplied spell-created light overlap facts keyed by tracked source effect id. Runtime owns Magic Action and level-2-or-higher Spell Slot spend, 15-foot Sphere radius, caster-owned Concentration up to 10 minutes, active zone projection, ordinary-sight and Darkvision Heavily Obscured consequence, nonmagical-light denial as a witness consequence, overlap-triggered dispel of tracked spell-light emitters whose source spell level is 2 or lower without authored spell identity dispatch, and cleanup. Object-origin Emanation, opaque-cover blocking, automatic area membership, line-of-sight drawing, and map illumination remain outside this profile.",
       "taskRefs": [
-        "L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME"
+        "L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME",
+        "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL"
       ],
       "title": "Spell invocation creates a Concentration-owned magical Darkness point-origin Sphere",
       "verificationOwners": [
@@ -1439,7 +1440,7 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
-      "sourceBoundary": "Runtime consumes typed table-supplied object identity facts, emitter-distance facts, and opaque-cover witnesses. Light additionally consumes size and worn/carried facts and owns one-hour duration cleanup plus same-caster recast replacement. Continual Flame consumes a touched-object fact, owns level-2+ Spell Slot casting, source-owned object attachment, Bright/Dim 20-foot radii, non-ticking until-dispelled persistence, and preserves prior Continual Flame emitters from the same caster. Existing light projection derives Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences without duplicating emitter state. Removal or suppression triggers such as Dispel Magic, Darkness overlap, and Antimagic Field are outside this object-emitter profile; this profile exposes object attachment and the until-dispelled marker for those future owners, while any additional generic Spell Effect facts belong to the remover or suppressor owner rather than a Continual Flame-specific registry. Colored/flame presentation, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, non-heat/fuel presentation, smother/quenched adjudication, and costly consumed Material component availability/consumption are outside this object-emitter runtime boundary.",
+      "sourceBoundary": "Runtime consumes typed table-supplied object identity facts, emitter-distance facts, and opaque-cover witnesses. Light additionally consumes size and worn/carried facts and owns one-hour duration cleanup plus same-caster recast replacement. Continual Flame consumes a touched-object fact, owns level-2+ Spell Slot casting, source-owned object attachment, Bright/Dim 20-foot radii, non-ticking until-dispelled persistence, and preserves prior Continual Flame emitters from the same caster. Existing light projection derives Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences without duplicating emitter state. Removal or suppression triggers such as Dispel Magic, Darkness overlap, and Antimagic Field are owned outside this object-emitter profile; this profile exposes object attachment and the until-dispelled marker for those removal or suppression owners, while any additional generic Spell Effect facts belong to the remover or suppressor owner rather than a Continual Flame-specific registry. Colored/flame presentation, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, non-heat/fuel presentation, smother/quenched adjudication, and costly consumed Material component availability/consumption are outside this object-emitter runtime boundary.",
       "taskRefs": [
         "SRDINV70B",
         "SRDINV89C",
@@ -2394,9 +2395,10 @@
       "taskRefs": [
         "SRDINV30A",
         "L12G-SPELL-AID",
-        "L12G-SPELL-BARKSKIN"
+        "L12G-SPELL-BARKSKIN",
+        "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME"
       ],
-      "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class bonus/floor, or Hit Point maximum effects",
+      "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, special Speed, Armor Class bonus/floor, or Hit Point maximum effects",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -5587,8 +5589,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 138,
-          "numerator": 136,
+          "denominator": 139,
+          "numerator": 137,
           "percent": "98.6%"
         }
       },
@@ -7264,6 +7266,31 @@
             }
           ],
           "unitId": "light"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.invocation-damage-save-or-attack",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "lightning_bolt"
         },
         {
           "joinStatus": "covered",
@@ -9461,6 +9488,22 @@
     },
     {
       "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover Fly's Magic Action scalar buff profile, level-3 Spell Slot spend, slot-scaled willing creature targets, Concentration duration, fixed 60-foot Fly Speed grant, Speed-change composition, and duration/concentration cleanup.",
+      "profileIds": [
+        "spell.scalar-buff"
+      ],
+      "taskId": "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests cover Fly catalog admission, known-willing touched-creature target gate, Spell Slot spend, fixed Fly Speed and hover active effect, effective movement and Dash projection, slot scaling, Concentration cleanup, and duration cleanup.",
+      "profileIds": [
+        "spell.scalar-buff"
+      ],
+      "taskId": "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME"
+    },
+    {
+      "claimKind": "qnt-proof",
       "note": "Promoted battle-runtime Quint facts for Bane, Bless, and Guidance d20 roll modifier spell effects, concentration replacement, failed-save targeting, and cantrip slot behavior.",
       "profileIds": [
         "spell.invocation-roll-modifier"
@@ -11040,11 +11083,27 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests cover Darkness Surface-profile admission, level-2-or-higher Spell Slot filtering, spell-area fill validation, Magic Action and Spell Slot spending, active caster-owned magical Darkness zone projection, ordinary-sight and Darkvision Heavily Obscured consequences, nonmagical-light denial through caller-supplied area facts, and Concentration plus duration cleanup. Object-origin and spell-created-light overlap dispel behavior remain deferred follow-ups.",
+      "note": "Focused battle-runtime tests cover Darkness Surface-profile admission, level-2-or-higher Spell Slot filtering, spell-area fill validation, Magic Action and Spell Slot spending, active caster-owned magical Darkness zone projection, ordinary-sight and Darkvision Heavily Obscured consequences, nonmagical-light denial through caller-supplied area facts, and Concentration plus duration cleanup. Object-origin behavior remains a separate follow-up boundary.",
       "profileIds": [
         "spell.invocation-magical-darkness-point-origin"
       ],
       "taskId": "L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Package-local promoted Quint facts cover Darkness overlap dispel through generic tracked ongoing spell-light facts: caller-supplied overlapping source effect ids identify spell-created Bright or Dim Light, source spell level gates level-2-or-lower removal, and non-overlapping or higher-level spell-light emitters remain active without spell identity dispatch.",
+      "profileIds": [
+        "spell.invocation-magical-darkness-point-origin"
+      ],
+      "taskId": "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Darkness removing overlapping level-2 tracked spell-created light emitters by source effect id while preserving higher-level and non-overlapping tracked light emitters. The test fixture uses a synthetic spell-light id to guard against authored spell identity dispatch.",
+      "profileIds": [
+        "spell.invocation-magical-darkness-point-origin"
+      ],
+      "taskId": "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL"
     },
     {
       "claimKind": "completed-runtime-parity",
@@ -17276,9 +17335,10 @@
           "taskRefs": [
             "SRDINV30A",
             "L12G-SPELL-AID",
-            "L12G-SPELL-BARKSKIN"
+            "L12G-SPELL-BARKSKIN",
+            "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME"
           ],
-          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class bonus/floor, or Hit Point maximum effects",
+          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, special Speed, Armor Class bonus/floor, or Hit Point maximum effects",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -17634,9 +17694,10 @@
           "taskRefs": [
             "SRDINV30A",
             "L12G-SPELL-AID",
-            "L12G-SPELL-BARKSKIN"
+            "L12G-SPELL-BARKSKIN",
+            "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME"
           ],
-          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class bonus/floor, or Hit Point maximum effects",
+          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, special Speed, Armor Class bonus/floor, or Hit Point maximum effects",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -18544,10 +18605,6 @@
             "mechanic": "Dispel Magic ending of an ongoing Continual Flame spell occurrence on a targeted object or magical effect, including spell-level and higher-slot gates, is blocked on a shared ongoing Spell Effect ending owner rather than a Continual Flame-specific remover registry."
           },
           {
-            "followUpTaskId": "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL",
-            "mechanic": "Darkness overlap dispelling spell-created Bright Light or Dim Light from level-2-or-lower spells is blocked on a Darkness runtime/profile owner that can consume generic spell-created light facts such as Continual Flame without dispatching on spell identity; the SRD Darkness Unit is authored separately by Task 9."
-          },
-          {
             "battleReadinessClosure": {
               "kind": "outside-battle-runtime",
               "owner": "character inventory/equipment spell-component legality owner",
@@ -18571,16 +18628,9 @@
             "owner": "Dispel Magic Unit support plus battle-runtime ongoing Spell Effect lifecycle owner",
             "requiredOutput": "Supported Dispel Magic profile or accepted closure with focused tests and promoted Quint/runtime parity for ending ongoing spell occurrences on targets, including object-attached until-dispelled light emitters exposed by the object-light profile.",
             "title": "Dispel Magic Ongoing Spell Ending"
-          },
-          {
-            "id": "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL",
-            "mechanic": "Promote or close the overlap rule that dispels another level-2-or-lower spell when Darkness overlaps Bright Light or Dim Light created by that spell, consuming generic spell-created light facts such as Continual Flame rather than spell identity.",
-            "owner": "battle-runtime Darkness area and spell-created light overlap owner",
-            "requiredOutput": "Focused tests and promoted Quint/runtime parity or accepted closure for overlap-triggered dispel of spell-created light; Continual Flame cleanup must remain represented through generic spell-created light facts.",
-            "title": "Darkness Spell-Created Light Dispel"
           }
         ],
-        "futureProfileOwner": "Dispel Magic ongoing Spell Effect ending plus Darkness runtime spell-created light overlap support plus character inventory/equipment component legality plus runtime-detached object presentation owner",
+        "futureProfileOwner": "Dispel Magic ongoing Spell Effect ending plus character inventory/equipment component legality plus runtime-detached object presentation owner",
         "profileIds": [
           "spell.invocation-object-light"
         ],
@@ -18595,6 +18645,7 @@
           "preserves prior Continual Flame emitters from the same caster because SRD Continual Flame has no recast-ending clause",
           "caller-supplied emitter projection facts derive Bright Light, Dim Light, and opaque-cover suppression from the object emitter",
           "derived Dim Light illumination projects Lightly Obscured sight consequences and Darkvision-adjusted sight consequences without duplicating emitter state",
+          "tracked object-attached Continual Flame spell-light occurrences expose generic source effect id and source spell level facts consumed by Darkness overlap dispel without dispatching on Continual Flame identity",
           "Antimagic Field suppresses ordinary tracked object-attached Continual Flame spell-light occurrences without deleting their ongoing spell occurrence; until-dispelled duration remains represented by the original non-ticking emitter expiration."
         ],
         "tag": "profile-subset-supported"
@@ -18619,7 +18670,7 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
-          "sourceBoundary": "Runtime consumes typed table-supplied object identity facts, emitter-distance facts, and opaque-cover witnesses. Light additionally consumes size and worn/carried facts and owns one-hour duration cleanup plus same-caster recast replacement. Continual Flame consumes a touched-object fact, owns level-2+ Spell Slot casting, source-owned object attachment, Bright/Dim 20-foot radii, non-ticking until-dispelled persistence, and preserves prior Continual Flame emitters from the same caster. Existing light projection derives Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences without duplicating emitter state. Removal or suppression triggers such as Dispel Magic, Darkness overlap, and Antimagic Field are outside this object-emitter profile; this profile exposes object attachment and the until-dispelled marker for those future owners, while any additional generic Spell Effect facts belong to the remover or suppressor owner rather than a Continual Flame-specific registry. Colored/flame presentation, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, non-heat/fuel presentation, smother/quenched adjudication, and costly consumed Material component availability/consumption are outside this object-emitter runtime boundary.",
+          "sourceBoundary": "Runtime consumes typed table-supplied object identity facts, emitter-distance facts, and opaque-cover witnesses. Light additionally consumes size and worn/carried facts and owns one-hour duration cleanup plus same-caster recast replacement. Continual Flame consumes a touched-object fact, owns level-2+ Spell Slot casting, source-owned object attachment, Bright/Dim 20-foot radii, non-ticking until-dispelled persistence, and preserves prior Continual Flame emitters from the same caster. Existing light projection derives Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences without duplicating emitter state. Removal or suppression triggers such as Dispel Magic, Darkness overlap, and Antimagic Field are owned outside this object-emitter profile; this profile exposes object attachment and the until-dispelled marker for those removal or suppression owners, while any additional generic Spell Effect facts belong to the remover or suppressor owner rather than a Continual Flame-specific registry. Colored/flame presentation, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, non-heat/fuel presentation, smother/quenched adjudication, and costly consumed Material component availability/consumption are outside this object-emitter runtime boundary.",
           "taskRefs": [
             "SRDINV70B",
             "SRDINV89C",
@@ -18833,10 +18884,6 @@
           {
             "followUpTaskId": "L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH",
             "mechanic": "Object-origin branch: target object not worn or carried, 15-foot Emanation originating from that object, movement with the object, and opaque-cover blocking remain blocked on the object-origin spell-area and opaque-cover witness owner."
-          },
-          {
-            "followUpTaskId": "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL",
-            "mechanic": "Overlap-triggered dispel of level-2-or-lower spell-created Bright Light or Dim Light remains blocked on a generic spell-created light overlap owner; this point-origin profile does not dispatch on spell identity or delete light emitters."
           }
         ],
         "followUpTasks": [
@@ -18846,16 +18893,9 @@
             "owner": "Surface Spell Definition authoring plus battle-runtime object-origin spell-area and opaque-cover witness boundary",
             "requiredOutput": "Darkness Surface content and runtime owner decision with focused tests for the object-origin branch, or accepted closure if object attachment, movement, and opaque-cover blocking stay outside promoted runtime.",
             "title": "Darkness Object-Origin Branch"
-          },
-          {
-            "id": "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL",
-            "mechanic": "Promote or close the overlap rule that dispels another level-2-or-lower spell when Darkness overlaps Bright Light or Dim Light created by that spell, consuming generic spell-created light facts such as Continual Flame rather than spell identity.",
-            "owner": "Darkness Surface definition plus battle-runtime Darkness area and spell-created light overlap owner",
-            "requiredOutput": "Focused tests and promoted Quint/runtime parity or accepted closure for overlap-triggered dispel of spell-created light; Continual Flame cleanup must remain represented through generic spell-created light facts.",
-            "title": "Darkness Spell-Created Light Dispel"
           }
         ],
-        "futureProfileOwner": "battle-runtime object-origin spell-area and opaque-cover witness boundary plus spell-created light overlap owner",
+        "futureProfileOwner": "battle-runtime object-origin spell-area and opaque-cover witness boundary",
         "profileIds": [
           "spell.invocation-magical-darkness-point-origin"
         ],
@@ -18868,6 +18908,8 @@
           "caster-owned Concentration up to 10 minutes",
           "active magical Darkness zone projection whose sight consequence is Heavily Obscured for ordinary sight and Darkvision",
           "nonmagical light denial exposed as a magical-Darkness area witness consequence without deleting existing light emitters",
+          "caller-supplied spell-created Bright Light or Dim Light overlap facts identify tracked ongoing spell-light occurrences by generic source effect id",
+          "overlapping tracked spell-light emitters whose source spell level is 2 or lower are dispelled without dispatching on authored spell identity",
           "Concentration and duration cleanup remove the active magical Darkness zone"
         ],
         "tag": "profile-subset-supported"
@@ -18895,9 +18937,10 @@
             "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
             "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
           ],
-          "sourceBoundary": "The runtime consumes a typed table-supplied point-origin magical Darkness area identity and exposes magical Darkness visibility/light witness consequences for that area. Runtime owns Magic Action and level-2-or-higher Spell Slot spend, 15-foot Sphere radius, caster-owned Concentration up to 10 minutes, active zone projection, ordinary-sight and Darkvision Heavily Obscured consequence, nonmagical-light denial as a witness consequence, and cleanup. Object-origin Emanation, opaque-cover blocking, automatic area membership, line-of-sight drawing, map illumination, and spell-created-light overlap dispel remain outside this profile.",
+          "sourceBoundary": "The runtime consumes a typed table-supplied point-origin magical Darkness area identity and typed caller-supplied spell-created light overlap facts keyed by tracked source effect id. Runtime owns Magic Action and level-2-or-higher Spell Slot spend, 15-foot Sphere radius, caster-owned Concentration up to 10 minutes, active zone projection, ordinary-sight and Darkvision Heavily Obscured consequence, nonmagical-light denial as a witness consequence, overlap-triggered dispel of tracked spell-light emitters whose source spell level is 2 or lower without authored spell identity dispatch, and cleanup. Object-origin Emanation, opaque-cover blocking, automatic area membership, line-of-sight drawing, and map illumination remain outside this profile.",
           "taskRefs": [
-            "L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME"
+            "L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME",
+            "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL"
           ],
           "title": "Spell invocation creates a Concentration-owned magical Darkness point-origin Sphere",
           "verificationOwners": [
@@ -19872,9 +19915,10 @@
           "taskRefs": [
             "SRDINV30A",
             "L12G-SPELL-AID",
-            "L12G-SPELL-BARKSKIN"
+            "L12G-SPELL-BARKSKIN",
+            "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME"
           ],
-          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class bonus/floor, or Hit Point maximum effects",
+          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, special Speed, Armor Class bonus/floor, or Hit Point maximum effects",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -21605,6 +21649,98 @@
       },
       "claim": {
         "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "table/spatial owner",
+          "reason": "Automatic Line direction, Total Cover blocking, point-of-origin inclusion choice, affected-creature derivation, and map geometry remain caller-supplied table/spatial facts outside the Lightning Bolt runtime profile."
+        },
+        "profileIds": [
+          "spell.invocation-damage-save-or-attack"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action level-3-or-higher Spell Slot casting",
+          "caller-supplied self-origin 100-foot-long, 5-foot-wide Line affected-creature boundary",
+          "Dexterity save-gated Lightning damage with half damage on successful saves",
+          "slot-scaled Lightning damage dice"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3-SPELL-LIGHTNING-BOLT-RUNTIME-SURVEY"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-damage-save-or-attack",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE10",
+            "QMBT5",
+            "SRDINV29E",
+            "SRDINV32B",
+            "SRDINV34",
+            "SRDINV59A",
+            "SRDINV59B",
+            "SRDINV79",
+            "SRDINV51",
+            "SRDINV52",
+            "SRDINV64",
+            "SRDINV67",
+            "SRDINV69B",
+            "SRDINV84A",
+            "SRDINV84B",
+            "SRDINV89A"
+          ],
+          "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/lightning_bolt.json",
+      "unitId": "lightning_bolt"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
           "kind": "outside-runtime-presentation-exploration",
           "owner": "exploration/detection owner",
           "reason": "Kind matching, target presence, closest-target selection, and direction/distance disclosure for Beasts, Plant creatures, or nonmagical plants are exploration/table facts outside promoted battle runtime."
@@ -21695,7 +21831,7 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
-          "sourceBoundary": "Runtime consumes typed table-supplied object identity facts, emitter-distance facts, and opaque-cover witnesses. Light additionally consumes size and worn/carried facts and owns one-hour duration cleanup plus same-caster recast replacement. Continual Flame consumes a touched-object fact, owns level-2+ Spell Slot casting, source-owned object attachment, Bright/Dim 20-foot radii, non-ticking until-dispelled persistence, and preserves prior Continual Flame emitters from the same caster. Existing light projection derives Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences without duplicating emitter state. Removal or suppression triggers such as Dispel Magic, Darkness overlap, and Antimagic Field are outside this object-emitter profile; this profile exposes object attachment and the until-dispelled marker for those future owners, while any additional generic Spell Effect facts belong to the remover or suppressor owner rather than a Continual Flame-specific registry. Colored/flame presentation, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, non-heat/fuel presentation, smother/quenched adjudication, and costly consumed Material component availability/consumption are outside this object-emitter runtime boundary.",
+          "sourceBoundary": "Runtime consumes typed table-supplied object identity facts, emitter-distance facts, and opaque-cover witnesses. Light additionally consumes size and worn/carried facts and owns one-hour duration cleanup plus same-caster recast replacement. Continual Flame consumes a touched-object fact, owns level-2+ Spell Slot casting, source-owned object attachment, Bright/Dim 20-foot radii, non-ticking until-dispelled persistence, and preserves prior Continual Flame emitters from the same caster. Existing light projection derives Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences without duplicating emitter state. Removal or suppression triggers such as Dispel Magic, Darkness overlap, and Antimagic Field are owned outside this object-emitter profile; this profile exposes object attachment and the until-dispelled marker for those removal or suppression owners, while any additional generic Spell Effect facts belong to the remover or suppressor owner rather than a Continual Flame-specific registry. Colored/flame presentation, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, non-heat/fuel presentation, smother/quenched adjudication, and costly consumed Material component availability/consumption are outside this object-emitter runtime boundary.",
           "taskRefs": [
             "SRDINV70B",
             "SRDINV89C",
@@ -21760,9 +21896,10 @@
           "taskRefs": [
             "SRDINV30A",
             "L12G-SPELL-AID",
-            "L12G-SPELL-BARKSKIN"
+            "L12G-SPELL-BARKSKIN",
+            "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME"
           ],
-          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class bonus/floor, or Hit Point maximum effects",
+          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, special Speed, Armor Class bonus/floor, or Hit Point maximum effects",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -24564,9 +24701,10 @@
           "taskRefs": [
             "SRDINV30A",
             "L12G-SPELL-AID",
-            "L12G-SPELL-BARKSKIN"
+            "L12G-SPELL-BARKSKIN",
+            "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME"
           ],
-          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class bonus/floor, or Hit Point maximum effects",
+          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, special Speed, Armor Class bonus/floor, or Hit Point maximum effects",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -24944,6 +25082,87 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "table-spatial-derivation",
+          "owner": "battle-runtime spell invocation/effect lifecycle plus future falling witness owner",
+          "reason": "This task owns Fly cast admission, Spell Slot spend, Concentration, fixed Fly Speed, hover retention, effective movement, Dash projection, and normal duration/concentration cleanup. Spell-end falling remains deferred to the caller-supplied aloft/can-stop-fall witness boundary."
+        },
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "table-spatial-derivation",
+              "owner": "L3-FOLLOWUP-FLY-END-FALL-WITNESS",
+              "reason": "Fall handoff needs caller-supplied still-aloft and can-stop-fall witnesses; promoted battle runtime does not own elevation simulation, automatic landing legality, or table pathfinding state."
+            },
+            "mechanic": "spell-end falling for affected targets that are aloft and cannot stop the fall"
+          }
+        ],
+        "profileIds": [
+          "spell.scalar-buff"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action level-3-or-higher Spell Slot casting from the authored SRD Fly Unit",
+          "caller-supplied known-willing touched creature target admission with one additional target per Spell Slot level above 3",
+          "caster-owned Concentration up to 10 minutes with active-effect cleanup on Concentration break or duration expiry",
+          "fixed 60-foot Fly Speed grant retained as a source-owned active effect instead of duplicating walk Speed or spent Movement state",
+          "hover retained on the Fly Speed grant active effect",
+          "granted Fly Speed appears in effective movement and Dash budgets while the spell effect remains active",
+          "general Speed changes compose with the granted fixed Fly Speed through the shared Speed algebra"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.scalar-buff",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV30A",
+            "L12G-SPELL-AID",
+            "L12G-SPELL-BARKSKIN",
+            "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME"
+          ],
+          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, special Speed, Armor Class bonus/floor, or Hit Point maximum effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/fly.json",
+      "unitId": "fly"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
           "owner": "table/spatial movement owner",
           "reason": "Automatic vertical-surface and ceiling path legality, hands-free traversal presentation, collision/pathfinding, and final-position derivation remain caller/table-owned; battle runtime owns the Spider Climb spell effect and Speed projection."
         },
@@ -24985,9 +25204,10 @@
           "taskRefs": [
             "SRDINV30A",
             "L12G-SPELL-AID",
-            "L12G-SPELL-BARKSKIN"
+            "L12G-SPELL-BARKSKIN",
+            "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME"
           ],
-          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class bonus/floor, or Hit Point maximum effects",
+          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, special Speed, Armor Class bonus/floor, or Hit Point maximum effects",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -27586,6 +27806,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "companion-control-boundary",
+          "owner": "future mount companion lifecycle/control owner",
+          "reason": "Find Steed's Surface-represented runtime behavior is closed at the companion-control boundary: a future mount companion owner must model summoned mount lifecycle, rider/control state, stat-block projection and actions, disappearance, and item-drop boundaries without autonomous companion action selection or authored-identity dispatch in generic runtime code."
+        },
+        "reason": "Find Steed's Surface record has SRD provenance and partial structured spawned-creature facts for Action casting, 30-foot range, V/S components, instantaneous duration, an inline Otherworldly Steed stat block, caster-chosen Celestial/Fey/Fiend creature type mode, slot-scaled AC and Hit Points, walking and level-4+ flying Speeds, ability scores, Saving Throw proficiencies, caster-language projection, a Radiant placeholder Slam action, Life Bond healing, shared-Initiative control metadata, and disappearance metadata for 0 Hit Points, spell end, caster 0 Hit Points, and equipment left behind. No promoted battle-runtime profile is claimed because these represented clauses require a mount companion owner for summoned steed identity, rider/control state, stat-block projection and action execution, disappearance, and item-drop boundaries; the existing Find Familiar profile is source-specific and is not admission evidence for Find Steed.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -27682,24 +27912,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/flesh_to_stone.json",
       "unitId": "flesh_to_stone"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/fly.json",
-      "unitId": "fly"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -27884,6 +28096,28 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR",
+            "mechanic": "Repair Hypnotic Pattern's Surface shape so the SRD spell definition, 30-foot Cube, sight-gated affected-creature predicate, Charmed plus Incapacitated plus Speed 0 failed-save bundle, target-takes-damage early end, and another-creature action-spend shake-awake escape are represented as typed procedure facts instead of prose-only runtime behavior.",
+            "owner": "Surface Spell Definition authoring and Unit catalog admission boundary",
+            "requiredOutput": "Updated Dhall and generated JSON content plus focused Surface/unit-catalog tests proving Hypnotic Pattern round-trips with typed sight-gated area targeting and target-specific escape facts before runtime admission.",
+            "title": "Hypnotic Pattern Surface Escape Repair"
+          },
+          {
+            "id": "L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME",
+            "mechanic": "Promote Hypnotic Pattern after Surface repair by admitting the repaired record into the Unit catalog; spending the Magic Action and level-3-or-higher Spell Slot; owning caster Concentration up to 1 minute; consuming caller-supplied Cube affected-creature and sight witnesses; resolving Wisdom Saving Throws; applying one source-owned target effect that projects Charmed, Incapacitated, and Speed 0; removing only the spell-owned target effect on affected-target damage or another creature's shake-awake action; and cleaning up on Concentration or duration end without authored-identity dispatch.",
+            "owner": "battle-runtime spell invocation/effect lifecycle, action-spend escape owner, and promoted Quint parity",
+            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, generated coverage artifacts, and promoted Quint/runtime parity for cast admission, Spell Slot spend, Concentration ownership, Saving Throw outcomes, linked condition and Speed projection, damage cleanup, shake-awake cleanup, and duration cleanup while leaving automatic Cube geometry, Total Cover, point-of-origin inclusion, area membership, and sight derivation table-owned.",
+            "title": "Hypnotic Pattern Control Runtime"
+          }
+        ],
+        "futureProfileOwner": "Surface sight/escape authoring plus battle-runtime save-gated composite condition/effect lifecycle and promoted Quint parity",
+        "reason": "The installed SRD 5.2.1 Hypnotic Pattern Surface Spell Definition encodes Action level-3 Spell Slot casting, 120-foot range, caster-owned Concentration up to 1 minute, a point-origin 30-foot Cube, Wisdom Saving Throw, failed-save Charmed condition, Incapacitated projection while Charmed, Speed 0 while Charmed, and target-specific ending when the affected target takes damage. No promoted battle-runtime profile exists yet because exact support needs structured Surface facts for sight-gated affected creatures and another-creature action-spend shake-awake escape, plus a source-owned runtime target effect that keeps Charmed, Incapacitated, and Speed 0 linked without duplicating independent condition or Speed sources.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -27972,24 +28206,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/insect_plague.json",
       "unitId": "insect_plague"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/lightning_bolt.json",
-      "unitId": "lightning_bolt"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

@@ -202,7 +202,7 @@
     "levelThreeClassRows": 51,
     "spellPressureRows": 367,
     "levelThreeSpellPressureRows": 128,
-    "levelThreeInstalledSpellPressureRows": 15,
+    "levelThreeInstalledSpellPressureRows": 20,
     "levelOneBattleReadiness": {
       "denominator": 367,
       "numerator": 367,
@@ -236,14 +236,14 @@
     },
     "levelThreeSpellBattleReadiness": {
       "denominator": 128,
-      "numerator": 20,
-      "percent": "15.6%",
+      "numerator": 25,
+      "percent": "19.5%",
       "rowsByStatus": {
-        "battle-runtime-required": 58,
+        "battle-runtime-required": 62,
         "accepted-no-battle-effect": 13,
         "partial-battle-runtime": 8,
-        "owner-evidence-required": 42,
-        "accepted": 7
+        "owner-evidence-required": 33,
+        "accepted": 12
       }
     },
     "levelOneClassContainers": 12,
@@ -270,15 +270,15 @@
       "spell access/list pressure": 5
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 441,
+      "catalog-installed-owner-evidence-present": 446,
       "non-runtime": 36,
       "level-3-follow-up-required": 17,
       "catalog-installed-owner-evidence-required": 2,
       "catalog-only/dead-for-now": 137,
       "missing-authored-record": 58,
-      "catalog-authored-review-required": 42,
-      "catalog-installed-needs-owner-evidence": 1,
-      "catalog-authored-executable-follow-up": 1
+      "catalog-authored-review-required": 33,
+      "catalog-authored-executable-follow-up": 5,
+      "catalog-installed-needs-owner-evidence": 1
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 243,
@@ -289,11 +289,12 @@
     "levelThreeSpellPressureRowsByDisposition": {
       "missing-authored-record": 58,
       "catalog-only/dead-for-now": 13,
-      "catalog-installed-owner-evidence-present": 15,
-      "catalog-authored-review-required": 42
+      "catalog-installed-owner-evidence-present": 20,
+      "catalog-authored-review-required": 33,
+      "catalog-authored-executable-follow-up": 4
     },
     "levelThreeInstalledSpellPressureRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 15
+      "catalog-installed-owner-evidence-present": 20
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -7708,10 +7709,11 @@
         "state": "not-installed",
         "unitId": "hypnotic_pattern"
       },
-      "finalDisposition": "catalog-authored-review-required",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Promote follow-up split L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR, L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME: L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR owns Repair Hypnotic Pattern's Surface shape so the SRD spell definition, 30-foot Cube, sight-gated affected-creature predicate, Charmed plus Incapacitated plus Speed 0 failed-save bundle, target-takes-damage early end, and another-creature action-spend shake-awake escape are represented as typed procedure facts instead of prose-only runtime behavior. Required output: Updated Dhall and generated JSON content plus focused Surface/unit-catalog tests proving Hypnotic Pattern round-trips with typed sight-gated area targeting and target-specific escape facts before runtime admission.; L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME owns Promote Hypnotic Pattern after Surface repair by admitting the repaired record into the Unit catalog; spending the Magic Action and level-3-or-higher Spell Slot; owning caster Concentration up to 1 minute; consuming caller-supplied Cube affected-creature and sight witnesses; resolving Wisdom Saving Throws; applying one source-owned target effect that projects Charmed, Incapacitated, and Speed 0; removing only the spell-owned target effect on affected-target damage or another creature's shake-awake action; and cleaning up on Concentration or duration end without authored-identity dispatch. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, generated coverage artifacts, and promoted Quint/runtime parity for cast admission, Spell Slot spend, Concentration ownership, Saving Throw outcomes, linked condition and Speed projection, damage cleanup, shake-awake cleanup, and duration cleanup while leaving automatic Cube geometry, Total Cover, point-of-origin inclusion, area membership, and sight derivation table-owned.",
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_major_image",
@@ -18113,7 +18115,7 @@
       "detail": "Find Steed (Conjuration; —)",
       "candidateUnitId": "find_steed",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -18124,9 +18126,16 @@
         "state": "not-installed",
         "unitId": "find_steed"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "companion-control-boundary",
+        "owner": "future mount companion lifecycle/control owner",
+        "reason": "Find Steed's Surface-represented runtime behavior is closed at the companion-control boundary: a future mount companion owner must model summoned mount lifecycle, rider/control state, stat-block projection and actions, disappearance, and item-drop boundaries without autonomous companion action selection or authored-identity dispatch in generic runtime code."
+      },
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
+      "nextAction": "Find Steed's Surface-represented runtime behavior is closed at the companion-control boundary: a future mount companion owner must model summoned mount lifecycle, rider/control state, stat-block projection and actions, disappearance, and item-drop boundaries without autonomous companion action selection or authored-identity dispatch in generic runtime code.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -26037,13 +26046,31 @@
         "sourceRecordPath": "packages/surface/content/fly.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "fly"
       },
-      "finalDisposition": "catalog-authored-review-required",
-      "ownerEvidence": [],
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "L3-FOLLOWUP-FLY-END-FALL-WITNESS",
+        "reason": "Fall handoff needs caller-supplied still-aloft and can-stop-fall witnesses; promoted battle runtime does not own elevation simulation, automatic landing legality, or table pathfinding state."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit fly is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME at packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_gaseous_form",
@@ -26129,10 +26156,11 @@
         "state": "not-installed",
         "unitId": "hypnotic_pattern"
       },
-      "finalDisposition": "catalog-authored-review-required",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Promote follow-up split L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR, L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME: L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR owns Repair Hypnotic Pattern's Surface shape so the SRD spell definition, 30-foot Cube, sight-gated affected-creature predicate, Charmed plus Incapacitated plus Speed 0 failed-save bundle, target-takes-damage early end, and another-creature action-spend shake-awake escape are represented as typed procedure facts instead of prose-only runtime behavior. Required output: Updated Dhall and generated JSON content plus focused Surface/unit-catalog tests proving Hypnotic Pattern round-trips with typed sight-gated area targeting and target-specific escape facts before runtime admission.; L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME owns Promote Hypnotic Pattern after Surface repair by admitting the repaired record into the Unit catalog; spending the Magic Action and level-3-or-higher Spell Slot; owning caster Concentration up to 1 minute; consuming caller-supplied Cube affected-creature and sight witnesses; resolving Wisdom Saving Throws; applying one source-owned target effect that projects Charmed, Incapacitated, and Speed 0; removing only the spell-owned target effect on affected-target damage or another creature's shake-awake action; and cleaning up on Concentration or duration end without authored-identity dispatch. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, generated coverage artifacts, and promoted Quint/runtime parity for cast admission, Spell Slot spend, Concentration ownership, Saving Throw outcomes, linked condition and Speed projection, damage cleanup, shake-awake cleanup, and duration cleanup while leaving automatic Cube geometry, Total Cover, point-of-origin inclusion, area membership, and sight derivation table-owned.",
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_lightning_bolt",
@@ -26157,13 +26185,31 @@
         "sourceRecordPath": "packages/surface/content/lightning_bolt.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "lightning_bolt"
       },
-      "finalDisposition": "catalog-authored-review-required",
-      "ownerEvidence": [],
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial owner",
+        "reason": "Automatic Line direction, Total Cover blocking, point-of-origin inclusion choice, affected-creature derivation, and map geometry remain caller-supplied table/spatial facts outside the Lightning Bolt runtime profile."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit lightning_bolt is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-SPELL-LIGHTNING-BOLT-RUNTIME-SURVEY at packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_major_image",
@@ -28624,13 +28670,31 @@
         "sourceRecordPath": "packages/surface/content/fly.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "fly"
       },
-      "finalDisposition": "catalog-authored-review-required",
-      "ownerEvidence": [],
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "L3-FOLLOWUP-FLY-END-FALL-WITNESS",
+        "reason": "Fall handoff needs caller-supplied still-aloft and can-stop-fall witnesses; promoted battle runtime does not own elevation simulation, automatic landing legality, or table pathfinding state."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit fly is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME at packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_gaseous_form",
@@ -28687,10 +28751,11 @@
         "state": "not-installed",
         "unitId": "hypnotic_pattern"
       },
-      "finalDisposition": "catalog-authored-review-required",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Promote follow-up split L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR, L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME: L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR owns Repair Hypnotic Pattern's Surface shape so the SRD spell definition, 30-foot Cube, sight-gated affected-creature predicate, Charmed plus Incapacitated plus Speed 0 failed-save bundle, target-takes-damage early end, and another-creature action-spend shake-awake escape are represented as typed procedure facts instead of prose-only runtime behavior. Required output: Updated Dhall and generated JSON content plus focused Surface/unit-catalog tests proving Hypnotic Pattern round-trips with typed sight-gated area targeting and target-specific escape facts before runtime admission.; L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME owns Promote Hypnotic Pattern after Surface repair by admitting the repaired record into the Unit catalog; spending the Magic Action and level-3-or-higher Spell Slot; owning caster Concentration up to 1 minute; consuming caller-supplied Cube affected-creature and sight witnesses; resolving Wisdom Saving Throws; applying one source-owned target effect that projects Charmed, Incapacitated, and Speed 0; removing only the spell-owned target effect on affected-target damage or another creature's shake-awake action; and cleaning up on Concentration or duration end without authored-identity dispatch. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, generated coverage artifacts, and promoted Quint/runtime parity for cast admission, Spell Slot spend, Concentration ownership, Saving Throw outcomes, linked condition and Speed projection, damage cleanup, shake-awake cleanup, and duration cleanup while leaving automatic Cube geometry, Total Cover, point-of-origin inclusion, area membership, and sight derivation table-owned.",
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_magic_circle",
@@ -33410,13 +33475,31 @@
         "sourceRecordPath": "packages/surface/content/fly.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "fly"
       },
-      "finalDisposition": "catalog-authored-review-required",
-      "ownerEvidence": [],
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "L3-FOLLOWUP-FLY-END-FALL-WITNESS",
+        "reason": "Fall handoff needs caller-supplied still-aloft and can-stop-fall witnesses; promoted battle runtime does not own elevation simulation, automatic landing legality, or table pathfinding state."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit fly is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME at packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_gaseous_form",
@@ -33531,10 +33614,11 @@
         "state": "not-installed",
         "unitId": "hypnotic_pattern"
       },
-      "finalDisposition": "catalog-authored-review-required",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Promote follow-up split L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR, L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME: L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR owns Repair Hypnotic Pattern's Surface shape so the SRD spell definition, 30-foot Cube, sight-gated affected-creature predicate, Charmed plus Incapacitated plus Speed 0 failed-save bundle, target-takes-damage early end, and another-creature action-spend shake-awake escape are represented as typed procedure facts instead of prose-only runtime behavior. Required output: Updated Dhall and generated JSON content plus focused Surface/unit-catalog tests proving Hypnotic Pattern round-trips with typed sight-gated area targeting and target-specific escape facts before runtime admission.; L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME owns Promote Hypnotic Pattern after Surface repair by admitting the repaired record into the Unit catalog; spending the Magic Action and level-3-or-higher Spell Slot; owning caster Concentration up to 1 minute; consuming caller-supplied Cube affected-creature and sight witnesses; resolving Wisdom Saving Throws; applying one source-owned target effect that projects Charmed, Incapacitated, and Speed 0; removing only the spell-owned target effect on affected-target damage or another creature's shake-awake action; and cleaning up on Concentration or duration end without authored-identity dispatch. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, generated coverage artifacts, and promoted Quint/runtime parity for cast admission, Spell Slot spend, Concentration ownership, Saving Throw outcomes, linked condition and Speed projection, damage cleanup, shake-awake cleanup, and duration cleanup while leaving automatic Cube geometry, Total Cover, point-of-origin inclusion, area membership, and sight derivation table-owned.",
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_lightning_bolt",
@@ -33559,13 +33643,31 @@
         "sourceRecordPath": "packages/surface/content/lightning_bolt.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "lightning_bolt"
       },
-      "finalDisposition": "catalog-authored-review-required",
-      "ownerEvidence": [],
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial owner",
+        "reason": "Automatic Line direction, Total Cover blocking, point-of-origin inclusion choice, affected-creature derivation, and map geometry remain caller-supplied table/spatial facts outside the Lightning Bolt runtime profile."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit lightning_bolt is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-SPELL-LIGHTNING-BOLT-RUNTIME-SURVEY at packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_magic_circle",

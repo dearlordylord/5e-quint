@@ -3612,7 +3612,8 @@ export function scalarBuffSpellEffect(
     effect.kind === "grant_speed" &&
     typeof effect.feet !== "number" &&
     effect.feet.kind === "walk_speed" &&
-    isBattleSpecialSpeedKind(effect.speedKind)
+    isEqualToSpeedGrantKind(effect.speedKind) &&
+    effect.hover === undefined
   ) {
     const speedGrantExpiresAt = scalarBuffSpecialSpeedGrantExpiration(
       actorId,
@@ -3627,6 +3628,36 @@ export function scalarBuffSpellEffect(
             sourceSpellId: spell.id,
             sourceCombatantId: actorId,
             speedKind: effect.speedKind,
+            speed: { kind: "equalToSpeed" },
+            hover: false,
+            expiresAt: speedGrantExpiresAt,
+          },
+        };
+  }
+  if (
+    effect.kind === "grant_speed" &&
+    typeof effect.feet === "number" &&
+    effect.speedKind === "fly" &&
+    effect.hover === true
+  ) {
+    const speedGrantExpiresAt = scalarBuffSpecialSpeedGrantExpiration(
+      actorId,
+      duration,
+    );
+    return speedGrantExpiresAt === null
+      ? null
+      : {
+          kind: "activeEffect",
+          activeEffect: {
+            kind: "specialSpeedGrant",
+            sourceSpellId: spell.id,
+            sourceCombatantId: actorId,
+            speedKind: effect.speedKind,
+            speed: {
+              kind: "fixed",
+              speedFeet: movementFeet(effect.feet),
+            },
+            hover: true,
             expiresAt: speedGrantExpiresAt,
           },
         };
@@ -3699,10 +3730,12 @@ export function scalarBuffSpellEffect(
   return null;
 }
 
-function isBattleSpecialSpeedKind(
+function isEqualToSpeedGrantKind(
   speedKind: Extract<EffectAtom, { readonly kind: "grant_speed" }>["speedKind"],
-): speedKind is BattleSpecialSpeedKind {
-  return BATTLE_SPECIAL_SPEED_KINDS.some((kind) => kind === speedKind);
+): speedKind is Exclude<BattleSpecialSpeedKind, "fly"> {
+  return BATTLE_SPECIAL_SPEED_KINDS.some(
+    (kind) => kind !== "fly" && kind === speedKind,
+  );
 }
 
 function scalarBuffSpecialSpeedGrantExpiration(

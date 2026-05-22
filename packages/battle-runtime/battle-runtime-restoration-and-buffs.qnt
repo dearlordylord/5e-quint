@@ -79,7 +79,7 @@ module battleRuntimeRestorationAndBuffs {
     targets: Set[Actor],
     knownWillingTargets: Set[Actor],
   ): bool =
-    if (invocation == BarkskinScalarBuff or invocation == SpiderClimbScalarBuff)
+    if (invocation == BarkskinScalarBuff or invocation == SpiderClimbScalarBuff or invocation == FlyScalarBuff)
       targets.forall(target => knownWillingTargets.contains(target))
     else
       true
@@ -89,6 +89,7 @@ module battleRuntimeRestorationAndBuffs {
 
   pure def aidDurationTicks: int = 8 * 60 * 10
   pure def barkskinDurationTicks: int = 1 * 60 * 10
+  pure def flyDurationTicks: int = 10 * 10
 
   pure def scalarBuffActiveEffects(invocation: ScalarBuffSpell, slotLevel: int): Set[ActiveEffect] =
     battleRuntimeScalarBuffEffects(battleRuntimeScalarBuffProfileForInvocation(invocation), 0, slotLevel)
@@ -99,6 +100,7 @@ module battleRuntimeRestorationAndBuffs {
       | BattleRuntimeLongstriderSpeedIncreaseEffect => LongstriderSpeedDelta
       | BattleRuntimeShieldOfFaithArmorClassBonusEffect => ShieldOfFaithArmorClassBonus
       | BattleRuntimeSpiderClimbClimbSpeedGrantEffect => SpiderClimbClimbSpeedGrant({ durationTicks: 600 })
+      | BattleRuntimeFlySpeedHoverGrantEffect => FlySpeedHoverGrant({ durationTicks: flyDurationTicks })
       | BattleRuntimeBarkskinArmorClassFloorEffect => BarkskinArmorClassFloor({ durationTicks: barkskinDurationTicks })
       | BattleRuntimeHeroismFrightenedImmunityEffect => HeroismFrightenedImmunity
       | BattleRuntimeHeroismTurnStartTemporaryHitPointsEffect(data) => HeroismTurnStartTemporaryHitPoints(data)

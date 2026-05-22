@@ -351,7 +351,8 @@ module battleRuntimeMovement {
     })
 
   pure def movementSpeed(combatant: Combatant, speedKind: MovementSpeedKind): int = {
-    val walkSpeed = combatant.speed + (if (combatant.activeEffects.contains(LongstriderSpeedDelta)) 10 else 0)
+    val speedDelta = if (combatant.activeEffects.contains(LongstriderSpeedDelta)) 10 else 0
+    val walkSpeed = combatant.speed + speedDelta
     val hasSpiderClimbSpeedGrant = combatant.activeEffects.exists(effect => match effect {
       | SpiderClimbClimbSpeedGrant(_) => true
       | _ => false
@@ -360,10 +361,15 @@ module battleRuntimeMovement {
       | SelfTransformationModeEffect(data) => data.mode == AquaticAdaptationMode
       | _ => false
     })
+    val hasFlySpeedGrant = combatant.activeEffects.exists(effect => match effect {
+      | FlySpeedHoverGrant(_) => true
+      | _ => false
+    })
     match speedKind {
       | WalkSpeedKind => walkSpeed
       | ClimbSpeedKind => if (combatant.hasRovingSpeedKindGrants or hasSpiderClimbSpeedGrant) walkSpeed else 0
       | SwimSpeedKind => if (combatant.hasRovingSpeedKindGrants or hasSelfTransformationSwimSpeedGrant) walkSpeed else 0
+      | FlySpeedKind => if (hasFlySpeedGrant) 60 + speedDelta else 0
     }
   }
 

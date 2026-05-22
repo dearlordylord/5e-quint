@@ -198,6 +198,9 @@ module battleRuntimeTimedEffects {
         | SpiderClimbClimbSpeedGrant(data) => SpiderClimbClimbSpeedGrant({
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
+        | FlySpeedHoverGrant(data) => FlySpeedHoverGrant({
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
         | AnimalFriendshipCharmed(data) => AnimalFriendshipCharmed({
             source: data.source,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
@@ -389,6 +392,7 @@ module battleRuntimeTimedEffects {
         | SearingSmiteBurning(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | ShiningSmiteIllumination(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | SpiderClimbClimbSpeedGrant(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | FlySpeedHoverGrant(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | AnimalFriendshipCharmed(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | CharmPersonCharmed(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | BlindnessDeafnessBlinded(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)

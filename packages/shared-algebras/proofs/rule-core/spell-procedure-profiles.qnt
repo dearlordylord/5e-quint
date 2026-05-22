@@ -86,6 +86,7 @@ module spellProcedureProfiles {
     | InflictWoundsSaveDamageProfile
     | BurningHandsSaveDamageProfile
     | FireballSaveDamageProfile
+    | LightningBoltSaveDamageProfile
     | ViciousMockerySaveDamageProfile
     | ThunderwaveSaveDamageProfile
     | DissonantWhispersSaveDamageProfile
@@ -119,6 +120,7 @@ module spellProcedureProfiles {
     | LongstriderScalarBuffProfile
     | ShieldOfFaithScalarBuffProfile
     | SpiderClimbScalarBuffProfile
+    | FlyScalarBuffProfile
     | BarkskinScalarBuffProfile
     | HeroismScalarBuffProfile
     | AidScalarBuffProfile
@@ -127,6 +129,7 @@ module spellProcedureProfiles {
     | LongstriderSpeedIncreaseEffect
     | ShieldOfFaithArmorClassBonusEffect
     | SpiderClimbClimbSpeedGrantEffect
+    | FlySpeedHoverGrantEffect
     | BarkskinArmorClassFloorEffect
     | HeroismFrightenedImmunityEffect
     | HeroismTurnStartTemporaryHitPointsEffect({ amount: int })
@@ -417,6 +420,7 @@ module spellProcedureProfiles {
       | InflictWoundsSaveDamageProfile => SpellSingleSaveTarget
       | BurningHandsSaveDamageProfile => SpellAreaSaveTargets
       | FireballSaveDamageProfile => SpellAreaSaveTargets
+      | LightningBoltSaveDamageProfile => SpellAreaSaveTargets
       | ViciousMockerySaveDamageProfile => SpellSingleSaveTarget
       | ThunderwaveSaveDamageProfile => SpellAreaSaveTargets
       | DissonantWhispersSaveDamageProfile => SpellSingleSaveTarget
@@ -431,6 +435,7 @@ module spellProcedureProfiles {
       | InflictWoundsSaveDamageProfile => SpellHalfDamageOnSaveSuccess
       | BurningHandsSaveDamageProfile => SpellHalfDamageOnSaveSuccess
       | FireballSaveDamageProfile => SpellHalfDamageOnSaveSuccess
+      | LightningBoltSaveDamageProfile => SpellHalfDamageOnSaveSuccess
       | ViciousMockerySaveDamageProfile => SpellNoDamageOnSaveSuccess
       | ThunderwaveSaveDamageProfile => SpellHalfDamageOnSaveSuccess
       | DissonantWhispersSaveDamageProfile => SpellHalfDamageOnSaveSuccess
@@ -445,6 +450,7 @@ module spellProcedureProfiles {
       | InflictWoundsSaveDamageProfile => NecroticDamage
       | BurningHandsSaveDamageProfile => FireDamage
       | FireballSaveDamageProfile => FireDamage
+      | LightningBoltSaveDamageProfile => LightningDamage
       | ViciousMockerySaveDamageProfile => PsychicDamage
       | ThunderwaveSaveDamageProfile => ThunderDamage
       | DissonantWhispersSaveDamageProfile => PsychicDamage
@@ -459,6 +465,7 @@ module spellProcedureProfiles {
       | InflictWoundsSaveDamageProfile => true
       | BurningHandsSaveDamageProfile => true
       | FireballSaveDamageProfile => true
+      | LightningBoltSaveDamageProfile => true
       | ViciousMockerySaveDamageProfile => false
       | ThunderwaveSaveDamageProfile => true
       | DissonantWhispersSaveDamageProfile => true
@@ -473,6 +480,7 @@ module spellProcedureProfiles {
       | InflictWoundsSaveDamageProfile => false
       | BurningHandsSaveDamageProfile => false
       | FireballSaveDamageProfile => false
+      | LightningBoltSaveDamageProfile => false
       | ViciousMockerySaveDamageProfile => false
       | ThunderwaveSaveDamageProfile => false
       | DissonantWhispersSaveDamageProfile => false
@@ -560,6 +568,7 @@ module spellProcedureProfiles {
   pure def scalarBuffMaximumTargets(profile: ScalarBuffSpellProfile, slotLevel: int): int =
     if (profile == LongstriderScalarBuffProfile) slotLevel
     else if (profile == SpiderClimbScalarBuffProfile) 1 + (if (slotLevel > 2) slotLevel - 2 else 0)
+    else if (profile == FlyScalarBuffProfile) 1 + (if (slotLevel > 3) slotLevel - 3 else 0)
     else if (profile == AidScalarBuffProfile) 3
     else 1
 
@@ -580,6 +589,7 @@ module spellProcedureProfiles {
       | LongstriderScalarBuffProfile => Set(LongstriderSpeedIncreaseEffect)
       | ShieldOfFaithScalarBuffProfile => Set(ShieldOfFaithArmorClassBonusEffect)
       | SpiderClimbScalarBuffProfile => Set(SpiderClimbClimbSpeedGrantEffect)
+      | FlyScalarBuffProfile => Set(FlySpeedHoverGrantEffect)
       | BarkskinScalarBuffProfile => Set(BarkskinArmorClassFloorEffect)
       | HeroismScalarBuffProfile => Set(
           HeroismFrightenedImmunityEffect,
@@ -589,7 +599,7 @@ module spellProcedureProfiles {
     }
 
   pure def scalarBuffRequiresConcentration(profile: ScalarBuffSpellProfile): bool =
-    profile == ShieldOfFaithScalarBuffProfile or profile == SpiderClimbScalarBuffProfile or profile == HeroismScalarBuffProfile
+    profile == ShieldOfFaithScalarBuffProfile or profile == SpiderClimbScalarBuffProfile or profile == FlyScalarBuffProfile or profile == HeroismScalarBuffProfile
 
   pure def damageRiderSpellAction(profile: DamageRiderSpellProfile): SpellInvocationAction =
     BonusActionSpellInvocation
@@ -1309,9 +1319,11 @@ module spellProcedureProfiles {
       assert(spellSaveGatedDamageTargeting(SacredFlameSaveDamageProfile) == SpellSingleSaveTarget),
       assert(spellSaveGatedDamageTargeting(BurningHandsSaveDamageProfile) == SpellAreaSaveTargets),
       assert(spellSaveGatedDamageTargeting(FireballSaveDamageProfile) == SpellAreaSaveTargets),
+      assert(spellSaveGatedDamageTargeting(LightningBoltSaveDamageProfile) == SpellAreaSaveTargets),
       assert(spellSaveGatedDamageTargeting(MindSpikeSaveDamageProfile) == SpellSingleSaveTarget),
       assert(spellSaveGatedDamageSuccess(InflictWoundsSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
       assert(spellSaveGatedDamageSuccess(FireballSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
+      assert(spellSaveGatedDamageSuccess(LightningBoltSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
       assert(spellSaveGatedDamageSuccess(ViciousMockerySaveDamageProfile) == SpellNoDamageOnSaveSuccess),
       assert(spellSaveGatedDamageSuccess(ThunderwaveSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
       assert(spellSaveGatedDamageSuccess(DissonantWhispersSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
@@ -1319,12 +1331,14 @@ module spellProcedureProfiles {
       assert(spellSaveGatedDamageSuccess(MindSpikeSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
       assert(spellSaveGatedDamageType(ViciousMockerySaveDamageProfile) == PsychicDamage),
       assert(spellSaveGatedDamageType(FireballSaveDamageProfile) == FireDamage),
+      assert(spellSaveGatedDamageType(LightningBoltSaveDamageProfile) == LightningDamage),
       assert(spellSaveGatedDamageType(ThunderwaveSaveDamageProfile) == ThunderDamage),
       assert(spellSaveGatedDamageType(DissonantWhispersSaveDamageProfile) == PsychicDamage),
       assert(spellSaveGatedDamageType(HellishRebukeSaveDamageProfile) == FireDamage),
       assert(spellSaveGatedDamageType(MindSpikeSaveDamageProfile) == PsychicDamage),
       assert(spellSaveGatedDamageRequiresSlot(BurningHandsSaveDamageProfile)),
       assert(spellSaveGatedDamageRequiresSlot(FireballSaveDamageProfile)),
+      assert(spellSaveGatedDamageRequiresSlot(LightningBoltSaveDamageProfile)),
       assert(spellSaveGatedDamageRequiresSlot(ThunderwaveSaveDamageProfile)),
       assert(spellSaveGatedDamageRequiresSlot(DissonantWhispersSaveDamageProfile)),
       assert(spellSaveGatedDamageRequiresSlot(HellishRebukeSaveDamageProfile)),
@@ -1367,8 +1381,10 @@ module spellProcedureProfiles {
       assert(scalarBuffSpellAction(BarkskinScalarBuffProfile) == BonusActionSpellInvocation),
       assert(scalarBuffSpellAction(LongstriderScalarBuffProfile) == ActionTimeSpellInvocation),
       assert(scalarBuffSpellAction(SpiderClimbScalarBuffProfile) == ActionTimeSpellInvocation),
+      assert(scalarBuffSpellAction(FlyScalarBuffProfile) == ActionTimeSpellInvocation),
       assert(scalarBuffMaximumTargets(LongstriderScalarBuffProfile, 3) == 3),
       assert(scalarBuffMaximumTargets(SpiderClimbScalarBuffProfile, 3) == 2),
+      assert(scalarBuffMaximumTargets(FlyScalarBuffProfile, 4) == 2),
       assert(scalarBuffMaximumTargets(AidScalarBuffProfile, 3) == 3),
       assert(scalarBuffMaximumTargets(BarkskinScalarBuffProfile, 3) == 1),
       assert(scalarBuffMaximumTargets(FalseLifeScalarBuffProfile, 3) == 1),
@@ -1377,11 +1393,13 @@ module spellProcedureProfiles {
       assert(scalarBuffEffects(LongstriderScalarBuffProfile, 3, 1) == Set(LongstriderSpeedIncreaseEffect)),
       assert(scalarBuffEffects(ShieldOfFaithScalarBuffProfile, 3, 1) == Set(ShieldOfFaithArmorClassBonusEffect)),
       assert(scalarBuffEffects(SpiderClimbScalarBuffProfile, 3, 1) == Set(SpiderClimbClimbSpeedGrantEffect)),
+      assert(scalarBuffEffects(FlyScalarBuffProfile, 3, 1) == Set(FlySpeedHoverGrantEffect)),
       assert(scalarBuffEffects(BarkskinScalarBuffProfile, 3, 2) == Set(BarkskinArmorClassFloorEffect)),
       assert(scalarBuffEffects(HeroismScalarBuffProfile, 3, 1) == Set(HeroismFrightenedImmunityEffect, HeroismTurnStartTemporaryHitPointsEffect({ amount: 3 }))),
       assert(scalarBuffEffects(AidScalarBuffProfile, 3, 3) == Set(AidHitPointMaximumIncreaseEffect({ amount: 10 }))),
       assert(scalarBuffRequiresConcentration(ShieldOfFaithScalarBuffProfile)),
       assert(scalarBuffRequiresConcentration(SpiderClimbScalarBuffProfile)),
+      assert(scalarBuffRequiresConcentration(FlyScalarBuffProfile)),
       assert(scalarBuffRequiresConcentration(HeroismScalarBuffProfile)),
       assert(not(scalarBuffRequiresConcentration(BarkskinScalarBuffProfile))),
       assert(not(scalarBuffRequiresConcentration(LongstriderScalarBuffProfile))),

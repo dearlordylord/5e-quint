@@ -60,6 +60,8 @@ let fly =
                                 , perSlotAboveBase = 1
                                 , baseLevel = 3
                                 }
+                            , targetKinds = [ "creature" ]
+                            , disposition = "willing"
                             }
                         }
                     }

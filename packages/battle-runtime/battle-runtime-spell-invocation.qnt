@@ -110,6 +110,7 @@ module battleRuntimeSpellInvocation {
       | Longstrider => true
       | ShieldOfFaith => true
       | SpiderClimb => true
+      | Fly => true
       | Barkskin => true
       | Heroism => true
       | Aid => true
@@ -202,6 +203,7 @@ module battleRuntimeSpellInvocation {
       | LongstriderScalarBuff => BattleRuntimeLongstriderScalarBuff
       | ShieldOfFaithScalarBuff => BattleRuntimeShieldOfFaithScalarBuff
       | SpiderClimbScalarBuff => BattleRuntimeSpiderClimbScalarBuff
+      | FlyScalarBuff => BattleRuntimeFlyScalarBuff
       | BarkskinScalarBuff => BattleRuntimeBarkskinScalarBuff
       | AidScalarBuff => BattleRuntimeAidScalarBuff
     }

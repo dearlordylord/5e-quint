@@ -567,6 +567,32 @@ module battleRuntimeHpArmorBuffSpatialTests {
     }
   }
 
+  run test_scalar_buff_fly_targets_selected_creature_and_grants_fixed_fly_speed = {
+    val result = resolveScalarBuffSpell(initialState, FlyScalarBuff, Set(Fighter), Set(Fighter), 3, 0)
+    val upcast = resolveScalarBuffSpell(initialState, FlyScalarBuff, Set(Fighter, Goblin), Set(Fighter, Goblin), 4, 0)
+    val rejected = resolveScalarBuffSpell(initialState, FlyScalarBuff, Set(Goblin), Set(Fighter), 3, 0)
+    val broken = breakConcentration(result.fighter)
+    val expired = { ...result.fighter, activeEffects: tickDurationActiveEffects(Set(FlySpeedHoverGrant({ durationTicks: 1 }))) }
+    val longstriderAndFly = {
+      ...initialState.fighter,
+      activeEffects: Set(LongstriderSpeedDelta, FlySpeedHoverGrant({ durationTicks: flyDurationTicks })),
+    }
+    all {
+      assert(result.fighter.concentrating),
+      assert(result.fighter.activeEffects.contains(FlySpeedHoverGrant({ durationTicks: flyDurationTicks }))),
+      assert(movementSpeed(result.fighter, WalkSpeedKind) == 30),
+      assert(movementSpeed(result.fighter, FlySpeedKind) == 60),
+      assert(movementSpeed(longstriderAndFly, FlySpeedKind) == 70),
+      assert(upcast.fighter.activeEffects.contains(FlySpeedHoverGrant({ durationTicks: flyDurationTicks }))),
+      assert(upcast.goblin.activeEffects.contains(FlySpeedHoverGrant({ durationTicks: flyDurationTicks }))),
+      assert(rejected == initialState),
+      assert(not(broken.activeEffects.contains(FlySpeedHoverGrant({ durationTicks: flyDurationTicks })))),
+      assert(movementSpeed(broken, FlySpeedKind) == 0),
+      assert(not(expired.activeEffects.contains(FlySpeedHoverGrant({ durationTicks: 1 })))),
+      assert(movementSpeed(expired, FlySpeedKind) == 0),
+    }
+  }
+
   run test_scalar_buff_aid_increases_hit_point_maximum_and_current_hit_points = {
     val result = resolveScalarBuffSpell(initialState, AidScalarBuff, Set(Fighter, Goblin), Set(), 3, 0)
     all {

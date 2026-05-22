@@ -127,6 +127,8 @@ export const jumpUnitId = "jump";
 
 export const levitateUnitId = "levitate";
 
+export const lightningBoltUnitId = "lightning_bolt";
+
 export const mistyStepUnitId = "misty_step";
 
 export const mirrorImageUnitId = "mirror_image";
@@ -212,6 +214,8 @@ export const falseLifeUnitId = "false_life";
 export const faerieFireUnitId = "faerie_fire";
 
 export const flameBladeUnitId = "flame_blade";
+
+export const flyUnitId = "fly";
 
 export const flamingSphereUnitId = "flaming_sphere";
 

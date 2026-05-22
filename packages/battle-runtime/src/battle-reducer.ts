@@ -515,6 +515,7 @@ export {
 export const BATTLE_SPECIAL_SPEED_KINDS = [
   "climb",
   "swim",
+  "fly",
 ] as const satisfies ReadonlyArray<Exclude<BattleMovementSpeedKind, "walk">>;
 export type BattleSpecialSpeedKind =
   (typeof BATTLE_SPECIAL_SPEED_KINDS)[number];

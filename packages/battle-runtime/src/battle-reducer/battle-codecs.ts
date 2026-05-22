@@ -1478,6 +1478,11 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
           kind: Schema.Literal("selfOriginCone"),
           lengthFeet: MovementFeet,
         }),
+        Schema.Struct({
+          kind: Schema.Literal("selfOriginLine"),
+          lengthFeet: MovementFeet,
+          widthFeet: MovementFeet,
+        }),
       ),
       damage: Schema.Struct({
         expr: BattleRuntimeObjectSchema,
@@ -1545,6 +1550,11 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
         Schema.Struct({
           kind: Schema.Literal("selfOriginCone"),
           lengthFeet: MovementFeet,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("selfOriginLine"),
+          lengthFeet: MovementFeet,
+          widthFeet: MovementFeet,
         }),
       ),
       damage: Schema.Struct({

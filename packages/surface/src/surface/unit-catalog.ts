@@ -93,6 +93,7 @@ import falseLifeInput from "../../content/false_life.json";
 import fireBoltInput from "../../content/fire_bolt.json";
 import fireballInput from "../../content/fireball.json";
 import flameBladeInput from "../../content/flame_blade.json";
+import flyInput from "../../content/fly.json";
 import findFamiliarInput from "../../content/find_familiar.json";
 import findTrapsInput from "../../content/find_traps.json";
 import flamingSphereInput from "../../content/flaming_sphere.json";
@@ -116,6 +117,7 @@ import jumpInput from "../../content/jump.json";
 import knockInput from "../../content/knock.json";
 import levitateInput from "../../content/levitate.json";
 import lesserRestorationInput from "../../content/lesser_restoration.json";
+import lightningBoltInput from "../../content/lightning_bolt.json";
 import lightInput from "../../content/light.json";
 import locateAnimalsOrPlantsInput from "../../content/locate_animals_or_plants.json";
 import locateObjectInput from "../../content/locate_object.json";
@@ -527,6 +529,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     knockInput,
     levitateInput,
     lesserRestorationInput,
+    lightningBoltInput,
     locateAnimalsOrPlantsInput,
     locateObjectInput,
     lightInput,
@@ -574,6 +577,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     silenceInput,
     shiningSmiteInput,
     sleepInput,
+    flyInput,
     spiderClimbInput,
     spikeGrowthInput,
     spiritualWeaponInput,

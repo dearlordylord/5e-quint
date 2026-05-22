@@ -504,7 +504,7 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING: Promote Dispel Magic's target creature, object, or magical effect procedure so it ends ongoing spells on the target, including object-attached Continual Flame occurrences, using spell-level and higher-slot gates from the Dispel Magic RAW without adding a Continual Flame-specific removal registry. Owner: Dispel Magic Unit support plus battle-runtime ongoing Spell Effect lifecycle owner. Required output: Supported Dispel Magic profile or accepted closure with focused tests and promoted Quint/runtime parity for ending ongoing spell occurrences on targets, including object-attached until-dispelled light emitters exposed by the object-light profile.; L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL: Promote or close the overlap rule that dispels another level-2-or-lower spell when Darkness overlaps Bright Light or Dim Light created by that spell, consuming generic spell-created light facts such as Continual Flame rather than spell identity. Owner: battle-runtime Darkness area and spell-created light overlap owner. Required output: Focused tests and promoted Quint/runtime parity or accepted closure for overlap-triggered dispel of spell-created light; Continual Flame cleanup must remain represented through generic spell-created light facts.",
+      "reason": "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING: Promote Dispel Magic's target creature, object, or magical effect procedure so it ends ongoing spells on the target, including object-attached Continual Flame occurrences, using spell-level and higher-slot gates from the Dispel Magic RAW without adding a Continual Flame-specific removal registry. Owner: Dispel Magic Unit support plus battle-runtime ongoing Spell Effect lifecycle owner. Required output: Supported Dispel Magic profile or accepted closure with focused tests and promoted Quint/runtime parity for ending ongoing spell occurrences on targets, including object-attached until-dispelled light emitters exposed by the object-light profile.",
       "sourceRecordPath": "packages/surface/content/continual_flame.json",
       "sourceRows": [
         {
@@ -557,7 +557,7 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH: Represent and promote or close Darkness's object branch: target object not worn or carried, 15-foot Emanation originating from that object, object-origin area identity, and opaque-cover blocking, consuming existing object and opaque-cover witness facts without adding duplicate map or cover state. Owner: Surface Spell Definition authoring plus battle-runtime object-origin spell-area and opaque-cover witness boundary. Required output: Darkness Surface content and runtime owner decision with focused tests for the object-origin branch, or accepted closure if object attachment, movement, and opaque-cover blocking stay outside promoted runtime.; L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL: Promote or close the overlap rule that dispels another level-2-or-lower spell when Darkness overlaps Bright Light or Dim Light created by that spell, consuming generic spell-created light facts such as Continual Flame rather than spell identity. Owner: Darkness Surface definition plus battle-runtime Darkness area and spell-created light overlap owner. Required output: Focused tests and promoted Quint/runtime parity or accepted closure for overlap-triggered dispel of spell-created light; Continual Flame cleanup must remain represented through generic spell-created light facts.",
+      "reason": "L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH: Represent and promote or close Darkness's object branch: target object not worn or carried, 15-foot Emanation originating from that object, object-origin area identity, and opaque-cover blocking, consuming existing object and opaque-cover witness facts without adding duplicate map or cover state. Owner: Surface Spell Definition authoring plus battle-runtime object-origin spell-area and opaque-cover witness boundary. Required output: Darkness Surface content and runtime owner decision with focused tests for the object-origin branch, or accepted closure if object attachment, movement, and opaque-cover blocking stay outside promoted runtime.",
       "sourceRecordPath": "packages/surface/content/darkness.json",
       "sourceRows": [
         {
@@ -1302,11 +1302,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "companion-control-boundary"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "Find Steed's Surface-represented runtime behavior is closed at the companion-control boundary: a future mount companion owner must model summoned mount lifecycle, rider/control state, stat-block projection and actions, disappearance, and item-drop boundaries without autonomous companion action selection or authored-identity dispatch in generic runtime code.",
       "sourceRecordPath": "packages/surface/content/find_steed.json",
       "sourceRows": [
         {
@@ -1322,8 +1325,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "closed-companion-control-boundary",
+      "strictTargetClosed": true,
       "unitId": "find_steed"
     },
     {
@@ -2886,11 +2889,12 @@
       ]
     },
     {
-      "count": 1,
+      "count": 2,
       "description": "Companion lifecycle and control residuals are closed at the companion control boundary.",
       "status": "closed-companion-control-boundary",
       "unitIds": [
-        "druid_wild_companion"
+        "druid_wild_companion",
+        "find_steed"
       ]
     },
     {
@@ -2899,14 +2903,6 @@
       "status": "open-profile-accounting",
       "unitIds": [
         "dragons_breath"
-      ]
-    },
-    {
-      "count": 1,
-      "description": "No Unit profile claim records runtime support or an accepted strict closure.",
-      "status": "open-runtime-behavior",
-      "unitIds": [
-        "find_steed"
       ]
     }
   ],
@@ -2945,8 +2941,8 @@
     },
     "strictTargetClosure": {
       "denominator": 171,
-      "numerator": 169,
-      "percent": "98.8%"
+      "numerator": 170,
+      "percent": "99.4%"
     }
   },
   "openFrontier": [
@@ -2956,14 +2952,6 @@
       "status": "open-profile-accounting",
       "unitIds": [
         "dragons_breath"
-      ]
-    },
-    {
-      "count": 1,
-      "description": "No Unit profile claim records runtime support or an accepted strict closure.",
-      "status": "open-runtime-behavior",
-      "unitIds": [
-        "find_steed"
       ]
     }
   ],
@@ -8252,20 +8240,18 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
-      "missing": 1,
       "profile-subset-supported": 27,
       "supported-profile": 114,
-      "unsupported-profile": 29
+      "unsupported-profile": 30
     },
     "groupsByStatus": {
       "blocked-follow-up-split": 8,
       "closed-character-fact-and-runtime-detached-split": 3,
-      "closed-companion-control-boundary": 1,
+      "closed-companion-control-boundary": 2,
       "closed-later-level-only": 6,
       "closed-outside-battle-runtime-boundary": 3,
       "closed-runtime-detached-table-adjudication": 34,
       "open-profile-accounting": 1,
-      "open-runtime-behavior": 1,
       "supported-profile": 114
     },
     "nonSupportedFrontier": 57,
