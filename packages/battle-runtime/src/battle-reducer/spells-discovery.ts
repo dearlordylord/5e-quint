@@ -238,6 +238,21 @@ export function discoverSupportedSpellInvocations(
           },
         ];
       }
+      if (invocation.procedure === "spikeGrowthMovementHazard") {
+        return [
+          {
+            subject: {
+              tag: "actionSpell" as const,
+              actorId,
+              invocation: supportedSpellInvocationRef(invocation),
+              mode: { tag: "cast" as const },
+            },
+            label: invocation.spell.name,
+            summary: `${spellActivationInvocationCastSummary(invocation)} The table supplies the Spike Growth area identity.`,
+            initialHoles: [spellAreaChoiceHole(invocation)],
+          },
+        ];
+      }
       if (invocation.procedure === "moonbeam") {
         return [
           {
@@ -1298,6 +1313,7 @@ export function spellActivationInvocationCastSummary(
         | "magicalDarknessPointOrigin"
         | "antimagicFieldOngoingSpellSuppression"
         | "flamingSphere"
+        | "spikeGrowthMovementHazard"
         | "moonbeam"
         | "objectContactDamage"
         | "dancingLightsSeparateCast"

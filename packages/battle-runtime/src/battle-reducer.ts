@@ -2,6 +2,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ongoing-spell-ending
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-mirror-image-hit-interception
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-moonbeam-movable-zone
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
@@ -269,6 +270,7 @@ export {
   resolveGustOfWindLineDirectionChangeCommand,
   resolveGustOfWindLineSaveCommand,
   resolveJumpMovementReplacementCommand,
+  resolveMoveAfterMovement,
   resolveMoveCommand,
   resolveOpportunityAttackCommand,
   resolveReleaseReadiedMovementCommand,
@@ -880,6 +882,19 @@ export type BattleActiveEffect =
         readonly damageType: Extract<DamageType, "fire">;
       };
       readonly ramMaxMoveFeet: MovementFeet;
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "concentration" }
+      >;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "spikeGrowthHazard";
+      readonly areaId: BattleAreaId;
+      readonly damage: {
+        readonly expr: DiceExpr;
+        readonly damageType: Extract<DamageType, "piercing">;
+      };
+      readonly damagePerFeet: MovementFeet;
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,
         { readonly kind: "concentration" }
@@ -1898,6 +1913,13 @@ export type BattleAreaDifficultTerrainSource =
       readonly sourceCombatantId: CombatantId;
       readonly sourceSpellId: SpellRecord["id"];
       readonly areaId: BattleAreaId;
+    }
+  | {
+      readonly kind: "spikeGrowthHazard";
+      readonly sourceCombatantId: CombatantId;
+      readonly sourceSpellId: SpellRecord["id"];
+      readonly areaId: BattleAreaId;
+      readonly damageDistanceFeet: MovementFeet;
     };
 export type BattleAreaDifficultTerrainMovementFact = {
   readonly kind: "areaDifficultTerrain";
@@ -2278,6 +2300,7 @@ export type BattleResolvedMovement = {
   readonly movementCostFeet: MovementFeet;
   readonly provokedOpportunityAttacks: readonly BattleOpportunityAttackThreat[];
   readonly spendsTurnMovement: boolean;
+  readonly areaDifficultTerrain?: BattleAreaDifficultTerrainMovementFact;
   readonly jumpMovementReplacement?: BattleJumpMovementReplacementFact;
 };
 export type HealingSpellActionCost = "magicAction" | "bonusAction";
@@ -2410,6 +2433,10 @@ export type BattleFlamingSphereAreaChoice = Extract<
   BattleSpellAreaIdentityChoice,
   { readonly kind: "flamingSphereArea" }
 >;
+export type BattleSpikeGrowthAreaChoice = Extract<
+  BattleSpellAreaIdentityChoice,
+  { readonly kind: "spikeGrowthArea" }
+>;
 export type BattleMoonbeamAreaChoice = Extract<
   BattleSpellAreaIdentityChoice,
   { readonly kind: "moonbeamCylinderArea" }
@@ -2439,6 +2466,10 @@ export type BattleSpellAreaIdentityChoice =
     }
   | {
       readonly kind: "flamingSphereArea";
+      readonly areaId: BattleAreaId;
+    }
+  | {
+      readonly kind: "spikeGrowthArea";
       readonly areaId: BattleAreaId;
     }
   | {
@@ -3664,6 +3695,23 @@ export type SupportedSpellInvocation =
   | {
       readonly access: PreparedSpellAccess;
       readonly resource: SpellSlotInvocationResource;
+      readonly procedure: "spikeGrowthMovementHazard";
+      readonly spell: SpellRecord;
+      readonly targeting: Extract<
+        SpellTargeting,
+        { readonly kind: "pointOriginSphere" }
+      >;
+      readonly durationTicks: ElapsedTimeTicks;
+      readonly rangeFeet: MovementFeet;
+      readonly damage: {
+        readonly expr: DiceExpr;
+        readonly damageType: Extract<DamageType, "piercing">;
+      };
+      readonly damagePerFeet: MovementFeet;
+    }
+  | {
+      readonly access: PreparedSpellAccess;
+      readonly resource: SpellSlotInvocationResource;
       readonly procedure: "moonbeam";
       readonly spell: SpellRecord;
       readonly ability: Extract<Ability, "con">;
@@ -3857,6 +3905,7 @@ type AnySupportedDamageSpellInvocation = Exclude<
       | "magicalDarknessPointOrigin"
       | "antimagicFieldOngoingSpellSuppression"
       | "flamingSphere"
+      | "spikeGrowthMovementHazard"
       | "moonbeam"
       | "chainedSpellAttackDamage";
   }
@@ -4440,6 +4489,7 @@ export type BattleSpellAreaChoiceHole = {
         | "magicalDarknessPointOrigin"
         | "antimagicFieldOngoingSpellSuppression"
         | "flamingSphere"
+        | "spikeGrowthMovementHazard"
         | "moonbeam"
         | "webRestraintHazard";
     }
@@ -4996,6 +5046,23 @@ export type BattleMoonbeamDamageRollHole = Extract<
   };
   readonly critical: false;
 };
+export type BattleSpikeGrowthMovementDamageRollHole = Extract<
+  RuntimeHole,
+  { readonly kind: "rolledDice" }
+> & {
+  readonly spikeGrowthMovement: {
+    readonly targetId: CombatantId;
+    readonly sourceSpellId: SpellRecord["id"];
+    readonly sourceCombatantId: CombatantId;
+    readonly areaId: BattleAreaId;
+    readonly distanceFeet: MovementFeet;
+    readonly damage: {
+      readonly expr: DiceExpr;
+      readonly damageType: Extract<DamageType, "piercing">;
+    };
+  };
+  readonly critical: false;
+};
 export type BattleProtectionRelevantEffectSavingThrowOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -5482,6 +5549,7 @@ export type BattleHole =
   | BattleMirrorImageDuplicateRollHole
   | BattleSpellTurnStartDamageRollHole
   | BattleFlamingSphereDamageRollHole
+  | BattleSpikeGrowthMovementDamageRollHole
   | BattleSpellHealingRollHole
   | BattleSpellSkillChoiceHole
   | BattleSpellAbilityChoiceHole

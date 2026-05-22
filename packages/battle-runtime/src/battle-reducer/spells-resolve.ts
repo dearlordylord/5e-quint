@@ -138,6 +138,7 @@ import {
   resolveGustOfWindLineSpellAct,
   resolveMagicalDarknessPointOriginSpellAct,
   resolveMoonbeamSpellAct,
+  resolveSpikeGrowthMovementHazardSpellAct,
   resolveWebRestraintHazardSpellAct,
 } from "./spells-resolve-area-effects.ts";
 import { resolveSpellAttackSequenceAct } from "./spells-resolve-attack-sequence.ts";
@@ -154,6 +155,7 @@ export {
   resolveGustOfWindLineSpellAct,
   resolveMagicalDarknessPointOriginSpellAct,
   resolveMoonbeamSpellAct,
+  resolveSpikeGrowthMovementHazardSpellAct,
   resolveWebRestraintHazardSpellAct,
 } from "./spells-resolve-area-effects.ts";
 export {
@@ -733,6 +735,14 @@ export function resolveSpellAct(
   }
   if (invocation.procedure === "flamingSphere") {
     return resolveFlamingSphereSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "spikeGrowthMovementHazard") {
+    return resolveSpikeGrowthMovementHazardSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

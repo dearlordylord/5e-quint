@@ -36,6 +36,7 @@ import {
   gustOfWindEastDirectionId,
   gustOfWindNorthDirectionId,
   moonbeamAreaId,
+  spikeGrowthAreaId,
   resistanceUnitId,
   spellCasterId,
   spellTargetId,
@@ -808,6 +809,17 @@ export function flamingSphereAreaFill(
     kind: "spellAreaChoice",
     holeId: hole.holeId,
     value: { kind: "flamingSphereArea", areaId },
+  };
+}
+
+export function spikeGrowthAreaFill(
+  hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>,
+  areaId = spikeGrowthAreaId,
+): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
+  return {
+    kind: "spellAreaChoice",
+    holeId: hole.holeId,
+    value: { kind: "spikeGrowthArea", areaId },
   };
 }
 

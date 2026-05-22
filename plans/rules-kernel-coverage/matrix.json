@@ -24,13 +24,13 @@
     "obligations[].profiles": "Derived from profileObligations by obligation id; authored obligations.jsonl rows must not contain profiles."
   },
   "battleHoleFrontierSummary": {
-    "total": 97,
+    "total": 98,
     "bySubject": {
-      "battle-hole-family": 60,
+      "battle-hole-family": 61,
       "battle-fill-kind": 37
     },
     "byClassification": {
-      "semantic-frontier": 74,
+      "semantic-frontier": 75,
       "deterministic-boundary-projection": 0,
       "table-owned-fact": 23,
       "unsupported-dead-branch": 0
@@ -3010,6 +3010,20 @@
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
+        "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
+        "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "rolledDice",
+      "id": "BattleSpikeGrowthMovementDamageRollHole",
+      "reason": "Spike Growth movement damage consumes caller-supplied movement-distance facts, scales 2d4 Piercing per 5 feet traveled into or within the area, and reuses shared HP damage and the generic damage-disposition split; automatic geometry and pathfinding remain boundary evidence.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "fillKind": "selfTransformationModeChoice",
@@ -3936,6 +3950,7 @@
     "spell.invocation-roll-modifier",
     "spell.invocation-sanctuary-targeting-interdiction",
     "spell.invocation-save-gated-condition-immunity",
+    "spell.invocation-see-invisible-observer-sight",
     "spell.invocation-self-ability-check-advantage",
     "spell.invocation-self-teleport",
     "spell.invocation-self-transformation-mode",
@@ -3943,6 +3958,7 @@
     "spell.invocation-sleep-target-admission",
     "spell.invocation-spell-created-held-object",
     "spell.invocation-spell-hosted-weapon-attack",
+    "spell.invocation-spike-growth-movement-hazard",
     "spell.invocation-warding-bond-linked-effect",
     "spell.invocation-weapon-attack-override",
     "spell.invocation-weapon-damage-rider",

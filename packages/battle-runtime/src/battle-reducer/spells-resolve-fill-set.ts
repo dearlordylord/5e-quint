@@ -633,6 +633,7 @@ export function spellFillSet(
         invocation.procedure !== "magicalDarknessPointOrigin" &&
         invocation.procedure !== "antimagicFieldOngoingSpellSuppression" &&
         invocation.procedure !== "flamingSphere" &&
+        invocation.procedure !== "spikeGrowthMovementHazard" &&
         invocation.procedure !== "moonbeam" &&
         invocation.procedure !== "webRestraintHazard"
       ) {

@@ -198,8 +198,8 @@
         "accepted": 375,
         "accepted-no-battle-effect": 137,
         "owner-evidence-required": 2,
-        "partial-battle-runtime": 14,
-        "battle-runtime-required": 28
+        "partial-battle-runtime": 16,
+        "battle-runtime-required": 26
       }
     },
     "levelOneClassContainers": 12,
@@ -214,20 +214,20 @@
       "catalog-installed-needs-owner-evidence": 1
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 394,
+      "catalog-installed-owner-evidence-present": 396,
       "non-runtime": 24,
       "catalog-installed-owner-evidence-required": 11,
       "catalog-only/dead-for-now": 108,
       "missing-authored-record": 10,
-      "catalog-authored-executable-follow-up": 8,
+      "catalog-authored-executable-follow-up": 6,
       "catalog-installed-needs-owner-evidence": 1
     },
     "spellPressureRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 231,
+      "catalog-installed-owner-evidence-present": 233,
       "catalog-only/dead-for-now": 108,
       "catalog-installed-owner-evidence-required": 10,
       "missing-authored-record": 10,
-      "catalog-authored-executable-follow-up": 8
+      "catalog-authored-executable-follow-up": 6
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -12258,14 +12258,25 @@
         "sourceRecordPath": "packages/surface/content/spike_growth.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "spike_growth"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME, L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION: L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME owns Promote Spike Growth's battle-visible hazard: Magic Action and level-2-or-higher Spell Slot spend, caster-owned Concentration up to 10 minutes, caller-supplied point-origin ground-area identity, active Difficult Terrain movement-cost facts for movement through the area, Movement-triggered 2d4 Piercing damage per 5-foot increment traveled into or within the area from caller-supplied path-distance facts, damage disposition and Concentration interactions, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Spike Growth movement damage, Difficult Terrain movement cost, resource spending, Concentration ownership, and cleanup without automatic geometry or pathfinding derivation.; L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION owns Represent and close the camouflaged terrain recognition rule: whether a creature could see the area when the spell was cast, Search action spend before entering for creatures that did not see it, Wisdom (Perception or Survival) check against the caster's spell save DC, recognition state or explicit table-owned witness used before movement into the area, and cleanup with the hazard. Required output: Surface schema/content support or accepted runtime-detached closure for Spike Growth hazard recognition, with focused tests and coverage disposition that either promotes the Search recognition boundary or closes it with an explicit table-owned reason.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit spike_growth is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME at packages/battle-runtime/src/unit-profile-admission-spike-growth-movement-hazard.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "partial-battle-runtime"
     },
     {
       "id": "srd521:classes/fighter:level-1:class-container:fighter_class_container",
@@ -17504,14 +17515,25 @@
         "sourceRecordPath": "packages/surface/content/spike_growth.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "spike_growth"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME, L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION: L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME owns Promote Spike Growth's battle-visible hazard: Magic Action and level-2-or-higher Spell Slot spend, caster-owned Concentration up to 10 minutes, caller-supplied point-origin ground-area identity, active Difficult Terrain movement-cost facts for movement through the area, Movement-triggered 2d4 Piercing damage per 5-foot increment traveled into or within the area from caller-supplied path-distance facts, damage disposition and Concentration interactions, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Spike Growth movement damage, Difficult Terrain movement cost, resource spending, Concentration ownership, and cleanup without automatic geometry or pathfinding derivation.; L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION owns Represent and close the camouflaged terrain recognition rule: whether a creature could see the area when the spell was cast, Search action spend before entering for creatures that did not see it, Wisdom (Perception or Survival) check against the caster's spell save DC, recognition state or explicit table-owned witness used before movement into the area, and cleanup with the hazard. Required output: Surface schema/content support or accepted runtime-detached closure for Spike Growth hazard recognition, with focused tests and coverage disposition that either promotes the Search recognition boundary or closes it with an explicit table-owned reason.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit spike_growth is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME at packages/battle-runtime/src/unit-profile-admission-spike-growth-movement-hazard.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "partial-battle-runtime"
     },
     {
       "id": "srd521:classes/rogue:level-1:class-container:rogue_class_container",

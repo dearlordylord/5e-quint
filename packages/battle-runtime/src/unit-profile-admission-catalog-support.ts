@@ -209,6 +209,8 @@ export const flameBladeUnitId = "flame_blade";
 
 export const flamingSphereUnitId = "flaming_sphere";
 
+export const spikeGrowthUnitId = "spike_growth";
+
 export const moonbeamUnitId = "moonbeam";
 
 export const webUnitId = "web";
@@ -339,6 +341,8 @@ export const greaseAreaId = battleAreaId("unit-profile-grease-ground-area");
 export const flamingSphereAreaId = battleAreaId(
   "unit-profile-flaming-sphere-area",
 );
+
+export const spikeGrowthAreaId = battleAreaId("unit-profile-spike-growth-area");
 
 export const moonbeamAreaId = battleAreaId("unit-profile-moonbeam-area");
 

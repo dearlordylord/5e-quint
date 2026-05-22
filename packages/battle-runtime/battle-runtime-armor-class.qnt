@@ -99,6 +99,7 @@ module battleRuntimeArmorClass {
         | SleepUnconscious(_) => false
         | HideousLaughterEffect(_) => false
         | GreaseGroundHazard(_) => false
+        | SpikeGrowthMovementHazard(_) => false
         | FogCloudObscurement(_) => false
         | MagicalDarknessPointOrigin(_) => false
         | AntimagicFieldOngoingSpellSuppression(_) => false

@@ -136,6 +136,7 @@ module battleRuntimeSpellInvocation {
       | Darkness => true
       | AntimagicField => true
       | Web => true
+      | SpikeGrowth => true
       | Command => true
       | DissonantWhispers => true
       | FeatherFall => true

@@ -289,6 +289,12 @@ module battleRuntimeTimedEffects {
             areaId: data.areaId,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
+        | SpikeGrowthMovementHazard(data) => SpikeGrowthMovementHazard({
+            areaId: data.areaId,
+            damageDice: data.damageDice,
+            damagePerFeet: data.damagePerFeet,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
         | FogCloudObscurement(data) => FogCloudObscurement({
             areaId: data.areaId,
             radiusFeet: data.radiusFeet,
@@ -375,6 +381,7 @@ module battleRuntimeTimedEffects {
         | SelfTransformationModeEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | HideousLaughterEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | GreaseGroundHazard(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | SpikeGrowthMovementHazard(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | FogCloudObscurement(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | MagicalDarknessPointOrigin(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | AntimagicFieldOngoingSpellSuppression(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)

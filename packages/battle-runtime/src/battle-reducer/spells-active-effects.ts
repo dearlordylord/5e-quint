@@ -1,6 +1,7 @@
 // Spell active-effect application extracted from spells-holes-fills.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-tracked-light-suppression
 
@@ -1956,6 +1957,47 @@ export function applyFlamingSphereCastEffect(input: {
       },
       damage: input.invocation.damage,
       ramMaxMoveFeet: input.invocation.ramMaxMoveFeet,
+      expiresAt: {
+        kind: "concentration" as const,
+        combatantId: input.actorId,
+        durationTicks: input.invocation.durationTicks,
+      },
+    },
+  ];
+  combatants.set(input.actorId, { ...caster, activeEffects });
+  return { ...input.state, combatants };
+}
+
+export function applySpikeGrowthMovementHazardCastEffect(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly areaId: BattleAreaId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "spikeGrowthMovementHazard" }
+  >;
+}): BattleState {
+  const combatants = new Map(input.state.combatants);
+  const caster = combatants.get(input.actorId);
+  if (caster === undefined) {
+    return input.state;
+  }
+  const replacing = caster.activeEffects.filter(
+    (effect) =>
+      effect.kind === "spikeGrowthHazard" &&
+      effect.sourceSpellId === input.invocation.spell.id &&
+      effect.sourceCombatantId === input.actorId &&
+      effect.areaId === input.areaId,
+  );
+  const activeEffects = [
+    ...caster.activeEffects.filter((effect) => !replacing.includes(effect)),
+    {
+      kind: "spikeGrowthHazard" as const,
+      sourceSpellId: input.invocation.spell.id,
+      sourceCombatantId: input.actorId,
+      areaId: input.areaId,
+      damage: input.invocation.damage,
+      damagePerFeet: input.invocation.damagePerFeet,
       expiresAt: {
         kind: "concentration" as const,
         combatantId: input.actorId,

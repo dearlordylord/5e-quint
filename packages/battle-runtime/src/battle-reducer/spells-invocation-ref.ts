@@ -150,6 +150,14 @@ export function supportedSpellInvocationRef(
       procedure: "flamingSphere",
     };
   }
+  if (invocation.procedure === "spikeGrowthMovementHazard") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "spikeGrowthMovementHazard",
+    };
+  }
   if (invocation.procedure === "moonbeam") {
     return {
       tag: "spellSlot",

@@ -6,7 +6,7 @@
   "tasks": [
     {"number":1,"id":"L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH","status":"done","title":"Darkness Object-Origin Branch"},
     {"number":2,"id":"L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT","status":"done","title":"See Invisibility Observer Sight Runtime Support"},
-    {"number":3,"id":"L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME","status":"ready-for-research","title":"Spike Growth Movement Hazard Runtime"},
+    {"number":3,"id":"L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME","status":"done","title":"Spike Growth Movement Hazard Runtime"},
     {"number":4,"id":"L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION","status":"ready-for-research","title":"Spike Growth Hazard Recognition Boundary"},
     {"number":5,"id":"L12G-MISSING-SILENCE","status":"ready-for-research","title":"Silence Definition And Support Or Closure"},
     {"number":6,"id":"L12G-MISSING-SUGGESTION","status":"ready-for-research","title":"Suggestion Definition And Closure"},
@@ -67,7 +67,7 @@ Output:
 
 ### Task 3 - L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME - Spike Growth Movement Hazard Runtime
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 - Existing area hazard, Difficult Terrain, movement path witness, and damage-disposition machinery.
