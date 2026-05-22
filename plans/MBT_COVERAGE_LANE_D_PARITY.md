@@ -199,7 +199,7 @@
     {
       "number": 33,
       "id": "L3-CLASS-SUBCLASS-FEATURE-OWNER-SPLIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Level 3 Class And Subclass Feature Owner Split"
     },
     {
@@ -213,6 +213,108 @@
       "id": "L12G-FOLLOWUP-DRUID-CIRCLE-LAND-SPELL-ACCESS",
       "status": "ready-for-research",
       "title": "Druid Circle of the Land Spell Access"
+    },
+    {
+      "number": 36,
+      "id": "L3-FOLLOWUP-BARBARIAN-FRENZY",
+      "status": "ready-for-research",
+      "title": "Barbarian Frenzy Runtime Follow-Up"
+    },
+    {
+      "number": 37,
+      "id": "L3-FOLLOWUP-BARBARIAN-PRIMAL-KNOWLEDGE",
+      "status": "ready-for-research",
+      "title": "Barbarian Primal Knowledge Owner Follow-Up"
+    },
+    {
+      "number": 38,
+      "id": "L3-FOLLOWUP-CLERIC-DISCIPLE-OF-LIFE",
+      "status": "ready-for-research",
+      "title": "Cleric Disciple Of Life Runtime Follow-Up"
+    },
+    {
+      "number": 39,
+      "id": "L3-FOLLOWUP-CLERIC-PRESERVE-LIFE",
+      "status": "ready-for-research",
+      "title": "Cleric Preserve Life Runtime Follow-Up"
+    },
+    {
+      "number": 40,
+      "id": "L3-FOLLOWUP-DRUID-LANDS-AID",
+      "status": "ready-for-research",
+      "title": "Druid Land's Aid Runtime Follow-Up"
+    },
+    {
+      "number": 41,
+      "id": "L3-FOLLOWUP-FIGHTER-REMARKABLE-ATHLETE",
+      "status": "ready-for-research",
+      "title": "Fighter Remarkable Athlete Runtime Follow-Up"
+    },
+    {
+      "number": 42,
+      "id": "L3-FOLLOWUP-MONK-OPEN-HAND-TECHNIQUE",
+      "status": "ready-for-research",
+      "title": "Monk Open Hand Technique Runtime Follow-Up"
+    },
+    {
+      "number": 43,
+      "id": "L3-FOLLOWUP-PALADIN-CHANNEL-DIVINITY",
+      "status": "ready-for-research",
+      "title": "Paladin Channel Divinity Owner Follow-Up"
+    },
+    {
+      "number": 44,
+      "id": "L3-FOLLOWUP-PALADIN-SACRED-WEAPON",
+      "status": "ready-for-research",
+      "title": "Paladin Sacred Weapon Runtime Follow-Up"
+    },
+    {
+      "number": 45,
+      "id": "L3-FOLLOWUP-RANGER-HUNTERS-PREY",
+      "status": "ready-for-research",
+      "title": "Ranger Hunter's Prey Runtime Follow-Up"
+    },
+    {
+      "number": 46,
+      "id": "L3-FOLLOWUP-ROGUE-FAST-HANDS",
+      "status": "ready-for-research",
+      "title": "Rogue Fast Hands Owner Follow-Up"
+    },
+    {
+      "number": 47,
+      "id": "L3-FOLLOWUP-ROGUE-SECOND-STORY-WORK",
+      "status": "ready-for-research",
+      "title": "Rogue Second-Story Work Owner Follow-Up"
+    },
+    {
+      "number": 48,
+      "id": "L3-FOLLOWUP-ROGUE-STEADY-AIM",
+      "status": "ready-for-research",
+      "title": "Rogue Steady Aim Runtime Follow-Up"
+    },
+    {
+      "number": 49,
+      "id": "L3-FOLLOWUP-SORCERER-DRACONIC-RESILIENCE",
+      "status": "ready-for-research",
+      "title": "Sorcerer Draconic Resilience Character Sheet Follow-Up"
+    },
+    {
+      "number": 50,
+      "id": "L3-FOLLOWUP-WARLOCK-DARK-ONES-BLESSING",
+      "status": "ready-for-research",
+      "title": "Warlock Dark One's Blessing Runtime Follow-Up"
+    },
+    {
+      "number": 51,
+      "id": "L3-FOLLOWUP-WIZARD-EVOCATION-SAVANT",
+      "status": "ready-for-research",
+      "title": "Wizard Evocation Savant Spellbook Follow-Up"
+    },
+    {
+      "number": 52,
+      "id": "L3-FOLLOWUP-WIZARD-POTENT-CANTRIP",
+      "status": "ready-for-research",
+      "title": "Wizard Potent Cantrip Runtime Follow-Up"
     }
   ]
 }
@@ -715,7 +817,7 @@ Acceptance:
 
 ### Task 33 - L3-CLASS-SUBCLASS-FEATURE-OWNER-SPLIT - Level 3 Class And Subclass Feature Owner Split
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -749,6 +851,14 @@ Acceptance:
   evidence rather than authored identity dispatch.
 - No PHB+ authored identity or companion AI/autonomous-control behavior is
   introduced.
+
+Completion:
+
+- `plans/unit-profile-coverage/srd-unit-inventory.json` now records precise
+  owner splits for the 17 remaining level-3 class/subclass feature rows.
+- `Ranger Hunter's Lore` is closed as runtime-detached table/stat-block
+  knowledge rather than promoted battle state.
+- The remaining executable follow-ups are tracked as Tasks 36-52.
 
 ### Task 34 - L3-REMAINING-SUBCLASS-SELECTION-FINALIZATION - Remaining Level 3 Selected Subclass Finalization
 
@@ -829,3 +939,289 @@ Acceptance:
   state.
 - No PHB+ authored identity, companion AI/autonomous-control behavior, or runtime
   authored-identity dispatch is introduced.
+
+### Task 36 - L3-FOLLOWUP-BARBARIAN-FRENZY - Barbarian Frenzy Runtime Follow-Up
+
+Status: `ready-for-research`
+
+Depends on:
+
+- Task 33.
+- Task 34.
+
+Output:
+
+- Promote Frenzy as a Rage-gated, Reckless Attack-gated first-hit damage rider
+  for the selected Berserker subclass.
+- Track active Rage, Reckless Attack use on the turn, first target hit by a
+  Strength-based weapon or Unarmed Strike attack, Rage Damage bonus d6 count, and
+  same damage type as the triggering attack.
+- Add focused runtime tests, generated coverage artifacts, and promoted Quint
+  parity if runtime behavior is admitted.
+
+### Task 37 - L3-FOLLOWUP-BARBARIAN-PRIMAL-KNOWLEDGE - Barbarian Primal Knowledge Owner Follow-Up
+
+Status: `ready-for-research`
+
+Depends on:
+
+- Task 33.
+
+Output:
+
+- Split Primal Knowledge between a durable Barbarian skill proficiency choice
+  over the Barbarian level-1 skill list and a Rage-active Ability Check
+  substitution.
+- Model Acrobatics, Intimidation, Perception, Stealth, and Survival checks using
+  Strength while Rage is active without duplicating the underlying Skill
+  proficiency facts.
+
+### Task 38 - L3-FOLLOWUP-CLERIC-DISCIPLE-OF-LIFE - Cleric Disciple Of Life Runtime Follow-Up
+
+Status: `ready-for-research`
+
+Depends on:
+
+- Task 33.
+- Task 34.
+
+Output:
+
+- Promote Disciple of Life as a source-owned healing modifier for spells the
+  Cleric casts with a Spell Slot.
+- Detect Hit Point restoration on the cast turn, add `2 + spent slot level` to
+  each affected creature, exclude non-slot casts, and add focused runtime tests
+  plus promoted Quint parity.
+
+### Task 39 - L3-FOLLOWUP-CLERIC-PRESERVE-LIFE - Cleric Preserve Life Runtime Follow-Up
+
+Status: `ready-for-research`
+
+Depends on:
+
+- Task 33.
+- Task 34.
+
+Output:
+
+- Promote Preserve Life as a Magic Action that spends Cleric Channel Divinity.
+- Accept caller-chosen Bloodied creatures within 30 feet including self, divide a
+  healing pool equal to five times Cleric level, cap each target at half Hit
+  Point Maximum, and add focused runtime tests plus promoted Quint parity.
+
+### Task 40 - L3-FOLLOWUP-DRUID-LANDS-AID - Druid Land's Aid Runtime Follow-Up
+
+Status: `ready-for-research`
+
+Depends on:
+
+- Task 33.
+- Task 34.
+
+Output:
+
+- Promote Land's Aid as a Magic Action that spends one Wild Shape use.
+- Accept a table-supplied 10-foot-radius Sphere within 60 feet, apply a
+  Constitution Saving Throw for chosen creatures in the area, deal Necrotic
+  damage with half damage on success, heal one chosen creature in the area, and
+  keep later Druid-level dice scaling as later-level work.
+
+### Task 41 - L3-FOLLOWUP-FIGHTER-REMARKABLE-ATHLETE - Fighter Remarkable Athlete Runtime Follow-Up
+
+Status: `ready-for-research`
+
+Depends on:
+
+- Task 33.
+- Task 34.
+
+Output:
+
+- Promote Remarkable Athlete by projecting Advantage on Initiative rolls and
+  Strength (Athletics) checks.
+- Add the immediately-after-Critical-Hit movement release up to half Speed
+  without Opportunity Attacks, using existing Movement and Opportunity Attack
+  vocabulary rather than a generic feature flag.
+
+### Task 42 - L3-FOLLOWUP-MONK-OPEN-HAND-TECHNIQUE - Monk Open Hand Technique Runtime Follow-Up
+
+Status: `ready-for-research`
+
+Depends on:
+
+- Task 33.
+- Task 34.
+
+Output:
+
+- Promote Open Hand Technique as choices attached only to attacks granted by
+  Flurry of Blows.
+- Model Addle denying Opportunity Attacks until the target's next turn starts,
+  Push as a Strength Saving Throw before pushing up to 15 feet away, and Topple
+  as a Dexterity Saving Throw before Prone.
+
+### Task 43 - L3-FOLLOWUP-PALADIN-CHANNEL-DIVINITY - Paladin Channel Divinity Owner Follow-Up
+
+Status: `ready-for-research`
+
+Depends on:
+
+- Task 33.
+
+Output:
+
+- Split Paladin Channel Divinity between a two-use Short Rest/Long Rest resource
+  that later Paladin effects spend and a runtime-detached Divine Sense detection
+  closure.
+- Keep Paladin level 11 use scaling as later-level work, and do not duplicate
+  creature-type or consecrated/desecrated object knowledge into promoted battle
+  state unless a runtime owner is explicitly admitted.
+
+### Task 44 - L3-FOLLOWUP-PALADIN-SACRED-WEAPON - Paladin Sacred Weapon Runtime Follow-Up
+
+Status: `ready-for-research`
+
+Depends on:
+
+- Task 33.
+- Task 34.
+- Task 43.
+
+Output:
+
+- Promote Sacred Weapon as an Attack-action option that spends Paladin Channel
+  Divinity and binds one held Melee weapon.
+- Add Charisma modifier minimum +1 to attack rolls with that weapon, allow normal
+  or Radiant damage type on hits, emit authored light while active, and end on
+  recast, no-action dismissal, or not carrying the weapon.
+
+### Task 45 - L3-FOLLOWUP-RANGER-HUNTERS-PREY - Ranger Hunter's Prey Runtime Follow-Up
+
+Status: `ready-for-research`
+
+Depends on:
+
+- Task 33.
+- Task 34.
+
+Output:
+
+- Split Hunter's Prey between Short or Long Rest replacement choice and
+  battle-runtime weapon-hit behavior.
+- Model Colossus Slayer as a once-per-turn weapon-hit damage rider against a
+  target missing Hit Points, and Horde Breaker as a once-per-turn same-weapon
+  extra attack against a different nearby creature within weapon range.
+
+### Task 46 - L3-FOLLOWUP-ROGUE-FAST-HANDS - Rogue Fast Hands Owner Follow-Up
+
+Status: `ready-for-research`
+
+Depends on:
+
+- Task 33.
+- Task 34.
+
+Output:
+
+- Split Fast Hands between Bonus Action action-economy permission,
+  runtime-detached Sleight of Hand lock/trap/pocket adjudication, Utilize action
+  support, and Magic Item Magic Action support.
+- Reuse item-owned activation facts instead of adding Thief-specific item
+  execution state.
+
+### Task 47 - L3-FOLLOWUP-ROGUE-SECOND-STORY-WORK - Rogue Second-Story Work Owner Follow-Up
+
+Status: `ready-for-research`
+
+Depends on:
+
+- Task 33.
+- Task 34.
+
+Output:
+
+- Promote Second-Story Work by projecting Climb Speed equal to Speed and adding a
+  jump-distance ability substitution that uses Dexterity rather than Strength.
+- Avoid storing duplicated climb or jump values beside base Speed and Ability
+  Score facts.
+
+### Task 48 - L3-FOLLOWUP-ROGUE-STEADY-AIM - Rogue Steady Aim Runtime Follow-Up
+
+Status: `ready-for-research`
+
+Depends on:
+
+- Task 33.
+
+Output:
+
+- Promote Steady Aim as a Bonus Action available only if the Rogue has not moved
+  on the turn.
+- Grant Advantage on the next attack roll on that same turn and set Speed to 0
+  until the current turn ends.
+
+### Task 49 - L3-FOLLOWUP-SORCERER-DRACONIC-RESILIENCE - Sorcerer Draconic Resilience Character Sheet Follow-Up
+
+Status: `ready-for-research`
+
+Depends on:
+
+- Task 33.
+- Task 34.
+
+Output:
+
+- Promote Draconic Resilience as durable Character Sheet facts.
+- Increase Hit Point Maximum by 3 at acquisition and by 1 for each later Sorcerer
+  level, and add the unarmored base Armor Class formula `10 + Dexterity modifier
+  + Charisma modifier` using the existing explicit base-formula selection
+  boundary.
+
+### Task 50 - L3-FOLLOWUP-WARLOCK-DARK-ONES-BLESSING - Warlock Dark One's Blessing Runtime Follow-Up
+
+Status: `ready-for-research`
+
+Depends on:
+
+- Task 33.
+- Task 34.
+
+Output:
+
+- Promote Dark One's Blessing as a trigger when the Warlock reduces an enemy to 0
+  Hit Points or another creature reduces an enemy within 10 feet of the Warlock
+  to 0 Hit Points.
+- Grant Temporary Hit Points equal to Charisma modifier plus Warlock level with a
+  minimum of 1.
+
+### Task 51 - L3-FOLLOWUP-WIZARD-EVOCATION-SAVANT - Wizard Evocation Savant Spellbook Follow-Up
+
+Status: `ready-for-research`
+
+Depends on:
+
+- Task 33.
+- Task 34.
+
+Output:
+
+- Promote Evocation Savant as spellbook acquisition facts.
+- At acquisition, choose two Wizard Evocation spells no higher than level 2 for
+  free; whenever the Wizard gains access to a new Spell Slot level, add one
+  Wizard Evocation spell for free no higher than an available slot level.
+
+### Task 52 - L3-FOLLOWUP-WIZARD-POTENT-CANTRIP - Wizard Potent Cantrip Runtime Follow-Up
+
+Status: `ready-for-research`
+
+Depends on:
+
+- Task 33.
+- Task 34.
+
+Output:
+
+- Promote Potent Cantrip as a damaging-cantrip rule.
+- When a Wizard cantrip cast at a creature misses with its Attack Roll or the
+  target succeeds on a Saving Throw against the cantrip, apply half the cantrip's
+  damage if any and no additional cantrip effect.

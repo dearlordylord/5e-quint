@@ -217,11 +217,11 @@
     },
     "levelThreeClassBattleReadiness": {
       "denominator": 51,
-      "numerator": 24,
-      "percent": "47.1%",
+      "numerator": 25,
+      "percent": "49%",
       "rowsByStatus": {
-        "owner-evidence-required": 27,
-        "accepted-no-battle-effect": 13,
+        "owner-evidence-required": 26,
+        "accepted-no-battle-effect": 14,
         "accepted": 11
       }
     },
@@ -249,10 +249,10 @@
       "catalog-installed-needs-owner-evidence": 1
     },
     "levelThreeClassRowsByDisposition": {
-      "level-3-follow-up-required": 18,
+      "level-3-follow-up-required": 17,
       "non-runtime": 12,
       "catalog-installed-owner-evidence-present": 11,
-      "catalog-only/dead-for-now": 1,
+      "catalog-only/dead-for-now": 2,
       "catalog-installed-owner-evidence-required": 9
     },
     "levelThreeClassRowsByCategory": {
@@ -264,9 +264,9 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 424,
       "non-runtime": 36,
-      "level-3-follow-up-required": 18,
+      "level-3-follow-up-required": 17,
       "catalog-installed-owner-evidence-required": 18,
-      "catalog-only/dead-for-now": 134,
+      "catalog-only/dead-for-now": 135,
       "missing-authored-record": 58,
       "catalog-authored-review-required": 42,
       "catalog-authored-executable-follow-up": 4,
@@ -4122,7 +4122,7 @@
       },
       "finalDisposition": "level-3-follow-up-required",
       "ownerEvidence": [],
-      "nextAction": "Promote a focused level-3 class or subclass feature split that authors the SRD feature record when missing, identifies the character-creation or battle-runtime owner, and adds checker-readable owner evidence before treating this row as supported.",
+      "nextAction": "Promote Frenzy as a Rage-gated, Reckless Attack-gated first-hit damage rider: selected Berserker subclass ownership, active Rage state, Reckless Attack use on the turn, first target hit by a Strength-based weapon or Unarmed Strike attack, Rage Damage bonus d6 count, same damage type as the triggering attack, focused runtime tests, and promoted Quint parity.",
       "battleReadinessStatus": "owner-evidence-required"
     },
     {
@@ -4151,7 +4151,7 @@
       },
       "finalDisposition": "level-3-follow-up-required",
       "ownerEvidence": [],
-      "nextAction": "Promote a focused level-3 class or subclass feature split that authors the SRD feature record when missing, identifies the character-creation or battle-runtime owner, and adds checker-readable owner evidence before treating this row as supported.",
+      "nextAction": "Promote Primal Knowledge as a split between a durable Barbarian skill proficiency choice over the Barbarian level-1 skill list and a Rage-active Ability Check substitution for Acrobatics, Intimidation, Perception, Stealth, and Survival that uses Strength without duplicating the underlying Skill proficiency facts.",
       "battleReadinessStatus": "owner-evidence-required"
     },
     {
@@ -8703,7 +8703,7 @@
       },
       "finalDisposition": "level-3-follow-up-required",
       "ownerEvidence": [],
-      "nextAction": "Promote a focused level-3 class or subclass feature split that authors the SRD feature record when missing, identifies the character-creation or battle-runtime owner, and adds checker-readable owner evidence before treating this row as supported.",
+      "nextAction": "Promote Disciple of Life as a source-owned healing modifier for spells the Cleric casts with a Spell Slot: detect Hit Point restoration on the cast turn, add 2 plus the spent slot level to each affected creature, avoid affecting non-slot casts, and add focused runtime tests plus promoted Quint parity.",
       "battleReadinessStatus": "owner-evidence-required"
     },
     {
@@ -8732,7 +8732,7 @@
       },
       "finalDisposition": "level-3-follow-up-required",
       "ownerEvidence": [],
-      "nextAction": "Promote a focused level-3 class or subclass feature split that authors the SRD feature record when missing, identifies the character-creation or battle-runtime owner, and adds checker-readable owner evidence before treating this row as supported.",
+      "nextAction": "Promote Preserve Life as a Magic Action that spends Cleric Channel Divinity, accepts caller-chosen Bloodied creatures within 30 feet including self, divides a healing pool equal to five times Cleric level, caps each target at half Hit Point Maximum, and carries focused runtime tests plus promoted Quint parity.",
       "battleReadinessStatus": "owner-evidence-required"
     },
     {
@@ -11991,7 +11991,7 @@
       },
       "finalDisposition": "level-3-follow-up-required",
       "ownerEvidence": [],
-      "nextAction": "Promote a focused level-3 class or subclass feature split that authors the SRD feature record when missing, identifies the character-creation or battle-runtime owner, and adds checker-readable owner evidence before treating this row as supported.",
+      "nextAction": "Promote Land's Aid as a Magic Action that spends one Wild Shape use, accepts a table-supplied 10-foot-radius Sphere within 60 feet, applies a Constitution save for chosen creatures in the area, deals Necrotic damage with half damage on success, heals one chosen creature in the area, and records later Druid-level dice scaling as later-level work.",
       "battleReadinessStatus": "owner-evidence-required"
     },
     {
@@ -15479,7 +15479,7 @@
       },
       "finalDisposition": "level-3-follow-up-required",
       "ownerEvidence": [],
-      "nextAction": "Promote a focused level-3 class or subclass feature split that authors the SRD feature record when missing, identifies the character-creation or battle-runtime owner, and adds checker-readable owner evidence before treating this row as supported.",
+      "nextAction": "Promote Remarkable Athlete by projecting Advantage on Initiative rolls and Strength (Athletics) checks, plus the immediately-after-Critical-Hit movement release up to half Speed without Opportunity Attacks, using existing movement and Opportunity Attack vocabulary rather than a generic feature flag.",
       "battleReadinessStatus": "owner-evidence-required"
     },
     {
@@ -16431,7 +16431,7 @@
       },
       "finalDisposition": "level-3-follow-up-required",
       "ownerEvidence": [],
-      "nextAction": "Promote a focused level-3 class or subclass feature split that authors the SRD feature record when missing, identifies the character-creation or battle-runtime owner, and adds checker-readable owner evidence before treating this row as supported.",
+      "nextAction": "Promote Open Hand Technique as choices attached only to attacks granted by Flurry of Blows: Addle denies Opportunity Attacks until the target's next turn starts, Push applies a Strength Saving Throw before pushing up to 15 feet away, and Topple applies a Dexterity Saving Throw before Prone.",
       "battleReadinessStatus": "owner-evidence-required"
     },
     {
@@ -17282,7 +17282,7 @@
       },
       "finalDisposition": "level-3-follow-up-required",
       "ownerEvidence": [],
-      "nextAction": "Promote a focused level-3 class or subclass feature split that authors the SRD feature record when missing, identifies the character-creation or battle-runtime owner, and adds checker-readable owner evidence before treating this row as supported.",
+      "nextAction": "Promote Paladin Channel Divinity as a split between a two-use Short Rest/Long Rest resource that later Paladin effects spend, with Paladin level 11 use scaling deferred as later-level work, and a Divine Sense detection closure for creature-type, consecrated-place, and desecrated-object knowledge outside promoted battle state.",
       "battleReadinessStatus": "owner-evidence-required"
     },
     {
@@ -17311,7 +17311,7 @@
       },
       "finalDisposition": "level-3-follow-up-required",
       "ownerEvidence": [],
-      "nextAction": "Promote a focused level-3 class or subclass feature split that authors the SRD feature record when missing, identifies the character-creation or battle-runtime owner, and adds checker-readable owner evidence before treating this row as supported.",
+      "nextAction": "Promote Sacred Weapon as an Attack-action option that spends Paladin Channel Divinity, binds one held Melee weapon, adds Charisma modifier minimum +1 to attack rolls with that weapon, allows normal or Radiant damage type on hits, emits authored light while active, and ends on recast, no-action dismissal, or not carrying the weapon.",
       "battleReadinessStatus": "owner-evidence-required"
     },
     {
@@ -19456,10 +19456,10 @@
         "state": "not-installed",
         "unitId": "ranger_hunters_lore"
       },
-      "finalDisposition": "level-3-follow-up-required",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Promote a focused level-3 class or subclass feature split that authors the SRD feature record when missing, identifies the character-creation or battle-runtime owner, and adds checker-readable owner evidence before treating this row as supported.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Hunter's Lore reveals whether a Hunter's Mark target has Immunities, Resistances, or Vulnerabilities and what they are. That disclosure is table/stat-block knowledge, not promoted battle state; the runtime must not duplicate Stat Block facts into Ranger feature state.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/ranger:level-3:class-feature-grant:ranger_hunters_prey",
@@ -19487,7 +19487,7 @@
       },
       "finalDisposition": "level-3-follow-up-required",
       "ownerEvidence": [],
-      "nextAction": "Promote a focused level-3 class or subclass feature split that authors the SRD feature record when missing, identifies the character-creation or battle-runtime owner, and adds checker-readable owner evidence before treating this row as supported.",
+      "nextAction": "Promote Hunter's Prey as a split between a Short or Long Rest replacement choice between Colossus Slayer and Horde Breaker, Colossus Slayer as a once-per-turn weapon-hit damage rider against a target missing Hit Points, and Horde Breaker as a once-per-turn same-weapon extra attack against a different nearby creature within weapon range.",
       "battleReadinessStatus": "owner-evidence-required"
     },
     {
@@ -22016,7 +22016,7 @@
       },
       "finalDisposition": "level-3-follow-up-required",
       "ownerEvidence": [],
-      "nextAction": "Promote a focused level-3 class or subclass feature split that authors the SRD feature record when missing, identifies the character-creation or battle-runtime owner, and adds checker-readable owner evidence before treating this row as supported.",
+      "nextAction": "Promote Fast Hands as a split between a Bonus Action action-economy permission, runtime-detached Sleight of Hand lock/trap/pocket adjudication, Utilize action support, and Magic Item Magic Action support that reuses item-owned activation facts instead of adding Thief-specific item execution state.",
       "battleReadinessStatus": "owner-evidence-required"
     },
     {
@@ -22045,7 +22045,7 @@
       },
       "finalDisposition": "level-3-follow-up-required",
       "ownerEvidence": [],
-      "nextAction": "Promote a focused level-3 class or subclass feature split that authors the SRD feature record when missing, identifies the character-creation or battle-runtime owner, and adds checker-readable owner evidence before treating this row as supported.",
+      "nextAction": "Promote Second-Story Work by projecting Climb Speed equal to Speed and by adding a jump-distance ability substitution that uses Dexterity rather than Strength, without storing duplicated climb or jump values beside the base Speed and Ability Score facts.",
       "battleReadinessStatus": "owner-evidence-required"
     },
     {
@@ -22074,7 +22074,7 @@
       },
       "finalDisposition": "level-3-follow-up-required",
       "ownerEvidence": [],
-      "nextAction": "Promote a focused level-3 class or subclass feature split that authors the SRD feature record when missing, identifies the character-creation or battle-runtime owner, and adds checker-readable owner evidence before treating this row as supported.",
+      "nextAction": "Promote Steady Aim as a Bonus Action available only if the Rogue has not moved on the turn, granting Advantage on the next attack roll on that same turn and setting Speed to 0 until the current turn ends.",
       "battleReadinessStatus": "owner-evidence-required"
     },
     {
@@ -22876,7 +22876,7 @@
       },
       "finalDisposition": "level-3-follow-up-required",
       "ownerEvidence": [],
-      "nextAction": "Promote a focused level-3 class or subclass feature split that authors the SRD feature record when missing, identifies the character-creation or battle-runtime owner, and adds checker-readable owner evidence before treating this row as supported.",
+      "nextAction": "Promote Draconic Resilience as durable Character Sheet facts: Hit Point Maximum increases by 3 at acquisition and by 1 for each later Sorcerer level, and unarmored base Armor Class equals 10 plus Dexterity and Charisma modifiers with the existing explicit base-formula selection boundary.",
       "battleReadinessStatus": "owner-evidence-required"
     },
     {
@@ -27067,7 +27067,7 @@
       },
       "finalDisposition": "level-3-follow-up-required",
       "ownerEvidence": [],
-      "nextAction": "Promote a focused level-3 class or subclass feature split that authors the SRD feature record when missing, identifies the character-creation or battle-runtime owner, and adds checker-readable owner evidence before treating this row as supported.",
+      "nextAction": "Promote Dark One's Blessing as a trigger when the Warlock reduces an enemy to 0 Hit Points or another creature reduces an enemy within 10 feet of the Warlock to 0 Hit Points, granting Temporary Hit Points equal to Charisma modifier plus Warlock level with a minimum of 1.",
       "battleReadinessStatus": "owner-evidence-required"
     },
     {
@@ -29496,7 +29496,7 @@
       },
       "finalDisposition": "level-3-follow-up-required",
       "ownerEvidence": [],
-      "nextAction": "Promote a focused level-3 class or subclass feature split that authors the SRD feature record when missing, identifies the character-creation or battle-runtime owner, and adds checker-readable owner evidence before treating this row as supported.",
+      "nextAction": "Promote Evocation Savant as spellbook acquisition facts: choose two Wizard Evocation spells no higher than level 2 for free at acquisition, then add one Wizard Evocation spell for free whenever the Wizard gains access to a new Spell Slot level, with the chosen spell no higher than an available slot level.",
       "battleReadinessStatus": "owner-evidence-required"
     },
     {
@@ -29525,7 +29525,7 @@
       },
       "finalDisposition": "level-3-follow-up-required",
       "ownerEvidence": [],
-      "nextAction": "Promote a focused level-3 class or subclass feature split that authors the SRD feature record when missing, identifies the character-creation or battle-runtime owner, and adds checker-readable owner evidence before treating this row as supported.",
+      "nextAction": "Promote Potent Cantrip as a damaging-cantrip rule: when a Wizard cantrip cast at a creature misses with its attack roll or the target succeeds on its Saving Throw, the target takes half the cantrip's damage if any and suffers no additional cantrip effect.",
       "battleReadinessStatus": "owner-evidence-required"
     },
     {

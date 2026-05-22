@@ -137,6 +137,157 @@ const catalogOnlyClosures = new Map([
   ],
 ]);
 
+const levelThreeClassFeatureOwnerSplits = new Map([
+  [
+    "srd521:classes/barbarian:level-3:class-feature-grant:barbarian_frenzy",
+    {
+      owner: "battle-runtime Rage and Reckless Attack damage-rider owner",
+      requirement:
+        "Promote Frenzy as a Rage-gated, Reckless Attack-gated first-hit damage rider: selected Berserker subclass ownership, active Rage state, Reckless Attack use on the turn, first target hit by a Strength-based weapon or Unarmed Strike attack, Rage Damage bonus d6 count, same damage type as the triggering attack, focused runtime tests, and promoted Quint parity.",
+    },
+  ],
+  [
+    "srd521:classes/barbarian:level-3:class-feature-grant:barbarian_primal_knowledge",
+    {
+      owner:
+        "character-creation-runtime skill-choice owner plus battle/character-sheet Rage skill ability-substitution owner",
+      requirement:
+        "Promote Primal Knowledge as a split between a durable Barbarian skill proficiency choice over the Barbarian level-1 skill list and a Rage-active Ability Check substitution for Acrobatics, Intimidation, Perception, Stealth, and Survival that uses Strength without duplicating the underlying Skill proficiency facts.",
+    },
+  ],
+  [
+    "srd521:classes/cleric:level-3:class-feature-grant:cleric_disciple_of_life",
+    {
+      owner: "spell invocation healing modifier owner",
+      requirement:
+        "Promote Disciple of Life as a source-owned healing modifier for spells the Cleric casts with a Spell Slot: detect Hit Point restoration on the cast turn, add 2 plus the spent slot level to each affected creature, avoid affecting non-slot casts, and add focused runtime tests plus promoted Quint parity.",
+    },
+  ],
+  [
+    "srd521:classes/cleric:level-3:class-feature-grant:cleric_preserve_life",
+    {
+      owner: "battle-runtime Channel Divinity healing-action owner",
+      requirement:
+        "Promote Preserve Life as a Magic Action that spends Cleric Channel Divinity, accepts caller-chosen Bloodied creatures within 30 feet including self, divides a healing pool equal to five times Cleric level, caps each target at half Hit Point Maximum, and carries focused runtime tests plus promoted Quint parity.",
+    },
+  ],
+  [
+    "srd521:classes/druid:level-3:class-feature-grant:druid_lands_aid",
+    {
+      owner: "battle-runtime Wild Shape spend and area damage/healing owner",
+      requirement:
+        "Promote Land's Aid as a Magic Action that spends one Wild Shape use, accepts a table-supplied 10-foot-radius Sphere within 60 feet, applies a Constitution save for chosen creatures in the area, deals Necrotic damage with half damage on success, heals one chosen creature in the area, and records later Druid-level dice scaling as later-level work.",
+    },
+  ],
+  [
+    "srd521:classes/fighter:level-3:class-feature-grant:fighter_remarkable_athlete",
+    {
+      owner: "battle-runtime initiative, Athletics, and critical-hit movement owner",
+      requirement:
+        "Promote Remarkable Athlete by projecting Advantage on Initiative rolls and Strength (Athletics) checks, plus the immediately-after-Critical-Hit movement release up to half Speed without Opportunity Attacks, using existing movement and Opportunity Attack vocabulary rather than a generic feature flag.",
+    },
+  ],
+  [
+    "srd521:classes/monk:level-3:class-feature-grant:monk_open_hand_technique",
+    {
+      owner: "battle-runtime Flurry of Blows hit-rider owner",
+      requirement:
+        "Promote Open Hand Technique as choices attached only to attacks granted by Flurry of Blows: Addle denies Opportunity Attacks until the target's next turn starts, Push applies a Strength Saving Throw before pushing up to 15 feet away, and Topple applies a Dexterity Saving Throw before Prone.",
+    },
+  ],
+  [
+    "srd521:classes/paladin:level-3:class-feature-grant:paladin_channel_divinity",
+    {
+      owner:
+        "character-sheet-runtime Channel Divinity resource owner plus runtime-detached Divine Sense detection owner",
+      requirement:
+        "Promote Paladin Channel Divinity as a split between a two-use Short Rest/Long Rest resource that later Paladin effects spend, with Paladin level 11 use scaling deferred as later-level work, and a Divine Sense detection closure for creature-type, consecrated-place, and desecrated-object knowledge outside promoted battle state.",
+    },
+  ],
+  [
+    "srd521:classes/paladin:level-3:class-feature-grant:paladin_sacred_weapon",
+    {
+      owner: "battle-runtime Channel Divinity weapon-imbue owner",
+      requirement:
+        "Promote Sacred Weapon as an Attack-action option that spends Paladin Channel Divinity, binds one held Melee weapon, adds Charisma modifier minimum +1 to attack rolls with that weapon, allows normal or Radiant damage type on hits, emits authored light while active, and ends on recast, no-action dismissal, or not carrying the weapon.",
+    },
+  ],
+  [
+    "srd521:classes/ranger:level-3:class-feature-grant:ranger_hunters_lore",
+    {
+      kind: "catalog-only-closure",
+      owner: "runtime-detached table/stat-block knowledge owner",
+      reason:
+        "Hunter's Lore reveals whether a Hunter's Mark target has Immunities, Resistances, or Vulnerabilities and what they are. That disclosure is table/stat-block knowledge, not promoted battle state; the runtime must not duplicate Stat Block facts into Ranger feature state.",
+    },
+  ],
+  [
+    "srd521:classes/ranger:level-3:class-feature-grant:ranger_hunters_prey",
+    {
+      owner: "character-sheet option selection plus battle-runtime weapon-hit owner",
+      requirement:
+        "Promote Hunter's Prey as a split between a Short or Long Rest replacement choice between Colossus Slayer and Horde Breaker, Colossus Slayer as a once-per-turn weapon-hit damage rider against a target missing Hit Points, and Horde Breaker as a once-per-turn same-weapon extra attack against a different nearby creature within weapon range.",
+    },
+  ],
+  [
+    "srd521:classes/rogue:level-3:class-feature-grant:rogue_fast_hands",
+    {
+      owner:
+        "battle-runtime action-economy owner plus runtime-detached object/trap and magic-item-use owners",
+      requirement:
+        "Promote Fast Hands as a split between a Bonus Action action-economy permission, runtime-detached Sleight of Hand lock/trap/pocket adjudication, Utilize action support, and Magic Item Magic Action support that reuses item-owned activation facts instead of adding Thief-specific item execution state.",
+    },
+  ],
+  [
+    "srd521:classes/rogue:level-3:class-feature-grant:rogue_second_story_work",
+    {
+      owner: "character-sheet Speed projection plus movement/jump owner",
+      requirement:
+        "Promote Second-Story Work by projecting Climb Speed equal to Speed and by adding a jump-distance ability substitution that uses Dexterity rather than Strength, without storing duplicated climb or jump values beside the base Speed and Ability Score facts.",
+    },
+  ],
+  [
+    "srd521:classes/rogue:level-3:class-feature-grant:rogue_steady_aim",
+    {
+      owner: "battle-runtime turn movement and attack-roll Advantage owner",
+      requirement:
+        "Promote Steady Aim as a Bonus Action available only if the Rogue has not moved on the turn, granting Advantage on the next attack roll on that same turn and setting Speed to 0 until the current turn ends.",
+    },
+  ],
+  [
+    "srd521:classes/sorcerer:level-3:class-feature-grant:sorcerer_draconic_resilience",
+    {
+      owner: "character-sheet Hit Point Maximum and Armor Class formula owner",
+      requirement:
+        "Promote Draconic Resilience as durable Character Sheet facts: Hit Point Maximum increases by 3 at acquisition and by 1 for each later Sorcerer level, and unarmored base Armor Class equals 10 plus Dexterity and Charisma modifiers with the existing explicit base-formula selection boundary.",
+    },
+  ],
+  [
+    "srd521:classes/warlock:level-3:class-feature-grant:warlock_dark_ones_blessing",
+    {
+      owner: "battle-runtime defeat-triggered Temporary Hit Point owner",
+      requirement:
+        "Promote Dark One's Blessing as a trigger when the Warlock reduces an enemy to 0 Hit Points or another creature reduces an enemy within 10 feet of the Warlock to 0 Hit Points, granting Temporary Hit Points equal to Charisma modifier plus Warlock level with a minimum of 1.",
+    },
+  ],
+  [
+    "srd521:classes/wizard:level-3:class-feature-grant:wizard_evocation_savant",
+    {
+      owner: "character-creation-runtime and character-sheet spellbook owner",
+      requirement:
+        "Promote Evocation Savant as spellbook acquisition facts: choose two Wizard Evocation spells no higher than level 2 for free at acquisition, then add one Wizard Evocation spell for free whenever the Wizard gains access to a new Spell Slot level, with the chosen spell no higher than an available slot level.",
+    },
+  ],
+  [
+    "srd521:classes/wizard:level-3:class-feature-grant:wizard_potent_cantrip",
+    {
+      owner: "battle-runtime cantrip miss/save damage replacement owner",
+      requirement:
+        "Promote Potent Cantrip as a damaging-cantrip rule: when a Wizard cantrip cast at a creature misses with its attack roll or the target succeeds on its Saving Throw, the target takes half the cantrip's damage if any and suffers no additional cantrip effect.",
+    },
+  ],
+]);
+
 const spellUnitExecutableFollowUpBatches = [];
 
 const spellUnitExecutableFollowUps = new Map(
@@ -1030,6 +1181,20 @@ function levelThreeClassOwnerClassification(row, ownerEvidenceSources) {
       requirement:
         "Promote a subclass Spell Access progression split that models level-gated always-prepared subclass spells as character-owned Spell Access, separate from individual Spell Definition spell-list pressure and spell invocation runtime support.",
     };
+  }
+  if (row.rowKind === "class-feature-grant") {
+    const levelThreeClassFeatureSplit = levelThreeClassFeatureOwnerSplits.get(
+      row.id,
+    );
+    if (levelThreeClassFeatureSplit !== undefined) {
+      if (levelThreeClassFeatureSplit.kind === "catalog-only-closure") {
+        return levelThreeClassFeatureSplit;
+      }
+      return {
+        kind: "evidence-required",
+        ...levelThreeClassFeatureSplit,
+      };
+    }
   }
   const claim = row.candidateUnitId
     ? ownerEvidenceSources.unitClaims.get(row.candidateUnitId)?.claim
