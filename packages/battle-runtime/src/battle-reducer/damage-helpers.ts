@@ -268,6 +268,8 @@ export function damageAmountByTypeMapEntries(
 
 const SPELL_DAMAGE_REDUCTION_ROLL_HOLE_PREFIX =
   "battle:spell-damage-reduction-roll";
+const SOURCE_DAMAGE_ROLL_PENALTY_ROLL_HOLE_PREFIX =
+  "battle:source-damage-roll-penalty-roll";
 const SPELL_ATTACK_SEQUENCE_PART_DAMAGE_REDUCTION_ROLL_HOLE_PREFIX =
   "battle:spell:attack-sequence-part-damage-reduction-roll";
 const SOURCE_DAMAGE_ROLL_PENALTY_ROLL_HOLE_PREFIX =

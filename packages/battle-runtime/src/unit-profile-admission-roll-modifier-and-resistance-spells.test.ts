@@ -40,6 +40,7 @@ import {
   savingThrowOutcomeFill,
   skillChoiceFill,
   spellAct,
+  targetAbilityChoicesFill,
   spellTargetFill,
   spellTargetListFill,
   withResistanceEffect,
