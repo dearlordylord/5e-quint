@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
 import {
   abilityModifier,
   armorClass,
@@ -7,7 +8,7 @@ import {
 } from "@dnd/shared-algebras/armor-class-algebra";
 import { abilityScoreToMod } from "@dnd/shared-algebras/ability-score-algebra";
 import { elapsedTimeTicksFromHours } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { Hp } from "@dnd/shared/types";
+import { Hp, SIZES } from "@dnd/shared/types";
 import { druidWildShapeDurationHoursForClassLevel } from "@dnd/surface/surface/druid-wild-shape-readers";
 import type { Size, UnitRecord } from "@dnd/surface/surface/types";
 import * as Either from "effect/Either";
@@ -23,6 +24,10 @@ import type {
 import type { BattleDruidWildShapeKnownFormSupportProfile } from "../unit-feature-support.ts";
 import type { CombatantId } from "../identity.ts";
 import { combatantHasUnendedDruidWildShapeEffect } from "./creature-state-leaves.ts";
+import {
+  activeCreatureSizeChangeEffect,
+  type SpellCreatureSizeChangeEffect,
+} from "./creature-size-change-effects.ts";
 
 export type ActiveDruidWildShape = {
   readonly effect: Extract<
@@ -83,7 +88,20 @@ export function activeDruidWildShape(
 
 export function combatantEffectiveSize(combatant: BattleCreatureState): Size {
   const form = activeDruidWildShapeForm(combatant);
-  return form === null ? combatant.size : literalStatBlockSize(form);
+  const baseSize = form === null ? combatant.size : literalStatBlockSize(form);
+  const sizeChange = activeCreatureSizeChangeEffect(combatant);
+  return sizeChange === null
+    ? baseSize
+    : shiftedCreatureSize(baseSize, sizeChange.direction);
+}
+
+function shiftedCreatureSize(
+  baseSize: Size,
+  direction: SpellCreatureSizeChangeEffect["direction"],
+): Size {
+  const index = SIZES.indexOf(baseSize);
+  const nextIndex = direction === "increase" ? index + 1 : index - 1;
+  return SIZES[Math.max(0, Math.min(SIZES.length - 1, nextIndex))] as Size;
 }
 
 export function combatantDruidWildShapeArmorClassState(

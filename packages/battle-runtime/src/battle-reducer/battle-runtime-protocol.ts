@@ -133,6 +133,18 @@ export const REACTION_DECISION_HOLE_INSTANCE = holeInstanceKey(
 );
 export const MOVEMENT_HOLE_ID = holeId("battle:movement");
 export const MOVEMENT_HOLE_INSTANCE = holeInstanceKey("battle:movement");
+export const LEVITATE_ALTITUDE_CHANGE_HOLE_ID = holeId(
+  "battle:levitate:altitude-change",
+);
+export const LEVITATE_ALTITUDE_CHANGE_HOLE_INSTANCE = holeInstanceKey(
+  "battle:levitate:altitude-change",
+);
+export const LEVITATE_INITIAL_RISE_HOLE_ID = holeId(
+  "battle:levitate:initial-rise",
+);
+export const LEVITATE_INITIAL_RISE_HOLE_INSTANCE = holeInstanceKey(
+  "battle:levitate:initial-rise",
+);
 export const HIDE_ABILITY_CHECK_HOLE_ID = holeId("battle:hide:stealth-check");
 export const HIDE_ABILITY_CHECK_HOLE_INSTANCE = holeInstanceKey(
   "battle:hide:stealth-check",

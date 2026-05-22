@@ -14,6 +14,8 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.creature-type-protection-and-charm spell.hit-point-restoration spell.invocation-after-hit-damage spell.invocation-after-hit-damage-illumination spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-blur-attack-roll-defense spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-removal-protection spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-dancing-lights-movable-dim-light spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-independent-attack-sequence spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-save-gated-condition-immunity spell.invocation-see-invisible-observer-sight spell.invocation-self-ability-check-advantage spell.invocation-self-teleport spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-failed-d20-test unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.zero-hit-point-replacement
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
@@ -162,6 +164,7 @@ import type {
   SelfTransformationNaturalWeaponFacts,
   SpellConditionEscape,
   SpellCreatedHeldObjectActiveEffect,
+  SpellLevitatedCreatureActiveEffect,
   SpellObjectContactDamageActiveEffect,
   SpellTurnStartDamage,
   SpellTurnStartDamageSave,
@@ -528,10 +531,17 @@ export type BattleD20RollModifierKind = Extract<
   "ability_check" | "attack_roll" | "saving_throw"
 >;
 export type BattleD20RollModifierDelta = {
-  readonly dice: number;
-  readonly dieSize: BattleD20RollModifierDieSize;
   readonly sign: "+" | "-";
-};
+} & (
+  | {
+      readonly kind: "fixedNumber";
+      readonly amount: number;
+    }
+  | {
+      readonly dice: number;
+      readonly dieSize: BattleD20RollModifierDieSize;
+    }
+);
 export type BattlePassiveSpeedProfile =
   | BattlePassiveSpeedBonusSupportProfile
   | BattlePassiveSpeedKindGrantsSupportProfile;
@@ -548,6 +558,7 @@ export type {
   ProtectionFromEvilAndGoodPreventedCondition,
   SelfTransformationModeEffectPayload,
   SelfTransformationNaturalWeaponFacts,
+  SpellLevitatedCreatureActiveEffect,
   SpellConditionAbilityCheckActor,
   SpellConditionAbilityCheckSuccessEnd,
   SpellConditionEscape,
@@ -1236,6 +1247,7 @@ export type BattleMovementFillValue = {
   readonly areaDifficultTerrain?: BattleAreaDifficultTerrainMovementFact;
   readonly gustOfWindLineMovement?: BattleGustOfWindLineMovementFact;
   readonly jumpMovementReplacement?: BattleJumpMovementReplacementFact;
+  readonly levitatedMovement?: BattleLevitatedMovementFact;
   readonly commandApproach?: BattleCommandApproachMovementFact;
   readonly commandFlee?: BattleCommandFleeMovementFact;
 };
@@ -1285,6 +1297,17 @@ export type BattleJumpMovementReplacementFact = {
   readonly kind: "jumpMovementReplacement";
   readonly distanceFeet: MovementFeet;
   readonly landing: BattleJumpLandingFact;
+};
+export type BattleLevitateAltitudeDirection = "up" | "down";
+export type BattleLevitatedMovementFact = {
+  readonly kind: "levitatedMovement";
+  readonly sourceCombatantId: CombatantId;
+  readonly sourceSpellId: SpellRecord["id"];
+  readonly fixedObjectOrSurfaceWithinReach: true;
+  readonly altitudeChange?: {
+    readonly direction: BattleLevitateAltitudeDirection;
+    readonly distanceFeet: MovementFeet;
+  };
 };
 export type BattleJumpLandingFact =
   | {
@@ -1524,6 +1547,13 @@ export type BattleTargetSpatialFact =
       readonly rangeFeet: MovementFeet;
     }
   | {
+      readonly kind: "levitatedTargetWithinSpellRange";
+      readonly sourceCombatantId: CombatantId;
+      readonly sourceSpellId: SpellRecord["id"];
+      readonly targetId: CombatantId;
+      readonly rangeFeet: MovementFeet;
+    }
+  | {
       readonly kind: "counterspellTriggerCasterVisibleWithinRange";
       readonly reactorId: CombatantId;
       readonly casterId: CombatantId;
@@ -1640,6 +1670,7 @@ export type BattleResolvedMovement = {
   readonly spendsTurnMovement: boolean;
   readonly areaDifficultTerrain?: BattleAreaDifficultTerrainMovementFact;
   readonly jumpMovementReplacement?: BattleJumpMovementReplacementFact;
+  readonly levitatedMovement?: BattleLevitatedMovementFact;
 };
 export type HealingSpellActionCost = "magicAction" | "bonusAction";
 export type PreparedSpellAccess = { readonly tag: "prepared" };
@@ -2025,6 +2056,14 @@ export type TargetListSpellInvocation =
     >
   | Extract<
       SupportedSpellInvocation,
+      { readonly procedure: "creatureSizeIncrease" | "creatureSizeDecrease" }
+    >
+  | Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "levitatedCreature" }
+    >
+  | Extract<
+      SupportedSpellInvocation,
       { readonly procedure: "conditionRemovalProtection" }
     >
   | Extract<
@@ -2079,7 +2118,11 @@ export type ScalarBuffSpellEffect =
       >;
     };
 export type RollModifierSpellTargeting =
-  | SpellTargetListTargeting
+  | {
+      readonly kind: "targetList";
+      readonly minTargets: 1;
+      readonly maxTargets: number | "allLegalTargets";
+    }
   | {
       readonly kind: "selfAndChosenLegalTargets";
       readonly minTargets: 1;
@@ -2149,6 +2192,37 @@ export type CreatureTypeProtectionSpellInvocation = {
     BattleActiveEffect,
     { readonly kind: "creatureTypeProtection" }
   >;
+  readonly rangeFeet: MovementFeet;
+};
+export type CreatureSizeChangeSpellInvocation = {
+  readonly access: PreparedSpellAccess;
+  readonly resource: SpellSlotInvocationResource;
+  readonly procedure: "creatureSizeIncrease" | "creatureSizeDecrease";
+  readonly spell: SpellRecord;
+  readonly actionCost: "magicAction";
+  readonly ability: Extract<Ability, "con">;
+  readonly dc: DcSource;
+  readonly targeting: SpellTargetListTargeting;
+  readonly activeEffect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "spellCreatureSizeChange" }
+  >;
+  readonly rangeFeet: MovementFeet;
+};
+export type LevitatedCreatureSpellInvocation = {
+  readonly access: PreparedSpellAccess;
+  readonly resource: SpellSlotInvocationResource;
+  readonly procedure: "levitatedCreature";
+  readonly spell: SpellRecord;
+  readonly actionCost: "magicAction";
+  readonly ability: Extract<Ability, "con">;
+  readonly dc: DcSource;
+  readonly targeting: SpellTargetListTargeting;
+  readonly activeEffect: Omit<
+    SpellLevitatedCreatureActiveEffect,
+    "altitudeFeet"
+  >;
+  readonly maxInitialRiseFeet: MovementFeet;
   readonly rangeFeet: MovementFeet;
 };
 export type BlurAttackRollDefenseSpellInvocation = {
@@ -3141,6 +3215,8 @@ export type SupportedSpellInvocation =
     }
   | RollModifierSpellInvocation
   | CreatureTypeProtectionSpellInvocation
+  | CreatureSizeChangeSpellInvocation
+  | LevitatedCreatureSpellInvocation
   | BlurAttackRollDefenseSpellInvocation
   | MirrorImageHitInterceptionSpellInvocation
   | ConditionRemovalProtectionSpellInvocation
@@ -3248,6 +3324,9 @@ type AnySupportedDamageSpellInvocation = Exclude<
       | "weaponAttackOverride"
       | "rollModifier"
       | "creatureTypeProtection"
+      | "creatureSizeIncrease"
+      | "creatureSizeDecrease"
+      | "levitatedCreature"
       | "blurAttackRollDefense"
       | "seeInvisibleObserverSight"
       | "mirrorImageHitInterception"
@@ -3414,10 +3493,16 @@ export type SpellWeaponDamageRider = Extract<
   BattleActiveEffect,
   { readonly kind: "spellWeaponDamageRider" }
 >;
-export type SpellAttackDamageComponent = Omit<
-  SpellWeaponDamageRider,
-  "kind" | "expiresAt"
->;
+export type SpellAttackDamageComponent = {
+  readonly sourceSpellId: SpellRecord["id"];
+  readonly sourceCombatantId: CombatantId;
+  readonly damage: {
+    readonly expr: DiceExpr;
+    readonly damageType: DamageType;
+  };
+  readonly operation?: "add" | "subtract";
+  readonly minimumDamageTotal?: 1;
+};
 export type AttackSpellDamageAddition = SpellAttackDamageComponent & {
   readonly kind: "attackSpellDamageAddition";
 };
@@ -4062,6 +4147,9 @@ export type BattleSpellTargetListHole = {
         | "saveGatedAttackRollAdvantage"
         | "hideousLaughter"
         | "creatureTypeProtection"
+        | "creatureSizeIncrease"
+        | "creatureSizeDecrease"
+        | "levitatedCreature"
         | "conditionRemovalProtection"
         | "damageReduction"
         | "scalarBuff"
@@ -4730,6 +4818,9 @@ export type BattleSpellSavingThrowOutcomeHole = {
         | "attackBurstSaveDamage"
         | "abilityD20TestRollModeSaveGate"
         | "rollModifier"
+        | "creatureSizeIncrease"
+        | "creatureSizeDecrease"
+        | "levitatedCreature"
         | "saveGatedDamage"
         | "saveGatedCondition"
         | "saveGatedConditionImmunity"
@@ -4839,6 +4930,26 @@ export type BattleMovementHole = {
     readonly kind: BattleMovementSpeedKind;
     readonly movementBudgetFeet: MovementFeet;
   }[];
+};
+export type BattleLevitateAltitudeChangeHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "levitateAltitudeChange";
+  readonly label: string;
+  readonly actorId: CombatantId;
+  readonly targetId: CombatantId;
+  readonly maxDistanceFeet: MovementFeet;
+  readonly directions: readonly BattleLevitateAltitudeDirection[];
+  readonly requiresTargetWithinRangeFact: true;
+};
+export type BattleLevitateInitialRiseHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "levitateInitialRise";
+  readonly label: string;
+  readonly actorId: CombatantId;
+  readonly targetId: CombatantId;
+  readonly maxDistanceFeet: MovementFeet;
 };
 export type BattleAbilityCheckHole = {
   readonly holeInstanceKey: HoleInstanceKey;
@@ -5002,6 +5113,8 @@ export type BattleHole =
   | BattleConcentrationSavingThrowHole
   | BattleReactionDecisionHole
   | BattleMovementHole
+  | BattleLevitateAltitudeChangeHole
+  | BattleLevitateInitialRiseHole
   | BattleAbilityCheckHole
   | BattleSpellcastingAbilityCheckHole
   | BattleGrappleOutcomeHole
@@ -5240,6 +5353,22 @@ export type BattleFill =
       readonly kind: "movement";
       readonly holeId: BattleHoleId;
       readonly value: BattleMovementFillValue;
+    }
+  | {
+      readonly kind: "levitateAltitudeChange";
+      readonly holeId: BattleHoleId;
+      readonly value: {
+        readonly direction: BattleLevitateAltitudeDirection;
+        readonly distanceFeet: MovementFeet;
+      };
+      readonly spatialFacts: readonly BattleTargetSpatialFact[];
+    }
+  | {
+      readonly kind: "levitateInitialRise";
+      readonly holeId: BattleHoleId;
+      readonly value: {
+        readonly distanceFeet: MovementFeet;
+      };
     }
   | {
       readonly kind: "abilityCheck";
@@ -5633,6 +5762,8 @@ export {
   HIDE_DC,
   INITIAL_ROUND,
   INITIAL_TURN_RESOURCES,
+  LEVITATE_ALTITUDE_CHANGE_HOLE_ID,
+  LEVITATE_ALTITUDE_CHANGE_HOLE_INSTANCE,
   MOVEMENT_HOLE_ID,
   MOVEMENT_HOLE_INSTANCE,
   REACTION_DECISION_HOLE_ID,

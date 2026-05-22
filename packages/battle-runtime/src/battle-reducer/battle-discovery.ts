@@ -2,6 +2,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard spell.invocation-spike-growth-movement-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // Owns top-level act discovery and subject/action-resource discovery helpers.
 // Mechanical move; no behavior change intended.
 
@@ -55,6 +56,10 @@ import {
 
 import { currentActorId, grappledBy } from "./creature-state-leaves.ts";
 import { maxJumpMovementReplacementDistanceFeet } from "./jump-movement-replacement.ts";
+import {
+  activeLevitatedCreatureTargetsControlledBy,
+  levitateAltitudeChangeHole,
+} from "./levitate-creature.ts";
 
 import {
   combatantCanTakeActions,
@@ -293,6 +298,7 @@ export function discoverBattleActs(
   }
   acts.push(...startTurnWebActs);
   acts.push(...selfTransformationModeReplacementActs(state, actorId));
+  acts.push(...levitateAltitudeControlActs(state, actorId));
   const attackActionOptions = attackActionOptionsForActor(
     state,
     actorId,
@@ -602,6 +608,41 @@ export function discoverBattleActs(
   acts.push(...discoverLegendaryActionActs(state));
 
   return acts;
+}
+
+function levitateAltitudeControlActs(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly AvailableBattleAct[] {
+  const actor = state.combatants.get(actorId);
+  if (
+    !combatantCanTakeActions(actor) ||
+    !canSpendAction(state.currentTurnResources, "magic")
+  ) {
+    return [];
+  }
+  return activeLevitatedCreatureTargetsControlledBy(state, actorId).map(
+    ({ targetId, effect }) => ({
+      subject: {
+        tag: "runtimeCommand" as const,
+        actorId,
+        command: "levitateAltitudeControl" as const,
+        sourceCombatantId: effect.sourceCombatantId,
+        sourceSpellId: spellId(effect.sourceSpellId),
+        targetId,
+      },
+      label: "Levitate altitude control",
+      summary:
+        "Use a Magic action to move the levitated target up or down while it remains within the spell's range.",
+      initialHoles: [
+        levitateAltitudeChangeHole({
+          actorId,
+          targetId,
+          maxDistanceFeet: effect.maxAltitudeChangeFeet,
+        }),
+      ],
+    }),
+  );
 }
 
 function spellCreatedHeldObjectReleaseActs(

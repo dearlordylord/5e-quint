@@ -6,6 +6,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
 import { Match } from "effect";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { difficultyClass, type DifficultyClass } from "@dnd/shared/types";
@@ -20,6 +21,10 @@ import type { SupportedAttackActionOption } from "../battle-action-options.ts";
 import type { CharacterBattleResourceState } from "../character-battle-resources.ts";
 import { resourceHasUsesRemaining } from "../character-battle-resources.ts";
 import { ongoingSpellEffectSuppressedByAntimagicField } from "./antimagic-field-suppression.ts";
+import {
+  activeCreatureSizeChangeEffect,
+  creatureSizeChangeStrengthRollMode,
+} from "./creature-size-change-effects.ts";
 import {
   BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
   type AlternateActionCostAction,
@@ -233,6 +238,43 @@ export function requiredAbilityCheckRollMode(
   return hasAdvantage ? "advantage" : "disadvantage";
 }
 
+export function passivePerceptionModifierDelta(
+  state: BattleState,
+  actorId: CombatantId,
+): number {
+  return activeFixedAbilityCheckModifierDelta(state, actorId, {
+    skill: "perception",
+  });
+}
+
+function activeFixedAbilityCheckModifierDelta(
+  state: BattleState,
+  actorId: CombatantId,
+  context: {
+    readonly skill: Skill;
+  },
+): number {
+  const actor = state.combatants.get(actorId);
+  return (
+    actor?.activeEffects.reduce((total, effect) => {
+      if (
+        effect.kind !== "d20RollModifier" ||
+        !effect.on.includes("ability_check") ||
+        (effect.skill !== null && effect.skill !== context.skill)
+      ) {
+        return total;
+      }
+      const magnitude =
+        "amount" in effect.delta
+          ? effect.delta.amount
+          : effect.delta.dieSize === 1
+            ? effect.delta.dice
+            : 0;
+      return total + (effect.delta.sign === "-" ? -magnitude : magnitude);
+    }, 0) ?? 0
+  );
+}
+
 function activeAbilityCheckRollModeEffectMatches(
   state: BattleState,
   actorId: CombatantId,
@@ -240,21 +282,25 @@ function activeAbilityCheckRollModeEffectMatches(
   mode: AttackRollMode,
 ): boolean {
   const actor = state.combatants.get(actorId);
+  const sizeChange = activeCreatureSizeChangeEffect(actor);
   return (
-    actor?.activeEffects.some(
-      (effect) =>
-        ((effect.kind === "abilityCheckRollMode" &&
-          effect.ability === ability) ||
-          (effect.kind === "abilityD20TestRollModeEndTurnSave" &&
+    (ability === "str" &&
+      sizeChange !== null &&
+      creatureSizeChangeStrengthRollMode(sizeChange) === mode) ||
+    (actor?.activeEffects.some(
+        (effect) =>
+          ((effect.kind === "abilityCheckRollMode" &&
             effect.ability === ability) ||
-          (effect.kind === "selfAttackRollAndAbilityCheckRollMode" &&
-            !ongoingSpellEffectSuppressedByAntimagicField(state, {
-              kind: "spellActiveEffect",
-              activeEffectKind: "spellObjectContactDamage",
-              sourceEffectId: effect.sourceEffectId,
-            }))) &&
-        effect.mode === mode,
-    ) ?? false
+            (effect.kind === "abilityD20TestRollModeEndTurnSave" &&
+              effect.ability === ability) ||
+            (effect.kind === "selfAttackRollAndAbilityCheckRollMode" &&
+              !ongoingSpellEffectSuppressedByAntimagicField(state, {
+                kind: "spellActiveEffect",
+                activeEffectKind: "spellObjectContactDamage",
+                sourceEffectId: effect.sourceEffectId,
+              }))) &&
+          effect.mode === mode,
+      ) ?? false)
   );
 }
 

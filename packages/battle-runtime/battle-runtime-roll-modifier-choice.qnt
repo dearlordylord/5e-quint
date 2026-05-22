@@ -16,5 +16,18 @@ module battleRuntimeRollModifierChoice {
       | GuidanceRollModifier => GuidanceAbilityCheckBonus({ skill: chosenSkill })
       | PassWithoutTraceRollModifier => PassWithoutTraceStealthBonus
       | EnhanceAbilityRollModifier => EnhanceAbilityCheckAdvantage({ ability: chosenAbility })
+      | EnthrallRollModifier => EnthrallPerceptionPenalty
     }
+
+  pure def rollModifierFixedAbilityCheckDelta(effect: ActiveEffect, skill: AbilityCheckSkill): int =
+    match effect {
+      | PassWithoutTraceStealthBonus => if (skill == StealthSkill) 10 else 0
+      | EnthrallPerceptionPenalty => if (skill == PerceptionSkill) -10 else 0
+      | _ => 0
+    }
+
+  pure def passivePerceptionModifierDelta(effects: Set[ActiveEffect]): int =
+    effects
+      .map(effect => rollModifierFixedAbilityCheckDelta(effect, PerceptionSkill))
+      .fold(0, (total, delta) => total + delta)
 }

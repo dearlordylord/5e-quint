@@ -55,37 +55,37 @@
     {
       "number": 9,
       "id": "L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Enlarge Reduce Creature Runtime Support"
     },
     {
       "number": 10,
       "id": "L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH",
-      "status": "blocked",
+      "status": "done",
       "title": "Enlarge Reduce Object Branch"
     },
     {
       "number": 11,
       "id": "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Enthrall Perception Penalty Runtime Support"
     },
     {
       "number": 12,
       "id": "L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Levitate Creature Runtime Support"
     },
     {
       "number": 13,
       "id": "L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH",
-      "status": "blocked",
+      "status": "done",
       "title": "Levitate Loose Object Branch"
     },
     {
       "number": 14,
       "id": "L12G-RECURSIVE-TAIL-LANE-A-2",
-      "status": "blocked",
+      "status": "done",
       "title": "Lane A Recursive Planning Tail 2"
     },
     {
@@ -167,12 +167,12 @@ Every task must include:
 | 6 | L12G-MISSING-SUGGESTION - Suggestion Definition And Closure | done | none | none | SRD Suggestion; table-owned/player-choice terminology | Completed Surface definition and runtime-detached closure. |
 | 7 | L12G-MISSING-ZONE-OF-TRUTH - Zone Of Truth Definition And Closure | done | none | none | SRD Zone of Truth; truth/knowledge/table adjudication boundaries | Completed Surface definition and runtime-detached closure. |
 | 8 | L12G-RECURSIVE-TAIL-LANE-A - Lane A Recursive Planning Tail | done | completed ready Lane A tasks | L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME, L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME, L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME | Refreshed Unit metrics and checker-readable follow-up splits | Completed by adding the next concrete Lane A frontier batch. |
-| 9 | L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME - Enlarge Reduce Creature Runtime Support | ready-for-research | L12G-RECURSIVE-TAIL-LANE-A | L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH, L12G-RECURSIVE-TAIL-LANE-A-2 | SRD Enlarge/Reduce creature branch; current unsupported-profile split | Next executable Enlarge/Reduce creature branch research/implementation task. |
-| 10 | L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH - Enlarge Reduce Object Branch | blocked | L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME | L12G-RECURSIVE-TAIL-LANE-A-2 | SRD Enlarge/Reduce object and worn/carried item text; object/item lifecycle boundaries | Blocked until the creature branch establishes the shared active effect and item-size boundary. |
-| 11 | L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME - Enthrall Perception Penalty Runtime Support | ready-for-research | L12G-RECURSIVE-TAIL-LANE-A | L12G-RECURSIVE-TAIL-LANE-A-2 | SRD Enthrall; target-list, Saving Throw, fixed d20-roll modifier, Passive Check projection boundaries | Independent executable Enthrall Perception subset research/implementation task. |
-| 12 | L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME - Levitate Creature Runtime Support | ready-for-research | L12G-RECURSIVE-TAIL-LANE-A | L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH, L12G-RECURSIVE-TAIL-LANE-A-2 | SRD Levitate creature branch; movement and table/spatial witness boundaries | Independent executable Levitate creature branch research/implementation task. |
-| 13 | L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH - Levitate Loose Object Branch | blocked | L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME | L12G-RECURSIVE-TAIL-LANE-A-2 | SRD Levitate loose object branch; shared object lifecycle or table/spatial witness owner | Blocked until the creature branch establishes the shared levitated-target and altitude-control boundary. |
-| 14 | L12G-RECURSIVE-TAIL-LANE-A-2 - Lane A Recursive Planning Tail 2 | blocked | L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH, L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME, L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH | next Lane A frontier if any | Refreshed level-2 feature metrics after this appended batch | Unblock only after the appended Lane A follow-up batch is done or explicitly closed. |
+| 9 | L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME - Enlarge Reduce Creature Runtime Support | done | L12G-RECURSIVE-TAIL-LANE-A | L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH, L12G-RECURSIVE-TAIL-LANE-A-2 | SRD Enlarge/Reduce creature branch; current unsupported-profile split | Next executable Enlarge/Reduce creature branch research/implementation task. |
+| 10 | L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH - Enlarge Reduce Object Branch | done | L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME | L12G-RECURSIVE-TAIL-LANE-A-2 | SRD Enlarge/Reduce object and worn/carried item text; object/item lifecycle boundaries | Completed Surface object-target support and accepted runtime-detached closure for object/item Size lifecycle residuals. |
+| 11 | L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME - Enthrall Perception Penalty Runtime Support | done | L12G-RECURSIVE-TAIL-LANE-A | L12G-RECURSIVE-TAIL-LANE-A-2 | SRD Enthrall; target-list, Saving Throw, fixed d20-roll modifier, Passive Check projection boundaries | Completed Enthrall Perception penalty subset through the promoted roll-modifier profile. |
+| 12 | L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME - Levitate Creature Runtime Support | done | L12G-RECURSIVE-TAIL-LANE-A | L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH, L12G-RECURSIVE-TAIL-LANE-A-2 | SRD Levitate creature branch; movement and table/spatial witness boundaries | Completed Levitate creature runtime subset with active levitated-target state and altitude-control witness boundaries. |
+| 13 | L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH - Levitate Loose Object Branch | done | L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME | L12G-RECURSIVE-TAIL-LANE-A-2 | SRD Levitate loose object branch; shared object lifecycle or table/spatial witness owner | Completed as accepted runtime-detached closure for loose-object lifecycle and table/spatial vertical movement residuals. |
+| 14 | L12G-RECURSIVE-TAIL-LANE-A-2 - Lane A Recursive Planning Tail 2 | done | L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH, L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME, L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH | L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL, L12G-FOLLOWUP-SPIKE-GROWTH-PROFILE-ACCOUNTING, L12G-FOLLOWUP-PRAYER-OF-HEALING-PROFILE-ACCOUNTING, L12G-FOLLOWUP-FIND-STEED-COMPANION-BOUNDARY, L3-SPELL-FLY-RUNTIME-SURVEY, L3-SPELL-LIGHTNING-BOLT-RUNTIME-SURVEY, L3-SPELL-HYPNOTIC-PATTERN-RUNTIME-SURVEY | Refreshed level-2 feature metrics after this appended batch | Completed by confirming generated metrics and keeping the already-appended Level 2 completion / Level 3 kickoff refill tasks as the concrete frontier. |
 
 ## Tasks
 
@@ -289,7 +289,7 @@ Verification completed:
 
 ### Task 9 - L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME - Enlarge Reduce Creature Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: L12G-RECURSIVE-TAIL-LANE-A
 
@@ -319,7 +319,7 @@ Output:
 
 ### Task 10 - L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH - Enlarge Reduce Object Branch
 
-Status: `blocked`
+Status: `done`
 
 Depends on: L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME
 
@@ -334,17 +334,19 @@ Input:
 Output:
 - Surface schema/content support for the object target constraint: one object
   that is neither worn nor carried.
-- Runtime object/item lifecycle owner decision for object Size-category change
-  and cleanup, carried/worn item size changes while a creature branch is active,
-  dropped item normalization, and thrown weapon/ammunition normalization
-  immediately after hit or miss.
-- Focused tests and coverage disposition that either supports the object branch
-  or closes it with an accepted runtime-boundary reason, without duplicating
-  object or item state inside Enlarge/Reduce.
+- Accepted runtime-detached closure for object Size-category change and cleanup,
+  carried/worn item size changes while a creature branch is active, dropped item
+  normalization, and thrown weapon/ammunition normalization immediately after
+  hit or miss: promoted battle runtime has no canonical object Size state,
+  carried/worn item Size state, dropped-item location state, or thrown
+  weapon/ammunition occurrence lifecycle to mutate and clean up.
+- Focused Surface/runtime tests and coverage disposition keep promoted support
+  narrowed to the existing creature branch without duplicating object or item
+  state inside Enlarge/Reduce.
 
 ### Task 11 - L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME - Enthrall Perception Penalty Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: L12G-RECURSIVE-TAIL-LANE-A
 
@@ -372,7 +374,7 @@ Output:
 
 ### Task 12 - L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME - Levitate Creature Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: L12G-RECURSIVE-TAIL-LANE-A
 
@@ -403,7 +405,7 @@ Output:
 
 ### Task 13 - L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH - Levitate Loose Object Branch
 
-Status: `blocked`
+Status: `done`
 
 Depends on: L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME
 
@@ -416,28 +418,52 @@ Input:
   table/spatial witness owner selected by prior tasks.
 
 Output:
-- Focused Surface/runtime owner decision for Levitate's loose object branch:
-  one visible loose object target within 60 feet weighing up to 500 pounds, no
-  creature Saving Throw, spell-owned suspension and altitude changes,
-  fixed-object or surface movement restrictions where relevant, range-gated
-  caster movement, and gentle grounding when the spell ends.
-- Focused tests or accepted runtime-detached closure for loose-object
-  suspension, altitude control, range, and gentle-grounding facts, reusing any
-  shared object lifecycle owner instead of duplicating object state inside
-  Levitate.
+- Accepted runtime-detached closure for Levitate's loose object branch: the
+  Surface Spell Definition records the loose-object target shape, visibility,
+  60-foot range, 500-pound weight gate, no creature Saving Throw for objects,
+  suspension, altitude-control, range-gated caster movement,
+  fixed-object-or-surface movement language, and gentle-grounding text.
+- Promoted battle runtime does not add Levitate-specific object altitude state:
+  loose-object position, weight, aloft/grounded state, fixed-object/surface
+  reach, range derivation, map geometry, and gentle grounding remain with a
+  runtime-detached loose-object lifecycle and table/spatial vertical movement
+  owner until a generic owner exists.
 
 ### Task 14 - L12G-RECURSIVE-TAIL-LANE-A-2 - Lane A Recursive Planning Tail 2
 
-Status: `blocked`
+Status: `done`
 
 Depends on: L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH, L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME, L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH
 
-Unblock only after the appended Lane A follow-up batch is done or explicitly
-closed.
+The appended Lane A follow-up batch is complete or explicitly closed.
 
 Output:
 - Refresh level-2 feature metrics.
 - Add the next concrete, Ralph-sized Lane A tasks only if real frontier remains.
+
+Completed:
+- Refreshed generated Unit profile and SRD inventory artifacts with
+  `pnpm unit-profile-coverage:check --write`; no generated file changes were
+  needed because the reports were already current.
+- Current level 1-2 battle readiness is 534/556 (96%) with 2
+  battle-runtime-required rows, 18 partial-battle-runtime rows, and 2
+  owner-evidence-required rows.
+- Current strict level 1-2 runtime/profile support is 113/171 (66.1%),
+  strict target closure is 169/171 (98.8%), and supported executable Unit
+  coverage is 136/196 (69.4%).
+- The remaining Lane A frontier is already represented by the appended refill:
+  Darkness spell-created light dispel, Spike Growth profile accounting, Prayer
+  of Healing profile accounting, Find Steed companion-boundary closure, and the
+  Level 3 Fly, Lightning Bolt, and Hypnotic Pattern survey/split tasks.
+- Dragon's Breath remains an open level-2 profile-accounting row, but it is
+  already owned by Lane C's Dragon's Breath granted-action task rather than this
+  Lane A tail.
+
+Verification completed:
+RAW/ubiquitous-language planning check against local SRD spell entries and
+`UBIQUITOUS_LANGUAGE.md`;
+`pnpm unit-profile-coverage:check --write`;
+`pnpm unit-profile-coverage:check`.
 
 ## Level 2 Completion And Level 3 Kickoff Refill
 

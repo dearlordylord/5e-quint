@@ -194,14 +194,14 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 526,
-      "percent": "94.6%",
+      "numerator": 534,
+      "percent": "96%",
       "rowsByStatus": {
-        "accepted": 379,
+        "accepted": 387,
         "accepted-no-battle-effect": 147,
         "owner-evidence-required": 2,
         "partial-battle-runtime": 18,
-        "battle-runtime-required": 10
+        "battle-runtime-required": 2
       }
     },
     "levelOneClassContainers": 12,
@@ -216,17 +216,16 @@
       "catalog-installed-needs-owner-evidence": 1
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 398,
+      "catalog-installed-owner-evidence-present": 406,
       "non-runtime": 24,
-      "catalog-installed-owner-evidence-required": 9,
+      "catalog-installed-owner-evidence-required": 1,
       "catalog-only/dead-for-now": 120,
       "catalog-authored-executable-follow-up": 4,
       "catalog-installed-needs-owner-evidence": 1
     },
     "spellPressureRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 235,
+      "catalog-installed-owner-evidence-present": 243,
       "catalog-only/dead-for-now": 120,
-      "catalog-installed-owner-evidence-required": 8,
       "catalog-authored-executable-follow-up": 4
     },
     "levelOneRowsByCategory": {
@@ -6401,8 +6400,14 @@
         "state": "installed",
         "unitId": "enlarge_reduce"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "runtime-detached object and item lifecycle owner",
+        "reason": "Promoted battle runtime has no canonical object Size state, carried/worn item Size state, dropped-item location state, or thrown weapon/ammunition occurrence lifecycle to mutate and clean up. The existing creature branch already models the battle-visible attack damage consequence without duplicating item state, so object and item Size normalization remain outside promoted battle runtime until a generic object/item lifecycle owner exists."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -6410,13 +6415,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/effect lifecycle plus promoted Quint parity; surface target selection plus battle-runtime object and item lifecycle",
-          "evidence": "Promote follow-up split L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME, L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH: L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME owns Promote the Enlarge/Reduce creature branch: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, willing target application, unwilling target Constitution save gate, cast-time Enlarge/Reduce mode choice, active size-category projection used by size-dependent runtime rules, Strength Ability Check and Strength Saving Throw Advantage/Disadvantage with normal cancellation, Enlarge +1d4 and Reduce -1d4 minimum 1 damage for attacks with affected weapons or Unarmed Strikes, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without object-target behavior.; L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH owns Represent and promote the object branch: a target object that is neither worn nor carried, object size-category change and cleanup, carried/worn item size changes while the creature branch is active, dropped item normalization, and thrown weapon/ammunition normalization immediately after hit or miss if those item lifecycle facts belong to promoted runtime. Required output: Surface schema/content support for the object target constraint, runtime object/item lifecycle owner decision, focused tests, and coverage disposition that either supports the object branch or closes it with an accepted runtime-boundary reason.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME at packages/battle-runtime/src/unit-profile-admission-enlarge-reduce.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME, L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH: L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME owns Promote the Enlarge/Reduce creature branch: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, willing target application, unwilling target Constitution save gate, cast-time Enlarge/Reduce mode choice, active size-category projection used by size-dependent runtime rules, Strength Ability Check and Strength Saving Throw Advantage/Disadvantage with normal cancellation, Enlarge +1d4 and Reduce -1d4 minimum 1 damage for attacks with affected weapons or Unarmed Strikes, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without object-target behavior.; L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH owns Represent and promote the object branch: a target object that is neither worn nor carried, object size-category change and cleanup, carried/worn item size changes while the creature branch is active, dropped item normalization, and thrown weapon/ammunition normalization immediately after hit or miss if those item lifecycle facts belong to promoted runtime. Required output: Surface schema/content support for the object target constraint, runtime object/item lifecycle owner decision, focused tests, and coverage disposition that either supports the object branch or closes it with an accepted runtime-boundary reason.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_enthrall",
@@ -6444,8 +6449,14 @@
         "state": "installed",
         "unitId": "enthrall"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "table/social target eligibility owner",
+        "reason": "The SRD fight/attention clauses depend on table relationship and social attention facts outside promoted battle-runtime state; the runtime consumes caller-selected eligible targets and records battle-visible failed-save Perception effects."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -6453,13 +6464,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/effect lifecycle plus promoted Quint parity",
-          "evidence": "Promote follow-up split L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME: L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME owns Promote Enthrall's battle-visible Perception subset: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caller-supplied eligible creature target list after applying the fighting-caster-or-companions auto-success predicate at the table boundary, Wisdom save, failed-save active -10 modifier to Wisdom (Perception) Ability Checks, derived Passive Perception consequence from the same modifier, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Enthrall's Perception penalty without modeling social attention state.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME at packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME: L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME owns Promote Enthrall's battle-visible Perception subset: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caller-supplied eligible creature target list after applying the fighting-caster-or-companions auto-success predicate at the table boundary, Wisdom save, failed-save active -10 modifier to Wisdom (Perception) Ability Checks, derived Passive Perception consequence from the same modifier, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Enthrall's Perception penalty without modeling social attention state.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_heat_metal",
@@ -11766,8 +11777,14 @@
         "state": "installed",
         "unitId": "enlarge_reduce"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "runtime-detached object and item lifecycle owner",
+        "reason": "Promoted battle runtime has no canonical object Size state, carried/worn item Size state, dropped-item location state, or thrown weapon/ammunition occurrence lifecycle to mutate and clean up. The existing creature branch already models the battle-visible attack damage consequence without duplicating item state, so object and item Size normalization remain outside promoted battle runtime until a generic object/item lifecycle owner exists."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -11775,13 +11792,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/effect lifecycle plus promoted Quint parity; surface target selection plus battle-runtime object and item lifecycle",
-          "evidence": "Promote follow-up split L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME, L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH: L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME owns Promote the Enlarge/Reduce creature branch: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, willing target application, unwilling target Constitution save gate, cast-time Enlarge/Reduce mode choice, active size-category projection used by size-dependent runtime rules, Strength Ability Check and Strength Saving Throw Advantage/Disadvantage with normal cancellation, Enlarge +1d4 and Reduce -1d4 minimum 1 damage for attacks with affected weapons or Unarmed Strikes, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without object-target behavior.; L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH owns Represent and promote the object branch: a target object that is neither worn nor carried, object size-category change and cleanup, carried/worn item size changes while the creature branch is active, dropped item normalization, and thrown weapon/ammunition normalization immediately after hit or miss if those item lifecycle facts belong to promoted runtime. Required output: Surface schema/content support for the object target constraint, runtime object/item lifecycle owner decision, focused tests, and coverage disposition that either supports the object branch or closes it with an accepted runtime-boundary reason.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME at packages/battle-runtime/src/unit-profile-admission-enlarge-reduce.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME, L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH: L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME owns Promote the Enlarge/Reduce creature branch: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, willing target application, unwilling target Constitution save gate, cast-time Enlarge/Reduce mode choice, active size-category projection used by size-dependent runtime rules, Strength Ability Check and Strength Saving Throw Advantage/Disadvantage with normal cancellation, Enlarge +1d4 and Reduce -1d4 minimum 1 damage for attacks with affected weapons or Unarmed Strikes, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without object-target behavior.; L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH owns Represent and promote the object branch: a target object that is neither worn nor carried, object size-category change and cleanup, carried/worn item size changes while the creature branch is active, dropped item normalization, and thrown weapon/ammunition normalization immediately after hit or miss if those item lifecycle facts belong to promoted runtime. Required output: Surface schema/content support for the object target constraint, runtime object/item lifecycle owner decision, focused tests, and coverage disposition that either supports the object branch or closes it with an accepted runtime-boundary reason.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_find_traps",
@@ -21081,8 +21098,14 @@
         "state": "installed",
         "unitId": "enlarge_reduce"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "runtime-detached object and item lifecycle owner",
+        "reason": "Promoted battle runtime has no canonical object Size state, carried/worn item Size state, dropped-item location state, or thrown weapon/ammunition occurrence lifecycle to mutate and clean up. The existing creature branch already models the battle-visible attack damage consequence without duplicating item state, so object and item Size normalization remain outside promoted battle runtime until a generic object/item lifecycle owner exists."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -21090,13 +21113,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/effect lifecycle plus promoted Quint parity; surface target selection plus battle-runtime object and item lifecycle",
-          "evidence": "Promote follow-up split L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME, L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH: L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME owns Promote the Enlarge/Reduce creature branch: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, willing target application, unwilling target Constitution save gate, cast-time Enlarge/Reduce mode choice, active size-category projection used by size-dependent runtime rules, Strength Ability Check and Strength Saving Throw Advantage/Disadvantage with normal cancellation, Enlarge +1d4 and Reduce -1d4 minimum 1 damage for attacks with affected weapons or Unarmed Strikes, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without object-target behavior.; L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH owns Represent and promote the object branch: a target object that is neither worn nor carried, object size-category change and cleanup, carried/worn item size changes while the creature branch is active, dropped item normalization, and thrown weapon/ammunition normalization immediately after hit or miss if those item lifecycle facts belong to promoted runtime. Required output: Surface schema/content support for the object target constraint, runtime object/item lifecycle owner decision, focused tests, and coverage disposition that either supports the object branch or closes it with an accepted runtime-boundary reason.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME at packages/battle-runtime/src/unit-profile-admission-enlarge-reduce.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME, L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH: L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME owns Promote the Enlarge/Reduce creature branch: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, willing target application, unwilling target Constitution save gate, cast-time Enlarge/Reduce mode choice, active size-category projection used by size-dependent runtime rules, Strength Ability Check and Strength Saving Throw Advantage/Disadvantage with normal cancellation, Enlarge +1d4 and Reduce -1d4 minimum 1 damage for attacks with affected weapons or Unarmed Strikes, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without object-target behavior.; L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH owns Represent and promote the object branch: a target object that is neither worn nor carried, object size-category change and cleanup, carried/worn item size changes while the creature branch is active, dropped item normalization, and thrown weapon/ammunition normalization immediately after hit or miss if those item lifecycle facts belong to promoted runtime. Required output: Surface schema/content support for the object target constraint, runtime object/item lifecycle owner decision, focused tests, and coverage disposition that either supports the object branch or closes it with an accepted runtime-boundary reason.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_flame_blade",
@@ -21406,8 +21429,14 @@
         "state": "installed",
         "unitId": "levitate"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "runtime-detached loose-object lifecycle and table/spatial vertical movement owner",
+        "reason": "The Surface Spell Definition records the loose-object target shape and 500-pound gate, but promoted battle runtime has no canonical loose-object position, weight, aloft/grounded, fixed-object attachment, surface reach, range derivation, map geometry, or gentle-grounding lifecycle state to mutate and clean up. Reusing the creature altitude active effect for objects would duplicate object lifecycle state inside Levitate, so the loose-object branch remains table/object-spatial adjudication until a generic loose-object lifecycle owner exists."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -21415,13 +21444,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/effect lifecycle plus table/spatial vertical movement witness boundary; surface Spell Definition authoring plus battle-runtime object lifecycle owner decision",
-          "evidence": "Promote follow-up split L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME, L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH: L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME owns Promote Levitate's creature branch: Magic Action and level-2+ Spell Slot spend, one visible creature target within 60 feet, caster-owned Concentration up to 10 minutes, unwilling-creature Constitution save gate, active levitated-target state with initial rise up to 20 feet, suspended/aloft projection, target movement only through caller-supplied fixed-object or surface-within-reach witnesses as if climbing, caster Magic Action altitude changes up to 20 feet while the target remains within range, self-target altitude changes as part of the target's move, and gentle-grounding cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without loose-object target behavior or automatic elevation/pathfinding derivation.; L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH owns Represent and promote or close Levitate's loose object branch: one visible loose object target within 60 feet weighing up to 500 pounds, no creature saving throw, spell-owned suspension and altitude changes, fixed-object or surface movement restrictions where relevant, range-gated caster movement, and gentle grounding when the spell ends without inventing spell-specific object position state. Required output: Focused Surface/runtime owner decision with tests or accepted runtime-detached closure for loose-object suspension, altitude control, range, and gentle-grounding facts, reusing any future object lifecycle owner rather than duplicating object state inside Levitate.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME at packages/battle-runtime/src/unit-profile-admission-levitate.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME, L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH: L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME owns Promote Levitate's creature branch: Magic Action and level-2+ Spell Slot spend, one visible creature target within 60 feet, caster-owned Concentration up to 10 minutes, unwilling-creature Constitution save gate, active levitated-target state with initial rise up to 20 feet, suspended/aloft projection, target movement only through caller-supplied fixed-object or surface-within-reach witnesses as if climbing, caster Magic Action altitude changes up to 20 feet while the target remains within range, self-target altitude changes as part of the target's move, and gentle-grounding cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without loose-object target behavior or automatic elevation/pathfinding derivation.; L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH owns Represent and promote or close Levitate's loose object branch: one visible loose object target within 60 feet weighing up to 500 pounds, no creature saving throw, spell-owned suspension and altitude changes, fixed-object or surface movement restrictions where relevant, range-gated caster movement, and gentle grounding when the spell ends without inventing spell-specific object position state. Required output: Focused Surface/runtime owner decision with tests or accepted runtime-detached closure for loose-object suspension, altitude control, range, and gentle-grounding facts, reusing any future object lifecycle owner rather than duplicating object state inside Levitate.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_magic_weapon",
@@ -23334,8 +23363,14 @@
         "state": "installed",
         "unitId": "enthrall"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "table/social target eligibility owner",
+        "reason": "The SRD fight/attention clauses depend on table relationship and social attention facts outside promoted battle-runtime state; the runtime consumes caller-selected eligible targets and records battle-visible failed-save Perception effects."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -23343,13 +23378,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/effect lifecycle plus promoted Quint parity",
-          "evidence": "Promote follow-up split L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME: L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME owns Promote Enthrall's battle-visible Perception subset: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caller-supplied eligible creature target list after applying the fighting-caster-or-companions auto-success predicate at the table boundary, Wisdom save, failed-save active -10 modifier to Wisdom (Perception) Ability Checks, derived Passive Perception consequence from the same modifier, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Enthrall's Perception penalty without modeling social attention state.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME at packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME: L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME owns Promote Enthrall's battle-visible Perception subset: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caller-supplied eligible creature target list after applying the fighting-caster-or-companions auto-success predicate at the table boundary, Wisdom save, failed-save active -10 modifier to Wisdom (Perception) Ability Checks, derived Passive Perception consequence from the same modifier, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Enthrall's Perception penalty without modeling social attention state.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_hold_person",
@@ -26814,8 +26849,14 @@
         "state": "installed",
         "unitId": "enlarge_reduce"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "runtime-detached object and item lifecycle owner",
+        "reason": "Promoted battle runtime has no canonical object Size state, carried/worn item Size state, dropped-item location state, or thrown weapon/ammunition occurrence lifecycle to mutate and clean up. The existing creature branch already models the battle-visible attack damage consequence without duplicating item state, so object and item Size normalization remain outside promoted battle runtime until a generic object/item lifecycle owner exists."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -26823,13 +26864,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/effect lifecycle plus promoted Quint parity; surface target selection plus battle-runtime object and item lifecycle",
-          "evidence": "Promote follow-up split L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME, L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH: L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME owns Promote the Enlarge/Reduce creature branch: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, willing target application, unwilling target Constitution save gate, cast-time Enlarge/Reduce mode choice, active size-category projection used by size-dependent runtime rules, Strength Ability Check and Strength Saving Throw Advantage/Disadvantage with normal cancellation, Enlarge +1d4 and Reduce -1d4 minimum 1 damage for attacks with affected weapons or Unarmed Strikes, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without object-target behavior.; L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH owns Represent and promote the object branch: a target object that is neither worn nor carried, object size-category change and cleanup, carried/worn item size changes while the creature branch is active, dropped item normalization, and thrown weapon/ammunition normalization immediately after hit or miss if those item lifecycle facts belong to promoted runtime. Required output: Surface schema/content support for the object target constraint, runtime object/item lifecycle owner decision, focused tests, and coverage disposition that either supports the object branch or closes it with an accepted runtime-boundary reason.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME at packages/battle-runtime/src/unit-profile-admission-enlarge-reduce.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME, L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH: L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME owns Promote the Enlarge/Reduce creature branch: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, willing target application, unwilling target Constitution save gate, cast-time Enlarge/Reduce mode choice, active size-category projection used by size-dependent runtime rules, Strength Ability Check and Strength Saving Throw Advantage/Disadvantage with normal cancellation, Enlarge +1d4 and Reduce -1d4 minimum 1 damage for attacks with affected weapons or Unarmed Strikes, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without object-target behavior.; L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH owns Represent and promote the object branch: a target object that is neither worn nor carried, object size-category change and cleanup, carried/worn item size changes while the creature branch is active, dropped item normalization, and thrown weapon/ammunition normalization immediately after hit or miss if those item lifecycle facts belong to promoted runtime. Required output: Surface schema/content support for the object target constraint, runtime object/item lifecycle owner decision, focused tests, and coverage disposition that either supports the object branch or closes it with an accepted runtime-boundary reason.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_flaming_sphere",
@@ -27128,8 +27169,14 @@
         "state": "installed",
         "unitId": "levitate"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "runtime-detached loose-object lifecycle and table/spatial vertical movement owner",
+        "reason": "The Surface Spell Definition records the loose-object target shape and 500-pound gate, but promoted battle runtime has no canonical loose-object position, weight, aloft/grounded, fixed-object attachment, surface reach, range derivation, map geometry, or gentle-grounding lifecycle state to mutate and clean up. Reusing the creature altitude active effect for objects would duplicate object lifecycle state inside Levitate, so the loose-object branch remains table/object-spatial adjudication until a generic loose-object lifecycle owner exists."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -27137,13 +27184,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/effect lifecycle plus table/spatial vertical movement witness boundary; surface Spell Definition authoring plus battle-runtime object lifecycle owner decision",
-          "evidence": "Promote follow-up split L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME, L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH: L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME owns Promote Levitate's creature branch: Magic Action and level-2+ Spell Slot spend, one visible creature target within 60 feet, caster-owned Concentration up to 10 minutes, unwilling-creature Constitution save gate, active levitated-target state with initial rise up to 20 feet, suspended/aloft projection, target movement only through caller-supplied fixed-object or surface-within-reach witnesses as if climbing, caster Magic Action altitude changes up to 20 feet while the target remains within range, self-target altitude changes as part of the target's move, and gentle-grounding cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without loose-object target behavior or automatic elevation/pathfinding derivation.; L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH owns Represent and promote or close Levitate's loose object branch: one visible loose object target within 60 feet weighing up to 500 pounds, no creature saving throw, spell-owned suspension and altitude changes, fixed-object or surface movement restrictions where relevant, range-gated caster movement, and gentle grounding when the spell ends without inventing spell-specific object position state. Required output: Focused Surface/runtime owner decision with tests or accepted runtime-detached closure for loose-object suspension, altitude control, range, and gentle-grounding facts, reusing any future object lifecycle owner rather than duplicating object state inside Levitate.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME at packages/battle-runtime/src/unit-profile-admission-levitate.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME, L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH: L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME owns Promote Levitate's creature branch: Magic Action and level-2+ Spell Slot spend, one visible creature target within 60 feet, caster-owned Concentration up to 10 minutes, unwilling-creature Constitution save gate, active levitated-target state with initial rise up to 20 feet, suspended/aloft projection, target movement only through caller-supplied fixed-object or surface-within-reach witnesses as if climbing, caster Magic Action altitude changes up to 20 feet while the target remains within range, self-target altitude changes as part of the target's move, and gentle-grounding cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without loose-object target behavior or automatic elevation/pathfinding derivation.; L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH owns Represent and promote or close Levitate's loose object branch: one visible loose object target within 60 feet weighing up to 500 pounds, no creature saving throw, spell-owned suspension and altitude changes, fixed-object or surface movement restrictions where relevant, range-gated caster movement, and gentle grounding when the spell ends without inventing spell-specific object position state. Required output: Focused Surface/runtime owner decision with tests or accepted runtime-detached closure for loose-object suspension, altitude control, range, and gentle-grounding facts, reusing any future object lifecycle owner rather than duplicating object state inside Levitate.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_locate_object",

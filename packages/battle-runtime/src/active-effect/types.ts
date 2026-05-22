@@ -103,6 +103,25 @@ export type BattleSpellEffectBase = {
   readonly sourceSpellId: SpellRecord["id"];
   readonly sourceCombatantId: CombatantId;
 };
+export type SpellCreatureSizeChangeDirection = "increase" | "decrease";
+export type SpellCreatureSizeChangeActiveEffect = BattleSpellEffectBase & {
+  readonly kind: "spellCreatureSizeChange";
+  readonly direction: SpellCreatureSizeChangeDirection;
+  readonly expiresAt: Extract<
+    BattleActiveEffectExpiration,
+    { readonly kind: "concentration" }
+  > & { readonly durationTicks: ElapsedTimeTicks };
+};
+export type SpellLevitatedCreatureActiveEffect = BattleSpellEffectBase & {
+  readonly kind: "spellLevitatedCreature";
+  readonly altitudeFeet: MovementFeet;
+  readonly maxAltitudeChangeFeet: MovementFeet;
+  readonly rangeFeet: MovementFeet;
+  readonly expiresAt: Extract<
+    BattleActiveEffectExpiration,
+    { readonly kind: "concentration" }
+  > & { readonly durationTicks: ElapsedTimeTicks };
+};
 export type BattleUnitFeatureEffectBase = {
   readonly sourceUnitId: UnitRecord["id"];
   readonly sourceCombatantId: CombatantId;
@@ -276,6 +295,7 @@ export type BattleActiveEffect =
         { readonly kind: "concentration" }
       > & { readonly durationTicks: ElapsedTimeTicks };
     } & SelfTransformationModeEffectPayload)
+  | SpellLevitatedCreatureActiveEffect
   | (BattleSpellEffectBase & {
       readonly kind: "spellArmorClassBonus";
       readonly bonus: number;
@@ -579,6 +599,7 @@ export type BattleActiveEffect =
       readonly ability: Ability;
       readonly expiresAt: BattleActiveEffectExpiration;
     })
+  | SpellCreatureSizeChangeActiveEffect
   | (BattleSpellEffectBase & {
       readonly kind: "thaumaturgyBoomingVoice";
       readonly expiresAt: Extract<

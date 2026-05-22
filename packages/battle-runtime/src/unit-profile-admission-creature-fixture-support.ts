@@ -568,6 +568,10 @@ export function movementFill(
       BattleFill,
       { readonly kind: "movement" }
     >["value"]["jumpMovementReplacement"];
+    readonly levitatedMovement?: Extract<
+      BattleFill,
+      { readonly kind: "movement" }
+    >["value"]["levitatedMovement"];
     readonly areaDifficultTerrain?: Extract<
       BattleFill,
       { readonly kind: "movement" }
@@ -588,6 +592,9 @@ export function movementFill(
       ...(value.jumpMovementReplacement === undefined
         ? {}
         : { jumpMovementReplacement: value.jumpMovementReplacement }),
+      ...(value.levitatedMovement === undefined
+        ? {}
+        : { levitatedMovement: value.levitatedMovement }),
       ...(value.areaDifficultTerrain === undefined
         ? {}
         : { areaDifficultTerrain: value.areaDifficultTerrain }),

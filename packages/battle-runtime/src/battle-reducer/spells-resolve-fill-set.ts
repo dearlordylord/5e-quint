@@ -5,7 +5,7 @@
 
 // KERNEL-COVERAGE: runtime-owner BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES BATTLE.COMMAND.OPTION_AND_NEXT_TURN
 import { type AttackRollResult } from "@dnd/shared-algebras/runtime-hole-algebra";
-import type { Condition } from "@dnd/shared/types";
+import type { Condition, MovementFeet } from "@dnd/shared/types";
 import type { Ability, Skill } from "@dnd/surface/surface/types";
 import {
   ATTACK_ROLL_HOLE_ID,
@@ -67,6 +67,7 @@ import {
   magicWeaponTargetItemHoleId,
   spellDancingLightsPlacementHoleId,
 } from "./spells-targeting.ts";
+import { levitateInitialRiseHole } from "./levitate-creature.ts";
 import { THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID } from "./domain-constants.ts";
 
 export type SpellAttackSequencePartTargetFill =
@@ -194,6 +195,7 @@ export type SpellFillSet =
         | SelfTransformationModeKind
         | undefined;
       readonly conditionChoice: Condition | undefined;
+      readonly levitateInitialRiseFeet: MovementFeet | undefined;
       readonly areaChoice: BattleSpellAreaIdentityChoice | undefined;
       readonly teleportDestination:
         | Extract<BattleFill, { readonly kind: "teleportDestination" }>
@@ -330,6 +332,7 @@ export function spellFillSet(
   let commandOptionChoice: BattleCommandOption | undefined;
   let selfTransformationModeChoice: SelfTransformationModeKind | undefined;
   let conditionChoice: Condition | undefined;
+  let levitateInitialRiseFeet: MovementFeet | undefined;
   let areaChoice: BattleSpellAreaIdentityChoice | undefined;
   let teleportDestination:
     | Extract<BattleFill, { readonly kind: "teleportDestination" }>
@@ -894,6 +897,9 @@ export function spellFillSet(
         invocation.procedure !== "sleepTargetAdmission" &&
         invocation.procedure !== "hideousLaughter" &&
         invocation.procedure !== "command" &&
+        invocation.procedure !== "creatureSizeIncrease" &&
+        invocation.procedure !== "creatureSizeDecrease" &&
+        invocation.procedure !== "levitatedCreature" &&
         invocation.procedure !== "greaseGroundHazard" &&
         invocation.procedure !== "gustOfWindLine" &&
         !(
@@ -1055,6 +1061,50 @@ export function spellFillSet(
         };
       }
       conditionChoice = fill.value;
+      continue;
+    }
+
+    if (fill.kind === "levitateInitialRise") {
+      if (
+        invocation.procedure !== "levitatedCreature" ||
+        targetId === undefined
+      ) {
+        return {
+          tag: "invalid",
+          message:
+            "Levitate initial rise must follow the selected Levitate creature target.",
+        };
+      }
+      const hole = levitateInitialRiseHole({
+        actorId: invocation.activeEffect.sourceCombatantId,
+        targetId,
+        maxDistanceFeet: invocation.maxInitialRiseFeet,
+      });
+      if (fill.holeId !== hole.holeId) {
+        return {
+          tag: "invalid",
+          message:
+            "Levitate initial rise must use the selected spell act initial-rise hole.",
+        };
+      }
+      if (
+        fill.value.distanceFeet < 0 ||
+        fill.value.distanceFeet > invocation.maxInitialRiseFeet ||
+        !Number.isInteger(fill.value.distanceFeet)
+      ) {
+        return {
+          tag: "invalid",
+          message:
+            "Levitate initial rise must be a whole number no greater than the spell limit.",
+        };
+      }
+      if (levitateInitialRiseFeet !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Levitate initial rise was filled twice.",
+        };
+      }
+      levitateInitialRiseFeet = fill.value.distanceFeet;
       continue;
     }
 
@@ -1426,6 +1476,7 @@ export function spellFillSet(
     commandOptionChoice,
     selfTransformationModeChoice,
     conditionChoice,
+    levitateInitialRiseFeet,
     areaChoice,
     teleportDestination,
     dancingLightsPlacement,
@@ -1474,6 +1525,7 @@ export function spellFillSetContainsOnlySpellCastReactionFacts(
     fillSet.commandOptionChoice === undefined &&
     fillSet.selfTransformationModeChoice === undefined &&
     fillSet.conditionChoice === undefined &&
+    fillSet.levitateInitialRiseFeet === undefined &&
     fillSet.areaChoice === undefined &&
     fillSet.teleportDestination === undefined &&
     fillSet.dancingLightsPlacement === undefined &&
@@ -1562,6 +1614,9 @@ export function spellFillSetSavingThrowTargeting(
         invocation.procedure === "sleepTargetAdmission" ||
         invocation.procedure === "hideousLaughter" ||
         invocation.procedure === "command" ||
+        invocation.procedure === "creatureSizeIncrease" ||
+        invocation.procedure === "creatureSizeDecrease" ||
+        invocation.procedure === "levitatedCreature" ||
         invocation.procedure === "greaseGroundHazard" ||
         invocation.procedure === "gustOfWindLine"
       ? invocation.targeting

@@ -72,24 +72,24 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 90,
-      "numerator": 90,
+      "denominator": 92,
+      "numerator": 92,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 90,
-      "numerator": 90,
+      "denominator": 92,
+      "numerator": 92,
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 123,
+      "denominator": 125,
       "numerator": 105,
-      "percent": "85.4%"
+      "percent": "84%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 123,
+      "denominator": 125,
       "numerator": 105,
-      "percent": "85.4%"
+      "percent": "84%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 136,
@@ -97,13 +97,13 @@
       "percent": "92.6%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 90,
-      "numerator": 90,
+      "denominator": 92,
+      "numerator": 92,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 90,
-      "numerator": 90,
+      "denominator": 92,
+      "numerator": 92,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -2225,10 +2225,11 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
-      "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets or table-supplied area membership, optional skill or ability choice fills, and optional Saving Throw outcomes; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 numeric modifiers, and chosen-ability Ability Check roll-mode active effects.",
+      "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets or table-supplied area membership, optional skill or ability choice fills, optional Saving Throw outcomes, and explicit any-number target-list selection facts; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 dice and fixed-number modifiers, chosen-ability Ability Check roll-mode active effects, and Passive Perception deltas derived from active Perception modifiers.",
       "taskRefs": [
         "SRDINV30B",
-        "L12G-MISSING-ENHANCE-ABILITY"
+        "L12G-MISSING-ENHANCE-ABILITY",
+        "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME"
       ],
       "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
       "verificationOwners": [
@@ -2239,6 +2240,37 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.invocation-creature-size-change",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/creature-size-change-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/druid-wild-shape.ts",
+        "packages/battle-runtime/src/battle-reducer/hole-helpers.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-helpers.ts"
+      ],
+      "sourceBoundary": "The runtime consumes the authored creature-target Enlarge/Reduce branch, caller-selected creature target and mode, table-supplied range and willingness facts, and Saving Throw outcomes for unwilling targets. It owns Magic Action and level-2-or-higher Spell Slot spending, prior Concentration loss when casting this Concentration spell, new caster-owned Concentration only when the creature effect applies, active one-step creature Size projection, Strength Ability Check and Strength Saving Throw roll modes with normal Advantage/Disadvantage cancellation, weapon or Unarmed Strike attack-hit 1d4 damage addition or subtraction with the Reduce minimum-damage floor, a single active creature size-change effect per target under ASSUMPTIONS.md A48, and cleanup on Concentration or duration end. Object targets, worn or carried item size changes, dropped-item normalization, and thrown weapon or ammunition normalization remain outside this creature-branch profile subset.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME"
+      ],
+      "title": "Spell invocation applies a creature size change with Strength roll modes and attack-hit damage adjustment",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-enlarge-reduce.test.ts"
         }
       ]
     },
@@ -3347,6 +3379,43 @@
       ]
     },
     {
+      "id": "spell.invocation-levitated-creature",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-levitate-creature.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/levitate-creature.ts",
+        "packages/battle-runtime/src/battle-reducer/readied-release.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-subjects.ts"
+      ],
+      "sourceBoundary": "The runtime consumes the authored Levitate creature branch plus caller-supplied visible target, target-within-range, willingness, initial-rise, fixed-object-or-surface movement, and ongoing caster-range witnesses. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration up to 10 minutes, initial suspension up to 20 feet, Constitution save gating for unwilling creatures, active levitated creature state, Magic Action altitude changes up to 20 feet while the target remains within range, target self-movement altitude adjustment when a fixed object or surface within reach is supplied, and cleanup on Concentration or duration end. Loose objects, automatic elevation/pathfinding, horizontal dragging, and fixed-object or surface discovery remain outside this creature-profile subset.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME"
+      ],
+      "title": "Spell invocation suspends and controls one levitated creature with table-supplied movement witnesses",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-levitate-creature.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-levitate.test.ts"
+        }
+      ]
+    },
+    {
       "id": "spell.invocation-ongoing-spell-ending",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -3577,14 +3646,14 @@
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 123,
+        "denominator": 125,
         "numerator": 105,
-        "percent": "85.4%"
+        "percent": "84%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 123,
+        "denominator": 125,
         "numerator": 105,
-        "percent": "85.4%"
+        "percent": "84%"
       }
     },
     "profileKinds": [
@@ -4640,6 +4709,12 @@
         "profileKind": "spell-invocation"
       },
       {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-creature-size-change",
+        "profileKind": "spell-invocation"
+      },
+      {
         "joinStatus": "covered",
         "obligations": [
           {
@@ -5150,6 +5225,12 @@
           }
         ],
         "profileId": "spell.invocation-web-restraint-hazard",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-levitated-creature",
         "profileKind": "spell-invocation"
       },
       {
@@ -10782,6 +10863,60 @@
         "spell.invocation-dragons-breath-initial"
       ],
       "taskId": "L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover Enlarge/Reduce creature size-change resolution for willing targets and unwilling successful-save no-effect, Magic Action and level-2 Spell Slot spending, prior Concentration loss when casting this Concentration spell, caster-owned Concentration only when the effect applies, single active size-change replacement on recast or opposite-mode cast under ASSUMPTIONS.md A48, active Size projection, Strength Ability Check and Strength Saving Throw roll modes, weapon and Unarmed Strike hit damage adjustment with Reduce's minimum-damage floor, and Concentration or duration cleanup.",
+      "profileIds": [
+        "spell.invocation-creature-size-change"
+      ],
+      "taskId": "L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Enlarge/Reduce Surface-profile admission by shape, paired creature size-change invocations for increase and decrease modes, Magic Action level-2 Spell Slot casting, willing-target effect application, unwilling-target Constitution save gating, prior Concentration loss on successful-save no-effect recast, single active size-change replacement on recast or opposite-mode cast under ASSUMPTIONS.md A48, active Size projection, Strength Ability Check and Strength Saving Throw roll-mode projection, weapon and Unarmed Strike damage adjustment including Reduce's minimum-damage floor, and Concentration/duration cleanup through shared active-effect expiration.",
+      "profileIds": [
+        "spell.invocation-creature-size-change"
+      ],
+      "taskId": "L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover Enthrall's Magic Action and level-2-or-higher Spell Slot spend, unbounded caller-supplied target list, Wisdom save gate, failed-save Perception penalty active effect, Passive Perception derivation from the same fixed modifier, and Concentration cleanup.",
+      "profileIds": [
+        "spell.invocation-roll-modifier"
+      ],
+      "taskId": "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Enthrall Surface-profile admission by shape, any-number target-list discovery capped by current legal choices, Magic Action and Spell Slot spending, Wisdom Saving Throw outcomes for selected targets, failed-save fixed -10 Wisdom (Perception) Ability Check modifiers, derived Passive Perception delta, successful-save no-effect targets, and Concentration-owned cleanup/recast behavior through the shared roll-modifier effect lifecycle.",
+      "profileIds": [
+        "spell.invocation-roll-modifier"
+      ],
+      "taskId": "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover Levitate's creature subset: Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration up to 10 minutes, caller-supplied visible creature target, caller-selected initial rise up to 20 feet, unwilling-target Constitution save gate, active levitated creature altitude state, 20-foot caster altitude control, target self-movement with a fixed-object-or-surface witness, and cleanup when Concentration ends.",
+      "profileIds": [
+        "spell.invocation-levitated-creature"
+      ],
+      "taskId": "L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Levitate Surface admission, willing target active-effect application with caller-selected initial rise, unwilling target Constitution save success with resource spend and no effect, caller-supplied levitated target movement witness validation, target self altitude adjustment, caster Magic Action altitude control, range witness rejection, active altitude update, and concentration/duration cleanup.",
+      "profileIds": [
+        "spell.invocation-levitated-creature"
+      ],
+      "taskId": "L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME"
+    },
+    {
+      "claimKind": "accepted-runtime-closure",
+      "note": "Task 13 closes Levitate's loose-object branch as runtime-detached object/spatial adjudication. The Surface Spell Definition already records the SRD loose object target, visibility, 60-foot range, 500-pound weight gate, no creature Saving Throw for objects, suspension, altitude-control, range-gated caster movement, fixed-object-or-surface movement language, and gentle-grounding text. Promoted battle runtime has no generic loose-object lifecycle owner for object position, weight, aloft/grounded state, fixed-object/surface reach, or gentle grounding; adding Levitate-specific object altitude state would duplicate object lifecycle facts instead of reusing a shared owner.",
+      "profileIds": [],
+      "taskId": "L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH"
     }
   ],
   "units": [
@@ -16682,10 +16817,11 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
-          "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets or table-supplied area membership, optional skill or ability choice fills, and optional Saving Throw outcomes; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 numeric modifiers, and chosen-ability Ability Check roll-mode active effects.",
+          "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets or table-supplied area membership, optional skill or ability choice fills, optional Saving Throw outcomes, and explicit any-number target-list selection facts; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 dice and fixed-number modifiers, chosen-ability Ability Check roll-mode active effects, and Passive Perception deltas derived from active Perception modifiers.",
           "taskRefs": [
             "SRDINV30B",
-            "L12G-MISSING-ENHANCE-ABILITY"
+            "L12G-MISSING-ENHANCE-ABILITY",
+            "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME"
           ],
           "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [
@@ -16743,10 +16879,11 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
-          "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets or table-supplied area membership, optional skill or ability choice fills, and optional Saving Throw outcomes; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 numeric modifiers, and chosen-ability Ability Check roll-mode active effects.",
+          "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets or table-supplied area membership, optional skill or ability choice fills, optional Saving Throw outcomes, and explicit any-number target-list selection facts; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 dice and fixed-number modifiers, chosen-ability Ability Check roll-mode active effects, and Passive Perception deltas derived from active Perception modifiers.",
           "taskRefs": [
             "SRDINV30B",
-            "L12G-MISSING-ENHANCE-ABILITY"
+            "L12G-MISSING-ENHANCE-ABILITY",
+            "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME"
           ],
           "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [
@@ -18239,10 +18376,11 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
-          "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets or table-supplied area membership, optional skill or ability choice fills, and optional Saving Throw outcomes; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 numeric modifiers, and chosen-ability Ability Check roll-mode active effects.",
+          "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets or table-supplied area membership, optional skill or ability choice fills, optional Saving Throw outcomes, and explicit any-number target-list selection facts; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 dice and fixed-number modifiers, chosen-ability Ability Check roll-mode active effects, and Passive Perception deltas derived from active Perception modifiers.",
           "taskRefs": [
             "SRDINV30B",
-            "L12G-MISSING-ENHANCE-ABILITY"
+            "L12G-MISSING-ENHANCE-ABILITY",
+            "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME"
           ],
           "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [
@@ -18267,31 +18405,75 @@
         "status": "installed"
       },
       "claim": {
-        "followUpTasks": [
+        "deferredMechanics": [
           {
-            "id": "L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME",
-            "mechanic": "Promote the Enlarge/Reduce creature branch: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, willing target application, unwilling target Constitution save gate, cast-time Enlarge/Reduce mode choice, active size-category projection used by size-dependent runtime rules, Strength Ability Check and Strength Saving Throw Advantage/Disadvantage with normal cancellation, Enlarge +1d4 and Reduce -1d4 minimum 1 damage for attacks with affected weapons or Unarmed Strikes, and cleanup when Concentration or duration ends.",
-            "owner": "battle-runtime spell invocation/effect lifecycle plus promoted Quint parity",
-            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without object-target behavior.",
-            "title": "Enlarge Reduce Creature Runtime Support"
-          },
-          {
-            "id": "L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH",
-            "mechanic": "Represent and promote the object branch: a target object that is neither worn nor carried, object size-category change and cleanup, carried/worn item size changes while the creature branch is active, dropped item normalization, and thrown weapon/ammunition normalization immediately after hit or miss if those item lifecycle facts belong to promoted runtime.",
-            "owner": "surface target selection plus battle-runtime object and item lifecycle",
-            "requiredOutput": "Surface schema/content support for the object target constraint, runtime object/item lifecycle owner decision, focused tests, and coverage disposition that either supports the object branch or closes it with an accepted runtime-boundary reason.",
-            "title": "Enlarge Reduce Object Branch"
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "runtime-detached object and item lifecycle owner",
+              "reason": "Promoted battle runtime has no canonical object Size state, carried/worn item Size state, dropped-item location state, or thrown weapon/ammunition occurrence lifecycle to mutate and clean up. The existing creature branch already models the battle-visible attack damage consequence without duplicating item state, so object and item Size normalization remain outside promoted battle runtime until a generic object/item lifecycle owner exists."
+            },
+            "mechanic": "Object Size-category lifecycle and cleanup for object targets, carried or worn item size changes while a creature branch is active, dropped-item normalization, and thrown weapon or ammunition normalization immediately after hit or miss"
           }
         ],
-        "futureProfileOwner": "surface object target widening plus battle-runtime spell invocation/effect lifecycle and promoted Quint parity",
-        "reason": "Enlarge/Reduce is authored as an SRD Surface Spell Definition for the creature branch, including Magic Action Spell Slot casting, Concentration up to 1 minute, Constitution save only for unwilling creature targets, an Enlarge/Reduce mode choice, one-step size category changes, Strength Ability Check and Strength Saving Throw Advantage/Disadvantage, and weapon-or-Unarmed-Strike attack-hit damage adjustment with the Reduce minimum-damage floor. Task 61 claims no promoted battle-runtime profile yet because runtime has no active size projection owner, no active Strength Saving Throw roll-mode projection from spell effects, no same-source weapon/Unarmed-Strike damage adjustment with subtract-and-floor semantics, and no object target or worn/carried item lifecycle owner.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "spell.invocation-creature-size-change"
+        ],
+        "supportedMechanics": [
+          "Surface Spell Definition records one creature-or-object target with executable object visibility and object neither-worn-nor-carried constraints",
+          "Magic Action casting with level-2-or-higher Spell Slot spending from the SRD Enlarge/Reduce creature branch",
+          "caster-owned Concentration up to 1 minute and cleanup through the active-effect expiration lifecycle",
+          "willing creature target application from table-supplied willingness facts",
+          "unwilling creature Constitution Saving Throw gate with no effect on a successful save",
+          "cast-time size-increase or size-decrease mode selection represented by distinct supported runtime procedures derived from the authored mode-effect shape",
+          "active one-step creature Size category projection used by promoted size-dependent runtime readers",
+          "Strength Ability Check and Strength Saving Throw Advantage or Disadvantage projections with normal cancellation",
+          "weapon or Unarmed Strike attack-hit 1d4 damage addition for size increase and 1d4 subtraction with minimum total damage 1 for size decrease"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-enlarge-reduce.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-creature-size-change",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/creature-size-change-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/druid-wild-shape.ts",
+            "packages/battle-runtime/src/battle-reducer/hole-helpers.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+            "packages/battle-runtime/src/battle-reducer/damage-helpers.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the authored creature-target Enlarge/Reduce branch, caller-selected creature target and mode, table-supplied range and willingness facts, and Saving Throw outcomes for unwilling targets. It owns Magic Action and level-2-or-higher Spell Slot spending, prior Concentration loss when casting this Concentration spell, new caster-owned Concentration only when the creature effect applies, active one-step creature Size projection, Strength Ability Check and Strength Saving Throw roll modes with normal Advantage/Disadvantage cancellation, weapon or Unarmed Strike attack-hit 1d4 damage addition or subtraction with the Reduce minimum-damage floor, a single active creature size-change effect per target under ASSUMPTIONS.md A48, and cleanup on Concentration or duration end. Object targets, worn or carried item size changes, dropped-item normalization, and thrown weapon or ammunition normalization remain outside this creature-branch profile subset.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME"
+          ],
+          "title": "Spell invocation applies a creature size change with Strength roll modes and attack-hit damage adjustment",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-enlarge-reduce.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/enlarge_reduce.json",
       "unitId": "enlarge_reduce"
     },
@@ -18425,24 +18607,71 @@
         "status": "installed"
       },
       "claim": {
-        "followUpTasks": [
+        "deferredMechanics": [
           {
-            "id": "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME",
-            "mechanic": "Promote Enthrall's battle-visible Perception subset: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caller-supplied eligible creature target list after applying the fighting-caster-or-companions auto-success predicate at the table boundary, Wisdom save, failed-save active -10 modifier to Wisdom (Perception) Ability Checks, derived Passive Perception consequence from the same modifier, and cleanup when Concentration or duration ends.",
-            "owner": "battle-runtime spell invocation/effect lifecycle plus promoted Quint parity",
-            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Enthrall's Perception penalty without modeling social attention state.",
-            "title": "Enthrall Perception Penalty Runtime Support"
+            "battleReadinessClosure": {
+              "kind": "social-knowledge-effect",
+              "owner": "table/social target eligibility owner",
+              "reason": "The SRD fight/attention clauses depend on table relationship and social attention facts outside promoted battle-runtime state; the runtime consumes caller-selected eligible targets and records battle-visible failed-save Perception effects."
+            },
+            "mechanic": "social attention/diversion adjudication and target eligibility predicate for creatures fighting the caster or caster's companions"
           }
         ],
-        "futureProfileOwner": "battle-runtime roll-modifier spell invocation plus table/social owner",
-        "reason": "Enthrall is authored as an SRD Surface Spell Definition with Magic Action Spell Slot casting, Concentration up to 1 minute, any-number creature target selection, a Wisdom save gate, and a failed-save -10 modifier to Wisdom (Perception) Ability Checks. Task 62 claims no promoted battle-runtime profile yet because runtime roll-modifier spell targeting has no unbounded any-number target-list projection, active d20 roll modifiers do not support fixed-number deltas such as -10, and the fighting-caster-or-companions auto-success predicate is allegiance/table state rather than a current battle-runtime target predicate. Passive Perception remains derived from the Wisdom (Perception) check bonus rather than duplicated as separate Surface state; broader social attention adjudication remains runtime-detached.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "spell.invocation-roll-modifier"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action prepared spell cast with a level-2-or-higher Spell Slot",
+          "caller-supplied eligible creature target list with any-number target selection after the table applies the fighting-caster-or-companions automatic-success boundary",
+          "Wisdom Saving Throw against the caster Spell Save DC for each selected target",
+          "failed-save caster-owned Concentration active effect applying a fixed -10 modifier to Wisdom (Perception) Ability Checks",
+          "Passive Perception consequence derives from the same active Perception modifier instead of duplicated passive state",
+          "Concentration cleanup and same-caster recast replacement remove the Perception modifier"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-roll-modifier",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets or table-supplied area membership, optional skill or ability choice fills, optional Saving Throw outcomes, and explicit any-number target-list selection facts; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 dice and fixed-number modifiers, chosen-ability Ability Check roll-mode active effects, and Passive Perception deltas derived from active Perception modifiers.",
+          "taskRefs": [
+            "SRDINV30B",
+            "L12G-MISSING-ENHANCE-ABILITY",
+            "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME"
+          ],
+          "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/enthrall.json",
       "unitId": "enthrall"
     },
@@ -19290,10 +19519,11 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
-          "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets or table-supplied area membership, optional skill or ability choice fills, and optional Saving Throw outcomes; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 numeric modifiers, and chosen-ability Ability Check roll-mode active effects.",
+          "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets or table-supplied area membership, optional skill or ability choice fills, optional Saving Throw outcomes, and explicit any-number target-list selection facts; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 dice and fixed-number modifiers, chosen-ability Ability Check roll-mode active effects, and Passive Perception deltas derived from active Perception modifiers.",
           "taskRefs": [
             "SRDINV30B",
-            "L12G-MISSING-ENHANCE-ABILITY"
+            "L12G-MISSING-ENHANCE-ABILITY",
+            "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME"
           ],
           "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [
@@ -20270,31 +20500,85 @@
         "status": "installed"
       },
       "claim": {
-        "followUpTasks": [
+        "deferredMechanics": [
           {
-            "id": "L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME",
-            "mechanic": "Promote Levitate's creature branch: Magic Action and level-2+ Spell Slot spend, one visible creature target within 60 feet, caster-owned Concentration up to 10 minutes, unwilling-creature Constitution save gate, active levitated-target state with initial rise up to 20 feet, suspended/aloft projection, target movement only through caller-supplied fixed-object or surface-within-reach witnesses as if climbing, caster Magic Action altitude changes up to 20 feet while the target remains within range, self-target altitude changes as part of the target's move, and gentle-grounding cleanup when Concentration or duration ends.",
-            "owner": "battle-runtime spell invocation/effect lifecycle plus table/spatial vertical movement witness boundary",
-            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without loose-object target behavior or automatic elevation/pathfinding derivation.",
-            "title": "Levitate Creature Runtime Support"
-          },
-          {
-            "id": "L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH",
-            "mechanic": "Represent and promote or close Levitate's loose object branch: one visible loose object target within 60 feet weighing up to 500 pounds, no creature saving throw, spell-owned suspension and altitude changes, fixed-object or surface movement restrictions where relevant, range-gated caster movement, and gentle grounding when the spell ends without inventing spell-specific object position state.",
-            "owner": "surface Spell Definition authoring plus battle-runtime object lifecycle owner decision",
-            "requiredOutput": "Focused Surface/runtime owner decision with tests or accepted runtime-detached closure for loose-object suspension, altitude control, range, and gentle-grounding facts, reusing any future object lifecycle owner rather than duplicating object state inside Levitate.",
-            "title": "Levitate Loose Object Branch"
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "runtime-detached loose-object lifecycle and table/spatial vertical movement owner",
+              "reason": "The Surface Spell Definition records the loose-object target shape and 500-pound gate, but promoted battle runtime has no canonical loose-object position, weight, aloft/grounded, fixed-object attachment, surface reach, range derivation, map geometry, or gentle-grounding lifecycle state to mutate and clean up. Reusing the creature altitude active effect for objects would duplicate object lifecycle state inside Levitate, so the loose-object branch remains table/object-spatial adjudication until a generic loose-object lifecycle owner exists."
+            },
+            "mechanic": "Levitate loose-object branch: one visible loose object target within 60 feet weighing up to 500 pounds, no creature Saving Throw, spell-owned suspension and altitude changes, caster range-gated Magic Action movement, fixed-object or surface movement restrictions, automatic spatial derivation, and gentle grounding for objects when the spell ends."
           }
         ],
-        "futureProfileOwner": "battle-runtime spell invocation/effect lifecycle plus table/spatial vertical movement witness boundary and object lifecycle owner",
-        "reason": "Levitate is authored and installed as an SRD Surface Spell Definition with Magic Action Spell Slot casting, one visible creature-or-loose-object target within 60 feet, a loose-object 500-pound target limit, an unwilling-creature Constitution save gate, an initial vertical rise up to 20 feet, duration-long suspension, target movement only by pushing or pulling a fixed object or surface within reach as if climbing, caster and self altitude-control clauses, and gentle grounding when the spell ends. Task 2 claims no promoted battle-runtime profile yet because runtime has no levitated-target active effect owner, no elevation or aloft state projection, no fixed-object or surface-within-reach witness boundary, no vertical altitude-control action or movement protocol, and no loose-object lifecycle owner.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "spell.invocation-levitated-creature"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action prepared spell cast with a level-2-or-higher Spell Slot",
+          "one visible creature target within 60 feet through caller-supplied target facts",
+          "unwilling creature Constitution Saving Throw gate, with successful saves spending the action and slot without starting Concentration",
+          "known willing creature targets bypass the Saving Throw",
+          "caller/table-selected initial rise from 0 to 20 feet",
+          "caster-owned Concentration for up to 10 minutes",
+          "target-attached levitated active effect stores the selected initial altitude, 20-foot altitude-change limit, 60-foot spell range, and duration-owned Concentration expiration",
+          "levitated target Movement requires a caller-supplied fixed-object or surface-within-reach witness and may carry self altitude changes as part of the target move",
+          "caster Magic Action altitude control changes altitude by up to 20 feet while consuming a caller-supplied fact that the target remains within spell range",
+          "Concentration or duration cleanup removes the levitated active effect, leaving no duplicate elevation state outside the spell-owned projection"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-levitate.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-levitated-creature",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-levitate-creature.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+            "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+            "packages/battle-runtime/src/battle-reducer/levitate-creature.ts",
+            "packages/battle-runtime/src/battle-reducer/readied-release.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+            "packages/battle-runtime/src/battle-subjects.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the authored Levitate creature branch plus caller-supplied visible target, target-within-range, willingness, initial-rise, fixed-object-or-surface movement, and ongoing caster-range witnesses. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration up to 10 minutes, initial suspension up to 20 feet, Constitution save gating for unwilling creatures, active levitated creature state, Magic Action altitude changes up to 20 feet while the target remains within range, target self-movement altitude adjustment when a fixed object or surface within reach is supplied, and cleanup on Concentration or duration end. Loose objects, automatic elevation/pathfinding, horizontal dragging, and fixed-object or surface discovery remain outside this creature-profile subset.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME"
+          ],
+          "title": "Spell invocation suspends and controls one levitated creature with table-supplied movement witnesses",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-levitate-creature.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-levitate.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/levitate.json",
       "unitId": "levitate"
     },
@@ -20665,10 +20949,11 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
-          "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets or table-supplied area membership, optional skill or ability choice fills, and optional Saving Throw outcomes; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 numeric modifiers, and chosen-ability Ability Check roll-mode active effects.",
+          "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets or table-supplied area membership, optional skill or ability choice fills, optional Saving Throw outcomes, and explicit any-number target-list selection facts; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 dice and fixed-number modifiers, chosen-ability Ability Check roll-mode active effects, and Passive Perception deltas derived from active Perception modifiers.",
           "taskRefs": [
             "SRDINV30B",
-            "L12G-MISSING-ENHANCE-ABILITY"
+            "L12G-MISSING-ENHANCE-ABILITY",
+            "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME"
           ],
           "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [

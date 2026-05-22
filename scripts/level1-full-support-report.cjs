@@ -76,6 +76,12 @@ const strictStatusDefinitions = [
       "Companion lifecycle and control residuals are closed at the companion control boundary.",
   },
   {
+    status: "closed-outside-battle-runtime-boundary",
+    strictTargetClosed: true,
+    description:
+      "The remaining residuals are explicitly outside promoted battle-runtime ownership.",
+  },
+  {
     status: "closed-later-level-only",
     strictTargetClosed: true,
     description:
@@ -117,6 +123,8 @@ const runtimeDetachedClosureKinds = new Set([
 const durableSocialKnowledgeClosureKind =
   battleReadinessClosureKind.socialKnowledgeEffect;
 const laterLevelOnlyClosureKind = battleReadinessClosureKind.laterLevelOnly;
+const outsideBattleRuntimeClosureKind =
+  battleReadinessClosureKind.outsideBattleRuntime;
 const companionControlBoundaryClosureKind =
   battleReadinessClosureKind.companionControlBoundary;
 const characterFactRuntimeDetachedSplitClosureKind =
@@ -281,6 +289,22 @@ function hasOnlyCompanionControlBoundaryResiduals(claim) {
   );
 }
 
+function hasOnlyOutsideBattleRuntimeResiduals(claim) {
+  if (claim?.tag === "profile-subset-supported") {
+    return (
+      claim.deferredMechanics.length > 0 &&
+      claim.deferredMechanics.every(
+        (entry) =>
+          entry.battleReadinessClosure?.kind ===
+          outsideBattleRuntimeClosureKind,
+      )
+    );
+  }
+  return (
+    claim?.battleReadinessClosure?.kind === outsideBattleRuntimeClosureKind
+  );
+}
+
 function hasCharacterFactRuntimeDetachedSplit(claim) {
   if (claim?.tag === "profile-subset-supported") {
     return claim.deferredMechanics.some(
@@ -335,6 +359,14 @@ function strictStatusForUnit(unit) {
       reason:
         closureReasonForClaim(claim) ||
         "The remaining profile subset residuals are closed at the companion control boundary.",
+    };
+  }
+  if (hasOnlyOutsideBattleRuntimeResiduals(claim)) {
+    return {
+      status: "closed-outside-battle-runtime-boundary",
+      reason:
+        closureReasonForClaim(claim) ||
+        "The remaining profile subset residuals are closed outside promoted battle-runtime ownership.",
     };
   }
   if (

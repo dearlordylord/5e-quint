@@ -52,6 +52,8 @@ module battleRuntimeMarkedRiders {
       | InvisibilityCondition(_) => true
       | SeeInvisibleAndEthereal(_) => false
       | MindSpikeConcentrationDuration(_) => true
+      | CreatureSizeChange(_) => true
+      | LevitatedCreature(_) => true
       | SelfTransformationModeEffect(_) => true
       | _ => false
     })

@@ -17,6 +17,14 @@ import {
 export function supportedSpellInvocationRef(
   invocation: SupportedSpellInvocation,
 ): SpellInvocationRef {
+  if (isCreatureSizeChangeOrLevitateSpellInvocation(invocation)) {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: invocation.procedure,
+    };
+  }
   if (invocation.procedure === "afterHitDamage") {
     if (invocation.resource.tag === "classFeatureFreeCast") {
       return classFeatureFreeCastSpellInvocationRef(
@@ -551,6 +559,24 @@ export function supportedSpellInvocationRef(
       procedure: "directHitPointRestoration" as const,
     })),
     Match.exhaustive,
+  );
+}
+
+function isCreatureSizeChangeOrLevitateSpellInvocation(
+  invocation: SupportedSpellInvocation,
+): invocation is Extract<
+  SupportedSpellInvocation,
+  {
+    readonly procedure:
+      | "creatureSizeIncrease"
+      | "creatureSizeDecrease"
+      | "levitatedCreature";
+  }
+> {
+  return (
+    invocation.procedure === "creatureSizeIncrease" ||
+    invocation.procedure === "creatureSizeDecrease" ||
+    invocation.procedure === "levitatedCreature"
   );
 }
 

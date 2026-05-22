@@ -115,6 +115,8 @@ export const eldritchBlastUnitId = "eldritch_blast";
 
 export const enhanceAbilityUnitId = "enhance_ability";
 
+export const enthrallUnitId = "enthrall";
+
 export const ensnaringStrikeUnitId = "ensnaring_strike";
 
 export const expeditiousRetreatUnitId = "expeditious_retreat";
@@ -122,6 +124,8 @@ export const expeditiousRetreatUnitId = "expeditious_retreat";
 export const dragonsBreathUnitId = "dragons_breath";
 
 export const jumpUnitId = "jump";
+
+export const levitateUnitId = "levitate";
 
 export const mistyStepUnitId = "misty_step";
 

@@ -54,6 +54,7 @@ module battleRuntimeArmorClass {
         | GuidanceAbilityCheckBonus(_) => false
         | PassWithoutTraceStealthBonus => false
         | EnhanceAbilityCheckAdvantage(_) => false
+        | EnthrallPerceptionPenalty => false
         | ThaumaturgyBoomingVoice(_) => false
         | ResistanceDamageReduction(_) => false
         | ProtectionFromPoisonSavingThrowAdvantage(_) => false
@@ -100,6 +101,8 @@ module battleRuntimeArmorClass {
         | SeeInvisibleAndEthereal(_) => false
         | MindSpikeConcentrationDuration(_) => false
         | RayOfEnfeeblementD20Lifecycle(_) => false
+        | CreatureSizeChange(_) => false
+        | LevitatedCreature(_) => false
         | SleepPendingRepeatSave(_) => false
         | SleepUnconscious(_) => false
         | HideousLaughterEffect(_) => false

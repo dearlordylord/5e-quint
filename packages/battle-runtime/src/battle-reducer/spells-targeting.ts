@@ -395,7 +395,7 @@ export function targetListTargetingHasFixedMaximum(
 ): targeting is TargetListSpellInvocation["targeting"] & {
   readonly maxTargets: number;
 } {
-  return "maxTargets" in targeting;
+  return "maxTargets" in targeting && targeting.maxTargets !== "allLegalTargets";
 }
 
 function targetListTargetingRequiresCaster(

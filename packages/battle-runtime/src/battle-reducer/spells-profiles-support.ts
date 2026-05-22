@@ -1,11 +1,12 @@
 // Support, defensive, and rider spell profile projections extracted from spells-profiles.ts.
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode spell.invocation-spell-created-held-object spell.invocation-magic-weapon-enhancement spell.invocation-dragons-breath-initial
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode spell.invocation-spell-created-held-object spell.invocation-magic-weapon-enhancement spell.invocation-dragons-breath-initial spell.invocation-levitated-creature
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SELF_TRANSFORMATION_MODE BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE
 
 import {
   elapsedTimeTicksFromHours,
   elapsedTimeTicksFromTimeSpanDuration,
+  type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import type { CreatureType } from "@dnd/shared/game-facts";
@@ -52,6 +53,7 @@ import {
   type AfterHitDamageAndIlluminationSpellInvocation,
   type AfterHitTimedDamageAndSaveSpellInvocation,
   type ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation,
+  type CreatureSizeChangeSpellInvocation,
   type ConditionRemovalProtectionSpellInvocation,
   type CreatureTypeProtectionSpellInvocation,
   type DamageReductionSpellInvocation,
@@ -59,6 +61,7 @@ import {
   type D20RollModifierSpellEffect,
   type JumpMovementReplacementSpellInvocation,
   type HealingSpellActionCost,
+  type LevitatedCreatureSpellInvocation,
   MAGIC_WEAPON_ENHANCEMENT_BONUSES,
   type MagicWeaponEnhancementBonus,
   type MarkedDamageRiderCastAbilityCheckBehavior,
@@ -100,6 +103,10 @@ import {
   WARDING_BOND_CONNECTION_RANGE_FEET,
   WARDING_BOND_SAVING_THROW_BONUS,
 } from "./domain-constants.ts";
+import {
+  LEVITATE_ALTITUDE_CONTROL_FEET,
+  LEVITATE_INITIAL_RISE_FEET,
+} from "./levitate-creature.ts";
 import { supportedDamageAmountExpr } from "./spells-profiles-save-gates.ts";
 import {
   sameStringSet,
@@ -1200,6 +1207,321 @@ export function supportedPreparedRollModifierSpellProfile(
       },
     ];
   });
+}
+
+export function supportedPreparedCreatureSizeChangeSpellProfile(
+  actorId: CombatantId,
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  const projections = creatureSizeChangeSpellProjection(actorId, spell);
+  if (projections.length === 0) {
+    return [];
+  }
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] =>
+    Number(slot.spellLevel) < spell.mechanics.level
+      ? []
+      : projections.map((projection) => ({
+          access: { tag: "prepared" },
+          resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+          spell,
+          actionCost: "magicAction",
+          ...projection,
+        })),
+  );
+}
+
+export function supportedPreparedLevitatedCreatureSpellProfile(
+  actorId: CombatantId,
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  const projection = levitatedCreatureSpellProjection(actorId, spell);
+  if (projection === null) {
+    return [];
+  }
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] =>
+    Number(slot.spellLevel) < spell.mechanics.level
+      ? []
+      : [
+          {
+            access: { tag: "prepared" },
+            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+            spell,
+            actionCost: "magicAction",
+            ...projection,
+          },
+        ],
+  );
+}
+
+function levitatedCreatureSpellProjection(
+  actorId: CombatantId,
+  spell: SpellRecord,
+): Omit<
+  LevitatedCreatureSpellInvocation,
+  "access" | "resource" | "spell" | "actionCost"
+> | null {
+  if (
+    spell.mechanics.family !== "activation" ||
+    spell.mechanics.level !== 2 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "point" ||
+    spell.mechanics.range.feet !== 60 ||
+    spell.mechanics.duration.kind !== "concentration" ||
+    spell.mechanics.duration.upTo.unit !== "minute" ||
+    spell.mechanics.duration.upTo.amount !== 10 ||
+    spell.mechanics.phases.length !== 1
+  ) {
+    return null;
+  }
+  const phase = spell.mechanics.phases[0];
+  if (
+    phase?.kind !== "save_gate" ||
+    phase.ability !== "con" ||
+    phase.dc.kind !== "caster_spell_save_dc" ||
+    phase.saveAppliesIf !== "unwilling_creature_target" ||
+    phase.attachment.kind !== "hole" ||
+    phase.attachment.value.kind !== "target" ||
+    phase.onSuccess.kind !== "none" ||
+    phase.onFail.kind !== "levitate_target"
+  ) {
+    return null;
+  }
+  const selection = phase.attachment.value.selection;
+  const objectFilter =
+    "objectFilter" in selection ? selection.objectFilter : undefined;
+  const effect = phase.onFail;
+  if (
+    selection.mode !== "one" ||
+    selection.targetKinds === undefined ||
+    !sameStringSet(selection.targetKinds, ["creature", "object"]) ||
+    objectFilter?.targetRelation !== "loose" ||
+    objectFilter?.maxWeightPounds !== 500 ||
+    effect.initialRiseMaxFeet !== 20 ||
+    effect.suspension !== "spell_duration" ||
+    effect.targetMovement.allowedBy !==
+      "push_or_pull_fixed_object_or_surface_within_reach" ||
+    effect.targetMovement.movementMode !== "as_if_climbing" ||
+    effect.casterAltitudeControl.maxDistanceFeet !== 20 ||
+    effect.casterAltitudeControl.direction !== "up_or_down" ||
+    effect.casterAltitudeControl.cost !== "magic_action_on_caster_turn" ||
+    effect.casterAltitudeControl.targetMustRemainWithinSpellRange !== true ||
+    effect.selfAltitudeControl.maxDistanceFeet !== 20 ||
+    effect.selfAltitudeControl.direction !== "up_or_down" ||
+    effect.selfAltitudeControl.cost !== "part_of_move" ||
+    effect.ending !== "float_gently_to_ground_if_aloft"
+  ) {
+    return null;
+  }
+  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
+    spell.mechanics.duration.upTo,
+  );
+  if (Either.isLeft(durationTicks)) {
+    return null;
+  }
+  return {
+    procedure: "levitatedCreature",
+    ability: "con",
+    dc: phase.dc,
+    targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
+    rangeFeet: movementFeet(60),
+    maxInitialRiseFeet: LEVITATE_INITIAL_RISE_FEET,
+    activeEffect: {
+      kind: "spellLevitatedCreature",
+      sourceSpellId: spell.id,
+      sourceCombatantId: actorId,
+      maxAltitudeChangeFeet: LEVITATE_ALTITUDE_CONTROL_FEET,
+      rangeFeet: movementFeet(60),
+      expiresAt: {
+        kind: "concentration",
+        combatantId: actorId,
+        durationTicks: durationTicks.right,
+      },
+    },
+  };
+}
+
+function creatureSizeChangeSpellProjection(
+  actorId: CombatantId,
+  spell: SpellRecord,
+): readonly Pick<
+  CreatureSizeChangeSpellInvocation,
+  | "procedure"
+  | "ability"
+  | "dc"
+  | "targeting"
+  | "activeEffect"
+  | "rangeFeet"
+>[] {
+  if (
+    spell.mechanics.family !== "activation" ||
+    spell.mechanics.level !== 2 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "point" ||
+    spell.mechanics.range.feet !== 30 ||
+    spell.mechanics.duration.kind !== "concentration" ||
+    spell.mechanics.duration.upTo.unit !== "minute" ||
+    spell.mechanics.duration.upTo.amount !== 1 ||
+    spell.mechanics.phases.length !== 1
+  ) {
+    return [];
+  }
+  const phase = spell.mechanics.phases[0];
+  if (
+    phase?.kind !== "save_gate" ||
+    phase.ability !== "con" ||
+    phase.dc.kind !== "caster_spell_save_dc" ||
+    phase.saveAppliesIf !== "unwilling_creature_target" ||
+    phase.attachment.kind !== "hole" ||
+    phase.attachment.value.kind !== "target"
+  ) {
+    return [];
+  }
+  const targetSelection = phase.attachment.value.selection;
+  const objectFilter =
+    "objectFilter" in targetSelection ? targetSelection.objectFilter : undefined;
+  if (
+    targetSelection?.mode !== "one" ||
+    targetSelection.targetKinds === undefined ||
+    !sameStringSet(targetSelection.targetKinds, ["creature", "object"]) ||
+    objectFilter?.visibility !== "caster_can_see" ||
+    objectFilter?.targetRelation !== "not_worn_or_carried" ||
+    phase.onSuccess.kind !== "none" ||
+    phase.onFail.kind !== "choose_effect_mode"
+  ) {
+    return [];
+  }
+  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
+    spell.mechanics.duration.upTo,
+  );
+  if (Either.isLeft(durationTicks)) {
+    return [];
+  }
+  return phase.onFail.options.flatMap(
+    (
+      option,
+    ): readonly Pick<
+      CreatureSizeChangeSpellInvocation,
+      | "procedure"
+      | "ability"
+      | "dc"
+      | "targeting"
+      | "activeEffect"
+      | "rangeFeet"
+    >[] => {
+      const activeEffect = creatureSizeChangeActiveEffect(
+        actorId,
+        spell,
+        option.effects,
+        durationTicks.right,
+      );
+      if (activeEffect === null) {
+        return [];
+      }
+      return [
+        {
+          procedure:
+            activeEffect.direction === "increase"
+              ? "creatureSizeIncrease"
+              : "creatureSizeDecrease",
+          ability: "con",
+          dc: phase.dc,
+          targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
+          activeEffect,
+          rangeFeet: movementFeet(30),
+        },
+      ];
+    },
+  );
+}
+
+function creatureSizeChangeActiveEffect(
+  actorId: CombatantId,
+  spell: SpellRecord,
+  effects: readonly OngoingEffect[],
+  durationTicks: ElapsedTimeTicks,
+): CreatureSizeChangeSpellInvocation["activeEffect"] | null {
+  const size = effects.find(
+    (
+      effect,
+    ): effect is Extract<
+      EffectAtom,
+      { readonly kind: "modify_size_category" }
+    > => effect.kind === "modify_size_category",
+  );
+  const abilityCheck = effects.find(
+    (
+      effect,
+    ): effect is Extract<
+      EffectAtom,
+      { readonly kind: "modify_roll_advantage" }
+    > =>
+      effect.kind === "modify_roll_advantage" &&
+      sameStringSet(effect.on, ["ability_check"]),
+  );
+  const savingThrow = effects.find(
+    (
+      effect,
+    ): effect is Extract<
+      EffectAtom,
+      { readonly kind: "modify_roll_advantage" }
+    > =>
+      effect.kind === "modify_roll_advantage" &&
+      sameStringSet(effect.on, ["saving_throw"]),
+  );
+  const damage = effects.find(
+    (
+      effect,
+    ): effect is Extract<
+      EffectAtom,
+      { readonly kind: "modify_damage_numeric" }
+    > => effect.kind === "modify_damage_numeric",
+  );
+  if (
+    effects.length !== 4 ||
+    size === undefined ||
+    size.steps !== 1 ||
+    abilityCheck === undefined ||
+    savingThrow === undefined ||
+    damage === undefined ||
+    abilityCheck.mode !== savingThrow.mode ||
+    !Array.isArray(abilityCheck.abilityFilter) ||
+    !sameStringSet(abilityCheck.abilityFilter, ["str"]) ||
+    abilityCheck.skillFilter !== undefined ||
+    !Array.isArray(savingThrow.saveAbilityFilter) ||
+    !sameStringSet(savingThrow.saveAbilityFilter, ["str"]) ||
+    damage.delta.kind !== "fixed_dice" ||
+    damage.delta.dice !== 1 ||
+    damage.delta.dieSize !== 4 ||
+    damage.damageSourceFilter?.kind !== "attack_hit" ||
+    damage.damageSourceFilter.attackRollFilter !== "weapon_or_unarmed_strike"
+  ) {
+    return null;
+  }
+  if (
+    (size.direction === "increase" &&
+      (abilityCheck.mode !== "advantage" ||
+        damage.delta.sign !== "+" ||
+        damage.minimumDamageTotal !== undefined)) ||
+    (size.direction === "decrease" &&
+      (abilityCheck.mode !== "disadvantage" ||
+        damage.delta.sign !== "-" ||
+        damage.minimumDamageTotal !== 1))
+  ) {
+    return null;
+  }
+  return {
+    kind: "spellCreatureSizeChange",
+    sourceSpellId: spell.id,
+    sourceCombatantId: actorId,
+    direction: size.direction,
+    expiresAt: {
+      kind: "concentration",
+      combatantId: actorId,
+      durationTicks,
+    },
+  };
 }
 
 export function supportedPreparedCreatureTypeProtectionSpellProfile(
@@ -3531,6 +3853,9 @@ export function rollModifierSpellTargeting(
   if (attachment.kind !== "hole" || attachment.value.kind !== "target") {
     return null;
   }
+  if (attachment.value.selection.mode === "any_number") {
+    return { kind: "targetList", minTargets: 1, maxTargets: "allLegalTargets" };
+  }
   const targetCount = scalarBuffSpellTargetCount(
     attachment.value.selection,
     spellLevel,
@@ -3705,6 +4030,14 @@ export function damageReductionSpellProjection(
 export function rollModifierDelta(
   delta: Extract<EffectAtom, { readonly kind: "modify_roll_numeric" }>["delta"],
 ): BattleD20RollModifierDelta | null {
+  if (
+    delta.kind === "fixed_number" &&
+    Number.isInteger(delta.amount) &&
+    delta.amount > 0 &&
+    (delta.sign === "+" || delta.sign === "-")
+  ) {
+    return { kind: "fixedNumber", amount: delta.amount, sign: delta.sign };
+  }
   return delta.kind === "fixed_dice" &&
     rollModifierDeltaDieSizeIsSupported(delta.dieSize) &&
     (delta.sign === "+" || delta.sign === "-")
@@ -3730,9 +4063,9 @@ function rollModifierSpellRangeFeet(
 
 function rollModifierDeltaDieSizeIsSupported(
   dieSize: number,
-): dieSize is BattleD20RollModifierDelta["dieSize"] {
+): dieSize is (typeof BATTLE_D20_ROLL_MODIFIER_DIE_SIZES)[number] {
   return BATTLE_D20_ROLL_MODIFIER_DIE_SIZES.includes(
-    dieSize as BattleD20RollModifierDelta["dieSize"],
+    dieSize as (typeof BATTLE_D20_ROLL_MODIFIER_DIE_SIZES)[number],
   );
 }
 

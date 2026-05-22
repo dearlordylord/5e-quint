@@ -2,6 +2,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dragons-breath-initial
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // Covers healing, scalar buffs, roll modifiers, protection, damage reduction,
 // and condition-immunity/temporary-hit-point procedures.
@@ -45,10 +46,12 @@ import {
   applyConditionImmunityAndTurnStartTemporaryHitPointsEffects,
   applyBlurAttackRollDefenseSpellEffect,
   applySeeInvisibleObserverSightSpellEffect,
+  applyCreatureSizeChangeSpellEffect,
   applyCreatureTypeProtectionSpellEffect,
   applyDamageReductionSpellEffect,
   applyDragonsBreathInitialSpellEffect,
   applyJumpMovementReplacementSpellEffect,
+  applyLevitatedCreatureSpellEffect,
   applyMirrorImageHitInterceptionSpellEffect,
   applyRollModifierSpellEffect,
   applyScalarBuffSpellEffect,
@@ -60,6 +63,7 @@ import {
   spellHealingRollHole,
   spellScalarBuffRollHole,
   selfTransformationModeChoiceHole,
+  spellSavingThrowOutcomeHole,
   spellTargetHole,
   spellTargetIsKnownWilling,
   spellTargetIsLegal,
@@ -82,6 +86,8 @@ import {
   spendSpellCastResources,
 } from "./spells-resolve-resources.ts";
 import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
+import { validateSavingThrowOutcomes } from "./spells-resolve-save-gates.ts";
+import { levitateInitialRiseHole } from "./levitate-creature.ts";
 
 import {
   conditionRemovalProtectionSpellTargetSelection,
@@ -1259,6 +1265,360 @@ export function resolveCreatureTypeProtectionSpellAct(input: {
     input.actorId,
     targetSelection.targetIds,
     input.invocation,
+  );
+  const resourced = spendSpellCastResources({
+    state: effected,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+  });
+  return resourced.tag === "invalid"
+    ? resourced
+    : {
+        tag: "resolved",
+        state: resourced.state,
+        snapshot: snapshotBattle(resourced.state),
+      };
+}
+
+export function resolveCreatureSizeChangeSpellAct(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "creatureSizeIncrease" | "creatureSizeDecrease" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  if (
+    input.fillSet.objectTarget !== undefined ||
+    input.fillSet.objectContactTargets !== undefined ||
+    input.fillSet.objectContactSavingThrowOutcome !== undefined ||
+    input.fillSet.objectDropResolution !== undefined ||
+    input.fillSet.magicWeaponTargetItem !== undefined ||
+    input.fillSet.ongoingSpellTarget !== undefined ||
+    input.fillSet.ongoingSpellAbilityChecks.length > 0 ||
+    input.fillSet.attackRoll !== undefined ||
+    input.fillSet.targetAllocation !== undefined ||
+    input.fillSet.targetList !== undefined ||
+    input.fillSet.attackSequencePartFills.length > 0 ||
+    input.fillSet.damageRoll !== undefined ||
+    input.fillSet.attackBurstDamageRoll !== undefined ||
+    input.fillSet.healingRoll !== undefined ||
+    input.fillSet.mirrorImageDuplicateRoll !== undefined ||
+    input.fillSet.skillChoice !== undefined ||
+    input.fillSet.abilityChoice !== undefined ||
+    input.fillSet.thaumaturgyActiveOneMinuteEffectCount !== undefined ||
+    input.fillSet.commandOptionChoice !== undefined ||
+    input.fillSet.selfTransformationModeChoice !== undefined ||
+    input.fillSet.conditionChoice !== undefined ||
+    input.fillSet.areaChoice !== undefined ||
+    input.fillSet.teleportDestination !== undefined ||
+    input.fillSet.dancingLightsPlacement !== undefined ||
+    input.fillSet.damageTypeChoice !== undefined ||
+    input.fillSet.movement !== undefined ||
+    input.fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
+    input.fillSet.damageDispositions.length > 0 ||
+    input.fillSet.concentrationSavingThrows.length > 0 ||
+    input.fillSet.spellDamageReductionRolls.length > 0
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Creature size-change spells use one target and, for unwilling targets, one Saving Throw fill.",
+    );
+  }
+  if (input.fillSet.targetId === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      spellTargetHole(input.input.state, input.actorId, input.invocation),
+    ]);
+  }
+  const target = input.input.state.combatants.get(input.fillSet.targetId);
+  if (
+    target === undefined ||
+    !spellTargetIsLegal(
+      input.input.state,
+      input.actorId,
+      target.combatantId,
+      input.invocation,
+      input.fillSet.targetSpatialFacts,
+    )
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Creature size-change spell target must be a combatant within the selected spell's supported range.",
+    );
+  }
+
+  const spellCastReactionWindow = maybeOpenReactionWindow(
+    input.input.state,
+    spellCastReactionFrame({
+      casterId: input.actorId,
+      invocation: input.invocation,
+      targetIds: [target.combatantId],
+      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+      castingResource: { kind: "magicAction" },
+      continuation: {
+        kind: "replay",
+        subject: input.input.subject,
+        fills: input.input.fills,
+      },
+    }),
+    input.input.suppressedReactionTrigger,
+  );
+  if (spellCastReactionWindow !== null) {
+    return spellCastReactionWindow;
+  }
+
+  const targetIsWilling = spellTargetIsKnownWilling(
+    input.actorId,
+    target.combatantId,
+    input.invocation,
+    input.fillSet.targetSpatialFacts,
+  );
+  if (targetIsWilling && input.fillSet.savingThrowOutcomes !== undefined) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Willing creature size-change targets do not make a Saving Throw.",
+    );
+  }
+  const savingThrowHole = spellSavingThrowOutcomeHole(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+  );
+  if (!targetIsWilling && input.fillSet.savingThrowOutcomes === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      savingThrowHole,
+    ]);
+  }
+  if (input.fillSet.savingThrowOutcomes !== undefined) {
+    const validation = validateSavingThrowOutcomes(
+      input.fillSet.savingThrowOutcomes,
+      savingThrowHole,
+      input.input.state,
+      input.actorId,
+      undefined,
+      [target.combatantId],
+    );
+    if (validation !== null) {
+      return invalidResult(input.input.state, "invalidFill", validation);
+    }
+    const outcome = input.fillSet.savingThrowOutcomes.outcomes[0];
+    if (outcome?.succeeded === true) {
+      const resourced = spendSpellCastResources({
+        state: input.input.state,
+        actorId: input.actorId,
+        invocation: input.invocation,
+        errorState: input.input.state,
+        startConcentration: false,
+      });
+      return resourced.tag === "invalid"
+        ? resourced
+        : {
+            tag: "resolved",
+            state: resourced.state,
+            snapshot: snapshotBattle(resourced.state),
+          };
+    }
+  }
+
+  const concentrationBase = spellRequiresConcentration(input.invocation)
+    ? breakBattleConcentration(input.input.state, input.actorId)
+    : input.input.state;
+  const effected = applyCreatureSizeChangeSpellEffect(
+    concentrationBase,
+    input.actorId,
+    [target.combatantId],
+    input.invocation,
+  );
+  const resourced = spendSpellCastResources({
+    state: effected,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+  });
+  return resourced.tag === "invalid"
+    ? resourced
+    : {
+        tag: "resolved",
+        state: resourced.state,
+        snapshot: snapshotBattle(resourced.state),
+      };
+}
+
+export function resolveLevitatedCreatureSpellAct(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "levitatedCreature" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  if (
+    input.fillSet.objectTarget !== undefined ||
+    input.fillSet.objectContactTargets !== undefined ||
+    input.fillSet.objectContactSavingThrowOutcome !== undefined ||
+    input.fillSet.objectDropResolution !== undefined ||
+    input.fillSet.magicWeaponTargetItem !== undefined ||
+    input.fillSet.ongoingSpellTarget !== undefined ||
+    input.fillSet.ongoingSpellAbilityChecks.length > 0 ||
+    input.fillSet.attackRoll !== undefined ||
+    input.fillSet.targetAllocation !== undefined ||
+    input.fillSet.targetList !== undefined ||
+    input.fillSet.attackSequencePartFills.length > 0 ||
+    input.fillSet.damageRoll !== undefined ||
+    input.fillSet.attackBurstDamageRoll !== undefined ||
+    input.fillSet.healingRoll !== undefined ||
+    input.fillSet.mirrorImageDuplicateRoll !== undefined ||
+    input.fillSet.skillChoice !== undefined ||
+    input.fillSet.abilityChoice !== undefined ||
+    input.fillSet.thaumaturgyActiveOneMinuteEffectCount !== undefined ||
+    input.fillSet.commandOptionChoice !== undefined ||
+    input.fillSet.selfTransformationModeChoice !== undefined ||
+    input.fillSet.conditionChoice !== undefined ||
+    input.fillSet.areaChoice !== undefined ||
+    input.fillSet.teleportDestination !== undefined ||
+    input.fillSet.dancingLightsPlacement !== undefined ||
+    input.fillSet.damageTypeChoice !== undefined ||
+    input.fillSet.movement !== undefined ||
+    input.fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
+    input.fillSet.damageDispositions.length > 0 ||
+    input.fillSet.concentrationSavingThrows.length > 0 ||
+    input.fillSet.spellDamageReductionRolls.length > 0
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Levitate's creature branch uses one target, one initial-rise fill, and, for unwilling targets, one Constitution Saving Throw fill.",
+    );
+  }
+  if (input.fillSet.targetId === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      spellTargetHole(input.input.state, input.actorId, input.invocation),
+    ]);
+  }
+  const target = input.input.state.combatants.get(input.fillSet.targetId);
+  if (
+    target === undefined ||
+    !spellTargetIsLegal(
+      input.input.state,
+      input.actorId,
+      target.combatantId,
+      input.invocation,
+      input.fillSet.targetSpatialFacts,
+    )
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Levitate creature target must be a combatant within 60 feet that the caster can see.",
+    );
+  }
+
+  const spellCastReactionWindow = maybeOpenReactionWindow(
+    input.input.state,
+    spellCastReactionFrame({
+      casterId: input.actorId,
+      invocation: input.invocation,
+      targetIds: [target.combatantId],
+      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+      castingResource: { kind: "magicAction" },
+      continuation: {
+        kind: "replay",
+        subject: input.input.subject,
+        fills: input.input.fills,
+      },
+    }),
+    input.input.suppressedReactionTrigger,
+  );
+  if (spellCastReactionWindow !== null) {
+    return spellCastReactionWindow;
+  }
+
+  const targetIsWilling = spellTargetIsKnownWilling(
+    input.actorId,
+    target.combatantId,
+    input.invocation,
+    input.fillSet.targetSpatialFacts,
+  );
+  if (targetIsWilling && input.fillSet.savingThrowOutcomes !== undefined) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Willing Levitate creature targets do not make a Saving Throw.",
+    );
+  }
+  const savingThrowHole = spellSavingThrowOutcomeHole(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+  );
+  if (!targetIsWilling && input.fillSet.savingThrowOutcomes === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      savingThrowHole,
+    ]);
+  }
+  if (input.fillSet.savingThrowOutcomes !== undefined) {
+    const validation = validateSavingThrowOutcomes(
+      input.fillSet.savingThrowOutcomes,
+      savingThrowHole,
+      input.input.state,
+      input.actorId,
+      undefined,
+      [target.combatantId],
+    );
+    if (validation !== null) {
+      return invalidResult(input.input.state, "invalidFill", validation);
+    }
+    const outcome = input.fillSet.savingThrowOutcomes.outcomes[0];
+    if (outcome?.succeeded === true) {
+      if (input.fillSet.levitateInitialRiseFeet !== undefined) {
+        return invalidResult(
+          input.input.state,
+          "invalidFill",
+          "Successful Levitate creature saves are unaffected and do not use an initial-rise fill.",
+        );
+      }
+      const resourced = spendSpellCastResources({
+        state: input.input.state,
+        actorId: input.actorId,
+        invocation: input.invocation,
+        errorState: input.input.state,
+        startConcentration: false,
+      });
+      return resourced.tag === "invalid"
+        ? resourced
+        : {
+            tag: "resolved",
+            state: resourced.state,
+            snapshot: snapshotBattle(resourced.state),
+          };
+    }
+  }
+
+  if (input.fillSet.levitateInitialRiseFeet === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      levitateInitialRiseHole({
+        actorId: input.actorId,
+        targetId: target.combatantId,
+        maxDistanceFeet: input.invocation.maxInitialRiseFeet,
+      }),
+    ]);
+  }
+
+  const concentrationBase = spellRequiresConcentration(input.invocation)
+    ? breakBattleConcentration(input.input.state, input.actorId)
+    : input.input.state;
+  const effected = applyLevitatedCreatureSpellEffect(
+    concentrationBase,
+    input.actorId,
+    [target.combatantId],
+    input.invocation,
+    input.fillSet.levitateInitialRiseFeet,
   );
   const resourced = spendSpellCastResources({
     state: effected,

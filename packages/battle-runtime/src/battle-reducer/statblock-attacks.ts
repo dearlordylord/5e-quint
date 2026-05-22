@@ -379,6 +379,8 @@ export function unarmedStrikeDamageDiceExpr(
 export type AttackDamageComponent = {
   readonly expr: DiceExpr;
   readonly damageType: DamageType;
+  readonly operation?: "add" | "subtract";
+  readonly minimumDamageTotal?: 1;
 };
 
 export function attackDamageRiderDiceCount(
@@ -547,6 +549,10 @@ export function attackDamageComponents(
       dice: critical ? rider.damage.expr.dice * 2 : rider.damage.expr.dice,
     },
     damageType: rider.damage.damageType,
+    ...(rider.operation === undefined ? {} : { operation: rider.operation }),
+    ...(rider.minimumDamageTotal === undefined
+      ? {}
+      : { minimumDamageTotal: rider.minimumDamageTotal }),
   }));
   const markedRiderComponents = spellMarkedDamageRiders.map((rider) => ({
     expr: {
@@ -979,8 +985,12 @@ export function weaponAttackDamageExpression(
   );
 
   return `${components
-    .map((component) => `${component.expr.dice}d${component.expr.dieSize}`)
-    .join("+")}${modifier}-${damage.damageType}`;
+    .map((component, index) => {
+      const sign = component.operation === "subtract" ? "-" : "+";
+      const dice = `${component.expr.dice}d${component.expr.dieSize}`;
+      return index === 0 && sign === "+" ? dice : `${sign}${dice}`;
+    })
+    .join("")}${modifier}-${damage.damageType}`;
 }
 
 export function signedModifier(modifier: number): string {

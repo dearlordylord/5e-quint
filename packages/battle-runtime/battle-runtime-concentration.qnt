@@ -45,6 +45,7 @@ module battleRuntimeConcentration {
         | SpiderClimbClimbSpeedGrant(_) => false
         | GuidanceAbilityCheckBonus(_) => false
         | EnhanceAbilityCheckAdvantage(_) => false
+        | EnthrallPerceptionPenalty => false
         | EnsnaringStrikeRestrained(_) => false
         | SearingSmiteBurning(_) => false
         | ShiningSmiteIllumination(_) => false
@@ -70,6 +71,8 @@ module battleRuntimeConcentration {
         | MindSpikeConcentrationDuration(_) => false
         | RayOfEnfeeblementNextAttackDisadvantage(_) => false
         | RayOfEnfeeblementD20Lifecycle(_) => false
+        | CreatureSizeChange(_) => false
+        | LevitatedCreature(_) => false
         | SelfTransformationModeEffect(_) => false
         | DragonsBreathEffect(_) => false
         | _ => true

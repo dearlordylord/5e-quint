@@ -1,6 +1,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30B bane bless guidance
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-PASS-WITHOUT-TRACE pass_without_trace
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-MISSING-ENHANCE-ABILITY enhance_ability
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME enthrall
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-PROTECTION-FROM-POISON protection_from_poison
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30F resistance
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-roll-modifier spell.invocation-damage-reduction spell.invocation-condition-removal-protection
@@ -10,6 +11,7 @@ import {
   baneUnitId,
   blessUnitId,
   enhanceAbilityUnitId,
+  enthrallUnitId,
   guidanceUnitId,
   passWithoutTraceUnitId,
   poisonSprayUnitId,
@@ -46,6 +48,7 @@ import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
   applyCondition,
   battleCreatureStateWithKnockOutPreservedConditions,
+  breakBattleConcentration,
   cantripSpellInvocationRef,
   combatantId,
   elapsedTimeTicks,
@@ -59,7 +62,10 @@ import type {
   BattleState,
   BattleSubject,
 } from "./unit-profile-admission-test-support.ts";
-import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
+import {
+  passivePerceptionModifierDelta,
+  requiredAbilityCheckRollMode,
+} from "./battle-reducer/hole-helpers.ts";
 
 function withProtectionFromPoisonResistance(
   state: BattleState,
@@ -557,6 +563,120 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         skill: "athletics",
       }),
     ).toBeUndefined();
+  });
+
+  test("enthrall applies its fixed Perception penalty only to failed Wisdom saves from an unbounded caller-supplied target list", () => {
+    const spell = spellRecord(enthrallUnitId);
+    const secondTargetId = combatantId("unit-profile-enthrall-target-2");
+    const thirdTargetId = combatantId("unit-profile-enthrall-target-3");
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      extraTargetIds: [secondTargetId, thirdTargetId],
+    });
+    const act = spellAct({ state, spellId: enthrallUnitId, slotLevel: 2 });
+    const targetListHole = requireHole(act.initialHoles, "spellTargetList");
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(enthrallUnitId, 2, "rollModifier"),
+      mode: { tag: "cast" },
+    });
+    expect(targetListHole).toEqual(
+      expect.objectContaining({ minTargets: 1, maxTargets: 4 }),
+    );
+
+    const targetFill = spellTargetListFill(
+      targetListHole,
+      spellCasterId,
+      enthrallUnitId,
+      [spellTargetId, secondTargetId, thirdTargetId],
+    );
+    const awaitingSaves = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill],
+    });
+    const saveHole = requireResultHole(awaitingSaves, "savingThrowOutcome");
+
+    expect(saveHole).toEqual(
+      expect.objectContaining({
+        ability: "wis",
+        targetRollModes: [],
+      }),
+    );
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        savingThrowOutcomeFill(saveHole, [
+          { targetId: spellTargetId, succeeded: false },
+          { targetId: secondTargetId, succeeded: true },
+          { targetId: thirdTargetId, succeeded: false },
+        ]),
+      ],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          expect.objectContaining({
+            combatantId: spellCasterId,
+            concentrating: true,
+          }),
+          expect.anything(),
+          expect.anything(),
+          expect.anything(),
+        ],
+      },
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Enthrall to resolve.");
+    }
+    const failedTargetEffect = {
+      kind: "d20RollModifier" as const,
+      sourceSpellId: enthrallUnitId,
+      sourceCombatantId: spellCasterId,
+      on: ["ability_check"] as const,
+      delta: { kind: "fixedNumber" as const, amount: 10, sign: "-" as const },
+      skill: "perception" as const,
+      expiresAt: { kind: "concentration" as const, combatantId: spellCasterId },
+    };
+    expect(
+      resolved.state.combatants.get(spellTargetId)?.activeEffects,
+    ).toContainEqual(failedTargetEffect);
+    expect(
+      resolved.state.combatants.get(thirdTargetId)?.activeEffects,
+    ).toContainEqual(failedTargetEffect);
+    expect(
+      resolved.state.combatants
+        .get(secondTargetId)
+        ?.activeEffects.some(
+          (effect) =>
+            effect.kind === "d20RollModifier" &&
+            effect.sourceSpellId === enthrallUnitId,
+        ),
+    ).toBe(false);
+    expect(
+      passivePerceptionModifierDelta(resolved.state, spellTargetId),
+    ).toBe(-10);
+    expect(
+      passivePerceptionModifierDelta(resolved.state, secondTargetId),
+    ).toBe(0);
+
+    const ended = breakBattleConcentration(resolved.state, spellCasterId);
+    expect(
+      requireCombatant(ended, spellTargetId).activeEffects.some(
+        (effect) =>
+          effect.kind === "d20RollModifier" &&
+          effect.sourceSpellId === enthrallUnitId,
+      ),
+    ).toBe(false);
+    expect(passivePerceptionModifierDelta(ended, spellTargetId)).toBe(0);
   });
 
   test("resistance stores a chosen damage-type reduction with a once-per-turn use marker", () => {

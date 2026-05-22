@@ -1,6 +1,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form spell.invocation-flaming-sphere-hazard-ram spell.invocation-self-transformation-mode spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE
 
@@ -82,6 +83,7 @@ export const BATTLE_RUNTIME_COMMANDS = [
   "commandDrop",
   "commandApproach",
   "commandFlee",
+  "levitateAltitudeControl",
   "creatureFalls",
 ] as const;
 export type BattleRuntimeCommand = (typeof BATTLE_RUNTIME_COMMANDS)[number];
@@ -153,6 +155,9 @@ export const SPELL_SLOT_PROCEDURES = [
   "repeatedDamageAllocation",
   "directHitPointRestoration",
   "rollModifier",
+  "creatureSizeIncrease",
+  "creatureSizeDecrease",
+  "levitatedCreature",
   "wardingBond",
   "scalarBuff",
   "selfTransformationMode",
@@ -774,6 +779,14 @@ export const BattleSubjectSchema = Schema.Union(
     command: Schema.Literal("commandFlee"),
     sourceCombatantId: CombatantId,
     sourceSpellId: SpellId,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("levitateAltitudeControl"),
+    sourceCombatantId: CombatantId,
+    sourceSpellId: SpellId,
+    targetId: CombatantId,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
