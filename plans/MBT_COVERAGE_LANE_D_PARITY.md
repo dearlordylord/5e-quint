@@ -109,7 +109,7 @@
     {
       "number": 18,
       "id": "RKBC-NONFEATURE-CREATURE-TYPE-PROTECTION-WITNESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Creature-Type Protection Coverage Witness"
     },
     {
@@ -295,7 +295,7 @@ Output:
 
 ### Task 18 - RKBC-NONFEATURE-CREATURE-TYPE-PROTECTION-WITNESS - Creature-Type Protection Coverage Witness
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 - Task 14.

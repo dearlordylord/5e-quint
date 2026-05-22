@@ -1,8 +1,8 @@
 {
   "summary": {
     "total": 72,
-    "covered": 63,
-    "open": 4,
+    "covered": 64,
+    "open": 3,
     "nonSemantic": 5,
     "byRuntime": {
       "shared-algebras": 1,
@@ -12,9 +12,9 @@
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 63,
+      "covered": 64,
       "needs-qnt-owner": 0,
-      "needs-parity-witness": 3,
+      "needs-parity-witness": 2,
       "needs-surface-evidence": 1,
       "boundary-only": 4,
       "unsupported-by-admission": 1
@@ -870,12 +870,16 @@
       "title": "Battle spell scalar buffs for Armor Class, Speed, special speeds, Hit Point maximum, and Temporary Hit Point effects"
     },
     {
-      "followUpTaskIds": [
-        "RKBC-NONFEATURE-CREATURE-TYPE-PROTECTION-WITNESS"
-      ],
       "id": "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION",
       "kind": "active-effect-lifecycle",
-      "parityWitnesses": [],
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/creature-type-protection-and-charm-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
       "profiles": [
         "spell.creature-type-protection-and-charm"
       ],
@@ -888,8 +892,12 @@
         "packages/battle-runtime/src/battle-reducer/spell-condition-effects-helpers.ts",
         "packages/battle-runtime/src/battle-reducer/attack-roll.ts"
       ],
-      "status": "needs-parity-witness",
-      "surfaceEvidence": [],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-M-P.md#Protection from Evil and Good",
+        ".references/srd-5.2.1/Playing-the-Game.md#Advantage/Disadvantage",
+        ".references/srd-5.2.1/Rules-Glossary.md#Possession"
+      ],
       "title": "Battle creature-type protection, Charmed/Frightened/possession prevention, and relevant-effect Saving Throw Advantage"
     },
     {
@@ -2599,13 +2607,13 @@
     },
     {
       "classification": "semantic-frontier",
-      "coveredByObligationIds": [],
-      "followUpTaskIds": [
-        "RKBC-NONFEATURE-CREATURE-TYPE-PROTECTION-WITNESS"
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION"
       ],
+      "followUpTaskIds": [],
       "holeKind": "savingThrowOutcome",
       "id": "BattleProtectionRelevantEffectSavingThrowOutcomeHole",
-      "reason": "Protection-related repeat saves decide whether relevant charmed, frightened, or possession effects persist; the semantic obligation remains open for a focused nonfeature parity witness.",
+      "reason": "Protection-related repeat saves decide whether relevant Charmed, Frightened, or possession effects persist; the creature-type protection obligation owns scoped-source Advantage and successful-save cleanup.",
       "subject": "battle-hole-family"
     },
     {
@@ -2816,15 +2824,15 @@
         "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
         "BATTLE.SPELL.REACTION_CASTING_TIME",
         "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
-        "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE"
+        "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
+        "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION"
       ],
       "fillKind": "savingThrowOutcome",
       "followUpTaskIds": [
-        "RKBC-NONFEATURE-CREATURE-TYPE-PROTECTION-WITNESS",
         "RKBC-NONFEATURE-CONDITION-REMOVAL-PROTECTION-WITNESS"
       ],
       "id": "savingThrowOutcome",
-      "reason": "Saving Throw outcomes drive damage, condition, Command, protection, feature, reaction-casting, and active-effect lifecycle branches. Covered branches point to semantic obligations; the remaining protection branches stay explicit nonfeature parity-witness follow-ups.",
+      "reason": "Saving Throw outcomes drive damage, condition, Command, creature-type protection, poison protection, feature, reaction-casting, and active-effect lifecycle branches. Covered branches point to semantic obligations; the remaining poison protection branch stays an explicit nonfeature parity-witness follow-up.",
       "subject": "battle-fill-kind"
     },
     {

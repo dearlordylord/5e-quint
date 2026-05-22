@@ -4,6 +4,7 @@
 // helpers from ./ongoing-feature-helpers.ts instead of cycling through J.
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.invocation-object-contact-damage
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
 
 import {
   applyCondition,
