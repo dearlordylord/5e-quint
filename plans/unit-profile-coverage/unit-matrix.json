@@ -3467,7 +3467,7 @@
         "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
         "packages/battle-runtime/src/battle-subjects.ts"
       ],
-      "sourceBoundary": "The runtime consumes a caller-supplied point-origin 20-foot-radius Sphere area identity, caster-owned Concentration up to 10 minutes, active Difficult Terrain movement-cost facts derived from caller-supplied movement distance through the area, and 2d4 Piercing damage per 5 feet traveled into or within the area. It owns Magic Action and level-2-or-higher Spell Slot spending, the active hazard identity, movement-cost projection, movement-triggered damage scaling, and cleanup on Concentration or duration end. Automatic geometry, pathfinding, and camouflaged-terrain recognition remain table/spatial facts deferred to the separate Search-boundary task.",
+      "sourceBoundary": "The runtime consumes a caller-supplied point-origin 20-foot-radius Sphere area identity, caster-owned Concentration up to 10 minutes, active Difficult Terrain movement-cost facts derived from caller-supplied movement distance through the area, and 2d4 Piercing damage per 5 feet traveled into or within the area. It owns Magic Action and level-2-or-higher Spell Slot spending, the active hazard identity, movement-cost projection, movement-triggered damage scaling, and cleanup on Concentration or duration end. Automatic geometry and pathfinding remain table/spatial facts. Camouflaged-terrain recognition is an accepted runtime-detached Search/perception witness: the table owns visibility at cast time, the Search Action declaration before entry, skill/check result, and recognized-hazard witness; runtime does not store per-observer terrain knowledge.",
       "taskRefs": [
         "L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME"
       ],
@@ -10593,7 +10593,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests and package-local Quint checks cover Spike Growth area admission, Magic Action and Spell Slot spending, concentration-owned active area recording, caller-supplied Difficult Terrain movement-cost projection, per-5-foot Piercing damage scaling, Concentration break cleanup, and duration-expiry cleanup, while automatic geometry and Search recognition remain table-owned follow-up work.",
+      "note": "Focused battle-runtime tests and package-local Quint checks cover Spike Growth area admission, Magic Action and Spell Slot spending, concentration-owned active area recording, caller-supplied Difficult Terrain movement-cost projection, per-5-foot Piercing damage scaling, Concentration break cleanup, and duration-expiry cleanup. Automatic geometry remains table-owned, and Search recognition is closed as a runtime-detached table/perception witness boundary.",
       "profileIds": [
         "spell.invocation-spike-growth-movement-hazard"
       ],
@@ -23629,12 +23629,16 @@
         "battleReadinessClosure": {
           "kind": "table-spatial-derivation",
           "owner": "table/spatial movement owner",
-          "reason": "Automatic geometry, pathfinding, and camouflaged-terrain recognition remain caller-supplied table/spatial facts outside promoted battle runtime."
+          "reason": "Automatic geometry and pathfinding remain caller-supplied table/spatial facts outside promoted battle runtime."
         },
         "deferredMechanics": [
           {
-            "followUpTaskId": "L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION",
-            "mechanic": "camouflaged terrain recognition and Search-boundary support"
+            "battleReadinessClosure": {
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "runtime-detached table Search/perception witness owner",
+              "reason": "The SRD recognition clause depends on table-owned visibility at cast time, the creature's declared Search Action before entering, skill applicability, and the resulting terrain-recognition witness. Promoted battle runtime already consumes movement-area facts for Spike Growth and does not store parallel per-observer terrain knowledge or perception state."
+            },
+            "mechanic": "camouflaged terrain recognition for creatures that could not see the area when cast, including Search Action spend and Wisdom (Perception or Survival) result against the caster's Spell Save DC before entering"
           }
         ],
         "profileIds": [
@@ -23680,7 +23684,7 @@
             "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
             "packages/battle-runtime/src/battle-subjects.ts"
           ],
-          "sourceBoundary": "The runtime consumes a caller-supplied point-origin 20-foot-radius Sphere area identity, caster-owned Concentration up to 10 minutes, active Difficult Terrain movement-cost facts derived from caller-supplied movement distance through the area, and 2d4 Piercing damage per 5 feet traveled into or within the area. It owns Magic Action and level-2-or-higher Spell Slot spending, the active hazard identity, movement-cost projection, movement-triggered damage scaling, and cleanup on Concentration or duration end. Automatic geometry, pathfinding, and camouflaged-terrain recognition remain table/spatial facts deferred to the separate Search-boundary task.",
+          "sourceBoundary": "The runtime consumes a caller-supplied point-origin 20-foot-radius Sphere area identity, caster-owned Concentration up to 10 minutes, active Difficult Terrain movement-cost facts derived from caller-supplied movement distance through the area, and 2d4 Piercing damage per 5 feet traveled into or within the area. It owns Magic Action and level-2-or-higher Spell Slot spending, the active hazard identity, movement-cost projection, movement-triggered damage scaling, and cleanup on Concentration or duration end. Automatic geometry and pathfinding remain table/spatial facts. Camouflaged-terrain recognition is an accepted runtime-detached Search/perception witness: the table owns visibility at cast time, the Search Action declaration before entry, skill/check result, and recognized-hazard witness; runtime does not store per-observer terrain knowledge.",
           "taskRefs": [
             "L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME"
           ],

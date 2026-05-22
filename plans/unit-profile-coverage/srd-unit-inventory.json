@@ -194,13 +194,13 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 514,
-      "percent": "92.4%",
+      "numerator": 516,
+      "percent": "92.8%",
       "rowsByStatus": {
-        "accepted": 377,
+        "accepted": 379,
         "accepted-no-battle-effect": 137,
         "owner-evidence-required": 2,
-        "partial-battle-runtime": 16,
+        "partial-battle-runtime": 14,
         "battle-runtime-required": 24
       }
     },
@@ -12271,6 +12271,12 @@
       },
       "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "runtime-detached table Search/perception witness owner",
+        "reason": "The SRD recognition clause depends on table-owned visibility at cast time, the creature's declared Search Action before entering, skill applicability, and the resulting terrain-recognition witness. Promoted battle runtime already consumes movement-area facts for Spike Growth and does not store parallel per-observer terrain knowledge or perception state."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -12284,7 +12290,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/fighter:level-1:class-container:fighter_class_container",
@@ -17534,6 +17540,12 @@
       },
       "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "runtime-detached table Search/perception witness owner",
+        "reason": "The SRD recognition clause depends on table-owned visibility at cast time, the creature's declared Search Action before entering, skill applicability, and the resulting terrain-recognition witness. Promoted battle runtime already consumes movement-area facts for Spike Growth and does not store parallel per-observer terrain knowledge or perception state."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -17547,7 +17559,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/rogue:level-1:class-container:rogue_class_container",

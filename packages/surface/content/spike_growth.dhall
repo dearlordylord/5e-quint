@@ -9,8 +9,10 @@
 -- with unused fields set to None. `dhall-to-json --omit-empty` drops
 -- the Nones, so the JSON shape is unchanged.
 --
--- The "Wisdom (Perception or Survival) to recognize the terrain"
--- check remains DM agenda (perception rulings are caller-provided).
+-- The Search action plus Wisdom (Perception or Survival) recognition check
+-- remains table/perception agenda. The authored text records the rule; the
+-- runtime consumes caller-provided movement-area facts instead of storing
+-- parallel observer terrain-knowledge state.
 
 let T = ./_types.dhall
 
@@ -23,7 +25,7 @@ let spikeGrowth =
           , section = "Spells/Descriptions-S-Z#Spike Growth"
           }
       , description =
-          "The ground in a 20-foot-radius Sphere centered on a point within range sprouts hard spikes and thorns. The area becomes Difficult Terrain for the duration. When a creature moves into or within the area, it takes 2d4 Piercing damage for every 5 feet it travels."
+          "The ground in a 20-foot-radius Sphere centered on a point within range sprouts hard spikes and thorns. The area becomes Difficult Terrain for the duration. When a creature moves into or within the area, it takes 2d4 Piercing damage for every 5 feet it travels. The transformation of the ground is camouflaged to look natural. Any creature that can't see the area when the spell is cast must take a Search action and succeed on a Wisdom (Perception or Survival) check against your spell save DC to recognize the terrain as hazardous before entering it."
       , mechanics =
           { family = "ongoing_effect"
           , level = 2

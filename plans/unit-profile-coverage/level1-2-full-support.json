@@ -2451,11 +2451,13 @@
     {
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
-      "closureKinds": [],
+      "closureKinds": [
+        "outside-runtime-presentation-exploration"
+      ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "camouflaged terrain recognition and Search-boundary support",
+      "reason": "The SRD recognition clause depends on table-owned visibility at cast time, the creature's declared Search Action before entering, skill applicability, and the resulting terrain-recognition witness. Promoted battle runtime already consumes movement-area facts for Spike Growth and does not store parallel per-observer terrain knowledge or perception state.",
       "sourceRecordPath": "packages/surface/content/spike_growth.json",
       "sourceRows": [
         {
@@ -2483,8 +2485,8 @@
           }
         }
       ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
       "unitId": "spike_growth"
     },
     {
@@ -2674,7 +2676,7 @@
       ]
     },
     {
-      "count": 29,
+      "count": 30,
       "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
@@ -2706,6 +2708,7 @@
         "rope_trick",
         "silent_image",
         "speak_with_animals",
+        "spike_growth",
         "thaumaturgy"
       ]
     },
@@ -2753,20 +2756,19 @@
       ]
     },
     {
-      "count": 2,
-      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
-      "status": "open-profile-accounting",
-      "unitIds": [
-        "prayer_of_healing",
-        "spike_growth"
-      ]
-    },
-    {
       "count": 1,
       "description": "Companion lifecycle and control residuals are closed at the companion control boundary.",
       "status": "closed-companion-control-boundary",
       "unitIds": [
         "druid_wild_companion"
+      ]
+    },
+    {
+      "count": 1,
+      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
+      "status": "open-profile-accounting",
+      "unitIds": [
+        "prayer_of_healing"
       ]
     },
     {
@@ -2781,14 +2783,14 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 514,
-      "percent": "92.4%",
+      "numerator": 516,
+      "percent": "92.8%",
       "rowsByStatus": {
-        "accepted": 377,
+        "accepted": 379,
         "accepted-no-battle-effect": 137,
         "battle-runtime-required": 24,
         "owner-evidence-required": 2,
-        "partial-battle-runtime": 16
+        "partial-battle-runtime": 14
       }
     },
     "rulesKernelCoveredProfileJoin": {
@@ -2813,18 +2815,17 @@
     },
     "strictTargetClosure": {
       "denominator": 168,
-      "numerator": 165,
-      "percent": "98.2%"
+      "numerator": 166,
+      "percent": "98.8%"
     }
   },
   "openFrontier": [
     {
-      "count": 2,
+      "count": 1,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
-        "prayer_of_healing",
-        "spike_growth"
+        "prayer_of_healing"
       ]
     },
     {
@@ -8168,8 +8169,8 @@
       "closed-character-fact-and-runtime-detached-split": 3,
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
-      "closed-runtime-detached-table-adjudication": 29,
-      "open-profile-accounting": 2,
+      "closed-runtime-detached-table-adjudication": 30,
+      "open-profile-accounting": 1,
       "open-runtime-behavior": 1,
       "supported-profile": 113
     },

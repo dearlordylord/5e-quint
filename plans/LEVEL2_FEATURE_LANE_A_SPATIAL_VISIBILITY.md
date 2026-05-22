@@ -7,7 +7,7 @@
     {"number":1,"id":"L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH","status":"done","title":"Darkness Object-Origin Branch"},
     {"number":2,"id":"L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT","status":"done","title":"See Invisibility Observer Sight Runtime Support"},
     {"number":3,"id":"L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME","status":"done","title":"Spike Growth Movement Hazard Runtime"},
-    {"number":4,"id":"L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION","status":"ready-for-research","title":"Spike Growth Hazard Recognition Boundary"},
+    {"number":4,"id":"L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION","status":"done","title":"Spike Growth Hazard Recognition Boundary"},
     {"number":5,"id":"L12G-MISSING-SILENCE","status":"ready-for-research","title":"Silence Definition And Support Or Closure"},
     {"number":6,"id":"L12G-MISSING-SUGGESTION","status":"ready-for-research","title":"Suggestion Definition And Closure"},
     {"number":7,"id":"L12G-MISSING-ZONE-OF-TRUTH","status":"ready-for-research","title":"Zone Of Truth Definition And Closure"},
@@ -79,14 +79,14 @@ Output:
 
 ### Task 4 - L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION - Spike Growth Hazard Recognition Boundary
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 - Result of Task A3 when available, plus existing Search action and table-witness language.
 
 Output:
-- Surface support or accepted runtime-detached closure for the camouflaged terrain recognition rule.
-- If promoted, represent Search action spend and recognition witness without duplicating table perception state.
+- Accepted runtime-detached closure for the camouflaged terrain recognition rule: visibility at cast time, Search Action declaration before entry, Wisdom (Perception or Survival) result against the caster's Spell Save DC, and the resulting recognized-hazard witness are table/perception facts outside promoted battle runtime.
+- The Spike Growth Surface description records the SRD recognition text; the promoted runtime continues to consume caller-supplied movement-area facts without duplicating per-observer terrain-knowledge state.
 
 ### Task 5 - L12G-MISSING-SILENCE - Silence Definition And Support Or Closure
 
