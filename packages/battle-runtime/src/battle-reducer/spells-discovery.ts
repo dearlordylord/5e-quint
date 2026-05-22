@@ -91,6 +91,7 @@ import {
   discoverSpellMetamagicSelections,
   HEIGHTENED_METAMAGIC_EFFECT_KIND,
   QUICKENED_SPELL_METAMAGIC_SELECTION,
+  spellInvocationSupportsQuickenedActionRewrite,
 } from "./metamagic.ts";
 
 export function discoverSupportedSpellInvocations(
@@ -127,7 +128,7 @@ export function discoverSupportedSpellInvocations(
         invocation,
       );
       const quickenedTurnResourceAvailable =
-        invocation.procedure === "directHitPointRestoration" &&
+        spellInvocationSupportsQuickenedActionRewrite(invocation) &&
         actorCanOfferQuickenedSpellMetamagic({
           state,
           actor,
@@ -1073,8 +1074,10 @@ export function discoverSupportedSpellInvocations(
               targetListSpellUsesTargetListHole(invocation)
             ? spellTargetListHole(state, actorId, invocation)
             : spellTargetHole(state, actorId, invocation);
+      const turnResourceAvailableForActionCast =
+        naturalTurnResourceAvailable || quickenedTurnResourceAvailable;
       const castActs =
-        targetHole.choices.length === 0 || !naturalTurnResourceAvailable
+        targetHole.choices.length === 0 || !turnResourceAvailableForActionCast
           ? []
           : [
               {
@@ -1089,33 +1092,78 @@ export function discoverSupportedSpellInvocations(
                 initialHoles: [targetHole],
               },
             ];
-      const quickenedCastActs =
-        targetHole.choices.length === 0 || !quickenedTurnResourceAvailable
-          ? []
-          : [
-              {
-                subject: {
-                  tag: "bonusActionSpell" as const,
-                  actorId,
-                  invocation: supportedSpellInvocationRef(invocation),
-                  mode: { tag: "cast" as const },
-                  metamagic: QUICKENED_SPELL_METAMAGIC_SELECTION,
-                },
-                label: `${invocation.spell.name} (Quickened Spell)`,
-                summary: `Cast ${invocation.spell.name} with Quickened Spell as a Bonus Action.`,
-                initialHoles: [targetHole],
-              },
-            ];
       return [
         ...castActs,
-        ...quickenedCastActs,
         ...readiedSpellAct(state, actorId, invocation),
       ];
     },
   );
-  return acts.map((act) =>
-    spellCastReactionFactsAct(actorId, invocations, counterspellReactors, act),
+  return acts
+    .flatMap((act) =>
+      spellActWithQuickenedRewrite({
+        act,
+        state,
+        actor,
+        actorId,
+        invocations,
+      }),
+    )
+    .map((act) =>
+      spellCastReactionFactsAct(actorId, invocations, counterspellReactors, act),
+    );
+}
+
+function spellActWithQuickenedRewrite(input: {
+  readonly act: AvailableBattleAct;
+  readonly state: BattleState;
+  readonly actor: BattleCreatureState;
+  readonly actorId: CombatantId;
+  readonly invocations: readonly SupportedSpellInvocation[];
+}): readonly AvailableBattleAct[] {
+  const subject = input.act.subject;
+  if (subject.tag !== "actionSpell") {
+    return [input.act];
+  }
+  const invocation = input.invocations.find((candidate) =>
+    supportedSpellInvocationMatchesRef(candidate, subject.invocation),
   );
+  if (invocation === undefined) {
+    return [input.act];
+  }
+  const naturalActs = spellActTurnResourceAvailable(
+    input.state.currentTurnResources,
+    input.actorId,
+    invocation,
+  )
+    ? [input.act]
+    : [];
+  if (subject.mode.tag !== "cast" || subject.metamagic !== undefined) {
+    return naturalActs;
+  }
+  const quickenedActs =
+    spellInvocationSupportsQuickenedActionRewrite(invocation) &&
+    actorCanOfferQuickenedSpellMetamagic({
+      state: input.state,
+      actor: input.actor,
+      actorId: input.actorId,
+      invocation,
+    })
+      ? [
+          {
+            ...input.act,
+            subject: {
+              tag: "bonusActionSpell" as const,
+              actorId: input.actorId,
+              invocation: subject.invocation,
+              mode: subject.mode,
+              metamagic: QUICKENED_SPELL_METAMAGIC_SELECTION,
+            },
+            label: `${input.act.label} (Quickened Spell)`,
+            summary: `Cast ${input.act.label} with Quickened Spell as a Bonus Action.`,
+          },
+        ]
+      : [];
+  return [...naturalActs, ...quickenedActs];
 }
 
 function spellMetamagicApplications(

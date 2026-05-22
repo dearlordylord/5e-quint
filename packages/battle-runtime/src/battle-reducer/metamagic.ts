@@ -63,6 +63,94 @@ export const QUICKENED_SPELL_METAMAGIC_SELECTION = [
   { effectKind: QUICKENED_METAMAGIC_EFFECT_KIND },
 ] as const satisfies readonly [SpellMetamagicSelection];
 
+export const QUICKENED_ACTION_SPELL_PROCEDURE_UNSUPPORTED_MESSAGE =
+  "Quickened Spell is not supported for this action-casting spell procedure until its resolver threads a Bonus Action rewrite and Metamagic applications through the shared spell-cast resource boundary.";
+export const QUICKENED_ACTION_CASTING_TIME_REQUIRED_MESSAGE =
+  "Quickened Spell can modify only spells with a casting time of an action.";
+
+type QuickenedActionRewriteProcedureDisposition =
+  | "bonusActionRewrite"
+  | "actionSpellResolverNotRewritten"
+  | "notActionSpellCasting";
+
+const QUICKENED_ACTION_REWRITE_PROCEDURE_DISPOSITIONS = {
+  afterHitDamage: "notActionSpellCasting",
+  afterHitDamageAndIllumination: "notActionSpellCasting",
+  afterHitSaveGatedCondition: "notActionSpellCasting",
+  afterHitTimedDamageAndSave: "notActionSpellCasting",
+  antimagicFieldOngoingSpellSuppression: "actionSpellResolverNotRewritten",
+  attackBurstSaveDamage: "actionSpellResolverNotRewritten",
+  blurAttackRollDefense: "actionSpellResolverNotRewritten",
+  chainedSpellAttackDamage: "actionSpellResolverNotRewritten",
+  command: "actionSpellResolverNotRewritten",
+  conditionImmunityAndTurnStartTemporaryHitPoints:
+    "actionSpellResolverNotRewritten",
+  conditionRemovalProtection: "actionSpellResolverNotRewritten",
+  counterspell: "notActionSpellCasting",
+  creatureTypeProtection: "actionSpellResolverNotRewritten",
+  damageReduction: "actionSpellResolverNotRewritten",
+  dancingLightsCombinedCast: "actionSpellResolverNotRewritten",
+  dancingLightsReposition: "notActionSpellCasting",
+  dancingLightsSeparateCast: "actionSpellResolverNotRewritten",
+  directCondition: "actionSpellResolverNotRewritten",
+  directConditionRemoval: "actionSpellResolverNotRewritten",
+  directHitPointRestoration: "bonusActionRewrite",
+  expeditiousRetreatDash: "notActionSpellCasting",
+  featherFallMitigation: "notActionSpellCasting",
+  flamingSphere: "actionSpellResolverNotRewritten",
+  fogCloudObscurement: "actionSpellResolverNotRewritten",
+  greaseGroundHazard: "actionSpellResolverNotRewritten",
+  gustOfWindLine: "actionSpellResolverNotRewritten",
+  heldLight: "actionSpellResolverNotRewritten",
+  heldLightHurl: "actionSpellResolverNotRewritten",
+  hideousLaughter: "actionSpellResolverNotRewritten",
+  jumpMovementReplacement: "notActionSpellCasting",
+  magicWeaponEnhancement: "notActionSpellCasting",
+  magicalDarknessPointOrigin: "actionSpellResolverNotRewritten",
+  makeStable: "actionSpellResolverNotRewritten",
+  markedDamageRider: "notActionSpellCasting",
+  mirrorImageHitInterception: "actionSpellResolverNotRewritten",
+  moonbeam: "actionSpellResolverNotRewritten",
+  objectContactDamage: "actionSpellResolverNotRewritten",
+  objectContactDamageRepeat: "notActionSpellCasting",
+  objectLight: "actionSpellResolverNotRewritten",
+  ongoingSpellEnd: "notActionSpellCasting",
+  persistentArmorEffect: "actionSpellResolverNotRewritten",
+  repeatedDamageAllocation: "actionSpellResolverNotRewritten",
+  rollModifier: "actionSpellResolverNotRewritten",
+  sanctuaryTargetingInterdiction: "notActionSpellCasting",
+  saveGatedAttackRollAdvantage: "actionSpellResolverNotRewritten",
+  saveGatedCondition: "actionSpellResolverNotRewritten",
+  saveGatedConditionImmunity: "actionSpellResolverNotRewritten",
+  saveGatedDamage: "actionSpellResolverNotRewritten",
+  scalarBuff: "bonusActionRewrite",
+  selfTeleport: "notActionSpellCasting",
+  selfTransformationMode: "actionSpellResolverNotRewritten",
+  shieldReaction: "notActionSpellCasting",
+  sleepTargetAdmission: "actionSpellResolverNotRewritten",
+  spellAttackDamage: "actionSpellResolverNotRewritten",
+  spellAttackSequence: "actionSpellResolverNotRewritten",
+  spellCreatedHeldObject: "notActionSpellCasting",
+  spellCreatedHeldObjectAttack: "notActionSpellCasting",
+  spellCreatedHeldObjectReEvoke: "notActionSpellCasting",
+  spellHostedWeaponAttack: "actionSpellResolverNotRewritten",
+  thaumaturgyBoomingVoice: "actionSpellResolverNotRewritten",
+  wardingBond: "actionSpellResolverNotRewritten",
+  weaponAttackOverride: "notActionSpellCasting",
+  weaponDamageRider: "notActionSpellCasting",
+  webRestraintHazard: "actionSpellResolverNotRewritten",
+} as const satisfies Record<
+  SupportedSpellInvocation["procedure"],
+  QuickenedActionRewriteProcedureDisposition
+>;
+
+type QuickenedActionRewriteProcedure = {
+  [Procedure in keyof typeof QUICKENED_ACTION_REWRITE_PROCEDURE_DISPOSITIONS]: (typeof QUICKENED_ACTION_REWRITE_PROCEDURE_DISPOSITIONS)[Procedure] extends
+    "bonusActionRewrite"
+    ? Procedure
+    : never;
+}[keyof typeof QUICKENED_ACTION_REWRITE_PROCEDURE_DISPOSITIONS];
+
 export type SpellMetamagicAdmissionIssue = {
   readonly tag: "spellMetamagicAdmissionIssue";
   readonly message: string;
@@ -188,6 +276,9 @@ export function actorCanOfferQuickenedSpellMetamagic(input: {
   if (!spellInvocationHasMagicActionCastingTime(input.invocation)) {
     return false;
   }
+  if (!spellInvocationSupportsQuickenedActionRewrite(input.invocation)) {
+    return false;
+  }
   if (!input.state.currentTurnResources.currentHasBonusAction) {
     return false;
   }
@@ -213,6 +304,18 @@ export function spellInvocationHasMagicActionCastingTime(
 ): boolean {
   return (
     !("actionCost" in invocation) || invocation.actionCost === "magicAction"
+  );
+}
+
+export function spellInvocationSupportsQuickenedActionRewrite(
+  invocation: SupportedSpellInvocation,
+): invocation is Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: QuickenedActionRewriteProcedure }
+> {
+  return (
+    quickenedActionRewriteProcedureDisposition(invocation) ===
+    "bonusActionRewrite"
   );
 }
 
@@ -343,12 +446,21 @@ function spellMetamagicSupportIssue(input: {
     input.applications.map((option) => option.effectKind),
   );
   if (effectKinds.has(QUICKENED_METAMAGIC_EFFECT_KIND)) {
-    return input.applications.every(
-      (application) =>
-        application.effectKind === QUICKENED_METAMAGIC_EFFECT_KIND,
-    )
-      ? null
-      : "Selected Metamagic option effect is not supported for this spell procedure.";
+    if (
+      !input.applications.every(
+        (application) =>
+          application.effectKind === QUICKENED_METAMAGIC_EFFECT_KIND,
+      )
+    ) {
+      return "Selected Metamagic option effect is not supported for this spell procedure.";
+    }
+    const quickenedSupportIssue = quickenedActionRewriteSupportIssue(
+      input.invocation,
+    );
+    if (quickenedSupportIssue !== null) {
+      return quickenedSupportIssue;
+    }
+    return null;
   }
   const castPropertyIssue = castPropertyMetamagicSupportIssue(effectKinds);
   if (castPropertyIssue !== null) {
@@ -391,6 +503,25 @@ function spellMetamagicSupportIssue(input: {
     return "Selected Metamagic option effect is not supported for this spell procedure.";
   }
   return null;
+}
+
+function quickenedActionRewriteProcedureDisposition(
+  invocation: SupportedSpellInvocation,
+): QuickenedActionRewriteProcedureDisposition {
+  return QUICKENED_ACTION_REWRITE_PROCEDURE_DISPOSITIONS[invocation.procedure];
+}
+
+function quickenedActionRewriteSupportIssue(
+  invocation: SupportedSpellInvocation,
+): string | null {
+  const disposition = quickenedActionRewriteProcedureDisposition(invocation);
+  if (disposition === "bonusActionRewrite") {
+    return null;
+  }
+  if (disposition === "actionSpellResolverNotRewritten") {
+    return QUICKENED_ACTION_SPELL_PROCEDURE_UNSUPPORTED_MESSAGE;
+  }
+  return QUICKENED_ACTION_CASTING_TIME_REQUIRED_MESSAGE;
 }
 
 function castPropertyMetamagicSupportIssue(
@@ -467,7 +598,7 @@ function quickenedSpellAdmissionIssue(input: {
     return "Quickened Spell must use the Bonus Action spell subject.";
   }
   if (!spellInvocationHasMagicActionCastingTime(input.invocation)) {
-    return "Quickened Spell can modify only a spell whose casting time is an action.";
+    return QUICKENED_ACTION_CASTING_TIME_REQUIRED_MESSAGE;
   }
   if (
     spellInvocationIsLevelOnePlus(input.invocation) &&

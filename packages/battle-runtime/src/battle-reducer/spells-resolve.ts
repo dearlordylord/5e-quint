@@ -1989,7 +1989,10 @@ export function resolveBonusActionSpellAct(
       );
     }
   } else if (invocation.procedure === "scalarBuff") {
-    if (invocation.actionCost !== "bonusAction") {
+    if (
+      invocation.actionCost !== "bonusAction" &&
+      actionCostOverride !== "bonusAction"
+    ) {
       return invalidResult(
         input.state,
         "unsupportedSubject",
@@ -2153,6 +2156,8 @@ export function resolveBonusActionSpellAct(
       actorId: subject.actorId,
       invocation,
       fillSet,
+      ...(actionCostOverride === undefined ? {} : { actionCostOverride }),
+      metamagicApplications: metamagicAdmission.applications,
     });
   }
   if (invocation.procedure === "weaponDamageRider") {

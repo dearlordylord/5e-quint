@@ -33,6 +33,14 @@ module battleRuntimeMetamagic {
     sorceryPointsRemaining: int,
   }
 
+  type BattleRuntimeQuickenedActionSpellProcedure =
+    | QuickenedDirectRestorationProcedure
+    | QuickenedScalarBuffProcedure
+    | QuickenedDamageProcedure
+    | QuickenedControlProcedure
+    | QuickenedOngoingEffectProcedure
+    | QuickenedOtherActionProcedure
+
   type BattleRuntimeSaveMetamagicProcedure =
     | SaveGatedDamageProcedure({ success: SaveGatedDamageSuccess })
     | SaveGatedNonDamageProcedure
@@ -84,10 +92,24 @@ module battleRuntimeMetamagic {
       selectedOptions.exists(option => option.stackingMode == CanCombineWithDifferentMetamagic)
     )
 
-  pure def selectedMetamagicOptionsSupportedByQuickenedDirectRestoration(
+  pure def selectedMetamagicOptionsSupportedByQuickenedActionSpell(
+    procedure: BattleRuntimeQuickenedActionSpellProcedure,
     selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
   ): bool =
-    selectedOptions == Set(quickenedSpellMetamagicFact)
+    selectedOptions == Set(quickenedSpellMetamagicFact) and
+    quickenedActionSpellProcedureSupportsBonusActionRewrite(procedure)
+
+  pure def quickenedActionSpellProcedureSupportsBonusActionRewrite(
+    procedure: BattleRuntimeQuickenedActionSpellProcedure,
+  ): bool =
+    match procedure {
+      | QuickenedDirectRestorationProcedure => true
+      | QuickenedScalarBuffProcedure => true
+      | QuickenedDamageProcedure => false
+      | QuickenedControlProcedure => false
+      | QuickenedOngoingEffectProcedure => false
+      | QuickenedOtherActionProcedure => false
+    }
 
   pure def selectedMetamagicOptionsSupportedBySaveSpell(
     procedure: BattleRuntimeSaveMetamagicProcedure,
@@ -197,9 +219,25 @@ module battleRuntimeMetamagic {
     selectedOptions.contains(quickenedSpellMetamagicFact) and
     selectedMetamagicOptionsKnown(knownOptions, selectedOptions) and
     selectedMetamagicOptionsCanStack(selectedOptions) and
-    selectedMetamagicOptionsSupportedByQuickenedDirectRestoration(selectedOptions) and
+    selectedMetamagicOptionsSupportedByQuickenedActionSpell(QuickenedDirectRestorationProcedure, selectedOptions) and
     sorceryPointsRemaining >= selectedMetamagicSorceryPointCost(selectedOptions) and
     directHitPointRestorationActionCost(invocation) == SpellMagicAction and
+    state.bonusActionAvailable and
+    not(battleActorHasCastLevelOnePlusSpellThisTurn(state, currentActor(state)))
+
+  pure def quickenedSpellCanModifyScalarBuff(
+    state: BattleState,
+    invocation: ScalarBuffSpell,
+    knownOptions: Set[BattleRuntimeMetamagicOptionFact],
+    selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
+    sorceryPointsRemaining: int,
+  ): bool =
+    selectedOptions.contains(quickenedSpellMetamagicFact) and
+    selectedMetamagicOptionsKnown(knownOptions, selectedOptions) and
+    selectedMetamagicOptionsCanStack(selectedOptions) and
+    selectedMetamagicOptionsSupportedByQuickenedActionSpell(QuickenedScalarBuffProcedure, selectedOptions) and
+    sorceryPointsRemaining >= selectedMetamagicSorceryPointCost(selectedOptions) and
+    scalarBuffActionCost(invocation) == SpellMagicAction and
     state.bonusActionAvailable and
     not(battleActorHasCastLevelOnePlusSpellThisTurn(state, currentActor(state)))
 
@@ -240,6 +278,51 @@ module battleRuntimeMetamagic {
           ...spendFighterSpellActionCost(state, SpellBonusAction),
           fighter: healed,
         }, Fighter), Fighter),
+        sorceryPointsRemaining: sorceryPointsRemaining - selectedCost,
+      }
+    } else {
+      {
+        state: state,
+        sorceryPointsRemaining: sorceryPointsRemaining,
+      }
+    }
+  }
+
+  pure def resolveQuickenedScalarBuffSpell(
+    state: BattleState,
+    invocation: ScalarBuffSpell,
+    targets: Set[Actor],
+    knownWillingTargets: Set[Actor],
+    slotLevel: int,
+    rolledDice: int,
+    knownOptions: Set[BattleRuntimeMetamagicOptionFact],
+    selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
+    sorceryPointsRemaining: int,
+  ): BattleRuntimeQuickenedMetamagicResult = {
+    val selectedCost = selectedMetamagicSorceryPointCost(selectedOptions)
+    val canModify = quickenedSpellCanModifyScalarBuff(
+      state,
+      invocation,
+      knownOptions,
+      selectedOptions,
+      sorceryPointsRemaining,
+    )
+    val resolved =
+      if (canModify)
+        resolveScalarBuffSpellWithActionCost(
+          state,
+          invocation,
+          SpellBonusAction,
+          targets,
+          knownWillingTargets,
+          slotLevel,
+          rolledDice,
+        )
+      else
+        state
+    if (canModify and resolved != state) {
+      {
+        state: commitActorQuickenedLevelOnePlusSpellCast(resolved, Fighter),
         sorceryPointsRemaining: sorceryPointsRemaining - selectedCost,
       }
     } else {
@@ -306,6 +389,29 @@ module battleRuntimeMetamagic {
     assert(result == { state: priorFreeSpell, sorceryPointsRemaining: 4 })
   }
 
+  run test_quickened_scalar_buff_spends_bonus_action_not_magic_action = {
+    val result = resolveQuickenedScalarBuffSpell(
+      initialState,
+      FalseLifeScalarBuff,
+      Set(Fighter),
+      Set(),
+      1,
+      7,
+      Set(quickenedSpellMetamagicFact),
+      Set(quickenedSpellMetamagicFact),
+      4,
+    )
+    all {
+      assert(result.state.fighter.tempHp == 11),
+      assert(result.state.actionAvailable),
+      assert(not(result.state.bonusActionAvailable)),
+      assert(battleActorHasCommittedSpellSlotUse(result.state, Fighter)),
+      assert(battleActorHasCastLevelOnePlusSpellThisTurn(result.state, Fighter)),
+      assert(battleActorHasQuickenedLevelOnePlusSpellThisTurn(result.state, Fighter)),
+      assert(result.sorceryPointsRemaining == 2),
+    }
+  }
+
   run test_quickened_metamagic_known_affordable_and_stacking_admission = {
     val known = Set(
       quickenedSpellMetamagicFact,
@@ -360,6 +466,41 @@ module battleRuntimeMetamagic {
         known,
         Set(quickenedSpellMetamagicFact),
         2,
+      ))),
+      assert(quickenedSpellCanModifyScalarBuff(
+        initialState,
+        FalseLifeScalarBuff,
+        known,
+        Set(quickenedSpellMetamagicFact),
+        2,
+      )),
+      assert(not(quickenedSpellCanModifyScalarBuff(
+        initialState,
+        ShieldOfFaithScalarBuff,
+        known,
+        Set(quickenedSpellMetamagicFact),
+        2,
+      ))),
+    }
+  }
+
+  run test_quickened_unsupported_action_spell_procedure_classes_are_closed = {
+    all {
+      assert(not(selectedMetamagicOptionsSupportedByQuickenedActionSpell(
+        QuickenedDamageProcedure,
+        Set(quickenedSpellMetamagicFact),
+      ))),
+      assert(not(selectedMetamagicOptionsSupportedByQuickenedActionSpell(
+        QuickenedControlProcedure,
+        Set(quickenedSpellMetamagicFact),
+      ))),
+      assert(not(selectedMetamagicOptionsSupportedByQuickenedActionSpell(
+        QuickenedOngoingEffectProcedure,
+        Set(quickenedSpellMetamagicFact),
+      ))),
+      assert(not(selectedMetamagicOptionsSupportedByQuickenedActionSpell(
+        QuickenedOtherActionProcedure,
+        Set(quickenedSpellMetamagicFact),
       ))),
     }
   }

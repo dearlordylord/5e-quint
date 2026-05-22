@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Sorcerer Metamagic Quickened All Action Spells"
     },
     {
@@ -164,7 +164,7 @@ Output:
 
 ### Task 7 - L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS - Sorcerer Metamagic Quickened All Action Spells
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 - Current Quickened direct Hit Point restoration subset.

@@ -307,6 +307,8 @@ export function resolveScalarBuffSpellAct(input: {
     { readonly procedure: "scalarBuff" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+  readonly actionCostOverride?: "magicAction" | "bonusAction";
+  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
 }): BattleResolutionResult {
   if (
     input.fillSet.attackRoll !== undefined ||
@@ -344,6 +346,7 @@ export function resolveScalarBuffSpellAct(input: {
       targetIds: targetSelection.targetIds,
       reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
       castingResource:
+        input.actionCostOverride === "bonusAction" ||
         input.input.subject.tag === "bonusActionSpell"
           ? { kind: "bonusAction" }
           : { kind: "magicAction" },
@@ -395,6 +398,12 @@ export function resolveScalarBuffSpellAct(input: {
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
+    ...(input.actionCostOverride === undefined
+      ? {}
+      : { actionCostOverride: input.actionCostOverride }),
+    ...(input.metamagicApplications === undefined
+      ? {}
+      : { metamagicApplications: input.metamagicApplications }),
   });
   return resourced.tag === "invalid"
     ? resourced

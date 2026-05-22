@@ -156,7 +156,26 @@ module battleRuntimeRestorationAndBuffs {
     slotLevel: int,
     rolledDice: int,
   ): BattleState = {
-    val actionCost = scalarBuffActionCost(invocation)
+    resolveScalarBuffSpellWithActionCost(
+      state,
+      invocation,
+      scalarBuffActionCost(invocation),
+      targets,
+      knownWillingTargets,
+      slotLevel,
+      rolledDice,
+    )
+  }
+
+  pure def resolveScalarBuffSpellWithActionCost(
+    state: BattleState,
+    invocation: ScalarBuffSpell,
+    actionCost: SpellActionCost,
+    targets: Set[Actor],
+    knownWillingTargets: Set[Actor],
+    slotLevel: int,
+    rolledDice: int,
+  ): BattleState = {
     val targetCount = targets.size()
     val validTargetCount = targetCount >= 1 and targetCount <= scalarBuffMaximumTargets(invocation, slotLevel)
     val validTargetDisposition = scalarBuffTargetDispositionIsSatisfied(invocation, targets, knownWillingTargets)

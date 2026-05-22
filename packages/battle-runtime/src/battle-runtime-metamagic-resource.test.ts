@@ -1,6 +1,9 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.metamagic-battle-resource-bridge unit-feature.metamagic-cast-governor-quickened
 
-import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
+import {
+  canSpendAction,
+  spendAction,
+} from "@dnd/shared-algebras/action-economy-algebra";
 import { resourceCount } from "@dnd/shared/types";
 import { Either } from "effect";
 import { describe, expect, test } from "vitest";
@@ -24,6 +27,7 @@ import {
   EMPOWERED_METAMAGIC_UNSUPPORTED_MESSAGE,
   EXTENDED_METAMAGIC_EFFECT_KIND,
   EXTENDED_METAMAGIC_UNSUPPORTED_MESSAGE,
+  QUICKENED_ACTION_SPELL_PROCEDURE_UNSUPPORTED_MESSAGE,
   QUICKENED_METAMAGIC_EFFECT_KIND,
   QUICKENED_SPELL_METAMAGIC_SELECTION,
   SEEKING_METAMAGIC_EFFECT_KIND,
@@ -216,6 +220,83 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
           candidate.subject.invocation.tag === "spellSlot",
       ),
     ).toBe(false);
+  });
+
+  test("discovers Quickened action-casting scalar buff spells through the same Bonus Action rewrite", () => {
+    const state = metamagicBattle({ preparedSpells: ["false_life"] });
+    const act = quickenedFalseLifeAct(state);
+
+    expect(act.subject).toEqual({
+      tag: "bonusActionSpell",
+      actorId: wizardId,
+      invocation: spellSlotInvocationRef("false_life", 1, "scalarBuff"),
+      mode: { tag: "cast" },
+      metamagic: QUICKENED_SPELL_METAMAGIC_SELECTION,
+    });
+
+    const tempHpHole = findHole(act.initialHoles, "rolledDice");
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [damageRollFillWithGroups(tempHpHole, [[4, 3]])],
+      }),
+    );
+
+    expect(resolved.state.currentTurnResources.currentHasBonusAction).toBe(
+      false,
+    );
+    expect(canSpendAction(resolved.state.currentTurnResources, "magic")).toBe(
+      true,
+    );
+    expect(
+      resolved.state.currentTurnResources
+        .quickenedLevelOnePlusSpellCastsThisTurn,
+    ).toContain(wizardId);
+    expect(sorceryPointsRemaining(resolved.state)).toBe(resourceCount(2));
+    expect(resolved.state.combatants.get(wizardId)?.tempHp).toBe(11);
+  });
+
+  test("discovers and resolves Quickened action spells after the Magic action is already spent", () => {
+    const state = metamagicBattle({
+      preparedSpells: ["cure_wounds", "false_life"],
+    });
+    const afterMagicAction = magicActionSpent(state);
+
+    expect(
+      canSpendAction(afterMagicAction.currentTurnResources, "magic"),
+    ).toBe(false);
+    expect(
+      afterMagicAction.currentTurnResources.levelOnePlusSpellCastsThisTurn,
+    ).not.toContain(wizardId);
+
+    const cureWounds = quickenedCureWoundsAct(afterMagicAction);
+    const healed = resolveQuickenedCureWounds(afterMagicAction, cureWounds);
+    expect(healed.state.currentTurnResources.currentHasBonusAction).toBe(
+      false,
+    );
+    expect(canSpendAction(healed.state.currentTurnResources, "magic")).toBe(
+      false,
+    );
+    expect(sorceryPointsRemaining(healed.state)).toBe(resourceCount(2));
+
+    const falseLife = quickenedFalseLifeAct(afterMagicAction);
+    const tempHpHole = findHole(falseLife.initialHoles, "rolledDice");
+    const buffed = requireResolved(
+      resolveBattleSubject({
+        state: afterMagicAction,
+        subject: falseLife.subject,
+        fills: [damageRollFillWithGroups(tempHpHole, [[4, 3]])],
+      }),
+    );
+    expect(buffed.state.currentTurnResources.currentHasBonusAction).toBe(
+      false,
+    );
+    expect(canSpendAction(buffed.state.currentTurnResources, "magic")).toBe(
+      false,
+    );
+    expect(sorceryPointsRemaining(buffed.state)).toBe(resourceCount(2));
+    expect(buffed.state.combatants.get(wizardId)?.tempHp).toBe(11);
   });
 
   test("requires known Metamagic options and enough unexpended Sorcery Points", () => {
@@ -429,6 +510,34 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       message:
         "Quickened Spell cannot modify a level 1+ spell after this turn has already cast a level 1+ spell.",
     });
+  });
+
+  test("rejects unsupported Quickened procedure classes before Sorcery Point spending", () => {
+    const state = saveMetamagicBattle({
+      knownOptions: [quickenedMetamagicOption()],
+    });
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: {
+          tag: "bonusActionSpell",
+          actorId: wizardId,
+          invocation: spellSlotInvocationRef(
+            "burning_hands",
+            1,
+            "saveGatedDamage",
+          ),
+          mode: { tag: "cast" },
+          metamagic: QUICKENED_SPELL_METAMAGIC_SELECTION,
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: QUICKENED_ACTION_SPELL_PROCEDURE_UNSUPPORTED_MESSAGE,
+    });
+    expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
   });
 });
 
@@ -802,9 +911,19 @@ function expectRight<T, E>(result: Either.Either<T, E>): T {
   return result.right;
 }
 
+function magicActionSpent(state: BattleState): BattleState {
+  return {
+    ...state,
+    currentTurnResources: expectRight(
+      spendAction(state.currentTurnResources, "magic"),
+    ),
+  };
+}
+
 function metamagicBattle(input?: {
   readonly sorceryPoints?: number;
   readonly knownOptions?: readonly MetamagicOptionFixture[];
+  readonly preparedSpells?: readonly ("cure_wounds" | "false_life")[];
 }): BattleState {
   return startBattleRight({
     battleId: battleId("battle:sorcerer-metamagic-quickened"),
@@ -832,7 +951,9 @@ function metamagicBattle(input?: {
         },
         spellcasting: {
           ...wizardSpellcasting({
-            preparedSpells: [spellRecord("cure_wounds")],
+            preparedSpells: (input?.preparedSpells ?? ["cure_wounds"]).map(
+              spellRecord,
+            ),
             spellSlots: [{ spellLevel: 1, count: 2 }],
           }),
           sourceClassName: "sorcerer",
@@ -1203,6 +1324,21 @@ function quickenedCureWoundsAct(
   const act = discoverBattleActs(state).find(isQuickenedCureWoundsAct);
   if (act === undefined) {
     throw new Error("Expected Quickened Cure Wounds act.");
+  }
+  return act;
+}
+
+function quickenedFalseLifeAct(state: BattleState): QuickenedBonusActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is QuickenedBonusActionSpellAct =>
+      candidate.subject.tag === "bonusActionSpell" &&
+      candidate.subject.invocation.spellId === "false_life" &&
+      candidate.subject.metamagic?.some(
+        (selection) => selection.effectKind === QUICKENED_METAMAGIC_EFFECT_KIND,
+      ) === true,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Quickened False Life act.");
   }
   return act;
 }
