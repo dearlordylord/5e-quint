@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 396,
-      "numerator": 192,
-      "percent": "48.5%"
+      "denominator": 397,
+      "numerator": 193,
+      "percent": "48.6%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 468,
-      "numerator": 224,
-      "percent": "47.9%"
+      "denominator": 469,
+      "numerator": 225,
+      "percent": "48%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 225
+      "value": 226
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 136,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 225,
-      "numerator": 225,
+      "denominator": 226,
+      "numerator": 226,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "79.4%"
     },
     "supportedProfileCoverage": {
-      "denominator": 193,
+      "denominator": 194,
       "numerator": 136,
-      "percent": "70.5%"
+      "percent": "70.1%"
     }
   },
   "metricSemantics": [
@@ -23384,6 +23384,29 @@
       ],
       "sourceRecordPath": "packages/surface/content/shillelagh.json",
       "unitId": "shillelagh"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table/spatial and audio adjudication owner",
+          "reason": "Silence's audio boundary, entirely-inside area membership, Thunder-immunity projection, Deafened projection, and Verbal-component casting block require table-supplied area/membership facts; promoted battle runtime must not infer audio geometry automatically."
+        },
+        "reason": "Silence is authored and installed as an SRD Surface Spell Definition with Action casting that spends a level-2 Spell Slot, Ritual casting that takes 10 extra minutes and expends no Spell Slot, point-origin 20-foot-radius Sphere area identity, caster-owned Concentration up to 10 minutes, no sound creation or passage through the Sphere, Thunder damage Immunity for creatures and objects entirely inside it, Deafened for creatures entirely inside it, and Verbal-component spellcasting impossibility there. Task 5 claims no promoted battle-runtime profile because automatic sound propagation, area membership, entirely-inside adjudication, and Verbal-component availability are runtime-detached table-spatial/audio facts outside promoted battle Unit profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/silence.json",
+      "unitId": "silence"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

@@ -8,7 +8,7 @@
     {"number":2,"id":"L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT","status":"done","title":"See Invisibility Observer Sight Runtime Support"},
     {"number":3,"id":"L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME","status":"done","title":"Spike Growth Movement Hazard Runtime"},
     {"number":4,"id":"L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION","status":"done","title":"Spike Growth Hazard Recognition Boundary"},
-    {"number":5,"id":"L12G-MISSING-SILENCE","status":"ready-for-research","title":"Silence Definition And Support Or Closure"},
+    {"number":5,"id":"L12G-MISSING-SILENCE","status":"done","title":"Silence Definition And Support Or Closure"},
     {"number":6,"id":"L12G-MISSING-SUGGESTION","status":"ready-for-research","title":"Suggestion Definition And Closure"},
     {"number":7,"id":"L12G-MISSING-ZONE-OF-TRUTH","status":"ready-for-research","title":"Zone Of Truth Definition And Closure"},
     {"number":8,"id":"L12G-RECURSIVE-TAIL-LANE-A","status":"blocked","title":"Lane A Recursive Planning Tail"}
@@ -90,14 +90,14 @@ Output:
 
 ### Task 5 - L12G-MISSING-SILENCE - Silence Definition And Support Or Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 - SRD Silence text and current spell Surface catalog.
 
 Output:
-- Authored Surface definition plus supported profile, profile subset, or accepted runtime-detached closure.
-- Runtime must not infer audio geometry automatically; table-supplied area/membership facts remain the boundary.
+- Authored SRD Surface definition plus accepted runtime-detached closure for Silence's audio boundary, entirely-inside area membership, Thunder-immunity projection, Deafened projection, and Verbal-component casting block.
+- Runtime does not infer audio geometry automatically; table-supplied area/membership facts remain the boundary.
 
 ### Task 6 - L12G-MISSING-SUGGESTION - Suggestion Definition And Closure
 

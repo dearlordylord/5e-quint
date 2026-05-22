@@ -1360,6 +1360,14 @@ type EffectAtom =
   | { readonly kind: "area_is_heavily_obscured" }
   | { readonly kind: "area_is_magical_darkness" }
   | {
+      readonly kind: "area_of_silence";
+      readonly soundBoundary: "blocks_creation_and_passage";
+      readonly appliesWhen: "entirely_inside_area";
+      readonly grantsDamageImmunity: "thunder";
+      readonly imposesCondition: "deafened";
+      readonly preventsSpellComponent: "verbal";
+    }
+  | {
       readonly kind: "end_overlapping_spell_created_bright_or_dim_light";
       readonly maxSpellLevel: number;
     }
@@ -3367,6 +3375,14 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       Schema.Struct({ kind: Schema.Literal("area_is_lightly_obscured") }),
       Schema.Struct({ kind: Schema.Literal("area_is_heavily_obscured") }),
       Schema.Struct({ kind: Schema.Literal("area_is_magical_darkness") }),
+      strictStruct({
+        kind: Schema.Literal("area_of_silence"),
+        soundBoundary: Schema.Literal("blocks_creation_and_passage"),
+        appliesWhen: Schema.Literal("entirely_inside_area"),
+        grantsDamageImmunity: Schema.Literal("thunder"),
+        imposesCondition: Schema.Literal("deafened"),
+        preventsSpellComponent: Schema.Literal("verbal"),
+      }),
       Schema.Struct({
         kind: Schema.Literal(
           "end_overlapping_spell_created_bright_or_dim_light",

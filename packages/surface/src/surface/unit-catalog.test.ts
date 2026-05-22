@@ -141,6 +141,7 @@ const requiredFirstVerticalUnitIds = [
   "protection_from_poison",
   "shield",
   "shatter",
+  "silence",
   "shining_smite",
   "see_invisibility",
   "sleep",
@@ -254,6 +255,54 @@ describe("SRD Unit catalog boundary", () => {
           ],
         },
       ]);
+    }
+  });
+
+  test("keeps Silence's coupled sound-area Surface atom in the catalog projection", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const silence = result.catalog.requireUnit("silence");
+
+      expect(silence.kind).toBe("spell");
+      if (
+        silence.kind !== "spell" ||
+        silence.mechanics.family !== "ongoing_effect"
+      ) {
+        throw new Error("Expected Silence to be an ongoing-effect spell.");
+      }
+      expect(silence.mechanics).toMatchObject({
+        level: 2,
+        school: "illusion",
+        castingTime: { kind: "action", ritual: true },
+        range: { kind: "point", feet: 120 },
+        components: { v: true, s: true, m: false },
+        duration: {
+          kind: "concentration",
+          upTo: { unit: "minute", amount: 10 },
+        },
+        attachment: {
+          value: {
+            kind: "area",
+            origin: { kind: "point_within_range" },
+            shape: { kind: "sphere", radiusFeet: 20 },
+          },
+        },
+        operations: [
+          {
+            trigger: { kind: "passive" },
+            effect: {
+              kind: "area_of_silence",
+              soundBoundary: "blocks_creation_and_passage",
+              appliesWhen: "entirely_inside_area",
+              grantsDamageImmunity: "thunder",
+              imposesCondition: "deafened",
+              preventsSpellComponent: "verbal",
+            },
+          },
+        ],
+      });
     }
   });
 

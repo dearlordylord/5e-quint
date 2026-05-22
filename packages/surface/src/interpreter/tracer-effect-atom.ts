@@ -192,6 +192,7 @@ export function traceEffectAtom(
     case "area_is_lightly_obscured":
     case "area_is_heavily_obscured":
     case "area_is_magical_darkness":
+    case "area_of_silence":
     case "end_overlapping_spell_created_bright_or_dim_light":
     case "area_anchor_or_layering_requirement":
     case "area_section_burns_away":
