@@ -211,7 +211,7 @@
     {
       "number": 35,
       "id": "L12G-FOLLOWUP-DRUID-CIRCLE-LAND-SPELL-ACCESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Druid Circle of the Land Spell Access"
     },
     {
@@ -913,7 +913,7 @@ Completion:
 
 ### Task 35 - L12G-FOLLOWUP-DRUID-CIRCLE-LAND-SPELL-ACCESS - Druid Circle of the Land Spell Access
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
