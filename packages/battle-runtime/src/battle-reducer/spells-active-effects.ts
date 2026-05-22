@@ -1,5 +1,6 @@
 // Spell active-effect application extracted from spells-holes-fills.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode spell.invocation-spell-created-held-object
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dragons-breath-initial
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
@@ -10,13 +11,18 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE
 import { Match } from "effect";
 import {
   applyCondition,
   hasCondition,
 } from "@dnd/shared-algebras/conditions-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { movementFeet, type Round as RoundType } from "@dnd/shared/types";
+import {
+  movementFeet,
+  type DifficultyClass,
+  type Round as RoundType,
+} from "@dnd/shared/types";
 import type {
   Ability,
   DamageType,
@@ -3385,6 +3391,47 @@ export function applyJumpMovementReplacementSpellEffect(
       }),
     };
   }, state);
+}
+
+export function applyDragonsBreathInitialSpellEffect(
+  state: BattleState,
+  actorId: CombatantId,
+  targetId: CombatantId,
+  damageType: DamageType,
+  spellSaveDc: DifficultyClass,
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "dragonsBreathInitial" }
+  >,
+): BattleState {
+  const target = state.combatants.get(targetId);
+  if (target === undefined) {
+    return state;
+  }
+  const nextEffect: BattleActiveEffect = {
+    ...invocation.activeEffect,
+    sourceCombatantId: actorId,
+    damageType,
+    spellSaveDc,
+  };
+  const activeEffects = [
+    ...target.activeEffects.filter(
+      (effect) =>
+        !(
+          effect.kind === "dragonsBreath" &&
+          effect.sourceSpellId === invocation.spell.id &&
+          effect.sourceCombatantId === actorId
+        ),
+    ),
+    nextEffect,
+  ];
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(targetId, {
+      ...target,
+      activeEffects,
+    }),
+  };
 }
 
 export function applyBlurAttackRollDefenseSpellEffect(

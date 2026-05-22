@@ -4,6 +4,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-mirror-image-hit-interception
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dragons-breath-initial
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-moonbeam-movable-zone
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.monk-focus-battle-options
@@ -21,7 +22,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS BATTLE.STAT_BLOCK.ATTACK_CONTROL
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE BATTLE.SPELL.REACTION_CASTING_TIME
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
@@ -2036,6 +2037,10 @@ export type TargetListSpellInvocation =
     >
   | Extract<
       SupportedSpellInvocation,
+      { readonly procedure: "dragonsBreathInitial" }
+    >
+  | Extract<
+      SupportedSpellInvocation,
       { readonly procedure: "featherFallMitigation" }
     >
   | Extract<
@@ -2293,6 +2298,24 @@ export type JumpMovementReplacementSpellInvocation = {
     BattleActiveEffect,
     { readonly kind: "jumpMovementReplacement" }
   >;
+  readonly rangeFeet: MovementFeet;
+};
+export type DragonsBreathInitialSpellInvocation = {
+  readonly access: PreparedSpellAccess;
+  readonly resource: SpellSlotInvocationResource;
+  readonly procedure: "dragonsBreathInitial";
+  readonly spell: SpellRecord;
+  readonly actionCost: "bonusAction";
+  readonly targeting: {
+    readonly kind: "targetList";
+    readonly minTargets: 1;
+    readonly maxTargets: 1;
+  };
+  readonly activeEffect: Omit<
+    Extract<BattleActiveEffect, { readonly kind: "dragonsBreath" }>,
+    "damageType" | "spellSaveDc"
+  >;
+  readonly damageTypeChoices: readonly DamageType[];
   readonly rangeFeet: MovementFeet;
 };
 export type SelfTeleportSpellInvocation = {
@@ -2759,6 +2782,7 @@ export type SupportedSpellInvocation =
   | WardingBondSpellInvocation
   | ThaumaturgyBoomingVoiceSpellInvocation
   | SeeInvisibleObserverSightSpellInvocation
+  | DragonsBreathInitialSpellInvocation
   | {
       readonly access: ClassCantripSpellAccess;
       readonly resource: NoSpellInvocationResource;
@@ -3240,6 +3264,7 @@ type AnySupportedDamageSpellInvocation = Exclude<
       | "markedDamageRider"
       | "expeditiousRetreatDash"
       | "jumpMovementReplacement"
+      | "dragonsBreathInitial"
       | "selfTeleport"
       | "sanctuaryTargetingInterdiction"
       | "directCondition"
@@ -3974,6 +3999,7 @@ export type BattleSpellDamageTypeChoiceHole = {
       readonly procedure:
         | "chainedSpellAttackDamage"
         | "damageReduction"
+        | "dragonsBreathInitial"
         | "selfTransformationMode"
         | "spellAttackDamage"
         | "spellHostedWeaponAttack";
@@ -4041,6 +4067,7 @@ export type BattleSpellTargetListHole = {
         | "scalarBuff"
         | "conditionImmunityAndTurnStartTemporaryHitPoints"
         | "jumpMovementReplacement"
+        | "dragonsBreathInitial"
         | "featherFallMitigation"
         | "sanctuaryTargetingInterdiction"
         | "directCondition"

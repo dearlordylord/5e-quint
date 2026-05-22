@@ -945,14 +945,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "unsupported-profile",
+      "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "follow-up-split"
+        "table-spatial-derivation"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST: Promote the Bonus Action spell invocation that spends a level-2-or-higher Spell Slot, chooses Acid, Cold, Fire, Lightning, or Poison once at cast time, targets one willing touched creature, starts caster-owned Concentration for up to 1 minute, and stores a target-attached active effect with the chosen damage type, caster spell save DC, and original slot level without duplicating Spell Access state or reauthoring damage-type options. Owner: battle-runtime spell invocation/effect lifecycle. Required output: Supported runtime owner evidence for Dragon's Breath initial casting, Spell Slot spending, damage-type choice retention, caster spell save DC retention, original slot level retention, willing target attachment, Concentration expiry, and active-effect cleanup.; L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION: Discover and execute the attached target's Magic action while the spell remains active, using the stored caster spell save DC, chosen damage type, and original slot level to resolve a 15-foot Cone Dexterity save for half damage with slot scaling from the original cast. Owner: battle-runtime target-granted action lifecycle plus promoted Quint parity. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for target-side action discovery, action economy spending, area membership input, save-for-half damage, slot scaling, and expiry behavior.",
+      "reason": "Task 8 promotes only the initial cast and retained effect state; the target-side breath action still needs target-granted action lifecycle support plus caller/table-owned Cone placement and affected-creature membership witnesses.",
       "sourceRecordPath": "packages/surface/content/dragons_breath.json",
       "sourceRows": [
         {
@@ -980,8 +980,8 @@
           }
         }
       ],
-      "status": "blocked-follow-up-split",
-      "strictTargetClosed": true,
+      "status": "open-profile-accounting",
+      "strictTargetClosed": false,
       "unitId": "dragons_breath"
     },
     {
@@ -2887,14 +2887,13 @@
       ]
     },
     {
-      "count": 13,
+      "count": 12,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
         "acid_arrow",
         "continual_flame",
         "darkness",
-        "dragons_breath",
         "druid_wild_shape",
         "enhance_ability",
         "enlarge_reduce",
@@ -2930,19 +2929,20 @@
       ]
     },
     {
+      "count": 2,
+      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
+      "status": "open-profile-accounting",
+      "unitIds": [
+        "dragons_breath",
+        "prayer_of_healing"
+      ]
+    },
+    {
       "count": 1,
       "description": "Companion lifecycle and control residuals are closed at the companion control boundary.",
       "status": "closed-companion-control-boundary",
       "unitIds": [
         "druid_wild_companion"
-      ]
-    },
-    {
-      "count": 1,
-      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
-      "status": "open-profile-accounting",
-      "unitIds": [
-        "prayer_of_healing"
       ]
     },
     {
@@ -2962,9 +2962,9 @@
       "rowsByStatus": {
         "accepted": 379,
         "accepted-no-battle-effect": 147,
-        "battle-runtime-required": 12,
+        "battle-runtime-required": 10,
         "owner-evidence-required": 2,
-        "partial-battle-runtime": 16
+        "partial-battle-runtime": 18
       }
     },
     "rulesKernelCoveredProfileJoin": {
@@ -2989,16 +2989,17 @@
     },
     "strictTargetClosure": {
       "denominator": 171,
-      "numerator": 169,
-      "percent": "98.8%"
+      "numerator": 168,
+      "percent": "98.2%"
     }
   },
   "openFrontier": [
     {
-      "count": 1,
+      "count": 2,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
+        "dragons_breath",
         "prayer_of_healing"
       ]
     },
@@ -8196,17 +8197,17 @@
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
       "missing": 1,
-      "profile-subset-supported": 24,
+      "profile-subset-supported": 25,
       "supported-profile": 113,
-      "unsupported-profile": 33
+      "unsupported-profile": 32
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 13,
+      "blocked-follow-up-split": 12,
       "closed-character-fact-and-runtime-detached-split": 3,
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 33,
-      "open-profile-accounting": 1,
+      "open-profile-accounting": 2,
       "open-runtime-behavior": 1,
       "supported-profile": 113
     },

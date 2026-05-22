@@ -157,6 +157,7 @@ import {
   supportedPreparedBlurAttackRollDefenseSpellProfile,
   supportedPreparedConditionRemovalProtectionSpellProfile,
   supportedPreparedCreatureTypeProtectionSpellProfile,
+  supportedPreparedDragonsBreathInitialSpellProfile,
   supportedPreparedExpeditiousRetreatDashSpellProfile,
   supportedPreparedFeatherFallMitigationSpellProfile,
   supportedPreparedJumpMovementReplacementSpellProfile,
@@ -552,6 +553,13 @@ export function supportedSpellActs(
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedJumpMovementReplacementSpellProfile(
+        actor.combatantId,
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      supportedPreparedDragonsBreathInitialSpellProfile(
         actor.combatantId,
         spell,
         spellcasting.spellSlots,

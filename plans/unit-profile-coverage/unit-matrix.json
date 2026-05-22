@@ -72,24 +72,24 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 89,
-      "numerator": 89,
+      "denominator": 90,
+      "numerator": 90,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 89,
-      "numerator": 89,
+      "denominator": 90,
+      "numerator": 90,
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 122,
-      "numerator": 101,
-      "percent": "82.8%"
+      "denominator": 123,
+      "numerator": 102,
+      "percent": "82.9%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 122,
-      "numerator": 104,
-      "percent": "85.2%"
+      "denominator": 123,
+      "numerator": 105,
+      "percent": "85.4%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 136,
@@ -97,13 +97,13 @@
       "percent": "90.4%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 89,
-      "numerator": 89,
+      "denominator": 90,
+      "numerator": 90,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 89,
-      "numerator": 89,
+      "denominator": 90,
+      "numerator": 90,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -3543,20 +3543,48 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-ray-of-enfeeblement.test.ts"
         }
       ]
+    },
+    {
+      "id": "spell.invocation-dragons-breath-initial",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
+      ],
+      "sourceBoundary": "The runtime consumes the authored Dragon's Breath ongoing-effect Surface shape, caller-supplied one willing touched creature target facts, a caster-selected damage type from the authored damage-type hole, and a selected level-2-or-higher Spell Slot. It owns Bonus Action and Spell Slot spending, caster-owned Concentration up to 1 minute, target-attached active effect replacement for the same caster and spell, chosen damage type retention, original slot level retention, caster Spell Save DC retention at cast time, and cleanup when the caster's Concentration ends. The target-granted Magic action, 15-foot Cone placement, affected-creature area membership, Dexterity save-for-half damage, and slot-scaled breath damage execution remain outside this profile and are owned by L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST"
+      ],
+      "title": "Spell invocation stores Dragon's Breath target-attached breath effect state",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dragons-breath.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 122,
-        "numerator": 101,
-        "percent": "82.8%"
+        "denominator": 123,
+        "numerator": 102,
+        "percent": "82.9%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 122,
-        "numerator": 104,
-        "percent": "85.2%"
+        "denominator": 123,
+        "numerator": 105,
+        "percent": "85.4%"
       }
     },
     "profileKinds": [
@@ -5164,6 +5192,19 @@
         "joinStatus": "unmapped",
         "obligations": [],
         "profileId": "spell.invocation-ray-of-enfeeblement-d20-lifecycle",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Dragon's Breath initial cast stores target-attached breath effect state"
+          }
+        ],
+        "profileId": "spell.invocation-dragons-breath-initial",
         "profileKind": "spell-invocation"
       }
     ],
@@ -10725,6 +10766,22 @@
         "spell.invocation-ray-of-enfeeblement-d20-lifecycle"
       ],
       "taskId": "L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover Dragon's Breath Bonus Action and level-2-or-higher Spell Slot spend, willing touched target gate, caster-owned Concentration up to 1 minute, chosen damage type, original slot level, caster Spell Save DC retention, target-attached active effect replacement, and Concentration cleanup. Target-side Magic action cone execution remains deferred.",
+      "profileIds": [
+        "spell.invocation-dragons-breath-initial"
+      ],
+      "taskId": "L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Dragon's Breath Surface admission, Bonus Action and level-2-or-higher Spell Slot spending, authored damage-type choice retention, willing target fill validation, caster Spell Save DC retention, original slot level retention, caster-owned Concentration, target-attached active effect storage, same-profile cleanup when Concentration breaks, and no target-side cone action execution in this task.",
+      "profileIds": [
+        "spell.invocation-dragons-breath-initial"
+      ],
+      "taskId": "L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST"
     }
   ],
   "units": [
@@ -25993,31 +26050,68 @@
         "status": "not-in-unit-catalog"
       },
       "claim": {
-        "followUpTasks": [
+        "deferredMechanics": [
           {
-            "id": "L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST",
-            "mechanic": "Promote the Bonus Action spell invocation that spends a level-2-or-higher Spell Slot, chooses Acid, Cold, Fire, Lightning, or Poison once at cast time, targets one willing touched creature, starts caster-owned Concentration for up to 1 minute, and stores a target-attached active effect with the chosen damage type, caster spell save DC, and original slot level without duplicating Spell Access state or reauthoring damage-type options.",
-            "owner": "battle-runtime spell invocation/effect lifecycle",
-            "requiredOutput": "Supported runtime owner evidence for Dragon's Breath initial casting, Spell Slot spending, damage-type choice retention, caster spell save DC retention, original slot level retention, willing target attachment, Concentration expiry, and active-effect cleanup.",
-            "title": "Dragon's Breath Initial Cast And Effect State"
-          },
-          {
-            "id": "L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION",
-            "mechanic": "Discover and execute the attached target's Magic action while the spell remains active, using the stored caster spell save DC, chosen damage type, and original slot level to resolve a 15-foot Cone Dexterity save for half damage with slot scaling from the original cast.",
-            "owner": "battle-runtime target-granted action lifecycle plus promoted Quint parity",
-            "requiredOutput": "Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for target-side action discovery, action economy spending, area membership input, save-for-half damage, slot scaling, and expiry behavior.",
-            "title": "Dragon's Breath Granted Magic Action"
+            "battleReadinessClosure": {
+              "kind": "table-spatial-derivation",
+              "owner": "battle-runtime target-granted action lifecycle plus promoted Quint parity",
+              "reason": "Task 8 promotes only the initial cast and retained effect state; the target-side breath action still needs target-granted action lifecycle support plus caller/table-owned Cone placement and affected-creature membership witnesses."
+            },
+            "followUpTaskId": "L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION",
+            "mechanic": "target-granted Magic action discovery and execution for the attached creature, including 15-foot Cone placement, affected-creature area membership, Dexterity save-for-half damage, slot-scaled breath damage, action-economy spending, and expiry behavior"
           }
         ],
-        "futureProfileOwner": "battle-runtime spell invocation plus target-granted action lifecycle",
-        "reason": "Dragon's Breath is authored as an SRD Surface Spell Definition for the willing touched target, chosen damage type, concentration duration, target-spent Magic action, attached-creature-origin 15-foot Cone, Dexterity save-for-half damage, and slot scaling. Task 59 claims no battle-runtime support yet because promoted battle runtime has no target-granted spell action lifecycle for a non-caster target to spend a Magic action through a caster-owned concentration effect.",
-        "tag": "unsupported-profile"
+        "futureProfileOwner": "battle-runtime target-granted action lifecycle plus promoted Quint parity",
+        "profileIds": [
+          "spell.invocation-dragons-breath-initial"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Bonus Action prepared spell cast with a level-2-or-higher Spell Slot",
+          "caster-selected damage type retained from the authored Acid, Cold, Fire, Lightning, or Poison choice hole at cast time",
+          "one willing touched creature target attachment through caller-supplied target facts",
+          "caster-owned Concentration for up to 1 minute",
+          "target-attached active effect stores chosen damage type, original slot level, and the caster Spell Save DC captured at cast time",
+          "active effect is removed when the caster's Concentration ends"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-dragons-breath-initial",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the authored Dragon's Breath ongoing-effect Surface shape, caller-supplied one willing touched creature target facts, a caster-selected damage type from the authored damage-type hole, and a selected level-2-or-higher Spell Slot. It owns Bonus Action and Spell Slot spending, caster-owned Concentration up to 1 minute, target-attached active effect replacement for the same caster and spell, chosen damage type retention, original slot level retention, caster Spell Save DC retention at cast time, and cleanup when the caster's Concentration ends. The target-granted Magic action, 15-foot Cone placement, affected-creature area membership, Dexterity save-for-half damage, and slot-scaled breath damage execution remain outside this profile and are owned by L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST"
+          ],
+          "title": "Spell invocation stores Dragon's Breath target-attached breath effect state",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dragons-breath.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/dragons_breath.json",
       "unitId": "dragons_breath"
     },

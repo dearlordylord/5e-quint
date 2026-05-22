@@ -93,6 +93,7 @@ module battleRuntimeArmorClass {
         | ShillelaghWeaponAttackOverride(_) => false
         | ExpeditiousRetreatDashBonusAction => false
         | JumpMovementReplacement(_) => false
+        | DragonsBreathEffect(_) => false
         | FeatherFallMitigation(_) => false
         | SanctuaryWard(_) => false
         | InvisibilityCondition(_) => false

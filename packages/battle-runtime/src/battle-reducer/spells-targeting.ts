@@ -958,6 +958,7 @@ export function spellInvocationRequiresKnownWillingTarget(
     invocation.procedure ===
       "conditionImmunityAndTurnStartTemporaryHitPoints" ||
     invocation.procedure === "wardingBond" ||
+    invocation.procedure === "dragonsBreathInitial" ||
     (invocation.procedure === "scalarBuff" &&
       invocation.targeting.kind === "targetList" &&
       invocation.targeting.requiredTargetDisposition === "willing") ||

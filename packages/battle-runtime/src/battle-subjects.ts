@@ -173,6 +173,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "markedDamageRider",
   "expeditiousRetreatDash",
   "jumpMovementReplacement",
+  "dragonsBreathInitial",
   "selfTeleport",
   "sanctuaryTargetingInterdiction",
   "directCondition",

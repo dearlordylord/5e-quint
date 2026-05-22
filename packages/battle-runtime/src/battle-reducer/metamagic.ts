@@ -95,6 +95,7 @@ const QUICKENED_ACTION_REWRITE_PROCEDURE_DISPOSITIONS = {
   directCondition: "actionSpellResolverNotRewritten",
   directConditionRemoval: "actionSpellResolverNotRewritten",
   directHitPointRestoration: "bonusActionRewrite",
+  dragonsBreathInitial: "notActionSpellCasting",
   expeditiousRetreatDash: "notActionSpellCasting",
   featherFallMitigation: "notActionSpellCasting",
   flamingSphere: "actionSpellResolverNotRewritten",

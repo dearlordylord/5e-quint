@@ -200,8 +200,8 @@
         "accepted": 379,
         "accepted-no-battle-effect": 147,
         "owner-evidence-required": 2,
-        "partial-battle-runtime": 16,
-        "battle-runtime-required": 12
+        "partial-battle-runtime": 18,
+        "battle-runtime-required": 10
       }
     },
     "levelOneClassContainers": 12,
@@ -219,15 +219,15 @@
       "catalog-installed-owner-evidence-present": 398,
       "non-runtime": 24,
       "catalog-installed-owner-evidence-required": 9,
-      "catalog-only/dead-for-now": 118,
-      "catalog-authored-executable-follow-up": 6,
+      "catalog-only/dead-for-now": 120,
+      "catalog-authored-executable-follow-up": 4,
       "catalog-installed-needs-owner-evidence": 1
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 235,
-      "catalog-only/dead-for-now": 118,
+      "catalog-only/dead-for-now": 120,
       "catalog-installed-owner-evidence-required": 8,
-      "catalog-authored-executable-follow-up": 6
+      "catalog-authored-executable-follow-up": 4
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -21000,11 +21000,17 @@
         "state": "not-installed",
         "unitId": "dragons_breath"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-authored-executable-follow-up",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "battle-runtime target-granted action lifecycle plus promoted Quint parity",
+        "reason": "Task 8 promotes only the initial cast and retained effect state; the target-side breath action still needs target-granted action lifecycle support plus caller/table-owned Cone placement and affected-creature membership witnesses."
+      },
       "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST, L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION: L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST owns Promote the Bonus Action spell invocation that spends a level-2-or-higher Spell Slot, chooses Acid, Cold, Fire, Lightning, or Poison once at cast time, targets one willing touched creature, starts caster-owned Concentration for up to 1 minute, and stores a target-attached active effect with the chosen damage type, caster spell save DC, and original slot level without duplicating Spell Access state or reauthoring damage-type options. Required output: Supported runtime owner evidence for Dragon's Breath initial casting, Spell Slot spending, damage-type choice retention, caster spell save DC retention, original slot level retention, willing target attachment, Concentration expiry, and active-effect cleanup.; L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION owns Discover and execute the attached target's Magic action while the spell remains active, using the stored caster spell save DC, chosen damage type, and original slot level to resolve a 15-foot Cone Dexterity save for half damage with slot scaling from the original cast. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for target-side action discovery, action economy spending, area membership input, save-for-half damage, slot scaling, and expiry behavior.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
+      "battleReadinessStatus": "partial-battle-runtime"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_enhance_ability",
@@ -26727,11 +26733,17 @@
         "state": "not-installed",
         "unitId": "dragons_breath"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-authored-executable-follow-up",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "battle-runtime target-granted action lifecycle plus promoted Quint parity",
+        "reason": "Task 8 promotes only the initial cast and retained effect state; the target-side breath action still needs target-granted action lifecycle support plus caller/table-owned Cone placement and affected-creature membership witnesses."
+      },
       "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST, L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION: L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST owns Promote the Bonus Action spell invocation that spends a level-2-or-higher Spell Slot, chooses Acid, Cold, Fire, Lightning, or Poison once at cast time, targets one willing touched creature, starts caster-owned Concentration for up to 1 minute, and stores a target-attached active effect with the chosen damage type, caster spell save DC, and original slot level without duplicating Spell Access state or reauthoring damage-type options. Required output: Supported runtime owner evidence for Dragon's Breath initial casting, Spell Slot spending, damage-type choice retention, caster spell save DC retention, original slot level retention, willing target attachment, Concentration expiry, and active-effect cleanup.; L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION owns Discover and execute the attached target's Magic action while the spell remains active, using the stored caster spell save DC, chosen damage type, and original slot level to resolve a 15-foot Cone Dexterity save for half damage with slot scaling from the original cast. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for target-side action discovery, action economy spending, area membership input, save-for-half damage, slot scaling, and expiry behavior.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
+      "battleReadinessStatus": "partial-battle-runtime"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_enhance_ability",

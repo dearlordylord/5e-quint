@@ -212,6 +212,7 @@ export {
   resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,
   resolveCreatureTypeProtectionSpellAct,
   resolveDamageReductionSpellAct,
+  resolveDragonsBreathInitialSpellAct,
   resolveDirectConditionRemovalSpellAct,
   resolveDirectConditionSpellAct,
   resolveJumpMovementReplacementSpellAct,
@@ -253,6 +254,7 @@ import {
   resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,
   resolveCreatureTypeProtectionSpellAct,
   resolveDamageReductionSpellAct,
+  resolveDragonsBreathInitialSpellAct,
   resolveDirectConditionRemovalSpellAct,
   resolveDirectConditionSpellAct,
   resolveJumpMovementReplacementSpellAct,
@@ -499,6 +501,7 @@ export function resolveSpellAct(
       invocation.procedure === "spellCreatedHeldObjectAttack" ||
       invocation.procedure === "spellCreatedHeldObjectReEvoke" ||
       invocation.procedure === "sanctuaryTargetingInterdiction" ||
+      invocation.procedure === "dragonsBreathInitial" ||
       invocation.procedure === "directConditionRemoval" ||
       invocation.procedure === "directCondition" ||
       invocation.procedure === "spellAttackSequence")
@@ -2059,6 +2062,14 @@ export function resolveBonusActionSpellAct(
         "Bonus Action spell subject requires a supported Bonus Action spell act.",
       );
     }
+  } else if (invocation.procedure === "dragonsBreathInitial") {
+    if (invocation.actionCost !== "bonusAction") {
+      return invalidResult(
+        input.state,
+        "unsupportedSubject",
+        "Bonus Action spell subject requires a supported Bonus Action spell act.",
+      );
+    }
   } else if (invocation.procedure === "selfTeleport") {
     if (invocation.actionCost !== "bonusAction") {
       return invalidResult(
@@ -2226,6 +2237,14 @@ export function resolveBonusActionSpellAct(
   }
   if (invocation.procedure === "jumpMovementReplacement") {
     return resolveJumpMovementReplacementSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "dragonsBreathInitial") {
+    return resolveDragonsBreathInitialSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

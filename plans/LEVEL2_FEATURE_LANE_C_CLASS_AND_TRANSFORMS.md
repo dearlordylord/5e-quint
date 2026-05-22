@@ -49,13 +49,13 @@
     {
       "number": 8,
       "id": "L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Dragon's Breath Initial Cast And Effect State"
     },
     {
       "number": 9,
       "id": "L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Dragon's Breath Granted Magic Action"
     },
     {
@@ -69,6 +69,48 @@
       "id": "L12G-RECURSIVE-TAIL-LANE-C",
       "status": "blocked",
       "title": "Lane C Recursive Planning Tail"
+    },
+    {
+      "number": 12,
+      "id": "L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER",
+      "status": "ready-for-research",
+      "title": "Moonbeam Shape-Shifting Rider Recheck"
+    },
+    {
+      "number": 13,
+      "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-RETAINED-STATISTICS",
+      "status": "ready-for-research",
+      "title": "Druid Wild Shape Retained Statistics Recheck"
+    },
+    {
+      "number": 14,
+      "id": "L3-FIGHTER-CHAMPION-SUBCLASS-SURVEY",
+      "status": "ready-for-research",
+      "title": "Level 3 Fighter Champion Survey"
+    },
+    {
+      "number": 15,
+      "id": "L3-WIZARD-EVOKER-SUBCLASS-SURVEY",
+      "status": "ready-for-research",
+      "title": "Level 3 Wizard Evoker Survey"
+    },
+    {
+      "number": 16,
+      "id": "L3-SPELL-HASTE-RUNTIME-SURVEY",
+      "status": "ready-for-research",
+      "title": "Level 3 Haste Runtime Survey"
+    },
+    {
+      "number": 17,
+      "id": "L3-SPELL-SLOW-RUNTIME-SURVEY",
+      "status": "ready-for-research",
+      "title": "Level 3 Slow Runtime Survey"
+    },
+    {
+      "number": 18,
+      "id": "L3-SPELL-PROTECTION-FROM-ENERGY-RUNTIME-SURVEY",
+      "status": "ready-for-research",
+      "title": "Level 3 Protection From Energy Runtime Survey"
     }
   ]
 }
@@ -175,7 +217,7 @@ Output:
 
 ### Task 8 - L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST - Dragon's Breath Initial Cast And Effect State
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 - SRD Dragon's Breath text and existing spell-created active-effect patterns.
@@ -186,7 +228,7 @@ Output:
 
 ### Task 9 - L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION - Dragon's Breath Granted Magic Action
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on:
 - Task C8.
@@ -213,3 +255,159 @@ Unblock only after all ready Lane C tasks are done or explicitly closed.
 Output:
 - Refresh level-2 class/resource metrics.
 - Add the next concrete, Ralph-sized Lane C tasks only if real frontier remains.
+
+## Level 2 Completion And Level 3 Kickoff Refill
+
+### Task 12 - L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER - Moonbeam Shape-Shifting Rider Recheck
+
+Status: `ready-for-research`
+
+Input:
+
+- Local RAW under `.references/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface content, Unit/profile claims, owner evidence, and focused tests.
+
+Output:
+
+- Recheck current merged Moonbeam/Wild Shape state. If not already solved, implement or split the failed-save shape-shift reversion/suppression rider; if solved externally, update claims/evidence.
+- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Focused verification, `git diff --check`, and reviewer-loop convergence.
+
+Acceptance:
+
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
+
+### Task 13 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-RETAINED-STATISTICS - Druid Wild Shape Retained Statistics Recheck
+
+Status: `ready-for-research`
+
+Input:
+
+- Local RAW under `.references/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface content, Unit/profile claims, owner evidence, and focused tests.
+
+Output:
+
+- Recheck current merged Wild Shape state. If retained statistics/persistence are already solved, update claims/evidence; otherwise split the smallest remaining runtime/profile task.
+- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Focused verification, `git diff --check`, and reviewer-loop convergence.
+
+Acceptance:
+
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
+
+### Task 14 - L3-FIGHTER-CHAMPION-SUBCLASS-SURVEY - Level 3 Fighter Champion Survey
+
+Status: `ready-for-research`
+
+Input:
+
+- Local RAW under `.references/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface content, Unit/profile claims, owner evidence, and focused tests.
+
+Output:
+
+- Read SRD Fighter level-3 Champion subclass facts and current character creation/unit records; close as class-fact projection or split missing runtime/profile support.
+- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Focused verification, `git diff --check`, and reviewer-loop convergence.
+
+Acceptance:
+
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
+
+### Task 15 - L3-WIZARD-EVOKER-SUBCLASS-SURVEY - Level 3 Wizard Evoker Survey
+
+Status: `ready-for-research`
+
+Input:
+
+- Local RAW under `.references/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface content, Unit/profile claims, owner evidence, and focused tests.
+
+Output:
+
+- Read SRD Wizard level-3 Evoker subclass facts and current character creation/unit records; close as class-fact projection or split missing runtime/profile support.
+- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Focused verification, `git diff --check`, and reviewer-loop convergence.
+
+Acceptance:
+
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
+
+### Task 16 - L3-SPELL-HASTE-RUNTIME-SURVEY - Level 3 Haste Runtime Survey
+
+Status: `ready-for-research`
+
+Input:
+
+- Local RAW under `.references/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface content, Unit/profile claims, owner evidence, and focused tests.
+
+Output:
+
+- If SRD Haste is present in local corpus/content, survey runtime support needs for action economy, AC/speed, and lethargy; otherwise record missing-corpus/content closure.
+- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Focused verification, `git diff --check`, and reviewer-loop convergence.
+
+Acceptance:
+
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
+
+### Task 17 - L3-SPELL-SLOW-RUNTIME-SURVEY - Level 3 Slow Runtime Survey
+
+Status: `ready-for-research`
+
+Input:
+
+- Local RAW under `.references/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface content, Unit/profile claims, owner evidence, and focused tests.
+
+Output:
+
+- If SRD Slow is present in local corpus/content, survey runtime support needs for save-gated action/speed/AC penalties; otherwise record missing-corpus/content closure.
+- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Focused verification, `git diff --check`, and reviewer-loop convergence.
+
+Acceptance:
+
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
+
+### Task 18 - L3-SPELL-PROTECTION-FROM-ENERGY-RUNTIME-SURVEY - Level 3 Protection From Energy Runtime Survey
+
+Status: `ready-for-research`
+
+Input:
+
+- Local RAW under `.references/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface content, Unit/profile claims, owner evidence, and focused tests.
+
+Output:
+
+- Read SRD Protection From Energy and existing resistance active-effect support; close or split runtime work for chosen damage resistance.
+- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Focused verification, `git diff --check`, and reviewer-loop convergence.
+
+Acceptance:
+
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.

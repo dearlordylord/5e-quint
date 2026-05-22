@@ -2,10 +2,11 @@
 
 // KERNEL-COVERAGE: qnt-owner BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE
-// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-mirror-image-hit-interception
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-self-transformation-mode
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-dragons-breath-initial
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-ongoing-spell-ending
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-antimagic-field-ongoing-spell-suppression
@@ -16,6 +17,7 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-mirror-image-hit-interception
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-direct-condition
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-dragons-breath-initial
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.druid-wild-shape-known-form
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
@@ -915,6 +917,67 @@ module battleRuntime {
           { ...state.goblin, activeEffects: state.goblin.activeEffects.union(Set(effect)) }
         else
           state.goblin,
+        bonusActionAvailable: false,
+      }, Fighter)
+    } else {
+      state
+    }
+
+  pure def dragonsBreathDurationTicks(): int = 10
+
+  pure def dragonsBreathDamageTypeChoiceIsLegal(damageType: DamageType): bool =
+    Set(Acid, Cold, Fire, Lightning, Poison).contains(damageType)
+
+  pure def dragonsBreathInitialEffect(source: Actor, damageType: DamageType, slotLevel: int, spellSaveDc: int): ActiveEffect =
+    DragonsBreathEffect({
+      source: source,
+      damageType: damageType,
+      originalSlotLevel: slotLevel,
+      spellSaveDc: spellSaveDc,
+      durationTicks: dragonsBreathDurationTicks,
+    })
+
+  pure def activeEffectsWithoutDragonsBreathFrom(effects: Set[ActiveEffect], source: Actor): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | DragonsBreathEffect(data) => data.source != source
+      | _ => true
+    })
+
+  pure def combatantWithDragonsBreathEffect(target: Combatant, effect: ActiveEffect, source: Actor): Combatant =
+    { ...target, activeEffects: activeEffectsWithoutDragonsBreathFrom(target.activeEffects, source).union(Set(effect)) }
+
+  pure def resolveDragonsBreathInitialSpell(
+    state: BattleState,
+    target: Actor,
+    willingTargets: Set[Actor],
+    damageType: DamageType,
+    slotLevel: int,
+    spellSaveDc: int,
+  ): BattleState =
+    if (
+      currentActor(state) == Fighter and
+      state.bonusActionAvailable and
+      canExpendSpellSlotThisTurn(state) and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(fighterHasRage(state)) and
+      slotLevel >= 2 and
+      dragonsBreathDamageTypeChoiceIsLegal(damageType) and
+      willingTargets.contains(target) and
+      spellSaveDc > 0
+    ) {
+      val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
+      val effect = dragonsBreathInitialEffect(Fighter, damageType, slotLevel, spellSaveDc)
+      commitActorSpellSlotUse({
+        ...withoutPrior,
+        fighter: if (target == Fighter)
+          combatantWithDragonsBreathEffect(withoutPrior.fighter, effect, Fighter)
+        else
+          withoutPrior.fighter,
+        goblin: if (target == Goblin)
+          combatantWithDragonsBreathEffect(withoutPrior.goblin, effect, Fighter)
+        else
+          withoutPrior.goblin,
         bonusActionAvailable: false,
       }, Fighter)
     } else {
