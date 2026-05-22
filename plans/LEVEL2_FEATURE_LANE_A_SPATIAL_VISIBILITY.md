@@ -488,19 +488,18 @@ Completed:
 - Refreshed generated Unit profile and SRD inventory artifacts with
   `pnpm unit-profile-coverage:check --write`; no generated file changes were
   needed because the reports were already current.
-- Current level 1-2 battle readiness is 534/556 (96%) with 2
-  battle-runtime-required rows, 18 partial-battle-runtime rows, and 2
-  owner-evidence-required rows.
-- Current strict level 1-2 runtime/profile support is 113/171 (66.1%),
-  strict target closure is 169/171 (98.8%), and supported executable Unit
-  coverage is 136/196 (69.4%).
+- Accounting closure commit `80809783` supersedes the older snapshot below:
+  strict level 1-2 target closure is now 171/171, rules-kernel joins are
+  90/90, and the strict open frontier is empty. Do not reopen Dragon's Breath,
+  Continual Flame, Ray of Enfeeblement damage-penalty, or Spiritual Weapon from
+  this historical lane note without first checking
+  `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`.
 - The remaining Lane A frontier is already represented by the appended refill:
   Darkness spell-created light dispel, Spike Growth profile accounting, Prayer
   of Healing profile accounting, Find Steed companion-boundary closure, and the
   Level 3 Fly, Lightning Bolt, and Hypnotic Pattern survey/split tasks.
-- Dragon's Breath remains an open level-2 profile-accounting row, but it is
-  already owned by Lane C's Dragon's Breath granted-action task rather than this
-  Lane A tail.
+- Dragon's Breath is closed by the accounting closure commit above; the older
+  Lane C ownership note is historical and must not create new work.
 
 Verification completed:
 RAW/ubiquitous-language planning check against local SRD spell entries and
