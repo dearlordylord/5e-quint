@@ -44,13 +44,13 @@ This is the default `%` for level-1 plus level-2 readiness questions. It uses th
 
 This metric is a separate seed for level-3 class feature, subclass selection, subclass feature, and subclass Spell Access rows. It covers both always-prepared subclass grants and choice-derived prepared grants without affecting the Level 1-2 readiness denominator or level-3 spell-list pressure.
 
-- Accepted: 33/51 (64.7%)
+- Accepted: 34/51 (66.7%)
 
 #### Level-3 Class/Subclass Battle Readiness by Status
 
-- accepted: 19
+- accepted: 20
 - accepted-no-battle-effect: 14
-- owner-evidence-required: 18
+- owner-evidence-required: 17
 
 ### Level-3 Spell Battle Readiness
 
@@ -80,8 +80,7 @@ This metric is a separate seed for level-3 spell-list pressure only. It does not
 
 ### Level-3 Class/Subclass Rows by Disposition
 
-- catalog-installed-owner-evidence-present: 19
-- catalog-installed-owner-evidence-required: 1
+- catalog-installed-owner-evidence-present: 20
 - catalog-only/dead-for-now: 2
 - level-3-follow-up-required: 17
 - non-runtime: 12
@@ -429,7 +428,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Druid Land's Aid|class feature|current-surface-can-express-source-facts|missing-authored-record|not-installed||level-3-follow-up-required|owner-evidence-required|||Promote Land's Aid as a Magic Action that spends one Wild Shape use, accepts a table-supplied 10-foot-radius Sphere within 60 feet, applies a Constitution save for chosen creatures in the area, deals Necrotic damage with half damage on success, heals one chosen creature in the area, and records later Druid-level dice scaling as later-level work.|.references/srd-5.2.1/Classes/Druid.md:406|
 |Druid level 3 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Druid.md:34|
 |Druid Subclass|subclass selection|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Druid.md:130|
-|Druid Circle of the Land Spells|spell access/list pressure|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-required|owner-evidence-required||Unit catalog/admission: catalog evidence; character-sheet-runtime selected-land Spell Access owner: owner evidence required|Promote follow-up split L12G-FOLLOWUP-DRUID-CIRCLE-LAND-SPELL-ACCESS: L12G-FOLLOWUP-DRUID-CIRCLE-LAND-SPELL-ACCESS owns Long Rest land-type choice for Circle of the Land Spells and Druid-level-gated prepared spell derivation Required output: Character Sheet runtime evidence, focused tests, and checker-readable unit claims that preserve the Long Rest land-type choice before deriving Druid Circle of the Land prepared Spell Access, while keeping individual Spell Definition invocation support in spell profiles.|.references/srd-5.2.1/Classes/Druid.md:366|
+|Druid Circle of the Land Spells|spell access/list pressure|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted|character-fact-and-runtime-detached-split: character-sheet-runtime selected-land Spell Access owner plus spell invocation profiles|Unit catalog/admission: catalog evidence; character-sheet-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Druid.md:366|
 |Fighter Improved Critical|class feature|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Fighter.md:136|
 |Fighter Remarkable Athlete|class feature|current-surface-can-express-source-facts|missing-authored-record|not-installed||level-3-follow-up-required|owner-evidence-required|||Promote Remarkable Athlete by projecting Advantage on Initiative rolls and Strength (Athletics) checks, plus the immediately-after-Critical-Hit movement release up to half Speed without Opportunity Attacks, using existing movement and Opportunity Attack vocabulary rather than a generic feature flag.|.references/srd-5.2.1/Classes/Fighter.md:140|
 |Fighter level 3 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Fighter.md:33|

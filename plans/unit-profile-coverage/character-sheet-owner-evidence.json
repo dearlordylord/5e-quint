@@ -306,6 +306,23 @@
         "packages/character-sheet-runtime/src/index.test.ts:prayerOfHealingRestBenefitApplicationTestName"
       ]
     },
+    "srd521:classes/druid:level-3:subclass-spell-access:druid_circle_of_the_land_spells": {
+      "taskId": "L12G-FOLLOWUP-DRUID-CIRCLE-LAND-SPELL-ACCESS",
+      "profile": "Character Sheet selected-land prepared Spell Access runtime",
+      "summary": "Druid Circle of the Land Spells is retained from the selected subclass feature grants in CharacterBuild, stores the current Long Rest land choice as Character Sheet state, and derives prepared Spell Access from the installed Surface land-choice table for the character's Druid level and lower. The runtime preserves the selected land before deriving spell ids, changes that state only through explicit Long Rest choice input, stores no duplicate prepared-spell list, and rejects Book of Shadows selections that duplicate the current land-derived Spell Access.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/index.ts:characterSheetDruidCircleLandPreparedSpellAccess",
+        "packages/character-sheet-runtime/src/index.ts:druidCircleLandAfterLongRest",
+        "packages/character-sheet-runtime/src/index.ts:druidCircleLandPreparedSpellAccessForBuild",
+        "packages/character-sheet-runtime/src/index.ts:storedBookOfShadowsDruidCircleLandSelectionIssue"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/index.test.ts:druidCircleLandSpellAccessProjectionTestName",
+        "packages/character-sheet-runtime/src/index.test.ts:druidCircleLandSpellAccessSelectedLandGateTestName",
+        "packages/character-sheet-runtime/src/index.test.ts:druidCircleLandSpellcastingSourceGateTestName",
+        "packages/character-sheet-runtime/src/index.test.ts:druidCircleLandSpellAccessBookOfShadowsDuplicateTestName"
+      ]
+    },
     "srd521:classes/cleric:level-3:subclass-spell-access:cleric_life_domain_spells": {
       "taskId": "L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT",
       "profile": "Character Sheet class-feature prepared Spell Access runtime",

@@ -166,6 +166,7 @@
         "srd521:classes/cleric:level-3:subclass-spell-access:cleric_life_domain_spells",
         "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_prayer_of_healing",
         "srd521:classes/druid:level-2:class-feature-grant:druid_wild_shape",
+        "srd521:classes/druid:level-3:subclass-spell-access:druid_circle_of_the_land_spells",
         "srd521:classes/fighter:level-1:mastery-pressure:fighter_weapon_mastery",
         "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense",
         "srd521:classes/monk:level-2:class-feature-grant:monk_monks_focus",
@@ -225,12 +226,12 @@
     },
     "levelThreeClassBattleReadiness": {
       "denominator": 51,
-      "numerator": 33,
-      "percent": "64.7%",
+      "numerator": 34,
+      "percent": "66.7%",
       "rowsByStatus": {
-        "owner-evidence-required": 18,
+        "owner-evidence-required": 17,
         "accepted-no-battle-effect": 14,
-        "accepted": 19
+        "accepted": 20
       }
     },
     "levelThreeSpellBattleReadiness": {
@@ -259,9 +260,8 @@
     "levelThreeClassRowsByDisposition": {
       "level-3-follow-up-required": 17,
       "non-runtime": 12,
-      "catalog-installed-owner-evidence-present": 19,
-      "catalog-only/dead-for-now": 2,
-      "catalog-installed-owner-evidence-required": 1
+      "catalog-installed-owner-evidence-present": 20,
+      "catalog-only/dead-for-now": 2
     },
     "levelThreeClassRowsByCategory": {
       "class feature": 22,
@@ -270,10 +270,10 @@
       "spell access/list pressure": 5
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 432,
+      "catalog-installed-owner-evidence-present": 433,
       "non-runtime": 36,
       "level-3-follow-up-required": 17,
-      "catalog-installed-owner-evidence-required": 10,
+      "catalog-installed-owner-evidence-required": 9,
       "catalog-only/dead-for-now": 135,
       "missing-authored-record": 58,
       "catalog-authored-review-required": 42,
@@ -12114,8 +12114,14 @@
         "state": "installed",
         "unitId": "druid_circle_of_the_land_spells"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "character-fact-and-runtime-detached-split",
+        "owner": "character-sheet-runtime selected-land Spell Access owner plus spell invocation profiles",
+        "reason": "The subclass feature owns Character Sheet selected-land prepared Spell Access; individual Spell Definition invocation behavior remains owned by each Spell Definition profile."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -12123,13 +12129,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-sheet-runtime selected-land Spell Access owner",
-          "evidence": "Promote follow-up split L12G-FOLLOWUP-DRUID-CIRCLE-LAND-SPELL-ACCESS: L12G-FOLLOWUP-DRUID-CIRCLE-LAND-SPELL-ACCESS owns Long Rest land-type choice for Circle of the Land Spells and Druid-level-gated prepared spell derivation Required output: Character Sheet runtime evidence, focused tests, and checker-readable unit claims that preserve the Long Rest land-type choice before deriving Druid Circle of the Land prepared Spell Access, while keeping individual Spell Definition invocation support in spell profiles.",
-          "status": "owner evidence required"
+          "owner": "character-sheet-runtime",
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L12G-FOLLOWUP-DRUID-CIRCLE-LAND-SPELL-ACCESS Character Sheet selected-land prepared Spell Access runtime; Druid Circle of the Land Spells is retained from the selected subclass feature grants in CharacterBuild, stores the current Long Rest land choice as Character Sheet state, and derives prepared Spell Access from the installed Surface land-choice table for the character's Druid level and lower. The runtime preserves the selected land before deriving spell ids, changes that state only through explicit Long Rest choice input, stores no duplicate prepared-spell list, and rejects Book of Shadows selections that duplicate the current land-derived Spell Access.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-DRUID-CIRCLE-LAND-SPELL-ACCESS: L12G-FOLLOWUP-DRUID-CIRCLE-LAND-SPELL-ACCESS owns Long Rest land-type choice for Circle of the Land Spells and Druid-level-gated prepared spell derivation Required output: Character Sheet runtime evidence, focused tests, and checker-readable unit claims that preserve the Long Rest land-type choice before deriving Druid Circle of the Land prepared Spell Access, while keeping individual Spell Definition invocation support in spell profiles.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_druidcraft",

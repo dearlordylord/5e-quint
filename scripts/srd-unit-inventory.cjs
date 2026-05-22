@@ -4188,7 +4188,11 @@ function validateSrdUnitInventory(report) {
       row.id ===
       "srd521:classes/druid:level-3:subclass-spell-access:druid_circle_of_the_land_spells"
     ) {
-      if (!row.nextAction.includes("Long Rest land-type choice")) {
+      if (
+        row.unitProfileDisposition !== "supported-profile" &&
+        row.finalDisposition !== "catalog-installed-owner-evidence-present" &&
+        !row.nextAction.includes("Long Rest land-type choice")
+      ) {
         issues.push(
           `${row.id} must preserve the Druid Circle of the Land Long Rest land-type choice in its follow-up split.`,
         );

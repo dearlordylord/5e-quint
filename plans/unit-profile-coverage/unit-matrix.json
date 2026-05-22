@@ -62,8 +62,8 @@
       "value": 243
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 136,
-      "numerator": 136,
+      "denominator": 137,
+      "numerator": 137,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -82,19 +82,19 @@
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 124,
+      "denominator": 125,
       "numerator": 123,
-      "percent": "99.2%"
+      "percent": "98.4%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 124,
+      "denominator": 125,
       "numerator": 123,
-      "percent": "99.2%"
+      "percent": "98.4%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 136,
+      "denominator": 137,
       "numerator": 136,
-      "percent": "100%"
+      "percent": "99.3%"
     },
     "runtimeMappingCoverage": {
       "denominator": 90,
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 136,
+      "denominator": 137,
       "numerator": 108,
-      "percent": "79.4%"
+      "percent": "78.8%"
     },
     "supportedProfileCoverage": {
       "denominator": 201,
-      "numerator": 136,
-      "percent": "67.7%"
+      "numerator": 137,
+      "percent": "68.2%"
     }
   },
   "metricSemantics": [
@@ -3597,20 +3597,39 @@
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
         }
       ]
+    },
+    {
+      "id": "character-sheet.druid-circle-land-spell-access",
+      "profileKind": "character-sheet",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "Character Sheet consumes the retained Circle of the Land feature ref from CharacterBuild, the installed Surface Long Rest land-choice spell table, current selected land sheet state, and the Druid spellcasting source and class level. It requires explicit selected-land state, changes that state only through Long Rest choice input, derives prepared Spell Access without storing the resulting spell list, and leaves individual Spell Definition invocation support to spell profiles.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-DRUID-CIRCLE-LAND-SPELL-ACCESS"
+      ],
+      "title": "Character Sheet derives Circle of the Land prepared Spell Access from selected land state",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 124,
+        "denominator": 125,
         "numerator": 123,
-        "percent": "99.2%"
+        "percent": "98.4%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 124,
+        "denominator": 125,
         "numerator": 123,
-        "percent": "99.2%"
+        "percent": "98.4%"
       }
     },
     "profileKinds": [
@@ -5376,6 +5395,12 @@
         "obligations": [],
         "profileId": "character-sheet.class-feature-prepared-spell-access",
         "profileKind": "character-sheet"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "character-sheet.druid-circle-land-spell-access",
+        "profileKind": "character-sheet"
       }
     ],
     "sourceArtifacts": {
@@ -5386,9 +5411,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 136,
+          "denominator": 137,
           "numerator": 136,
-          "percent": "100%"
+          "percent": "99.3%"
         }
       },
       "units": [
@@ -6169,6 +6194,18 @@
             }
           ],
           "unitId": "divine_smite"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "character-sheet.druid-circle-land-spell-access",
+              "profileKind": "character-sheet"
+            }
+          ],
+          "unitId": "druid_circle_of_the_land_spells"
         },
         {
           "joinStatus": "covered",
@@ -11044,6 +11081,14 @@
         "character-sheet.class-feature-prepared-spell-access"
       ],
       "taskId": "L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Character Sheet stores the selected Circle of the Land land choice as character-owned sheet state, updates that state from explicit Long Rest choice input, and derives prepared Spell Access from the installed Surface land-choice table and Druid level without storing a duplicate prepared-spell list. Individual Spell Definition invocation behavior remains owned by spell profiles.",
+      "profileIds": [
+        "character-sheet.druid-circle-land-spell-access"
+      ],
+      "taskId": "L12G-FOLLOWUP-DRUID-CIRCLE-LAND-SPELL-ACCESS"
     }
   ],
   "units": [
@@ -12945,23 +12990,54 @@
         "status": "installed"
       },
       "claim": {
-        "followUpTasks": [
-          {
-            "id": "L12G-FOLLOWUP-DRUID-CIRCLE-LAND-SPELL-ACCESS",
-            "mechanic": "Long Rest land-type choice for Circle of the Land Spells and Druid-level-gated prepared spell derivation",
-            "owner": "character-sheet-runtime selected-land Spell Access owner",
-            "requiredOutput": "Character Sheet runtime evidence, focused tests, and checker-readable unit claims that preserve the Long Rest land-type choice before deriving Druid Circle of the Land prepared Spell Access, while keeping individual Spell Definition invocation support in spell profiles.",
-            "title": "Druid Circle of the Land Spell Access"
-          }
+        "battleReadinessClosure": {
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "character-sheet-runtime selected-land Spell Access owner plus spell invocation profiles",
+          "reason": "The subclass feature owns Character Sheet selected-land prepared Spell Access; individual Spell Definition invocation behavior remains owned by each Spell Definition profile."
+        },
+        "profileIds": [
+          "character-sheet.druid-circle-land-spell-access"
         ],
-        "reason": "Circle of the Land Spells requires a Long Rest land-type choice before deriving the character's prepared spell access, so it is not the same shape as fixed subclass spell-access grants.",
-        "tag": "unsupported-profile"
+        "supportedMechanics": [
+          "Selected Druid Circle of the Land subclass ownership retains the level-3 Circle Spells class-feature Unit in CharacterBuild feature refs when the Druid class level is 3 or higher",
+          "The Surface class-feature record carries the Long Rest land-choice prepared Spell Access table as structured source facts instead of fixed grants",
+          "Character Sheet stores the current selected land as character-owned state and requires an explicit Long Rest land choice before changing that state",
+          "Character Sheet derives Circle of the Land prepared Spell Access from the selected land, Druid spellcasting source, Druid level, and installed Surface table without storing a duplicate prepared-spell list",
+          "Book of Shadows selections are rejected when they duplicate spell access already granted by the selected Circle of the Land land table"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-DRUID-CIRCLE-LAND-SPELL-ACCESS"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-sheet.druid-circle-land-spell-access",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Character Sheet consumes the retained Circle of the Land feature ref from CharacterBuild, the installed Surface Long Rest land-choice spell table, current selected land sheet state, and the Druid spellcasting source and class level. It requires explicit selected-land state, changes that state only through Long Rest choice input, derives prepared Spell Access without storing the resulting spell list, and leaves individual Spell Definition invocation support to spell profiles.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-DRUID-CIRCLE-LAND-SPELL-ACCESS"
+          ],
+          "title": "Character Sheet derives Circle of the Land prepared Spell Access from selected land state",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/druid_circle_of_the_land_spells.json",
       "unitId": "druid_circle_of_the_land_spells"
     },

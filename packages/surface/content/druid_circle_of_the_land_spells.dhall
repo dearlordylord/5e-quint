@@ -5,10 +5,9 @@
 --   You always have the spells prepared in the Circle Spells table for
 --   your Druid level and lower.
 --
--- This record preserves the class-feature identity. The selected land
--- state and derived spell access are intentionally deferred to a
--- character-sheet follow-up so the Long Rest choice is not collapsed into
--- fixed grants.
+-- This record preserves the Long Rest land choice and the SRD spell table as
+-- source facts. Character Sheet stores the selected land and derives prepared
+-- Spell Access from these facts instead of copying the resulting spell list.
 
 let circleOfTheLandSpells =
       { kind = "class_feature"
@@ -24,7 +23,48 @@ let circleOfTheLandSpells =
           "Whenever you finish a Long Rest, choose one type of land: Arid, Polar, Temperate, or Tropical. You always have the spells prepared that are listed in the Circle Spells table for your Druid level and lower."
       , mechanics =
           { family = "passive"
-          , grants = [] : List {}
+          , grants =
+            [ { kind = "grant_land_choice_prepared_spell_access"
+              , choice =
+                { kind = "druid_circle_land", trigger = "long_rest" }
+              , spellsByLand =
+                { arid =
+                  [ { minimumClassLevel = 3
+                    , spellIds = [ "blur", "burning_hands", "fire_bolt" ]
+                    }
+                  , { minimumClassLevel = 5, spellIds = [ "fireball" ] }
+                  , { minimumClassLevel = 7, spellIds = [ "blight" ] }
+                  , { minimumClassLevel = 9, spellIds = [ "wall_of_stone" ] }
+                  ]
+                , polar =
+                  [ { minimumClassLevel = 3
+                    , spellIds = [ "fog_cloud", "hold_person", "ray_of_frost" ]
+                    }
+                  , { minimumClassLevel = 5, spellIds = [ "sleet_storm" ] }
+                  , { minimumClassLevel = 7, spellIds = [ "ice_storm" ] }
+                  , { minimumClassLevel = 9, spellIds = [ "cone_of_cold" ] }
+                  ]
+                , temperate =
+                  [ { minimumClassLevel = 3
+                    , spellIds = [ "misty_step", "shocking_grasp", "sleep" ]
+                    }
+                  , { minimumClassLevel = 5, spellIds = [ "lightning_bolt" ] }
+                  , { minimumClassLevel = 7
+                    , spellIds = [ "freedom_of_movement" ]
+                    }
+                  , { minimumClassLevel = 9, spellIds = [ "tree_stride" ] }
+                  ]
+                , tropical =
+                  [ { minimumClassLevel = 3
+                    , spellIds = [ "acid_splash", "ray_of_sickness", "web" ]
+                    }
+                  , { minimumClassLevel = 5, spellIds = [ "stinking_cloud" ] }
+                  , { minimumClassLevel = 7, spellIds = [ "polymorph" ] }
+                  , { minimumClassLevel = 9, spellIds = [ "insect_plague" ] }
+                  ]
+                }
+              }
+            ]
           }
       }
 
