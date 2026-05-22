@@ -49,10 +49,10 @@ reducer entry point
   -> executable TS parity witness
 ```
 
-For C, the QNT corpus is classified and refactored toward a generation-ready
-semantic core. The output is not generated Rust. The output is a disciplined
-QNT architecture, generation subset, readiness matrix, and manually validated
-dry run that makes a future generator plausible.
+For C, the QNT corpus is classified and refactored toward the
+[generator-readiness source of truth](README.md#generator-readiness-source-of-truth).
+The output is not generated Rust; it is the reviewed C-lane evidence that makes
+a future generator plausible.
 
 ## User Stories
 
@@ -90,9 +90,9 @@ dry run that makes a future generator plausible.
 - Composed profiles are allowed, but composition obligations must expose sequencing, shared resources, active-effect handoff, and cleanup points.
 - QNT owns abstract option legality, cardinality, timing, and effects. Deterministic Surface evidence owns concrete option enumeration and display payloads.
 - B closure removes transitional `needs-*` statuses from the baseline before the lane becomes mandatory for new reducer semantics.
-- C introduces generator-readiness statuses without requiring generated Rust.
+- C uses the generator-readiness statuses and row fields defined in
+  [`README.md`](README.md#generator-readiness-source-of-truth).
 - C classifies QNT file roles before refactoring.
-- C defines a generation subset before any generator is built.
 - C identifies kernel IR boundaries before any generated Rust ABI is attempted.
 - C includes one manual dry run from QNT semantic core to hypothetical Rust types/functions, but does not implement the generator.
 
@@ -125,10 +125,11 @@ dry run that makes a future generator plausible.
 B is done when no transitional coverage gaps remain for TS-current reducer
 semantics, and the checker can be made mandatory for new reducer changes.
 
-C is done when the QNT corpus has a reviewed generator-readiness classification,
-a documented generation subset, identified kernel IR boundaries, a refactor plan
-for role separation, and one manual dry run proving the subset can express a
-small generated Rust kernel slice later.
+C is done when the QNT corpus satisfies the
+[generator-readiness source of truth](README.md#generator-readiness-source-of-truth),
+has identified kernel IR boundaries, has a refactor plan for role separation,
+and has one manual dry run proving the subset can express a small generated Rust
+kernel slice later.
 
 Only after C should the project consider D/E work: building and expanding an
 actual Rust generator.

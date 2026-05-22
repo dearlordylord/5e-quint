@@ -7,61 +7,61 @@
     {
       "number": 1,
       "id": "MBTRUST-A-SOURCE-OF-TRUTH-DRY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Generator Readiness Source Of Truth DRY Pass"
     },
     {
       "number": 2,
       "id": "MBTRUST-A-CHECKER-SCHEMA-HARDENING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Generator Readiness Checker Schema Hardening"
     },
     {
       "number": 3,
       "id": "MBTRUST-A-QNT-ROLE-INVENTORY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "QNT Role Inventory For Generation Readiness"
     },
     {
       "number": 4,
       "id": "MBTRUST-A-GENERATION-SUBSET-CATALOG",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Generation Subset Catalog And Blocker Vocabulary"
     },
     {
       "number": 5,
       "id": "MBTRUST-A-KERNEL-IR-BOUNDARY-INVENTORY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Kernel IR Boundary Inventory"
     },
     {
       "number": 6,
       "id": "MBTRUST-A-HIT-POINT-DAMAGE-DRY-RUN",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Hit Point Damage Manual Rust Dry Run"
     },
     {
       "number": 7,
       "id": "MBTRUST-A-MOVEMENT-OBLIGATION-READINESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Movement Obligation Generator Readiness Row"
     },
     {
       "number": 8,
       "id": "MBTRUST-A-REACTION-WINDOW-READINESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Reaction Window Generator Readiness Row"
     },
     {
       "number": 9,
       "id": "MBTRUST-A-SPELL-PROCEDURE-READINESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Spell Procedure Generator Readiness Row"
     },
     {
       "number": 10,
       "id": "MBTRUST-A-CLOSURE-REPORT",
-      "status": "blocked",
+      "status": "done",
       "title": "Generator Readiness Closure Report"
     }
   ]
@@ -135,7 +135,7 @@ Every task must include:
 
 ### Task 1 - MBTRUST-A-SOURCE-OF-TRUTH-DRY - Generator Readiness Source Of Truth DRY Pass
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -153,7 +153,7 @@ Output:
 
 ### Task 2 - MBTRUST-A-CHECKER-SCHEMA-HARDENING - Generator Readiness Checker Schema Hardening
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -172,7 +172,7 @@ Output:
 
 ### Task 3 - MBTRUST-A-QNT-ROLE-INVENTORY - QNT Role Inventory For Generation Readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -189,7 +189,7 @@ Output:
 
 ### Task 4 - MBTRUST-A-GENERATION-SUBSET-CATALOG - Generation Subset Catalog And Blocker Vocabulary
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -205,7 +205,7 @@ Output:
 
 ### Task 5 - MBTRUST-A-KERNEL-IR-BOUNDARY-INVENTORY - Kernel IR Boundary Inventory
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -222,7 +222,7 @@ Output:
 
 ### Task 6 - MBTRUST-A-HIT-POINT-DAMAGE-DRY-RUN - Hit Point Damage Manual Rust Dry Run
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -240,7 +240,7 @@ Output:
 
 ### Task 7 - MBTRUST-A-MOVEMENT-OBLIGATION-READINESS - Movement Obligation Generator Readiness Row
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -255,7 +255,7 @@ Output:
 
 ### Task 8 - MBTRUST-A-REACTION-WINDOW-READINESS - Reaction Window Generator Readiness Row
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -269,7 +269,7 @@ Output:
 
 ### Task 9 - MBTRUST-A-SPELL-PROCEDURE-READINESS - Spell Procedure Generator Readiness Row
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -283,7 +283,7 @@ Output:
 
 ### Task 10 - MBTRUST-A-CLOSURE-REPORT - Generator Readiness Closure Report
 
-Status: `blocked`
+Status: `done`
 
 Depends on:
 
@@ -295,4 +295,3 @@ Output:
 - A short closeout note explaining what is generator-ready, what is fixture-bound
   or proof-only, and what concrete next lane would be needed before real Rust
   generation.
-

@@ -8,12 +8,16 @@ const {
   battleFrontierSubjects,
   coveragePaths,
   coveredStatuses,
+  generatorReadinessBlockers,
   generatorReadinessStatuses,
+  generatorSubsetConstructs,
+  kernelIrBoundaryKinds,
   markerKinds,
   nonSemanticStatuses,
   obligationKinds,
   obligationStatuses,
   parityWitnessKinds,
+  qntOwnerRoles,
   runtimes,
 } = require("./rules-kernel-coverage-config.cjs");
 const { scanClaimFiles } = require("./rules-kernel-coverage-claim-scan.cjs");
@@ -25,6 +29,27 @@ const {
 const root = process.env.RULES_KERNEL_COVERAGE_ROOT ?? process.cwd();
 const write = process.argv.includes("--write");
 const selfTest = process.argv.includes("--self-test");
+const generatorReadinessArrayFields = [
+  "semanticCore",
+  "proofOnly",
+  "generatorSubset",
+  "blockedBy",
+];
+const kernelIrBoundaryArrayFields = [
+  "runtimeBoundaryPaths",
+  "obligationIds",
+];
+const generatorReadinessSemanticCoreStatuses = new Set([
+  "semantic-core-candidate",
+  "fixture-bound",
+  "generation-subset-clean",
+]);
+const generatorReadinessSubsetStatuses = new Set([
+  "semantic-core-candidate",
+  "fixture-bound",
+  "generation-subset-clean",
+]);
+const generatorReadinessBlockerStatuses = new Set(["fixture-bound", "blocked"]);
 
 function isRecord(value) {
   return value != null && typeof value === "object" && !Array.isArray(value);
@@ -118,6 +143,21 @@ function validateStringArray(value, context) {
 function validateRequiredStringArray(value, context) {
   if (value === undefined) return [`${context} must be an array.`];
   return validateStringArray(value, context);
+}
+
+function stringArrayOrEmpty(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function duplicateStrings(value) {
+  const seen = new Set();
+  const duplicates = new Set();
+  for (const entry of stringArrayOrEmpty(value)) {
+    if (typeof entry !== "string") continue;
+    if (seen.has(entry)) duplicates.add(entry);
+    seen.add(entry);
+  }
+  return [...duplicates];
 }
 
 function lastTypeName(typeName) {
@@ -682,6 +722,7 @@ function validateGeneratorReadiness(
   index,
   rootPath,
   obligationsById,
+  qntOwnerRolesByPath,
 ) {
   const issues = [];
   const context = `generator-readiness row ${index + 1}`;
@@ -703,36 +744,64 @@ function validateGeneratorReadiness(
   if (!generatorReadinessStatuses.has(readiness.status)) {
     issues.push(`${context}.status has unknown value ${readiness.status}.`);
   }
-  for (const field of [
-    "semanticCore",
-    "proofOnly",
-    "generatorSubset",
-    "blockedBy",
-  ]) {
+  for (const field of generatorReadinessArrayFields) {
     issues.push(
       ...validateRequiredStringArray(readiness[field], `${context}.${field}`),
     );
   }
-  const semanticCore = readiness.semanticCore ?? [];
-  const generatorSubset = readiness.generatorSubset ?? [];
-  const blockedBy = readiness.blockedBy ?? [];
+  for (const field of generatorReadinessArrayFields) {
+    for (const duplicate of duplicateStrings(readiness[field])) {
+      issues.push(`${context}.${field} repeats ${duplicate}.`);
+    }
+  }
+  const semanticCore = stringArrayOrEmpty(readiness.semanticCore);
+  const proofOnly = stringArrayOrEmpty(readiness.proofOnly);
+  const generatorSubset = stringArrayOrEmpty(readiness.generatorSubset);
+  const blockedBy = stringArrayOrEmpty(readiness.blockedBy);
+  for (const construct of generatorSubset) {
+    if (!generatorSubsetConstructs.has(construct)) {
+      issues.push(
+        `${context}.generatorSubset has unknown generation-subset construct ${construct}.`,
+      );
+    }
+  }
+  for (const blocker of blockedBy) {
+    if (!generatorReadinessBlockers.has(blocker)) {
+      issues.push(
+        `${context}.blockedBy has unknown generator-readiness blocker ${blocker}.`,
+      );
+    }
+  }
+  const semanticCoreSet = new Set(semanticCore);
+  for (const ownerPath of proofOnly) {
+    if (semanticCoreSet.has(ownerPath)) {
+      issues.push(
+        `${context}.${ownerPath} cannot be both semanticCore and proofOnly.`,
+      );
+    }
+  }
+  if (readiness.status === "not-assessed") {
+    for (const field of generatorReadinessArrayFields) {
+      const entries = stringArrayOrEmpty(readiness[field]);
+      if (entries.length > 0) {
+        issues.push(`${context}.not-assessed must have empty ${field}.`);
+      }
+    }
+  }
   if (
-    (readiness.status === "semantic-core-candidate" ||
-      readiness.status === "fixture-bound" ||
-      readiness.status === "generation-subset-clean") &&
+    generatorReadinessSemanticCoreStatuses.has(readiness.status) &&
     semanticCore.length === 0
   ) {
     issues.push(`${context}.${readiness.status} requires semanticCore.`);
   }
   if (
-    (readiness.status === "semantic-core-candidate" ||
-      readiness.status === "generation-subset-clean") &&
+    generatorReadinessSubsetStatuses.has(readiness.status) &&
     generatorSubset.length === 0
   ) {
     issues.push(`${context}.${readiness.status} requires generatorSubset.`);
   }
   if (
-    (readiness.status === "fixture-bound" || readiness.status === "blocked") &&
+    generatorReadinessBlockerStatuses.has(readiness.status) &&
     blockedBy.length === 0
   ) {
     issues.push(`${context}.${readiness.status} requires blockedBy.`);
@@ -740,8 +809,17 @@ function validateGeneratorReadiness(
   if (readiness.status === "generation-subset-clean" && blockedBy.length > 0) {
     issues.push(`${context}.generation-subset-clean must not have blockedBy.`);
   }
+  if (
+    !generatorReadinessBlockerStatuses.has(readiness.status) &&
+    blockedBy.length > 0
+  ) {
+    issues.push(`${context}.${readiness.status} must have empty blockedBy.`);
+  }
+  if (readiness.status === "blocked" && semanticCore.length > 0) {
+    issues.push(`${context}.blocked must not declare semanticCore.`);
+  }
   for (const field of ["semanticCore", "proofOnly"]) {
-    for (const ownerPath of readiness[field] ?? []) {
+    for (const ownerPath of stringArrayOrEmpty(readiness[field])) {
       if (!fs.existsSync(path.join(rootPath, ownerPath))) {
         issues.push(`${context}.${field} path ${ownerPath} does not exist.`);
       }
@@ -749,10 +827,16 @@ function validateGeneratorReadiness(
   }
   if (obligation !== undefined) {
     const qntOwners = new Set(obligation.qntOwners ?? []);
-    for (const ownerPath of readiness.semanticCore ?? []) {
+    for (const ownerPath of semanticCore) {
       if (!qntOwners.has(ownerPath)) {
         issues.push(
           `${context}.semanticCore path ${ownerPath} is not declared as a QNT owner by ${obligation.id}.`,
+        );
+      }
+      const ownerRole = qntOwnerRolesByPath.get(ownerPath);
+      if (ownerRole !== undefined && ownerRole !== "semantic-core") {
+        issues.push(
+          `${context}.semanticCore path ${ownerPath} has QNT owner role ${ownerRole}; expected semantic-core.`,
         );
       }
     }
@@ -763,6 +847,82 @@ function validateGeneratorReadiness(
     } else if (!fs.existsSync(path.join(rootPath, readiness.dryRun))) {
       issues.push(`${context}.dryRun path ${readiness.dryRun} does not exist.`);
     }
+  }
+  return issues;
+}
+
+function validateKernelIrBoundary(row, index, rootPath, obligationIds) {
+  const issues = [];
+  const context = `kernel-ir-boundaries row ${index + 1}`;
+  if (!isRecord(row)) return [`${context} must be an object.`];
+  if (!kernelIrBoundaryKinds.has(row.boundary)) {
+    issues.push(`${context}.boundary has unknown value ${row.boundary}.`);
+  }
+  for (const field of kernelIrBoundaryArrayFields) {
+    issues.push(
+      ...validateRequiredStringArray(row[field], `${context}.${field}`),
+    );
+  }
+  for (const field of kernelIrBoundaryArrayFields) {
+    for (const duplicate of duplicateStrings(row[field])) {
+      issues.push(`${context}.${field} repeats ${duplicate}.`);
+    }
+  }
+  if (typeof row.summary !== "string" || row.summary.length === 0) {
+    issues.push(`${context}.summary must be a non-empty string.`);
+  }
+  if (typeof row.evidence !== "string" || row.evidence.length === 0) {
+    issues.push(`${context}.evidence must be a non-empty string.`);
+  }
+  for (const ownerPath of stringArrayOrEmpty(row.runtimeBoundaryPaths)) {
+    if (!fs.existsSync(path.join(rootPath, ownerPath))) {
+      issues.push(
+        `${context}.runtimeBoundaryPaths path ${ownerPath} does not exist.`,
+      );
+    }
+  }
+  for (const obligationId of stringArrayOrEmpty(row.obligationIds)) {
+    if (!obligationIds.has(obligationId)) {
+      issues.push(
+        `${context}.obligationIds references unknown obligation ${obligationId}.`,
+      );
+    }
+  }
+  return issues;
+}
+
+function qntOwnerPaths(obligations) {
+  const ownerPaths = new Set();
+  for (const obligation of obligations) {
+    if (!coveredStatuses.has(obligation.status)) continue;
+    for (const ownerPath of obligation.qntOwners ?? []) {
+      ownerPaths.add(ownerPath);
+    }
+  }
+  return ownerPaths;
+}
+
+function validateQntOwnerRole(row, index, rootPath, expectedQntOwnerPaths) {
+  const issues = [];
+  const context = `qnt-owner-roles row ${index + 1}`;
+  if (!isRecord(row)) return [`${context} must be an object.`];
+  if (typeof row.ownerPath !== "string" || row.ownerPath.length === 0) {
+    issues.push(`${context}.ownerPath must be a non-empty string.`);
+  } else {
+    if (!expectedQntOwnerPaths.has(row.ownerPath)) {
+      issues.push(
+        `${context}.ownerPath ${row.ownerPath} is not a covered obligation QNT owner.`,
+      );
+    }
+    if (!fs.existsSync(path.join(rootPath, row.ownerPath))) {
+      issues.push(`${context}.ownerPath ${row.ownerPath} does not exist.`);
+    }
+  }
+  if (!qntOwnerRoles.has(row.role)) {
+    issues.push(`${context}.role has unknown value ${row.role}.`);
+  }
+  if (typeof row.evidence !== "string" || row.evidence.length === 0) {
+    issues.push(`${context}.evidence must be a non-empty string.`);
   }
   return issues;
 }
@@ -1039,14 +1199,27 @@ function buildMatrix(rootPath) {
   const obligations = readJsonl(rootPath, paths.obligations);
   const battleHoleFrontier = readJsonl(rootPath, paths.battleHoleFrontier);
   const profileObligations = readJsonl(rootPath, paths.profileObligations);
+  const qntOwnerRoleRows = readJsonl(rootPath, paths.qntOwnerRoles);
   const generatorReadiness = readJsonl(rootPath, paths.generatorReadiness);
+  const kernelIrBoundaries = readJsonl(rootPath, paths.kernelIrBoundaries);
   const profiles = readJsonl(rootPath, paths.unitProfiles);
   const profileIdsByObligation = profilesByObligation(profileObligations);
+  const obligationIdsByQntOwner = new Map();
+  for (const obligation of obligations) {
+    if (!coveredStatuses.has(obligation.status)) continue;
+    for (const ownerPath of obligation.qntOwners ?? []) {
+      const current = obligationIdsByQntOwner.get(ownerPath) ?? [];
+      current.push(obligation.id);
+      obligationIdsByQntOwner.set(ownerPath, current);
+    }
+  }
   return {
     summary: buildSummary(obligations),
     derivedFields: {
       "obligations[].profiles":
         "Derived from profileObligations by obligation id; authored obligations.jsonl rows must not contain profiles.",
+      "qntOwnerRoles[].obligationIds":
+        "Derived from obligations[].qntOwners for covered obligations; qnt-owner-roles.jsonl rows classify ownerPath only.",
     },
     battleHoleFrontierSummary: buildBattleFrontierSummary(battleHoleFrontier),
     obligations: obligations.map((obligation) =>
@@ -1057,8 +1230,17 @@ function buildMatrix(rootPath) {
     ),
     battleHoleFrontier: battleHoleFrontier.map((row) => stable(row)),
     profileObligations: profileObligations.map((mapping) => stable(mapping)),
+    qntOwnerRoles: qntOwnerRoleRows.map((row) =>
+      stable({
+        ...row,
+        obligationIds: (obligationIdsByQntOwner.get(row.ownerPath) ?? []).sort(),
+      }),
+    ),
     generatorReadiness: generatorReadiness.map((readiness) =>
       stable(readiness),
+    ),
+    kernelIrBoundaries: kernelIrBoundaries.map((boundary) =>
+      stable(boundary),
     ),
     profileIdsSeenFromUnitProfileCoverage: profiles
       .map((profile) => profile.id)
@@ -1071,7 +1253,7 @@ function renderReport(matrix, issues) {
   lines.push("# Rules Kernel Coverage Report");
   lines.push("");
   lines.push(
-    "Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-frontier.jsonl`, `profile-obligations.jsonl`, `generator-readiness.jsonl`, and `KERNEL-COVERAGE` source markers.",
+    "Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-frontier.jsonl`, `profile-obligations.jsonl`, `qnt-owner-roles.jsonl`, `generator-readiness.jsonl`, `kernel-ir-boundaries.jsonl`, and `KERNEL-COVERAGE` source markers.",
   );
   lines.push("");
   lines.push("## Summary");
@@ -1151,6 +1333,22 @@ function renderReport(matrix, issues) {
     }
   }
   lines.push("");
+  lines.push("## QNT Owner Roles");
+  lines.push("");
+  if (matrix.qntOwnerRoles.length === 0) {
+    lines.push("No QNT owner roles recorded yet.");
+  } else {
+    lines.push("| Owner | Role | Obligations |");
+    lines.push("| --- | --- | --- |");
+    for (const row of matrix.qntOwnerRoles) {
+      const obligations =
+        (row.obligationIds ?? [])
+          .map((obligationId) => `\`${obligationId}\``)
+          .join(", ") || "_none_";
+      lines.push(`| \`${row.ownerPath}\` | ${row.role} | ${obligations} |`);
+    }
+  }
+  lines.push("");
   lines.push("## Generator Readiness");
   lines.push("");
   if (matrix.generatorReadiness.length === 0) {
@@ -1161,6 +1359,28 @@ function renderReport(matrix, issues) {
     for (const readiness of matrix.generatorReadiness) {
       lines.push(
         `| \`${readiness.obligationId}\` | ${readiness.status} | ${(readiness.generatorSubset ?? []).map((entry) => `\`${entry}\``).join(", ")} |`,
+      );
+    }
+  }
+  lines.push("");
+  lines.push("## Kernel IR Boundaries");
+  lines.push("");
+  if (matrix.kernelIrBoundaries.length === 0) {
+    lines.push("No kernel-IR boundary rows recorded yet.");
+  } else {
+    lines.push("| Boundary | Obligations | Runtime Paths | Summary |");
+    lines.push("| --- | --- | --- | --- |");
+    for (const boundary of matrix.kernelIrBoundaries) {
+      const obligations =
+        (boundary.obligationIds ?? [])
+          .map((obligationId) => `\`${obligationId}\``)
+          .join(", ") || "_none_";
+      const runtimePaths =
+        (boundary.runtimeBoundaryPaths ?? [])
+          .map((ownerPath) => `\`${ownerPath}\``)
+          .join(", ") || "_none_";
+      lines.push(
+        `| ${boundary.boundary} | ${obligations} | ${runtimePaths} | ${boundary.summary} |`,
       );
     }
   }
@@ -1225,7 +1445,9 @@ function buildKernelCoverage({ root: rootPath }) {
   const obligations = readJsonl(rootPath, paths.obligations);
   const battleHoleFrontier = readJsonl(rootPath, paths.battleHoleFrontier);
   const profileObligations = readJsonl(rootPath, paths.profileObligations);
+  const qntOwnerRoleRows = readJsonl(rootPath, paths.qntOwnerRoles);
   const generatorReadiness = readJsonl(rootPath, paths.generatorReadiness);
+  const kernelIrBoundaries = readJsonl(rootPath, paths.kernelIrBoundaries);
   const profiles = readJsonl(rootPath, paths.unitProfiles);
   const expectedBattleFrontier = extractBattleFrontierSource(rootPath);
   const scanned = scanClaimFiles(rootPath);
@@ -1329,6 +1551,27 @@ function buildKernelCoverage({ root: rootPath }) {
     }
   }
 
+  const expectedQntOwnerPaths = qntOwnerPaths(obligations);
+  const qntOwnerRolesByPath = new Map();
+  for (const [index, row] of qntOwnerRoleRows.entries()) {
+    if (isRecord(row) && typeof row.ownerPath === "string") {
+      if (qntOwnerRolesByPath.has(row.ownerPath)) {
+        issues.push(
+          `qnt-owner-roles row ${index + 1}: duplicate QNT owner role for ${row.ownerPath}.`,
+        );
+      }
+      qntOwnerRolesByPath.set(row.ownerPath, row.role);
+    }
+    issues.push(
+      ...validateQntOwnerRole(row, index, rootPath, expectedQntOwnerPaths),
+    );
+  }
+  for (const ownerPath of expectedQntOwnerPaths) {
+    if (!qntOwnerRolesByPath.has(ownerPath)) {
+      issues.push(`qnt-owner-roles is missing QNT owner ${ownerPath}.`);
+    }
+  }
+
   const derivedProfilesByObligation = profilesByObligation(profileObligations);
   const readinessObligationIds = new Set();
   for (const [index, readiness] of generatorReadiness.entries()) {
@@ -1346,8 +1589,29 @@ function buildKernelCoverage({ root: rootPath }) {
         index,
         rootPath,
         obligationsById,
+        qntOwnerRolesByPath,
       ),
     );
+  }
+
+  const seenKernelIrBoundaries = new Set();
+  for (const [index, boundary] of kernelIrBoundaries.entries()) {
+    if (isRecord(boundary) && typeof boundary.boundary === "string") {
+      if (seenKernelIrBoundaries.has(boundary.boundary)) {
+        issues.push(
+          `kernel-ir-boundaries row ${index + 1}: duplicate kernel IR boundary ${boundary.boundary}.`,
+        );
+      }
+      seenKernelIrBoundaries.add(boundary.boundary);
+    }
+    issues.push(
+      ...validateKernelIrBoundary(boundary, index, rootPath, obligationIds),
+    );
+  }
+  for (const boundary of kernelIrBoundaryKinds) {
+    if (!seenKernelIrBoundaries.has(boundary)) {
+      issues.push(`kernel-ir-boundaries is missing boundary ${boundary}.`);
+    }
   }
 
   for (const obligation of obligations) {

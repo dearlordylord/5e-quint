@@ -97,6 +97,19 @@ function runSelfTest() {
       root,
       "plans",
       "rules-kernel-coverage",
+      "qnt-owner-roles.jsonl",
+    ),
+    JSON.stringify({
+      ownerPath: "sample.qnt",
+      role: "semantic-core",
+      evidence: "sample.qnt is the qnt-owner marker source for BATTLE.SAMPLE.",
+    }) + "\n",
+  );
+  writeFile(
+    path.join(
+      root,
+      "plans",
+      "rules-kernel-coverage",
       "generator-readiness.jsonl",
     ),
     JSON.stringify({
@@ -108,6 +121,33 @@ function runSelfTest() {
       blockedBy: [],
       dryRun: "plans/rules-kernel-coverage/SAMPLE_DRY_RUN.md",
     }) + "\n",
+  );
+  const sampleKernelIrBoundaries = [
+    "command",
+    "fill",
+    "result",
+    "state",
+    "active-effect",
+    "support-profile",
+    "resource",
+    "handoff",
+  ].map((boundary) =>
+    JSON.stringify({
+      boundary,
+      summary: `${boundary} sample boundary`,
+      runtimeBoundaryPaths: ["sample.ts"],
+      obligationIds: ["BATTLE.SAMPLE"],
+      evidence: `${boundary} sample evidence`,
+    }),
+  );
+  writeFile(
+    path.join(
+      root,
+      "plans",
+      "rules-kernel-coverage",
+      "kernel-ir-boundaries.jsonl",
+    ),
+    `${sampleKernelIrBoundaries.join("\n")}\n`,
   );
   writeFile(
     path.join(root, "plans", "rules-kernel-coverage", "SAMPLE_DRY_RUN.md"),
@@ -143,7 +183,155 @@ function runSelfTest() {
   assert.deepEqual(result.issues, []);
   assert.equal(result.matrix.summary.byStatus.covered, 1);
   assert.equal(result.matrix.summary.byStatus["boundary-only"], 1);
+  assert.equal(result.matrix.qntOwnerRoles.length, 1);
   assert.equal(result.matrix.generatorReadiness.length, 1);
+  assert.equal(result.matrix.kernelIrBoundaries.length, 8);
+
+  const sampleQntOwnerRolesPath = path.join(
+    root,
+    "plans",
+    "rules-kernel-coverage",
+    "qnt-owner-roles.jsonl",
+  );
+  const initialQntOwnerRolesText = fs.readFileSync(
+    sampleQntOwnerRolesPath,
+    "utf8",
+  );
+  writeFile(sampleQntOwnerRolesPath, "");
+  const missingQntOwnerRoleResult = buildKernelCoverage({ root });
+  assert.ok(
+    missingQntOwnerRoleResult.issues.includes(
+      "qnt-owner-roles is missing QNT owner sample.qnt.",
+    ),
+    `Expected missing qnt-owner role issue, got ${JSON.stringify(missingQntOwnerRoleResult.issues)}`,
+  );
+  writeFile(
+    sampleQntOwnerRolesPath,
+    JSON.stringify({
+      ownerPath: "sample.qnt",
+      role: "mbt-fixture",
+      evidence: "sample invalid role for readiness semanticCore check.",
+    }) + "\n",
+  );
+  const wrongSemanticCoreRoleResult = buildKernelCoverage({ root });
+  assert.ok(
+    wrongSemanticCoreRoleResult.issues.includes(
+      "generator-readiness row 1.semanticCore path sample.qnt has QNT owner role mbt-fixture; expected semantic-core.",
+    ),
+    `Expected semanticCore role issue, got ${JSON.stringify(wrongSemanticCoreRoleResult.issues)}`,
+  );
+  writeFile(sampleQntOwnerRolesPath, initialQntOwnerRolesText);
+
+  const sampleGeneratorReadinessPath = path.join(
+    root,
+    "plans",
+    "rules-kernel-coverage",
+    "generator-readiness.jsonl",
+  );
+  const initialGeneratorReadinessText = fs.readFileSync(
+    sampleGeneratorReadinessPath,
+    "utf8",
+  );
+  writeFile(
+    sampleGeneratorReadinessPath,
+    JSON.stringify({
+      obligationId: "BATTLE.SAMPLE",
+      status: "not-assessed",
+    }) + "\n",
+  );
+  const missingGeneratorArrayResult = buildKernelCoverage({ root });
+  for (const field of [
+    "semanticCore",
+    "proofOnly",
+    "generatorSubset",
+    "blockedBy",
+  ]) {
+    assert.ok(
+      missingGeneratorArrayResult.issues.includes(
+        `generator-readiness row 1.${field} must be an array.`,
+      ),
+      `Expected missing generator-readiness ${field} issue, got ${JSON.stringify(missingGeneratorArrayResult.issues)}`,
+    );
+  }
+  writeFile(
+    sampleGeneratorReadinessPath,
+    JSON.stringify({
+      obligationId: "BATTLE.SAMPLE",
+      status: "semantic-core-candidate",
+      semanticCore: ["sample.qnt"],
+      proofOnly: ["sample.qnt"],
+      generatorSubset: ["record", "record"],
+      blockedBy: ["sample blocker"],
+    }) + "\n",
+  );
+  const invalidGeneratorSemanticsResult = buildKernelCoverage({ root });
+  for (const issue of [
+    "generator-readiness row 1.generatorSubset repeats record.",
+    "generator-readiness row 1.blockedBy has unknown generator-readiness blocker sample blocker.",
+    "generator-readiness row 1.sample.qnt cannot be both semanticCore and proofOnly.",
+    "generator-readiness row 1.semantic-core-candidate must have empty blockedBy.",
+  ]) {
+    assert.ok(
+      invalidGeneratorSemanticsResult.issues.includes(issue),
+      `Expected generator-readiness issue ${issue}, got ${JSON.stringify(invalidGeneratorSemanticsResult.issues)}`,
+    );
+  }
+  writeFile(
+    sampleGeneratorReadinessPath,
+    JSON.stringify({
+      obligationId: "BATTLE.SAMPLE",
+      status: "semantic-core-candidate",
+      semanticCore: ["sample.qnt"],
+      proofOnly: [],
+      generatorSubset: ["unknown-construct"],
+      blockedBy: [],
+    }) + "\n",
+  );
+  const unknownGeneratorSubsetResult = buildKernelCoverage({ root });
+  assert.ok(
+    unknownGeneratorSubsetResult.issues.includes(
+      "generator-readiness row 1.generatorSubset has unknown generation-subset construct unknown-construct.",
+    ),
+    `Expected generator-readiness unknown subset issue, got ${JSON.stringify(unknownGeneratorSubsetResult.issues)}`,
+  );
+  writeFile(sampleGeneratorReadinessPath, initialGeneratorReadinessText);
+
+  const sampleKernelIrBoundariesPath = path.join(
+    root,
+    "plans",
+    "rules-kernel-coverage",
+    "kernel-ir-boundaries.jsonl",
+  );
+  const initialKernelIrBoundariesText = fs.readFileSync(
+    sampleKernelIrBoundariesPath,
+    "utf8",
+  );
+  writeFile(
+    sampleKernelIrBoundariesPath,
+    JSON.stringify({
+      boundary: "unknown-boundary",
+      summary: "",
+      runtimeBoundaryPaths: ["missing.ts", "missing.ts"],
+      obligationIds: ["BATTLE.MISSING"],
+      evidence: "",
+    }) + "\n",
+  );
+  const invalidKernelIrBoundaryResult = buildKernelCoverage({ root });
+  for (const issue of [
+    "kernel-ir-boundaries row 1.boundary has unknown value unknown-boundary.",
+    "kernel-ir-boundaries row 1.runtimeBoundaryPaths repeats missing.ts.",
+    "kernel-ir-boundaries row 1.summary must be a non-empty string.",
+    "kernel-ir-boundaries row 1.evidence must be a non-empty string.",
+    "kernel-ir-boundaries row 1.runtimeBoundaryPaths path missing.ts does not exist.",
+    "kernel-ir-boundaries row 1.obligationIds references unknown obligation BATTLE.MISSING.",
+    "kernel-ir-boundaries is missing boundary command.",
+  ]) {
+    assert.ok(
+      invalidKernelIrBoundaryResult.issues.includes(issue),
+      `Expected kernel IR boundary issue ${issue}, got ${JSON.stringify(invalidKernelIrBoundaryResult.issues)}`,
+    );
+  }
+  writeFile(sampleKernelIrBoundariesPath, initialKernelIrBoundariesText);
 
   const initialObligationsText = fs.readFileSync(
     path.join(root, "plans", "rules-kernel-coverage", "obligations.jsonl"),
@@ -216,6 +404,16 @@ function runSelfTest() {
       "\n",
   );
   writeFile(
+    sampleQntOwnerRolesPath,
+    initialQntOwnerRolesText +
+      JSON.stringify({
+        ownerPath: "multi.qnt",
+        role: "semantic-core",
+        evidence: "multi.qnt is the qnt-owner marker source for BATTLE.MULTI.",
+      }) +
+      "\n",
+  );
+  writeFile(
     path.join(root, "multi.qnt"),
     "// KERNEL-COVERAGE: qnt-owner BATTLE.MULTI\nmodule multi {}\n",
   );
@@ -250,6 +448,7 @@ function runSelfTest() {
     path.join(root, "plans", "unit-profile-coverage", "profiles.jsonl"),
     initialProfilesText,
   );
+  writeFile(sampleQntOwnerRolesPath, initialQntOwnerRolesText);
   for (const fileName of [
     "multi.qnt",
     "multi.ts",
