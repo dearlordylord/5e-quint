@@ -43,6 +43,7 @@ import {
   type BattleSubject,
   type CombatantId,
 } from "./index.ts";
+import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -696,6 +697,7 @@ function characterCreature(input: {
       characterId: characterId(`${input.combatantId}-character`),
       characterUnitRefs: [],
       classLevels: [{ className: "wizard", level: 3 }],
+      d20Statistics: testCharacterD20Statistics(),
       armorClass: defaultArmorClassState(),
       size: "medium",
       speed: { walkFeet: movementFeet(30) },

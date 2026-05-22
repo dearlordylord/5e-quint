@@ -168,14 +168,17 @@ import {
   applyGreaseProneToTarget,
   applyWebRestrainedCondition,
   expireBattleLightEmitters,
+  addMoonbeamShapeShiftSuppression,
   markWebSavedThisTurn,
   markMoonbeamSavedThisTurn,
+  removeMoonbeamShapeShiftSuppression,
   removeWebRestrainedCondition,
   replaceGustOfWindLineDirection,
   resetAllMoonbeamSavedThisTurn,
   resetAllWebSavedThisTurn,
   tickDurationBattleLightEmitters,
 } from "./spells-active-effects.ts";
+import { revertShapeShiftedCombatantToTrueForm } from "./shape-shifting.ts";
 import { validateGustOfWindLineAreaPushFacts } from "./spells-resolve-save-gates.ts";
 
 import {
@@ -3399,7 +3402,10 @@ function moonbeamEffectFor(
     BattleSubject,
     {
       readonly tag: "runtimeCommand";
-      readonly command: "movableZoneSave" | "movableZoneReposition";
+      readonly command:
+        | "movableZoneSave"
+        | "movableZoneReposition"
+        | "moonbeamCylinderExit";
     }
   >,
 ): MoonbeamEffect | undefined {
@@ -3601,6 +3607,29 @@ function applyMoonbeamDamage(input: {
       damageSourceId: input.effect.sourceCombatantId,
       concentrationSavingThrow: input.concentrationSavingThrow,
     },
+  );
+}
+
+function applyMoonbeamShapeShiftRider(input: {
+  readonly state: BattleState;
+  readonly targetId: CombatantId;
+  readonly effect: MoonbeamEffect;
+  readonly saveSucceeded: boolean;
+}): BattleState {
+  if (input.saveSucceeded) {
+    return input.state;
+  }
+  const reversion = revertShapeShiftedCombatantToTrueForm({
+    state: input.state,
+    combatantId: input.targetId,
+  });
+  if (reversion.tag !== "reverted") {
+    return reversion.state;
+  }
+  return addMoonbeamShapeShiftSuppression(
+    reversion.state,
+    input.targetId,
+    input.effect,
   );
 }
 
@@ -3817,8 +3846,14 @@ export function resolveMoonbeamSaveCommand(
     saveSucceeded: saveOutcome.succeeded,
     concentrationSavingThrow: concentrationFill,
   });
+  const afterShapeShiftRider = applyMoonbeamShapeShiftRider({
+    state: afterDamage,
+    targetId: input.subject.actorId,
+    effect,
+    saveSucceeded: saveOutcome.succeeded,
+  });
   const afterMark = markMoonbeamSavedThisTurn(
-    afterDamage,
+    afterShapeShiftRider,
     input.subject.actorId,
     effect,
   );
@@ -3836,6 +3871,47 @@ export function resolveMoonbeamSaveCommand(
     tag: "resolved",
     state: afterMark,
     snapshot: snapshotBattle(afterMark),
+  };
+}
+
+export function resolveMoonbeamCylinderExitCommand(
+  input: BattleResolutionInput & {
+    readonly subject: Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "moonbeamCylinderExit";
+      }
+    >;
+  },
+): BattleResolutionResult {
+  if (input.fills.length > 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Moonbeam Cylinder exit cleanup uses no fills.",
+    );
+  }
+  const effect = moonbeamEffectFor(input.state, input.subject);
+  if (
+    effect === undefined ||
+    !effect.shapeShiftSuppressed.includes(input.subject.actorId)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Moonbeam shape-shift suppression is no longer active.",
+    );
+  }
+  const nextState = removeMoonbeamShapeShiftSuppression(
+    input.state,
+    input.subject.actorId,
+    effect,
+  );
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
   };
 }
 

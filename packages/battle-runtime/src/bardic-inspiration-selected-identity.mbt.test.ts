@@ -40,6 +40,7 @@ import {
   type BattleState,
   type BattleSubject,
 } from "./index.ts";
+import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 
 const bardicInspirationSelectedIdentityDriverSchema = {
   init: {},
@@ -268,6 +269,7 @@ function bardicInspirationBard(): BattleCreatureInit {
         },
       ],
       classLevels: [{ className: "bard", level: 15 }],
+      d20Statistics: testCharacterD20Statistics(),
       armorClass: defaultArmorClassState(),
       size: "medium",
       speed: { walkFeet: movementFeet(30) },
@@ -298,6 +300,7 @@ function targetCreature(): BattleCreatureInit {
       characterId: characterId("bardic-inspiration-selected-identity-target"),
       characterUnitRefs: [],
       classLevels: [{ className: "fighter", level: 1 }],
+      d20Statistics: testCharacterD20Statistics(),
       armorClass: defaultArmorClassState(),
       size: "medium",
       speed: { walkFeet: movementFeet(30) },

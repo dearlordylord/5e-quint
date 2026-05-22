@@ -75,6 +75,7 @@ export const BATTLE_RUNTIME_COMMANDS = [
   "gustOfWindLineSave",
   "gustOfWindLineDirectionChange",
   "movableZoneSave",
+  "moonbeamCylinderExit",
   "movableZoneReposition",
   "movableZoneRam",
   "releaseSpellCreatedHeldObject",
@@ -691,6 +692,14 @@ export const BattleSubjectSchema = Schema.Union(
       "entersArea",
       "endsTurnInArea",
     ),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("moonbeamCylinderExit"),
+    sourceCombatantId: CombatantId,
+    sourceSpellId: SpellId,
+    areaId: BattleSubjectTextSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),

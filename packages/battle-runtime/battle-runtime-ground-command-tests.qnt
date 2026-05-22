@@ -47,6 +47,7 @@ module battleRuntimeGroundCommandTests {
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
   import battleRuntimeGroundCommand.* from "./battle-runtime-ground-command"
   import battleRuntimeWeaponAttacks.* from "./battle-runtime-weapon-attacks"
+  import battleRuntimeShapeShifting.* from "./battle-runtime-shape-shifting"
 
   run test_grease_records_ground_hazard_and_prones_failed_appearance_save = {
     val resolved = resolveGrease(initialState, true, false)
@@ -396,6 +397,7 @@ module battleRuntimeGroundCommandTests {
         durationTicks: moonbeamDurationTicks,
         repositionMaxMoveFeet: moonbeamRepositionMaxMoveFeet,
         savedThisTurn: Set(),
+        shapeShiftSuppressed: Set(),
       }))),
       assert(moonbeamRadiusFeet == 5),
       assert(moonbeamHeightFeet == 40),
@@ -415,6 +417,29 @@ module battleRuntimeGroundCommandTests {
       assert(moonbeamActiveDamageDice(resolved, moonbeamAreaId) == 4),
       assert(failed.goblin.hp == 2),
       assert(succeeded.goblin.hp == 6),
+    }
+  }
+
+  run test_moonbeam_failed_save_reverts_shape_shift_and_suppresses_until_exit = {
+    val resolved = resolveMoonbeam(initialState, moonbeamAreaId, 2)
+    val shifted = ClassFeatureShapeShifted({
+      source: {
+        sourceCombatantId: "synthetic_druid",
+        sourceUnitId: "synthetic_shape_feature",
+      },
+      replacementForm: syntheticLargeFastFormFacts,
+    })
+    val failed = resolveMoonbeamSaveWithShapeShift(resolved, Goblin, moonbeamAreaId, false, 8, shifted)
+    val succeeded = resolveMoonbeamSaveWithShapeShift(resolved, Goblin, moonbeamAreaId, true, 8, shifted)
+    val exited = clearMoonbeamShapeShiftSuppressed(failed.state, Goblin, moonbeamAreaId)
+    val broken = breakConcentrationSpellEffects(failed.state, Fighter)
+    all {
+      assert(failed.targetShapeShiftState == TrueForm),
+      assert(succeeded.targetShapeShiftState == shifted),
+      assert(moonbeamShapeShiftSuppressed(failed.state, Goblin, moonbeamAreaId)),
+      assert(not(moonbeamShapeShiftSuppressed(succeeded.state, Goblin, moonbeamAreaId))),
+      assert(not(moonbeamShapeShiftSuppressed(exited, Goblin, moonbeamAreaId))),
+      assert(not(moonbeamShapeShiftSuppressed(broken, Goblin, moonbeamAreaId))),
     }
   }
 

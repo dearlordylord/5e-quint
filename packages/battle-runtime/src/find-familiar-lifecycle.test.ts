@@ -61,6 +61,7 @@ import {
   type FindFamiliarFormEligibility,
   type PactOfTheChainFamiliarAttackSubject,
 } from "./index.ts";
+import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer.ts";
 import { battleCreatureStateWithoutKnockOut } from "./battle-reducer/creature-state.ts";
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
@@ -483,6 +484,7 @@ function characterCreature(input: {
       characterId: characterId(`${input.combatantId}-character`),
       characterUnitRefs: input.characterUnitRefs ?? [],
       classLevels: [{ className: input.className ?? "wizard", level: 1 }],
+      d20Statistics: testCharacterD20Statistics(),
       armorClass: defaultArmorClassState(),
       size: "medium",
       speed: { walkFeet: movementFeet(30) },

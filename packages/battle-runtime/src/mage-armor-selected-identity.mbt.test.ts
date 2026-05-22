@@ -51,6 +51,7 @@ import {
   type BattleSubject,
   type CombatantId,
 } from "./index.ts";
+import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 
 const mageArmorSelectedIdentityDriverSchema = {
   init: {},
@@ -481,6 +482,7 @@ function battleCreature(input: {
       characterId: characterId(`${input.combatantId}-character`),
       characterUnitRefs: [],
       classLevels: [{ className: "wizard", level: 1 }],
+      d20Statistics: testCharacterD20Statistics(),
       armorClass: input.armorClass,
       size: "medium",
       speed: { walkFeet: movementFeet(30) },

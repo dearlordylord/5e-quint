@@ -31,6 +31,7 @@ import {
   type BattleSubject,
   type CombatantId,
 } from "./index.ts";
+import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
   battleUnitSupportProfilesForUnit,
   type BattleUnitSupportProfile,
@@ -283,6 +284,7 @@ function characterCombatant(input: {
       characterId: characterId(`${input.combatantId}-character`),
       characterUnitRefs: input.characterUnitRefs,
       classLevels: [{ className: "fighter", level: 1 }],
+      d20Statistics: testCharacterD20Statistics(),
       armorClass: defaultArmorClassState(),
       size: "medium",
       speed: { walkFeet: movementFeet(30) },

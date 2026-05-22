@@ -291,6 +291,7 @@ import {
   resolveFlamingSphereRepositionCommand,
   resolveFlamingSphereRamCommand,
   resolveFlamingSphereSaveCommand,
+  resolveMoonbeamCylinderExitCommand,
   resolveMoonbeamRepositionCommand,
   resolveMoonbeamSaveCommand,
   resolveGreaseGroundHazardSaveCommand,
@@ -968,6 +969,12 @@ export function resolveBattleSubjectInternal(
         subject,
         suppressedReactionTrigger: options.suppressedReactionTrigger,
       });
+    }
+    if (
+      subject.tag === "runtimeCommand" &&
+      subject.command === "moonbeamCylinderExit"
+    ) {
+      return resolveMoonbeamCylinderExitCommand({ ...input, subject });
     }
     if (
       subject.tag === "runtimeCommand" &&

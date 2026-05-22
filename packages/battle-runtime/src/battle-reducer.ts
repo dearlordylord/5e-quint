@@ -103,6 +103,7 @@ import type {
 import type {
   BattleDruidWildShapeKnownForm,
   BattlePositiveHpUnconscious,
+  CharacterBattleD20Statistics,
   CharacterBattleInvocationFeature,
   BattleUnitRef,
   BattleWalkSpeed,
@@ -279,6 +280,7 @@ export {
   resolveFlamingSphereRepositionCommand,
   resolveFlamingSphereRamCommand,
   resolveFlamingSphereSaveCommand,
+  resolveMoonbeamCylinderExitCommand,
   resolveMoonbeamRepositionCommand,
   resolveMoonbeamSaveCommand,
   resolveCommandApproachAfterMovement,
@@ -3739,6 +3741,7 @@ type BattleCreatureStateCommon = {
         readonly characterId: CharacterId;
         readonly characterUnitRefs: readonly BattleUnitRef[];
         readonly classLevels: readonly CharacterBattleClassLevel[];
+        readonly d20Statistics: CharacterBattleD20Statistics;
         readonly druidWildShapeKnownForms?: ReadonlyNonEmptyArray<BattleDruidWildShapeKnownForm>;
         readonly weaponProficiencies: readonly WeaponProficiency[];
         readonly selectedLoadout: CharacterBattleLoadoutRef;

@@ -41,6 +41,7 @@ import {
   type BattleSubject,
   type CombatantId,
 } from "./index.ts";
+import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { ongoingFeatureSourceKeyForUnit } from "./battle-reducer/creature-state.ts";
 
 const innateSorcerySelectedIdentityDriverSchema = {
@@ -421,6 +422,7 @@ function characterCombatant(input: {
       characterId: characterId(`${input.combatantId}-character`),
       characterUnitRefs: [],
       classLevels: input.classLevels,
+      d20Statistics: testCharacterD20Statistics(),
       armorClass: defaultArmorClassState(),
       size: "medium",
       speed: { walkFeet: movementFeet(30) },

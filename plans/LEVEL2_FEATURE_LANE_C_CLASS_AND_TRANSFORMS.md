@@ -127,13 +127,13 @@
     {
       "number": 21,
       "id": "L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-AREA-SUPPRESSION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Moonbeam Shape-Shift Area Suppression Rider"
     },
     {
       "number": 22,
       "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Druid Wild Shape D20 Statistic Projection"
     },
     {
@@ -151,13 +151,13 @@
     {
       "number": 25,
       "id": "L12G-FOLLOWUP-WIZARD-EVOKER-POTENT-CANTRIP",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Wizard Evoker Potent Cantrip Runtime Support"
     },
     {
       "number": 26,
       "id": "L3-FOLLOWUP-HASTE-SURFACE-AUTHORING",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Haste Surface Authoring And Restriction Shape"
     },
     {
@@ -175,7 +175,7 @@
     {
       "number": 29,
       "id": "L3-FOLLOWUP-SLOW-SURFACE-AUTHORING",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Slow Surface Authoring And Restriction Shape"
     },
     {
@@ -193,7 +193,7 @@
     {
       "number": 32,
       "id": "L3-FOLLOWUP-PROTECTION-FROM-ENERGY-DAMAGE-RESISTANCE",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Protection From Energy Surface Target Shape And Damage Resistance Runtime Support"
     },
     {
@@ -213,6 +213,9 @@
 -->
 
 This is an active Ralph execution plan for level-2 feature/runtime coverage. It replaces the stale Loop C class-resource file.
+
+
+Planning policy update, 2026-05-22: until the owner explicitly reopens level-3 expansion, recursive tails and deciders must add only level-1/level-2 closure tasks. Park not-yet-started level-3 tasks as `deferred` instead of expanding this lane with more level-3 work.
 
 Every Ralph prompt for this lane must include:
 
@@ -710,7 +713,7 @@ Verification notes:
 
 ### Task 21 - L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-AREA-SUPPRESSION - Moonbeam Shape-Shift Area Suppression Rider
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -736,9 +739,20 @@ Acceptance:
 - No companion AI/autonomous-control behavior is introduced.
 - No authored identity dispatch is introduced in runtime code.
 
+Result:
+
+- Implemented Moonbeam failed-save shape-shift reversion through the shared Task 20 shape-shift runtime state, with successful saves preserving the active shape-shift.
+- Added Moonbeam-owned shape-shift suppression scoped to the active Cylinder, explicit table-supplied Cylinder-exit cleanup, and spell-effect cleanup through the existing concentration/duration lifecycle.
+- Kept spell-effect and stat-block shape-shift reversion outside Task 21; Tasks 33 and 34 remain the dependency-ordered owners for those unsupported reversion sources.
+
+Verification notes:
+
+- RAW/ubiquitous-language check: SRD 5.2.1 `Spells/Descriptions-M-P.md#Moonbeam` defines failed-save true-form reversion and shape-shifting suppression until the creature leaves the Cylinder; `UBIQUITOUS_LANGUAGE.md` keeps Cylinder/Area of Effect terminology distinct from runtime creature state and table/spatial witnesses.
+- Focused verification covered failed save, successful save, all Moonbeam save triggers, once-per-turn duplicate behavior, explicit Cylinder-exit cleanup, spell cleanup, package-local Quint parity artifacts, generated unit-profile coverage artifacts, and `git diff --check`.
+
 ### Task 22 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION - Druid Wild Shape D20 Statistic Projection
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -763,6 +777,18 @@ Acceptance:
 - The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
 - No companion AI/autonomous-control behavior is introduced.
 - No authored identity dispatch is introduced in runtime code.
+
+Result:
+
+- Implemented battle-owned Wild Shape D20 statistic projection from existing source facts: Character Sheet D20 statistics and selected Beast Stat Blocks.
+- Projected Beast Strength, Dexterity, and Constitution; retained character Intelligence, Wisdom, and Charisma; retained character Skill and Saving Throw proficiencies using character Proficiency Bonus; and higher Beast stat-block Skill/Saving Throw modifiers where present.
+- Kept non-D20 Wild Shape retained-statistic and shape-shifting work visible under Task 23 and the retained-statistics follow-up coverage notes.
+
+Verification notes:
+
+- RAW/ubiquitous-language check: SRD 5.2.1 `Classes/Druid.md#Level 2: Wild Shape` defines the Wild Shape game-statistics replacement and retained Skill/Saving Throw proficiency rules; SRD 5.2.1 `Rules-Glossary.md#Shape-Shifting` says the effect description controls replacement facts; `UBIQUITOUS_LANGUAGE.md` keeps Ability Check, Saving Throw, Skill, Proficiency Bonus, Character Sheet, and Stat Block terms distinct.
+- Focused runtime tests cover active-form Ability Score projection, Skill modifier reconciliation, Saving Throw modifier reconciliation, Wild Shape Shove DC, and true-form Unarmed Strike ability modifier preservation.
+- Package-local promoted Quint tests and generated unit-profile coverage artifacts were updated for the D20 projection slice.
 
 ### Task 23 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME - Druid Wild Shape Shape-Shifting Runtime And Promoted Parity
 
@@ -822,7 +848,9 @@ Acceptance:
 
 ### Task 25 - L12G-FOLLOWUP-WIZARD-EVOKER-POTENT-CANTRIP - Wizard Evoker Potent Cantrip Runtime Support
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred Detail: Owner instruction on 2026-05-22: park not-yet-started level-3 work while the level-1/level-2 closure frontier remains active.
 
 Depends on:
 
@@ -850,7 +878,9 @@ Acceptance:
 
 ### Task 26 - L3-FOLLOWUP-HASTE-SURFACE-AUTHORING - Haste Surface Authoring And Restriction Shape
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred Detail: Owner instruction on 2026-05-22: park not-yet-started level-3 work while the level-1/level-2 closure frontier remains active.
 
 Input:
 
@@ -921,7 +951,9 @@ Acceptance:
 
 ### Task 29 - L3-FOLLOWUP-SLOW-SURFACE-AUTHORING - Slow Surface Authoring And Restriction Shape
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred Detail: Owner instruction on 2026-05-22: park not-yet-started level-3 work while the level-1/level-2 closure frontier remains active.
 
 Input:
 
@@ -991,7 +1023,9 @@ Acceptance:
 
 ### Task 32 - L3-FOLLOWUP-PROTECTION-FROM-ENERGY-DAMAGE-RESISTANCE - Protection From Energy Surface Target Shape And Damage Resistance Runtime Support
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred Detail: Owner instruction on 2026-05-22: park not-yet-started level-3 work while the level-1/level-2 closure frontier remains active.
 
 Input:
 

@@ -592,6 +592,7 @@ export function discoverBattleActs(
   acts.push(...greaseGroundHazardEntrySaveActs(state, actorId));
   acts.push(...webRestraintEntrySaveActs(state, actorId));
   acts.push(...webRestrainedNoLongerInAreaActs(state, actorId));
+  acts.push(...moonbeamCylinderExitActs(state, actorId));
   acts.push(...protectionRelevantEffectSaveActs(state, actorId));
   if (standFromProneCostFeet(state, actorId) !== null) {
     acts.push({
@@ -1240,6 +1241,28 @@ function moonbeamEndTurnSaveActs(
       moonbeamSavingThrowOutcomeHole(state, actorId, effect, "endsTurnInArea"),
     ],
   }));
+}
+
+function moonbeamCylinderExitActs(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly AvailableBattleAct[] {
+  return activeMoonbeamEffects(state)
+    .filter((effect) => effect.shapeShiftSuppressed.includes(actorId))
+    .map((effect) => ({
+      subject: {
+        tag: "runtimeCommand" as const,
+        actorId,
+        command: "moonbeamCylinderExit" as const,
+        sourceCombatantId: effect.sourceCombatantId,
+        sourceSpellId: spellId(effect.sourceSpellId),
+        areaId: effect.areaId,
+      },
+      label: "Leave Moonbeam Cylinder",
+      summary:
+        "Apply the table-supplied fact that the shape-shift-suppressed target has left this Moonbeam Cylinder.",
+      initialHoles: [],
+    }));
 }
 
 function moonbeamRepositionActs(

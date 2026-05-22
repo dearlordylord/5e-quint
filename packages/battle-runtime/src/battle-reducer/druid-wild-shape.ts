@@ -9,9 +9,15 @@ import {
 } from "@dnd/shared-algebras/armor-class-algebra";
 import { abilityScoreToMod } from "@dnd/shared-algebras/ability-score-algebra";
 import { elapsedTimeTicksFromHours } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { Hp, SIZES } from "@dnd/shared/types";
+import { Hp, SIZES, proficiencyBonus } from "@dnd/shared/types";
 import { druidWildShapeDurationHoursForClassLevel } from "@dnd/surface/surface/druid-wild-shape-readers";
-import type { Size, UnitRecord } from "@dnd/surface/surface/types";
+import type {
+  Ability,
+  Size,
+  Skill,
+  StatBlockRecord,
+  UnitRecord,
+} from "@dnd/surface/surface/types";
 import * as Either from "effect/Either";
 
 import type { StatBlockMutableResourceState } from "../battle-action-options.ts";
@@ -29,6 +35,33 @@ import {
   activeCreatureSizeChangeEffect,
   type SpellCreatureSizeChangeEffect,
 } from "./creature-size-change-effects.ts";
+
+const WILD_SHAPE_BEAST_ABILITY_SCORE_ABILITIES = [
+  "str",
+  "dex",
+  "con",
+] as const satisfies ReadonlyArray<Ability>;
+
+const SKILL_ABILITIES = {
+  acrobatics: "dex",
+  animal_handling: "wis",
+  arcana: "int",
+  athletics: "str",
+  deception: "cha",
+  history: "int",
+  insight: "wis",
+  intimidation: "cha",
+  investigation: "int",
+  medicine: "wis",
+  nature: "int",
+  perception: "wis",
+  performance: "cha",
+  persuasion: "cha",
+  religion: "int",
+  sleight_of_hand: "dex",
+  stealth: "dex",
+  survival: "wis",
+} as const satisfies Record<Skill, Ability>;
 
 export type ActiveDruidWildShape = {
   readonly effect: Extract<
@@ -114,6 +147,96 @@ export function combatantDruidWildShapeArmorClassState(
     ...statBlockArmorClassState(literalStatBlockArmorClass(form)),
     abilityModifiers: statBlockAbilityModifiers(form),
   };
+}
+
+export function combatantD20ProficiencyBonus(
+  combatant: BattleCreatureState,
+): number {
+  if (combatant.origin.kind === "statBlock") return 2;
+  const level = combatant.origin.classLevels.reduce(
+    (total, classLevel) => total + Number(classLevel.level),
+    0,
+  );
+  return Number(proficiencyBonus(Math.floor((level - 1) / 4) + 2));
+}
+
+export function combatantD20AbilityScore(
+  combatant: BattleCreatureState,
+  ability: Ability,
+): number {
+  const activeForm = activeDruidWildShapeForm(combatant);
+  if (
+    activeForm !== null &&
+    isWildShapeBeastAbilityScoreAbility(ability)
+  ) {
+    return activeForm.statBlock.abilityScores[ability];
+  }
+  return trueFormD20AbilityScore(combatant, ability);
+}
+
+export function combatantD20AbilityModifier(
+  combatant: BattleCreatureState,
+  ability: Ability,
+): number {
+  return abilityScoreModifier(combatantD20AbilityScore(combatant, ability));
+}
+
+export function combatantAbilityCheckModifier(
+  combatant: BattleCreatureState,
+  input: { readonly ability: Ability; readonly skill?: Skill },
+): number {
+  const ownModifier =
+    combatantD20AbilityModifier(combatant, input.ability) +
+    characterSkillProficiencyBonus(combatant, input.skill);
+  const activeForm = activeDruidWildShapeForm(combatant);
+  const beastSkillModifier =
+    input.skill === undefined || activeForm === null
+      ? undefined
+      : statBlockSkillModifier(activeForm, input.skill);
+  if (beastSkillModifier !== undefined) {
+    return Math.max(ownModifier, beastSkillModifier);
+  }
+  if (combatant.origin.kind === "statBlock" && input.skill !== undefined) {
+    return (
+      statBlockSkillModifier(combatant.origin.statBlock, input.skill) ??
+      ownModifier
+    );
+  }
+  return ownModifier;
+}
+
+export function combatantSkillModifier(
+  combatant: BattleCreatureState,
+  skill: Skill,
+): number {
+  return combatantAbilityCheckModifier(combatant, {
+    ability: SKILL_ABILITIES[skill],
+    skill,
+  });
+}
+
+export function combatantSavingThrowModifier(
+  combatant: BattleCreatureState,
+  ability: Ability,
+): number {
+  const ownModifier =
+    combatantD20AbilityModifier(combatant, ability) +
+    characterSavingThrowProficiencyBonus(combatant, ability);
+  const activeForm = activeDruidWildShapeForm(combatant);
+  const beastSavingThrowModifier =
+    activeForm === null
+      ? undefined
+      : statBlockSavingThrowModifier(activeForm, ability);
+  if (beastSavingThrowModifier !== undefined) {
+    return Math.max(ownModifier, beastSavingThrowModifier);
+  }
+  if (combatant.origin.kind === "statBlock") {
+    return (
+      statBlockSavingThrowModifier(combatant.origin.statBlock, ability) ??
+      ownModifier
+    );
+  }
+  return ownModifier;
 }
 
 export function removeEndedDruidWildShapeEffects(
@@ -231,4 +354,67 @@ function statBlockAbilityModifiers(
     wis: abilityModifier(abilityScoreToMod(scores.wis)),
     cha: abilityModifier(abilityScoreToMod(scores.cha)),
   };
+}
+
+function trueFormD20AbilityScore(
+  combatant: BattleCreatureState,
+  ability: Ability,
+): number {
+  return combatant.origin.kind === "statBlock"
+    ? combatant.origin.statBlock.statBlock.abilityScores[ability]
+    : combatant.origin.d20Statistics.abilityScores[ability];
+}
+
+function isWildShapeBeastAbilityScoreAbility(ability: Ability): boolean {
+  return WILD_SHAPE_BEAST_ABILITY_SCORE_ABILITIES.some(
+    (candidate) => candidate === ability,
+  );
+}
+
+function abilityScoreModifier(score: number): number {
+  return Math.floor((score - 10) / 2);
+}
+
+function characterSavingThrowProficiencyBonus(
+  combatant: BattleCreatureState,
+  ability: Ability,
+): number {
+  return combatant.origin.kind === "character" &&
+    combatant.origin.d20Statistics.savingThrowProficiencies.includes(ability)
+    ? combatantD20ProficiencyBonus(combatant)
+    : 0;
+}
+
+function characterSkillProficiencyBonus(
+  combatant: BattleCreatureState,
+  skill: Skill | undefined,
+): number {
+  if (combatant.origin.kind !== "character" || skill === undefined) return 0;
+  const proficiency = combatantD20ProficiencyBonus(combatant);
+  const proficiencies = combatant.origin.d20Statistics;
+  const trained = proficiencies.skillProficiencies.includes(skill)
+    ? proficiency
+    : 0;
+  const expertise = proficiencies.skillExpertise.includes(skill)
+    ? proficiency
+    : 0;
+  return trained + expertise;
+}
+
+function statBlockSavingThrowModifier(
+  form: BattleDruidWildShapeKnownForm | StatBlockRecord,
+  ability: Ability,
+): number | undefined {
+  return form.statBlock.savingThrowModifiers?.find(
+    (modifier) => modifier.ability === ability,
+  )?.modifier;
+}
+
+function statBlockSkillModifier(
+  form: BattleDruidWildShapeKnownForm | StatBlockRecord,
+  skill: Skill,
+): number | undefined {
+  return form.statBlock.skillModifiers?.find(
+    (modifier) => modifier.skill === skill,
+  )?.modifier;
 }

@@ -20,6 +20,20 @@ module battleRuntimeDruidWildShape {
   }
 
   pure def proficiencyBonus: int = 2
+  pure def characterStrengthModifier: int = -1
+  pure def characterDexterityModifier: int = 0
+  pure def characterConstitutionModifier: int = 0
+  pure def characterIntelligenceModifier: int = 3
+  pure def characterWisdomModifier: int = 2
+  pure def characterCharismaModifier: int = 1
+  pure def characterNatureModifier: int =
+    characterIntelligenceModifier + proficiencyBonus
+  pure def characterStealthModifier: int =
+    characterDexterityModifier + proficiencyBonus + proficiencyBonus
+  pure def characterDexteritySavingThrowModifier: int =
+    characterDexterityModifier + proficiencyBonus
+  pure def characterWisdomSavingThrowModifier: int =
+    characterWisdomModifier + proficiencyBonus
 
   pure def druidWildShapeSource: ClassFeatureShapeShiftSource =
     {
@@ -32,6 +46,12 @@ module battleRuntimeDruidWildShape {
     creatureSize: "large",
     speedFeet: 60,
     strengthModifier: 3,
+    dexterityModifier: 1,
+    constitutionModifier: 1,
+    stealthModifier: 1,
+    perceptionModifier: 0,
+    dexteritySavingThrowModifier: 1,
+    wisdomSavingThrowModifier: 0,
   }
 
   pure def mediumSwiftFormFacts: DruidWildShapeFormFacts = {
@@ -39,6 +59,12 @@ module battleRuntimeDruidWildShape {
     creatureSize: "medium",
     speedFeet: 40,
     strengthModifier: 2,
+    dexterityModifier: 2,
+    constitutionModifier: 1,
+    stealthModifier: 4,
+    perceptionModifier: 5,
+    dexteritySavingThrowModifier: 6,
+    wisdomSavingThrowModifier: 1,
   }
 
   pure def projectedArmorClass(state: DruidWildShapeProjection): int =
@@ -69,6 +95,72 @@ module battleRuntimeDruidWildShape {
     match state.activeForm {
       | DruidWildShapeTrueForm => 13
       | DruidWildShapeShifted(data) => 8 + data.replacementForm.strengthModifier + proficiencyBonus
+    }
+
+  pure def projectedStrengthModifier(state: DruidWildShapeProjection): int =
+    match state.activeForm {
+      | DruidWildShapeTrueForm => characterStrengthModifier
+      | DruidWildShapeShifted(data) => data.replacementForm.strengthModifier
+    }
+
+  pure def projectedDexterityModifier(state: DruidWildShapeProjection): int =
+    match state.activeForm {
+      | DruidWildShapeTrueForm => characterDexterityModifier
+      | DruidWildShapeShifted(data) => data.replacementForm.dexterityModifier
+    }
+
+  pure def projectedConstitutionModifier(state: DruidWildShapeProjection): int =
+    match state.activeForm {
+      | DruidWildShapeTrueForm => characterConstitutionModifier
+      | DruidWildShapeShifted(data) => data.replacementForm.constitutionModifier
+    }
+
+  pure def projectedIntelligenceModifier(_state: DruidWildShapeProjection): int =
+    characterIntelligenceModifier
+
+  pure def projectedWisdomModifier(_state: DruidWildShapeProjection): int =
+    characterWisdomModifier
+
+  pure def projectedCharismaModifier(_state: DruidWildShapeProjection): int =
+    characterCharismaModifier
+
+  pure def projectedNatureModifier(_state: DruidWildShapeProjection): int =
+    characterNatureModifier
+
+  pure def projectedStealthModifier(state: DruidWildShapeProjection): int =
+    match state.activeForm {
+      | DruidWildShapeTrueForm => characterStealthModifier
+      | DruidWildShapeShifted(data) =>
+        if (data.replacementForm.stealthModifier > characterStealthModifier)
+          data.replacementForm.stealthModifier
+        else characterStealthModifier
+    }
+
+  pure def projectedPerceptionModifier(state: DruidWildShapeProjection): int =
+    match state.activeForm {
+      | DruidWildShapeTrueForm => characterWisdomModifier
+      | DruidWildShapeShifted(data) =>
+        if (data.replacementForm.perceptionModifier > characterWisdomModifier)
+          data.replacementForm.perceptionModifier
+        else characterWisdomModifier
+    }
+
+  pure def projectedDexteritySavingThrowModifier(state: DruidWildShapeProjection): int =
+    match state.activeForm {
+      | DruidWildShapeTrueForm => characterDexteritySavingThrowModifier
+      | DruidWildShapeShifted(data) =>
+        if (data.replacementForm.dexteritySavingThrowModifier > characterDexteritySavingThrowModifier)
+          data.replacementForm.dexteritySavingThrowModifier
+        else characterDexteritySavingThrowModifier
+    }
+
+  pure def projectedWisdomSavingThrowModifier(state: DruidWildShapeProjection): int =
+    match state.activeForm {
+      | DruidWildShapeTrueForm => characterWisdomSavingThrowModifier
+      | DruidWildShapeShifted(data) =>
+        if (data.replacementForm.wisdomSavingThrowModifier > characterWisdomSavingThrowModifier)
+          data.replacementForm.wisdomSavingThrowModifier
+        else characterWisdomSavingThrowModifier
     }
 
   pure def canAssumeForm(state: DruidWildShapeProjection): bool =
@@ -121,6 +213,23 @@ module battleRuntimeDruidWildShape {
       assert(projectedSpeedFeet(state) == 60),
       assert(projectedShoveSaveDc(state) == 13),
       assert(canCastSpells(state) == false),
+    }
+  }
+
+  run test_druid_wild_shape_projects_d20_statistics = {
+    val state = assumeForm(initialProjection, mediumSwiftFormFacts)
+    all {
+      assert(projectedStrengthModifier(state) == 2),
+      assert(projectedDexterityModifier(state) == 2),
+      assert(projectedConstitutionModifier(state) == 1),
+      assert(projectedIntelligenceModifier(state) == 3),
+      assert(projectedWisdomModifier(state) == 2),
+      assert(projectedCharismaModifier(state) == 1),
+      assert(projectedNatureModifier(state) == 5),
+      assert(projectedStealthModifier(state) == 4),
+      assert(projectedPerceptionModifier(state) == 5),
+      assert(projectedDexteritySavingThrowModifier(state) == 6),
+      assert(projectedWisdomSavingThrowModifier(state) == 4),
     }
   }
 

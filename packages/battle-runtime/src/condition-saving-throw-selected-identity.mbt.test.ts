@@ -47,6 +47,7 @@ import {
   type BattleSubject,
   type CombatantId,
 } from "./index.ts";
+import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { spellConditionChoiceFill } from "./unit-profile-admission-spell-fill-support.ts";
 
 const conditionSavingThrowSelectedIdentityDriverSchema = {
@@ -668,6 +669,7 @@ function conditionSpellCreature(input: {
       characterId: characterId(`${input.combatantId}-character`),
       characterUnitRefs: [],
       classLevels: [{ className: input.className, level: 1 }],
+      d20Statistics: testCharacterD20Statistics(),
       armorClass: defaultArmorClassState(),
       size: "medium",
       speed: { walkFeet: movementFeet(30) },

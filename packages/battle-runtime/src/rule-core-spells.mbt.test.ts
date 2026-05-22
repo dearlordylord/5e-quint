@@ -66,6 +66,7 @@ import {
   type CombatantId,
   type SpellInvocationRef,
 } from "./index.ts";
+import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 
 const ruleCoreSpellMbtHoles = [
   "TargetChoice",
@@ -1645,6 +1646,7 @@ function characterCreature(input: {
       characterId: characterId(`${input.combatantId}-character`),
       characterUnitRefs: [],
       classLevels: [{ className: "wizard", level: 1 }],
+      d20Statistics: testCharacterD20Statistics(),
       armorClass: input.armorClass ?? defaultArmorClassState(),
       size: "medium",
       speed: { walkFeet: movementFeet(30) },
