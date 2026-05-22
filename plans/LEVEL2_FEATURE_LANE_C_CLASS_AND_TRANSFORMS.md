@@ -151,13 +151,13 @@
     {
       "number": 25,
       "id": "L12G-FOLLOWUP-WIZARD-EVOKER-POTENT-CANTRIP",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Wizard Evoker Potent Cantrip Runtime Support"
     },
     {
       "number": 26,
       "id": "L3-FOLLOWUP-HASTE-SURFACE-AUTHORING",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Haste Surface Authoring And Restriction Shape"
     },
     {
@@ -175,7 +175,7 @@
     {
       "number": 29,
       "id": "L3-FOLLOWUP-SLOW-SURFACE-AUTHORING",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Slow Surface Authoring And Restriction Shape"
     },
     {
@@ -193,7 +193,7 @@
     {
       "number": 32,
       "id": "L3-FOLLOWUP-PROTECTION-FROM-ENERGY-DAMAGE-RESISTANCE",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Protection From Energy Surface Target Shape And Damage Resistance Runtime Support"
     },
     {
@@ -213,6 +213,9 @@
 -->
 
 This is an active Ralph execution plan for level-2 feature/runtime coverage. It replaces the stale Loop C class-resource file.
+
+
+Planning policy update, 2026-05-22: until the owner explicitly reopens level-3 expansion, recursive tails and deciders must add only level-1/level-2 closure tasks. Park not-yet-started level-3 tasks as `deferred` instead of expanding this lane with more level-3 work.
 
 Every Ralph prompt for this lane must include:
 
@@ -845,7 +848,9 @@ Acceptance:
 
 ### Task 25 - L12G-FOLLOWUP-WIZARD-EVOKER-POTENT-CANTRIP - Wizard Evoker Potent Cantrip Runtime Support
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred Detail: Owner instruction on 2026-05-22: park not-yet-started level-3 work while the level-1/level-2 closure frontier remains active.
 
 Depends on:
 
@@ -873,7 +878,9 @@ Acceptance:
 
 ### Task 26 - L3-FOLLOWUP-HASTE-SURFACE-AUTHORING - Haste Surface Authoring And Restriction Shape
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred Detail: Owner instruction on 2026-05-22: park not-yet-started level-3 work while the level-1/level-2 closure frontier remains active.
 
 Input:
 
@@ -944,7 +951,9 @@ Acceptance:
 
 ### Task 29 - L3-FOLLOWUP-SLOW-SURFACE-AUTHORING - Slow Surface Authoring And Restriction Shape
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred Detail: Owner instruction on 2026-05-22: park not-yet-started level-3 work while the level-1/level-2 closure frontier remains active.
 
 Input:
 
@@ -1014,7 +1023,9 @@ Acceptance:
 
 ### Task 32 - L3-FOLLOWUP-PROTECTION-FROM-ENERGY-DAMAGE-RESISTANCE - Protection From Energy Surface Target Shape And Damage Resistance Runtime Support
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred Detail: Owner instruction on 2026-05-22: park not-yet-started level-3 work while the level-1/level-2 closure frontier remains active.
 
 Input:
 
