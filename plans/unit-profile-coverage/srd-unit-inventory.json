@@ -194,13 +194,13 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 532,
-      "percent": "95.7%",
+      "numerator": 534,
+      "percent": "96%",
       "rowsByStatus": {
-        "accepted": 385,
+        "accepted": 387,
         "accepted-no-battle-effect": 147,
         "owner-evidence-required": 2,
-        "partial-battle-runtime": 20,
+        "partial-battle-runtime": 18,
         "battle-runtime-required": 2
       }
     },
@@ -21431,6 +21431,12 @@
       },
       "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "runtime-detached loose-object lifecycle and table/spatial vertical movement owner",
+        "reason": "The Surface Spell Definition records the loose-object target shape and 500-pound gate, but promoted battle runtime has no canonical loose-object position, weight, aloft/grounded, fixed-object attachment, surface reach, range derivation, map geometry, or gentle-grounding lifecycle state to mutate and clean up. Reusing the creature altitude active effect for objects would duplicate object lifecycle state inside Levitate, so the loose-object branch remains table/object-spatial adjudication until a generic loose-object lifecycle owner exists."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -21444,7 +21450,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_magic_weapon",
@@ -27165,6 +27171,12 @@
       },
       "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "runtime-detached loose-object lifecycle and table/spatial vertical movement owner",
+        "reason": "The Surface Spell Definition records the loose-object target shape and 500-pound gate, but promoted battle runtime has no canonical loose-object position, weight, aloft/grounded, fixed-object attachment, surface reach, range derivation, map geometry, or gentle-grounding lifecycle state to mutate and clean up. Reusing the creature altitude active effect for objects would duplicate object lifecycle state inside Levitate, so the loose-object branch remains table/object-spatial adjudication until a generic loose-object lifecycle owner exists."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -27178,7 +27190,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_locate_object",

@@ -79,13 +79,13 @@
     {
       "number": 13,
       "id": "L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Levitate Loose Object Branch"
     },
     {
       "number": 14,
       "id": "L12G-RECURSIVE-TAIL-LANE-A-2",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Lane A Recursive Planning Tail 2"
     },
     {
@@ -171,8 +171,8 @@ Every task must include:
 | 10 | L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH - Enlarge Reduce Object Branch | done | L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME | L12G-RECURSIVE-TAIL-LANE-A-2 | SRD Enlarge/Reduce object and worn/carried item text; object/item lifecycle boundaries | Completed Surface object-target support and accepted runtime-detached closure for object/item Size lifecycle residuals. |
 | 11 | L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME - Enthrall Perception Penalty Runtime Support | done | L12G-RECURSIVE-TAIL-LANE-A | L12G-RECURSIVE-TAIL-LANE-A-2 | SRD Enthrall; target-list, Saving Throw, fixed d20-roll modifier, Passive Check projection boundaries | Completed Enthrall Perception penalty subset through the promoted roll-modifier profile. |
 | 12 | L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME - Levitate Creature Runtime Support | done | L12G-RECURSIVE-TAIL-LANE-A | L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH, L12G-RECURSIVE-TAIL-LANE-A-2 | SRD Levitate creature branch; movement and table/spatial witness boundaries | Completed Levitate creature runtime subset with active levitated-target state and altitude-control witness boundaries. |
-| 13 | L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH - Levitate Loose Object Branch | ready-for-research | L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME | L12G-RECURSIVE-TAIL-LANE-A-2 | SRD Levitate loose object branch; shared object lifecycle or table/spatial witness owner | Creature branch dependency is complete; next executable task decides or promotes the loose-object branch without duplicating object state inside Levitate. |
-| 14 | L12G-RECURSIVE-TAIL-LANE-A-2 - Lane A Recursive Planning Tail 2 | blocked | L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH, L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME, L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH | next Lane A frontier if any | Refreshed level-2 feature metrics after this appended batch | Unblock only after the appended Lane A follow-up batch is done or explicitly closed. |
+| 13 | L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH - Levitate Loose Object Branch | done | L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME | L12G-RECURSIVE-TAIL-LANE-A-2 | SRD Levitate loose object branch; shared object lifecycle or table/spatial witness owner | Completed as accepted runtime-detached closure for loose-object lifecycle and table/spatial vertical movement residuals. |
+| 14 | L12G-RECURSIVE-TAIL-LANE-A-2 - Lane A Recursive Planning Tail 2 | ready-for-research | L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH, L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME, L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH | next Lane A frontier if any | Refreshed level-2 feature metrics after this appended batch | Dependencies are complete; next task refreshes metrics and adds concrete Lane A frontier tasks only if real frontier remains. |
 
 ## Tasks
 
@@ -405,7 +405,7 @@ Output:
 
 ### Task 13 - L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH - Levitate Loose Object Branch
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME
 
@@ -418,24 +418,24 @@ Input:
   table/spatial witness owner selected by prior tasks.
 
 Output:
-- Focused Surface/runtime owner decision for Levitate's loose object branch:
-  one visible loose object target within 60 feet weighing up to 500 pounds, no
-  creature Saving Throw, spell-owned suspension and altitude changes,
-  fixed-object or surface movement restrictions where relevant, range-gated
-  caster movement, and gentle grounding when the spell ends.
-- Focused tests or accepted runtime-detached closure for loose-object
-  suspension, altitude control, range, and gentle-grounding facts, reusing any
-  shared object lifecycle owner instead of duplicating object state inside
-  Levitate.
+- Accepted runtime-detached closure for Levitate's loose object branch: the
+  Surface Spell Definition records the loose-object target shape, visibility,
+  60-foot range, 500-pound weight gate, no creature Saving Throw for objects,
+  suspension, altitude-control, range-gated caster movement,
+  fixed-object-or-surface movement language, and gentle-grounding text.
+- Promoted battle runtime does not add Levitate-specific object altitude state:
+  loose-object position, weight, aloft/grounded state, fixed-object/surface
+  reach, range derivation, map geometry, and gentle grounding remain with a
+  runtime-detached loose-object lifecycle and table/spatial vertical movement
+  owner until a generic owner exists.
 
 ### Task 14 - L12G-RECURSIVE-TAIL-LANE-A-2 - Lane A Recursive Planning Tail 2
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH, L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME, L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH
 
-Unblock only after the appended Lane A follow-up batch is done or explicitly
-closed.
+The appended Lane A follow-up batch is complete or explicitly closed.
 
 Output:
 - Refresh level-2 feature metrics.

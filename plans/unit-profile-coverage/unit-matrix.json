@@ -10911,6 +10911,12 @@
         "spell.invocation-levitated-creature"
       ],
       "taskId": "L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME"
+    },
+    {
+      "claimKind": "accepted-runtime-closure",
+      "note": "Task 13 closes Levitate's loose-object branch as runtime-detached object/spatial adjudication. The Surface Spell Definition already records the SRD loose object target, visibility, 60-foot range, 500-pound weight gate, no creature Saving Throw for objects, suspension, altitude-control, range-gated caster movement, fixed-object-or-surface movement language, and gentle-grounding text. Promoted battle runtime has no generic loose-object lifecycle owner for object position, weight, aloft/grounded state, fixed-object/surface reach, or gentle grounding; adding Levitate-specific object altitude state would duplicate object lifecycle facts instead of reusing a shared owner.",
+      "profileIds": [],
+      "taskId": "L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH"
     }
   ],
   "units": [
@@ -20496,28 +20502,14 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH",
-            "mechanic": "Levitate loose-object branch: one visible loose object target within 60 feet weighing up to 500 pounds, spell-owned suspension and altitude changes, and gentle grounding for objects."
-          },
-          {
             "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "table/spatial vertical movement witness boundary",
-              "reason": "Promoted battle runtime records active levitated altitude and consumes explicit fixed-object/surface and within-range witnesses; it does not derive map geometry, available surfaces, or routes."
+              "kind": "outside-battle-runtime",
+              "owner": "runtime-detached loose-object lifecycle and table/spatial vertical movement owner",
+              "reason": "The Surface Spell Definition records the loose-object target shape and 500-pound gate, but promoted battle runtime has no canonical loose-object position, weight, aloft/grounded, fixed-object attachment, surface reach, range derivation, map geometry, or gentle-grounding lifecycle state to mutate and clean up. Reusing the creature altitude active effect for objects would duplicate object lifecycle state inside Levitate, so the loose-object branch remains table/object-spatial adjudication until a generic loose-object lifecycle owner exists."
             },
-            "mechanic": "automatic elevation, pathfinding, route legality, range derivation, fixed-object discovery, surface reach derivation, and map geometry remain caller/table supplied facts rather than runtime-derived position state"
+            "mechanic": "Levitate loose-object branch: one visible loose object target within 60 feet weighing up to 500 pounds, no creature Saving Throw, spell-owned suspension and altitude changes, caster range-gated Magic Action movement, fixed-object or surface movement restrictions, automatic spatial derivation, and gentle grounding for objects when the spell ends."
           }
         ],
-        "followUpTasks": [
-          {
-            "id": "L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH",
-            "mechanic": "Represent and promote or close Levitate's loose object branch: one visible loose object target within 60 feet weighing up to 500 pounds, no creature saving throw, spell-owned suspension and altitude changes, fixed-object or surface movement restrictions where relevant, range-gated caster movement, and gentle grounding when the spell ends without inventing spell-specific object position state.",
-            "owner": "surface Spell Definition authoring plus battle-runtime object lifecycle owner decision",
-            "requiredOutput": "Focused Surface/runtime owner decision with tests or accepted runtime-detached closure for loose-object suspension, altitude control, range, and gentle-grounding facts, reusing any future object lifecycle owner rather than duplicating object state inside Levitate.",
-            "title": "Levitate Loose Object Branch"
-          }
-        ],
-        "futureProfileOwner": "battle-runtime object lifecycle owner plus table/spatial vertical movement witness boundary",
         "profileIds": [
           "spell.invocation-levitated-creature"
         ],

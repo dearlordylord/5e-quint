@@ -1605,12 +1605,12 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "follow-up-split"
+        "outside-battle-runtime"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH: Represent and promote or close Levitate's loose object branch: one visible loose object target within 60 feet weighing up to 500 pounds, no creature saving throw, spell-owned suspension and altitude changes, fixed-object or surface movement restrictions where relevant, range-gated caster movement, and gentle grounding when the spell ends without inventing spell-specific object position state. Owner: surface Spell Definition authoring plus battle-runtime object lifecycle owner decision. Required output: Focused Surface/runtime owner decision with tests or accepted runtime-detached closure for loose-object suspension, altitude control, range, and gentle-grounding facts, reusing any future object lifecycle owner rather than duplicating object state inside Levitate.",
+      "reason": "The Surface Spell Definition records the loose-object target shape and 500-pound gate, but promoted battle runtime has no canonical loose-object position, weight, aloft/grounded, fixed-object attachment, surface reach, range derivation, map geometry, or gentle-grounding lifecycle state to mutate and clean up. Reusing the creature altitude active effect for objects would duplicate object lifecycle state inside Levitate, so the loose-object branch remains table/object-spatial adjudication until a generic loose-object lifecycle owner exists.",
       "sourceRecordPath": "packages/surface/content/levitate.json",
       "sourceRows": [
         {
@@ -1638,7 +1638,7 @@
           }
         }
       ],
-      "status": "blocked-follow-up-split",
+      "status": "closed-outside-battle-runtime-boundary",
       "strictTargetClosed": true,
       "unitId": "levitate"
     },
@@ -2888,7 +2888,7 @@
       ]
     },
     {
-      "count": 10,
+      "count": 9,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
@@ -2897,7 +2897,6 @@
         "darkness",
         "druid_wild_shape",
         "enhance_ability",
-        "levitate",
         "moonbeam",
         "ray_of_enfeeblement",
         "sorcerer_metamagic",
@@ -2928,11 +2927,12 @@
       ]
     },
     {
-      "count": 2,
+      "count": 3,
       "description": "The remaining residuals are explicitly outside promoted battle-runtime ownership.",
       "status": "closed-outside-battle-runtime-boundary",
       "unitIds": [
         "enlarge_reduce",
+        "levitate",
         "prayer_of_healing"
       ]
     },
@@ -2964,14 +2964,14 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 532,
-      "percent": "95.7%",
+      "numerator": 534,
+      "percent": "96%",
       "rowsByStatus": {
-        "accepted": 385,
+        "accepted": 387,
         "accepted-no-battle-effect": 147,
         "battle-runtime-required": 2,
         "owner-evidence-required": 2,
-        "partial-battle-runtime": 20
+        "partial-battle-runtime": 18
       }
     },
     "rulesKernelCoveredProfileJoin": {
@@ -8208,11 +8208,11 @@
       "unsupported-profile": 29
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 10,
+      "blocked-follow-up-split": 9,
       "closed-character-fact-and-runtime-detached-split": 3,
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
-      "closed-outside-battle-runtime-boundary": 2,
+      "closed-outside-battle-runtime-boundary": 3,
       "closed-runtime-detached-table-adjudication": 34,
       "open-profile-accounting": 1,
       "open-runtime-behavior": 1,
