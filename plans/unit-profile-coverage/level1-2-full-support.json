@@ -1163,11 +1163,13 @@
     {
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
-      "closureKinds": [],
+      "closureKinds": [
+        "outside-battle-runtime"
+      ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "object target branch, object size-category lifecycle, worn or carried item size changes, dropped-item normalization, and thrown weapon or ammunition normalization",
+      "reason": "Promoted battle runtime has no canonical object Size state, carried/worn item Size state, dropped-item location state, or thrown weapon/ammunition occurrence lifecycle to mutate and clean up. The existing creature branch already models the battle-visible attack damage consequence without duplicating item state, so object and item Size normalization remain outside promoted battle runtime until a generic object/item lifecycle owner exists.",
       "sourceRecordPath": "packages/surface/content/enlarge_reduce.json",
       "sourceRows": [
         {
@@ -1219,8 +1221,8 @@
           }
         }
       ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
+      "status": "closed-outside-battle-runtime-boundary",
+      "strictTargetClosed": true,
       "unitId": "enlarge_reduce"
     },
     {
@@ -2094,8 +2096,8 @@
           }
         }
       ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
+      "status": "closed-outside-battle-runtime-boundary",
+      "strictTargetClosed": true,
       "unitId": "prayer_of_healing"
     },
     {
@@ -2926,11 +2928,10 @@
       ]
     },
     {
-      "count": 3,
-      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
-      "status": "open-profile-accounting",
+      "count": 2,
+      "description": "The remaining residuals are explicitly outside promoted battle-runtime ownership.",
+      "status": "closed-outside-battle-runtime-boundary",
       "unitIds": [
-        "dragons_breath",
         "enlarge_reduce",
         "prayer_of_healing"
       ]
@@ -2945,6 +2946,14 @@
     },
     {
       "count": 1,
+      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
+      "status": "open-profile-accounting",
+      "unitIds": [
+        "dragons_breath"
+      ]
+    },
+    {
+      "count": 1,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
@@ -2955,14 +2964,14 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 526,
-      "percent": "94.6%",
+      "numerator": 530,
+      "percent": "95.3%",
       "rowsByStatus": {
-        "accepted": 379,
+        "accepted": 383,
         "accepted-no-battle-effect": 147,
         "battle-runtime-required": 6,
         "owner-evidence-required": 2,
-        "partial-battle-runtime": 22
+        "partial-battle-runtime": 18
       }
     },
     "rulesKernelCoveredProfileJoin": {
@@ -2987,19 +2996,17 @@
     },
     "strictTargetClosure": {
       "denominator": 171,
-      "numerator": 167,
-      "percent": "97.7%"
+      "numerator": 169,
+      "percent": "98.8%"
     }
   },
   "openFrontier": [
     {
-      "count": 3,
+      "count": 1,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
-        "dragons_breath",
-        "enlarge_reduce",
-        "prayer_of_healing"
+        "dragons_breath"
       ]
     },
     {
@@ -8205,8 +8212,9 @@
       "closed-character-fact-and-runtime-detached-split": 3,
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
+      "closed-outside-battle-runtime-boundary": 2,
       "closed-runtime-detached-table-adjudication": 33,
-      "open-profile-accounting": 3,
+      "open-profile-accounting": 1,
       "open-runtime-behavior": 1,
       "supported-profile": 113
     },

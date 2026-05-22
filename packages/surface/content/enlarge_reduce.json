@@ -26,13 +26,18 @@
         "attachment": {
           "holeId": "enlarge_reduce_target",
           "kind": "hole",
-          "label": "creature target",
+          "label": "creature or object target",
           "value": {
             "kind": "target",
             "selection": {
               "mode": "one",
+              "objectFilter": {
+                "targetRelation": "not_worn_or_carried",
+                "visibility": "caster_can_see"
+              },
               "targetKinds": [
-                "creature"
+                "creature",
+                "object"
               ]
             }
           }
@@ -139,7 +144,7 @@
         "onSuccess": {
           "kind": "none"
         },
-        "saveAppliesIf": "unwilling_target"
+        "saveAppliesIf": "unwilling_creature_target"
       }
     ],
     "range": {

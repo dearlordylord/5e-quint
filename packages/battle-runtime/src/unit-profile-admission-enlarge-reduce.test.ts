@@ -76,7 +76,7 @@ function creatureSizeActInState(
 }
 
 describe("L12G deterministic Enlarge/Reduce creature admission", () => {
-  test("admits separate creature size increase and decrease spell-slot acts", () => {
+  test("admits only creature size increase and decrease spell-slot acts from the creature-or-object Surface target", () => {
     const { state } = creatureSizeAct("creatureSizeIncrease");
     const procedures = discoverBattleActs(state).flatMap((act) =>
       act.subject.tag === "actionSpell" &&

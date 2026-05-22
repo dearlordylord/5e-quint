@@ -18322,14 +18322,19 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH",
-            "mechanic": "object target branch, object size-category lifecycle, worn or carried item size changes, dropped-item normalization, and thrown weapon or ammunition normalization"
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "runtime-detached object and item lifecycle owner",
+              "reason": "Promoted battle runtime has no canonical object Size state, carried/worn item Size state, dropped-item location state, or thrown weapon/ammunition occurrence lifecycle to mutate and clean up. The existing creature branch already models the battle-visible attack damage consequence without duplicating item state, so object and item Size normalization remain outside promoted battle runtime until a generic object/item lifecycle owner exists."
+            },
+            "mechanic": "Object Size-category lifecycle and cleanup for object targets, carried or worn item size changes while a creature branch is active, dropped-item normalization, and thrown weapon or ammunition normalization immediately after hit or miss"
           }
         ],
         "profileIds": [
           "spell.invocation-creature-size-change"
         ],
         "supportedMechanics": [
+          "Surface Spell Definition records one creature-or-object target with executable object visibility and object neither-worn-nor-carried constraints",
           "Magic Action casting with level-2-or-higher Spell Slot spending from the SRD Enlarge/Reduce creature branch",
           "caster-owned Concentration up to 1 minute and cleanup through the active-effect expiration lifecycle",
           "willing creature target application from table-supplied willingness facts",

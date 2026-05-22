@@ -13,12 +13,18 @@
 --   1d4 damage from attacks with reduced weapons or Unarmed Strikes, with a
 --   minimum damage of 1.
 --
--- PARTIAL CREATURE-BRANCH SURFACE RECORD.
---   The object target branch is deliberately not encoded here: Surface target
---   selection cannot represent "object that is neither worn nor carried"
---   together with the creature branch, and promoted runtime has
---   no object-size lifecycle owner. The Unit coverage claim records that as a
---   smaller follow-up split.
+--   "Everything that a targeted creature is wearing and carrying changes size
+--    with it. Any item it drops returns to normal size at once. A thrown weapon
+--    or piece of ammunition returns to normal size immediately after it hits or
+--    misses a target."
+--
+-- Runtime profile boundary:
+--   Surface records the creature-or-object target and the object target's
+--   visibility and neither-worn-nor-carried constraints. Promoted battle runtime
+--   support stays narrowed to the creature branch because no generic object Size
+--   lifecycle or carried/worn item lifecycle owner exists; the Unit coverage
+--   claim records that object and item state as an outside-battle-runtime
+--   closure.
 
 let DiceDelta : Type =
       { kind : Text, dice : Natural, dieSize : Natural, sign : Text }
@@ -174,16 +180,22 @@ let enlargeReduce =
                 , attachment =
                     { kind = "hole"
                     , holeId = "enlarge_reduce_target"
-                    , label = "creature target"
+                    , label = "creature or object target"
                     , value =
                         { kind = "target"
                         , selection =
-                            { mode = "one", targetKinds = [ "creature" ] }
+                            { mode = "one"
+                            , targetKinds = [ "creature", "object" ]
+                            , objectFilter =
+                                { visibility = "caster_can_see"
+                                , targetRelation = "not_worn_or_carried"
+                                }
+                            }
                         }
                     }
                 , ability = "con"
                 , dc = { kind = "caster_spell_save_dc" }
-                , saveAppliesIf = "unwilling_target"
+                , saveAppliesIf = "unwilling_creature_target"
                 , onFail = enlargeReduceChoice
                 , onSuccess = { kind = "none" }
                 }

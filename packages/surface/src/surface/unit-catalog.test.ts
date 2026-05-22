@@ -3305,7 +3305,7 @@ describe("SRD Unit catalog boundary", () => {
     ).toBe(true);
   });
 
-  test("decodes Enlarge/Reduce as a creature-branch size and Strength-mode spell", () => {
+  test("decodes Enlarge/Reduce as a creature-or-object target with creature-branch size and Strength-mode facts", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 
     expect(result.tag).toBe("ok");
@@ -3333,16 +3333,20 @@ describe("SRD Unit catalog boundary", () => {
       expect(phase?.kind).toBe("save_gate");
       if (phase?.kind !== "save_gate") return;
       expect(phase.ability).toBe("con");
-      expect(phase.saveAppliesIf).toBe("unwilling_target");
+      expect(phase.saveAppliesIf).toBe("unwilling_creature_target");
       expect(phase.attachment).toEqual({
         kind: "hole",
         holeId: "enlarge_reduce_target",
-        label: "creature target",
+        label: "creature or object target",
         value: {
           kind: "target",
           selection: {
             mode: "one",
-            targetKinds: ["creature"],
+            targetKinds: ["creature", "object"],
+            objectFilter: {
+              visibility: "caster_can_see",
+              targetRelation: "not_worn_or_carried",
+            },
           },
         },
       });

@@ -1256,12 +1256,21 @@ function creatureSizeChangeSpellProjection(
     phase?.kind !== "save_gate" ||
     phase.ability !== "con" ||
     phase.dc.kind !== "caster_spell_save_dc" ||
-    phase.saveAppliesIf !== "unwilling_target" ||
+    phase.saveAppliesIf !== "unwilling_creature_target" ||
     phase.attachment.kind !== "hole" ||
-    phase.attachment.value.kind !== "target" ||
-    phase.attachment.value.selection.mode !== "one" ||
-    phase.attachment.value.selection.targetKinds === undefined ||
-    !sameStringSet(phase.attachment.value.selection.targetKinds, ["creature"]) ||
+    phase.attachment.value.kind !== "target"
+  ) {
+    return [];
+  }
+  const targetSelection = phase.attachment.value.selection;
+  const objectFilter =
+    "objectFilter" in targetSelection ? targetSelection.objectFilter : undefined;
+  if (
+    targetSelection?.mode !== "one" ||
+    targetSelection.targetKinds === undefined ||
+    !sameStringSet(targetSelection.targetKinds, ["creature", "object"]) ||
+    objectFilter?.visibility !== "caster_can_see" ||
+    objectFilter?.targetRelation !== "not_worn_or_carried" ||
     phase.onSuccess.kind !== "none" ||
     phase.onFail.kind !== "choose_effect_mode"
   ) {
