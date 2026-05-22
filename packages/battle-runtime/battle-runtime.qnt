@@ -154,7 +154,7 @@ module battleRuntime {
   // - Playing-the-Game.md lines 684-698 and 788-808: damage subtracts from HP,
   //   HP cannot go below 0, weapon damage adds the attack ability modifier, and
   //   Temporary Hit Points absorb damage before HP.
-  // - Playing-the-Game.md lines 748-780 and ASSUMPTIONS.md A12: Stat Block
+  // - Playing-the-Game.md lines 748-780: Stat Block
   //   monsters use Monster Death at 0 HP; Character Build combatants use the
   //   Death Saving Throw lifecycle, including instant death from massive
   //   damage. This spec covers the immediate HP-mutation boundary: drop to
@@ -334,7 +334,7 @@ module battleRuntime {
   //   other spatial costs are caller-authored Movement costs at this runtime
   //   boundary; table-supplied reach-exit facts open an Opportunity Attack
   //   Reaction window before Movement is committed.
-  // - Monsters/Overview.md lines 253-265 and ASSUMPTIONS.md A21-A24: Stat
+  // - Monsters/Overview.md lines 253-265: Stat
   //   Block monster controls own Legendary Action uses and limited-use
   //   resources. This spec models the Stat Block resource boundary with a
   //   representative Goblin recharge part and Legendary Action use pool;

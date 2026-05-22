@@ -143,7 +143,7 @@ This package supports these character-creation profiles:
 - equipment ownership and selected-equipment loadout slots needed by finalization.
 
 Loadout is a runtime projection precondition for the first supported build, not
-an SRD-authored character-creation choice. See `../../ASSUMPTIONS.md` A40.
+an SRD-authored character-creation choice.
 
 Support gates are package-private runtime narrowings. They must not become
 public Surface classifications or new source rules. The current

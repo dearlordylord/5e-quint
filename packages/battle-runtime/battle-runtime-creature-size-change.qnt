@@ -113,7 +113,7 @@ module battleRuntimeCreatureSizeChange {
     target: Actor,
     effect: ActiveEffect,
   ): BattleState =
-    // A48: the promoted Enlarge/Reduce creature branch is target-exclusive.
+    // The promoted Enlarge/Reduce creature branch is target-exclusive.
     match target {
       | Fighter => {
           ...state,

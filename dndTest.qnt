@@ -4883,7 +4883,7 @@ module dndTest::Impl {
   }
 
   // ============================================================
-  // Multiattack Tests (A15)
+  // Multiattack Tests
   // ============================================================
   // SRD 5.2.1 (Monsters/Overview.md, "Multiattack"): a stat block entry
   // allowing a monster to make multiple attacks as part of a single Attack

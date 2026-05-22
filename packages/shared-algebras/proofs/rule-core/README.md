@@ -413,8 +413,7 @@ Scope:
   spend Reaction quota only when taken;
 - Legendary Action windows open after another creature's turn, spend one
   Legendary Action use, close after one action, refresh at the monster's start
-  turn, and leave per-action-name cooldowns to the caller per `ASSUMPTIONS.md`
-  A24;
+  turn, and leave per-action-name cooldowns to the caller;
 - X/Day, Recharge, Recharge after Short or Long Rest, and start-turn keyed d6
   Recharge rolls mutate only executable resource state.
 
@@ -422,8 +421,7 @@ Out of scope for QCORE11:
 
 - authored Stat Block catalog breadth or parser admission;
 - monster-specific tactics or action priority guidance;
-- per-Legendary-Action identity cooldown tracking, documented in
-  `ASSUMPTIONS.md` A24;
+- per-Legendary-Action identity cooldown tracking, left to the caller;
 - broad battle reducer replay beyond the reusable control procedure facts.
 
 `stat-block-controls-inductive.qnt` is the owned proof machine. It samples

@@ -4,25 +4,17 @@ The spec (`creature.qnt`) maintains direct feature parity with the SRD. Formaliz
 
 Each entry records the assumption, rules justification, and what changed in both Quint and XState.
 
-## A0: "Point Buy" naming for SRD "Point Cost"
+## A1: Spell slot expenditure and starting concentration require ability to act
 
-**Assumption:** Code and user-facing runtime APIs use the term "Point Buy" for the SRD 5.2.1 ability-score generation method titled "Point Cost."
+**Assumption:** EXPEND_SLOT, EXPEND_PACT_SLOT, and START_CONCENTRATION are only valid when the creature is alive (hp > 0, not dead) and not incapacitated.
 
-**Rules basis (SRD 5.2.1 Character Creation, Step 3):** The SRD names the method "Point Cost" and defines the 27-point budget and the Ability Score Point Costs table. "Point Buy" is the established community term for the same method and is the term used in this repo's ubiquitous language.
-
-**Changes:** `@dnd/shared-algebras/ability-score-algebra` and character creation runtime method identifiers use `pointBuy` while preserving the SRD budget and cost table exactly.
-
-## A1: Spell slot expenditure requires ability to act
-
-**Assumption:** EXPEND_SLOT and EXPEND_PACT_SLOT are only valid when alive (hp > 0, not dead) AND not incapacitated.
-
-**Rules basis (PHB Ch. 10, Ch. 12):** Casting a spell requires an action or bonus action. The Incapacitated condition (PHB Ch. 12) prevents taking actions or reactions. Multiple conditions impose Incapacitated: Unconscious (from dropping to 0 HP), Paralyzed, Petrified, Stunned, and direct Incapacitated. Any of these should block slot expenditure.
+**Rules basis (SRD 5.2.1 Rules-Glossary "Incapacitated [Condition]"):** Casting a spell requires an Action or Bonus Action, and starting concentration is a consequence of casting a concentration spell. "An Incapacitated creature can't take any action, Bonus Action, or Reaction." Multiple conditions impose Incapacitated: Unconscious (from dropping to 0 HP), Paralyzed, Petrified, Stunned, and direct Incapacitated. Any of these blocks slot expenditure and starting new concentration. The SRD never states "you cannot spend a spell slot while unable to act" verbatim — it is a constraint that follows logically from the casting rules.
 
 **Changes:**
 
-- `creature.qnt`: `doExpendSlot` and `doExpendPactSlot` guarded by `isConscious(state) and pCanAct(state)`
-- `machine-states.ts`: `EXPEND_SLOT` and `EXPEND_PACT_SLOT` given `canExpendSlot` guard
-- `machine.ts`: added `canExpendSlot` guard (`c.hp > 0 && !isIncapacitated(c)`)
+- `creature.qnt`: `doExpendSlot` and `doExpendPactSlot` guarded by `isConscious(state) and pCanAct(state)`; `doStartConcentration` guarded by `not(isIncapacitated(state))`.
+- `machine-states.ts`: `EXPEND_SLOT` / `EXPEND_PACT_SLOT` given the `canExpendSlot` guard; both `START_CONCENTRATION` handlers given the `canConcentrate` guard.
+- `machine.ts`: added `canExpendSlot` guard (`c.hp > 0 && !isIncapacitated(c)`).
 
 ## A2: END_TURN as modeling convention
 
@@ -32,24 +24,15 @@ Each entry records the assumption, rules justification, and what changed in both
 
 **Changes:** Implemented in TA2. `creature.qnt`: added `turnPhase` state variable (`"outOfCombat"` | `"acting"` | `"waitingForTurn"`), `doEndTurn` action processing end-of-turn saves (remove effect + conditions on success), end-of-turn damage (with concentration checks), and clearing expired `AtEndOfTurn` effects. XState: `END_TURN` event on `acting` state transitions to `waitingForTurn`. MBT bridge maps `turnPhase` field-by-field.
 
-## A3: Damage track state names
+## A4: Round = 6 seconds as the atomic time unit
 
-**Assumption:** The XState `damageTrack` parallel state uses four states: `alive`, `dying.unstable`, `dying.stable`, `dead`. The Quint spec tracks this via fields (`hp`, `dead`, `stable`) and the derived predicate `isConscious(s) = s.hp > 0 and not(s.dead)`.
+**Assumption:** The round (6 seconds) is the smallest time unit modeled. All durations are tracked as integer turn counts; no sub-round time tracking exists. When authored time-span durations are projected into elapsed-time math, each round contributes exactly 6 seconds — the conversion never prorates or subtracts partial round progress based on whose turn is currently being resolved.
 
-**Rules basis:** The SRD 5.2.1 formally names only two of these states. "Stable" (Rules-Glossary): "A creature is Stable if it has 0 Hit Points but isn't required to make Death Saving Throws." "Dead" (Rules-Glossary): "A dead creature has no Hit Points and can't regain them unless it is first revived by magic." The SRD has no formal name for "hp > 0" or for "at 0 HP, making Death Saving Throws." Our names `alive` and `dying.unstable` are modeling inventions. We avoid "conscious" as a state name because it clashes with the Unconscious condition — a creature can be `alive` (hp > 0) while having the Unconscious condition (e.g., after being knocked out).
+**Rules basis (SRD 5.2.1 Playing-the-Game):** A round represents about 6 seconds in the game world. Reactions, opportunity attacks, and reaction spells are interrupt-style triggers within the round framework, not smaller time quanta. No spell or ability uses a duration shorter than 1 round, and the SRD does not define partial-round elapsed-time accounting.
 
-**Changes:**
+**Rationale:** Initiative order is a resolution view over combat time, not a statement that one creature's turn consumes an isolated slice of the 6-second round. The model treats the turns in a round as an ordered resolution of one 6-second combat cycle, so it does not charge partial elapsed seconds based on position in initiative order.
 
-- `machine-states.ts`: `damageTrack` states named `alive` / `dying.unstable` / `dying.stable` / `dead`
-- `creature.qnt`: predicate `isConscious(s)` = `s.hp > 0 and not(s.dead)` (Quint predates this assumption; name kept for spec continuity)
-
-## A4: Round = 6 seconds as atomic time unit
-
-**Assumption:** The round (6 seconds) is the smallest time unit modeled. All durations are tracked as integer turn counts. No sub-round time tracking exists.
-
-**Rules basis (PHB Ch. 9):** "A round represents about 6 seconds in the game world." Reactions, opportunity attacks, and reaction spells (Shield, Counterspell) are interrupt-style triggers within the round framework, not smaller time quanta. No spell or ability uses a duration shorter than 1 round. The phrase "until the end of this turn" (same-turn, sub-round duration) does not appear anywhere in the rules.
-
-**Changes:** Duration tracking implemented in TA4.
+**Changes:** Durations are integer turn counts. Shared timing conversion uses `TIME_SPAN_SECONDS_PER_ROUND = 6`; no conversion helper subtracts elapsed turn progress from a round.
 
 ## A5: Single-creature turn = 1 round for duration tracking
 
@@ -69,14 +52,6 @@ Each entry records the assumption, rules justification, and what changed in both
 
 **Changes:** Implemented in TA4. `creature.qnt`: `pStartTurnFull` calls `pDeathSave` (step 3) before `pProcessStartOfTurn` (step 4). XState: `computeStartTurn` follows the same order.
 
-## A7: Incapacitated creatures cannot start concentration
-
-**Assumption:** START_CONCENTRATION is blocked when the creature is dead or incapacitated.
-
-**Rules basis (SRD 5.2.1 Rules-Glossary "Incapacitated [Condition]"):** "An Incapacitated creature can't take any action, Bonus Action, or Reaction." Casting a spell (which starts concentration) requires an action or bonus action. Therefore incapacitated creatures cannot start new concentration.
-
-**Changes:** Implemented in TA4. `creature.qnt`: `doStartConcentration` guarded by `not(isIncapacitated(state))`. XState: `canConcentrate` guard on both START_CONCENTRATION handlers in `machine-states.ts`.
-
 ## A8: Two-Weapon Fighting requires melee weapons
 
 **Assumption:** `pCanTWFWithWeapons` requires both weapons to have the Light property AND be melee weapons.
@@ -92,58 +67,6 @@ Each entry records the assumption, rules justification, and what changed in both
 **Rules basis:** SRD 5.2.1 Cleric (L2) and Paladin (L3) both say "this class's Channel Divinity," implying per-class tracking. However, the SRD 5.2.1 does not include explicit multiclass rules for Channel Divinity. The 5.1 PHB multiclass rules stated that gaining Channel Divinity from a second class does not grant additional uses — only additional effect options. We model additive pools as a permissive interpretation of 5.2.1's per-class language, which diverges from 5.1 intent (5.1 said no extra uses). This assumption can be revised if official 5.2.1 multiclass guidance clarifies.
 
 **Changes:** `creature.qnt`: `pChannelDivinityMax` sums per-class max functions. No XState changes (framework only).
-
-## A10: Ritual casting — caller-orchestrated, no slot expenditure
-
-**Assumption:** Ritual casting is modeled as the absence of slot expenditure. The caller skips `pExpendSlot` and optionally calls `pStartConcentration` if the spell requires it. The old `canRitualCast: bool` config flag was removed — ritual casting is universal in 5.2.1.
-
-**Rules basis (SRD 5.2.1 Rules Glossary, "Ritual"):** "If you have a spell prepared that has the Ritual tag, you can cast that spell as a Ritual. The Ritual version of a spell takes 10 minutes longer to cast than normal. It also doesn't expend a spell slot, which means the ritual version of a spell can't be cast at a higher level."
-
-**Why no dedicated function:** The spec has no composite "cast spell" action — slot expenditure, concentration, and effects are separate events. Ritual casting means the caller orchestrates the same events minus `pExpendSlot`. Whether the spell requires concentration is a separate property of the spell, not of ritual casting itself. A `pCastAsRitual` wrapper would conflate ritual casting with concentration.
-
-**What's not modeled:** Casting time (+10 minutes — spec doesn't model time beyond action/bonus action). Spell identity and Ritual tag (spec models slots, not individual spells). Spell preparation lists. Wizard "Ritual Adept" (class feature for `features/`).
-
-**Changes:** Removed `canRitualCast: bool` from `CharConfig` (5.2.1 made ritual casting universal). No new function needed — ritual casting is the caller choosing not to call `pExpendSlot`.
-
-## A11: Ongoing damage respects creature R/V/I
-
-**Assumption:** End-of-turn and start-of-turn ongoing damage (e.g., Heat Metal, Spirit Guardians) applies creature resistances, vulnerabilities, and immunities. The R/V/I are provided per damage entry by the caller.
-
-**Rules basis (SRD 5.2.1 "Damage Resistance/Vulnerability"):** "Resistance and then Vulnerability are applied after all other modifiers to damage." No exception is made for ongoing damage — resistances always apply unless a feature explicitly states otherwise.
-
-**Changes:** `creature.qnt`: Added `resistances`, `vulnerabilities`, `immunities` fields to `EndOfTurnDamage` and `StartOfTurnEffect` types. `pProcessEndOfTurnDamage` and `pProcessStartOfTurn` now pass these to `pTakeDamage` instead of empty sets. XState: matching fields added to event types and passed through in `machine-endturn.ts` and `machine-startturn.ts`.
-
-## A12: Monsters die at 0 HP (death saves are PC-only per RAW)
-
-**Assumption:** Monsters die immediately at 0 HP. PCs enter the death save track (unconscious at 0 HP, death save failures on subsequent hits, start-of-turn death save rolls). The spec gates this on a `creatureKind` discriminator (`PC | Monster`).
-
-**Rules basis (SRD 5.2.1 Playing-the-Game):** "Monster Death: A monster dies the instant it drops to 0 Hit Points, although a Game Master can ignore this rule for an individual monster and treat it like a character." Death saves: "A player character must make a Death Saving Throw if they start their turn with 0 Hit Points" (Rules Glossary). The spec does not model DM fiat to allow monster death saves.
-
-**Changes:** `creature.qnt`: `pTakeDamageAsCreature` takes a `kind: CreatureKind` parameter. PC path: existing behavior (unconscious at 0 HP, death save failures). Monster path: `dead = true` at 0 HP, no unconscious, no death saves. `pTakeDamage` wrapper passes `PC` for backward compatibility. `doStartTurn` passes `deathSaveRoll = 0` for monsters (skip). `pMonsterDeathCheck` clears spurious `unconscious` flag after monster damage.
-
-## A13: Monster AC is a flat integer from the stat block
-
-**Assumption:** Monster AC is a flat integer from the stat block. The spec does not model how natural armor + DEX produces that value -- the SRD gives us the final number directly.
-
-**Rules basis (SRD 5.2.1 Monsters > Overview > Armor Class):** "A monster's Armor Class (AC) includes its natural armor, Dexterity, gear, and other defenses." The stat block lists the final AC value.
-
-**Changes:** `StatBlock.ac` is a plain `int` in both Quint and TypeScript. No armor formula derivation.
-
-## A14: Exhaustion immunity is separate from condition immunities
-
-**Assumption:** Exhaustion immunity is a separate boolean, not part of `conditionImmunities: Set[Condition]`. Exhaustion is not one of the 14 SRD Conditions -- it is a leveled mechanic (1-6) stored as an integer.
-
-**Rules basis (SRD 5.2.1 Rules Glossary):** The 14 Conditions are: Blinded, Charmed, Deafened, Frightened, Grappled, Incapacitated, Invisible, Paralyzed, Petrified, Poisoned, Prone, Restrained, Stunned, Unconscious. Exhaustion is described separately as a leveled mechanic with cumulative effects at levels 1-6.
-
-**Changes:** `StatBlock.exhaustionImmune: bool` in Quint and TypeScript. `pAddExhaustion` checks this flag independently of `conditionImmunities`.
-
-## A15: CR encoded as sum type with fractional special cases
-
-**Assumption:** CR encoded as sum type: `CR0 | CR_Eighth | CR_Quarter | CR_Half | CRN(int)`. Fractional CRs are special cases with specific PB/XP values that don't follow the integer formula.
-
-**Rules basis (SRD 5.2.1 Monsters > Overview):** The CR table lists CR 0, 1/8, 1/4, 1/2 as distinct entries with specific XP values (0/10, 25, 50, 100) that don't fit the integer CR pattern. All integer CRs (1-30) follow a regular PB progression.
-
-**Changes:** `ChallengeRating` sum type in Quint (`creature.qnt`) and discriminated union in TypeScript (`monster-types.ts`). `crToProficiencyBonus` function handles all variants.
 
 ## A16: Dead creatures: effect processing continues, heal/damage/exhaustion table mutations are no-ops
 
@@ -161,22 +84,6 @@ Each entry records the assumption, rules justification, and what changed in both
 
 **Changes:** `creature.qnt`: `doStandFromProne` uses `t1 != turnState` (structural equality) — zero-cost stand produces identical state, so prone is not removed. XState: `spendHalfSpeed` (`machine-helpers.ts`) returns `success: false` when `cost <= 0`.
 
-## A18: Multiattack maps to extraAttacksRemaining
-
-**Assumption:** A monster's Multiattack maps to `extraAttacksRemaining = length(multiattack) - 1`. The first attack consumes the Attack action; remaining attacks use extra attacks. A monster with no Multiattack has `extraAttacksRemaining = 0`.
-
-**Rules basis (SRD 5.2.1 Monsters > Overview, "Multiattack"):** "Some creatures can make more than one attack when they take the Attack action. [...] This entry details the attacks a creature can make, as well as any additional abilities it can use, as part of the Attack action." In 5.2.1, Multiattack is explicitly part of the Attack action (unlike 5.1 where it was a separate action).
-
-**Simplification:** The spec reuses the `extraAttacksRemaining` counter for both Multiattack and PC Extra Attack. This is an architectural convenience — the action economy (one action → N strikes) is structurally the same. However, the SRD mechanics differ in important ways not currently modeled:
-
-- **Extra Attack** (PC) allows substituting any attack for a Grapple or Shove (SRD 5.2.1 Rules Glossary: "you can replace one of your attacks" with Grapple/Shove). **Multiattack** specifies fixed attack combinations — the monster makes the listed attacks, not arbitrary substitutions.
-- **Extra Attack** scales with class level (Fighter gets 2/3/4 attacks). **Multiattack** is fixed per stat block.
-- **Extra Attack** allows free choice of weapon per attack. **Multiattack** lists specific named attacks (e.g., "two Claw attacks and one Bite").
-
-These distinctions are caller-side concerns (which attacks to resolve, whether grapple/shove substitution is allowed). The spec's action-economy counter treats both as "N attacks per Attack action" and leaves attack identity to the caller.
-
-**Changes:** `creature.qnt`: `doStartTurn` computes `monsterExtraAttacks = multiattack.length() - 1` and sets `extraAttacksRemaining` on the turn state. `MultiattackSlot` sum type (`MAttack(str) | MSpecialAbility(str)`) supports heterogeneous multiattacks. `init` sets `extraAttacksRemaining` from the selected stat block's multiattack length.
-
 ## A19: Legendary Action timing in single-creature model
 
 **Assumption:** Legendary Actions fire during `turnPhase == "waitingForTurn"`. In the SRD, a Legendary Action is taken "immediately after another creature's turn." Since the spec models a single creature, `waitingForTurn` represents the window between the creature's own turns — this is when other creatures would act.
@@ -185,53 +92,13 @@ These distinctions are caller-side concerns (which attacks to resolve, whether g
 
 **Changes:** `creature.qnt`: `doUseLegendaryAction` guards on `turnPhase == "waitingForTurn"`.
 
-## A20: Legendary Resistance as caller decision
+## A22: Recharge abilities refresh on a rest
 
-**Assumption:** Whether to use Legendary Resistance on a failed save is a caller-provided boolean (`useLR`), not an automatic optimization. The spec does not decide when LR is "worth using" — that is a tactical judgment left to the caller.
+**Assumption:** Recharge abilities refresh on both a Short Rest and a Long Rest. (Legendary Action refresh at the start of the monster's turn, and Legendary Resistance / daily-ability refresh on a Long Rest, are stated by RAW and need no assumption — only the rest behavior of Recharge abilities is underspecified.)
 
-**Rules basis (SRD 5.2.1 Monsters > Traits, "Legendary Resistance"):** "If the dragon fails a saving throw, it can choose to succeed instead." The word "choose" makes it a tactical decision.
+**Rules basis (SRD 5.2.1 Monsters):** A "Recharge X–Y" ability rolls 1d6 at the start of each of the monster's turns to recharge, but the SRD gives no explicit rule for whether it also recharges on a rest. The spec assumes it does, since an encounter begun after a rest conventionally starts with Recharge abilities available.
 
-**Changes:** `creature.qnt`: `doEndTurn` adds `nondet useLR = Bool.oneOf()` and applies `pUseLegendaryResistance` to override the save result when the monster fails and LR is available. XState: `END_TURN` event accepts `useLegendaryResistance?: boolean`.
-
-## A21: Recharge rolls as event arguments
-
-**Assumption:** Recharge d6 rolls are nondeterministic values generated at the start of a monster's turn, not pre-computed or automatic. The promoted StatBlockRecord runtime asks for one d6 result per unavailable Recharge stat block part, keyed by that part, so multiple Recharge controls cannot accidentally share a roll.
-
-**Rules basis (SRD 5.2.1 Monsters > Limited Usage, "Recharge X–Y"):** "At the start of each of the monster's turns, roll 1d6." The roll is per stat block part in the SRD.
-
-**Changes:** `creature.qnt`: `doStartTurn` monster path adds `nondet rechargeRollVal = 1.to(6).oneOf()` and builds `RechargeRollEvent` for each unavailable ability. `pProcessRechargeRolls` checks each roll against the ability's `rechargeMin`. `packages/battle-runtime`: `BattleStatBlockRechargeRollHole` lists the unavailable authored parts, and the corresponding fill supplies one keyed d6 result for each part.
-
-## A22: Resource refresh timing
-
-**Assumption:** Legendary Actions refresh at the start of the monster's turn. Legendary Resistance and daily abilities refresh on Long Rest. Recharge abilities refresh on both Short Rest and Long Rest.
-
-**Rules basis (SRD 5.2.1):** "The monster regains all expended [Legendary Action] uses at the start of each of its turns." "Legendary Resistance (3/Day)" — the "/Day" implies daily refresh. Recharge abilities have no explicit rest refresh rule in the SRD, but are conventionally available after rests.
-
-**Changes:** `creature.qnt`: `doStartTurn` calls `pRefreshLegendaryActions`. `doShortRest` calls `pRefreshRechargeAbilities`. `doLongRest` calls `pRefreshRechargeAbilities`, `pRefreshDailyAbilities`, and resets `legendaryResistancesRemaining`.
-
-## A23: Lair bonus derivation
-
-**Assumption:** The `inLair: bool` field on `StatBlock` adds +1 to both Legendary Action and Legendary Resistance effective maximums. This bonus is applied at initialization (`pInitMonsterResources`) and at refresh time (`pRefreshLegendaryActions`, long rest LR reset). It is not dynamically toggled during combat.
-
-**Rules basis (SRD 5.2.1, Adult Red Dragon):** "Legendary Action Uses: 3 (4 in Lair)" and "Legendary Resistance (3/Day, or 4/Day in Lair)." The parenthetical suggests lair status is determined before the encounter, not mid-combat.
-
-**Changes:** `creature.qnt`: `pInitMonsterResources` computes `base + (if inLair then 1 else 0)`. `pRefreshLegendaryActions` takes `maxUses` and `inLair` and applies the same formula.
-
-## A24: Legendary Action cooldowns left to caller
-
-**Assumption:** Per-action-name cooldowns (e.g., "The dragon can't take this action again until the start of its next turn" for Commanding Presence and Fiery Rays) are NOT modeled in the spec. The spec tracks only the global legendary action use count, not which specific actions were used this round.
-
-**Rules basis (SRD 5.2.1, Adult Red Dragon > Legendary Actions):** "The dragon can't take this action again until the start of its next turn." This is a per-action identity constraint. Modeling it would require a `Set[str]` of used action names, cleared at start of turn. Since the spec focuses on resource economy rather than tactical action selection, this constraint is left to the caller.
-
-**Changes:** None — documented as an intentional omission.
-
-## A25: Init class selection (Fighter or Barbarian)
-
-**Assumption:** The Quint `init` action nondeterministically selects either Fighter or Barbarian as the PC's class. The selected class gets level `l` (from `Set(3, 5, 9, 10, 18)`); the other gets level 0 with zeroed charges. Monsters always have both at level 0.
-
-**Rules basis:** D&D 5e supports multiclassing, but the spec models single-class PCs for tractability. The choice is a nondeterministic parameter to exercise both class state machines in MBT traces.
-
-**Changes:** `creature.qnt`: `init` adds `nondet pcClass = Set("Fighter", "Barbarian").oneOf()`, sets `fighterLevel`/`barbarianLevel` based on selection. `creature.mbt.test.ts`: init handler reads `pcClass` and sets levels accordingly.
+**Changes:** `creature.qnt`: `doShortRest` and `doLongRest` both call `pRefreshRechargeAbilities`.
 
 ## A26 Stable recovery timers do not cross the battle handoff boundary
 
@@ -248,30 +115,6 @@ These distinctions are caller-side concerns (which attacks to resolve, whether g
 **Rules basis (SRD 5.2.1 Druid Level 2 "Wild Shape"):** The SRD defines how long a Wild Shape form lasts and says the druid can leave the form early as a Bonus Action, or that the form ends when Wild Shape is used again, the druid has the Incapacitated condition, or dies. The SRD does not define a cross-boundary persistence protocol for writing durable Character Sheet state while the battle projection is still in Beast form. Blocking handoff until reversion is therefore an architectural boundary choice rather than a direct RAW handoff rule.
 
 **Changes:** `packages/character-battle-runtime/src/index.ts`: `applyBattleHandoffToCharacterSheet` rejects combatants with `combatantHasActiveDruidWildShape(input.combatant)`. `packages/character-battle-runtime/character-battle-settlement.mbt.qnt` and `packages/character-battle-runtime/src/character-battle-settlement.mbt.test.ts` include deterministic witness cases for active Wild Shape handoff rejection.
-
-## A28: Remaining TS-only barbarian features
-
-**Assumption:** Brutal Strike effects (Forceful Blow, Hamstring Blow, Staggering Blow, Sundering Blow) and Relentless Rage save resolution remain TS-only features. These are caller-side composition (e.g., resolving replacement saves and non-promoted rider effects) rather than promoted battle-runtime resource tracking. Danger Sense and Frenzy are no longer TS-only at the promoted battle-runtime boundary: Danger Sense is modeled as a passive Saving Throw roll-mode profile that grants Advantage on Dexterity Saving Throws unless the target has the Incapacitated condition, and Frenzy is modeled as a Rage-gated, Reckless Attack-gated mandatory first-hit attack damage rider.
-
-**Rules basis:** The remaining TS-only features modify attack rolls, damage totals, or saving throws that are still computed by the caller using the existing spec mechanics (damage, advantage, saves). The spec tracks only the resource charges and state flags that constrain when promoted features can be used. Danger Sense is different because SRD 5.2.1 Barbarian level 2 grants a passive roll-mode fact: Advantage on Dexterity Saving Throws unless Incapacitated. Frenzy is different because SRD 5.2.1 Barbarian Path of the Berserker level 3 gates extra same-type damage on using Reckless Attack while Rage is active and hitting the first target on the turn with a Strength-based weapon or Unarmed Strike attack.
-
-**Changes:** Retaliation after-damage reaction eligibility is modeled in `battle.qnt` from battle-owned trigger qualifiers. Danger Sense is modeled in the promoted battle-runtime passive Saving Throw roll-mode profile and corresponding Quint/runtime proofs. Frenzy is modeled in Task 36 by `packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt`, `packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt`, `packages/battle-runtime/battle-runtime-feature-bridge.qnt`, `packages/battle-runtime/rule-core-features.mbt.qnt`, and the promoted `@dnd/battle-runtime` reducer/tests. The remaining TS-only features are implemented in `class-barbarian.ts`.
-
-## A30: Wholeness of Body — WIS modifier range
-
-**Assumption:** Wholeness of Body max charges equal the monk's Wisdom modifier. Since the spec doesn't track ability scores, `wholenessMax` is derived from a nondeterministic `wisMod` (range 1–5) at init. The TS side uses `wholenessOfBodyMaxCharges(wisMod)` which clamps to `max(1, wisMod)`.
-
-**Rules basis (SRD 5.2.1 Warrior of the Open Hand L6 "Wholeness of Body"):** "You gain a number of uses equal to your Wisdom modifier (minimum of 1 use)."
-
-**Changes:** `creature.qnt`: `freshMonkState` takes `wholenessMax` parameter. `init` generates `nondet wisMod = 1.to(5).oneOf()`.
-
-## A31: Uncanny Metabolism — modeled as player action, not auto-trigger
-
-**Assumption:** Uncanny Metabolism triggers "when you roll Initiative" but is modeled as an available action during the `acting` phase (player choice at initiative) rather than auto-triggering in `doStartTurn`. This preserves player agency — the player may choose not to use it if Focus Points are already full.
-
-**Rules basis (SRD 5.2.1 Monk L2 "Uncanny Metabolism"):** "When you roll Initiative, you can regain all expended Focus Points." The word "can" implies optional.
-
-**Changes:** `creature.qnt`: `doUncannyMetabolism` is a separate action in `stepPC`, not wired into `doStartTurn`. Heal amount = `monkLevel + healRoll` (martial arts die abstracted as nondet 1–12).
 
 ## A32: Trigger taxonomy — inferred from reaction catalog (battle layer)
 
@@ -293,14 +136,6 @@ These distinctions are caller-side concerns (which attacks to resolve, whether g
 
 **Rules basis:** Playing-the-Game.md states "Everyone involved in the combat encounter rolls Initiative" at start, and "The Initiative order remains the same from round to round." No rules for mid-combat changes. Combat ends "when one side or the other is defeated, which can mean the creatures are killed or knocked out or have surrendered or fled" — but no explicit removal from initiative on individual death/flee.
 
-## A35: Environmental hazards beyond falling/underwater — DM agenda
-
-**Assumption:** Lava, extreme weather, traps, and similar environmental hazards are not modeled. The SRD describes these as DM-narrated events with DM-set DCs and damage. The spec models the _mechanical consequences_ (damage, conditions) as caller-provided inputs; the hazard itself is DM agenda.
-
-## A36: Summoned creature stat blocks — content layer
-
-**Assumption:** The battle spec models adding/removing creatures mid-combat (A33) but does not model summoning _spell effects_ (specific stat blocks, durations, caster-control rules). These belong in `features/spell-*.ts` as content, not in the Quint spec.
-
 ## A37: Grapple Movable cost modeled as movement cost, not speed reduction
 
 **Assumption:** The SRD 5.2.1 Grappled condition's Movable property is modeled directly in battle semantics as an extra movement cost: when the grappler moves while dragging a grappled creature, each foot costs 1 extra foot unless the target is Tiny or two or more sizes smaller than the grappler.
@@ -310,65 +145,6 @@ These distinctions are caller-side concerns (which attacks to resolve, whether g
 **Rationale:** The previous speed-halving representation diverged from RAW once grapple state changed mid-turn because recomputing `effectiveSpeed` could incorrectly rebuild `movementRemaining` for the grappler after link/release/escape. The current model keeps the grappler's Speed unchanged and applies the extra cost only when movement is actually spent while dragging. That preserves RAW behavior for mid-turn grapple changes and avoids fake movement refunds.
 
 **Changes:** `pComputeEffectiveSpeed` no longer halves speed for `isGrappling`. `pMovementCost` can represent drag cost explicitly, and `battle.qnt` / the TS battle machine spend 2 feet of movement per 1 foot moved when the active creature is dragging a non-exempt grappled target. The target-side Speed 0 behavior remains unchanged.
-
-## A38: Creature-level prepared spell casting models deterministic prepared-spell defaults and caster-side bookkeeping only
-
-**Assumption:** The creature-level `CAST_PREPARED_SPELL` action does not model full player-chosen prepared spell lists or downstream spell effects. It models only caster-side bookkeeping:
-
-- spend a regular spell slot
-- consume Action or Bonus Action based on casting time
-- mark one-slot-per-turn flags
-- start/replace concentration for modeled concentration spells
-
-When explicit prepared-spell input is absent, the TypeScript machine and `creature.qnt` both derive the same deterministic modeled subset from class levels and available regular spell slots. This subset is intentionally narrow and exists to support available-actions/MCP coverage and MBT parity.
-
-**Rules basis:** The SRD defines prepared spells as character-build choices ("choose spells ... The chosen spells must be of a level for which you have spell slots"), but the helper creature spec does not model spellbook contents or player preparation choices as separate authored state. The battle spec remains the authoritative combat-spec layer for concrete spell identity/effect resolution.
-
-**Modeled subset in Phase 3:** `bless`, `burning_hands`, `fireball`, `guiding_bolt`, `haste`, `healing_word`, `hold_person`, `inflict_wounds`, `spirit_guardians`.
-
-**Out of scope for this phase:** Cantrips, ritual casting, reaction spells, pact-slot casting, slot-free class/subclass spell casts, target/effect resolution, and full class spell-list/preparation management.
-
-**Changes:**
-
-- `creature.qnt`: adds `doCastPreparedSpell`, deterministic `pDefaultPreparedSpells`, and spell-casting bookkeeping helpers.
-- TypeScript machine: adds `CAST_PREPARED_SPELL`, `preparedSpells` input/context, and default prepared-spell derivation when explicit input is omitted.
-- MBT bridge: adds `CAST_PREPARED_SPELL` driver mapping and compares `slotExpendedThisTurn` from the real creature machine state.
-
-## A39: The Attack action grants attack opportunities; replacement costs spend those attacks, not another Action
-
-**Assumption:** Taking the Attack action is modeled as spending one Action resource to open one or more attack opportunities. Effects with `replace_attack` spend one of those attack opportunities. They do not spend a separate Action and are not equivalent to an `activationCost` of `standard_action`.
-
-**Rules basis:** SRD 5.2.1 repeatedly distinguishes taking the Attack action from attacks made as part of that action. Multiattack says some creatures can make more than one attack when they take the Attack action. Grapple and Shove say they can replace one attack when a creature takes the Attack action. This implies a two-step structure: spend the Action to take the Attack action, then spend the attacks made available by that action.
-
-**Changes:** `UBIQUITOUS_LANGUAGE.md` records the terminology distinction. Surface uses `replace_attack` for authored units such as Dragonborn Breath Weapon and Javelin of Lightning, keeping them separate from `standard_action` activation costs. The deleted `surface-runtime-correction` slice did not implement attack-opportunity accounting; this assumption records the intended model before that reducer work.
-
-## A40: Character creation runtime loadout precondition
-
-**Assumption:** `@dnd/character-creation-runtime` requires loadout choices before finalizing its first supported Character Sheet.
-
-**Rules basis:** SRD 5.2.1 Character Creation, Step 4 requires a character to choose starting equipment, spend any coins gained at that step, record chosen equipment, and note coins left after purchases. It does not require choosing whether armor is worn, a shield is wielded, or a weapon is wielded one-handed during character creation.
-
-**Why the runtime requires it:** The package finalizes a player-character boundary for later battle composition, not just a paper character sheet. The first supported vertical buys Chain Mail, a Shield, and a Longsword from Fighter option C coins; battle initialization needs an unambiguous starting loadout to derive armor/shield/weapon state without adding a second post-finalization setup protocol.
-
-**Changes:** `@dnd/character-creation-runtime` exposes loadout Creation Holes after the supported equipment purchase. The phase-1 Quint slice and runtime MBT model require those holes before `finalizeCharacterDraft` returns `ready`. This is a runtime projection precondition, not an SRD-authored character-creation choice.
-
-## A41: `walkFeet` means ordinary ground Speed, not a separate walk/run mode
-
-**Assumption:** Runtime fields named `walkFeet` represent the creature's ordinary ground Speed in feet: the default "walk" movement mode used when no special speed such as Climb, Fly, Swim, or Burrow is selected. The runtime does not model a separate run mode. Taking Dash grants extra movement equal to the selected Speed; for ordinary ground movement, that means the creature can spend more movement from the same `walkFeet`-based budget, not that it switches from walking to running.
-
-**Rules basis:** SRD 5.2.1 defines Speed as the distance a creature can cover when it moves on its turn. The movement rules say movement can include climbing, crawling, jumping, and swimming, and the Rules Glossary distinguishes special speeds from the base Speed. Dash says the creature gains extra movement equal to its Speed for the current turn, and gives the example that Speed 30 allows moving up to 60 feet when Dashing. The SRD does not create separate walk and run speeds for combat movement.
-
-**Changes:** Documentation only. Existing `walkFeet` fields in Surface, MCP battle initialization, and `@dnd/battle-runtime` continue to mean ordinary ground Speed. Dash should widen movement budget derived from the selected speed rather than introduce a second run/walk state.
-
-## A42: Round time-span conversion uses whole 6-second units
-
-**Assumption:** When authored time-span durations are projected into elapsed-time math, each `round` contributes exactly 6 seconds. The conversion does not prorate or subtract partial round progress based on whose turn is currently being resolved.
-
-**Rules basis:** SRD 5.2.1 says combat is organized into rounds and turns, a round represents about 6 seconds, and spell time spans can be stated in rounds. It does not define partial-round elapsed-time accounting.
-
-**Rationale:** Initiative order is a resolution view over combat time, not a statement that one creature's turn consumes an isolated slice of the 6-second round. The model treats turns in a round as an ordered resolution of one 6-second combat cycle, so it does not charge partial elapsed seconds based on position in initiative order.
-
-**Changes:** Shared timing conversion uses `TIME_SPAN_SECONDS_PER_ROUND = 6`; no conversion helper subtracts elapsed turn progress from a round.
 
 ## A43: Scalar reductions on mixed damage rolls allocate proportionally
 
@@ -395,39 +171,3 @@ When explicit prepared-spell input is absent, the TypeScript machine and `creatu
 **Rules basis:** SRD 5.2.1 says a Reaction is an instant response to a trigger, a creature cannot take another Reaction until the start of its next turn, a Reaction normally occurs immediately after its trigger, and an interrupted creature continues its turn right after the Reaction. Ready says the reacting creature can take its Reaction after the trigger finishes or ignore the trigger. The SRD does not specify a general-purpose queue, stack, or replay policy for multiple nested reaction windows.
 
 **Changes:** `packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt` encodes Offer, Decline, matching Reaction spend, Advance, bounded nested windows with suspended-window restoration, Opportunity Attack and guarded damage-interruption shallow integrations, reactor-owned Readied Movement Response release gated by the held Readied Movement fact, and actor-owned Concentration break/prevent/damage-save procedures.
-
-## A46: Savage Attacker chooses between full critical weapon damage dice pools
-
-**Assumption:** When Savage Attacker is used on a Critical Hit, each Savage Attacker candidate is the full weapon damage dice pool after Critical Hit doubling. The player chooses either complete candidate pool, then adds relevant modifiers as normal. Extra damage dice from other features, such as Sneak Attack, are not part of the Savage Attacker candidates.
-
-**Rules basis:** SRD 5.2.1 Feats, "Savage Attacker" says once per turn when a creature hits with a weapon, it can roll the weapon's damage dice twice and use either roll. Playing the Game, "Critical Hits" says a Critical Hit rolls the attack's damage dice twice and adds them together, and separately says other damage dice such as Sneak Attack are also rolled twice. The SRD does not explicitly define ordering for Savage Attacker plus Critical Hit, so the promoted model treats the Critical Hit rule as defining the weapon damage dice pool for the hit, and Savage Attacker as choosing between two rolls of that weapon pool only.
-
-**Changes:** `packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt` and `packages/battle-runtime/src/battle-reducer.ts` model Savage Attacker's weapon damage dice choice this way.
-
-## A47: Moonbeam spatial-membership saves are caller-supplied; only the end-turn save is runtime-discovered
-
-**Assumption:** The SRD describes four Moonbeam save triggers: Cylinder appears (initial cast), area moves into creature's space, creature enters the area, and creature ends its turn in the area. The end-of-turn trigger is determined entirely from turn state and is auto-discovered by the battle runtime each turn. The remaining three triggers depend on spatial membership facts — where creatures are relative to the moving Cylinder — and are supplied by the table/spatial owner as explicit save commands rather than derived by the runtime. A creature makes the save only once per turn regardless of how many triggers fire in a single turn; the runtime enforces this invariant across all four.
-
-**Rules basis (SRD 5.2.1 Moonbeam):** "When the Cylinder appears, each creature in it makes a Constitution saving throw. A creature also makes this save when the spell's area moves into its space and when it enters the spell's area or ends its turn there. A creature makes this save only once per turn." The initial-appearance save (cast time) and the area-moves / creature-enters triggers are spatial membership events that require position and movement facts the promoted battle runtime delegates to the table.
-
-**Changes:** `packages/battle-runtime`: battle discovery auto-generates the end-turn Moonbeam save subject each turn. The other three trigger variants are accepted by the runtime command schema and dispatcher when supplied by the table.
-
-## A48: Enlarge/Reduce creature size-change effects are target-exclusive
-
-**Assumption:** In the promoted creature branch of Enlarge/Reduce, a creature can have at most one active spell-owned creature size-change effect. A successful new creature-branch Enlarge or Reduce effect on a target replaces any existing Enlarge/Reduce creature size-change effect on that target, regardless of caster or mode. If the displaced effect's source has no remaining active effects from that spell, the runtime clears that source's stale Concentration state.
-
-**Rules basis:** SRD 5.2.1 Enlarge/Reduce says one target is enlarged or reduced for the duration, describes the target's Size as increasing or decreasing by one category, and gives mutually opposed Strength and attack-damage consequences for the two modes. The SRD passage does not define a stacking or simultaneous-conflicting-effect rule for multiple overlapping Enlarge/Reduce castings on the same creature.
-
-**Rationale:** The promoted battle runtime exposes one effective creature Size, one Strength roll-mode projection, and one attack-hit damage adjustment for this profile. Allowing overlapping increase and decrease effects would create contradictory executable state that the SRD does not resolve. Target-exclusive replacement keeps the promoted state deterministic while preserving caster-owned Concentration cleanup.
-
-**Changes:** `packages/battle-runtime/src/battle-reducer/creature-size-change-effects.ts` replaces existing creature size-change effects when applying a new one, and `packages/battle-runtime/src/battle-reducer/spells-active-effects.ts` clears displaced-source Concentration when no matching spell effects remain.
-
-## A49: Levitate creature altitude effects are target-exclusive
-
-**Assumption:** In the promoted creature branch of Levitate, a creature can have at most one active spell-owned levitated altitude effect. A successful new creature-branch Levitate effect on a target replaces any existing Levitate creature effect on that target, regardless of caster. If the displaced effect's source has no remaining active effects from that spell, the runtime clears that source's stale Concentration state.
-
-**Rules basis:** SRD 5.2.1 Levitate says one creature or loose object rises vertically up to 20 feet and remains suspended there for the duration. The spell also gives one caster-owned altitude-control procedure for another target and one target-owned movement procedure for a self target or a target reaching a fixed object or surface. The SRD passage does not define stacking or simultaneous-control behavior for multiple overlapping Levitate castings on the same creature.
-
-**Rationale:** The promoted battle runtime exposes one effective suspended altitude and one active movement/control projection for this profile. Allowing overlapping Levitate creature effects would create contradictory altitude and controller state that the SRD does not resolve. Target-exclusive replacement keeps the promoted state deterministic while preserving caster-owned Concentration cleanup.
-
-**Changes:** `packages/battle-runtime/src/battle-reducer/spells-active-effects.ts` replaces existing Levitate creature effects when applying a new one and clears displaced-source Concentration when no matching spell effects remain.

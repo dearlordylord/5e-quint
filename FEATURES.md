@@ -94,7 +94,7 @@ Three implementation layers: **Spec** (`creature.qnt`/`battle.qnt`), **Engine** 
 | Bonus action spells | Battle | Done | One-slot-per-turn rule enforced (5.2.1) |
 | Concentration spells (cast) | Battle | Done | Mandatory Counterspell window |
 | Spell components (V/S/M) | Spec | Done | Grapple blocks somatic, silence blocks verbal |
-| Ritual casting | Spec | Done | Caller skips slot expenditure (A10) |
+| Ritual casting | Spec | Done | Caller skips slot expenditure |
 | Spell save DC | Spec | Done | 8 + prof + ability mod |
 | Spell attack bonus | Spec | Done | Prof + ability mod |
 | 339 SRD spells (metadata) | Content | Done | Name, level, school, components, concentration, ritual, classes |
@@ -315,7 +315,7 @@ Three implementation layers: **Spec** (`creature.qnt`/`battle.qnt`), **Engine** 
 | Food & Water (starvation/dehydration exhaustion) | Spec | Done | Day-threshold tracking |
 | Travel & Forced March (pace/DC) | Spec | Done | Fast/Normal/Slow + DC 10 + hours |
 | Underwater combat (fire resistance, melee modifiers) | Spec | Done | AttackContext fields |
-| Lava, weather, traps, etc. | — | Not modeled | DM agenda (A35) |
+| Lava, weather, traps, etc. | — | Not modeled | DM agenda |
 
 ## Species Traits
 
@@ -349,9 +349,9 @@ Three implementation layers: **Spec** (`creature.qnt`/`battle.qnt`), **Engine** 
 | Aura of Courage (battle wiring) | Deferred | F7 | Data in content; not wired to condition immunity in battle |
 | Cover in battle | Not planned | F8 | Requires spatial model; spec accepts cover as caller input |
 | Subclass features in battle | Planned | F4 | Stunning Strike, Cunning Strike, Brutal Strike battle wiring |
-| Time beyond turn economy | Out of scope | TODO_FEATURES | Separate orchestration module (A10) |
-| Summoned creature stat blocks | Content layer | A36 | Roster mechanics done (A33); specific stat blocks are content |
-| Environmental hazards (lava, traps, weather) | Not modeled | A35 | DM agenda — consequences modeled as caller inputs |
+| Time beyond turn economy | Out of scope | TODO_FEATURES | Separate orchestration module |
+| Summoned creature stat blocks | Content layer | — | Roster mechanics done (A33); specific stat blocks are content |
+| Environmental hazards (lava, traps, weather) | Not modeled | — | DM agenda — consequences modeled as caller inputs |
 
 ---
 

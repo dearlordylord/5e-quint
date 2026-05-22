@@ -12,11 +12,10 @@ module statBlockControls {
   // - Monsters/Overview.md: Actions, Multiattack, Bonus Action, Reactions,
   //   Legendary Actions, and Limited Usage.
   // - Rules-Glossary.md: Stat Block, Bonus Action, and Reaction.
-  // - ASSUMPTIONS.md A18/A44: Multiattack maps to named attack dispatches
+  // - ASSUMPTIONS.md A44: Multiattack maps to named attack dispatches
   //   inside the Attack action, with only Movement and End Turn interleaving.
-  // - ASSUMPTIONS.md A21-A24: Recharge rolls are keyed event arguments,
-  //   resource refresh timing is explicit, and Legendary Action per-name
-  //   cooldowns are caller-owned.
+  // - Recharge rolls are keyed event arguments, resource refresh timing is
+  //   explicit, and Legendary Action per-name cooldowns are caller-owned.
 
   type StatBlockAttackName =
     | PrimaryStatBlockAttack

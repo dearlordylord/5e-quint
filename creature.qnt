@@ -1387,7 +1387,7 @@ module creature {
   /// instant death, and death save failures at 0 HP.
   /// Petrified auto-adds resistance to all damage types.
   /// NOTE: Death save track (unconscious at 0 HP, failures on subsequent hits) is PC-only per RAW.
-  /// Current spec applies universally — correct while only PCs use the spec (see A12).
+  /// Current spec applies universally — correct while only PCs use the spec.
   /// Take damage (PC behavior: death saves at 0 HP). Delegates to pTakeDamageAsCreature.
   pure def pTakeDamage(
     s: CreatureState,
@@ -2543,7 +2543,7 @@ module creature {
     })
 
   /// Full START_TURN orchestrator: decrement → expiry → death save → effects → turn reset.
-  /// NOTE: Death save roll at step 3 is PC-only per RAW. See A12 in ASSUMPTIONS.md.
+  /// NOTE: Death save roll at step 3 is PC-only per RAW.
   type StartTurnFullResult = { creature: CreatureState, slots: SpellSlotState, turn: TurnState }
 
   pure def pStartTurnFull(
@@ -4320,7 +4320,7 @@ module creature {
     nondet l = Set(3, 5, 9, 10, 18).oneOf()
     nondet maxHp = HP_RANGE.oneOf()
     nondet selectedBlock = MONSTER_STAT_BLOCKS.oneOf()
-    // A25: class selection — one of 12 SRD classes at level l, others at 0
+    // Class selection — one of 12 SRD classes at level l, others at 0
     nondet pcClass = Set("Fighter", "Barbarian", "Monk", "Wizard", "Rogue", "Cleric", "Paladin", "Warlock", "Sorcerer", "Druid", "Ranger", "Bard").oneOf()
     // D5: Wholeness of Body uses WIS mod; Ranger uses WIS mod; spec uses nondet range 1-5
     nondet wisMod = 1.to(5).oneOf()
