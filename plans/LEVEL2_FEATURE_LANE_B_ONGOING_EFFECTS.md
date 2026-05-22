@@ -97,19 +97,19 @@
     {
       "number": 22,
       "id": "L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION",
-      "status": "ready-for-research",
+      "status": "blocked",
       "title": "Acid Arrow RAW Corpus Reconciliation"
     },
     {
       "number": 23,
       "id": "L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE",
-      "status": "ready-for-research",
+      "status": "blocked",
       "title": "Acid Arrow Surface Damage Shape"
     },
     {
       "number": 24,
       "id": "L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT",
-      "status": "ready-for-research",
+      "status": "blocked",
       "title": "Acid Arrow Delayed Runtime Support"
     },
     {
@@ -372,7 +372,9 @@ Acceptance:
 
 ### Task 22 - L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION - Acid Arrow RAW Corpus Reconciliation
 
-Status: `ready-for-research`
+Status: `blocked`
+
+Blocked Detail: Owner decision required. The local SRD 5.2.1 Acid Arrow passage states only 4d4 Acid damage at the end of the target's next turn on a hit, but also refers to "initial" and "later" damage in the miss and higher-level clauses. The owner must approve a local corpus correction or `ASSUMPTIONS.md` entry that defines whether initial hit damage exists, its timing and base amount, the end-of-next-turn hit damage amount, miss damage derivation, and higher-level scaling.
 
 Input:
 
@@ -385,6 +387,7 @@ Output:
 - Resolve the local SRD Acid Arrow damage-timing contradiction by producing an owner-ready ASSUMPTIONS/corpus decision patch or by marking the task blocked with exact missing owner input.
 - Updated plan/profile/evidence/report artifacts only when they are the correct owner.
 - Focused verification, `git diff --check`, and reviewer-loop convergence.
+- Current blocker detail is recorded in `plans/unit-profile-coverage/ACID_ARROW_RAW_CORPUS_RECONCILIATION.md`.
 
 Acceptance:
 
@@ -394,7 +397,12 @@ Acceptance:
 
 ### Task 23 - L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE - Acid Arrow Surface Damage Shape
 
-Status: `ready-for-research`
+Status: `blocked`
+
+Depends on:
+- Task B22.
+
+Blocked Detail: Task B22 must first supply the owner-approved Acid Arrow damage relationship. Surface authoring cannot honestly encode immediate, miss, delayed, or slot-scaled damage facts from the contradictory local RAW passage alone.
 
 Input:
 
@@ -416,7 +424,12 @@ Acceptance:
 
 ### Task 24 - L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT - Acid Arrow Delayed Runtime Support
 
-Status: `ready-for-research`
+Status: `blocked`
+
+Depends on:
+- Task B23.
+
+Blocked Detail: Task B23 must first produce a lossless approved Surface damage shape. Runtime support must project from that shape rather than dispatching on Acid Arrow identity or reinterpreting the contradictory local RAW passage.
 
 Input:
 
