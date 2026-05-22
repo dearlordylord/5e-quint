@@ -89,22 +89,46 @@
       "title": "Lane A Recursive Planning Tail 2"
     },
     {
-      "number": 17,
-      "id": "L12G-MISSING-DARKVISION",
+      "number": 15,
+      "id": "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL",
       "status": "ready-for-research",
-      "title": "Darkvision Definition And Support Or Closure"
+      "title": "Darkness Spell-Created Light Dispel"
+    },
+    {
+      "number": 16,
+      "id": "L12G-FOLLOWUP-SPIKE-GROWTH-PROFILE-ACCOUNTING",
+      "status": "ready-for-research",
+      "title": "Spike Growth Profile Accounting Closure"
+    },
+    {
+      "number": 17,
+      "id": "L12G-FOLLOWUP-PRAYER-OF-HEALING-PROFILE-ACCOUNTING",
+      "status": "ready-for-research",
+      "title": "Prayer Of Healing Profile Accounting Closure"
     },
     {
       "number": 18,
-      "id": "L12G-MISSING-DETECT-THOUGHTS",
+      "id": "L12G-FOLLOWUP-FIND-STEED-COMPANION-BOUNDARY",
       "status": "ready-for-research",
-      "title": "Detect Thoughts Definition And Closure"
+      "title": "Find Steed Companion Boundary Closure"
     },
     {
       "number": 19,
-      "id": "L12G-MISSING-KNOCK",
+      "id": "L3-SPELL-FLY-RUNTIME-SURVEY",
       "status": "ready-for-research",
-      "title": "Knock Definition And Closure"
+      "title": "Level 3 Fly Runtime Survey And Task Split"
+    },
+    {
+      "number": 20,
+      "id": "L3-SPELL-LIGHTNING-BOLT-RUNTIME-SURVEY",
+      "status": "ready-for-research",
+      "title": "Level 3 Lightning Bolt Runtime Survey And Task Split"
+    },
+    {
+      "number": 21,
+      "id": "L3-SPELL-HYPNOTIC-PATTERN-RUNTIME-SURVEY",
+      "status": "ready-for-research",
+      "title": "Level 3 Hypnotic Pattern Runtime Survey And Task Split"
     }
   ]
 }
@@ -415,90 +439,158 @@ Output:
 - Refresh level-2 feature metrics.
 - Add the next concrete, Ralph-sized Lane A tasks only if real frontier remains.
 
+## Level 2 Completion And Level 3 Kickoff Refill
 
-### Task 17 - L12G-MISSING-DARKVISION - Darkvision Definition And Support Or Closure
-
-Status: `ready-for-research`
-
-Unit: `darkvision`. Gate task: 59 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
-
-Inputs:
-
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `darkvision`.
-
-Outputs:
-
-- one concrete end state from the Task Output Contract for `darkvision`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the level 1-2 metric row for `darkvision` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-<!-- moved-from-lanes: A, B; observed-statuses: deferred, ready-for-research -->
-
-### Task 18 - L12G-MISSING-DETECT-THOUGHTS - Detect Thoughts Definition And Closure
+### Task 15 - L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL - Darkness Spell-Created Light Dispel
 
 Status: `ready-for-research`
 
-Unit: `detect_thoughts`. Gate task: 60 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+Input:
 
-Inputs:
+- Local RAW under `.references/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface content, Unit/profile claims, owner evidence, and focused tests.
 
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `detect_thoughts`.
+Output:
 
-Outputs:
-
-- one concrete end state from the Task Output Contract for `detect_thoughts`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
+- Promote or precisely close Darkness overlap dispel of level-2-or-lower spell-created Bright/Dim Light, consuming generic spell-created light facts such as Continual Flame without spell identity dispatch.
+- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Focused verification, `git diff --check`, and reviewer-loop convergence.
 
 Acceptance:
 
-- the level 1-2 metric row for `detect_thoughts` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
 
-<!-- moved-from-lanes: A, B, D; observed-statuses: deferred, ready-for-research -->
-
-### Task 19 - L12G-MISSING-KNOCK - Knock Definition And Closure
+### Task 16 - L12G-FOLLOWUP-SPIKE-GROWTH-PROFILE-ACCOUNTING - Spike Growth Profile Accounting Closure
 
 Status: `ready-for-research`
 
-Unit: `knock`. Gate task: 68 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+Input:
 
-Inputs:
+- Local RAW under `.references/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface content, Unit/profile claims, owner evidence, and focused tests.
 
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `knock`.
+Output:
 
-Outputs:
-
-- one concrete end state from the Task Output Contract for `knock`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
+- Resolve the remaining open-profile-accounting status for Spike Growth after movement hazard and recognition work: update claims/evidence/reports so the metric is supported, target-closed, or split into a smaller concrete follow-up.
+- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Focused verification, `git diff --check`, and reviewer-loop convergence.
 
 Acceptance:
 
-- the level 1-2 metric row for `knock` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
 
-<!-- moved-from-lanes: A, B, D; observed-statuses: deferred, ready-for-research -->
+### Task 17 - L12G-FOLLOWUP-PRAYER-OF-HEALING-PROFILE-ACCOUNTING - Prayer Of Healing Profile Accounting Closure
+
+Status: `ready-for-research`
+
+Input:
+
+- Local RAW under `.references/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface content, Unit/profile claims, owner evidence, and focused tests.
+
+Output:
+
+- Resolve the remaining open-profile-accounting status for Prayer of Healing after Surface and Character Sheet rest runtime work: update claims/evidence/reports so the metric is supported, target-closed, or split into a smaller concrete follow-up.
+- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Focused verification, `git diff --check`, and reviewer-loop convergence.
+
+Acceptance:
+
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
+
+### Task 18 - L12G-FOLLOWUP-FIND-STEED-COMPANION-BOUNDARY - Find Steed Companion Boundary Closure
+
+Status: `ready-for-research`
+
+Input:
+
+- Local RAW under `.references/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface content, Unit/profile claims, owner evidence, and focused tests.
+
+Output:
+
+- Resolve the open-runtime-behavior row for Find Steed by documenting whether it is covered by the companion-control boundary or by adding the smallest non-companion runtime/accounting support needed without implementing autonomous companion AI.
+- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Focused verification, `git diff --check`, and reviewer-loop convergence.
+
+Acceptance:
+
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
+
+### Task 19 - L3-SPELL-FLY-RUNTIME-SURVEY - Level 3 Fly Runtime Survey And Task Split
+
+Status: `ready-for-research`
+
+Input:
+
+- Local RAW under `.references/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface content, Unit/profile claims, owner evidence, and focused tests.
+
+Output:
+
+- Read SRD Fly, current Surface content, Unit/profile claims, and existing movement/witness language; either close as table/runtime-detached or create a precise runtime task split.
+- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Focused verification, `git diff --check`, and reviewer-loop convergence.
+
+Acceptance:
+
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
+
+### Task 20 - L3-SPELL-LIGHTNING-BOLT-RUNTIME-SURVEY - Level 3 Lightning Bolt Runtime Survey And Task Split
+
+Status: `ready-for-research`
+
+Input:
+
+- Local RAW under `.references/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface content, Unit/profile claims, owner evidence, and focused tests.
+
+Output:
+
+- Read SRD Lightning Bolt and current line/area damage support; produce supported/closed accounting or a precise runtime implementation split for line save damage.
+- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Focused verification, `git diff --check`, and reviewer-loop convergence.
+
+Acceptance:
+
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
+
+### Task 21 - L3-SPELL-HYPNOTIC-PATTERN-RUNTIME-SURVEY - Level 3 Hypnotic Pattern Runtime Survey And Task Split
+
+Status: `ready-for-research`
+
+Input:
+
+- Local RAW under `.references/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface content, Unit/profile claims, owner evidence, and focused tests.
+
+Output:
+
+- Read SRD Hypnotic Pattern and existing condition-save/incapacitation support; close table-owned presentation or create a precise runtime task split.
+- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Focused verification, `git diff --check`, and reviewer-loop convergence.
+
+Acceptance:
+
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
