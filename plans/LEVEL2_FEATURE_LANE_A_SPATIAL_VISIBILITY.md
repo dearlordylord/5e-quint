@@ -85,7 +85,7 @@
     {
       "number": 14,
       "id": "L12G-RECURSIVE-TAIL-LANE-A-2",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Lane A Recursive Planning Tail 2"
     },
     {
@@ -172,7 +172,7 @@ Every task must include:
 | 11 | L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME - Enthrall Perception Penalty Runtime Support | done | L12G-RECURSIVE-TAIL-LANE-A | L12G-RECURSIVE-TAIL-LANE-A-2 | SRD Enthrall; target-list, Saving Throw, fixed d20-roll modifier, Passive Check projection boundaries | Completed Enthrall Perception penalty subset through the promoted roll-modifier profile. |
 | 12 | L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME - Levitate Creature Runtime Support | done | L12G-RECURSIVE-TAIL-LANE-A | L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH, L12G-RECURSIVE-TAIL-LANE-A-2 | SRD Levitate creature branch; movement and table/spatial witness boundaries | Completed Levitate creature runtime subset with active levitated-target state and altitude-control witness boundaries. |
 | 13 | L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH - Levitate Loose Object Branch | done | L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME | L12G-RECURSIVE-TAIL-LANE-A-2 | SRD Levitate loose object branch; shared object lifecycle or table/spatial witness owner | Completed as accepted runtime-detached closure for loose-object lifecycle and table/spatial vertical movement residuals. |
-| 14 | L12G-RECURSIVE-TAIL-LANE-A-2 - Lane A Recursive Planning Tail 2 | ready-for-research | L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH, L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME, L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH | next Lane A frontier if any | Refreshed level-2 feature metrics after this appended batch | Dependencies are complete; next task refreshes metrics and adds concrete Lane A frontier tasks only if real frontier remains. |
+| 14 | L12G-RECURSIVE-TAIL-LANE-A-2 - Lane A Recursive Planning Tail 2 | done | L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH, L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME, L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH | L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL, L12G-FOLLOWUP-SPIKE-GROWTH-PROFILE-ACCOUNTING, L12G-FOLLOWUP-PRAYER-OF-HEALING-PROFILE-ACCOUNTING, L12G-FOLLOWUP-FIND-STEED-COMPANION-BOUNDARY, L3-SPELL-FLY-RUNTIME-SURVEY, L3-SPELL-LIGHTNING-BOLT-RUNTIME-SURVEY, L3-SPELL-HYPNOTIC-PATTERN-RUNTIME-SURVEY | Refreshed level-2 feature metrics after this appended batch | Completed by confirming generated metrics and keeping the already-appended Level 2 completion / Level 3 kickoff refill tasks as the concrete frontier. |
 
 ## Tasks
 
@@ -431,7 +431,7 @@ Output:
 
 ### Task 14 - L12G-RECURSIVE-TAIL-LANE-A-2 - Lane A Recursive Planning Tail 2
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH, L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME, L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH
 
@@ -440,6 +440,30 @@ The appended Lane A follow-up batch is complete or explicitly closed.
 Output:
 - Refresh level-2 feature metrics.
 - Add the next concrete, Ralph-sized Lane A tasks only if real frontier remains.
+
+Completed:
+- Refreshed generated Unit profile and SRD inventory artifacts with
+  `pnpm unit-profile-coverage:check --write`; no generated file changes were
+  needed because the reports were already current.
+- Current level 1-2 battle readiness is 534/556 (96%) with 2
+  battle-runtime-required rows, 18 partial-battle-runtime rows, and 2
+  owner-evidence-required rows.
+- Current strict level 1-2 runtime/profile support is 113/171 (66.1%),
+  strict target closure is 169/171 (98.8%), and supported executable Unit
+  coverage is 136/196 (69.4%).
+- The remaining Lane A frontier is already represented by the appended refill:
+  Darkness spell-created light dispel, Spike Growth profile accounting, Prayer
+  of Healing profile accounting, Find Steed companion-boundary closure, and the
+  Level 3 Fly, Lightning Bolt, and Hypnotic Pattern survey/split tasks.
+- Dragon's Breath remains an open level-2 profile-accounting row, but it is
+  already owned by Lane C's Dragon's Breath granted-action task rather than this
+  Lane A tail.
+
+Verification completed:
+RAW/ubiquitous-language planning check against local SRD spell entries and
+`UBIQUITOUS_LANGUAGE.md`;
+`pnpm unit-profile-coverage:check --write`;
+`pnpm unit-profile-coverage:check`.
 
 ## Level 2 Completion And Level 3 Kickoff Refill
 
