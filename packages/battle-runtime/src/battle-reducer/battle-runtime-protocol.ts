@@ -39,6 +39,7 @@ export const INITIAL_TURN_RESOURCES = resetTurnActionEconomy({
   actionResources: [],
   currentHasBonusAction: false,
   commandHalt: null,
+  jumpDistanceMultiplier: null,
   spellSlotUsesThisTurn: [],
   levelOnePlusSpellCastsThisTurn: [],
   quickenedLevelOnePlusSpellCastsThisTurn: [],

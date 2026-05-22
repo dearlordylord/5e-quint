@@ -4619,6 +4619,9 @@ const BattleTurnSnapshotSchema = Schema.Struct({
     Schema.Struct({ weaponItemId: Schema.String }),
     { exact: true },
   ),
+  jumpDistanceMultiplier: Schema.NullOr(
+    Schema.Struct({ multiplier: Schema.Literal(2) }),
+  ),
   dashMovementBonusFeet: Schema.Number,
   disengaged: Schema.Boolean,
 });

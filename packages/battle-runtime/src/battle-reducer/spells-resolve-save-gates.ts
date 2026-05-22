@@ -19,8 +19,10 @@ import {
   type ActionSpellBattleResolutionInput,
   type BattleActiveEffect,
   type BattleHoleId,
+  type BattleHole,
   type BattleAfterDamageEvent,
   type BattleFill,
+  type BattleSavingThrowOutcome,
   type BattleObjectDamageOutcome,
   type BattleObjectIgnitionOutcome,
   type BattleResolutionResult,
@@ -69,9 +71,13 @@ import {
   applySpellDamage,
   saveGateDamageResultForOutcome,
   commandOptionChoiceHole,
+  carefulSpellProtectedTargetsHoleId,
+  carefulSpellProtectedTargetsHole,
+  heightenedSpellTargetChoiceHoleId,
   spellConditionChoiceHole,
   spellDamageAmountForTarget,
   spellDamageHole,
+  heightenedSpellTargetChoiceHole,
   spellObjectDamageOutcome,
   spellSavingThrowOutcomeHole,
   spellSavingThrowTargeting,
@@ -82,6 +88,10 @@ import {
   validateSpellTargetList,
 } from "./spells-holes-fills.ts";
 import { battleCreatureType } from "./domain-helpers.ts";
+import {
+  CAREFUL_METAMAGIC_EFFECT_KIND,
+  HEIGHTENED_METAMAGIC_EFFECT_KIND,
+} from "./metamagic.ts";
 
 import {
   spendSpellCastResources,
@@ -89,6 +99,7 @@ import {
 } from "./spells-resolve-resources.ts";
 
 import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
+import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resources.ts";
 
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import {
@@ -96,6 +107,263 @@ import {
   readiedMovementHole,
   readiedMovementBudgetForActor,
 } from "./turn-end-movement.ts";
+
+type SaveMetamagicSelectionState =
+  | {
+      readonly tag: "ok";
+      readonly carefulSpellProtectedTargetIds: readonly CombatantId[];
+      readonly heightenedSpellTargetId: CombatantId | undefined;
+    }
+  | {
+      readonly tag: "needsHoles";
+      readonly holes: readonly BattleHole[];
+    }
+  | {
+      readonly tag: "invalid";
+      readonly message: string;
+    };
+
+function metamagicApplicationsIncludeCareful(
+  applications: readonly CharacterBattleMetamagicOptionFact[] | undefined,
+): boolean {
+  return (
+    applications?.some(
+      (application) => application.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
+    ) ?? false
+  );
+}
+
+function metamagicApplicationsIncludeHeightened(
+  applications: readonly CharacterBattleMetamagicOptionFact[] | undefined,
+): boolean {
+  return (
+    applications?.some(
+      (application) =>
+        application.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
+    ) ?? false
+  );
+}
+
+function carefulSpellProtectedTargetLimit(
+  state: BattleState,
+  actorId: CombatantId,
+): number {
+  const actor = state.combatants.get(actorId);
+  return actor?.origin.kind === "character" &&
+    actor.origin.spellcasting !== undefined
+    ? Math.max(1, Number(actor.origin.spellcasting.spellcastingAbilityModifier))
+    : 1;
+}
+
+export function saveMetamagicSelectionState(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    {
+      readonly procedure:
+        | "saveGatedDamage"
+        | "saveGatedCondition"
+        | "saveGatedConditionImmunity"
+        | "saveGatedAttackRollAdvantage"
+        | "hideousLaughter"
+        | "command"
+        | "greaseGroundHazard"
+        | "gustOfWindLine";
+    }
+  >;
+  readonly fills: readonly BattleFill[];
+  readonly metamagicApplications:
+    | readonly CharacterBattleMetamagicOptionFact[]
+    | undefined;
+  readonly targetId: CombatantId | undefined;
+}): SaveMetamagicSelectionState {
+  const metamagicSelectionFills = saveMetamagicSelectionFills(
+    input.fills,
+    input.invocation,
+  );
+  if (metamagicSelectionFills.tag === "invalid") {
+    return metamagicSelectionFills;
+  }
+  const includesCareful = metamagicApplicationsIncludeCareful(
+    input.metamagicApplications,
+  );
+  const includesHeightened = metamagicApplicationsIncludeHeightened(
+    input.metamagicApplications,
+  );
+  if (!includesCareful && !includesHeightened) {
+    if (
+      metamagicSelectionFills.carefulSpellProtectedTargetIds !== undefined ||
+      metamagicSelectionFills.heightenedSpellTargetId !== undefined
+    ) {
+      return {
+        tag: "invalid",
+        message:
+          "Save-affecting Metamagic selections require matching selected Metamagic options.",
+      };
+    }
+    return {
+      tag: "ok",
+      carefulSpellProtectedTargetIds: [],
+      heightenedSpellTargetId: undefined,
+    };
+  }
+  const targeting = spellSavingThrowTargeting(input.invocation);
+  if (
+    targeting.kind === "singleCombatant" &&
+    metamagicSelectionFills.carefulSpellProtectedTargetIds !== undefined
+  ) {
+    return {
+      tag: "invalid",
+      message:
+        "Single-target Careful Spell does not use a protected-target selection hole.",
+    };
+  }
+  if (
+    targeting.kind === "singleCombatant" &&
+    metamagicSelectionFills.heightenedSpellTargetId !== undefined
+  ) {
+    return {
+      tag: "invalid",
+      message:
+        "Single-target Heightened Spell does not use a target-selection hole.",
+    };
+  }
+  const holes: BattleHole[] = [];
+  const carefulSpellProtectedTargetIds =
+    includesCareful && targeting.kind === "singleCombatant"
+      ? input.targetId === undefined
+        ? []
+        : [input.targetId]
+      : (metamagicSelectionFills.carefulSpellProtectedTargetIds ?? []);
+  if (
+    !includesCareful &&
+    metamagicSelectionFills.carefulSpellProtectedTargetIds !== undefined
+  ) {
+    return {
+      tag: "invalid",
+      message: "Careful Spell protected targets require Careful Spell.",
+    };
+  }
+  if (
+    includesCareful &&
+    targeting.kind !== "singleCombatant" &&
+    metamagicSelectionFills.carefulSpellProtectedTargetIds === undefined
+  ) {
+    holes.push(
+      carefulSpellProtectedTargetsHole(
+        input.state,
+        input.actorId,
+        input.invocation,
+      ),
+    );
+  }
+  const heightenedSpellTargetId =
+    includesHeightened && targeting.kind === "singleCombatant"
+      ? input.targetId
+      : metamagicSelectionFills.heightenedSpellTargetId;
+  if (
+    !includesHeightened &&
+    metamagicSelectionFills.heightenedSpellTargetId !== undefined
+  ) {
+    return {
+      tag: "invalid",
+      message: "Heightened Spell target requires Heightened Spell.",
+    };
+  }
+  if (
+    includesHeightened &&
+    targeting.kind !== "singleCombatant" &&
+    metamagicSelectionFills.heightenedSpellTargetId === undefined
+  ) {
+    holes.push(
+      heightenedSpellTargetChoiceHole(
+        input.state,
+        input.actorId,
+        input.invocation,
+      ),
+    );
+  }
+  return holes.length > 0
+    ? { tag: "needsHoles", holes }
+    : {
+        tag: "ok",
+        carefulSpellProtectedTargetIds,
+        heightenedSpellTargetId,
+      };
+}
+
+function saveMetamagicSelectionFills(
+  fills: readonly BattleFill[],
+  invocation: Extract<
+    SupportedSpellInvocation,
+    {
+      readonly procedure:
+        | "saveGatedDamage"
+        | "saveGatedCondition"
+        | "saveGatedConditionImmunity"
+        | "saveGatedAttackRollAdvantage"
+        | "hideousLaughter"
+        | "command"
+        | "greaseGroundHazard"
+        | "gustOfWindLine";
+    }
+  >,
+):
+  | {
+      readonly tag: "ok";
+      readonly carefulSpellProtectedTargetIds:
+        | readonly CombatantId[]
+        | undefined;
+      readonly heightenedSpellTargetId: CombatantId | undefined;
+    }
+  | {
+      readonly tag: "invalid";
+      readonly message: string;
+    } {
+  let carefulSpellProtectedTargetIds: readonly CombatantId[] | undefined;
+  let heightenedSpellTargetId: CombatantId | undefined;
+  for (const fill of fills) {
+    if (fill.holeId === carefulSpellProtectedTargetsHoleId(invocation)) {
+      if (fill.kind !== "spellTargetList") {
+        return {
+          tag: "invalid",
+          message:
+            "Careful Spell protected targets must use the Careful Spell target-list hole.",
+        };
+      }
+      if (carefulSpellProtectedTargetIds !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Careful Spell protected targets were filled twice.",
+        };
+      }
+      carefulSpellProtectedTargetIds = fill.value.targetIds;
+      continue;
+    }
+    if (fill.holeId === heightenedSpellTargetChoiceHoleId(invocation)) {
+      if (fill.kind !== "targetChoice") {
+        return {
+          tag: "invalid",
+          message:
+            "Heightened Spell target must use the Heightened Spell target hole.",
+        };
+      }
+      if (heightenedSpellTargetId !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Heightened Spell target was filled twice.",
+        };
+      }
+      heightenedSpellTargetId = fill.value;
+    }
+  }
+  return {
+    tag: "ok",
+    carefulSpellProtectedTargetIds,
+    heightenedSpellTargetId,
+  };
+}
 
 export function resolveGreaseGroundHazardSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
@@ -105,12 +373,8 @@ export function resolveGreaseGroundHazardSpellAct(input: {
     { readonly procedure: "greaseGroundHazard" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
 }): BattleResolutionResult {
-  const savingThrowHole = spellSavingThrowOutcomeHole(
-    input.input.state,
-    input.actorId,
-    input.invocation,
-  );
   if (
     input.fillSet.targetId !== undefined ||
     input.fillSet.targetList !== undefined
@@ -133,6 +397,34 @@ export function resolveGreaseGroundHazardSpellAct(input: {
       "Grease does not use attack, damage, or Concentration fills.",
     );
   }
+  const metamagicSelections = saveMetamagicSelectionState({
+    state: input.input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    fills: input.input.fills,
+    metamagicApplications: input.metamagicApplications,
+    targetId: undefined,
+  });
+  if (metamagicSelections.tag === "invalid") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      metamagicSelections.message,
+    );
+  }
+  if (metamagicSelections.tag === "needsHoles") {
+    return needsHolesResult(
+      input.input.state,
+      input.input.subject,
+      metamagicSelections.holes,
+    );
+  }
+  const savingThrowHole = spellSavingThrowOutcomeHole(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+    metamagicSelections.heightenedSpellTargetId,
+  );
   if (input.fillSet.savingThrowOutcomes === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
       savingThrowHole,
@@ -146,6 +438,8 @@ export function resolveGreaseGroundHazardSpellAct(input: {
     input.actorId,
     undefined,
     undefined,
+    metamagicSelections.carefulSpellProtectedTargetIds,
+    metamagicSelections.heightenedSpellTargetId,
   );
   if (savingThrowValidation !== null) {
     return invalidResult(
@@ -199,6 +493,9 @@ export function resolveGreaseGroundHazardSpellAct(input: {
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
+    ...(input.metamagicApplications === undefined
+      ? {}
+      : { metamagicApplications: input.metamagicApplications }),
   });
   if (resourced.tag === "invalid") {
     return resourced;
@@ -332,6 +629,7 @@ export function resolveHideousLaughterSpellAct(input: {
     { readonly procedure: "hideousLaughter" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
 }): BattleResolutionResult {
   const targetHole = spellTargetListHole(
     input.input.state,
@@ -366,10 +664,33 @@ export function resolveHideousLaughterSpellAct(input: {
   if (targetValidation !== null) {
     return invalidResult(input.input.state, "invalidFill", targetValidation);
   }
+  const metamagicSelections = saveMetamagicSelectionState({
+    state: input.input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    fills: input.input.fills,
+    metamagicApplications: input.metamagicApplications,
+    targetId: undefined,
+  });
+  if (metamagicSelections.tag === "invalid") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      metamagicSelections.message,
+    );
+  }
+  if (metamagicSelections.tag === "needsHoles") {
+    return needsHolesResult(
+      input.input.state,
+      input.input.subject,
+      metamagicSelections.holes,
+    );
+  }
   const savingThrowHole = spellSavingThrowOutcomeHole(
     input.input.state,
     input.actorId,
     input.invocation,
+    metamagicSelections.heightenedSpellTargetId,
   );
   if (input.fillSet.savingThrowOutcomes === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
@@ -383,6 +704,8 @@ export function resolveHideousLaughterSpellAct(input: {
     input.actorId,
     undefined,
     input.fillSet.targetList.targetIds,
+    metamagicSelections.carefulSpellProtectedTargetIds,
+    metamagicSelections.heightenedSpellTargetId,
   );
   if (savingThrowValidation !== null) {
     return invalidResult(
@@ -420,6 +743,9 @@ export function resolveHideousLaughterSpellAct(input: {
     invocation: input.invocation,
     errorState: input.input.state,
     startConcentration: failedTargets.length > 0,
+    ...(input.metamagicApplications === undefined
+      ? {}
+      : { metamagicApplications: input.metamagicApplications }),
   });
   if (resourced.tag === "invalid") {
     return resourced;
@@ -475,12 +801,8 @@ export function resolveSaveGateDamageSpellAct(input: {
     { readonly procedure: "saveGatedDamage" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
 }): BattleResolutionResult {
-  const savingThrowHole = spellSavingThrowOutcomeHole(
-    input.input.state,
-    input.actorId,
-    input.invocation,
-  );
   if (
     input.invocation.targeting.kind !== "singleCombatant" &&
     input.invocation.targeting.kind !== "targetList" &&
@@ -541,6 +863,9 @@ export function resolveSaveGateDamageSpellAct(input: {
         invocation: input.invocation,
         errorState: input.input.state,
         startConcentration: false,
+        ...(input.metamagicApplications === undefined
+          ? {}
+          : { metamagicApplications: input.metamagicApplications }),
       });
     }
     if (sanctuaryCheck.tag === "newTarget") {
@@ -602,6 +927,34 @@ export function resolveSaveGateDamageSpellAct(input: {
       });
     }
   }
+  const metamagicSelections = saveMetamagicSelectionState({
+    state: input.input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    fills: input.input.fills,
+    metamagicApplications: input.metamagicApplications,
+    targetId: input.fillSet.targetId,
+  });
+  if (metamagicSelections.tag === "invalid") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      metamagicSelections.message,
+    );
+  }
+  if (metamagicSelections.tag === "needsHoles") {
+    return needsHolesResult(
+      input.input.state,
+      input.input.subject,
+      metamagicSelections.holes,
+    );
+  }
+  const savingThrowHole = spellSavingThrowOutcomeHole(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+    metamagicSelections.heightenedSpellTargetId,
+  );
   if (input.fillSet.attackRoll !== undefined) {
     return invalidResult(
       input.input.state,
@@ -642,6 +995,8 @@ export function resolveSaveGateDamageSpellAct(input: {
     input.actorId,
     input.fillSet.targetId,
     input.fillSet.targetList?.targetIds,
+    metamagicSelections.carefulSpellProtectedTargetIds,
+    metamagicSelections.heightenedSpellTargetId,
   );
   if (savingThrowValidation !== null) {
     return invalidResult(
@@ -709,6 +1064,7 @@ export function resolveSaveGateDamageSpellAct(input: {
         outcome.targetId,
         input.invocation,
         outcome.succeeded,
+        metamagicSelections.carefulSpellProtectedTargetIds,
       ),
     ]),
   );
@@ -771,6 +1127,9 @@ export function resolveSaveGateDamageSpellAct(input: {
         invocation: input.invocation,
         errorState: input.input.state,
         startConcentration: startFailedSaveConcentration,
+        ...(input.metamagicApplications === undefined
+          ? {}
+          : { metamagicApplications: input.metamagicApplications }),
       }),
       input.actorId,
       failedSaveConcentrationDuration,
@@ -1021,6 +1380,9 @@ export function resolveSaveGateDamageSpellAct(input: {
       invocation: input.invocation,
       errorState: input.input.state,
       startConcentration: startFailedSaveConcentration,
+      ...(input.metamagicApplications === undefined
+        ? {}
+        : { metamagicApplications: input.metamagicApplications }),
     }),
     input.actorId,
     failedSaveConcentrationDuration,
@@ -1294,12 +1656,8 @@ export function resolveSaveGateConditionSpellAct(input: {
     { readonly procedure: "saveGatedCondition" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
 }): BattleResolutionResult {
-  const savingThrowHole = spellSavingThrowOutcomeHole(
-    input.input.state,
-    input.actorId,
-    input.invocation,
-  );
   if (
     input.invocation.targeting.kind !== "singleCombatant" &&
     input.fillSet.targetId !== undefined
@@ -1400,6 +1758,34 @@ export function resolveSaveGateConditionSpellAct(input: {
       selectedEffect.message,
     );
   }
+  const metamagicSelections = saveMetamagicSelectionState({
+    state: input.input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    fills: input.input.fills,
+    metamagicApplications: input.metamagicApplications,
+    targetId: input.fillSet.targetId,
+  });
+  if (metamagicSelections.tag === "invalid") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      metamagicSelections.message,
+    );
+  }
+  if (metamagicSelections.tag === "needsHoles") {
+    return needsHolesResult(
+      input.input.state,
+      input.input.subject,
+      metamagicSelections.holes,
+    );
+  }
+  const savingThrowHole = spellSavingThrowOutcomeHole(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+    metamagicSelections.heightenedSpellTargetId,
+  );
   if (input.fillSet.savingThrowOutcomes === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
       savingThrowHole,
@@ -1413,6 +1799,8 @@ export function resolveSaveGateConditionSpellAct(input: {
     input.actorId,
     input.fillSet.targetId,
     input.fillSet.targetList?.targetIds,
+    metamagicSelections.carefulSpellProtectedTargetIds,
+    metamagicSelections.heightenedSpellTargetId,
   );
   if (savingThrowValidation !== null) {
     return invalidResult(
@@ -1454,6 +1842,9 @@ export function resolveSaveGateConditionSpellAct(input: {
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
+    ...(input.metamagicApplications === undefined
+      ? {}
+      : { metamagicApplications: input.metamagicApplications }),
   });
   if (resourced.tag === "invalid") {
     return resourced;
@@ -1485,12 +1876,8 @@ export function resolveSaveGateConditionImmunitySpellAct(input: {
     { readonly procedure: "saveGatedConditionImmunity" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
 }): BattleResolutionResult {
-  const savingThrowHole = spellSavingThrowOutcomeHole(
-    input.input.state,
-    input.actorId,
-    input.invocation,
-  );
   if (
     input.fillSet.targetId !== undefined ||
     input.fillSet.targetList !== undefined
@@ -1513,6 +1900,34 @@ export function resolveSaveGateConditionImmunitySpellAct(input: {
       "Save-gate condition-immunity spells do not use attack or damage fills.",
     );
   }
+  const metamagicSelections = saveMetamagicSelectionState({
+    state: input.input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    fills: input.input.fills,
+    metamagicApplications: input.metamagicApplications,
+    targetId: undefined,
+  });
+  if (metamagicSelections.tag === "invalid") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      metamagicSelections.message,
+    );
+  }
+  if (metamagicSelections.tag === "needsHoles") {
+    return needsHolesResult(
+      input.input.state,
+      input.input.subject,
+      metamagicSelections.holes,
+    );
+  }
+  const savingThrowHole = spellSavingThrowOutcomeHole(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+    metamagicSelections.heightenedSpellTargetId,
+  );
   if (input.fillSet.savingThrowOutcomes === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
       savingThrowHole,
@@ -1526,6 +1941,8 @@ export function resolveSaveGateConditionImmunitySpellAct(input: {
     input.actorId,
     undefined,
     undefined,
+    metamagicSelections.carefulSpellProtectedTargetIds,
+    metamagicSelections.heightenedSpellTargetId,
   );
   if (savingThrowValidation !== null) {
     return invalidResult(
@@ -1579,6 +1996,9 @@ export function resolveSaveGateConditionImmunitySpellAct(input: {
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
+    ...(input.metamagicApplications === undefined
+      ? {}
+      : { metamagicApplications: input.metamagicApplications }),
   });
   if (resourced.tag === "invalid") {
     return resourced;
@@ -1630,6 +2050,7 @@ export function resolveCommandSpellAct(input: {
     { readonly procedure: "command" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
 }): BattleResolutionResult {
   const targetHole = spellTargetListHole(
     input.input.state,
@@ -1679,10 +2100,33 @@ export function resolveCommandSpellAct(input: {
       "Command does not use attack, damage, or Concentration fills.",
     );
   }
+  const metamagicSelections = saveMetamagicSelectionState({
+    state: input.input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    fills: input.input.fills,
+    metamagicApplications: input.metamagicApplications,
+    targetId: undefined,
+  });
+  if (metamagicSelections.tag === "invalid") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      metamagicSelections.message,
+    );
+  }
+  if (metamagicSelections.tag === "needsHoles") {
+    return needsHolesResult(
+      input.input.state,
+      input.input.subject,
+      metamagicSelections.holes,
+    );
+  }
   const savingThrowHole = spellSavingThrowOutcomeHole(
     input.input.state,
     input.actorId,
     input.invocation,
+    metamagicSelections.heightenedSpellTargetId,
   );
   if (input.fillSet.savingThrowOutcomes === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
@@ -1697,6 +2141,8 @@ export function resolveCommandSpellAct(input: {
     input.actorId,
     undefined,
     input.fillSet.targetList.targetIds,
+    metamagicSelections.carefulSpellProtectedTargetIds,
+    metamagicSelections.heightenedSpellTargetId,
   );
   if (savingThrowValidation !== null) {
     return invalidResult(
@@ -1738,6 +2184,9 @@ export function resolveCommandSpellAct(input: {
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
+    ...(input.metamagicApplications === undefined
+      ? {}
+      : { metamagicApplications: input.metamagicApplications }),
   });
   if (resourced.tag === "invalid") {
     return resourced;
@@ -1769,12 +2218,8 @@ export function resolveSaveGateAttackRollAdvantageSpellAct(input: {
     { readonly procedure: "saveGatedAttackRollAdvantage" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
 }): BattleResolutionResult {
-  const savingThrowHole = spellSavingThrowOutcomeHole(
-    input.input.state,
-    input.actorId,
-    input.invocation,
-  );
   if (input.fillSet.targetId !== undefined) {
     return invalidResult(
       input.input.state,
@@ -1794,6 +2239,34 @@ export function resolveSaveGateAttackRollAdvantageSpellAct(input: {
       "Save-gate attack-roll advantage spells do not use attack or damage fills.",
     );
   }
+  const metamagicSelections = saveMetamagicSelectionState({
+    state: input.input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    fills: input.input.fills,
+    metamagicApplications: input.metamagicApplications,
+    targetId: undefined,
+  });
+  if (metamagicSelections.tag === "invalid") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      metamagicSelections.message,
+    );
+  }
+  if (metamagicSelections.tag === "needsHoles") {
+    return needsHolesResult(
+      input.input.state,
+      input.input.subject,
+      metamagicSelections.holes,
+    );
+  }
+  const savingThrowHole = spellSavingThrowOutcomeHole(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+    metamagicSelections.heightenedSpellTargetId,
+  );
   if (input.fillSet.savingThrowOutcomes === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
       savingThrowHole,
@@ -1807,6 +2280,8 @@ export function resolveSaveGateAttackRollAdvantageSpellAct(input: {
     input.actorId,
     undefined,
     undefined,
+    metamagicSelections.carefulSpellProtectedTargetIds,
+    metamagicSelections.heightenedSpellTargetId,
   );
   if (savingThrowValidation !== null) {
     return invalidResult(
@@ -1848,6 +2323,9 @@ export function resolveSaveGateAttackRollAdvantageSpellAct(input: {
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
+    ...(input.metamagicApplications === undefined
+      ? {}
+      : { metamagicApplications: input.metamagicApplications }),
   });
   if (resourced.tag === "invalid") {
     return resourced;
@@ -1878,6 +2356,8 @@ export function validateSavingThrowOutcomes(
   actorId: CombatantId,
   targetId: CombatantId | undefined,
   targetListIds?: readonly CombatantId[],
+  carefulSpellProtectedTargetIds: readonly CombatantId[] = [],
+  heightenedSpellTargetId?: CombatantId,
 ): string | null {
   const outcomes = value.outcomes;
   if (hole.spell.procedure === "rollModifier") {
@@ -1932,9 +2412,17 @@ export function validateSavingThrowOutcomes(
     if (outcomes.length !== 1 || outcomes[0]?.targetId !== targetId) {
       return "Single-target save-gate spell Saving Throw outcome must match the selected target.";
     }
-    return state.combatants.has(targetId)
-      ? null
-      : "Save-gate spell target must be a combatant in this battle.";
+    if (!state.combatants.has(targetId)) {
+      return "Save-gate spell target must be a combatant in this battle.";
+    }
+    return validateSavingThrowOutcomeSelections({
+      outcomes,
+      state,
+      actorId,
+      allowedTargetIds: new Set([targetId]),
+      carefulSpellProtectedTargetIds,
+      heightenedSpellTargetId,
+    });
   }
   if (targeting.kind === "targetList") {
     if ("area" in value) {
@@ -1969,7 +2457,14 @@ export function validateSavingThrowOutcomes(
       }
       seenTargets.add(outcome.targetId);
     }
-    return null;
+    return validateSavingThrowOutcomeSelections({
+      outcomes,
+      state,
+      actorId,
+      allowedTargetIds: selectedTargets,
+      carefulSpellProtectedTargetIds,
+      heightenedSpellTargetId,
+    });
   }
   if (!("area" in value)) {
     return `Save-gate spell Saving Throw outcomes require area facts for ${targeting.kind}.`;
@@ -2078,7 +2573,67 @@ export function validateSavingThrowOutcomes(
   if (seenTargets.size !== affectedTargets.size) {
     return "Save-gate spell Saving Throw outcomes must cover every table-supplied area affected target.";
   }
-  return null;
+  return validateSavingThrowOutcomeSelections({
+    outcomes,
+    state,
+    actorId,
+    allowedTargetIds: affectedTargets,
+    carefulSpellProtectedTargetIds,
+    heightenedSpellTargetId,
+  });
+}
+
+function validateSavingThrowOutcomeSelections(input: {
+  readonly outcomes: readonly BattleSavingThrowOutcome[];
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly allowedTargetIds: ReadonlySet<CombatantId>;
+  readonly carefulSpellProtectedTargetIds: readonly CombatantId[];
+  readonly heightenedSpellTargetId: CombatantId | undefined;
+}): string | null {
+  if (input.carefulSpellProtectedTargetIds.length > 0) {
+    const maxProtectedTargets = carefulSpellProtectedTargetLimit(
+      input.state,
+      input.actorId,
+    );
+    if (
+      input.carefulSpellProtectedTargetIds.length > maxProtectedTargets ||
+      input.carefulSpellProtectedTargetIds.length === 0
+    ) {
+      return "Careful Spell protected target count must be between one and the caster's spellcasting ability modifier.";
+    }
+    if (
+      new Set(input.carefulSpellProtectedTargetIds).size !==
+      input.carefulSpellProtectedTargetIds.length
+    ) {
+      return "Careful Spell protected targets must not repeat.";
+    }
+    const succeededTargets = new Set(
+      input.outcomes
+        .filter((outcome) => outcome.succeeded)
+        .map((outcome) => outcome.targetId),
+    );
+    const outcomeTargets = new Set(
+      input.outcomes.map((outcome) => outcome.targetId),
+    );
+    if (
+      !input.carefulSpellProtectedTargetIds.every(
+        (targetId) =>
+          targetId !== input.actorId &&
+          input.allowedTargetIds.has(targetId) &&
+          outcomeTargets.has(targetId) &&
+          succeededTargets.has(targetId),
+      )
+    ) {
+      return "Careful Spell protected targets must be non-caster spell targets that succeed on the saving throw.";
+    }
+  }
+  if (input.heightenedSpellTargetId === undefined) {
+    return null;
+  }
+  return input.allowedTargetIds.has(input.heightenedSpellTargetId)
+    ? null
+    : "Heightened Spell disadvantaged target must be one affected target from the selected spell.";
 }
 
 function saveGatedDamageSpellCastTargetIds(

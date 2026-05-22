@@ -643,6 +643,7 @@ export function resolveSpellAct(
       actorId: subject.actorId,
       invocation,
       fillSet,
+      metamagicApplications: metamagicAdmission.applications,
     });
   }
   if (invocation.procedure === "saveGatedCondition") {
@@ -651,6 +652,7 @@ export function resolveSpellAct(
       actorId: subject.actorId,
       invocation,
       fillSet,
+      metamagicApplications: metamagicAdmission.applications,
     });
   }
   if (invocation.procedure === "saveGatedConditionImmunity") {
@@ -659,6 +661,7 @@ export function resolveSpellAct(
       actorId: subject.actorId,
       invocation,
       fillSet,
+      metamagicApplications: metamagicAdmission.applications,
     });
   }
   if (invocation.procedure === "saveGatedAttackRollAdvantage") {
@@ -667,6 +670,7 @@ export function resolveSpellAct(
       actorId: subject.actorId,
       invocation,
       fillSet,
+      metamagicApplications: metamagicAdmission.applications,
     });
   }
   if (invocation.procedure === "sleepTargetAdmission") {
@@ -683,6 +687,7 @@ export function resolveSpellAct(
       actorId: subject.actorId,
       invocation,
       fillSet,
+      metamagicApplications: metamagicAdmission.applications,
     });
   }
   if (invocation.procedure === "greaseGroundHazard") {
@@ -691,6 +696,7 @@ export function resolveSpellAct(
       actorId: subject.actorId,
       invocation,
       fillSet,
+      metamagicApplications: metamagicAdmission.applications,
     });
   }
   if (invocation.procedure === "fogCloudObscurement") {
@@ -731,6 +737,7 @@ export function resolveSpellAct(
       actorId: subject.actorId,
       invocation,
       fillSet,
+      metamagicApplications: metamagicAdmission.applications,
     });
   }
   if (invocation.procedure === "flamingSphere") {
@@ -771,6 +778,7 @@ export function resolveSpellAct(
       actorId: subject.actorId,
       invocation,
       fillSet,
+      metamagicApplications: metamagicAdmission.applications,
     });
   }
   if (invocation.procedure === "repeatedDamageAllocation") {
@@ -2002,7 +2010,10 @@ export function resolveBonusActionSpellAct(
       );
     }
   } else if (invocation.procedure === "scalarBuff") {
-    if (invocation.actionCost !== "bonusAction") {
+    if (
+      invocation.actionCost !== "bonusAction" &&
+      actionCostOverride !== "bonusAction"
+    ) {
       return invalidResult(
         input.state,
         "unsupportedSubject",
@@ -2166,6 +2177,8 @@ export function resolveBonusActionSpellAct(
       actorId: subject.actorId,
       invocation,
       fillSet,
+      ...(actionCostOverride === undefined ? {} : { actionCostOverride }),
+      metamagicApplications: metamagicAdmission.applications,
     });
   }
   if (invocation.procedure === "weaponDamageRider") {

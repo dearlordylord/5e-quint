@@ -4284,6 +4284,7 @@ export function battleTurnSnapshot(state: BattleState): BattleTurnSnapshot {
   return {
     actionResources: resources.actionResources,
     bonusActionAvailable: resources.currentHasBonusAction,
+    jumpDistanceMultiplier: resources.jumpDistanceMultiplier,
     spellSlotUsesThisTurn: resources.spellSlotUsesThisTurn,
     levelOnePlusSpellCastsThisTurn: resources.levelOnePlusSpellCastsThisTurn,
     quickenedLevelOnePlusSpellCastsThisTurn:

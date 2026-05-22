@@ -277,6 +277,9 @@ export type BattleMonkFocusBattleOptionsSupportProfile = {
     readonly freeAction: "dash";
     readonly focusPointCost: 1;
     readonly focusActions: readonly ["disengage", "dash"];
+    readonly jumpDistanceMultiplier: {
+      readonly multiplier: 2;
+    };
   };
 };
 export type BattleDruidWildShapeKnownFormSupportProfile = {
@@ -1297,6 +1300,10 @@ export function battleMonkFocusBattleOptionsSupportForUnit(
       freeAction: stepOfTheWind.battleExecution.freeAction,
       focusPointCost: stepOfTheWind.battleExecution.focusPointCost,
       focusActions: stepOfTheWind.battleExecution.focusActions,
+      jumpDistanceMultiplier: {
+        multiplier: stepOfTheWind.battleExecution.jumpDistanceMultiplier
+          .multiplier,
+      },
     },
   };
 }

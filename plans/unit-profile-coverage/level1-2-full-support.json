@@ -1935,12 +1935,12 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "follow-up-split"
+        "outside-runtime-presentation-exploration"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME: Execute Step of the Wind's doubled jump distance through an ordinary Long Jump and High Jump movement witness boundary, using the existing movement budget and caller-supplied legal landing/table-spatial facts rather than storing an inert Monk-only active effect. Owner: battle-runtime shared jump movement witness boundary plus promoted Quint parity. Required output: Supported runtime owner evidence, focused tests, and promoted Quint/runtime parity for doubled Long Jump and High Jump distance under Step of the Wind without duplicating Strength, Speed, or table-spatial landing state.",
+      "reason": "Task 5 promotes the paid Step of the Wind jump-distance multiplier where promoted runtime can consume it today: Jump spell movement replacement witnesses. Ordinary Long Jump and High Jump require separate Strength-derived distance, route, obstacle, destination, and landing witnesses that are not part of the promoted battle-runtime movement command surface in this lane.",
       "sourceRecordPath": "packages/surface/content/monk_monks_focus.json",
       "sourceRows": [
         {
@@ -1956,7 +1956,7 @@
           }
         }
       ],
-      "status": "blocked-follow-up-split",
+      "status": "closed-runtime-detached-table-adjudication",
       "strictTargetClosed": true,
       "unitId": "monk_monks_focus"
     },
@@ -2324,12 +2324,12 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "follow-up-split"
+        "character-fact-and-runtime-detached-split"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE: Execute Font of Magic Creating Spell Slots at an action-economy boundary that spends a Bonus Action, and carry ordinary-versus-created Spell Slot source through battle spell casting and handoff when both sources of the same level are available. Owner: character-sheet-runtime plus character-battle-runtime and battle-runtime spell invocation lifecycle. Required output: Supported-profile Unit claim update with focused Character Sheet, Character Battle, and promoted battle-runtime tests; if battle-runtime spell invocation state changes, update package-local Quint parity and run the appropriate MBT tier under the repository protocol.",
+      "reason": "RAW distinguishes the Bonus Action resource conversion from spell execution, and the existing Character Sheet boundary is the canonical owner of ordinary-vs-created Spell Slot source state. Character Battle intentionally carries only aggregate Spell Slot capacity and the shared Sorcery Point pool, rejects source-ambiguous handoff when both ordinary and created slots of the same level could have been spent, and does not introduce a second battle-local Spell Slot source pool or source ledger.",
       "sourceRecordPath": "packages/surface/content/sorcerer_font_of_magic.json",
       "sourceRows": [
         {
@@ -2345,7 +2345,7 @@
           }
         }
       ],
-      "status": "blocked-follow-up-split",
+      "status": "closed-character-fact-and-runtime-detached-split",
       "strictTargetClosed": true,
       "unitId": "sorcerer_font_of_magic"
     },
@@ -2358,7 +2358,7 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS: Promote Quickened Spell from direct Hit Point restoration to every supported action-casting Spell Invocation procedure, using typed procedure support gates and the level-1-plus spell cast turn fact for slot and free-cast resources. Owner: battle-runtime Spell Invocation discovery and resolution profiles plus package-local Quint parity. Required output: Supported-profile or profile-subset-supported Unit claim with focused runtime tests and promoted Quint/runtime parity for Quickened action-to-Bonus-Action rewrite across each supported spell profile without option authored identity dispatch.; L12G-FOLLOWUP-SORCERER-METAMAGIC-SAVE-OPTIONS: Promote Careful Spell and Heightened Spell against supported save-for-half and save-gated spell procedures, including protected-target automatic success with no successful-save damage and one-target Disadvantage on saves against the spell. Owner: battle-runtime saving throw spell resolution hooks. Required output: Supported-profile or profile-subset-supported Unit claim with typed holes/fills, focused runtime tests, and promoted Quint/runtime parity for Careful and Heightened without option identity dispatch.; L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-PROPERTY-OPTIONS: Promote Distant, Extended, and Subtle Spell for supported spell procedures by rewriting range, duration, Concentration-save roll mode, and component requirements from typed spell facts and caller-supplied component/material witnesses. Owner: battle-runtime spell invocation profile projection plus concentration and component witness boundaries. Required output: Supported-profile or profile-subset-supported Unit claim with focused tests for Distant range changes, Extended duration and Concentration-save Advantage, and Subtle component suppression while preserving consumed or priced Material components.; L12G-FOLLOWUP-SORCERER-METAMAGIC-DAMAGE-SHAPE-OPTIONS: Promote Transmuted Spell and Twinned Spell for supported spell procedures by substituting only Acid, Cold, Fire, Lightning, Poison, or Thunder spell damage types and increasing effective spell level by 1 only for spells whose higher-slot profile targets one additional creature. Owner: battle-runtime spell damage profile and upcast targeting projection. Required output: Supported-profile or profile-subset-supported Unit claim with focused runtime tests and promoted Quint/runtime parity for typed damage-type substitution and higher-slot target-count projection without duplicating spell slot state.; L12G-FOLLOWUP-SORCERER-METAMAGIC-REROLL-OPTIONS: Promote Empowered Spell and Seeking Spell rerolls after damage rolls or missed spell attacks, consuming typed reroll fills, enforcing Charisma-modifier dice limits where applicable, and using the new rolls. Owner: battle-runtime damage-roll and spell-attack miss lifecycle. Required output: Supported-profile or profile-subset-supported Unit claim with focused runtime tests and promoted Quint/runtime parity for post-roll damage dice rerolls and missed spell attack d20 rerolls while preserving the options' different-Metamagic stacking exception.",
+      "reason": "L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS: Promote Quickened Spell from direct Hit Point restoration to every supported action-casting Spell Invocation procedure, using typed procedure support gates and the level-1-plus spell cast turn fact for slot and free-cast resources. Owner: battle-runtime Spell Invocation discovery and resolution profiles plus package-local Quint parity. Required output: Supported-profile or profile-subset-supported Unit claim with focused runtime tests and promoted Quint/runtime parity for Quickened action-to-Bonus-Action rewrite across each supported spell profile without option authored identity dispatch.; L12G-FOLLOWUP-SORCERER-METAMAGIC-SAVE-OPTIONS: Promote Careful Spell and Heightened Spell against supported save-for-half and save-gated spell procedures, including protected-target automatic success with no successful-save damage and one-target Disadvantage on saves against the spell. Owner: battle-runtime saving throw spell resolution hooks. Required output: Supported-profile or profile-subset-supported Unit claim with typed holes/fills, focused runtime tests, and promoted Quint/runtime parity for Careful and Heightened without option identity dispatch.; L12G-FOLLOWUP-SORCERER-METAMAGIC-DAMAGE-SHAPE-OPTIONS: Promote Transmuted Spell and Twinned Spell for supported spell procedures by substituting only Acid, Cold, Fire, Lightning, Poison, or Thunder spell damage types and increasing effective spell level by 1 only for spells whose higher-slot profile targets one additional creature. Owner: battle-runtime spell damage profile and upcast targeting projection. Required output: Supported-profile or profile-subset-supported Unit claim with focused runtime tests and promoted Quint/runtime parity for typed damage-type substitution and higher-slot target-count projection without duplicating spell slot state.",
       "sourceRecordPath": "packages/surface/content/sorcerer_metamagic.json",
       "sourceRows": [
         {
@@ -2674,7 +2674,7 @@
       ]
     },
     {
-      "count": 28,
+      "count": 29,
       "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
@@ -2701,6 +2701,7 @@
         "magic_mouth",
         "mind_spike",
         "minor_illusion",
+        "monk_monks_focus",
         "pass_without_trace",
         "rope_trick",
         "silent_image",
@@ -2709,7 +2710,7 @@
       ]
     },
     {
-      "count": 15,
+      "count": 13,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
@@ -2722,10 +2723,8 @@
         "enlarge_reduce",
         "enthrall",
         "levitate",
-        "monk_monks_focus",
         "moonbeam",
         "ray_of_enfeeblement",
-        "sorcerer_font_of_magic",
         "sorcerer_metamagic",
         "spiritual_weapon"
       ]
@@ -2744,12 +2743,13 @@
       ]
     },
     {
-      "count": 2,
+      "count": 3,
       "description": "Character facts are owned while only runtime-detached adjudication remains.",
       "status": "closed-character-fact-and-runtime-detached-split",
       "unitIds": [
         "druid_druidic",
-        "rogue_thieves_cant"
+        "rogue_thieves_cant",
+        "sorcerer_font_of_magic"
       ]
     },
     {
@@ -8164,11 +8164,11 @@
       "unsupported-profile": 31
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 15,
-      "closed-character-fact-and-runtime-detached-split": 2,
+      "blocked-follow-up-split": 13,
+      "closed-character-fact-and-runtime-detached-split": 3,
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
-      "closed-runtime-detached-table-adjudication": 28,
+      "closed-runtime-detached-table-adjudication": 29,
       "open-profile-accounting": 2,
       "open-runtime-behavior": 1,
       "supported-profile": 113

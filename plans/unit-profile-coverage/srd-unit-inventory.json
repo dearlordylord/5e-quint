@@ -13660,8 +13660,8 @@
       "battleReadinessClosure": {
         "source": "deferred-mechanics",
         "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "battle-runtime shared jump movement witness boundary plus promoted Quint parity",
-        "reason": "Doubled jump distance depends on a shared ordinary jump movement witness boundary for Long Jump and High Jump distance, movement spend, and legal landing/table-spatial facts; Task 2 promotes only the action-economy and resource-spend subset."
+        "owner": "table movement adjudication and any future ordinary jump movement witness owner",
+        "reason": "Task 5 promotes the paid Step of the Wind jump-distance multiplier where promoted runtime can consume it today: Jump spell movement replacement witnesses. Ordinary Long Jump and High Jump require separate Strength-derived distance, route, obstacle, destination, and landing witnesses that are not part of the promoted battle-runtime movement command surface in this lane."
       },
       "ownerEvidence": [
         {
@@ -18920,6 +18920,12 @@
       },
       "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "Character Sheet Font of Magic conversion state plus Character Battle aggregate Spell Slot handoff",
+        "reason": "RAW distinguishes the Bonus Action resource conversion from spell execution, and the existing Character Sheet boundary is the canonical owner of ordinary-vs-created Spell Slot source state. Character Battle intentionally carries only aggregate Spell Slot capacity and the shared Sorcery Point pool, rejects source-ambiguous handoff when both ordinary and created slots of the same level could have been spent, and does not introduce a second battle-local Spell Slot source pool or source ledger."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -18933,7 +18939,7 @@
         },
         {
           "owner": "character-sheet-runtime",
-          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS Character Sheet class-feature point-pool resource and Spell Slot conversion runtime; Font of Magic is read from CharacterBuild resources and the installed Surface feature record, then projected as Character Sheet Sorcery Point point-pool state. The runtime derives capacity from Sorcerer class level, stores only expended Sorcery Points, restores all expended points on Long Rest, executes the no-action source-aware Spell Slot to Sorcery Point conversion for ordinary and created Spell Slots, and records the Character Sheet state transition from Sorcery Points to created Spell Slots from the installed Creating Spell Slots table. Created Spell Slot state stores only the delta above ordinary build capacity, exposes aggregate capacity for Character Battle init, is preserved exactly when Character Battle handoff is source-unambiguous, and is cleared on Long Rest without duplicating class progression, action-economy state, or Metamagic option state. Bonus Action execution and source-aware battle spell spending remain split to L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE.",
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS Character Sheet class-feature point-pool resource and Spell Slot conversion runtime; Font of Magic is read from CharacterBuild resources and the installed Surface feature record, then projected as Character Sheet Sorcery Point point-pool state. The runtime derives capacity from Sorcerer class level, stores only expended Sorcery Points, restores all expended points on Long Rest, executes the no-action source-aware Spell Slot to Sorcery Point conversion for ordinary and created Spell Slots, and records the Character Sheet state transition from Sorcery Points to created Spell Slots from the installed Creating Spell Slots table. Created Spell Slot state stores only the delta above ordinary build capacity, exposes aggregate capacity for Character Battle init, is preserved exactly when Character Battle handoff is source-unambiguous, and is cleared on Long Rest without duplicating class progression, action-economy state, or Metamagic option state. Battle Bonus Action/source handling is closed at the Character Sheet conversion and aggregate handoff boundary rather than by adding a duplicate battle-local Spell Slot source pool.",
           "status": "owner evidence present"
         }
       ],

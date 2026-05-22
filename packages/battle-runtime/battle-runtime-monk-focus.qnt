@@ -122,6 +122,7 @@ module battleRuntimeMonkFocus {
         {
           ...dashed,
           disengaged: true,
+          jumpDistanceMultiplier: 2,
         },
         focusPointsRemaining - 1,
         0,
@@ -169,6 +170,7 @@ module battleRuntimeMonkFocus {
     all {
       assert(result.state.dashMovementBonus == 30),
       assert(result.state.disengaged),
+      assert(result.state.jumpDistanceMultiplier == 2),
       assert(result.focusPointsRemaining == 1),
     }
   }

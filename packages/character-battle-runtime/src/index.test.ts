@@ -6,6 +6,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.monk-focus-battle-options
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B mastery_sap mastery_topple mastery_cleave
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME monk_uncanny_metabolism
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE sorcerer_font_of_magic
 import type {
   BattleFill,
   BattleCreatureState,
@@ -752,6 +753,73 @@ describe("Character Sheet battle handoff", () => {
           "Battle handoff Spell Slot expenditure is source-ambiguous for level 3.",
       }),
     );
+  });
+
+  test("keeps Font of Magic Spell Slot creation at the Character Sheet boundary during battle", () => {
+    const sheet = expectRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:sorcerer-font-battle-closed"),
+        build: sorcererMetamagicBuild(),
+        maximumHp: Hp(24),
+        currentHp: Hp(24),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const created = expectRight(
+      convertFontOfMagicSorceryPointsToSpellSlot({
+        sheet,
+        unitLibrary,
+        spellLevel: spellSlotLevel(3),
+      }),
+    );
+    const combatantIdValue = combatantId(
+      "combatant:sorcerer-font-battle-closed",
+    );
+    const init = expectRight(
+      characterSheetBattleInit({
+        sheet: created,
+        unitLibrary,
+        statBlockCatalog,
+        combatantId: combatantIdValue,
+        displayName: "Sorcerer",
+        initiative: initiativeScore(12),
+        side: battleCombatantSide("party"),
+      }),
+    );
+    const state = expectRight(
+      startBattle({
+        battleId: battleId("character-sheet-sorcerer-font-battle-closed"),
+        combatants: [
+          init,
+          battleCreatureInitFromStatBlock({
+            combatantId: combatantId(
+              "combatant:sorcerer-font-battle-closed-skeleton",
+            ),
+            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            initiative: initiativeScore(10),
+            side: battleCombatantSide("monsters"),
+          }),
+        ],
+      }),
+    );
+
+    const sorcerer = state.combatants.get(combatantIdValue);
+    if (sorcerer?.origin.kind !== "character") {
+      throw new Error("Expected character-origin Sorcerer combatant.");
+    }
+    expect(sorcerer.origin.spellcasting?.spellSlots).toEqual([
+      { spellLevel: 1, count: 4, expended: 0 },
+      { spellLevel: 2, count: 3, expended: 0 },
+      { spellLevel: 3, count: 3, expended: 0 },
+    ]);
+    expect(
+      discoverBattleActs(state).some(
+        (act) =>
+          act.subject.tag === "unitFeature" &&
+          act.subject.unitId === "sorcerer_font_of_magic",
+      ),
+    ).toBe(false);
   });
 
   test("bridges Metamagic facts through the shared Font of Magic point pool", () => {

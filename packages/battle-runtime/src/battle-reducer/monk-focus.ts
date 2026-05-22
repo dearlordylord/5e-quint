@@ -414,6 +414,8 @@ function resolveStepOfTheWindFocus(
     spentResources,
   );
   const withDisengage = applyDisengage(withDash, withDash.currentTurnResources);
+  const withJumpDistanceMultiplier =
+    applyStepOfTheWindJumpDistanceMultiplier(withDisengage, focus);
   const actor = withDisengage.combatants.get(input.subject.actorId);
   if (!isCharacterBattleCreatureState(actor)) {
     return invalidResult(
@@ -424,11 +426,27 @@ function resolveStepOfTheWindFocus(
   }
   return resolved(
     stateWithMonkFocusResource(
-      withDisengage,
+      withJumpDistanceMultiplier,
       actor,
       spendCharacterResourceUse(focus.resource),
     ),
   );
+}
+
+function applyStepOfTheWindJumpDistanceMultiplier(
+  state: BattleState,
+  focus: MonkFocusResourceFact,
+): BattleState {
+  return {
+    ...state,
+    currentTurnResources: {
+      ...state.currentTurnResources,
+      jumpDistanceMultiplier: {
+        multiplier: focus.profile.stepOfTheWind.jumpDistanceMultiplier
+          .multiplier,
+      },
+    },
+  };
 }
 
 export function resolveMonkFocusFlurryOfBlowsStrike(

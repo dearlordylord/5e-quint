@@ -54,6 +54,7 @@ import {
 } from "./attack-resolution.ts";
 
 import { currentActorId, grappledBy } from "./creature-state-leaves.ts";
+import { maxJumpMovementReplacementDistanceFeet } from "./jump-movement-replacement.ts";
 
 import {
   combatantCanTakeActions,
@@ -1380,7 +1381,7 @@ function jumpMovementReplacementActs(
             sourceSpellId: spellId(effect.sourceSpellId),
           },
           label: "Jump",
-          summary: `Spend ${effect.movementCostFeet} feet of Movement to jump up to ${effect.maxJumpDistanceFeet} feet using table-supplied landing facts.`,
+          summary: `Spend ${effect.movementCostFeet} feet of Movement to jump up to ${maxJumpMovementReplacementDistanceFeet(state, actorId, effect)} feet using table-supplied landing facts.`,
           initialHoles: [movementHoleForActor],
         },
       ];
