@@ -41,9 +41,9 @@ import {
 } from "./spells-resolve-save-gates.ts";
 import type { SpellFillSet } from "./spells-resolve-fill-set.ts";
 import {
+  antimagicFieldOngoingSpellEffectRefForActiveEffect,
+  antimagicFieldOngoingSpellEffectRefForEmitter,
   isTrackedOngoingSpellLightEmitter,
-  ongoingSpellEffectRefForActiveEffect,
-  ongoingSpellEffectRefForEmitter,
   ongoingSpellEffectRefKey,
 } from "./antimagic-field-suppression.ts";
 import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resources.ts";
@@ -328,15 +328,20 @@ function trackedOngoingSpellEffectKeys(
   return new Set([
     ...state.lightEmitters.flatMap((emitter) =>
       isTrackedOngoingSpellLightEmitter(emitter)
-        ? [ongoingSpellEffectRefKey(ongoingSpellEffectRefForEmitter(emitter))]
+        ? [
+            ongoingSpellEffectRefKey(
+              antimagicFieldOngoingSpellEffectRefForEmitter(emitter),
+            ),
+          ]
         : [],
     ),
     ...[...state.combatants.values()].flatMap((combatant) =>
       combatant.activeEffects.flatMap((effect) =>
-        effect.kind === "spellObjectContactDamage"
+        effect.kind === "spellObjectContactDamage" ||
+        effect.kind === "spiritualWeapon"
           ? [
               ongoingSpellEffectRefKey(
-                ongoingSpellEffectRefForActiveEffect(effect),
+                antimagicFieldOngoingSpellEffectRefForActiveEffect(effect),
               ),
             ]
           : [],

@@ -1,6 +1,7 @@
 // Spell target holes and target legality validation extracted from spells-holes-fills.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
 
 import {
   holeId,
@@ -19,7 +20,9 @@ import {
   type BattleDancingLightsPlacementHole,
   type BattleSelfTransformationModeChoiceHole,
   type BattleSpellTargetAllocation,
+  type BattleSpiritualWeaponForcePosition,
   type BattleSpellAreaChoiceHole,
+  type BattleSpiritualWeaponForcePositionHole,
   type BattleSpellTargetAllocationHole,
   type BattleSpellTargetListHole,
   type BattleSpellTargetListSpatialFact,
@@ -35,7 +38,12 @@ import {
   type TargetListSpellInvocation,
 } from "../battle-reducer.ts";
 import { COMMAND_OPTIONS } from "./domain-constants.ts";
-import { spellId, type BattleObjectId, type CombatantId } from "../identity.ts";
+import {
+  spellId,
+  type BattleObjectId,
+  type BattleTablePositionId,
+  type CombatantId,
+} from "../identity.ts";
 import { combatantWearingArmor } from "./creature-state-leaves.ts";
 import { spellAttackSequencePartName } from "./spells-profile-shared.ts";
 
@@ -83,6 +91,10 @@ type SingleObjectSpellInvocation =
         readonly spell: { readonly id: string; readonly name: string };
       }
     >;
+
+type SpellTargetLegalityOptions = {
+  readonly spiritualWeaponForcePositionId?: BattleTablePositionId;
+};
 type ObjectLightTargetFact = Extract<
   BattleTargetSpatialFact,
   { readonly kind: "spellObjectLightTarget" | "spellTouchedObjectTarget" }
@@ -124,6 +136,77 @@ export function spellTargetHole(
       spellTargetHasNonSpatialPrerequisites(state, actorId, id, invocation),
     ),
   };
+}
+
+export function spiritualWeaponForcePositionHole(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    {
+      readonly procedure:
+        | "spiritualWeaponAttackProxy"
+        | "spiritualWeaponRepeatAttack";
+    }
+  >,
+): BattleSpiritualWeaponForcePositionHole {
+  const mode =
+    invocation.procedure === "spiritualWeaponAttackProxy"
+      ? "cast"
+      : "reposition";
+  const maxDistanceFeet =
+    invocation.procedure === "spiritualWeaponAttackProxy"
+      ? invocation.rangeFeet
+      : invocation.repeatMoveMaxFeet;
+  const key = `battle:spiritual-weapon-force-position:${invocation.spell.id}:${mode}`;
+  return {
+    kind: "spiritualWeaponForcePosition",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label:
+      mode === "cast"
+        ? `${invocation.spell.name} force position`
+        : `${invocation.spell.name} force reposition`,
+    spell: invocation,
+    mode,
+    maxDistanceFeet,
+    requiresTableSpatialFact: true,
+  };
+}
+
+export function spiritualWeaponForcePositionInvalidReason(
+  forcePosition: BattleSpiritualWeaponForcePosition,
+  invocation: Extract<
+    SupportedSpellInvocation,
+    {
+      readonly procedure:
+        | "spiritualWeaponAttackProxy"
+        | "spiritualWeaponRepeatAttack";
+    }
+  >,
+): string | null {
+  if (invocation.procedure === "spiritualWeaponAttackProxy") {
+    if (forcePosition.mode !== "cast") {
+      return "Spiritual Weapon cast requires a cast force-position fill.";
+    }
+    if (
+      !Number.isInteger(forcePosition.distanceFromCasterFeet) ||
+      forcePosition.distanceFromCasterFeet < 0 ||
+      forcePosition.distanceFromCasterFeet > invocation.rangeFeet
+    ) {
+      return "Spiritual Weapon force placement must be within the spell range.";
+    }
+    return null;
+  }
+  if (forcePosition.mode !== "reposition") {
+    return "Spiritual Weapon repeat attack requires a reposition fill.";
+  }
+  if (
+    !Number.isInteger(forcePosition.moveDistanceFeet) ||
+    forcePosition.moveDistanceFeet < 0 ||
+    forcePosition.moveDistanceFeet > invocation.repeatMoveMaxFeet
+  ) {
+    return "Spiritual Weapon force movement exceeds the spell's maximum.";
+  }
+  return null;
 }
 
 export function spellAttackSequencePartTargetHole(
@@ -555,6 +638,7 @@ export function spellTargetIsLegal(
   targetId: CombatantId,
   invocation: SupportedSpellInvocation,
   facts: readonly BattleTargetSpatialFact[],
+  options: SpellTargetLegalityOptions = {},
 ): boolean {
   if (
     !spellTargetHasNonSpatialPrerequisites(
@@ -568,7 +652,7 @@ export function spellTargetIsLegal(
     return false;
   }
   const hasSpellTargetFact = facts.some((fact) =>
-    spellTargetSpatialFactMatches(fact, actorId, targetId, invocation),
+    spellTargetSpatialFactMatches(fact, actorId, targetId, invocation, options),
   );
   if (!hasSpellTargetFact) {
     return false;
@@ -584,7 +668,23 @@ export function spellTargetSpatialFactMatches(
   actorId: CombatantId,
   targetId: CombatantId,
   invocation: SupportedSpellInvocation,
+  options: SpellTargetLegalityOptions = {},
 ): boolean {
+  if (
+    invocation.procedure === "spiritualWeaponAttackProxy" ||
+    invocation.procedure === "spiritualWeaponRepeatAttack"
+  ) {
+    const forcePositionId = options.spiritualWeaponForcePositionId;
+    return (
+      fact.kind === "spiritualWeaponTargetWithinForceReach" &&
+      fact.casterId === actorId &&
+      fact.targetId === targetId &&
+      fact.spellId === invocation.spell.id &&
+      (forcePositionId === undefined ||
+        fact.forcePositionId === forcePositionId) &&
+      fact.reachFeet === invocation.forceReachFeet
+    );
+  }
   if (invocation.procedure === "featherFallMitigation") {
     return (
       fact.kind === "featherFallTargetFallingWithinRange" &&

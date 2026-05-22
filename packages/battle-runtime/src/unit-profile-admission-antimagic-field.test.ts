@@ -2,7 +2,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-antimagic-field-ongoing-spell-suppression
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { movementFeet, Round } from "@dnd/shared/types";
+import { attackBonus, movementFeet, Round } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
@@ -13,6 +13,7 @@ import {
   heatMetalUnitId,
   spellCasterId,
   spellTargetId,
+  spiritualWeaponUnitId,
 } from "./unit-profile-admission-catalog-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
@@ -22,12 +23,16 @@ import {
 import {
   maybeBonusSpellAct,
   spellAct,
+  spiritualWeaponForcePositionFill,
+  spiritualWeaponTargetFill,
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
   battleAreaId,
   battleObjectId,
+  battleTablePositionId,
   breakBattleConcentration,
+  discoverBattleActs,
   endTurn,
   resolveBattleSubject,
   snapshotBattle,
@@ -253,7 +258,156 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
       maybeBonusSpellAct({ state: restored, spellId: heatMetalUnitId }),
     ).toBeDefined();
   });
+
+  test("suppresses tracked Spiritual Weapon spell effects without deleting the occurrence", () => {
+    const sourceEffectId = battleSpellEffectOccurrenceId(
+      `${spellCasterId}:${spiritualWeaponUnitId}:unit-profile-antimagic-spiritual-weapon`,
+    );
+    const spiritualWeaponEffect = spiritualWeaponActiveEffect({
+      effectId: sourceEffectId,
+      durationTicks: elapsedTimeTicks(3),
+    });
+    const state = antimagicFieldBattle({
+      activeEffects: [spiritualWeaponEffect],
+      preparedSpells: [
+        spellRecord(antimagicFieldUnitId),
+        spellRecord(spiritualWeaponUnitId),
+      ],
+      spellSlots: [
+        { spellLevel: 8, count: 1 },
+        { spellLevel: 2, count: 1 },
+      ],
+    });
+    const suppressed = antimagicFieldSuppressing(state, [
+      antimagicAffectedSpiritualWeapon(sourceEffectId, "ordinarySpell"),
+    ]);
+
+    expect(
+      suppressed.combatants
+        .get(spellCasterId)
+        ?.activeEffects.some(
+          (effect) =>
+            effect.kind === "spiritualWeapon" &&
+            effect.sourceEffectId === sourceEffectId,
+        ),
+    ).toBe(true);
+    expect(
+      maybeSpiritualWeaponRepeatAct(suppressed),
+    ).toBeUndefined();
+
+    const targetTurn = endTurn({
+      state: suppressed,
+      actorId: spellCasterId,
+    });
+    expect(targetTurn.tag).toBe("resolved");
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected target turn.");
+    }
+    const casterTurn = endTurn({
+      state: targetTurn.state,
+      actorId: spellTargetId,
+    });
+    expect(casterTurn.tag).toBe("resolved");
+    if (casterTurn.tag !== "resolved") {
+      throw new Error("Expected caster turn.");
+    }
+
+    const tickedEffect = casterTurn.state.combatants
+      .get(spellCasterId)
+      ?.activeEffects.find(
+        (effect) =>
+          effect.kind === "spiritualWeapon" &&
+          effect.sourceEffectId === sourceEffectId,
+      );
+    expect(tickedEffect).toMatchObject({
+      kind: "spiritualWeapon",
+      expiresAt: {
+        kind: "concentration",
+        durationTicks: elapsedTimeTicks(2),
+      },
+    });
+
+    const restored = breakBattleConcentration(suppressed, spellTargetId);
+    expect(maybeSpiritualWeaponRepeatAct(restored)).toBeDefined();
+  });
+
+  test("rejects a stale Spiritual Weapon repeat subject after Antimagic Field suppression", () => {
+    const sourceEffectId = battleSpellEffectOccurrenceId(
+      `${spellCasterId}:${spiritualWeaponUnitId}:unit-profile-antimagic-stale-spiritual-weapon`,
+    );
+    const spiritualWeaponEffect = spiritualWeaponActiveEffect({
+      effectId: sourceEffectId,
+      durationTicks: elapsedTimeTicks(3),
+    });
+    const state = antimagicFieldBattle({
+      activeEffects: [spiritualWeaponEffect],
+      preparedSpells: [
+        spellRecord(antimagicFieldUnitId),
+        spellRecord(spiritualWeaponUnitId),
+      ],
+      spellSlots: [
+        { spellLevel: 8, count: 1 },
+        { spellLevel: 2, count: 1 },
+      ],
+    });
+    const staleAct = maybeSpiritualWeaponRepeatAct(state);
+    expect(staleAct).toBeDefined();
+    if (staleAct === undefined) {
+      throw new Error("Expected Spiritual Weapon repeat act before suppression.");
+    }
+    const suppressed = antimagicFieldSuppressing(state, [
+      antimagicAffectedSpiritualWeapon(sourceEffectId, "ordinarySpell"),
+    ]);
+    const forceHole = requireHole(
+      staleAct.initialHoles,
+      "spiritualWeaponForcePosition",
+    );
+    const targetHole = requireHole(staleAct.initialHoles, "targetChoice");
+    const movedForceId = "unit-profile-antimagic-stale-spiritual-weapon-moved";
+
+    const resolved = resolveBattleSubject({
+      state: suppressed,
+      subject: staleAct.subject,
+      fills: [
+        spiritualWeaponForcePositionFill({
+          hole: forceHole,
+          positionId: movedForceId,
+        }),
+        spiritualWeaponTargetFill(
+          targetHole,
+          spiritualWeaponUnitId,
+          spellCasterId,
+          spellTargetId,
+          battleTablePositionId(movedForceId),
+        ),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+    expect(
+      suppressed.combatants
+        .get(spellCasterId)
+        ?.activeEffects.find(
+          (effect) =>
+            effect.kind === "spiritualWeapon" &&
+            effect.sourceEffectId === sourceEffectId,
+        ),
+    ).toMatchObject({
+      kind: "spiritualWeapon",
+      forcePositionId: spiritualWeaponEffect.forcePositionId,
+    });
+  });
+
 });
+
+function maybeSpiritualWeaponRepeatAct(state: BattleState) {
+  return discoverBattleActs(state).find(
+    (candidate) =>
+      candidate.subject.tag === "bonusActionSpell" &&
+      candidate.subject.invocation.spellId === spiritualWeaponUnitId &&
+      candidate.subject.invocation.procedure === "spiritualWeaponRepeatAttack",
+  );
+}
 
 function antimagicFieldBattle(input?: {
   readonly lightEmitters?: readonly BattleLightEmitter[];
@@ -354,6 +508,21 @@ function antimagicAffectedSpellObjectContactDamage(
   };
 }
 
+function antimagicAffectedSpiritualWeapon(
+  sourceEffectId: ReturnType<typeof battleSpellEffectOccurrenceId>,
+  sourceKind: BattleAntimagicFieldAffectedOngoingSpellEffect["sourceKind"],
+): BattleAntimagicFieldAffectedOngoingSpellEffect {
+  return {
+    kind: "antimagicFieldAffectedOngoingSpellEffect",
+    effect: {
+      kind: "spellActiveEffect",
+      activeEffectKind: "spiritualWeapon",
+      sourceEffectId,
+    },
+    sourceKind,
+  };
+}
+
 function antimagicFieldSuppressing(
   state: BattleState,
   affectedOngoingSpellEffects: readonly BattleAntimagicFieldAffectedOngoingSpellEffect[],
@@ -445,6 +614,44 @@ function heatMetalObjectContactDamageEffect(input: {
       actorId: spellTargetId,
       round: Round(1),
     },
+    expiresAt: {
+      kind: "concentration",
+      combatantId: spellCasterId,
+      durationTicks: input.durationTicks,
+    },
+  };
+}
+
+function spiritualWeaponActiveEffect(input: {
+  readonly effectId: ReturnType<typeof battleSpellEffectOccurrenceId>;
+  readonly durationTicks: ReturnType<typeof elapsedTimeTicks>;
+}): Extract<BattleActiveEffect, { readonly kind: "spiritualWeapon" }> {
+  const sourceSpellLevel = parseBattleSpellEffectLevel(2);
+  if (sourceSpellLevel === null) {
+    throw new Error("Expected valid Spiritual Weapon spell effect level.");
+  }
+  return {
+    kind: "spiritualWeapon",
+    sourceEffectId: input.effectId,
+    sourceSpellId: spiritualWeaponUnitId,
+    sourceCombatantId: spellCasterId,
+    sourceSpellLevel,
+    forcePositionId: battleTablePositionId(
+      "unit-profile-antimagic-spiritual-weapon-force",
+    ),
+    forceReachFeet: movementFeet(5),
+    repeatMoveMaxFeet: movementFeet(20),
+    startedOn: {
+      actorId: spellTargetId,
+      round: Round(1),
+    },
+    damage: {
+      kind: "fixedSpellAttackDamage",
+      expr: { dice: 1, dieSize: 8, flat: 3 },
+      damageType: "force",
+    },
+    attackKind: "melee_spell_attack",
+    attackBonus: attackBonus(5),
     expiresAt: {
       kind: "concentration",
       combatantId: spellCasterId,

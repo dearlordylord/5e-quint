@@ -1,7 +1,9 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 // Spell resolution dispatch (Cluster L). Mechanical extraction from
 // battle-reducer.ts. The largest cluster in the file: master spell-act
@@ -43,8 +45,10 @@ import {
   maybeOpenReactionWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
+  type BattleCreatureState,
   type BattleFill,
   type BattleResolutionResult,
+  type BattleSpellCastingTimeResource,
   type BattleState,
   type BonusActionDashSpellBattleResolutionInput,
   type BonusActionSpellBattleResolutionInput,
@@ -91,6 +95,10 @@ import { invalidResult } from "./result-helpers.ts";
 import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
 import { expendSpellSlot } from "./spell-effects.ts";
 import {
+  applySpiritualWeaponAttackProxyEffect,
+  repositionSpiritualWeaponAttackProxyEffect,
+} from "./spells-active-effects.ts";
+import {
   isReadiedSpellInvocation,
   spellInvocationCasterPrerequisiteIsMet,
   spellInvocationIsSpellcasting,
@@ -132,6 +140,14 @@ import {
   recordAttackRollMissToHitReplacementUsed,
   selectedAttackRollMissToHitReplacement,
 } from "./statblock-attacks.ts";
+import {
+  spiritualWeaponForcePositionHole,
+  spiritualWeaponForcePositionInvalidReason,
+} from "./spells-targeting.ts";
+import {
+  antimagicFieldOngoingSpellEffectRefForActiveEffect,
+  ongoingSpellEffectSuppressedByAntimagicField,
+} from "./antimagic-field-suppression.ts";
 
 import {
   admitSpellMetamagicApplications,
@@ -332,6 +348,10 @@ type SpellAttackDamageInvocation = Extract<
   { readonly procedure: "spellAttackDamage" }
 >;
 
+type ResolveSpellActInternalOptions = {
+  readonly allowBonusActionInvocation?: boolean;
+};
+
 function isSupportedDamageSpellInvocation(
   invocation: SupportedSpellInvocation,
 ): invocation is SupportedDamageSpellInvocation {
@@ -340,6 +360,8 @@ function isSupportedDamageSpellInvocation(
     invocation.procedure === "spellCreatedHeldObjectAttack" ||
     invocation.procedure === "objectContactDamage" ||
     invocation.procedure === "objectContactDamageRepeat" ||
+    invocation.procedure === "spiritualWeaponAttackProxy" ||
+    invocation.procedure === "spiritualWeaponRepeatAttack" ||
     invocation.procedure === "repeatedDamageAllocation" ||
     (invocation.procedure === "spellAttackDamage" &&
       invocation.damage.kind !== "sorcerousBurstDamageTypeChoice") ||
@@ -408,19 +430,33 @@ function spellAttackPostMirrorImageFillsArePresent(
 export function resolveSpellAct(
   input: ActionSpellBattleResolutionInput,
 ): BattleResolutionResult {
+  return resolveSpellActInternal(input);
+}
+
+function resolveSpellActInternal(
+  input: ActionSpellBattleResolutionInput,
+  options: ResolveSpellActInternalOptions = {},
+): BattleResolutionResult {
   const subject = input.subject;
   const actor = input.state.combatants.get(subject.actorId);
-  const invocation =
+  let invocation =
     actor?.origin.kind === "character"
-      ? supportedSpellActs(actor, input.state).find(
-          (candidate) =>
-            supportedSpellInvocationMatchesRef(candidate, subject.invocation) &&
-            (candidate.procedure !== "spellHostedWeaponAttack" ||
-              (subject.componentWeaponItemId !== undefined &&
-                candidate.componentWeapon.itemId ===
-                  subject.componentWeaponItemId)),
-        )
+      ? supportedActionSpellInvocationForSubject(actor, input.state, subject)
       : undefined;
+  if (
+    actor?.origin.kind === "character" &&
+    invocation == null &&
+    options.allowBonusActionInvocation === true &&
+    invocationRefHasAntimagicSuppressedRepeatResolverGuard(
+      subject.invocation.procedure,
+    )
+  ) {
+    invocation = supportedActionSpellInvocationForSubject(
+      actor,
+      stateForAntimagicSuppressedRepeatLookup(input.state),
+      subject,
+    );
+  }
   if (actor?.origin.kind !== "character" || invocation == null) {
     return invalidResult(
       input.state,
@@ -442,7 +478,22 @@ export function resolveSpellAct(
       metamagicAdmission.message,
     );
   }
-  if (!spellHasAvailableSpend(actor, invocation)) {
+  const replayingSpiritualWeaponAttackHit =
+    input.suppressedReactionTrigger === "attackHit" &&
+    (invocation.procedure === "spiritualWeaponAttackProxy" ||
+      invocation.procedure === "spiritualWeaponRepeatAttack");
+  const spiritualWeaponCommitAlreadyApplied =
+    spiritualWeaponResolutionCommitAlreadyApplied({
+      state: input.state,
+      actorId: subject.actorId,
+      invocation,
+      fills: input.fills,
+    });
+  if (
+    !replayingSpiritualWeaponAttackHit &&
+    !spiritualWeaponCommitAlreadyApplied &&
+    !spellHasAvailableSpend(actor, invocation)
+  ) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -454,6 +505,7 @@ export function resolveSpellAct(
       input.replayingInterruptedProcedure === true &&
       invocation.procedure === "heldLightHurl"
     ) &&
+    !spiritualWeaponCommitAlreadyApplied &&
     !spellInvocationCasterPrerequisiteIsMet(actor, invocation)
   ) {
     return invalidResult(
@@ -463,6 +515,7 @@ export function resolveSpellAct(
     );
   }
   if (
+    !spiritualWeaponCommitAlreadyApplied &&
     spellInvocationIsSpellcasting(invocation) &&
     activeOngoingFeaturesPreventSpellcasting(actor)
   ) {
@@ -470,6 +523,21 @@ export function resolveSpellAct(
       input.state,
       "staleSubject",
       "Action-time spell act is unavailable while an active ongoing feature prevents spellcasting.",
+    );
+  }
+  if (
+    invocation.procedure === "spiritualWeaponRepeatAttack" &&
+    ongoingSpellEffectSuppressedByAntimagicField(
+      input.state,
+      antimagicFieldOngoingSpellEffectRefForActiveEffect(
+        invocation.activeEffect,
+      ),
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Spiritual Weapon repeat attack is suppressed by Antimagic Field.",
     );
   }
   if (
@@ -527,7 +595,15 @@ export function resolveSpellAct(
       "This spell procedure cannot be readied by this runtime lane.",
     );
   }
-  if ("actionCost" in invocation && invocation.actionCost === "bonusAction") {
+  if (
+    "actionCost" in invocation &&
+    invocation.actionCost === "bonusAction" &&
+    options.allowBonusActionInvocation !== true &&
+    !(
+      input.replayingInterruptedProcedure === true &&
+      replayingSpiritualWeaponAttackHit
+    )
+  ) {
     return invalidResult(
       input.state,
       "unsupportedSubject",
@@ -556,6 +632,8 @@ export function resolveSpellAct(
     );
   }
   if (
+    !replayingSpiritualWeaponAttackHit &&
+    !spiritualWeaponCommitAlreadyApplied &&
     !spellActTurnResourceAvailable(
       input.state.currentTurnResources,
       input.subject.actorId,
@@ -985,6 +1063,36 @@ export function resolveSpellAct(
     );
   }
   const invocationForResolution = selectedInvocation.invocation;
+  if (
+    (invocationForResolution.procedure === "spiritualWeaponAttackProxy" ||
+      invocationForResolution.procedure === "spiritualWeaponRepeatAttack") &&
+    fillSet.spiritualWeaponForcePosition === undefined
+  ) {
+    return needsHolesResult(castingState, input.subject, [
+      spiritualWeaponForcePositionHole(invocationForResolution),
+    ]);
+  }
+  const spiritualWeaponForcePosition =
+    invocationForResolution.procedure === "spiritualWeaponAttackProxy" ||
+    invocationForResolution.procedure === "spiritualWeaponRepeatAttack"
+      ? fillSet.spiritualWeaponForcePosition
+      : undefined;
+  const spiritualWeaponForcePositionError =
+    spiritualWeaponForcePosition === undefined ||
+    (invocationForResolution.procedure !== "spiritualWeaponAttackProxy" &&
+      invocationForResolution.procedure !== "spiritualWeaponRepeatAttack")
+      ? null
+      : spiritualWeaponForcePositionInvalidReason(
+          spiritualWeaponForcePosition,
+          invocationForResolution,
+        );
+  if (spiritualWeaponForcePositionError !== null) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      spiritualWeaponForcePositionError,
+    );
+  }
   if (fillSet.targetId == null && fillSet.objectTarget === undefined) {
     return needsHolesResult(castingState, input.subject, [
       spellTargetHole(castingState, subject.actorId, invocationForResolution),
@@ -1041,12 +1149,35 @@ export function resolveSpellAct(
       target.combatantId,
       invocationForResolution,
       fillSet.targetSpatialFacts,
+      spiritualWeaponForcePosition === undefined
+        ? {}
+        : {
+            spiritualWeaponForcePositionId:
+              spiritualWeaponForcePosition.positionId,
+          },
     )
   ) {
     return invalidResult(
       input.state,
       "invalidFill",
       "Spell target must be a combatant within the selected spell's supported range.",
+    );
+  }
+  if (
+    spiritualWeaponForcePosition !== undefined &&
+    !fillSet.targetSpatialFacts.some(
+      (fact) =>
+        fact.kind === "spiritualWeaponTargetWithinForceReach" &&
+        fact.casterId === subject.actorId &&
+        fact.targetId === target.combatantId &&
+        fact.spellId === invocationForResolution.spell.id &&
+        fact.forcePositionId === spiritualWeaponForcePosition.positionId,
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Spiritual Weapon target adjacency must match the selected force position.",
     );
   }
 
@@ -1076,6 +1207,9 @@ export function resolveSpellAct(
         actorId: subject.actorId,
         invocation: invocationForResolution,
         errorState: input.state,
+        ...(spiritualWeaponForcePosition === undefined
+          ? {}
+          : { spiritualWeaponForcePosition }),
       });
     }
     if (sanctuaryCheck.tag === "newTarget") {
@@ -1090,6 +1224,12 @@ export function resolveSpellAct(
           replacementTarget.combatantId,
           invocationForResolution,
           sanctuaryCheck.spatialFacts,
+          spiritualWeaponForcePosition === undefined
+            ? {}
+            : {
+                spiritualWeaponForcePositionId:
+                  spiritualWeaponForcePosition.positionId,
+              },
         )
       ) {
         return invalidResult(
@@ -1167,7 +1307,9 @@ export function resolveSpellAct(
           invocation: invocationForResolution,
           targetIds: [target.combatantId],
           reactionSpellTargetFacts: fillSet.reactionSpellTargetFacts,
-          castingResource: { kind: "magicAction" },
+          castingResource: spellCastingTimeResourceForInvocation(
+            invocationForResolution,
+          ),
           continuation: {
             kind: "replay",
             subject: input.subject,
@@ -1185,7 +1327,9 @@ export function resolveSpellAct(
   if (
     invocationForResolution.procedure === "spellAttackDamage" ||
     invocationForResolution.procedure === "heldLightHurl" ||
-    invocationForResolution.procedure === "spellCreatedHeldObjectAttack"
+    invocationForResolution.procedure === "spellCreatedHeldObjectAttack" ||
+    invocationForResolution.procedure === "spiritualWeaponAttackProxy" ||
+    invocationForResolution.procedure === "spiritualWeaponRepeatAttack"
   ) {
     const requiredRollMode = requiredSpellAttackRollMode(
       castingState,
@@ -1273,6 +1417,26 @@ export function resolveSpellAct(
       subject.actorId,
       invocationForResolution,
     );
+    const attackRolledStateWithSpiritualWeaponCast = hit
+      ? stateAfterSpiritualWeaponCastProxyCreatedBeforeImmediateAttack({
+          state: attackRolledStateAfterHurl,
+          actorId: subject.actorId,
+          invocation: invocationForResolution,
+          errorState: input.state,
+          ...(spiritualWeaponForcePosition === undefined
+            ? {}
+            : { spiritualWeaponForcePosition }),
+        })
+      : {
+          tag: "resolved" as const,
+          state: attackRolledStateAfterHurl,
+          snapshot: snapshotBattle(attackRolledStateAfterHurl),
+        };
+    if (attackRolledStateWithSpiritualWeaponCast.tag !== "resolved") {
+      return attackRolledStateWithSpiritualWeaponCast;
+    }
+    const attackRolledStateBeforeHitContinuations =
+      attackRolledStateWithSpiritualWeaponCast.state;
     if (!hit && fillSet.mirrorImageDuplicateRoll !== undefined) {
       return invalidResult(
         input.state,
@@ -1281,9 +1445,8 @@ export function resolveSpellAct(
       );
     }
     if (hit) {
-      const mirrorImageAttacker = attackRolledStateAfterHurl.combatants.get(
-        subject.actorId,
-      );
+      const mirrorImageAttacker =
+        attackRolledStateBeforeHitContinuations.combatants.get(subject.actorId);
       if (mirrorImageAttacker === undefined) {
         return invalidResult(
           input.state,
@@ -1292,19 +1455,22 @@ export function resolveSpellAct(
         );
       }
       const mirrorImageCheck = mirrorImageHitInterceptionCheck({
-        state: attackRolledStateAfterHurl,
+        state: attackRolledStateBeforeHitContinuations,
         attacker: mirrorImageAttacker,
         target:
-          attackRolledStateAfterHurl.combatants.get(target.combatantId) ??
-          target,
+          attackRolledStateBeforeHitContinuations.combatants.get(
+            target.combatantId,
+          ) ?? target,
         targetSpatialFacts: fillSet.targetSpatialFacts,
         triggeringAttackRollHoleId: ATTACK_ROLL_HOLE_ID,
         fill: fillSet.mirrorImageDuplicateRoll,
       });
       if (mirrorImageCheck.tag === "needsHoles") {
-        return needsHolesResult(attackRolledStateAfterHurl, input.subject, [
-          mirrorImageCheck.hole,
-        ]);
+        return needsHolesResult(
+          attackRolledStateBeforeHitContinuations,
+          input.subject,
+          [mirrorImageCheck.hole],
+        );
       }
       if (mirrorImageCheck.tag === "invalid") {
         return invalidResult(
@@ -1321,23 +1487,37 @@ export function resolveSpellAct(
             "Spell attack damage and after-hit fills are not valid when Mirror Image redirects the hit to a duplicate.",
           );
         }
+        if (
+          invocationForResolution.procedure === "spiritualWeaponAttackProxy"
+        ) {
+          return {
+            tag: "resolved",
+            state: mirrorImageCheck.state,
+            snapshot: snapshotBattle(mirrorImageCheck.state),
+          };
+        }
         return spendSpellActResolutionResources({
           state: mirrorImageCheck.state,
           actorId: subject.actorId,
           invocation: invocationForResolution,
           errorState: input.state,
+          ...(spiritualWeaponForcePosition === undefined
+            ? {}
+            : { spiritualWeaponForcePosition }),
         });
       }
     }
     spellMarkedDamageRiders = hit
       ? activeMarkedDamageRiders(
-          attackRolledStateAfterHurl.combatants.get(subject.actorId),
+          attackRolledStateBeforeHitContinuations.combatants.get(
+            subject.actorId,
+          ),
           target.combatantId,
         )
       : [];
     if (hit && input.suppressedReactionTrigger !== "attackHit") {
       const reactionWindow = maybeOpenReactionWindow(
-        attackRolledStateAfterHurl,
+        attackRolledStateBeforeHitContinuations,
         {
           trigger: "attackHit",
           attackerId: subject.actorId,
@@ -1375,13 +1555,17 @@ export function resolveSpellAct(
           "Selected spell act does not use a damage roll.",
         );
       }
-      return needsHolesResult(attackRolledStateAfterHurl, input.subject, [
-        spellDamageHole(
-          invocationForResolution,
-          critical,
-          spellMarkedDamageRiders,
-        ),
-      ]);
+      return needsHolesResult(
+        attackRolledStateBeforeHitContinuations,
+        input.subject,
+        [
+          spellDamageHole(
+            invocationForResolution,
+            critical,
+            spellMarkedDamageRiders,
+          ),
+        ],
+      );
     }
     if (
       !hit &&
@@ -1401,6 +1585,9 @@ export function resolveSpellAct(
         actorId: subject.actorId,
         invocation: invocationForResolution,
         errorState: input.state,
+        ...(spiritualWeaponForcePosition === undefined
+          ? {}
+          : { spiritualWeaponForcePosition }),
       });
     }
   } else if (fillSet.attackRoll != null) {
@@ -1434,7 +1621,9 @@ export function resolveSpellAct(
   const spellAttackMissToHitReplacement =
     (invocationForResolution.procedure === "spellAttackDamage" ||
       invocationForResolution.procedure === "heldLightHurl" ||
-      invocationForResolution.procedure === "spellCreatedHeldObjectAttack") &&
+      invocationForResolution.procedure === "spellCreatedHeldObjectAttack" ||
+      invocationForResolution.procedure === "spiritualWeaponAttackProxy" ||
+      invocationForResolution.procedure === "spiritualWeaponRepeatAttack") &&
     fillSet.attackRoll != null
       ? selectedAttackRollMissToHitReplacement({
           state: castingState,
@@ -1451,7 +1640,9 @@ export function resolveSpellAct(
   const spellResolutionState =
     (invocationForResolution.procedure === "spellAttackDamage" ||
       invocationForResolution.procedure === "heldLightHurl" ||
-      invocationForResolution.procedure === "spellCreatedHeldObjectAttack") &&
+      invocationForResolution.procedure === "spellCreatedHeldObjectAttack" ||
+      invocationForResolution.procedure === "spiritualWeaponAttackProxy" ||
+      invocationForResolution.procedure === "spiritualWeaponRepeatAttack") &&
     fillSet.attackRoll != null
       ? recordAttackRollMissToHitReplacementUsed(
           consumeHelpAttackForAttackRoll(
@@ -1477,10 +1668,28 @@ export function resolveSpellAct(
           },
         )
       : castingState;
+  const spellDamageBaseStateResult =
+    stateAfterSpiritualWeaponCastProxyCreatedBeforeImmediateAttack({
+      state: spellResolutionState,
+      actorId: subject.actorId,
+      invocation: invocationForResolution,
+      errorState: input.state,
+      ...(spiritualWeaponForcePosition === undefined
+        ? {}
+        : { spiritualWeaponForcePosition }),
+    });
+  if (spellDamageBaseStateResult.tag !== "resolved") {
+    return spellDamageBaseStateResult;
+  }
+  const spellDamageBaseState = spellDamageBaseStateResult.state;
+  const targetBeforeDamage =
+    spellDamageBaseState.combatants.get(target.combatantId) ?? target;
   const critical =
     (invocationForResolution.procedure === "spellAttackDamage" ||
       invocationForResolution.procedure === "heldLightHurl" ||
-      invocationForResolution.procedure === "spellCreatedHeldObjectAttack") &&
+      invocationForResolution.procedure === "spellCreatedHeldObjectAttack" ||
+      invocationForResolution.procedure === "spiritualWeaponAttackProxy" ||
+      invocationForResolution.procedure === "spiritualWeaponRepeatAttack") &&
     fillSet.attackRoll != null &&
     attackRollIsCriticalHit(fillSet.attackRoll);
   const damageValidation = validateSpellDamageFill(
@@ -1504,7 +1713,7 @@ export function resolveSpellAct(
     spellMarkedDamageRiders,
     critical,
   );
-  const damageSource = spellResolutionState.combatants.get(subject.actorId);
+  const damageSource = spellDamageBaseState.combatants.get(subject.actorId);
   const expectedSourcePenaltyHole =
     sourceDamageRollPenaltyRollHoleForDamageRoll(
       damageSource,
@@ -1523,13 +1732,12 @@ export function resolveSpellAct(
       "Source damage roll penalty does not match an active source-side damage penalty.",
     );
   }
-  const sourceDamageRollPenaltyRoll =
-    sourceDamageRollPenaltyRollForDamageRoll(
-      fillSet.sourceDamageRollPenaltyRolls,
-      damageSource,
-      spellDamageByType,
-      fillSet.damageRoll.holeId,
-    );
+  const sourceDamageRollPenaltyRoll = sourceDamageRollPenaltyRollForDamageRoll(
+    fillSet.sourceDamageRollPenaltyRolls,
+    damageSource,
+    spellDamageByType,
+    fillSet.damageRoll.holeId,
+  );
   const sourcePenalty = applyAvailableSourceDamageRollPenalty(
     damageSource,
     spellDamageByType,
@@ -1544,12 +1752,12 @@ export function resolveSpellAct(
     );
   }
   if (sourcePenalty.tag === "needsHoles") {
-    return needsHolesResult(spellResolutionState, input.subject, [
+    return needsHolesResult(spellDamageBaseState, input.subject, [
       ...sourcePenalty.holes,
     ]);
   }
   const spellReduction = applyAvailableSpellDamageReduction(
-    target,
+    targetBeforeDamage,
     sourcePenalty.damageByType,
     spellReductionRoll,
   );
@@ -1561,7 +1769,7 @@ export function resolveSpellAct(
     );
   }
   if (spellReduction.tag === "needsHoles") {
-    return needsHolesResult(spellResolutionState, input.subject, [
+    return needsHolesResult(spellDamageBaseState, input.subject, [
       ...spellReduction.holes,
     ]);
   }
@@ -1582,13 +1790,13 @@ export function resolveSpellAct(
         );
   const concentrationSaveCheck =
     damageLifecycleConcentrationSavingThrowFillCheck({
-      state: spellResolutionState,
+      state: spellDamageBaseState,
       target: spellReduction.target,
       damageAmount: spellDamageAmount,
       fills: fillSet.concentrationSavingThrows,
     });
   if (concentrationSaveCheck.tag === "needsHoles") {
-    return needsHolesResult(spellResolutionState, input.subject, [
+    return needsHolesResult(spellDamageBaseState, input.subject, [
       ...concentrationSaveCheck.holes,
     ]);
   }
@@ -1622,19 +1830,19 @@ export function resolveSpellAct(
       damageDispositionHole,
     ) === undefined
   ) {
-    return needsHolesResult(spellResolutionState, input.subject, [
+    return needsHolesResult(spellDamageBaseState, input.subject, [
       damageDispositionHole,
     ]);
   }
   const hideousLaughterSaveCheck =
     damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
-      state: spellResolutionState,
+      state: spellDamageBaseState,
       target: spellReduction.target,
       damageAmount: spellDamageAmount,
       fills: fillSet.hideousLaughterDamageRepeatSaves,
     });
   if (hideousLaughterSaveCheck.tag === "needsHoles") {
-    return needsHolesResult(spellResolutionState, input.subject, [
+    return needsHolesResult(spellDamageBaseState, input.subject, [
       ...hideousLaughterSaveCheck.holes,
     ]);
   }
@@ -1646,7 +1854,7 @@ export function resolveSpellAct(
     );
   }
   const damaged = applySpellDamage(
-    spellResolutionState,
+    spellDamageBaseState,
     target.combatantId,
     damageInvocation,
     fillSet.damageRoll,
@@ -1684,16 +1892,27 @@ export function resolveSpellAct(
           invocationForResolution,
         )
       : effected;
-  const spentResources = spendSpellActResolutionResources({
-    state: stateAfterResolvedHeldLightHurl(
-      lit,
-      subject.actorId,
-      invocationForResolution,
-    ),
-    actorId: subject.actorId,
-    invocation: invocationForResolution,
-    errorState: input.state,
-  });
+  const stateAfterDamageAndHurl = stateAfterResolvedHeldLightHurl(
+    lit,
+    subject.actorId,
+    invocationForResolution,
+  );
+  const spentResources =
+    invocationForResolution.procedure === "spiritualWeaponAttackProxy"
+      ? {
+          tag: "resolved" as const,
+          state: stateAfterDamageAndHurl,
+          snapshot: snapshotBattle(stateAfterDamageAndHurl),
+        }
+      : spendSpellActResolutionResources({
+          state: stateAfterDamageAndHurl,
+          actorId: subject.actorId,
+          invocation: invocationForResolution,
+          errorState: input.state,
+          ...(spiritualWeaponForcePosition === undefined
+            ? {}
+            : { spiritualWeaponForcePosition }),
+        });
   if (spentResources.tag !== "resolved") {
     return spentResources;
   }
@@ -1738,6 +1957,14 @@ function stateAfterResolvedHeldLightHurl(
     : state;
 }
 
+function spellCastingTimeResourceForInvocation(
+  invocation: SupportedSpellInvocation,
+): BattleSpellCastingTimeResource {
+  return "actionCost" in invocation
+    ? { kind: invocation.actionCost }
+    : { kind: "magicAction" };
+}
+
 function stateAfterSpellAttackRollMadeForInvocation(
   state: BattleState,
   actorId: CombatantId,
@@ -1748,12 +1975,287 @@ function stateAfterSpellAttackRollMadeForInvocation(
     : state;
 }
 
+function stateAfterSpiritualWeaponCastProxyCreatedBeforeImmediateAttack(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly invocation: SupportedSpellInvocation;
+  readonly errorState: BattleState;
+  readonly spiritualWeaponForcePosition?: Extract<
+    BattleFill,
+    { readonly kind: "spiritualWeaponForcePosition" }
+  >["value"];
+}): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
+  if (input.invocation.procedure !== "spiritualWeaponAttackProxy") {
+    return {
+      tag: "resolved",
+      state: input.state,
+      snapshot: snapshotBattle(input.state),
+    };
+  }
+  return spendSpellActResolutionResources(input);
+}
+
+function spiritualWeaponProxyEffectMatches(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly invocation:
+    | Extract<
+        SupportedSpellInvocation,
+        { readonly procedure: "spiritualWeaponAttackProxy" }
+      >
+    | Extract<
+        SupportedSpellInvocation,
+        { readonly procedure: "spiritualWeaponRepeatAttack" }
+      >;
+  readonly forcePositionId: Extract<
+    BattleFill,
+    { readonly kind: "spiritualWeaponForcePosition" }
+  >["value"]["positionId"];
+}): boolean {
+  const actor = input.state.combatants.get(input.actorId);
+  return (
+    actor?.activeEffects.some(
+      (effect) =>
+        effect.kind === "spiritualWeapon" &&
+        effect.sourceSpellId === input.invocation.spell.id &&
+        effect.sourceCombatantId === input.actorId &&
+        effect.forcePositionId === input.forcePositionId,
+    ) === true
+  );
+}
+
+function spiritualWeaponCastCommitAlreadyApplied(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "spiritualWeaponAttackProxy" }
+  >;
+  readonly forcePositionId: Extract<
+    BattleFill,
+    { readonly kind: "spiritualWeaponForcePosition" }
+  >["value"]["positionId"];
+}): boolean {
+  const actor = input.state.combatants.get(input.actorId);
+  return (
+    input.state.currentTurnResources.currentHasBonusAction === false &&
+    input.state.currentTurnResources.spellSlotUsesThisTurn.some(
+      (use) => use.kind === "committed" && use.combatantId === input.actorId,
+    ) &&
+    actor?.concentration?.effectKind === "spellEffect" &&
+    actor.concentration.sourceSpellId === input.invocation.spell.id &&
+    spiritualWeaponProxyEffectMatches(input)
+  );
+}
+
+function spiritualWeaponRepeatCommitAlreadyApplied(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "spiritualWeaponRepeatAttack" }
+  >;
+  readonly forcePositionId: Extract<
+    BattleFill,
+    { readonly kind: "spiritualWeaponForcePosition" }
+  >["value"]["positionId"];
+}): boolean {
+  return (
+    input.state.currentTurnResources.currentHasBonusAction === false &&
+    spiritualWeaponProxyEffectMatches(input)
+  );
+}
+
+function spiritualWeaponResolutionCommitAlreadyApplied(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly invocation: SupportedSpellInvocation;
+  readonly fills: readonly BattleFill[];
+}): boolean {
+  if (
+    input.invocation.procedure !== "spiritualWeaponAttackProxy" &&
+    input.invocation.procedure !== "spiritualWeaponRepeatAttack"
+  ) {
+    return false;
+  }
+  const fillSet = spellFillSet(input.fills, input.invocation);
+  if (
+    fillSet.tag !== "ok" ||
+    fillSet.spiritualWeaponForcePosition === undefined
+  ) {
+    return false;
+  }
+  if (input.invocation.procedure === "spiritualWeaponAttackProxy") {
+    return spiritualWeaponCastCommitAlreadyApplied({
+      state: input.state,
+      actorId: input.actorId,
+      invocation: input.invocation,
+      forcePositionId: fillSet.spiritualWeaponForcePosition.positionId,
+    });
+  }
+  return spiritualWeaponRepeatCommitAlreadyApplied({
+    state: input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    forcePositionId: fillSet.spiritualWeaponForcePosition.positionId,
+  });
+}
+
+function spiritualWeaponRepeatIsLaterTurn(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "spiritualWeaponRepeatAttack" }
+  >;
+}): boolean {
+  return (
+    input.actorId !== input.invocation.activeEffect.startedOn.actorId ||
+    input.state.initiative.round !== input.invocation.activeEffect.startedOn.round
+  );
+}
+
 function spendSpellActResolutionResources(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly invocation: SupportedSpellInvocation;
   readonly errorState: BattleState;
+  readonly spiritualWeaponForcePosition?: Extract<
+    BattleFill,
+    { readonly kind: "spiritualWeaponForcePosition" }
+  >["value"];
 }): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
+  if (input.invocation.procedure === "spiritualWeaponAttackProxy") {
+    if (
+      input.spiritualWeaponForcePosition === undefined ||
+      input.spiritualWeaponForcePosition.mode !== "cast"
+    ) {
+      return invalidResult(
+        input.errorState,
+        "invalidFill",
+        "Spiritual Weapon cast requires a table-supplied force position.",
+      );
+    }
+    if (
+      spiritualWeaponCastCommitAlreadyApplied({
+        state: input.state,
+        actorId: input.actorId,
+        invocation: input.invocation,
+        forcePositionId: input.spiritualWeaponForcePosition.positionId,
+      })
+    ) {
+      return {
+        tag: "resolved",
+        state: input.state,
+        snapshot: snapshotBattle(input.state),
+      };
+    }
+    const spent = spendSpellCastResources({
+      state: input.state,
+      actorId: input.actorId,
+      invocation: input.invocation,
+      errorState: input.errorState,
+    });
+    if (spent.tag !== "resolved") {
+      return spent;
+    }
+    const nextState = applySpiritualWeaponAttackProxyEffect({
+      state: spent.state,
+      actorId: input.actorId,
+      forcePositionId: input.spiritualWeaponForcePosition.positionId,
+      invocation: input.invocation,
+    });
+    return {
+      tag: "resolved",
+      state: nextState,
+      snapshot: snapshotBattle(nextState),
+    };
+  }
+  if (input.invocation.procedure === "spiritualWeaponRepeatAttack") {
+    if (
+      !spiritualWeaponRepeatIsLaterTurn({
+        state: input.state,
+        actorId: input.actorId,
+        invocation: input.invocation,
+      })
+    ) {
+      return invalidResult(
+        input.errorState,
+        "staleSubject",
+        "Spiritual Weapon repeat attack is only available on later turns.",
+      );
+    }
+    if (
+      ongoingSpellEffectSuppressedByAntimagicField(
+        input.state,
+        antimagicFieldOngoingSpellEffectRefForActiveEffect(
+          input.invocation.activeEffect,
+        ),
+      )
+    ) {
+      return invalidResult(
+        input.errorState,
+        "staleSubject",
+        "Spiritual Weapon repeat attack is suppressed by Antimagic Field.",
+      );
+    }
+    if (
+      input.spiritualWeaponForcePosition === undefined ||
+      input.spiritualWeaponForcePosition.mode !== "reposition"
+    ) {
+      return invalidResult(
+        input.errorState,
+        "invalidFill",
+        "Spiritual Weapon repeat attack requires a table-supplied reposition.",
+      );
+    }
+    if (
+      spiritualWeaponRepeatCommitAlreadyApplied({
+        state: input.state,
+        actorId: input.actorId,
+        invocation: input.invocation,
+        forcePositionId: input.spiritualWeaponForcePosition.positionId,
+      })
+    ) {
+      return {
+        tag: "resolved",
+        state: input.state,
+        snapshot: snapshotBattle(input.state),
+      };
+    }
+    const spellAttackState = battleStateAfterTargetActionEarlyEndForActor(
+      input.state,
+      input.actorId,
+    );
+    const spent = spendActivationResource(
+      spellAttackState.currentTurnResources,
+      { kind: "bonusAction" },
+    );
+    if (Either.isLeft(spent)) {
+      return invalidResult(
+        input.errorState,
+        "staleSubject",
+        "Bonus Action spell is no longer available for the current actor.",
+      );
+    }
+    const repositioned = repositionSpiritualWeaponAttackProxyEffect({
+      state: {
+        ...spellAttackState,
+        currentTurnResources:
+          clearPendingAttackRollMissToHitReplacementSelection(
+            spent.right,
+            input.actorId,
+          ),
+      },
+      invocation: input.invocation,
+      forcePositionId: input.spiritualWeaponForcePosition.positionId,
+    });
+    return {
+      tag: "resolved",
+      state: repositioned,
+      snapshot: snapshotBattle(repositioned),
+    };
+  }
   if (input.invocation.procedure !== "spellCreatedHeldObjectAttack") {
     return spendSpellCastResources(input);
   }
@@ -2021,13 +2523,12 @@ function resolveSpellAttackDamageObjectTarget(input: {
       "Source damage roll penalty does not match an active source-side damage penalty.",
     );
   }
-  const sourceDamageRollPenaltyRoll =
-    sourceDamageRollPenaltyRollForDamageRoll(
-      input.fillSet.sourceDamageRollPenaltyRolls,
-      objectDamageSource,
-      objectDamageByType,
-      input.fillSet.damageRoll.holeId,
-    );
+  const sourceDamageRollPenaltyRoll = sourceDamageRollPenaltyRollForDamageRoll(
+    input.fillSet.sourceDamageRollPenaltyRolls,
+    objectDamageSource,
+    objectDamageByType,
+    input.fillSet.damageRoll.holeId,
+  );
   const sourcePenalty = applyAvailableSourceDamageRollPenalty(
     objectDamageSource,
     objectDamageByType,
@@ -2098,17 +2599,17 @@ export function resolveBonusActionSpellAct(
 ): BattleResolutionResult {
   const subject = input.subject;
   const actor = input.state.combatants.get(subject.actorId);
-  const invocation =
+  let invocation =
     actor?.origin.kind === "character"
-      ? supportedSpellActs(actor, input.state).find(
-          (candidate) =>
-            supportedSpellInvocationMatchesRef(candidate, subject.invocation) &&
-            (candidate.procedure !== "weaponAttackOverride" ||
-              (subject.componentWeaponItemId !== undefined &&
-                candidate.attachedWeapon.itemId ===
-                  subject.componentWeaponItemId)),
-        )
+      ? supportedBonusActionSpellInvocationForSubject(actor, input.state, subject)
       : undefined;
+  if (actor?.origin.kind === "character" && invocation == null) {
+    invocation = antimagicSuppressedInvocationForStaleSubject(
+      actor,
+      input.state,
+      subject,
+    );
+  }
   if (actor?.origin.kind !== "character" || invocation == null) {
     return invalidResult(
       input.state,
@@ -2150,6 +2651,17 @@ export function resolveBonusActionSpellAct(
       );
     }
   } else if (invocation.procedure === "objectContactDamageRepeat") {
+    if (invocation.actionCost !== "bonusAction") {
+      return invalidResult(
+        input.state,
+        "unsupportedSubject",
+        "Bonus Action spell subject requires a supported Bonus Action spell act.",
+      );
+    }
+  } else if (
+    invocation.procedure === "spiritualWeaponAttackProxy" ||
+    invocation.procedure === "spiritualWeaponRepeatAttack"
+  ) {
     if (invocation.actionCost !== "bonusAction") {
       return invalidResult(
         input.state,
@@ -2257,7 +2769,17 @@ export function resolveBonusActionSpellAct(
       "Bonus Action spell subject requires a supported Bonus Action spell act.",
     );
   }
-  if (!spellHasAvailableSpend(actor, invocation)) {
+  const spiritualWeaponCommitAlreadyApplied =
+    spiritualWeaponResolutionCommitAlreadyApplied({
+      state: input.state,
+      actorId: subject.actorId,
+      invocation,
+      fills: input.fills,
+    });
+  if (
+    !spiritualWeaponCommitAlreadyApplied &&
+    !spellHasAvailableSpend(actor, invocation)
+  ) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -2265,6 +2787,7 @@ export function resolveBonusActionSpellAct(
     );
   }
   if (
+    !spiritualWeaponCommitAlreadyApplied &&
     !spellActTurnResourceAvailable(
       input.state.currentTurnResources,
       input.subject.actorId,
@@ -2279,6 +2802,7 @@ export function resolveBonusActionSpellAct(
     );
   }
   if (
+    !spiritualWeaponCommitAlreadyApplied &&
     spellInvocationIsSpellcasting(invocation) &&
     activeOngoingFeaturesPreventSpellcasting(actor)
   ) {
@@ -2336,6 +2860,15 @@ export function resolveBonusActionSpellAct(
       actorId: subject.actorId,
       invocation,
       fillSet,
+    });
+  }
+  if (
+    invocation.procedure === "spiritualWeaponAttackProxy" ||
+    invocation.procedure === "spiritualWeaponRepeatAttack"
+  ) {
+    return resolveBonusActionSpellAttackProxyAct({
+      ...input,
+      state: castingState,
     });
   }
   if (invocation.procedure === "scalarBuff") {
@@ -2428,6 +2961,103 @@ export function resolveBonusActionSpellAct(
     metamagicApplications: metamagicAdmission.applications,
     ...(actionCostOverride === undefined ? {} : { actionCostOverride }),
   });
+}
+
+function resolveBonusActionSpellAttackProxyAct(
+  input: BonusActionSpellBattleResolutionInput,
+): BattleResolutionResult {
+  const result = resolveSpellActInternal(
+    {
+      ...input,
+      subject: {
+        ...input.subject,
+        tag: "actionSpell",
+      },
+    },
+    { allowBonusActionInvocation: true },
+  );
+  return result.tag === "needsHoles"
+    ? {
+        ...result,
+        subject: input.subject,
+      }
+    : result;
+}
+
+function supportedActionSpellInvocationForSubject(
+  actor: BattleCreatureState,
+  state: BattleState,
+  subject: ActionSpellBattleResolutionInput["subject"],
+): SupportedSpellInvocation | undefined {
+  return supportedSpellActs(actor, state).find(
+    (candidate) =>
+      supportedSpellInvocationMatchesRef(candidate, subject.invocation) &&
+      (candidate.procedure !== "spellHostedWeaponAttack" ||
+        (subject.componentWeaponItemId !== undefined &&
+          candidate.componentWeapon.itemId === subject.componentWeaponItemId)),
+  );
+}
+
+function supportedBonusActionSpellInvocationForSubject(
+  actor: BattleCreatureState,
+  state: BattleState,
+  subject: BonusActionSpellBattleResolutionInput["subject"],
+): SupportedSpellInvocation | undefined {
+  return supportedSpellActs(actor, state).find(
+    (candidate) =>
+      supportedSpellInvocationMatchesRef(candidate, subject.invocation) &&
+      (candidate.procedure !== "weaponAttackOverride" ||
+        (subject.componentWeaponItemId !== undefined &&
+          candidate.attachedWeapon.itemId === subject.componentWeaponItemId)),
+  );
+}
+
+function antimagicSuppressedInvocationForStaleSubject(
+  actor: BattleCreatureState,
+  state: BattleState,
+  subject: BonusActionSpellBattleResolutionInput["subject"],
+): SupportedSpellInvocation | undefined {
+  if (
+    !invocationRefHasAntimagicSuppressedRepeatResolverGuard(
+      subject.invocation.procedure,
+    )
+  ) {
+    return undefined;
+  }
+  return supportedBonusActionSpellInvocationForSubject(
+    actor,
+    stateForAntimagicSuppressedRepeatLookup(state),
+    subject,
+  );
+}
+
+function stateForAntimagicSuppressedRepeatLookup(
+  state: BattleState,
+): BattleState {
+  return {
+    ...state,
+    combatants: new Map(
+      [...state.combatants].map(([combatantId, combatant]) => [
+        combatantId,
+        {
+          ...combatant,
+          activeEffects: combatant.activeEffects.filter(
+            (effect) =>
+              effect.kind !== "antimagicFieldOngoingSpellSuppression",
+          ),
+        },
+      ]),
+    ),
+  };
+}
+
+function invocationRefHasAntimagicSuppressedRepeatResolverGuard(
+  procedure: ActionSpellBattleResolutionInput["subject"]["invocation"]["procedure"],
+): boolean {
+  return (
+    procedure === "objectContactDamageRepeat" ||
+    procedure === "spiritualWeaponRepeatAttack"
+  );
 }
 
 export function resolveBonusActionDashSpellAct(

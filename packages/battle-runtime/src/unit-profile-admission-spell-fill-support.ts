@@ -274,6 +274,62 @@ export function spellTargetFill(
   };
 }
 
+export function spiritualWeaponTargetFill(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  spellId: string,
+  casterId: CombatantId,
+  targetId: CombatantId,
+  forcePositionId = battleTablePositionId("spiritual-weapon-force"),
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  return {
+    kind: "targetChoice",
+    holeId: hole.holeId,
+    value: targetId,
+    spatialFacts: [
+      {
+        kind: "spiritualWeaponTargetWithinForceReach",
+        casterId,
+        targetId,
+        spellId,
+        forcePositionId,
+        reachFeet: movementFeet(5),
+      },
+    ],
+  };
+}
+
+export function spiritualWeaponForcePositionFill(input: {
+  readonly hole: Extract<
+    BattleHole,
+    { readonly kind: "spiritualWeaponForcePosition" }
+  >;
+  readonly positionId?: string;
+  readonly distanceFromCasterFeet?: number;
+  readonly moveDistanceFeet?: number;
+}): Extract<BattleFill, { readonly kind: "spiritualWeaponForcePosition" }> {
+  const positionId = battleTablePositionId(
+    input.positionId ?? "spiritual-weapon-force",
+  );
+  return {
+    kind: "spiritualWeaponForcePosition",
+    holeId: input.hole.holeId,
+    value:
+      input.hole.mode === "cast"
+        ? {
+            mode: "cast",
+            positionId,
+            distanceFromCasterFeet: movementFeet(
+              input.distanceFromCasterFeet ?? 60,
+            ),
+          }
+        : {
+            mode: "reposition",
+            positionId,
+            moveDistanceFeet: movementFeet(input.moveDistanceFeet ?? 20),
+          },
+  };
+}
+
 export function knownWillingSpellTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
   spellId: string,

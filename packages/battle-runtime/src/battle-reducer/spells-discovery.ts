@@ -1,6 +1,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-weapon-enhancement
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 // Spell discovery (Cluster K). Mechanical extraction from battle-reducer.ts.
@@ -34,6 +35,7 @@ import {
   type TargetListSpellInvocation,
 } from "../battle-reducer.ts";
 import {
+  spellInvocationIsSpellcasting,
   spellActTurnResourceAvailable,
   spellHasAvailableSpend,
   supportedSpellActs,
@@ -73,6 +75,7 @@ import {
   magicWeaponTargetItemHole,
   spellDancingLightsPlacementHole,
   spellObjectContactTargetsHole,
+  spiritualWeaponForcePositionHole,
   targetListTargetingHasFixedMaximum,
 } from "./spells-targeting.ts";
 import { spellCreatedHeldObjectHasFreeHand } from "./spell-created-held-object.ts";
@@ -271,6 +274,27 @@ export function discoverSupportedSpellInvocations(
           },
         ];
       }
+      if (invocation.procedure === "spiritualWeaponAttackProxy") {
+        const targetHole = spellTargetHole(state, actorId, invocation);
+        return targetHole.choices.length === 0
+          ? []
+          : [
+              {
+                subject: {
+                  tag: "bonusActionSpell" as const,
+                  actorId,
+                  invocation: supportedSpellInvocationRef(invocation),
+                  mode: { tag: "cast" as const },
+                },
+                label: invocation.spell.name,
+                summary: `${spellActivationInvocationCastSummary(invocation)} The table supplies the spectral force position and target adjacency.`,
+                initialHoles: [
+                  spiritualWeaponForcePositionHole(invocation),
+                  targetHole,
+                ],
+              },
+            ];
+      }
       if (invocation.procedure === "spikeGrowthMovementHazard") {
         return [
           {
@@ -338,6 +362,27 @@ export function discoverSupportedSpellInvocations(
             ],
           },
         ];
+      }
+      if (invocation.procedure === "spiritualWeaponRepeatAttack") {
+        const targetHole = spellTargetHole(state, actorId, invocation);
+        return targetHole.choices.length === 0
+          ? []
+          : [
+              {
+                subject: {
+                  tag: "bonusActionSpell" as const,
+                  actorId,
+                  invocation: supportedSpellInvocationRef(invocation),
+                  mode: { tag: "cast" as const },
+                },
+                label: `${invocation.spell.name} attack`,
+                summary: spellInvocationCastSummary(invocation),
+                initialHoles: [
+                  spiritualWeaponForcePositionHole(invocation),
+                  targetHole,
+                ],
+              },
+            ];
       }
       if (invocation.procedure === "selfTeleport") {
         return [
@@ -1441,6 +1486,9 @@ export function spellInvocationCastSummary(
   if (invocation.procedure === "objectContactDamageRepeat") {
     return `Use a Bonus Action to repeat ${invocation.spell.name} contact damage.`;
   }
+  if (invocation.procedure === "spiritualWeaponRepeatAttack") {
+    return `Use a Bonus Action to move ${invocation.spell.name}'s force and repeat the attack.`;
+  }
   if (invocation.procedure === "repeatedDamageAllocation") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot, allocating ${invocation.targeting.repeatedEffectCount} repeated effects among targets.`;
   }
@@ -1611,6 +1659,7 @@ export function spellActivationInvocationCastSummary(
         | "magicalDarknessPointOrigin"
         | "antimagicFieldOngoingSpellSuppression"
         | "flamingSphere"
+        | "spiritualWeaponAttackProxy"
         | "spikeGrowthMovementHazard"
         | "moonbeam"
         | "objectContactDamage"
@@ -1646,7 +1695,11 @@ export function spellSubjectTagForInvocation(
   if (invocation.procedure === "dancingLightsReposition") {
     return "bonusActionSpell";
   }
-  if (invocation.procedure === "objectContactDamageRepeat") {
+  if (
+    invocation.procedure === "objectContactDamageRepeat" ||
+    invocation.procedure === "spiritualWeaponAttackProxy" ||
+    invocation.procedure === "spiritualWeaponRepeatAttack"
+  ) {
     return "bonusActionSpell";
   }
   if (
@@ -1695,18 +1748,7 @@ export function spellSubjectTagForInvocation(
   return "actionSpell";
 }
 
-export function spellInvocationIsSpellcasting(
-  invocation: SupportedSpellInvocation,
-): boolean {
-  return !(
-    invocation.procedure === "spellCreatedHeldObjectAttack" ||
-    invocation.procedure === "spellCreatedHeldObjectReEvoke" ||
-    invocation.procedure === "objectContactDamageRepeat" ||
-    invocation.procedure === "dancingLightsReposition" ||
-    (invocation.procedure === "markedDamageRider" &&
-      invocation.action === "transfer")
-  );
-}
+export { spellInvocationIsSpellcasting };
 
 export function spellInvocationCasterPrerequisiteIsMet(
   actor: BattleCreatureState,
@@ -1744,6 +1786,13 @@ export function spellInvocationCasterPrerequisiteIsMet(
           effect.sourceSpellId === invocation.spell.id &&
           effect.sourceCombatantId === actor.combatantId,
       )) &&
+    (invocation.procedure !== "spiritualWeaponRepeatAttack" ||
+      actor.activeEffects.some(
+        (effect) =>
+          effect.kind === "spiritualWeapon" &&
+          effect.sourceSpellId === invocation.spell.id &&
+          effect.sourceCombatantId === actor.combatantId,
+      )) &&
     (invocation.procedure !== "dancingLightsReposition" ||
       actor.activeEffects.some(
         (effect) =>
@@ -1769,6 +1818,8 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "spellCreatedHeldObjectReEvoke" &&
     invocation.procedure !== "objectContactDamage" &&
     invocation.procedure !== "objectContactDamageRepeat" &&
+    invocation.procedure !== "spiritualWeaponAttackProxy" &&
+    invocation.procedure !== "spiritualWeaponRepeatAttack" &&
     invocation.procedure !== "dancingLightsSeparateCast" &&
     invocation.procedure !== "dancingLightsCombinedCast" &&
     invocation.procedure !== "dancingLightsReposition" &&
@@ -1834,6 +1885,8 @@ export function readiedSpellAct(
     invocation.procedure === "spellCreatedHeldObjectReEvoke" ||
     invocation.procedure === "objectContactDamage" ||
     invocation.procedure === "objectContactDamageRepeat" ||
+    invocation.procedure === "spiritualWeaponAttackProxy" ||
+    invocation.procedure === "spiritualWeaponRepeatAttack" ||
     invocation.procedure === "damageReduction" ||
     invocation.procedure === "makeStable" ||
     invocation.procedure === "spellHostedWeaponAttack" ||

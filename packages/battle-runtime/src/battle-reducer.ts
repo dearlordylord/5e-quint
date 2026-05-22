@@ -11,6 +11,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.monk-focus-battle-options
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-weapon-enhancement
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
@@ -661,9 +662,12 @@ export type BattleOngoingSpellEffectRef =
     }
   | {
       readonly kind: "spellActiveEffect";
-      readonly activeEffectKind: "spellObjectContactDamage";
+      readonly activeEffectKind: "spellObjectContactDamage" | "spiritualWeapon";
       readonly sourceEffectId: BattleSpellEffectOccurrenceId;
     };
+export type BattleAntimagicFieldOngoingSpellEffectRef =
+  | Extract<BattleOngoingSpellEffectRef, { readonly kind: "spellLightEmitter" }>
+  | Extract<BattleOngoingSpellEffectRef, { readonly kind: "spellActiveEffect" }>;
 export type BattleOngoingSpellTarget =
   | {
       readonly kind: "combatant";
@@ -1341,6 +1345,18 @@ export type BattleTeleportDestinationFact = BattleTeleportDestination & {
   readonly actorId: CombatantId;
   readonly spellId: SpellId;
 };
+export type BattleSpiritualWeaponForcePosition = {
+  readonly positionId: BattleTablePositionId;
+} & (
+  | {
+      readonly mode: "cast";
+      readonly distanceFromCasterFeet: MovementFeet;
+    }
+  | {
+      readonly mode: "reposition";
+      readonly moveDistanceFeet: MovementFeet;
+    }
+);
 export type BattleOpportunityAttackThreat = {
   readonly reactorId: CombatantId;
   readonly attackName: string;
@@ -1398,6 +1414,14 @@ export type BattleTargetSpatialFact =
       readonly casterId: CombatantId;
       readonly targetId: CombatantId;
       readonly spellId: SpellRecord["id"];
+    }
+  | {
+      readonly kind: "spiritualWeaponTargetWithinForceReach";
+      readonly casterId: CombatantId;
+      readonly targetId: CombatantId;
+      readonly spellId: SpellRecord["id"];
+      readonly forcePositionId: BattleTablePositionId;
+      readonly reachFeet: MovementFeet;
     }
   | {
       readonly kind: "wardingBondPairedWornPlatinumRings";
@@ -1797,7 +1821,7 @@ export type BattleSpellCreatedLightAreaOverlap = {
 };
 export type BattleAntimagicFieldAffectedOngoingSpellEffect = {
   readonly kind: "antimagicFieldAffectedOngoingSpellEffect";
-  readonly effect: BattleOngoingSpellEffectRef;
+  readonly effect: BattleAntimagicFieldOngoingSpellEffectRef;
   readonly sourceKind: BattleAntimagicFieldOngoingSpellEffectSourceKind;
 };
 export type BattleAntimagicFieldAreaChoice = Extract<
@@ -2743,6 +2767,29 @@ export type ObjectContactDamageSpellInvocation =
       readonly damage: SpellObjectContactDamageActiveEffect["damage"];
       readonly rangeFeet: MovementFeet;
     };
+export type SpiritualWeaponRepeatAttackSpellInvocation = {
+  readonly access: SpellEffectSpellAccess;
+  readonly resource: NoSpellInvocationResource;
+  readonly procedure: "spiritualWeaponRepeatAttack";
+  readonly spell: SpellRecord;
+  readonly actionCost: "bonusAction";
+  readonly activeEffect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "spiritualWeapon" }
+  >;
+  readonly targeting: Extract<
+    SpellTargeting,
+    { readonly kind: "singleCombatant" }
+  >;
+  readonly damage: Extract<
+    BattleActiveEffect,
+    { readonly kind: "spiritualWeapon" }
+  >["damage"];
+  readonly attackKind: Extract<SpellAttackKind, "melee_spell_attack">;
+  readonly attackBonus: AttackBonus;
+  readonly forceReachFeet: MovementFeet;
+  readonly repeatMoveMaxFeet: MovementFeet;
+};
 export type SpellAttackDamageTargeting = Extract<
   SpellTargeting,
   { readonly kind: "singleCombatant" | "singleCreatureOrObject" }
@@ -2861,6 +2908,7 @@ export type SupportedSpellInvocation =
   | DancingLightsSpellInvocation
   | SpellCreatedHeldObjectSpellInvocation
   | ObjectContactDamageSpellInvocation
+  | SpiritualWeaponRepeatAttackSpellInvocation
   | SpellHostedWeaponAttackInvocation
   | WeaponAttackOverrideSpellInvocation
   | DamageReductionSpellInvocation
@@ -3171,6 +3219,28 @@ export type SupportedSpellInvocation =
   | {
       readonly access: PreparedSpellAccess;
       readonly resource: SpellSlotInvocationResource;
+      readonly procedure: "spiritualWeaponAttackProxy";
+      readonly spell: SpellRecord;
+      readonly actionCost: "bonusAction";
+      readonly targeting: Extract<
+        SpellTargeting,
+        { readonly kind: "singleCombatant" }
+      >;
+      readonly durationTicks: ElapsedTimeTicks;
+      readonly rangeFeet: MovementFeet;
+      readonly forceReachFeet: MovementFeet;
+      readonly repeatMoveMaxFeet: MovementFeet;
+      readonly damage: {
+        readonly kind: "fixedSpellAttackDamage";
+        readonly expr: DiceExpr;
+        readonly damageType: Extract<DamageType, "force">;
+      };
+      readonly attackKind: Extract<SpellAttackKind, "melee_spell_attack">;
+      readonly attackBonus: AttackBonus;
+    }
+  | {
+      readonly access: PreparedSpellAccess;
+      readonly resource: SpellSlotInvocationResource;
       readonly procedure: "spikeGrowthMovementHazard";
       readonly spell: SpellRecord;
       readonly targeting: Extract<
@@ -3412,6 +3482,8 @@ export type ReadiedSpellInvocation =
           | "heldLightHurl"
           | "objectContactDamage"
           | "objectContactDamageRepeat"
+          | "spiritualWeaponAttackProxy"
+          | "spiritualWeaponRepeatAttack"
           | "spellCreatedHeldObjectAttack";
       }
     >
@@ -4009,6 +4081,24 @@ export type BattleTeleportDestinationHole = {
   readonly maxDistanceFeet: MovementFeet;
   readonly requiresTableSpatialFact: true;
 };
+export type BattleSpiritualWeaponForcePositionHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "spiritualWeaponForcePosition";
+  readonly label: string;
+  readonly spell:
+    | Extract<
+        SupportedSpellInvocation,
+        { readonly procedure: "spiritualWeaponAttackProxy" }
+      >
+    | Extract<
+        SupportedSpellInvocation,
+        { readonly procedure: "spiritualWeaponRepeatAttack" }
+      >;
+  readonly mode: BattleSpiritualWeaponForcePosition["mode"];
+  readonly maxDistanceFeet: MovementFeet;
+  readonly requiresTableSpatialFact: true;
+};
 export type BattleHeldObjectFactsHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -4240,6 +4330,8 @@ export type BattleSpellDamageRollHole = Extract<
         | "repeatedDamageAllocation"
         | "saveGatedDamage"
         | "spellCreatedHeldObjectAttack"
+        | "spiritualWeaponAttackProxy"
+        | "spiritualWeaponRepeatAttack"
         | "spellAttackSequence"
         | "spellAttackDamage";
     }
@@ -5126,6 +5218,7 @@ export type BattleHole =
   | BattleObjectDropResolutionHole
   | BattleSpellAreaChoiceHole
   | BattleTeleportDestinationHole
+  | BattleSpiritualWeaponForcePositionHole
   | BattleHeldObjectFactsHole
   | BattleMagicWeaponTargetItemHole
   | BattleSpellDamageTypeChoiceHole
@@ -5389,6 +5482,11 @@ export type BattleFill =
       readonly kind: "teleportDestination";
       readonly holeId: BattleHoleId;
       readonly value: BattleTeleportDestinationFact;
+    }
+  | {
+      readonly kind: "spiritualWeaponForcePosition";
+      readonly holeId: BattleHoleId;
+      readonly value: BattleSpiritualWeaponForcePosition;
     }
   | {
       readonly kind: "spellTargetAllocation";

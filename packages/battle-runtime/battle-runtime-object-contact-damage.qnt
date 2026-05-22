@@ -7,6 +7,7 @@ module battleRuntimeObjectContactDamage {
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
   import battleRuntimeLight.* from "./battle-runtime-light"
+  import battleRuntimeOngoingSpellDispel.* from "./battle-runtime-ongoing-spell-dispel"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
   import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
 
@@ -65,7 +66,11 @@ module battleRuntimeObjectContactDamage {
     state.fighter.activeEffects.exists(effect => match effect {
       | HeatMetalObjectContactDamage(data) =>
           data.objectId == objectId and
-            not(antimagicSuppressesOngoingSpellActiveEffect(state, data.effectId))
+            not(antimagicSuppressesOngoingSpellActiveEffect(
+              state,
+              OngoingSpellObjectContactDamageEffect,
+              data.effectId,
+            ))
       | _ => false
     })
 
@@ -73,7 +78,11 @@ module battleRuntimeObjectContactDamage {
     state.fighter.activeEffects
       .map(effect => match effect {
         | HeatMetalObjectContactDamage(data) =>
-            if (data.objectId == objectId and not(antimagicSuppressesOngoingSpellActiveEffect(state, data.effectId)))
+            if (data.objectId == objectId and not(antimagicSuppressesOngoingSpellActiveEffect(
+              state,
+              OngoingSpellObjectContactDamageEffect,
+              data.effectId,
+            )))
               data.damageDice
             else
               0
@@ -85,7 +94,11 @@ module battleRuntimeObjectContactDamage {
     state.fighter.activeEffects
       .map(effect => match effect {
         | HeatMetalObjectContactDamage(data) =>
-            if (data.objectId == objectId and not(antimagicSuppressesOngoingSpellActiveEffect(state, data.effectId)))
+            if (data.objectId == objectId and not(antimagicSuppressesOngoingSpellActiveEffect(
+              state,
+              OngoingSpellObjectContactDamageEffect,
+              data.effectId,
+            )))
               data.startedRound
             else
               0
@@ -180,6 +193,7 @@ module battleRuntimeObjectContactDamage {
           ...state.fighter,
           activeEffects: dispelMagicMagicalEffectTargetActiveEffects(
             state.fighter.activeEffects,
+            OngoingSpellObjectContactDamageEffect,
             effectId,
             slotLevel,
             successfulCheckEffectIds,
@@ -189,6 +203,7 @@ module battleRuntimeObjectContactDamage {
           ...state.goblin,
           activeEffects: dispelMagicMagicalEffectTargetActiveEffects(
             state.goblin.activeEffects,
+            OngoingSpellObjectContactDamageEffect,
             effectId,
             slotLevel,
             successfulCheckEffectIds,

@@ -166,6 +166,14 @@ export function supportedSpellInvocationRef(
       procedure: "flamingSphere",
     };
   }
+  if (invocation.procedure === "spiritualWeaponAttackProxy") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "spiritualWeaponAttackProxy",
+    };
+  }
   if (invocation.procedure === "spikeGrowthMovementHazard") {
     return {
       tag: "spellSlot",
@@ -195,6 +203,13 @@ export function supportedSpellInvocationRef(
       invocation.spell.id,
       invocation.activeEffect.sourceCombatantId,
       "objectContactDamageRepeat",
+    );
+  }
+  if (invocation.procedure === "spiritualWeaponRepeatAttack") {
+    return spellEffectInvocationRef(
+      invocation.spell.id,
+      invocation.activeEffect.sourceCombatantId,
+      "spiritualWeaponRepeatAttack",
     );
   }
   if (invocation.procedure === "spellCreatedHeldObject") {

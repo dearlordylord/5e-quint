@@ -61,6 +61,7 @@ import type {
   BattleLineDirectionId,
   BattleObjectId,
   BattleSpellEffectOccurrenceId,
+  BattleTablePositionId,
   CombatantId,
 } from "../identity.ts";
 import type { BattleSpellEffectLevel } from "../battle-reducer/spells-effective-level.ts";
@@ -249,6 +250,26 @@ export type SpellObjectContactDamageActiveEffect = BattleSpellEffectBase & {
     readonly damageType: DamageType;
   };
   readonly startedOn: BattleTurnAnchor;
+  readonly expiresAt: Extract<
+    BattleActiveEffectExpiration,
+    { readonly kind: "concentration" }
+  > & { readonly durationTicks: ElapsedTimeTicks };
+};
+export type SpiritualWeaponActiveEffect = BattleSpellEffectBase & {
+  readonly kind: "spiritualWeapon";
+  readonly sourceEffectId: BattleSpellEffectOccurrenceId;
+  readonly sourceSpellLevel: BattleSpellEffectLevel;
+  readonly forcePositionId: BattleTablePositionId;
+  readonly forceReachFeet: MovementFeet;
+  readonly repeatMoveMaxFeet: MovementFeet;
+  readonly startedOn: BattleTurnAnchor;
+  readonly damage: {
+    readonly kind: "fixedSpellAttackDamage";
+    readonly expr: DiceExpr;
+    readonly damageType: DamageType;
+  };
+  readonly attackKind: Extract<SpellAttackKind, "melee_spell_attack">;
+  readonly attackBonus: AttackBonus;
   readonly expiresAt: Extract<
     BattleActiveEffectExpiration,
     { readonly kind: "concentration" }
@@ -806,6 +827,7 @@ export type BattleActiveEffect =
     })
   | SpellCreatedHeldObjectActiveEffect
   | SpellObjectContactDamageActiveEffect
+  | SpiritualWeaponActiveEffect
   | ObjectContactPenaltyActiveEffect
   | (BattleSpellEffectBase & {
       readonly kind: "dancingLights";

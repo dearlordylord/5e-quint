@@ -4,6 +4,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
 // Extracted from ../battle-reducer.ts; this module owns Effect Schema values,
 // while domain types remain exported by the reducer facade.
 
@@ -741,6 +742,14 @@ const BattleTargetSpatialFactSchema = Schema.Union(
     casterId: CombatantId,
     targetId: CombatantId,
     spellId: Schema.String,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("spiritualWeaponTargetWithinForceReach"),
+    casterId: CombatantId,
+    targetId: CombatantId,
+    spellId: Schema.String,
+    forcePositionId: BattleTablePositionId,
+    reachFeet: MovementFeet,
   }),
   Schema.Struct({
     kind: Schema.Literal("wardingBondPairedWornPlatinumRings"),
@@ -1796,6 +1805,27 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("spiritualWeaponAttackProxy"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("bonusAction"),
+      targeting: Schema.Struct({
+        kind: Schema.Literal("singleCombatant"),
+      }),
+      durationTicks: BattleRuntimeObjectSchema,
+      rangeFeet: MovementFeet,
+      forceReachFeet: MovementFeet,
+      repeatMoveMaxFeet: MovementFeet,
+      damage: Schema.Struct({
+        kind: Schema.Literal("fixedSpellAttackDamage"),
+        expr: BattleRuntimeObjectSchema,
+        damageType: Schema.Literal("force"),
+      }),
+      attackKind: Schema.Literal("melee_spell_attack"),
+      attackBonus: AttackBonus,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("spikeGrowthMovementHazard"),
       spell: BattleRuntimeObjectSchema,
       targeting: Schema.Struct({
@@ -1838,6 +1868,26 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
         damageType: DamageTypeSchema,
       }),
       rangeFeet: MovementFeet,
+    }),
+    Schema.Struct({
+      access: SpellEffectSpellAccessSchema,
+      resource: NoSpellInvocationResourceSchema,
+      procedure: Schema.Literal("spiritualWeaponRepeatAttack"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("bonusAction"),
+      activeEffect: BattleRuntimeObjectSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("singleCombatant"),
+      }),
+      damage: Schema.Struct({
+        kind: Schema.Literal("fixedSpellAttackDamage"),
+        expr: BattleRuntimeObjectSchema,
+        damageType: Schema.Literal("force"),
+      }),
+      attackKind: Schema.Literal("melee_spell_attack"),
+      attackBonus: AttackBonus,
+      forceReachFeet: MovementFeet,
+      repeatMoveMaxFeet: MovementFeet,
     }),
     Schema.Struct({
       access: PreparedSpellAccessSchema,
@@ -2373,7 +2423,24 @@ const BattleOngoingSpellEffectRefSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("spellActiveEffect"),
-    activeEffectKind: Schema.Literal("spellObjectContactDamage"),
+    activeEffectKind: Schema.Literal(
+      "spellObjectContactDamage",
+      "spiritualWeapon",
+    ),
+    sourceEffectId: BattleSpellEffectOccurrenceId,
+  }),
+);
+const BattleAntimagicFieldOngoingSpellEffectRefSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("spellLightEmitter"),
+    sourceEffectId: BattleSpellEffectOccurrenceId,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("spellActiveEffect"),
+    activeEffectKind: Schema.Literal(
+      "spellObjectContactDamage",
+      "spiritualWeapon",
+    ),
     sourceEffectId: BattleSpellEffectOccurrenceId,
   }),
 );
@@ -2792,6 +2859,15 @@ export const BattleHoleSchema = Schema.Union(
     label: Schema.String,
     spell: SupportedSpellInvocationSchema,
     actorId: CombatantId,
+    maxDistanceFeet: MovementFeet,
+    requiresTableSpatialFact: Schema.Literal(true),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("spiritualWeaponForcePosition"),
+    label: Schema.String,
+    spell: SupportedSpellInvocationSchema,
+    mode: Schema.Literal("cast", "reposition"),
     maxDistanceFeet: MovementFeet,
     requiresTableSpatialFact: Schema.Literal(true),
   }),
@@ -3401,7 +3477,9 @@ type BattleFillEncoded =
                 }
               | {
                   readonly kind: "spellActiveEffect";
-                  readonly activeEffectKind: "spellObjectContactDamage";
+                  readonly activeEffectKind:
+                    | "spellObjectContactDamage"
+                    | "spiritualWeapon";
                   readonly sourceEffectId: string;
                 };
           };
@@ -3427,7 +3505,9 @@ type BattleFillEncoded =
                   }
                 | {
                     readonly kind: "spellActiveEffect";
-                    readonly activeEffectKind: "spellObjectContactDamage";
+                    readonly activeEffectKind:
+                      | "spellObjectContactDamage"
+                      | "spiritualWeapon";
                     readonly sourceEffectId: string;
                   };
             };
@@ -3530,7 +3610,9 @@ type BattleFillEncoded =
                   }
                 | {
                     readonly kind: "spellActiveEffect";
-                    readonly activeEffectKind: "spellObjectContactDamage";
+                    readonly activeEffectKind:
+                      | "spellObjectContactDamage"
+                      | "spiritualWeapon";
                     readonly sourceEffectId: string;
                   };
               readonly sourceKind: "ordinarySpell" | "artifact" | "deity";
@@ -3589,6 +3671,21 @@ type BattleFillEncoded =
         readonly destinationId: string;
         readonly distanceFeet: number;
       };
+    }
+  | {
+      readonly kind: "spiritualWeaponForcePosition";
+      readonly holeId: string;
+      readonly value:
+        | {
+            readonly mode: "cast";
+            readonly positionId: string;
+            readonly distanceFromCasterFeet: number;
+          }
+        | {
+            readonly mode: "reposition";
+            readonly positionId: string;
+            readonly moveDistanceFeet: number;
+          };
     }
   | {
       readonly kind: "spellTargetAllocation";
@@ -4323,7 +4420,7 @@ export const BattleFillSchema: Schema.Schema<
           affectedOngoingSpellEffects: Schema.Array(
             Schema.Struct({
               kind: Schema.Literal("antimagicFieldAffectedOngoingSpellEffect"),
-              effect: BattleOngoingSpellEffectRefSchema,
+              effect: BattleAntimagicFieldOngoingSpellEffectRefSchema,
               sourceKind: Schema.Literal(
                 ...BATTLE_ANTIMAGIC_FIELD_ONGOING_SPELL_EFFECT_SOURCE_KINDS,
               ),
@@ -4384,6 +4481,22 @@ export const BattleFillSchema: Schema.Schema<
         destinationId: BattleTablePositionId,
         distanceFeet: MovementFeet,
       }),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("spiritualWeaponForcePosition"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Union(
+        Schema.Struct({
+          mode: Schema.Literal("cast"),
+          positionId: BattleTablePositionId,
+          distanceFromCasterFeet: MovementFeet,
+        }),
+        Schema.Struct({
+          mode: Schema.Literal("reposition"),
+          positionId: BattleTablePositionId,
+          moveDistanceFeet: MovementFeet,
+        }),
+      ),
     }),
     Schema.Struct({
       kind: Schema.Literal("savingThrowOutcome"),

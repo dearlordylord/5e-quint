@@ -1,6 +1,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
 // Spell replay fill parser extracted from spells-resolve.ts.
 // Owns classification and validation of supplied fills against spell replay holes.
 
@@ -25,6 +26,7 @@ import {
   type BattleSpellTargetListSpatialFact,
   type BattleSpellCastReactionFact,
   type BattleMagicWeaponTargetItemFact,
+  type BattleSpiritualWeaponForcePosition,
   type BattleObjectContactTargetSpatialFact,
   type BattleOngoingSpellTargetWithinRangeFact,
   type SelfTransformationModeKind,
@@ -72,6 +74,8 @@ import {
 import {
   magicWeaponTargetItemHoleId,
   spellDancingLightsPlacementHoleId,
+  spiritualWeaponForcePositionHole,
+  spiritualWeaponForcePositionInvalidReason,
 } from "./spells-targeting.ts";
 import { levitateInitialRiseHole } from "./levitate-creature.ts";
 import { THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID } from "./domain-constants.ts";
@@ -208,6 +212,9 @@ export type SpellFillSet =
       readonly areaChoice: BattleSpellAreaIdentityChoice | undefined;
       readonly teleportDestination:
         | Extract<BattleFill, { readonly kind: "teleportDestination" }>
+        | undefined;
+      readonly spiritualWeaponForcePosition:
+        | BattleSpiritualWeaponForcePosition
         | undefined;
       readonly dancingLightsPlacement:
         | Extract<BattleFill, { readonly kind: "dancingLightsPlacement" }>
@@ -352,6 +359,9 @@ export function spellFillSet(
   let areaChoice: BattleSpellAreaIdentityChoice | undefined;
   let teleportDestination:
     | Extract<BattleFill, { readonly kind: "teleportDestination" }>
+    | undefined;
+  let spiritualWeaponForcePosition:
+    | BattleSpiritualWeaponForcePosition
     | undefined;
   let dancingLightsPlacement:
     | Extract<BattleFill, { readonly kind: "dancingLightsPlacement" }>
@@ -1303,6 +1313,42 @@ export function spellFillSet(
       continue;
     }
 
+    if (fill.kind === "spiritualWeaponForcePosition") {
+      if (
+        invocation.procedure !== "spiritualWeaponAttackProxy" &&
+        invocation.procedure !== "spiritualWeaponRepeatAttack"
+      ) {
+        return {
+          tag: "invalid",
+          message:
+            "Spiritual Weapon force position does not match this spell act.",
+        };
+      }
+      if (fill.holeId !== spiritualWeaponForcePositionHole(invocation).holeId) {
+        return {
+          tag: "invalid",
+          message:
+            "Spiritual Weapon force position must use the selected spell act position hole.",
+        };
+      }
+      const spiritualWeaponForcePositionError =
+        spiritualWeaponForcePositionInvalidReason(fill.value, invocation);
+      if (spiritualWeaponForcePositionError !== null) {
+        return {
+          tag: "invalid",
+          message: spiritualWeaponForcePositionError,
+        };
+      }
+      if (spiritualWeaponForcePosition !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Spiritual Weapon force position was filled twice.",
+        };
+      }
+      spiritualWeaponForcePosition = fill.value;
+      continue;
+    }
+
     if (fill.kind === "rolledDice") {
       if (isMirrorImageDuplicateRollFill(fill)) {
         if (
@@ -1568,6 +1614,7 @@ export function spellFillSet(
     levitateInitialRiseFeet,
     areaChoice,
     teleportDestination,
+    spiritualWeaponForcePosition,
     dancingLightsPlacement,
     damageTypeChoice,
     concentrationSavingThrows,
@@ -1596,6 +1643,7 @@ export function spellFillSetContainsOnlySpellCastReactionFacts(
     fillSet.magicWeaponTargetItem === undefined &&
     fillSet.ongoingSpellTarget === undefined &&
     fillSet.ongoingSpellAbilityChecks.length === 0 &&
+    fillSet.spiritualWeaponForcePosition === undefined &&
     fillSet.targetSpatialFacts.length === 0 &&
     fillSet.targetAllocation === undefined &&
     fillSet.targetList === undefined &&

@@ -49,31 +49,31 @@
     {
       "number": 8,
       "id": "L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Spiritual Weapon Persistent Attack Runtime"
     },
     {
       "number": 9,
       "id": "L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Enlarge Reduce Creature Runtime Support"
     },
     {
       "number": 10,
       "id": "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Enthrall Perception Penalty Runtime Support"
     },
     {
       "number": 11,
       "id": "L12G-FOLLOWUP-BROADER-ONGOING-SPELL-EFFECT-DISPEL",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Broader Ongoing Spell Effect Dispel Runtime"
     },
     {
       "number": 12,
       "id": "L12G-FOLLOWUP-ANTIMAGIC-FIELD-PREVENTION-AND-BROADER-SUPPRESSION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Antimagic Field Prevention And Broader Suppression Runtime"
     },
     {
@@ -83,9 +83,15 @@
       "title": "Lane B Recursive Planning Tail"
     },
     {
+      "number": 14,
+      "id": "L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-RUNTIME",
+      "status": "done",
+      "title": "Enlarge Reduce Object Runtime Support"
+    },
+    {
       "number": 21,
       "id": "L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Continual Flame Dispel And Suppression Removal"
     },
     {
@@ -109,19 +115,19 @@
     {
       "number": 25,
       "id": "L3-SPELL-FIREBALL-RUNTIME-SURVEY",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Level 3 Fireball Runtime Survey And Task Split"
     },
     {
       "number": 26,
       "id": "L3-SPELL-MASS-HEALING-WORD-RUNTIME-SURVEY",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Level 3 Mass Healing Word Runtime Survey And Task Split"
     },
     {
       "number": 27,
       "id": "L3-SPELL-VAMPIRIC-TOUCH-RUNTIME-SURVEY",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Level 3 Vampiric Touch Runtime Survey And Task Split"
     }
   ]
@@ -129,6 +135,9 @@
 -->
 
 This is an active Ralph execution plan for level-2 feature/runtime coverage. It replaces stale Loop B continuation work; do not merge or replay old B worktree commits.
+
+
+Planning policy update, 2026-05-22: until the owner explicitly reopens level-3 expansion, recursive tails and deciders must add only level-1/level-2 closure tasks. Park not-yet-started level-3 tasks as `deferred` instead of expanding this lane with more level-3 work.
 
 Every Ralph prompt for this lane must include:
 
@@ -233,7 +242,7 @@ Output:
 
 ### Task 8 - L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME - Spiritual Weapon Persistent Attack Runtime
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 - Task B7.
@@ -244,7 +253,7 @@ Output:
 
 ### Task 9 - L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME - Enlarge Reduce Creature Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 - Existing size, weapon damage, Strength check/save, and concentration effect projections.
@@ -256,7 +265,7 @@ Output:
 
 ### Task 10 - L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME - Enthrall Perception Penalty Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 - Existing roll-mode profile readers and observer/target table facts.
@@ -268,19 +277,20 @@ Output:
 
 ### Task 11 - L12G-FOLLOWUP-BROADER-ONGOING-SPELL-EFFECT-DISPEL - Broader Ongoing Spell Effect Dispel Runtime
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 - Task 1 Dispel Magic support for tracked spell-light emitters and tracked `spellObjectContactDamage` active-effect occurrences.
 - Existing active-effect, area-effect, and concentration lifecycle models.
 
 Output:
-- Promote Dispel Magic beyond tracked spell-light emitters and tracked `spellObjectContactDamage` occurrences only where broader ongoing Spell Effect occurrences have stable identity, source spell level, target association, and cleanup semantics without duplicated state.
-- Keep spell-specific dispel exceptions or immunities as explicit typed closures instead of identity-dispatched special cases.
+- Promoted Dispel Magic for tracked `spiritualWeapon` active-effect occurrences as stable magical-effect targets with source spell level, occurrence identity, source target association through the hosted active effect, concentration cleanup, and the existing higher-level spellcasting ability check gate.
+- Preserved Antimagic Field's narrower suppression boundary by keeping `spiritualWeapon` out of the Antimagic suppressible occurrence type until Task 12 researches broader suppression.
+- Remaining broader Dispel Magic frontiers, including other creature active effects, area effects, object effects, and spell-specific exceptions or immunities, stay visible through Task 13's recursive planning tail rather than being identity-dispatched here.
 
 ### Task 12 - L12G-FOLLOWUP-ANTIMAGIC-FIELD-PREVENTION-AND-BROADER-SUPPRESSION - Antimagic Field Prevention And Broader Suppression Runtime
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 - Task 2 Antimagic Field support for tracked spell-light emitters and tracked `spellObjectContactDamage` active-effect occurrences.
@@ -288,9 +298,10 @@ Input:
 - SRD Antimagic Field prevention/suppression clauses.
 
 Output:
-- Split and promote Antimagic Field clauses whose owners are still absent: spellcasting prevention, Magic Action prevention, magical targeting prevention, magic item suppression, magical area clipping, teleportation/planar travel blocking, portal closure, Dispel Magic immunity on the aura, and suppression of ongoing Spell Effects beyond tracked spell-light emitters and tracked `spellObjectContactDamage` occurrences.
-- Model only owner-specific executable subsets with focused tests and promoted Quint/runtime parity; close or split clauses that still lack precise owners.
-- Suppressed occurrences must keep ticking and must not be deleted while suppressed.
+- Promoted Antimagic Field suppression for tracked `spiritualWeapon` active-effect occurrences alongside the existing tracked spell-light and `spellObjectContactDamage` occurrences.
+- Suppressed tracked Spiritual Weapon occurrences keep ticking, are not deleted while suppressed, and previously discovered repeat-attack subjects reject as stale while the occurrence is suppressed.
+- Spellcasting prevention, Magic Action prevention, Emanation origin-inclusion choice for the caster, other-creature aura membership, magical targeting prevention, magic item suppression, magical area clipping, teleportation/planar travel blocking, portal closure, and Dispel Magic immunity on the aura are closed from this runtime-promotion task because the promoted battle runtime does not yet own explicit origin-inclusion, aura-membership, item, portal, planar-travel, or magical-target witness facts.
+- Remaining not-yet-tracked ongoing Spell Effect suppression beyond tracked spell-light emitters, tracked `spellObjectContactDamage` active-effect occurrences, and tracked `spiritualWeapon` active-effect occurrences stays visible through Task 13's recursive planning tail.
 
 ### Task 13 - L12G-RECURSIVE-TAIL-LANE-B - Lane B Recursive Planning Tail
 
@@ -301,10 +312,30 @@ Unblock only after all ready Lane B tasks are done or explicitly closed.
 Output:
 - Refresh level-2 ongoing-effect metrics.
 - Add the next concrete, Ralph-sized Lane B tasks only if real frontier remains.
+- Split or close remaining Dispel Magic ongoing Spell Effect frontiers from Task 11's residual set: other creature active effects, area effects, object effects, and spell-specific exceptions or immunities.
+- Split or close remaining Antimagic Field frontiers from Task 12's residual set: not-yet-tracked ongoing Spell Effect suppression plus any future prevention task that first introduces explicit origin-inclusion, aura-membership, item, portal, planar-travel, or magical-target witness ownership.
+
+### Task 14 - L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-RUNTIME - Enlarge Reduce Object Runtime Support
+
+Status: `done`
+
+Completed: pruned on 2026-05-22 because Lane A already closed the Enlarge/Reduce object branch as an accepted runtime-detached object/item lifecycle boundary; rerunning object runtime support here would duplicate a closed frontier.
+
+Depends on:
+- Task 9 creature-target Enlarge/Reduce runtime support.
+
+Input:
+- Existing Enlarge/Reduce creature-target runtime support and Surface target shape.
+- SRD Enlarge/Reduce object branch text.
+- Current object, item, attack-damage, Concentration, and active-effect lifecycle owners.
+
+Output:
+- Research and either promote or split the object-target branch: visible non-worn/non-carried object targeting, object Size-category lifecycle and cleanup, carried or worn item size changes while a creature branch is active, dropped-item normalization, and thrown weapon or ammunition normalization immediately after hit or miss.
+- Do not rework the Task 9 creature-target profile unless object support exposes a shared owner that must change to avoid duplicated state.
 
 ### Task 21 - L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL - Continual Flame Dispel And Suppression Removal
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `continual_flame`. Follow-up split from Task 28.
 
@@ -407,7 +438,9 @@ Acceptance:
 
 ### Task 25 - L3-SPELL-FIREBALL-RUNTIME-SURVEY - Level 3 Fireball Runtime Survey And Task Split
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred Detail: Owner instruction on 2026-05-22: park not-yet-started level-3 work while the level-1/level-2 closure frontier remains active.
 
 Input:
 
@@ -429,7 +462,9 @@ Acceptance:
 
 ### Task 26 - L3-SPELL-MASS-HEALING-WORD-RUNTIME-SURVEY - Level 3 Mass Healing Word Runtime Survey And Task Split
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred Detail: Owner instruction on 2026-05-22: park not-yet-started level-3 work while the level-1/level-2 closure frontier remains active.
 
 Input:
 
@@ -451,7 +486,9 @@ Acceptance:
 
 ### Task 27 - L3-SPELL-VAMPIRIC-TOUCH-RUNTIME-SURVEY - Level 3 Vampiric Touch Runtime Survey And Task Split
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred Detail: Owner instruction on 2026-05-22: park not-yet-started level-3 work while the level-1/level-2 closure frontier remains active.
 
 Input:
 

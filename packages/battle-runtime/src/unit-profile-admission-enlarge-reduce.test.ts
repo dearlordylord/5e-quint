@@ -2,6 +2,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-creature-size-change
 import { abilityModifier } from "@dnd/shared-algebras/armor-class-algebra";
 import { proficiencyBonus } from "@dnd/shared/types";
+import type { Size } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
 import {
   attackRollFill,
@@ -142,9 +143,9 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
     expect(
       requiredAbilityCheckRollMode(resolved.state, spellTargetId, "str"),
     ).toBe("advantage");
-    expect(savingThrowRollModeProjections(resolved.state, "str")).toContainEqual(
-      { targetId: spellTargetId, rollMode: "advantage" },
-    );
+    expect(
+      savingThrowRollModeProjections(resolved.state, "str"),
+    ).toContainEqual({ targetId: spellTargetId, rollMode: "advantage" });
   });
 
   test("unwilling size decrease is gated by Constitution save and records reduce floor", () => {
@@ -183,8 +184,12 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
     if (succeeded.tag !== "resolved") {
       throw new Error("Expected successful Reduce save to resolve.");
     }
-    expect(requireCombatant(succeeded.state, spellCasterId).concentration).toBeNull();
-    expect(requireCombatant(succeeded.state, spellTargetId).activeEffects).not.toEqual(
+    expect(
+      requireCombatant(succeeded.state, spellCasterId).concentration,
+    ).toBeNull();
+    expect(
+      requireCombatant(succeeded.state, spellTargetId).activeEffects,
+    ).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({ kind: "spellCreatureSizeChange" }),
       ]),
@@ -277,14 +282,73 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
         direction: "decrease",
       }),
     ]);
-    expect(combatantEffectiveSize(requireCombatant(reduced.state, spellCasterId))).toBe(
-      "small",
-    );
+    expect(
+      combatantEffectiveSize(requireCombatant(reduced.state, spellCasterId)),
+    ).toBe("small");
     expect(
       savingThrowRollModeProjections(reduced.state, "str").filter(
         (projection) => projection.targetId === spellCasterId,
       ),
     ).toEqual([{ targetId: spellCasterId, rollMode: "disadvantage" }]);
+  });
+
+  test("creature size projection stays within the SRD Size category bounds", () => {
+    const spell = spellRecord(enlargeReduceUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const reduceReady = withCombatantSize(state, spellTargetId, "tiny");
+    const reduceAct = creatureSizeActInState(
+      reduceReady,
+      "creatureSizeDecrease",
+    );
+    const reduceTarget = requireHole(reduceAct.initialHoles, "targetChoice");
+    const reduced = resolveBattleSubject({
+      state: reduceReady,
+      subject: reduceAct.subject,
+      fills: [
+        knownWillingSpellTargetFill(
+          reduceTarget,
+          enlargeReduceUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+      ],
+    });
+    expect(reduced).toMatchObject({ tag: "resolved" });
+    if (reduced.tag !== "resolved") {
+      throw new Error("Expected Tiny Reduce cast to resolve.");
+    }
+    expect(
+      combatantEffectiveSize(requireCombatant(reduced.state, spellTargetId)),
+    ).toBe("tiny");
+
+    const enlargeReady = withCombatantSize(state, spellTargetId, "gargantuan");
+    const enlargeAct = creatureSizeActInState(
+      enlargeReady,
+      "creatureSizeIncrease",
+    );
+    const enlargeTarget = requireHole(enlargeAct.initialHoles, "targetChoice");
+    const enlarged = resolveBattleSubject({
+      state: enlargeReady,
+      subject: enlargeAct.subject,
+      fills: [
+        knownWillingSpellTargetFill(
+          enlargeTarget,
+          enlargeReduceUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+      ],
+    });
+    expect(enlarged).toMatchObject({ tag: "resolved" });
+    if (enlarged.tag !== "resolved") {
+      throw new Error("Expected Gargantuan Enlarge cast to resolve.");
+    }
+    expect(
+      combatantEffectiveSize(requireCombatant(enlarged.state, spellTargetId)),
+    ).toBe("gargantuan");
   });
 
   test("successful unwilling save still ends prior Concentration spell", () => {
@@ -354,7 +418,9 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
     if (saved.tag !== "resolved") {
       throw new Error("Expected successful Reduce save to resolve.");
     }
-    expect(requireCombatant(saved.state, spellCasterId).concentration).toBeNull();
+    expect(
+      requireCombatant(saved.state, spellCasterId).concentration,
+    ).toBeNull();
     expect(sizeChangeEffects(saved.state, spellCasterId)).toEqual([]);
     expect(sizeChangeEffects(saved.state, spellTargetId)).toEqual([]);
   });
@@ -802,6 +868,21 @@ function sizeChangeEffects(
   return requireCombatant(state, combatantId).activeEffects.filter(
     (effect) => effect.kind === "spellCreatureSizeChange",
   );
+}
+
+function withCombatantSize(
+  state: BattleState,
+  combatantId: typeof spellCasterId | typeof spellTargetId,
+  size: Size,
+): BattleState {
+  const combatant = requireCombatant(state, combatantId);
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(combatantId, {
+      ...combatant,
+      size,
+    }),
+  };
 }
 
 function attackActSubject(

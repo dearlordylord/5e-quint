@@ -6,6 +6,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
@@ -142,6 +143,8 @@ export function spellAttackRollHole(
         | "attackBurstSaveDamage"
         | "heldLightHurl"
         | "spellCreatedHeldObjectAttack"
+        | "spiritualWeaponAttackProxy"
+        | "spiritualWeaponRepeatAttack"
         | "spellAttackDamage";
     }
   >,
@@ -217,6 +220,8 @@ function spellAttackRollHoleBase(
         | "attackBurstSaveDamage"
         | "heldLightHurl"
         | "spellCreatedHeldObjectAttack"
+        | "spiritualWeaponAttackProxy"
+        | "spiritualWeaponRepeatAttack"
         | "spellAttackDamage";
     }
   >,
@@ -530,6 +535,8 @@ export function spellDamageTypes(
         | "heldLightHurl"
         | "spellCreatedHeldObjectAttack"
         | "spellAttackSequence"
+        | "spiritualWeaponAttackProxy"
+        | "spiritualWeaponRepeatAttack"
         | "spellAttackDamage";
     }
   >,

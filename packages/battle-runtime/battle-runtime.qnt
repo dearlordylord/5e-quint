@@ -131,6 +131,7 @@ module battleRuntime {
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
   import battleRuntimeGroundCommand.* from "./battle-runtime-ground-command"
   import battleRuntimeObjectContactDamage.* from "./battle-runtime-object-contact-damage"
+  import battleRuntimeSpiritualWeapon.* from "./battle-runtime-spiritual-weapon"
   import battleRuntimeRollModifierChoice.* from "./battle-runtime-roll-modifier-choice"
   import battleRuntimeWeaponAttacks.* from "./battle-runtime-weapon-attacks"
   import battleRuntimeMonkFocus.* from "./battle-runtime-monk-focus"

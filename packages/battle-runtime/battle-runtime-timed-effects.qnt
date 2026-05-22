@@ -296,6 +296,18 @@ module battleRuntimeTimedEffects {
             source: data.source,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
+        | SpiritualWeapon(data) => SpiritualWeapon({
+            source: data.source,
+            effectId: data.effectId,
+            sourceSpellLevel: data.sourceSpellLevel,
+            forcePositionId: data.forcePositionId,
+            forceReachFeet: data.forceReachFeet,
+            repeatMoveMaxFeet: data.repeatMoveMaxFeet,
+            startedRound: data.startedRound,
+            damageDice: data.damageDice,
+            spellcastingAbilityModifier: data.spellcastingAbilityModifier,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
         | SelfTransformationModeEffect(data) => SelfTransformationModeEffect({
             source: data.source,
             mode: data.mode,
@@ -414,6 +426,7 @@ module battleRuntimeTimedEffects {
         | CreatureSizeChange(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | LevitatedCreature(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | RayOfEnfeeblementDamageRollPenalty(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | SpiritualWeapon(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | SelfTransformationModeEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | DragonsBreathEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | HideousLaughterEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)

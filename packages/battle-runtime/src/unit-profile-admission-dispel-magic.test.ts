@@ -13,6 +13,7 @@ import {
   heatMetalUnitId,
   spellCasterId,
   spellTargetId,
+  spiritualWeaponUnitId,
 } from "./unit-profile-admission-catalog-support.ts";
 import {
   requireHole,
@@ -34,6 +35,8 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleState,
+  attackBonus,
+  battleTablePositionId,
 } from "./unit-profile-admission-test-support.ts";
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
 import { battleSpellEffectOccurrenceId } from "./identity.ts";
@@ -726,6 +729,134 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     });
   });
 
+  test("magical-effect targeting ends a tracked Spiritual Weapon occurrence and clears concentration", () => {
+    const effect = spiritualWeaponEffect({
+      sourceSpellLevel: 2,
+      sourceEffectId: `${spellCasterId}:${spiritualWeaponUnitId}:tracked-force`,
+    });
+    const state = stateWithActiveEffects([effect], {
+      concentration: {
+        sourceSpellId: spiritualWeaponUnitId,
+        effectKind: "spellEffect",
+      },
+    });
+    const act = spellAct({
+      state,
+      spellId: dispelMagicUnitId,
+      slotLevel: 3,
+    });
+    const target = {
+      kind: "magicalEffect" as const,
+      effect: {
+        kind: "spellActiveEffect" as const,
+        activeEffectKind: "spiritualWeapon" as const,
+        sourceEffectId: effect.sourceEffectId,
+      },
+    };
+
+    expect(
+      requireHole(act.initialHoles, "ongoingSpellTargetChoice").choices,
+    ).toContainEqual(target);
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        ongoingSpellTargetFill({
+          hole: requireHole(act.initialHoles, "ongoingSpellTargetChoice"),
+          target,
+        }),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Dispel Magic to resolve.");
+    }
+    const caster = resolved.state.combatants.get(spellCasterId);
+    expect(caster?.concentration).toBeNull();
+    expect(
+      caster?.activeEffects.some((candidate) => candidate === effect),
+    ).toBe(false);
+  });
+
+  test("higher-level tracked Spiritual Weapon occurrences use the Dispel Magic ability-check gate", () => {
+    const effect = spiritualWeaponEffect({
+      sourceSpellLevel: 4,
+      sourceEffectId: `${spellCasterId}:${spiritualWeaponUnitId}:upcast-force`,
+    });
+    const state = stateWithActiveEffects([effect], {
+      concentration: {
+        sourceSpellId: spiritualWeaponUnitId,
+        effectKind: "spellEffect",
+      },
+    });
+    const act = spellAct({
+      state,
+      spellId: dispelMagicUnitId,
+      slotLevel: 3,
+    });
+    const target = {
+      kind: "magicalEffect" as const,
+      effect: {
+        kind: "spellActiveEffect" as const,
+        activeEffectKind: "spiritualWeapon" as const,
+        sourceEffectId: effect.sourceEffectId,
+      },
+    };
+    const targetFill = ongoingSpellTargetFill({
+      hole: requireHole(act.initialHoles, "ongoingSpellTargetChoice"),
+      target,
+    });
+
+    const needsCheck = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill],
+    });
+    const checkHole = requireResultHole(needsCheck, "spellcastingAbilityCheck");
+    expect(checkHole).toEqual(
+      expect.objectContaining({
+        dc: 14,
+        spellcastingAbilityCheck: expect.objectContaining({
+          target,
+          effect: target.effect,
+          contestedSpellLevel: 4,
+        }),
+      }),
+    );
+
+    const failed = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill, abilityCheckFill(checkHole, 13)],
+    });
+    expect(failed).toMatchObject({ tag: "resolved" });
+    if (failed.tag !== "resolved") {
+      throw new Error("Expected failed Dispel Magic check to resolve.");
+    }
+    expect(
+      failed.state.combatants
+        .get(spellCasterId)
+        ?.activeEffects.some((candidate) => candidate === effect),
+    ).toBe(true);
+
+    const succeeded = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill, abilityCheckFill(checkHole, 14)],
+    });
+    expect(succeeded).toMatchObject({ tag: "resolved" });
+    if (succeeded.tag !== "resolved") {
+      throw new Error("Expected successful Dispel Magic check to resolve.");
+    }
+    expect(
+      succeeded.state.combatants
+        .get(spellCasterId)
+        ?.activeEffects.some((candidate) => candidate === effect),
+    ).toBe(false);
+  });
+
   test("snapshot codec rejects out-of-domain ongoing spell effect levels", () => {
     const objectId = battleObjectId("dispel-invalid-level-codec-object");
     const state = stateWithLightEmitters([
@@ -893,6 +1024,35 @@ function heatMetalObjectContactDamageEffect(input: {
     expiresAt: {
       kind: "concentration",
       combatantId: sourceCombatantId,
+      durationTicks: elapsedTimeTicks(10),
+    },
+  };
+}
+
+function spiritualWeaponEffect(input: {
+  readonly sourceSpellLevel: number;
+  readonly sourceEffectId: string;
+}): Extract<BattleActiveEffect, { readonly kind: "spiritualWeapon" }> {
+  return {
+    kind: "spiritualWeapon",
+    sourceSpellId: spiritualWeaponUnitId,
+    sourceCombatantId: spellCasterId,
+    sourceEffectId: battleSpellEffectOccurrenceId(input.sourceEffectId),
+    sourceSpellLevel: testBattleSpellEffectLevel(input.sourceSpellLevel),
+    forcePositionId: battleTablePositionId("dispel-spiritual-weapon-force"),
+    forceReachFeet: movementFeet(5),
+    repeatMoveMaxFeet: movementFeet(20),
+    startedOn: { actorId: spellCasterId, round: Round(1) },
+    damage: {
+      kind: "fixedSpellAttackDamage",
+      expr: { dice: 1, dieSize: 8, flat: 4 },
+      damageType: "force",
+    },
+    attackKind: "melee_spell_attack",
+    attackBonus: attackBonus(6),
+    expiresAt: {
+      kind: "concentration",
+      combatantId: spellCasterId,
       durationTicks: elapsedTimeTicks(10),
     },
   };
