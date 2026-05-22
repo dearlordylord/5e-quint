@@ -26071,8 +26071,8 @@
       "battleReadinessClosure": {
         "source": "deferred-mechanics",
         "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "L3-FOLLOWUP-FLY-END-FALL-WITNESS",
-        "reason": "Fall handoff needs caller-supplied still-aloft and can-stop-fall witnesses; promoted battle runtime does not own elevation simulation, automatic landing legality, or table pathfinding state."
+        "owner": "table/spatial owner",
+        "reason": "The promoted runtime consumes explicit not-aloft, can-stop-fall, and cannot-stop-fall witnesses; it does not derive whether a creature is aloft, has another means to stop the fall, or where/how the fall lands."
       },
       "ownerEvidence": [
         {
@@ -26082,7 +26082,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME at packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-FOLLOWUP-FLY-END-FALL-WITNESS at packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -28695,8 +28695,8 @@
       "battleReadinessClosure": {
         "source": "deferred-mechanics",
         "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "L3-FOLLOWUP-FLY-END-FALL-WITNESS",
-        "reason": "Fall handoff needs caller-supplied still-aloft and can-stop-fall witnesses; promoted battle runtime does not own elevation simulation, automatic landing legality, or table pathfinding state."
+        "owner": "table/spatial owner",
+        "reason": "The promoted runtime consumes explicit not-aloft, can-stop-fall, and cannot-stop-fall witnesses; it does not derive whether a creature is aloft, has another means to stop the fall, or where/how the fall lands."
       },
       "ownerEvidence": [
         {
@@ -28706,7 +28706,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME at packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-FOLLOWUP-FLY-END-FALL-WITNESS at packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -33506,8 +33506,8 @@
       "battleReadinessClosure": {
         "source": "deferred-mechanics",
         "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "L3-FOLLOWUP-FLY-END-FALL-WITNESS",
-        "reason": "Fall handoff needs caller-supplied still-aloft and can-stop-fall witnesses; promoted battle runtime does not own elevation simulation, automatic landing legality, or table pathfinding state."
+        "owner": "table/spatial owner",
+        "reason": "The promoted runtime consumes explicit not-aloft, can-stop-fall, and cannot-stop-fall witnesses; it does not derive whether a creature is aloft, has another means to stop the fall, or where/how the fall lands."
       },
       "ownerEvidence": [
         {
@@ -33517,7 +33517,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME at packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-FOLLOWUP-FLY-END-FALL-WITNESS at packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
           "status": "owner evidence present"
         }
       ],

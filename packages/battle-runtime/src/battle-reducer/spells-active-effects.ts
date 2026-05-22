@@ -56,6 +56,10 @@ import {
   applyTemporaryHitPoints,
   breakBattleConcentration,
 } from "./damage-apply.ts";
+import {
+  battleStateWithFlySpeedGrantEndFallCleanupFrames,
+  flySpeedGrantEndFallCleanupFramesForExpiredEffects,
+} from "./fly-speed-grant-end-fall-cleanup.ts";
 import { scalarBuffTemporaryHitPointsAmount } from "./spell-effects.ts";
 import {
   battleCreatureAfterConditionRemoval,
@@ -3270,9 +3274,9 @@ export function applyScalarBuffSpellEffect(
     if (target === undefined) {
       return nextState;
     }
-    const nextTarget =
-      scalarEffect.kind === "temporaryHitPoints"
-        ? temporaryHitPointsRoll === undefined
+    if (scalarEffect.kind === "temporaryHitPoints") {
+      const nextTarget =
+        temporaryHitPointsRoll === undefined
           ? target
           : applyTemporaryHitPoints(
               target,
@@ -3280,29 +3284,42 @@ export function applyScalarBuffSpellEffect(
                 invocation,
                 temporaryHitPointsRoll,
               ),
-            )
-        : scalarEffect.kind === "hitPointMaximumIncrease"
-          ? applyHitPointMaximumIncrease(target, {
-              ...scalarEffect.activeEffect,
-              sourceCombatantId: actorId,
-            })
-          : battleCreatureWithSpellActiveEffects(target, [
-              ...target.activeEffects.filter(
-                (effect) =>
-                  !(
-                    effect.kind === scalarEffect.activeEffect.kind &&
-                    effect.sourceSpellId === invocation.spell.id
-                  ),
-              ),
-              {
-                ...scalarEffect.activeEffect,
-                sourceCombatantId: actorId,
-              },
-            ]);
-    return {
+            );
+      return {
+        ...nextState,
+        combatants: new Map(nextState.combatants).set(targetId, nextTarget),
+      };
+    }
+    if (scalarEffect.kind === "hitPointMaximumIncrease") {
+      const nextTarget = applyHitPointMaximumIncrease(target, {
+        ...scalarEffect.activeEffect,
+        sourceCombatantId: actorId,
+      });
+      return {
+        ...nextState,
+        combatants: new Map(nextState.combatants).set(targetId, nextTarget),
+      };
+    }
+    const replacing = target.activeEffects.filter(
+      (effect) =>
+        effect.kind === scalarEffect.activeEffect.kind &&
+        effect.sourceSpellId === invocation.spell.id,
+    );
+    const nextTarget = battleCreatureWithSpellActiveEffects(target, [
+      ...target.activeEffects.filter((effect) => !replacing.includes(effect)),
+      {
+        ...scalarEffect.activeEffect,
+        sourceCombatantId: actorId,
+      },
+    ]);
+    const applied = {
       ...nextState,
       combatants: new Map(nextState.combatants).set(targetId, nextTarget),
     };
+    return battleStateWithFlySpeedGrantEndFallCleanupFrames(
+      applied,
+      flySpeedGrantEndFallCleanupFramesForExpiredEffects(targetId, replacing),
+    );
   }, state);
 }
 

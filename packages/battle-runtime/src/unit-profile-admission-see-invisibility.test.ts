@@ -283,7 +283,7 @@ describe(
       };
       const expired = {
         ...nearlyExpired,
-        combatants: tickDurationEffects(nearlyExpired.combatants),
+        combatants: tickDurationEffects(nearlyExpired.combatants).value,
       };
 
       expect(

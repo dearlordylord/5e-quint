@@ -213,7 +213,7 @@ describe("battle runtime: Darkness", () => {
     const expiring = darknessWithDurationTicks(cast.state, elapsedTimeTicks(1));
     const expired = {
       ...expiring,
-      combatants: tickDurationEffects(expiring.combatants),
+      combatants: tickDurationEffects(expiring.combatants).value,
     };
     expect(expired.combatants.get(wizardId)?.activeEffects).toEqual([]);
     expect(expired.combatants.get(wizardId)?.concentration).toBeNull();

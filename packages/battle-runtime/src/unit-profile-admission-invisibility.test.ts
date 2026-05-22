@@ -154,7 +154,7 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
 
     const expiredCombatants = tickDurationEffects(
       combatantsWithInvisibilityDurationTicks(cast.state, [spellTargetId]),
-    );
+    ).value;
 
     const expiredState = { ...cast.state, combatants: expiredCombatants };
     expectNoInvisibilityEffect(expiredState, spellTargetId);

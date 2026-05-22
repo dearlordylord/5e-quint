@@ -2396,7 +2396,8 @@
         "SRDINV30A",
         "L12G-SPELL-AID",
         "L12G-SPELL-BARKSKIN",
-        "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME"
+        "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME",
+        "L3-FOLLOWUP-FLY-END-FALL-WITNESS"
       ],
       "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, special Speed, Armor Class bonus/floor, or Hit Point maximum effects",
       "verificationOwners": [
@@ -9616,6 +9617,22 @@
         "spell.scalar-buff"
       ],
       "taskId": "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts model Fly-end cleanup as a pending end-fall witness frame emitted when the Fly Speed grant is cleaned up, and classify caller-supplied not-aloft, can-stop-fall, and cannot-stop-fall witnesses with cannot-stop-fall handing off to the Feather Fall reaction/landing pipeline.",
+      "profileIds": [
+        "spell.scalar-buff"
+      ],
+      "taskId": "L3-FOLLOWUP-FLY-END-FALL-WITNESS"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Fly Speed grant cleanup frames emitted by Concentration break, duration expiration, and recast replacement; the witness resolver consumes a pending cleanup frame, rejects pre-cleanup resolution, records not-aloft and can-stop-fall outcomes, and hands cannot-stop-fall to the existing creatureFalls Reaction plus Feather Fall landing pipeline.",
+      "profileIds": [
+        "spell.scalar-buff"
+      ],
+      "taskId": "L3-FOLLOWUP-FLY-END-FALL-WITNESS"
     },
     {
       "claimKind": "qnt-proof",
@@ -17530,7 +17547,8 @@
             "SRDINV30A",
             "L12G-SPELL-AID",
             "L12G-SPELL-BARKSKIN",
-            "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME"
+            "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME",
+            "L3-FOLLOWUP-FLY-END-FALL-WITNESS"
           ],
           "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, special Speed, Armor Class bonus/floor, or Hit Point maximum effects",
           "verificationOwners": [
@@ -17890,7 +17908,8 @@
             "SRDINV30A",
             "L12G-SPELL-AID",
             "L12G-SPELL-BARKSKIN",
-            "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME"
+            "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME",
+            "L3-FOLLOWUP-FLY-END-FALL-WITNESS"
           ],
           "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, special Speed, Armor Class bonus/floor, or Hit Point maximum effects",
           "verificationOwners": [
@@ -20099,7 +20118,8 @@
             "SRDINV30A",
             "L12G-SPELL-AID",
             "L12G-SPELL-BARKSKIN",
-            "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME"
+            "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME",
+            "L3-FOLLOWUP-FLY-END-FALL-WITNESS"
           ],
           "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, special Speed, Armor Class bonus/floor, or Hit Point maximum effects",
           "verificationOwners": [
@@ -22080,7 +22100,8 @@
             "SRDINV30A",
             "L12G-SPELL-AID",
             "L12G-SPELL-BARKSKIN",
-            "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME"
+            "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME",
+            "L3-FOLLOWUP-FLY-END-FALL-WITNESS"
           ],
           "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, special Speed, Armor Class bonus/floor, or Hit Point maximum effects",
           "verificationOwners": [
@@ -24900,7 +24921,8 @@
             "SRDINV30A",
             "L12G-SPELL-AID",
             "L12G-SPELL-BARKSKIN",
-            "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME"
+            "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME",
+            "L3-FOLLOWUP-FLY-END-FALL-WITNESS"
           ],
           "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, special Speed, Armor Class bonus/floor, or Hit Point maximum effects",
           "verificationOwners": [
@@ -25280,17 +25302,17 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "table-spatial-derivation",
-          "owner": "battle-runtime spell invocation/effect lifecycle plus future falling witness owner",
-          "reason": "This task owns Fly cast admission, Spell Slot spend, Concentration, fixed Fly Speed, hover retention, effective movement, Dash projection, and normal duration/concentration cleanup. Spell-end falling remains deferred to the caller-supplied aloft/can-stop-fall witness boundary."
+          "owner": "battle-runtime spell invocation/effect lifecycle plus falling witness boundary",
+          "reason": "Fly cast admission, Spell Slot spend, Concentration, fixed Fly Speed, hover retention, effective movement, Dash projection, normal duration/concentration cleanup, and spell-end fall handoff are promoted. Elevation, automatic landing legality, and can-stop-fall derivation remain caller/table-spatial facts."
         },
         "deferredMechanics": [
           {
             "battleReadinessClosure": {
               "kind": "table-spatial-derivation",
-              "owner": "L3-FOLLOWUP-FLY-END-FALL-WITNESS",
-              "reason": "Fall handoff needs caller-supplied still-aloft and can-stop-fall witnesses; promoted battle runtime does not own elevation simulation, automatic landing legality, or table pathfinding state."
+              "owner": "table/spatial owner",
+              "reason": "The promoted runtime consumes explicit not-aloft, can-stop-fall, and cannot-stop-fall witnesses; it does not derive whether a creature is aloft, has another means to stop the fall, or where/how the fall lands."
             },
-            "mechanic": "spell-end falling for affected targets that are aloft and cannot stop the fall"
+            "mechanic": "automatic elevation state, can-stop-fall derivation, landing legality, and map/path geometry for Fly-ended Falling remain table/spatial facts rather than battle-owned simulation"
           }
         ],
         "profileIds": [
@@ -25306,7 +25328,8 @@
           "fixed 60-foot Fly Speed grant retained as a source-owned active effect instead of duplicating walk Speed or spent Movement state",
           "hover retained on the Fly Speed grant active effect",
           "granted Fly Speed appears in effective movement and Dash budgets while the spell effect remains active",
-          "general Speed changes compose with the granted fixed Fly Speed through the shared Speed algebra"
+          "general Speed changes compose with the granted fixed Fly Speed through the shared Speed algebra",
+          "spell-end falling is represented as caller-supplied not-aloft, can-stop-fall, or cannot-stop-fall witnesses consumed by the Fly Speed grant cleanup operation; cannot-stop-fall hands off to the existing creatureFalls Reaction window and Feather Fall landing pipeline without storing elevation"
         ],
         "tag": "profile-subset-supported"
       },
@@ -25315,7 +25338,7 @@
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
           "tag": "deterministic-admission-projection",
-          "taskId": "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME"
+          "taskId": "L3-FOLLOWUP-FLY-END-FALL-WITNESS"
         }
       ],
       "executableMechanics": true,
@@ -25334,7 +25357,8 @@
             "SRDINV30A",
             "L12G-SPELL-AID",
             "L12G-SPELL-BARKSKIN",
-            "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME"
+            "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME",
+            "L3-FOLLOWUP-FLY-END-FALL-WITNESS"
           ],
           "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, special Speed, Armor Class bonus/floor, or Hit Point maximum effects",
           "verificationOwners": [
@@ -25403,7 +25427,8 @@
             "SRDINV30A",
             "L12G-SPELL-AID",
             "L12G-SPELL-BARKSKIN",
-            "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME"
+            "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME",
+            "L3-FOLLOWUP-FLY-END-FALL-WITNESS"
           ],
           "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, special Speed, Armor Class bonus/floor, or Hit Point maximum effects",
           "verificationOwners": [

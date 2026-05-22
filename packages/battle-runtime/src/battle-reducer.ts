@@ -428,6 +428,7 @@ export {
   resolveBattleSubjectInternal,
   resolveCastTriggeredReactionSpellCommand,
   resolveFeatherFallLanding,
+  resolveFlySpeedGrantEndFallCleanup,
   resolveReactionRollOrDamageReduction,
   resolveReplayContinuation,
   resolveReplayContinuationFromState,
@@ -440,6 +441,9 @@ export {
   standardActionKindForSubject,
   suppressReactionTriggerForActiveReaction,
   unofferedEligibleReactors,
+  type FlyEndCanStopFallReason,
+  type FlySpeedGrantEndFallWitness,
+  type FlySpeedGrantEndFallWitnessResult,
 } from "./battle-reducer/dispatcher.ts";
 
 export { zeroHpLifecycleIsTerminal } from "./battle-reducer/creature-state-leaves.ts";
@@ -1180,8 +1184,18 @@ export type BattleReactionFrame =
       readonly moverId: CombatantId;
       readonly threats: readonly BattleOpportunityAttackThreat[];
     });
+export type EndedFlySpeedGrant = Extract<
+  BattleActiveEffect,
+  { readonly kind: "specialSpeedGrant"; readonly speedKind: "fly" }
+>;
+export type BattleFlySpeedGrantEndFallCleanupFrame = {
+  readonly kind: "flySpeedGrantEndFallCleanup";
+  readonly targetId: CombatantId;
+  readonly endedEffect: EndedFlySpeedGrant;
+};
 export type BattleInterruptFrame =
   | { readonly kind: "reaction"; readonly frame: BattleReactionFrame }
+  | BattleFlySpeedGrantEndFallCleanupFrame
   | BattleReplayContinuationFrame
   | BattleAttackDamageContinuationConcentrationFrame;
 export type BattleReactionInterruptFrame = Extract<

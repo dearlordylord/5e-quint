@@ -15,9 +15,11 @@
 --   • TargetSelection.choose_up_to with SlotScaling (base 1, +1/slot)
 --   • Duration.concentration up to 10 minutes
 --
--- The "target falls if still aloft" clause is DM agenda (physics /
--- geometry resolved by the session, not the spec — see
--- ARCHITECTURE.md §1). Omitted.
+-- The "target falls if still aloft" clause is promoted as a battle-runtime
+-- witness boundary that removes the Fly Speed grant during cleanup. The runtime
+-- consumes caller-supplied not-aloft / can-stop-fall / cannot-stop-fall
+-- witnesses and reuses the creatureFalls Reaction and Feather Fall landing
+-- pipeline; it does not store elevation or derive landing geometry.
 
 let fly =
       { kind = "spell"

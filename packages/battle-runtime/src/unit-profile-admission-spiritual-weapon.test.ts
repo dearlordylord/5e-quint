@@ -284,7 +284,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     );
     const expired = {
       ...expiring,
-      combatants: tickDurationEffects(expiring.combatants),
+      combatants: tickDurationEffects(expiring.combatants).value,
     };
     expect(
       requireCombatant(expired, spellCasterId).activeEffects,

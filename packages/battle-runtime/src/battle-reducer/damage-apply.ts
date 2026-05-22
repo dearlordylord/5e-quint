@@ -56,6 +56,7 @@ import {
   type BattleConcentrationSavingThrowHole,
   type BattleCreatureState,
   type BattleDeathSavingThrowHole,
+  type BattleFlySpeedGrantEndFallCleanupFrame,
   type BattleFill,
   type BattleReadiedSpell,
   type BattleStatBlockRechargeRollHole,
@@ -98,6 +99,10 @@ import {
   damageAmountByTypeAfterTargetAdjustments,
 } from "./damage-helpers.ts";
 import { concentrationSavingThrowDc } from "./domain-helpers.ts";
+import {
+  battleStateWithFlySpeedGrantEndFallCleanupFrames,
+  flySpeedGrantEndFallCleanupFramesForExpiredEffects,
+} from "./fly-speed-grant-end-fall-cleanup.ts";
 import {
   hideousLaughterDamageRepeatSaveHoles,
   hideousLaughterRepeatSavingThrowOutcomeHole,
@@ -148,20 +153,25 @@ export function breakBattleConcentration(
     remainingReadiedSpells.delete(combatantId);
     readiedSpells = remainingReadiedSpells;
   }
-  return {
-    ...state,
-    combatants: breakCombatantConcentration(state.combatants, combatantId),
-    objectOutlines: state.objectOutlines.filter(
-      (outline) => outline.expiresAt.combatantId !== combatantId,
-    ),
-    readiedSpells,
-  };
+  const broken = breakCombatantConcentration(state.combatants, combatantId);
+  return battleStateWithFlySpeedGrantEndFallCleanupFrames(
+    {
+      ...state,
+      combatants: broken.value,
+      objectOutlines: state.objectOutlines.filter(
+        (outline) => outline.expiresAt.combatantId !== combatantId,
+      ),
+      readiedSpells,
+    },
+    broken.flySpeedGrantEndFallCleanupFrames,
+  );
 }
 
 export function breakBattleConcentrationAfterDamage(input: {
   readonly state: BattleState;
   readonly combatantId: CombatantId;
   readonly priorConcentration: BattleConcentration | null;
+  readonly priorCombatant: BattleCreatureState;
 }): BattleState {
   const currentConcentration =
     input.state.combatants.get(input.combatantId)?.concentration ?? null;
@@ -169,14 +179,12 @@ export function breakBattleConcentrationAfterDamage(input: {
     return breakBattleConcentration(input.state, input.combatantId);
   }
   if (input.priorConcentration?.effectKind === "spellEffect") {
-    return {
-      ...input.state,
-      combatants: breakCombatantConcentration(
-        input.state.combatants,
-        input.combatantId,
-        input.priorConcentration,
-      ),
-    };
+    return battleStateAfterCombatantConcentrationBreak({
+      state: input.state,
+      combatantId: input.combatantId,
+      priorConcentration: input.priorConcentration,
+      priorCombatant: input.priorCombatant,
+    });
   }
   if (input.priorConcentration?.effectKind !== "readiedSpell") {
     return input.state;
@@ -184,6 +192,46 @@ export function breakBattleConcentrationAfterDamage(input: {
   const readiedSpells = new Map(input.state.readiedSpells);
   readiedSpells.delete(input.combatantId);
   return { ...input.state, readiedSpells };
+}
+
+type BreakCombatantConcentrationResult = {
+  readonly value: ReadonlyMap<CombatantId, BattleCreatureState>;
+  readonly flySpeedGrantEndFallCleanupFrames: readonly BattleFlySpeedGrantEndFallCleanupFrame[];
+};
+
+function battleStateAfterCombatantConcentrationBreak(input: {
+  readonly state: BattleState;
+  readonly combatantId: CombatantId;
+  readonly priorConcentration: BattleConcentration;
+  readonly priorCombatant: BattleCreatureState;
+}): BattleState {
+  const broken = breakCombatantConcentration(
+    input.state.combatants,
+    input.combatantId,
+    input.priorConcentration,
+  );
+  const priorFrames = flySpeedGrantEndFallCleanupFramesForExpiredEffects(
+    input.priorCombatant.combatantId,
+    input.priorCombatant.activeEffects.filter((effect) =>
+      concentrationBrokenEffectFrom(
+        effect,
+        input.combatantId,
+        input.priorConcentration,
+      ),
+    ),
+  ).filter(
+    (frame) =>
+      !broken.flySpeedGrantEndFallCleanupFrames.some(
+        (candidate) => candidate.endedEffect === frame.endedEffect,
+      ),
+  );
+  return battleStateWithFlySpeedGrantEndFallCleanupFrames(
+    {
+      ...input.state,
+      combatants: broken.value,
+    },
+    [...broken.flySpeedGrantEndFallCleanupFrames, ...priorFrames],
+  );
 }
 
 export function resolveBattleConcentrationDamage(input: {
@@ -378,6 +426,7 @@ export function applyBattleHitPointDamage(input: {
           state: afterMarkDrop,
           combatantId: targetId,
           priorConcentration: input.target.concentration,
+          priorCombatant: input.target,
         })
       : afterMarkDrop;
   const afterCasterOrAllyDamageEscapes =
@@ -1517,16 +1566,21 @@ export function breakCombatantConcentration(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   combatantId: CombatantId,
   priorConcentration?: BattleConcentration,
-): ReadonlyMap<CombatantId, BattleCreatureState> {
+): BreakCombatantConcentrationResult {
   const broken =
     combatants.get(combatantId)?.concentration ?? priorConcentration;
   if (broken === undefined) {
-    return combatants;
+    return { value: combatants, flySpeedGrantEndFallCleanupFrames: [] };
   }
-  return new Map(
+  const flySpeedGrantEndFallCleanupFrames: BattleFlySpeedGrantEndFallCleanupFrame[] =
+    [];
+  const value = new Map(
     [...combatants].map(([id, combatant]) => {
       const expiring = combatant.activeEffects.filter((effect) =>
         concentrationBrokenEffectFrom(effect, combatantId, broken),
+      );
+      flySpeedGrantEndFallCleanupFrames.push(
+        ...flySpeedGrantEndFallCleanupFramesForExpiredEffects(id, expiring),
       );
       const activeEffects = combatant.activeEffects.filter(
         (effect) => !expiring.includes(effect),
@@ -1559,6 +1613,7 @@ export function breakCombatantConcentration(
       return [id, nextCombatant];
     }),
   );
+  return { value, flySpeedGrantEndFallCleanupFrames };
 }
 
 function concentrationBrokenEffectFrom(

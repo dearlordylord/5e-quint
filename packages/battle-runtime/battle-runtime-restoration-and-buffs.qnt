@@ -10,6 +10,7 @@ module battleRuntimeRestorationAndBuffs {
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
+  import battleRuntimeFeatherFall.* from "./battle-runtime-feather-fall"
 
   pure def battleRuntimeDirectRestorationProfile(
     invocation: DirectHitPointRestorationSpell
@@ -91,6 +92,19 @@ module battleRuntimeRestorationAndBuffs {
   pure def barkskinDurationTicks: int = 1 * 60 * 10
   pure def flyDurationTicks: int = 10 * 10
 
+  type FlySpeedGrantEndFallWitness =
+    | FlyEndTargetNotAloft
+    | FlyEndTargetCanStopFall
+    | FlyEndTargetCannotStopFall({
+        featherFallReactor: Actor,
+        featherFallTargets: Set[Actor],
+      })
+
+  type FlySpeedGrantEndFallWitnessResult =
+    FlyEndInvalid({ state: BattleState, target: Actor }) |
+    FlyEndNoFall({ state: BattleState, target: Actor }) |
+    FlyEndFalls({ state: BattleState, target: Actor })
+
   pure def scalarBuffActiveEffects(invocation: ScalarBuffSpell, slotLevel: int): Set[ActiveEffect] =
     battleRuntimeScalarBuffEffects(battleRuntimeScalarBuffProfileForInvocation(invocation), 0, slotLevel)
       .map(scalarBuffActiveEffect)
@@ -106,6 +120,102 @@ module battleRuntimeRestorationAndBuffs {
       | BattleRuntimeHeroismTurnStartTemporaryHitPointsEffect(data) => HeroismTurnStartTemporaryHitPoints(data)
       | BattleRuntimeAidHitPointMaximumIncreaseEffect(data) => AidHitPointMaximumIncrease({ amount: data.amount, durationTicks: aidDurationTicks })
     }
+
+  pure def activeEffectsWithoutFlySpeedHoverGrant(effects: Set[ActiveEffect]): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | FlySpeedHoverGrant(_) => false
+      | _ => true
+    })
+
+  pure def activeEffectsContainFlySpeedHoverGrant(effects: Set[ActiveEffect]): bool =
+    effects.exists(effect => match effect {
+      | FlySpeedHoverGrant(_) => true
+      | _ => false
+    })
+
+  pure def stateWithoutEndedFlySpeedGrant(state: BattleState, source: Actor, target: Actor): BattleState = {
+    val cleaned = match target {
+      | Fighter => {
+          ...state,
+          fighter: {
+            ...state.fighter,
+            activeEffects: activeEffectsWithoutFlySpeedHoverGrant(state.fighter.activeEffects),
+          },
+        }
+      | Goblin => {
+          ...state,
+          goblin: {
+            ...state.goblin,
+            activeEffects: activeEffectsWithoutFlySpeedHoverGrant(state.goblin.activeEffects),
+          },
+        }
+    }
+    match source {
+      | Fighter => { ...cleaned, fighter: { ...cleaned.fighter, concentrating: false } }
+      | Goblin => { ...cleaned, goblin: { ...cleaned.goblin, concentrating: false } }
+    }
+  }
+
+  pure def flySpeedGrantEndFallCleanupFrame(target: Actor): InterruptFrame =
+    PendingFlySpeedGrantEndFallCleanup({ target: target })
+
+  pure def stateWithFlySpeedGrantEndFallCleanupFrame(state: BattleState, target: Actor): BattleState =
+    { ...state, interruptStack: state.interruptStack.append(flySpeedGrantEndFallCleanupFrame(target)) }
+
+  pure def stateWithoutFlySpeedGrantEndFallCleanupFrame(state: BattleState, target: Actor): BattleState =
+    {
+      ...state,
+      interruptStack: state.interruptStack.filter(frame => frame != flySpeedGrantEndFallCleanupFrame(target)),
+    }
+
+  pure def stateHasFlySpeedGrantEndFallCleanupFrame(state: BattleState, target: Actor): bool =
+    state.interruptStack.contains(flySpeedGrantEndFallCleanupFrame(target))
+
+  pure def breakFlySpeedGrantForEndFall(state: BattleState, source: Actor, target: Actor): BattleState =
+    stateWithFlySpeedGrantEndFallCleanupFrame(
+      stateWithoutEndedFlySpeedGrant(state, source, target),
+      target,
+    )
+
+  pure def stateAfterFlySpeedGrantConcentrationCleanup(state: BattleState, source: Actor): BattleState = {
+    val fighterCleaned =
+      if (activeEffectsContainFlySpeedHoverGrant(state.fighter.activeEffects))
+        breakFlySpeedGrantForEndFall(state, source, Fighter)
+      else
+        state
+    if (activeEffectsContainFlySpeedHoverGrant(state.goblin.activeEffects))
+      breakFlySpeedGrantForEndFall(fighterCleaned, source, Goblin)
+    else
+      fighterCleaned
+  }
+
+  pure def resolveFlySpeedGrantEndFallCleanup(
+    state: BattleState,
+    source: Actor,
+    target: Actor,
+    witness: FlySpeedGrantEndFallWitness,
+  ): FlySpeedGrantEndFallWitnessResult = {
+    if (not(stateHasFlySpeedGrantEndFallCleanupFrame(state, target)))
+      FlyEndInvalid({ state: state, target: target })
+    else {
+      val cleaned = stateWithoutFlySpeedGrantEndFallCleanupFrame(state, target)
+      match witness {
+        | FlyEndTargetNotAloft => FlyEndNoFall({ state: cleaned, target: target })
+        | FlyEndTargetCanStopFall => FlyEndNoFall({ state: cleaned, target: target })
+        | FlyEndTargetCannotStopFall(data) =>
+            FlyEndFalls({
+              state: resolveFeatherFallSpell(
+                cleaned,
+                data.featherFallReactor,
+                data.featherFallTargets,
+                Set(target),
+                data.featherFallTargets.size(),
+              ),
+              target: target,
+            })
+      }
+    }
+  }
 
   pure def combatantWithAidHitPointMaximumIncrease(
     combatant: Combatant,
@@ -195,11 +305,14 @@ module battleRuntimeRestorationAndBuffs {
     ) {
       val concentrationBase =
         if (battleRuntimeScalarBuffRequiresConcentration(battleRuntimeScalarBuffProfileForInvocation(invocation)))
-          {
-            ...state,
-            fighter: breakConcentration(state.fighter),
-            goblin: { ...state.goblin, activeEffects: activeEffectsWithoutSpellEffectConcentration(state.goblin.activeEffects) },
-          }
+          if (invocation == FlyScalarBuff)
+            stateAfterFlySpeedGrantConcentrationCleanup(state, Fighter)
+          else
+            {
+              ...state,
+              fighter: breakConcentration(state.fighter),
+              goblin: { ...state.goblin, activeEffects: activeEffectsWithoutSpellEffectConcentration(state.goblin.activeEffects) },
+            }
         else
           state
       val effected = scalarBuffTargetedState(concentrationBase, invocation, targets, slotLevel, rolledDice)

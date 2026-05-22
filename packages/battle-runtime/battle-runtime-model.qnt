@@ -451,6 +451,7 @@ module battleRuntimeModel {
     | ResumeAttackDamageToGoblin
   type InterruptFrame =
     | PendingReaction(PendingReactionFrame)
+    | PendingFlySpeedGrantEndFallCleanup({ target: Actor })
     | PendingAttackDamageConcentration({ continuation: AttackDamageConcentrationContinuation, damage: int })
   type PendingReactionFrameOption =
     | NoPendingReactionFrame

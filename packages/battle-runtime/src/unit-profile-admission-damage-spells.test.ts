@@ -910,7 +910,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
         ),
       },
     );
-    const expiredCombatants = tickDurationEffects(nearlyExpiredCombatants);
+    const expiredCombatants = tickDurationEffects(nearlyExpiredCombatants).value;
 
     expect(expiredCombatants.get(spellCasterId)?.concentration).toBeNull();
     expect(expiredCombatants.get(spellCasterId)?.activeEffects).toEqual([]);

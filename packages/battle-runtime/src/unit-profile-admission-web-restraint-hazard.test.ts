@@ -509,7 +509,7 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
         ),
       },
     );
-    const expiredCombatants = tickDurationEffects(nearlyExpiredCombatants);
+    const expiredCombatants = tickDurationEffects(nearlyExpiredCombatants).value;
 
     expect(expiredCombatants.get(spellCasterId)).toMatchObject({
       concentration: null,

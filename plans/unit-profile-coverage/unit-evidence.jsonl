@@ -117,7 +117,7 @@
 {"unitId":"protection_from_evil_and_good","evidence":{"tag":"selected-identity-mbt","taskId":"L1H-PROTECTION-EVIL-GOOD","ownerPath":"packages/battle-runtime/src/creature-type-protection-and-charm-selected-identity.mbt.test.ts"}}
 {"unitId":"aid","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-SPELL-AID","ownerPath":"packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts"}}
 {"unitId":"barkskin","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-SPELL-BARKSKIN","ownerPath":"packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts"}}
-{"unitId":"fly","evidence":{"tag":"deterministic-admission-projection","taskId":"L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME","ownerPath":"packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts"}}
+{"unitId":"fly","evidence":{"tag":"deterministic-admission-projection","taskId":"L3-FOLLOWUP-FLY-END-FALL-WITNESS","ownerPath":"packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts"}}
 {"unitId":"blindness_deafness","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-SPELL-BLINDNESS-DEAFNESS","ownerPath":"packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts"}}
 {"unitId":"false_life","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV30A","ownerPath":"packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts"}}
 {"unitId":"false_life","evidence":{"tag":"selected-identity-mbt","taskId":"L1E-FALSE-LIFE","ownerPath":"packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts"}}
