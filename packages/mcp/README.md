@@ -112,10 +112,10 @@ not use character presets, Core projections, duplicated executable stat-block
 data, or reducer-owned in-progress battle fills.
 
 The mixed character-and-Stat-Block battle workflow is also covered through MCP tools. It
-creates and finalizes an Orc Soldier Fighter 2 and an Orc Soldier Wizard 1
+creates and finalizes an Orc Soldier Fighter 2 and an Elf Soldier Wizard 2
 through real creation holes, selects the authored SRD Skeleton Stat Block,
-starts battle from both finalized character identities plus the selected Stat
-Block id, applies Skeleton Bludgeoning vulnerability through a Flail hit,
+starts battle from both finalized character identities plus multiple selected
+Stat Block ids, applies Skeleton Bludgeoning vulnerability through Flail hits,
 resolves Fighter Second Wind and Action Surge, casts Wizard `ray_of_frost` as a
 cantrip without spending a Spell Slot, lets Skeleton apply authored Shortsword
 attack pressure, casts prepared `magic_missile` with a level-1 Spell Slot spend
