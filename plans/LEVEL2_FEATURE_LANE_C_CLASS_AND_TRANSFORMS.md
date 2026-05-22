@@ -103,7 +103,7 @@
     {
       "number": 17,
       "id": "L3-SPELL-HASTE-RUNTIME-SURVEY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Level 3 Haste Runtime Survey"
     },
     {
@@ -153,6 +153,24 @@
       "id": "L12G-FOLLOWUP-WIZARD-EVOKER-POTENT-CANTRIP",
       "status": "ready-for-research",
       "title": "Wizard Evoker Potent Cantrip Runtime Support"
+    },
+    {
+      "number": 26,
+      "id": "L3-FOLLOWUP-HASTE-SURFACE-AUTHORING",
+      "status": "ready-for-research",
+      "title": "Haste Surface Authoring And Restriction Shape"
+    },
+    {
+      "number": 27,
+      "id": "L3-FOLLOWUP-HASTE-POSITIVE-RUNTIME",
+      "status": "blocked",
+      "title": "Haste Positive Runtime Support"
+    },
+    {
+      "number": 28,
+      "id": "L3-FOLLOWUP-HASTE-LETHARGY-RUNTIME",
+      "status": "blocked",
+      "title": "Haste Lethargy Runtime Support"
     }
   ]
 }
@@ -473,7 +491,7 @@ Verification notes:
 
 ### Task 17 - L3-SPELL-HASTE-RUNTIME-SURVEY - Level 3 Haste Runtime Survey
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -492,6 +510,21 @@ Acceptance:
 - The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
 - No companion AI/autonomous-control behavior is introduced.
 - No authored identity dispatch is introduced in runtime code.
+
+Result:
+
+- Rechecked SRD 5.2.1 Haste RAW. Haste is present in the local SRD corpus but has no authored `packages/surface/content/haste.json`, no Unit catalog admission, and no `haste` row in the Unit profile claims or generated matrix.
+- Closed Task 17 as a follow-up split instead of claiming support. Legacy root Quint mentions Haste, but the promoted authority is package-local `packages/battle-runtime/battle-runtime.qnt`; promoted battle runtime has no Haste Unit/profile owner today.
+- Recorded the detailed survey in `plans/unit-profile-coverage/L3_HASTE_RUNTIME_SURVEY.md`.
+- Split Surface authoring to `L3-FOLLOWUP-HASTE-SURFACE-AUTHORING`: author Haste only after Surface can represent an allow-list extra-action restriction with Attack limited to one attack only and a typed end-of-effect lethargy rider.
+- Split the active positive runtime to `L3-FOLLOWUP-HASTE-POSITIVE-RUNTIME`: promote Magic Action and level-3+ Spell Slot spend, caster-owned Concentration, willing target admission, doubled Speed, +2 Armor Class, Dexterity Saving Throw Advantage, and the restricted per-target-turn additional action without authored-identity dispatch.
+- Split the end rider to `L3-FOLLOWUP-HASTE-LETHARGY-RUNTIME`: promote Incapacitated plus Speed 0 until the end of the target's next turn when the Haste effect ends, preserving independent Incapacitated sources and not treating Incapacitated as an implicit Speed-0 shortcut.
+
+Verification notes:
+
+- RAW/ubiquitous-language check: SRD 5.2.1 `Spells/Descriptions-E-L.md#Haste`; `UBIQUITOUS_LANGUAGE.md` terms for Magic Action, Spell Slot, Concentration, Speed, Movement, Armor Class, Saving Throw, Advantage, Action, Attack action, Dash, Disengage, Hide, Utilize, and Incapacitated.
+- Coverage verification: Task 17 changed survey/plan artifacts only and did not add Unit claims, Surface catalog admission, runtime reducers, or promoted Quint behavior. `pnpm unit-profile-coverage:check` and `git diff --check` are the relevant checks; MBT is not applicable.
+- Reviewer-loop convergence: survey review found no runtime/code-change issues; architecture and connascence review kept Haste split into Surface action restriction/lethargy authoring, active positive runtime, and end-rider lifecycle instead of adding workaround adapters or authored-identity dispatch.
 
 ### Task 18 - L3-SPELL-SLOW-RUNTIME-SURVEY - Level 3 Slow Runtime Survey
 
@@ -699,3 +732,74 @@ Acceptance:
 - No authored identity runtime dispatch is introduced.
 - The half-damage and no-additional-effect clauses stay colocated in one runtime owner.
 - Focused verification includes RAW/ubiquitous-language check, relevant Surface/runtime tests, `pnpm unit-profile-coverage:check`, and promoted battle-runtime parity if battle behavior changes.
+
+### Task 26 - L3-FOLLOWUP-HASTE-SURFACE-AUTHORING - Haste Surface Authoring And Restriction Shape
+
+Status: `ready-for-research`
+
+Input:
+
+- Local RAW under `.references/srd-5.2.1/Spells/Descriptions-E-L.md#Haste`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Existing Surface action restriction, spell ongoing/activation effect atoms, and the Task 17 survey note.
+
+Output:
+
+- Author `haste` Surface content only after the Surface schema can represent Haste losslessly.
+- Extend the existing `grant_extra_action` restriction shape, rather than adding a parallel action-state field, to represent an allow-list where Attack is limited to one attack only.
+- Add or reuse a typed operation for end-of-effect lethargy: Incapacitated plus Speed 0 until the end of the target's next turn.
+- Preserve Magic Action casting, level-3 Spell Slot, 30-foot visible willing-creature targeting, caster-owned Concentration, doubled Speed, +2 Armor Class, Dexterity Saving Throw Advantage, restricted additional action, and lethargy source facts in authored Surface data.
+
+Acceptance:
+
+- `packages/surface/content/haste.dhall` and generated JSON are admitted by the Surface catalog without lossy prose-only placeholders.
+- No runtime code branches on Haste authored identity.
+- Follow-up runtime tasks remain blocked until the Surface record exposes typed facts.
+
+### Task 27 - L3-FOLLOWUP-HASTE-POSITIVE-RUNTIME - Haste Positive Runtime Support
+
+Status: `blocked`
+
+Blocked on: `L3-FOLLOWUP-HASTE-SURFACE-AUTHORING`
+
+Input:
+
+- Authored Haste Surface record with typed positive-effect facts.
+- Package-local promoted `packages/battle-runtime/battle-runtime.qnt`.
+- Current spell invocation, concentration, scalar buff, roll-mode, movement, and action-resource reducers.
+
+Output:
+
+- Promote Haste's active positive effect through typed spell procedure support: Magic Action and level-3+ Spell Slot spend, caster-owned Concentration, known willing target admission, active doubled-Speed projection, +2 Armor Class projection, Dexterity Saving Throw Advantage, and one restricted extra action on each target turn.
+- The extra action must allow only Attack with one attack only, Dash, Disengage, Hide, or Utilize.
+- Update Unit claims/evidence/report artifacts only after deterministic admission/projection and focused runtime/parity evidence exist.
+
+Acceptance:
+
+- Haste lands as `supported-profile` or `profile-subset-supported` for the positive active effect, without the lethargy rider unless Task 28 is also complete.
+- Focused runtime tests and promoted Quint/runtime parity cover resource spend, Concentration, active projections, turn-scoped action grant, restriction enforcement, and cleanup.
+- No authored identity dispatch is introduced.
+
+### Task 28 - L3-FOLLOWUP-HASTE-LETHARGY-RUNTIME - Haste Lethargy Runtime Support
+
+Status: `blocked`
+
+Blocked on: `L3-FOLLOWUP-HASTE-SURFACE-AUTHORING`, `L3-FOLLOWUP-HASTE-POSITIVE-RUNTIME`
+
+Input:
+
+- Authored Haste Surface record with typed lethargy facts.
+- Promoted Haste positive active-effect lifecycle from Task 27.
+- Current condition and Speed projection owners.
+
+Output:
+
+- Promote Haste's end rider: when the Haste spell effect ends for a target, remove the positive effect and apply source-owned lethargy that gives Incapacitated and Speed 0 until the end of the target's next turn.
+- Preserve independent Incapacitated sources; do not use Incapacitated as an implicit Speed-0 shortcut.
+- Cover concentration break, duration expiration, replacement/recast, and target-turn cleanup.
+
+Acceptance:
+
+- Haste can claim exact active-effect support only if Task 27 and this task both land.
+- Focused runtime tests and promoted Quint/runtime parity cover end-of-effect lethargy lifecycle and cleanup.
+- No companion AI/autonomous-control behavior or authored identity dispatch is introduced.
