@@ -132,45 +132,51 @@
     },
     {
       "number": 22,
-      "id": "L12G-MISSING-ANIMAL-MESSENGER",
+      "id": "L3-METRIC-SCOPE-EXPANSION-PRECHECK",
       "status": "ready-for-research",
-      "title": "Animal Messenger Definition And Closure"
+      "title": "Level 3 Metric Scope Expansion Precheck"
     },
     {
       "number": 23,
-      "id": "L12G-MISSING-ARCANISTS-MAGIC-AURA",
+      "id": "L3-SPELL-UNIT-INVENTORY-SEED",
       "status": "ready-for-research",
-      "title": "Arcanists Magic Aura Definition And Closure"
+      "title": "Level 3 Spell Unit Inventory Seed"
     },
     {
       "number": 24,
-      "id": "L12G-MISSING-AUGURY",
+      "id": "L3-RULES-KERNEL-JOIN-PRECHECK",
       "status": "ready-for-research",
-      "title": "Augury Definition And Closure"
+      "title": "Level 3 Rules-Kernel Join Precheck"
     },
     {
       "number": 25,
-      "id": "L12G-MISSING-LOCATE-ANIMALS-OR-PLANTS",
+      "id": "L3-SPELL-COUNTERSPELL-ACCOUNTING-AUDIT",
       "status": "ready-for-research",
-      "title": "Locate Animals Or Plants Definition And Closure"
+      "title": "Level 3 Counterspell Accounting Audit"
     },
     {
       "number": 26,
-      "id": "L12G-MISSING-LOCATE-OBJECT",
+      "id": "L3-SPELL-DISPEL-MAGIC-ACCOUNTING-AUDIT",
       "status": "ready-for-research",
-      "title": "Locate Object Definition And Closure"
+      "title": "Level 3 Dispel Magic Accounting Audit"
     },
     {
       "number": 27,
-      "id": "L12G-MISSING-MAGIC-MOUTH",
+      "id": "L3-SPELL-CLAIRVOYANCE-CLOSURE-SURVEY",
       "status": "ready-for-research",
-      "title": "Magic Mouth Definition And Closure"
+      "title": "Level 3 Clairvoyance Closure Survey"
     },
     {
       "number": 28,
-      "id": "L12G-MISSING-ROPE-TRICK",
+      "id": "L3-SPELL-TONGUES-CLOSURE-SURVEY",
       "status": "ready-for-research",
-      "title": "Rope Trick Definition And Closure"
+      "title": "Level 3 Tongues Closure Survey"
+    },
+    {
+      "number": 29,
+      "id": "L3-SPELL-WATER-BREATHING-CLOSURE-SURVEY",
+      "status": "ready-for-research",
+      "title": "Level 3 Water Breathing Closure Survey"
     }
   ]
 }
@@ -377,205 +383,180 @@ Output:
 
 ## Overnight Backlog Refill
 
-### Task 22 - L12G-MISSING-ANIMAL-MESSENGER - Animal Messenger Definition And Closure
+## Level 2 Completion And Level 3 Kickoff Refill
+
+### Task 22 - L3-METRIC-SCOPE-EXPANSION-PRECHECK - Level 3 Metric Scope Expansion Precheck
 
 Status: `ready-for-research`
 
-Unit: `animal_messenger`. Gate task: 54 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+Input:
 
-Inputs:
+- Local RAW under `.references/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface content, Unit/profile claims, owner evidence, and focused tests.
 
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `animal_messenger`.
+Output:
 
-Outputs:
-
-- one concrete end state from the Task Output Contract for `animal_messenger`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
+- Survey how level 1-2 inventory/report metrics are generated and propose the smallest safe extension for spell-level-3/class-level-3 pressure without breaking existing level 1-2 reporting.
+- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Focused verification, `git diff --check`, and reviewer-loop convergence.
 
 Acceptance:
 
-- the level 1-2 metric row for `animal_messenger` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
 
-<!-- moved-from-lanes: A, B; observed-statuses: deferred, ready-for-research -->
-
-### Task 23 - L12G-MISSING-ARCANISTS-MAGIC-AURA - Arcanists Magic Aura Definition And Closure
+### Task 23 - L3-SPELL-UNIT-INVENTORY-SEED - Level 3 Spell Unit Inventory Seed
 
 Status: `ready-for-research`
 
-Unit: `arcanists_magic_aura`. Gate task: 55 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+Input:
 
-Inputs:
+- Local RAW under `.references/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface content, Unit/profile claims, owner evidence, and focused tests.
 
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `arcanists_magic_aura`.
+Output:
 
-Outputs:
-
-- one concrete end state from the Task Output Contract for `arcanists_magic_aura`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
+- Seed or plan level-3 spell-pressure inventory rows from installed SRD Surface spell content, with level-3 rows clearly separated from level 1-2 metrics.
+- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Focused verification, `git diff --check`, and reviewer-loop convergence.
 
 Acceptance:
 
-- the level 1-2 metric row for `arcanists_magic_aura` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
 
-<!-- moved-from-lanes: A, B; observed-statuses: deferred, ready-for-research -->
-
-### Task 24 - L12G-MISSING-AUGURY - Augury Definition And Closure
+### Task 24 - L3-RULES-KERNEL-JOIN-PRECHECK - Level 3 Rules-Kernel Join Precheck
 
 Status: `ready-for-research`
 
-Unit: `augury`. Gate task: 56 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+Input:
 
-Inputs:
+- Local RAW under `.references/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface content, Unit/profile claims, owner evidence, and focused tests.
 
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `augury`.
+Output:
 
-Outputs:
-
-- one concrete end state from the Task Output Contract for `augury`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
+- Survey level-3 supported or likely-supported profiles and identify rules-kernel obligation mappings needed before broad implementation.
+- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Focused verification, `git diff --check`, and reviewer-loop convergence.
 
 Acceptance:
 
-- the level 1-2 metric row for `augury` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
 
-<!-- moved-from-lanes: A, B; observed-statuses: deferred, ready-for-research -->
-
-### Task 25 - L12G-MISSING-LOCATE-ANIMALS-OR-PLANTS - Locate Animals Or Plants Definition And Closure
+### Task 25 - L3-SPELL-COUNTERSPELL-ACCOUNTING-AUDIT - Level 3 Counterspell Accounting Audit
 
 Status: `ready-for-research`
 
-Unit: `locate_animals_or_plants`. Gate task: 70 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+Input:
 
-Inputs:
+- Local RAW under `.references/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface content, Unit/profile claims, owner evidence, and focused tests.
 
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `locate_animals_or_plants`.
+Output:
 
-Outputs:
-
-- one concrete end state from the Task Output Contract for `locate_animals_or_plants`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
+- Check existing Counterspell support against level-3 metric expansion and add any missing profile/evidence/rules-kernel accounting without changing already-correct runtime behavior.
+- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Focused verification, `git diff --check`, and reviewer-loop convergence.
 
 Acceptance:
 
-- the level 1-2 metric row for `locate_animals_or_plants` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
 
-<!-- moved-from-lanes: A, B, D; observed-statuses: deferred, ready-for-research -->
-
-### Task 26 - L12G-MISSING-LOCATE-OBJECT - Locate Object Definition And Closure
+### Task 26 - L3-SPELL-DISPEL-MAGIC-ACCOUNTING-AUDIT - Level 3 Dispel Magic Accounting Audit
 
 Status: `ready-for-research`
 
-Unit: `locate_object`. Gate task: 71 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+Input:
 
-Inputs:
+- Local RAW under `.references/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface content, Unit/profile claims, owner evidence, and focused tests.
 
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `locate_object`.
+Output:
 
-Outputs:
-
-- one concrete end state from the Task Output Contract for `locate_object`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
+- Check existing Dispel Magic support against level-3 metric expansion and add any missing profile/evidence/rules-kernel accounting without duplicating ongoing spell ending logic.
+- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Focused verification, `git diff --check`, and reviewer-loop convergence.
 
 Acceptance:
 
-- the level 1-2 metric row for `locate_object` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
 
-<!-- moved-from-lanes: A, B, D; observed-statuses: deferred, ready-for-research -->
-
-### Task 27 - L12G-MISSING-MAGIC-MOUTH - Magic Mouth Definition And Closure
+### Task 27 - L3-SPELL-CLAIRVOYANCE-CLOSURE-SURVEY - Level 3 Clairvoyance Closure Survey
 
 Status: `ready-for-research`
 
-Unit: `magic_mouth`. Gate task: 72 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+Input:
 
-Inputs:
+- Local RAW under `.references/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface content, Unit/profile claims, owner evidence, and focused tests.
 
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `magic_mouth`.
+Output:
 
-Outputs:
-
-- one concrete end state from the Task Output Contract for `magic_mouth`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
+- Read SRD Clairvoyance and current content; close runtime-detached sensor/table ownership or split any actual runtime/profile work.
+- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Focused verification, `git diff --check`, and reviewer-loop convergence.
 
 Acceptance:
 
-- the level 1-2 metric row for `magic_mouth` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
 
-<!-- moved-from-lanes: A, B, D; observed-statuses: deferred, ready-for-research -->
-
-### Task 28 - L12G-MISSING-ROPE-TRICK - Rope Trick Definition And Closure
+### Task 28 - L3-SPELL-TONGUES-CLOSURE-SURVEY - Level 3 Tongues Closure Survey
 
 Status: `ready-for-research`
 
-Unit: `rope_trick`. Gate task: 74 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+Input:
 
-Inputs:
+- Local RAW under `.references/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface content, Unit/profile claims, owner evidence, and focused tests.
 
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `rope_trick`.
+Output:
 
-Outputs:
-
-- one concrete end state from the Task Output Contract for `rope_trick`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
+- Read SRD Tongues and current language-access policy; close runtime-detached language/table ownership or split any actual runtime/profile work.
+- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Focused verification, `git diff --check`, and reviewer-loop convergence.
 
 Acceptance:
 
-- the level 1-2 metric row for `rope_trick` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
 
-<!-- moved-from-lanes: A, B, D; observed-statuses: deferred, ready-for-research -->
+### Task 29 - L3-SPELL-WATER-BREATHING-CLOSURE-SURVEY - Level 3 Water Breathing Closure Survey
+
+Status: `ready-for-research`
+
+Input:
+
+- Local RAW under `.references/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface content, Unit/profile claims, owner evidence, and focused tests.
+
+Output:
+
+- Read SRD Water Breathing and current environmental/table policy; close runtime-detached environment ownership or split any actual runtime/profile work.
+- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Focused verification, `git diff --check`, and reviewer-loop convergence.
+
+Acceptance:
+
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
