@@ -8,7 +8,7 @@
     "kind": "trained"
   },
   "className": "ranger",
-  "description": "SRD Ranger class creation facts for level-1 characters plus the level-2 Deft Explorer and Fighting Style class-feature grants, including class-list prepared Spell Access, Spell Slots, and spellcasting focus facts.",
+  "description": "SRD Ranger class creation and early progression facts through level 3, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, level-2 class-feature grants, and level-3 subclass selection.",
   "featureGrants": [
     {
       "level": 1,
@@ -140,6 +140,10 @@
         {
           "spellId": "longstrider",
           "spellLevel": 1
+        },
+        {
+          "spellId": "hunters_mark",
+          "spellLevel": 1
         }
       ]
     },
@@ -176,6 +180,17 @@
         "spellSlots": [
           {
             "count": 2,
+            "spellLevel": 1
+          }
+        ]
+      },
+      {
+        "atLevel": 3,
+        "cantripCount": 0,
+        "preparedSpellCount": 4,
+        "spellSlots": [
+          {
+            "count": 3,
             "spellLevel": 1
           }
         ]

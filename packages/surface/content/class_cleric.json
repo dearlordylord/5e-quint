@@ -107,6 +107,10 @@
         {
           "spellId": "healing_word",
           "spellLevel": 1
+        },
+        {
+          "spellId": "aid",
+          "spellLevel": 2
         }
       ]
     },
@@ -144,6 +148,21 @@
           {
             "count": 3,
             "spellLevel": 1
+          }
+        ]
+      },
+      {
+        "atLevel": 3,
+        "cantripCount": 3,
+        "preparedSpellCount": 6,
+        "spellSlots": [
+          {
+            "count": 4,
+            "spellLevel": 1
+          },
+          {
+            "count": 2,
+            "spellLevel": 2
           }
         ]
       }

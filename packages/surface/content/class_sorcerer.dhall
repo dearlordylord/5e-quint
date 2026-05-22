@@ -10,7 +10,7 @@ let ClassSpellAccess : Type = { spellId : Text, spellLevel : Natural }
 let sorcerer =
       { armorTraining = { kind = "none" }
       , className = "sorcerer"
-      , description = "SRD Sorcerer class creation and early progression facts for level-1 and level-2 characters, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, and level-1 and level-2 class feature grants."
+      , description = "SRD Sorcerer class creation and early progression facts through level 3, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, level-1 and level-2 class-feature grants, and level-3 subclass selection."
       , featureGrants =
         [ { level = 1, unitId = "sorcerer_innate_sorcery" }
         , { level = 2, unitId = "sorcerer_font_of_magic" }
@@ -49,6 +49,8 @@ let sorcerer =
                 , { spellId = "detect_magic", spellLevel = 1 }
                 , { spellId = "chromatic_orb", spellLevel = 1 }
                 , { spellId = "thunderwave", spellLevel = 1 }
+                , { spellId = "alter_self", spellLevel = 2 }
+                , { spellId = "scorching_ray", spellLevel = 2 }
                 ] : List ClassSpellAccess
               , changeOn = { kind = "class_level", replacementCount = 1 }
               }
@@ -67,6 +69,14 @@ let sorcerer =
               , cantripCount = 4
               , preparedSpellCount = 4
               , spellSlots = [ { spellLevel = 1, count = 3 } ]
+              }
+            , { atLevel = 3
+              , cantripCount = 4
+              , preparedSpellCount = 6
+              , spellSlots =
+                [ { spellLevel = 1, count = 4 }
+                , { spellLevel = 2, count = 2 }
+                ]
               }
             ]
           , spellcastingFocus = "arcane_focus"

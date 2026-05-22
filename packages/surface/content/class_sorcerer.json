@@ -3,7 +3,7 @@
     "kind": "none"
   },
   "className": "sorcerer",
-  "description": "SRD Sorcerer class creation and early progression facts for level-1 and level-2 characters, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, and level-1 and level-2 class feature grants.",
+  "description": "SRD Sorcerer class creation and early progression facts through level 3, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, level-1 and level-2 class-feature grants, and level-3 subclass selection.",
   "featureGrants": [
     {
       "level": 1,
@@ -90,6 +90,14 @@
         {
           "spellId": "thunderwave",
           "spellLevel": 1
+        },
+        {
+          "spellId": "alter_self",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "scorching_ray",
+          "spellLevel": 2
         }
       ]
     },
@@ -127,6 +135,21 @@
           {
             "count": 3,
             "spellLevel": 1
+          }
+        ]
+      },
+      {
+        "atLevel": 3,
+        "cantripCount": 4,
+        "preparedSpellCount": 6,
+        "spellSlots": [
+          {
+            "count": 4,
+            "spellLevel": 1
+          },
+          {
+            "count": 2,
+            "spellLevel": 2
           }
         ]
       }

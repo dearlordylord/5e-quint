@@ -71,7 +71,10 @@ const listPreparedSpellcasting = (input: {
   readonly preparedChangeOn: "class_level" | "long_rest";
   readonly preparedReplacementCount: 1 | "any";
   readonly preparedCount: number;
-  readonly preparedSpells: readonly string[];
+  readonly preparedSpells: readonly (
+    | string
+    | { readonly spellId: string; readonly spellLevel: number }
+  )[];
   readonly cantrips?: readonly string[];
 }) => ({
   ...(input.cantrips === undefined
@@ -93,10 +96,9 @@ const listPreparedSpellcasting = (input: {
     },
     choose: input.preparedCount,
     kind: "prepared_from_class_spell_list",
-    spells: input.preparedSpells.map((spellId) => ({
-      spellId,
-      spellLevel: 1,
-    })),
+    spells: input.preparedSpells.map((spell) =>
+      typeof spell === "string" ? { spellId: spell, spellLevel: 1 } : spell,
+    ),
   },
   spellSlotProjection: {
     kind: "leveled_spell_slots",
@@ -206,6 +208,8 @@ describe("character-creation Surface records", () => {
               { spellId: "sleep", spellLevel: 1 },
               { spellId: "thunderwave", spellLevel: 1 },
               { spellId: "chromatic_orb", spellLevel: 1 },
+              { spellId: "mirror_image", spellLevel: 2 },
+              { spellId: "misty_step", spellLevel: 2 },
             ],
           },
           preparedAccess: {
@@ -220,6 +224,8 @@ describe("character-creation Surface records", () => {
               "sleep",
               "thunderwave",
               "chromatic_orb",
+              "mirror_image",
+              "misty_step",
             ],
           },
           spellSlotProjection: {
@@ -241,6 +247,16 @@ describe("character-creation Surface records", () => {
               spellbookSpellCount: 8,
               preparedSpellCount: 5,
               spellSlots: [{ count: 3, spellLevel: 1 }],
+            },
+            {
+              atLevel: 3,
+              cantripCount: 3,
+              spellbookSpellCount: 10,
+              preparedSpellCount: 6,
+              spellSlots: [
+                { count: 4, spellLevel: 1 },
+                { count: 2, spellLevel: 2 },
+              ],
             },
           ],
           spellcastingFocuses: ["arcane_focus", "spellbook"],
@@ -267,7 +283,12 @@ describe("character-creation Surface records", () => {
           cantripAccess: {
             choose: 2,
             kind: "known_cantrips_from_class_spell_list",
-            spellIds: ["eldritch_blast", "minor_illusion"],
+            spellIds: [
+              "eldritch_blast",
+              "minor_illusion",
+              "poison_spray",
+              "prestidigitation",
+            ],
             changeOn: { count: 1, kind: "class_level" },
           },
           preparedAccess: {
@@ -276,6 +297,19 @@ describe("character-creation Surface records", () => {
             spells: [
               { spellId: "charm_person", spellLevel: 1 },
               { spellId: "hellish_rebuke", spellLevel: 1 },
+              { spellId: "hex", spellLevel: 1 },
+              { spellId: "mirror_image", spellLevel: 2 },
+              { spellId: "bane", spellLevel: 1 },
+              { spellId: "comprehend_languages", spellLevel: 1 },
+              { spellId: "detect_magic", spellLevel: 1 },
+              { spellId: "expeditious_retreat", spellLevel: 1 },
+              { spellId: "protection_from_evil_and_good", spellLevel: 1 },
+              { spellId: "unseen_servant", spellLevel: 1 },
+              { spellId: "darkness", spellLevel: 2 },
+              { spellId: "hold_person", spellLevel: 2 },
+              { spellId: "invisibility", spellLevel: 2 },
+              { spellId: "misty_step", spellLevel: 2 },
+              { spellId: "suggestion", spellLevel: 2 },
             ],
             changeOn: { kind: "class_level", replacementCount: 1 },
           },
@@ -327,6 +361,7 @@ describe("character-creation Surface records", () => {
               "dissonant_whispers",
               "healing_word",
               "thunderwave",
+              { spellId: "aid", spellLevel: 2 },
             ],
             cantrips: ["dancing_lights", "vicious_mockery"],
           }),
@@ -343,6 +378,15 @@ describe("character-creation Surface records", () => {
               cantripCount: 2,
               preparedSpellCount: 5,
               spellSlots: [{ spellLevel: 1, count: 3 }],
+            },
+            {
+              atLevel: 3,
+              cantripCount: 2,
+              preparedSpellCount: 6,
+              spellSlots: [
+                { spellLevel: 1, count: 4 },
+                { spellLevel: 2, count: 2 },
+              ],
             },
           ],
         },
@@ -365,6 +409,7 @@ describe("character-creation Surface records", () => {
               "guiding_bolt",
               "shield_of_faith",
               "healing_word",
+              { spellId: "aid", spellLevel: 2 },
             ],
             cantrips: ["guidance", "sacred_flame", "thaumaturgy"],
           }),
@@ -381,6 +426,15 @@ describe("character-creation Surface records", () => {
               cantripCount: 3,
               preparedSpellCount: 5,
               spellSlots: [{ spellLevel: 1, count: 3 }],
+            },
+            {
+              atLevel: 3,
+              cantripCount: 3,
+              preparedSpellCount: 6,
+              spellSlots: [
+                { spellLevel: 1, count: 4 },
+                { spellLevel: 2, count: 2 },
+              ],
             },
           ],
         },
@@ -403,6 +457,7 @@ describe("character-creation Surface records", () => {
               "entangle",
               "faerie_fire",
               "thunderwave",
+              { spellId: "aid", spellLevel: 2 },
             ],
             cantrips: ["druidcraft", "produce_flame"],
           }),
@@ -420,6 +475,15 @@ describe("character-creation Surface records", () => {
               preparedSpellCount: 5,
               spellSlots: [{ spellLevel: 1, count: 3 }],
             },
+            {
+              atLevel: 3,
+              cantripCount: 2,
+              preparedSpellCount: 6,
+              spellSlots: [
+                { spellLevel: 1, count: 4 },
+                { spellLevel: 2, count: 2 },
+              ],
+            },
           ],
         },
       },
@@ -428,29 +492,15 @@ describe("character-creation Surface records", () => {
         input: classPaladinInput,
         className: "paladin",
         hitPointDie: 10,
-        spellcasting: listPreparedSpellcasting({
-          className: "paladin",
-          spellcastingAbility: "cha",
-          spellcastingFocus: "holy_symbol",
-          preparedChangeOn: "long_rest",
-          preparedReplacementCount: 1,
-          preparedCount: 2,
-          preparedSpells: ["heroism", "searing_smite"],
-        }),
-      },
-      {
-        input: classRangerInput,
-        className: "ranger",
-        hitPointDie: 10,
         spellcasting: {
           ...listPreparedSpellcasting({
-            className: "ranger",
-            spellcastingAbility: "wis",
-            spellcastingFocus: "druidic_focus",
+            className: "paladin",
+            spellcastingAbility: "cha",
+            spellcastingFocus: "holy_symbol",
             preparedChangeOn: "long_rest",
             preparedReplacementCount: 1,
             preparedCount: 2,
-            preparedSpells: ["cure_wounds", "ensnaring_strike", "longstrider"],
+            preparedSpells: ["heroism", "searing_smite", "bless", "command"],
           }),
           kind: "list_prepared_spellcasting_progression_creation",
           spellcastingProgression: [
@@ -465,6 +515,54 @@ describe("character-creation Surface records", () => {
               cantripCount: 0,
               preparedSpellCount: 3,
               spellSlots: [{ spellLevel: 1, count: 2 }],
+            },
+            {
+              atLevel: 3,
+              cantripCount: 0,
+              preparedSpellCount: 4,
+              spellSlots: [{ spellLevel: 1, count: 3 }],
+            },
+          ],
+        },
+      },
+      {
+        input: classRangerInput,
+        className: "ranger",
+        hitPointDie: 10,
+        spellcasting: {
+          ...listPreparedSpellcasting({
+            className: "ranger",
+            spellcastingAbility: "wis",
+            spellcastingFocus: "druidic_focus",
+            preparedChangeOn: "long_rest",
+            preparedReplacementCount: 1,
+            preparedCount: 2,
+            preparedSpells: [
+              "cure_wounds",
+              "ensnaring_strike",
+              "longstrider",
+              "hunters_mark",
+            ],
+          }),
+          kind: "list_prepared_spellcasting_progression_creation",
+          spellcastingProgression: [
+            {
+              atLevel: 1,
+              cantripCount: 0,
+              preparedSpellCount: 2,
+              spellSlots: [{ spellLevel: 1, count: 2 }],
+            },
+            {
+              atLevel: 2,
+              cantripCount: 0,
+              preparedSpellCount: 3,
+              spellSlots: [{ spellLevel: 1, count: 2 }],
+            },
+            {
+              atLevel: 3,
+              cantripCount: 0,
+              preparedSpellCount: 4,
+              spellSlots: [{ spellLevel: 1, count: 3 }],
             },
           ],
         },
@@ -487,6 +585,8 @@ describe("character-creation Surface records", () => {
               "detect_magic",
               "chromatic_orb",
               "thunderwave",
+              { spellId: "alter_self", spellLevel: 2 },
+              { spellId: "scorching_ray", spellLevel: 2 },
             ],
             cantrips: [
               "light",
@@ -508,6 +608,15 @@ describe("character-creation Surface records", () => {
               cantripCount: 4,
               preparedSpellCount: 4,
               spellSlots: [{ spellLevel: 1, count: 3 }],
+            },
+            {
+              atLevel: 3,
+              cantripCount: 4,
+              preparedSpellCount: 6,
+              spellSlots: [
+                { spellLevel: 1, count: 4 },
+                { spellLevel: 2, count: 2 },
+              ],
             },
           ],
         },

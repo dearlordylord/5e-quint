@@ -180,10 +180,9 @@ type SupportedDraftChoicePath = (typeof SUPPORTED_DRAFT_CHOICE_PATHS)[number];
 
 const SUPPORTED_PROGRESSIONS = [
   ...SRD_LEVEL_ONE_CLASS_UNIT_IDS.map(supportedLevelOneProgression),
-  supportedSameClassProgression("class_barbarian", 3),
-  supportedSameClassProgression(PHASE1_CLASS_FIGHTER_UNIT_ID, 3),
-  supportedSameClassProgression(SRD_MONK_CLASS_UNIT_ID, 3),
-  supportedSameClassProgression(SRD_ROGUE_CLASS_UNIT_ID, 3),
+  ...SRD_LEVEL_ONE_CLASS_UNIT_IDS.map((classUnitId) =>
+    supportedSameClassProgression(classUnitId, 3),
+  ),
   supportedSameClassSecondLevelProgression(PHASE1_CLASS_FIGHTER_UNIT_ID),
   supportedSameClassSecondLevelProgression(SRD_BARD_CLASS_UNIT_ID),
   supportedSameClassSecondLevelProgression(SRD_CLERIC_CLASS_UNIT_ID),
@@ -377,6 +376,8 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
       creationChoiceOptionId("sleep"),
       creationChoiceOptionId("thunderwave"),
       creationChoiceOptionId("chromatic_orb"),
+      creationChoiceOptionId("mirror_image"),
+      creationChoiceOptionId("misty_step"),
     ],
     [WIZARD_PREPARED_SPELL_CHOICE_KEY]: [
       creationChoiceOptionId("detect_magic"),
@@ -387,6 +388,8 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
       creationChoiceOptionId("sleep"),
       creationChoiceOptionId("thunderwave"),
       creationChoiceOptionId("chromatic_orb"),
+      creationChoiceOptionId("mirror_image"),
+      creationChoiceOptionId("misty_step"),
     ],
     [BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY]: [
       PHASE1_BACKGROUND_ABILITY_SCORE_INCREASE_OPTION_ID,

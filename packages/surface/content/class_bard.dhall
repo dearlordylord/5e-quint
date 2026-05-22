@@ -92,6 +92,7 @@ let bard =
                 , { spellId = "dissonant_whispers", spellLevel = 1 }
                 , { spellId = "healing_word", spellLevel = 1 }
                 , { spellId = "thunderwave", spellLevel = 1 }
+                , { spellId = "aid", spellLevel = 2 }
                 ] : List ClassSpellAccess
               , changeOn = { kind = "class_level", replacementCount = 1 }
               }
@@ -110,6 +111,14 @@ let bard =
               , cantripCount = 2
               , preparedSpellCount = 5
               , spellSlots = [ { spellLevel = 1, count = 3 } ]
+              }
+            , { atLevel = 3
+              , cantripCount = 2
+              , preparedSpellCount = 6
+              , spellSlots =
+                [ { spellLevel = 1, count = 4 }
+                , { spellLevel = 2, count = 2 }
+                ]
               }
             ]
           , spellcastingFocus = "musical_instrument"

@@ -205,7 +205,7 @@
     {
       "number": 34,
       "id": "L3-REMAINING-SUBCLASS-SELECTION-FINALIZATION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Remaining Level 3 Selected Subclass Finalization"
     },
     {
@@ -862,7 +862,7 @@ Completion:
 
 ### Task 34 - L3-REMAINING-SUBCLASS-SELECTION-FINALIZATION - Remaining Level 3 Selected Subclass Finalization
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -901,6 +901,15 @@ Acceptance:
   subclass feature execution from the subclass container record.
 - No PHB+ authored identity, companion AI/autonomous-control behavior, or runtime
   authored-identity dispatch is introduced.
+
+Completion:
+
+- Bard, Cleric, Druid, Paladin, Ranger, Sorcerer, Warlock, and Wizard level-3
+  subclass-selection rows now have checker-visible Character Creation owner
+  evidence.
+- The selected subclass Unit ref is finalized as selected identity only;
+  subclass Spell Access and subclass feature execution remain owned by their
+  existing follow-up rows.
 
 ### Task 35 - L12G-FOLLOWUP-DRUID-CIRCLE-LAND-SPELL-ACCESS - Druid Circle of the Land Spell Access
 

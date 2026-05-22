@@ -93,6 +93,7 @@ import {
 } from "./phase1-manifest.ts";
 import { selectedEldritchInvocationFeatures } from "./eldritch-invocations.ts";
 import {
+  availableSpellSlotLevels,
   classSpellcastingCreationAtLevel,
   isListPreparedSpellcastingCreation,
   isPactMagicSpellcastingCreation,
@@ -429,7 +430,16 @@ export function selectedPreparedSpellsAreInSelectedSpellbook(
     return true;
   }
 
-  const spellcasting = classFacts.value.spellcasting;
+  const spellcasting = classSpellcastingCreationAtLevel(
+    classFacts.value.spellcasting,
+    classLevelForUnit(
+      selections.progression,
+      startingClassUnitId(selections.progression),
+    ),
+  );
+  if (spellcasting == null || !isWizardSpellcastingCreation(spellcasting)) {
+    return false;
+  }
   const unitChoices = unitChoiceSelections(selections);
   const selectedSpellbook = new Set(
     selectedUnitRefsForChoice(unitChoices, WIZARD_SPELLBOOK_CHOICE_KEY),
@@ -438,8 +448,8 @@ export function selectedPreparedSpellsAreInSelectedSpellbook(
     unitChoices,
     WIZARD_PREPARED_SPELL_CHOICE_KEY,
   );
-  const slotLevels = new Set(
-    spellcasting.spellSlotProjection.slots.map((slot) => slot.spellLevel),
+  const slotLevels = availableSpellSlotLevels(
+    spellcasting.spellSlotProjection.slots,
   );
   const spellbookLevels = new Map(
     spellcasting.spellbookAccess.spells.map((spell) => [

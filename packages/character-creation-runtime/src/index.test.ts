@@ -138,6 +138,8 @@ import {
   SRD_LEVEL_THREE_SUBCLASS_UNIT_IDS,
   SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY,
   WEAPON_MASTERY_OPTIONS_CHOICE_KEY,
+  WIZARD_PREPARED_SPELL_CHOICE_KEY,
+  WIZARD_SPELLBOOK_CHOICE_KEY,
 } from "./phase1-manifest.ts";
 import {
   decodeAbilityScoreIncreaseOptionId,
@@ -782,10 +784,13 @@ describe("character creation hole discovery", () => {
           "15:class_barbarian:level_1:maximum_hit_die",
           "15:class_barbarian|15:class_barbarian|15:class_barbarian:level_3:fixed_hp_gain",
           "10:class_bard:level_1:maximum_hit_die",
+          "10:class_bard|10:class_bard|10:class_bard:level_3:fixed_hp_gain",
           "10:class_bard|10:class_bard:level_2:fixed_hp_gain",
           "12:class_cleric:level_1:maximum_hit_die",
+          "12:class_cleric|12:class_cleric|12:class_cleric:level_3:fixed_hp_gain",
           "12:class_cleric|12:class_cleric:level_2:fixed_hp_gain",
           "11:class_druid:level_1:maximum_hit_die",
+          "11:class_druid|11:class_druid|11:class_druid:level_3:fixed_hp_gain",
           "11:class_druid|11:class_druid:level_2:fixed_hp_gain",
           "13:class_fighter:level_1:maximum_hit_die",
           "13:class_fighter|13:class_fighter|13:class_fighter:level_3:fixed_hp_gain",
@@ -805,16 +810,21 @@ describe("character creation hole discovery", () => {
           "10:class_monk|10:class_monk|10:class_monk:level_3:fixed_hp_gain",
           "10:class_monk|10:class_monk:level_2:fixed_hp_gain",
           "13:class_paladin:level_1:maximum_hit_die",
+          "13:class_paladin|13:class_paladin|13:class_paladin:level_3:fixed_hp_gain",
           "13:class_paladin|13:class_paladin:level_2:fixed_hp_gain",
           "12:class_ranger:level_1:maximum_hit_die",
+          "12:class_ranger|12:class_ranger|12:class_ranger:level_3:fixed_hp_gain",
           "12:class_ranger|12:class_ranger:level_2:fixed_hp_gain",
           "11:class_rogue:level_1:maximum_hit_die",
           "11:class_rogue|11:class_rogue|11:class_rogue:level_3:fixed_hp_gain",
           "11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue:level_6:fixed_hp_gain",
           "14:class_sorcerer:level_1:maximum_hit_die",
+          "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_3:fixed_hp_gain",
           "14:class_sorcerer|14:class_sorcerer:level_2:fixed_hp_gain",
           "13:class_warlock:level_1:maximum_hit_die",
+          "13:class_warlock|13:class_warlock|13:class_warlock:level_3:fixed_hp_gain",
           "12:class_wizard:level_1:maximum_hit_die",
+          "12:class_wizard|12:class_wizard|12:class_wizard:level_3:fixed_hp_gain",
           "12:class_wizard|12:class_wizard:level_2:fixed_hp_gain",
           "12:class_wizard|13:class_fighter:level_2:fixed_hp_gain",
         ],
@@ -3742,6 +3752,168 @@ describe("character creation finalization", () => {
         },
       },
     });
+  });
+
+  test("projects Paladin and Warlock level-3 spellcasting facts from progression rows", () => {
+    const paladinDraft = completeSupportedProgressionDraft({
+      draftId: "draft:srd-level-3-class_paladin-spellcasting",
+      progression: testProgression("class_paladin", 3),
+    });
+    const paladinResult = finalizeCharacterDraft({
+      draft: paladinDraft,
+      unitLibrary,
+    });
+
+    expect(paladinResult.tag).toBe("ready");
+    if (paladinResult.tag !== "ready") return;
+    expect(
+      selectedChoiceOptionIds(
+        paladinDraft,
+        "class_paladin",
+        CLASS_PREPARED_SPELL_CHOICE_KEY,
+      ),
+    ).toEqual(["heroism", "searing_smite", "bless", "command"]);
+    expect(
+      paladinResult.build.spellcasting?.sources.find(
+        (source) => source.sourceUnitId === "class_paladin",
+      )?.preparedSpells,
+    ).toEqual(["heroism", "searing_smite", "bless", "command"]);
+    expect(paladinResult.build.spellcasting?.slotPools.spellcasting).toEqual({
+      kind: "spellcasting",
+      slots: [{ spellLevel: 1, count: 3 }],
+    });
+
+    const warlockDraft = completeSupportedProgressionDraft({
+      draftId: "draft:srd-level-3-class_warlock-pact-magic",
+      progression: testProgression("class_warlock", 3),
+    });
+    const warlockResult = finalizeCharacterDraft({
+      draft: warlockDraft,
+      unitLibrary,
+    });
+
+    expect(warlockResult.tag).toBe("ready");
+    if (warlockResult.tag !== "ready") return;
+    expect(
+      selectedChoiceOptionIds(
+        warlockDraft,
+        "class_warlock",
+        CLASS_PREPARED_SPELL_CHOICE_KEY,
+      ),
+    ).toEqual(["charm_person", "hellish_rebuke", "hex", "mirror_image"]);
+    expect(
+      warlockResult.build.spellcasting?.sources.find(
+        (source) => source.sourceUnitId === "class_warlock",
+      )?.preparedSpells,
+    ).toEqual(["charm_person", "hellish_rebuke", "hex", "mirror_image"]);
+    expect(warlockResult.build.spellcasting?.slotPools.pactMagic).toEqual({
+      kind: "pactMagic",
+      slotLevel: 2,
+      count: 2,
+    });
+  });
+
+  test("rejects level-gated prepared spell options before their class has matching slots", () => {
+    const progression = testProgression("class_bard", 2);
+    const draft = createTestDraft("draft:srd-level-2-class_bard-aid-rejected");
+    const afterInitial = requireAcceptedBatch(
+      fillCreationHoles({
+        draft,
+        unitLibrary,
+        expectedRevision: draft.revision,
+        fills: initialManifestFills(progressionOptionId(progression)),
+      }),
+    );
+    const preparedSpellHoleId = testUnitHoleId(
+      "class_bard",
+      CLASS_PREPARED_SPELL_CHOICE_KEY,
+    );
+
+    expect(
+      optionIds(
+        holeById(
+          discoverCreationHoles({ draft: afterInitial, unitLibrary }),
+          preparedSpellHoleId,
+        ),
+      ),
+    ).not.toContain("aid");
+    expect(
+      fillCreationHoles({
+        draft: afterInitial,
+        unitLibrary,
+        expectedRevision: afterInitial.revision,
+        fills: [
+          choiceFill(
+            preparedSpellHoleId,
+            "charm_person",
+            "color_spray",
+            "dissonant_whispers",
+            "healing_word",
+            "aid",
+          ),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "rejected",
+      issues: [
+        {
+          tag: "illegalFill",
+          code: "invalidChoice",
+        },
+      ],
+    });
+  });
+
+  test("finalizes a level-3 Wizard with a level-2 prepared spell from the selected spellbook", () => {
+    const spellbookSpellIds = [
+      "detect_magic",
+      "feather_fall",
+      "mage_armor",
+      "magic_missile",
+      "shield",
+      "sleep",
+      "thunderwave",
+      "chromatic_orb",
+      "mirror_image",
+      "misty_step",
+    ] as const;
+    const preparedSpellIds = [
+      "detect_magic",
+      "feather_fall",
+      "mage_armor",
+      "magic_missile",
+      "shield",
+      "mirror_image",
+    ] as const;
+    const draft = completeSupportedProgressionDraft({
+      draftId: "draft:srd-level-3-class_wizard-mirror-image-prepared",
+      progression: testProgression("class_wizard", 3),
+      preferredOptionIdsBySource: {
+        [testUnitChoiceSourceKey("class_wizard", WIZARD_SPELLBOOK_CHOICE_KEY)]:
+          spellbookSpellIds.map(creationChoiceOptionId),
+        [testUnitChoiceSourceKey(
+          "class_wizard",
+          WIZARD_PREPARED_SPELL_CHOICE_KEY,
+        )]: preparedSpellIds.map(creationChoiceOptionId),
+      },
+    });
+
+    const result = finalizeCharacterDraft({ draft, unitLibrary });
+
+    expect(result.tag).toBe("ready");
+    if (result.tag !== "ready") return;
+    expect(
+      selectedChoiceOptionIds(
+        draft,
+        "class_wizard",
+        WIZARD_PREPARED_SPELL_CHOICE_KEY,
+      ),
+    ).toEqual([...preparedSpellIds]);
+    expect(
+      result.build.spellcasting?.sources.find(
+        (source) => source.sourceUnitId === "class_wizard",
+      )?.preparedSpells,
+    ).toEqual([...preparedSpellIds]);
   });
 
   test("finalizes non-Fighter level-1 Weapon Mastery choices from Surface mastery records", () => {

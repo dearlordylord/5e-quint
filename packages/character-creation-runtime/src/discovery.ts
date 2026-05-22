@@ -127,6 +127,7 @@ import {
   type WeaponMasteryChoiceFeature,
 } from "./weapon-mastery.ts";
 import {
+  availableSpellSlotLevels,
   classSpellcastingCreationAtLevel,
   isListPreparedSpellcastingCreation,
   isPactMagicSpellcastingCreation,
@@ -289,6 +290,8 @@ export function classSpellcastingChoiceHoles(
   }
 
   if (isListPreparedSpellcastingCreation(spellcasting)) {
+    const preparedSpells =
+      listPreparedSpellOptionsAvailableToSpellcasting(spellcasting);
     return compactChoiceHoles([
       ...(spellcasting.cantripAccess == null
         ? []
@@ -308,7 +311,7 @@ export function classSpellcastingChoiceHoles(
       choiceHole({
         source: unitSource(classUnitId, CLASS_PREPARED_SPELL_CHOICE_KEY),
         cardinality: exactChoiceCardinality(spellcasting.preparedAccess.choose),
-        options: spellcasting.preparedAccess.spells.map((spell) => ({
+        options: preparedSpells.map((spell) => ({
           optionId: creationChoiceOptionId(spell.spellId),
           label: spell.spellId,
           unitRef: { unitId: spell.spellId },
@@ -318,6 +321,8 @@ export function classSpellcastingChoiceHoles(
   }
 
   if (isPactMagicSpellcastingCreation(spellcasting)) {
+    const preparedSpells =
+      pactMagicSpellOptionsAvailableToSpellcasting(spellcasting);
     return compactChoiceHoles([
       choiceHole({
         source: unitSource(classUnitId, CLASS_CANTRIP_CHOICE_KEY),
@@ -331,7 +336,7 @@ export function classSpellcastingChoiceHoles(
       choiceHole({
         source: unitSource(classUnitId, CLASS_PREPARED_SPELL_CHOICE_KEY),
         cardinality: exactChoiceCardinality(spellcasting.preparedAccess.choose),
-        options: spellcasting.preparedAccess.spells.map((spell) => ({
+        options: preparedSpells.map((spell) => ({
           optionId: creationChoiceOptionId(spell.spellId),
           label: spell.spellId,
           unitRef: { unitId: spell.spellId },
@@ -344,6 +349,11 @@ export function classSpellcastingChoiceHoles(
     return [];
   }
 
+  const wizardSpellbookSpells =
+    wizardSpellbookOptionsAvailableToSpellcasting(spellcasting);
+  const wizardSpellbookSpellIds = new Set(
+    wizardSpellbookSpells.map((spell) => spell.spellId),
+  );
   return compactChoiceHoles([
     choiceHole({
       source: unitSource(classUnitId, WIZARD_CANTRIP_CHOICE_KEY),
@@ -357,7 +367,7 @@ export function classSpellcastingChoiceHoles(
     choiceHole({
       source: unitSource(classUnitId, WIZARD_SPELLBOOK_CHOICE_KEY),
       cardinality: exactChoiceCardinality(spellcasting.spellbookAccess.choose),
-      options: spellcasting.spellbookAccess.spells.map((spell) => ({
+      options: wizardSpellbookSpells.map((spell) => ({
         optionId: creationChoiceOptionId(spell.spellId),
         label: spell.spellId,
         unitRef: { unitId: spell.spellId },
@@ -366,13 +376,61 @@ export function classSpellcastingChoiceHoles(
     choiceHole({
       source: unitSource(classUnitId, WIZARD_PREPARED_SPELL_CHOICE_KEY),
       cardinality: exactChoiceCardinality(spellcasting.preparedAccess.choose),
-      options: spellcasting.preparedAccess.spellIds.map((spellId) => ({
-        optionId: creationChoiceOptionId(spellId),
-        label: spellId,
-        unitRef: { unitId: spellId },
-      })),
+      options: spellcasting.preparedAccess.spellIds
+        .filter((spellId) => wizardSpellbookSpellIds.has(spellId))
+        .map((spellId) => ({
+          optionId: creationChoiceOptionId(spellId),
+          label: spellId,
+          unitRef: { unitId: spellId },
+        })),
     }),
   ]);
+}
+
+function listPreparedSpellOptionsAvailableToSpellcasting(
+  spellcasting: Extract<
+    ReadableClassSpellcasting,
+    {
+      readonly kind:
+        | "list_prepared_spellcasting_creation"
+        | "list_prepared_spellcasting_progression_creation";
+    }
+  >,
+): readonly { readonly spellId: string; readonly spellLevel: number }[] {
+  const slotLevels = availableSpellSlotLevels(
+    spellcasting.spellSlotProjection.slots,
+  );
+  return spellcasting.preparedAccess.spells.filter((spell) =>
+    slotLevels.has(spell.spellLevel),
+  );
+}
+
+function pactMagicSpellOptionsAvailableToSpellcasting(
+  spellcasting: Extract<
+    ReadableClassSpellcasting,
+    { readonly kind: "pact_magic_spellcasting_creation" }
+  >,
+): readonly { readonly spellId: string; readonly spellLevel: number }[] {
+  if (spellcasting.pactSlotProjection.count <= 0) {
+    return [];
+  }
+  return spellcasting.preparedAccess.spells.filter(
+    (spell) => spell.spellLevel <= spellcasting.pactSlotProjection.spellLevel,
+  );
+}
+
+function wizardSpellbookOptionsAvailableToSpellcasting(
+  spellcasting: Extract<
+    ReadableClassSpellcasting,
+    { readonly kind: "wizard_spellcasting_creation" }
+  >,
+): readonly { readonly spellId: string; readonly spellLevel: number }[] {
+  const slotLevels = availableSpellSlotLevels(
+    spellcasting.spellSlotProjection.slots,
+  );
+  return spellcasting.spellbookAccess.spells.filter((spell) =>
+    slotLevels.has(spell.spellLevel),
+  );
 }
 
 function compactChoiceHoles(
