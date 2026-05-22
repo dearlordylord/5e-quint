@@ -175,7 +175,7 @@
     {
       "number": 29,
       "id": "L3-SPELL-WATER-BREATHING-CLOSURE-SURVEY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Level 3 Water Breathing Closure Survey"
     },
     {
@@ -552,7 +552,7 @@ Acceptance:
 
 ### Task 29 - L3-SPELL-WATER-BREATHING-CLOSURE-SURVEY - Level 3 Water Breathing Closure Survey
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
