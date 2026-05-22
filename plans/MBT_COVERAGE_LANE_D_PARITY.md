@@ -223,97 +223,97 @@
     {
       "number": 37,
       "id": "L3-FOLLOWUP-BARBARIAN-PRIMAL-KNOWLEDGE",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Barbarian Primal Knowledge Owner Follow-Up"
     },
     {
       "number": 38,
       "id": "L3-FOLLOWUP-CLERIC-DISCIPLE-OF-LIFE",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Cleric Disciple Of Life Runtime Follow-Up"
     },
     {
       "number": 39,
       "id": "L3-FOLLOWUP-CLERIC-PRESERVE-LIFE",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Cleric Preserve Life Runtime Follow-Up"
     },
     {
       "number": 40,
       "id": "L3-FOLLOWUP-DRUID-LANDS-AID",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Druid Land's Aid Runtime Follow-Up"
     },
     {
       "number": 41,
       "id": "L3-FOLLOWUP-FIGHTER-REMARKABLE-ATHLETE",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Fighter Remarkable Athlete Runtime Follow-Up"
     },
     {
       "number": 42,
       "id": "L3-FOLLOWUP-MONK-OPEN-HAND-TECHNIQUE",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Monk Open Hand Technique Runtime Follow-Up"
     },
     {
       "number": 43,
       "id": "L3-FOLLOWUP-PALADIN-CHANNEL-DIVINITY",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Paladin Channel Divinity Owner Follow-Up"
     },
     {
       "number": 44,
       "id": "L3-FOLLOWUP-PALADIN-SACRED-WEAPON",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Paladin Sacred Weapon Runtime Follow-Up"
     },
     {
       "number": 45,
       "id": "L3-FOLLOWUP-RANGER-HUNTERS-PREY",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Ranger Hunter's Prey Runtime Follow-Up"
     },
     {
       "number": 46,
       "id": "L3-FOLLOWUP-ROGUE-FAST-HANDS",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Rogue Fast Hands Owner Follow-Up"
     },
     {
       "number": 47,
       "id": "L3-FOLLOWUP-ROGUE-SECOND-STORY-WORK",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Rogue Second-Story Work Owner Follow-Up"
     },
     {
       "number": 48,
       "id": "L3-FOLLOWUP-ROGUE-STEADY-AIM",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Rogue Steady Aim Runtime Follow-Up"
     },
     {
       "number": 49,
       "id": "L3-FOLLOWUP-SORCERER-DRACONIC-RESILIENCE",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Sorcerer Draconic Resilience Character Sheet Follow-Up"
     },
     {
       "number": 50,
       "id": "L3-FOLLOWUP-WARLOCK-DARK-ONES-BLESSING",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Warlock Dark One's Blessing Runtime Follow-Up"
     },
     {
       "number": 51,
       "id": "L3-FOLLOWUP-WIZARD-EVOCATION-SAVANT",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Wizard Evocation Savant Spellbook Follow-Up"
     },
     {
       "number": 52,
       "id": "L3-FOLLOWUP-WIZARD-POTENT-CANTRIP",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Wizard Potent Cantrip Runtime Follow-Up"
     }
   ]
@@ -321,6 +321,9 @@
 -->
 
 This is an active Ralph execution plan for MBT/coverage parity work. It replaces the stale rules-kernel B closure active lane.
+
+
+Planning policy update, 2026-05-22: until the owner explicitly reopens level-3 expansion, recursive tails and deciders must add only level-1/level-2 closure tasks. Park not-yet-started level-3 tasks as `deferred` instead of expanding this lane with more level-3 work.
 
 Every Ralph prompt for this lane must include:
 
@@ -970,7 +973,9 @@ Output:
 
 ### Task 37 - L3-FOLLOWUP-BARBARIAN-PRIMAL-KNOWLEDGE - Barbarian Primal Knowledge Owner Follow-Up
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred Detail: Owner instruction on 2026-05-22: park not-yet-started level-3 work while the level-1/level-2 closure frontier remains active.
 
 Depends on:
 
@@ -987,7 +992,9 @@ Output:
 
 ### Task 38 - L3-FOLLOWUP-CLERIC-DISCIPLE-OF-LIFE - Cleric Disciple Of Life Runtime Follow-Up
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred Detail: Owner instruction on 2026-05-22: park not-yet-started level-3 work while the level-1/level-2 closure frontier remains active.
 
 Depends on:
 
@@ -1004,7 +1011,9 @@ Output:
 
 ### Task 39 - L3-FOLLOWUP-CLERIC-PRESERVE-LIFE - Cleric Preserve Life Runtime Follow-Up
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred Detail: Owner instruction on 2026-05-22: park not-yet-started level-3 work while the level-1/level-2 closure frontier remains active.
 
 Depends on:
 
@@ -1020,7 +1029,9 @@ Output:
 
 ### Task 40 - L3-FOLLOWUP-DRUID-LANDS-AID - Druid Land's Aid Runtime Follow-Up
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred Detail: Owner instruction on 2026-05-22: park not-yet-started level-3 work while the level-1/level-2 closure frontier remains active.
 
 Depends on:
 
@@ -1037,7 +1048,9 @@ Output:
 
 ### Task 41 - L3-FOLLOWUP-FIGHTER-REMARKABLE-ATHLETE - Fighter Remarkable Athlete Runtime Follow-Up
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred Detail: Owner instruction on 2026-05-22: park not-yet-started level-3 work while the level-1/level-2 closure frontier remains active.
 
 Depends on:
 
@@ -1054,7 +1067,9 @@ Output:
 
 ### Task 42 - L3-FOLLOWUP-MONK-OPEN-HAND-TECHNIQUE - Monk Open Hand Technique Runtime Follow-Up
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred Detail: Owner instruction on 2026-05-22: park not-yet-started level-3 work while the level-1/level-2 closure frontier remains active.
 
 Depends on:
 
@@ -1071,7 +1086,9 @@ Output:
 
 ### Task 43 - L3-FOLLOWUP-PALADIN-CHANNEL-DIVINITY - Paladin Channel Divinity Owner Follow-Up
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred Detail: Owner instruction on 2026-05-22: park not-yet-started level-3 work while the level-1/level-2 closure frontier remains active.
 
 Depends on:
 
@@ -1088,7 +1105,9 @@ Output:
 
 ### Task 44 - L3-FOLLOWUP-PALADIN-SACRED-WEAPON - Paladin Sacred Weapon Runtime Follow-Up
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred Detail: Owner instruction on 2026-05-22: park not-yet-started level-3 work while the level-1/level-2 closure frontier remains active.
 
 Depends on:
 
@@ -1106,7 +1125,9 @@ Output:
 
 ### Task 45 - L3-FOLLOWUP-RANGER-HUNTERS-PREY - Ranger Hunter's Prey Runtime Follow-Up
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred Detail: Owner instruction on 2026-05-22: park not-yet-started level-3 work while the level-1/level-2 closure frontier remains active.
 
 Depends on:
 
@@ -1123,7 +1144,9 @@ Output:
 
 ### Task 46 - L3-FOLLOWUP-ROGUE-FAST-HANDS - Rogue Fast Hands Owner Follow-Up
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred Detail: Owner instruction on 2026-05-22: park not-yet-started level-3 work while the level-1/level-2 closure frontier remains active.
 
 Depends on:
 
@@ -1140,7 +1163,9 @@ Output:
 
 ### Task 47 - L3-FOLLOWUP-ROGUE-SECOND-STORY-WORK - Rogue Second-Story Work Owner Follow-Up
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred Detail: Owner instruction on 2026-05-22: park not-yet-started level-3 work while the level-1/level-2 closure frontier remains active.
 
 Depends on:
 
@@ -1156,7 +1181,9 @@ Output:
 
 ### Task 48 - L3-FOLLOWUP-ROGUE-STEADY-AIM - Rogue Steady Aim Runtime Follow-Up
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred Detail: Owner instruction on 2026-05-22: park not-yet-started level-3 work while the level-1/level-2 closure frontier remains active.
 
 Depends on:
 
@@ -1171,7 +1198,9 @@ Output:
 
 ### Task 49 - L3-FOLLOWUP-SORCERER-DRACONIC-RESILIENCE - Sorcerer Draconic Resilience Character Sheet Follow-Up
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred Detail: Owner instruction on 2026-05-22: park not-yet-started level-3 work while the level-1/level-2 closure frontier remains active.
 
 Depends on:
 
@@ -1188,7 +1217,9 @@ Output:
 
 ### Task 50 - L3-FOLLOWUP-WARLOCK-DARK-ONES-BLESSING - Warlock Dark One's Blessing Runtime Follow-Up
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred Detail: Owner instruction on 2026-05-22: park not-yet-started level-3 work while the level-1/level-2 closure frontier remains active.
 
 Depends on:
 
@@ -1205,7 +1236,9 @@ Output:
 
 ### Task 51 - L3-FOLLOWUP-WIZARD-EVOCATION-SAVANT - Wizard Evocation Savant Spellbook Follow-Up
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred Detail: Owner instruction on 2026-05-22: park not-yet-started level-3 work while the level-1/level-2 closure frontier remains active.
 
 Depends on:
 
@@ -1221,7 +1254,9 @@ Output:
 
 ### Task 52 - L3-FOLLOWUP-WIZARD-POTENT-CANTRIP - Wizard Potent Cantrip Runtime Follow-Up
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred Detail: Owner instruction on 2026-05-22: park not-yet-started level-3 work while the level-1/level-2 closure frontier remains active.
 
 Depends on:
 
