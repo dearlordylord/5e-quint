@@ -5514,6 +5514,7 @@
       "blockedBy": [
         "run-block-coupled"
       ],
+      "dryRun": "plans/rules-kernel-coverage/HIT_POINT_DAMAGE_RUST_DRY_RUN.md",
       "generatorSubset": [
         "variant",
         "record",

@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "MBTRUST-A-HIT-POINT-DAMAGE-DRY-RUN",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Hit Point Damage Manual Rust Dry Run"
     },
     {
@@ -222,7 +222,7 @@ Output:
 
 ### Task 6 - MBTRUST-A-HIT-POINT-DAMAGE-DRY-RUN - Hit Point Damage Manual Rust Dry Run
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
