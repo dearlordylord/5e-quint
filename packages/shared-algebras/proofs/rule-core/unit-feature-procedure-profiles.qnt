@@ -187,6 +187,24 @@ module unitFeatureProcedureProfiles {
     damageType: RuleDamageType,
   }
 
+  type FrenzyFacts = {
+    rageActive: bool,
+    recklessAttackUsedWhileRagingThisTurn: bool,
+    hitWithAttackRoll: bool,
+    strengthBasedAttack: bool,
+    attackForm: RageAttackForm,
+    usedThisTurn: bool,
+    barbarianLevel: int,
+    attackDamageType: RuleDamageType,
+  }
+
+  type FrenzyResult = {
+    admitted: bool,
+    usedThisTurn: bool,
+    damageDice: int,
+    damageType: RuleDamageType,
+  }
+
   type SavingThrowAbilityFact =
     | StrengthSavingThrowFact
     | DexteritySavingThrowFact
@@ -1187,6 +1205,28 @@ module unitFeatureProcedureProfiles {
     }
   }
 
+  pure def frenzyAttackFormEligible(form: RageAttackForm): bool =
+    form == RageWeaponAttack or form == RageUnarmedStrikeAttack
+
+  pure def resolveFrenzy(facts: FrenzyFacts): FrenzyResult = {
+    val dice = rageDamageBonus(facts.barbarianLevel)
+    val admitted = all {
+      facts.rageActive,
+      facts.recklessAttackUsedWhileRagingThisTurn,
+      facts.hitWithAttackRoll,
+      facts.strengthBasedAttack,
+      frenzyAttackFormEligible(facts.attackForm),
+      not(facts.usedThisTurn),
+      dice > 0,
+    }
+    {
+      admitted: admitted,
+      usedThisTurn: facts.usedThisTurn or admitted,
+      damageDice: if (admitted) dice else 0,
+      damageType: facts.attackDamageType,
+    }
+  }
+
   pure def saveDamageAfterEvasionReplacement(
     facts: SaveDamageReplacementFacts,
     normalFailedSaveDamage: int
@@ -1711,6 +1751,48 @@ module unitFeatureProcedureProfiles {
       assert(not(canceledAdvantage.admitted)),
     }
   }
+
+  run test_frenzy_uses_rage_reckless_strength_first_hit_facts = {
+    val result = resolveFrenzy({
+      rageActive: true,
+      recklessAttackUsedWhileRagingThisTurn: true,
+      hitWithAttackRoll: true,
+      strengthBasedAttack: true,
+      attackForm: RageUnarmedStrikeAttack,
+      usedThisTurn: false,
+      barbarianLevel: 3,
+      attackDamageType: BludgeoningDamage,
+    })
+    val repeated = resolveFrenzy({
+      rageActive: true,
+      recklessAttackUsedWhileRagingThisTurn: true,
+      hitWithAttackRoll: true,
+      strengthBasedAttack: true,
+      attackForm: RageWeaponAttack,
+      usedThisTurn: result.usedThisTurn,
+      barbarianLevel: 3,
+      attackDamageType: SlashingDamage,
+    })
+    val blocked = resolveFrenzy({
+      rageActive: true,
+      recklessAttackUsedWhileRagingThisTurn: false,
+      hitWithAttackRoll: true,
+      strengthBasedAttack: true,
+      attackForm: RageWeaponAttack,
+      usedThisTurn: false,
+      barbarianLevel: 3,
+      attackDamageType: SlashingDamage,
+    })
+    all {
+      assert(result.admitted),
+      assert(result.usedThisTurn),
+      assert(result.damageDice == rageDamageBonus(3)),
+      assert(result.damageType == BludgeoningDamage),
+      assert(not(repeated.admitted)),
+      assert(not(blocked.admitted)),
+    }
+  }
+
 
   run test_evasion_replaces_dexterity_save_damage_only_when_not_incapacitated = {
     val success = saveDamageAfterEvasionReplacement({

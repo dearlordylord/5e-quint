@@ -46,6 +46,7 @@ export const INITIAL_TURN_RESOURCES = resetTurnActionEconomy({
   quickenedLevelOnePlusSpellCastsThisTurn: [],
   attackRollMadeThisTurn: false,
   attackDamageRidersUsedThisTurn: [],
+  recklessAttackWhileRagingUsedThisTurn: [],
   weaponDamageDiceRollChoicesUsedThisTurn: [],
   weaponMasteryCleaveAttackersUsedThisTurn: [],
   dashMovementBonusFeet: movementFeet(0),

@@ -258,7 +258,8 @@
       "catalog-installed-needs-owner-evidence": 1
     },
     "levelThreeClassRowsByDisposition": {
-      "level-3-follow-up-required": 17,
+      "catalog-installed-owner-evidence-required": 1,
+      "level-3-follow-up-required": 16,
       "non-runtime": 12,
       "catalog-installed-owner-evidence-present": 20,
       "catalog-only/dead-for-now": 2
@@ -272,8 +273,8 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 447,
       "non-runtime": 36,
-      "level-3-follow-up-required": 17,
-      "catalog-installed-owner-evidence-required": 1,
+      "catalog-installed-owner-evidence-required": 2,
+      "level-3-follow-up-required": 16,
       "catalog-only/dead-for-now": 137,
       "missing-authored-record": 58,
       "catalog-authored-review-required": 33,
@@ -4122,14 +4123,28 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "barbarian_frenzy",
+        "sourceRecordPath": "packages/surface/content/barbarian_frenzy.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "barbarian_frenzy"
       },
-      "finalDisposition": "level-3-follow-up-required",
-      "ownerEvidence": [],
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit barbarian_frenzy is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime Rage and Reckless Attack damage-rider owner",
+          "evidence": "Promote Frenzy as a Rage-gated, Reckless Attack-gated first-hit damage rider: selected Berserker subclass ownership, active Rage state, Reckless Attack use on the turn, first target hit by a Strength-based weapon or Unarmed Strike attack, Rage Damage bonus d6 count, same damage type as the triggering attack, focused runtime tests, and promoted Quint parity.",
+          "status": "owner evidence required"
+        }
+      ],
       "nextAction": "Promote Frenzy as a Rage-gated, Reckless Attack-gated first-hit damage rider: selected Berserker subclass ownership, active Rage state, Reckless Attack use on the turn, first target hit by a Strength-based weapon or Unarmed Strike attack, Rage Damage bonus d6 count, same damage type as the triggering attack, focused runtime tests, and promoted Quint parity.",
       "battleReadinessStatus": "owner-evidence-required"
     },

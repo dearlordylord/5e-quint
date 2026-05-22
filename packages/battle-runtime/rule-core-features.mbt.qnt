@@ -449,6 +449,27 @@ module ruleCoreFeaturesMbt {
     }
   }
 
+  action doFrenzy = {
+    val result = resolveFrenzy({
+      rageActive: true,
+      recklessAttackUsedWhileRagingThisTurn: true,
+      hitWithAttackRoll: true,
+      strengthBasedAttack: true,
+      attackForm: RageWeaponAttack,
+      usedThisTurn: false,
+      barbarianLevel: 3,
+      attackDamageType: SlashingDamage,
+    })
+    all {
+      qHoles == Set(),
+      recordProjection(
+        false, false, true, 0, NoActionSurgeActionGrant, 12, 7, 0,
+        false, false, true, true, true, false, result.damageDice, false,
+        featureMbtBaselineArmorClass, Set(), false, "resolved", "none"
+      ),
+    }
+  }
+
   action doImprovedCritical = {
     val outcome = resolveAttackRoll({
       naturalD20: 19,
@@ -677,6 +698,7 @@ module ruleCoreFeaturesMbt {
     doRageActivateAndDamage,
     doRecklessAttack,
     doSneakAttack,
+    doFrenzy,
     doImprovedCritical,
     doEvasionSuccess,
     doEvasionFailure,

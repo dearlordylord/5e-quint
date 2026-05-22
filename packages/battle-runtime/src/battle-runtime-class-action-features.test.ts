@@ -15,6 +15,7 @@ import {
   reactionDecisionFill,
   grappleOutcomeFill,
   damageRollFill,
+  damageRollFillWithGroups,
   attackDamageDispositionHoleAfterFills,
   attackDamageDispositionFill,
   characterSeed,
@@ -26,6 +27,8 @@ import {
   rageResource,
   innateSorceryResource,
   recklessAttackFeature,
+  testUnarmedStrikeDamageAttack,
+  testUnarmedStrikeDieAttack,
   actionSurgeWithAdditionalDirectEffect,
   secondWindWithAdditionalDirectEffect,
   wizardSpellcasting,
@@ -78,6 +81,7 @@ describe("battle runtime: class action features", () => {
         quickenedLevelOnePlusSpellCastsThisTurn: [],
         attackRollMadeThisTurn: false,
         attackDamageRidersUsedThisTurn: [],
+        recklessAttackWhileRagingUsedThisTurn: [],
         weaponDamageDiceRollChoicesUsedThisTurn: [],
         weaponMasteryCleaveAttackersUsedThisTurn: [],
         dashMovementBonusFeet: movementFeet(0),
@@ -198,6 +202,7 @@ describe("battle runtime: class action features", () => {
         quickenedLevelOnePlusSpellCastsThisTurn: [],
         attackRollMadeThisTurn: false,
         attackDamageRidersUsedThisTurn: [],
+        recklessAttackWhileRagingUsedThisTurn: [],
         weaponDamageDiceRollChoicesUsedThisTurn: [],
         weaponMasteryCleaveAttackersUsedThisTurn: [],
         dashMovementBonusFeet: movementFeet(0),
@@ -243,6 +248,7 @@ describe("battle runtime: class action features", () => {
         quickenedLevelOnePlusSpellCastsThisTurn: [],
         attackRollMadeThisTurn: false,
         attackDamageRidersUsedThisTurn: [],
+        recklessAttackWhileRagingUsedThisTurn: [],
         weaponDamageDiceRollChoicesUsedThisTurn: [],
         weaponMasteryCleaveAttackersUsedThisTurn: [],
         dashMovementBonusFeet: movementFeet(0),
@@ -367,6 +373,7 @@ describe("battle runtime: class action features", () => {
         quickenedLevelOnePlusSpellCastsThisTurn: [],
         attackRollMadeThisTurn: false,
         attackDamageRidersUsedThisTurn: [],
+        recklessAttackWhileRagingUsedThisTurn: [],
         weaponDamageDiceRollChoicesUsedThisTurn: [],
         weaponMasteryCleaveAttackersUsedThisTurn: [],
         dashMovementBonusFeet: movementFeet(0),
@@ -1729,6 +1736,193 @@ describe("battle runtime: class action features", () => {
     expect(
       barbarianTurn.combatants.get(fighterId)?.activeOngoingFeatureOccurrences,
     ).toEqual(new Map());
+  });
+
+  test("Frenzy applies mandatory Rage Damage dice to the first Reckless Strength hit", () => {
+    const frenzyUnit = unitLibrary.requireUnit("barbarian_frenzy");
+    const state = startBattleRight({
+      battleId: battleId("battle-barbarian-frenzy"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevels: [{ className: "barbarian", level: 3 }],
+          resources: [rageResource()],
+          unitFeatures: [{ unit: frenzyUnit }, recklessAttackFeature()],
+          characterUnitRefs: [supportedBattleUnitRef(frenzyUnit)],
+          unarmedStrike: testUnarmedStrikeDamageAttack(),
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const rageSubject: BattleSubject = {
+      tag: "unitFeature",
+      actorId: fighterId,
+      unitId: "barbarian_rage",
+    };
+    const raging = requireResolved(
+      resolveBattleSubject({ state, subject: rageSubject, fills: [] }),
+    ).state;
+
+    const attackSubject = fighterAttackSubject("Unarmed Strike");
+    const target = attackInitialTargetHole(raging, attackSubject);
+    const roll = attackRollHoleAfterTarget(raging, target, attackSubject);
+    const afterRecklessRoll = resolveBattleSubject({
+      state: raging,
+      subject: attackSubject,
+      fills: [
+        targetFill(target, goblinId),
+        attackRollFill(roll, {
+          total: 15,
+          naturalD20: 10,
+          rollMode: "advantage",
+          activatedOngoingFeatureUnitId: "barbarian_reckless_attack",
+        }),
+      ],
+    });
+    if (afterRecklessRoll.tag !== "needsHoles") {
+      throw new Error("Expected Frenzy attack to reach damage roll.");
+    }
+    const damage = findHole(afterRecklessRoll.holes, "rolledDice");
+    expect(damage).toMatchObject({
+      attackDamageRiders: [
+        {
+          unitId: "barbarian_frenzy",
+          optional: false,
+          damage: { dice: 2, dieSize: 6, damageType: "bludgeoning" },
+        },
+      ],
+    });
+    const damageFill = damageRollFillWithGroups(damage, [[4, 4]]);
+    const disposition = attackDamageDispositionHoleAfterFills(
+      afterRecklessRoll.state,
+      attackSubject,
+      [
+        targetFill(target, goblinId),
+        attackRollFill(roll, {
+          total: 15,
+          naturalD20: 10,
+          rollMode: "advantage",
+          activatedOngoingFeatureUnitId: "barbarian_reckless_attack",
+        }),
+        damageFill,
+      ],
+    );
+
+    const hit = requireResolved(
+      resolveBattleSubject({
+        state: afterRecklessRoll.state,
+        subject: attackSubject,
+        fills: [
+          targetFill(target, goblinId),
+          attackRollFill(roll, {
+            total: 15,
+            naturalD20: 10,
+            rollMode: "advantage",
+            activatedOngoingFeatureUnitId: "barbarian_reckless_attack",
+          }),
+          damageFill,
+          attackDamageDispositionFill(disposition, { kind: "ordinaryDamage" }),
+        ],
+      }),
+    );
+    expect(
+      hit.state.currentTurnResources.attackDamageRidersUsedThisTurn,
+    ).toEqual([{ attackerId: fighterId, unitId: "barbarian_frenzy" }]);
+  });
+
+  test("Frenzy does not apply when Reckless Attack was used before Rage was active", () => {
+    const frenzyUnit = unitLibrary.requireUnit("barbarian_frenzy");
+    const extraAttackUnit = unitLibrary.requireUnit("fighter_extra_attack");
+    const state = startBattleRight({
+      battleId: battleId("battle-barbarian-frenzy-reckless-before-rage"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevels: [
+            { className: "barbarian", level: 3 },
+            { className: "fighter", level: 5 },
+          ],
+          resources: [rageResource()],
+          unitFeatures: [{ unit: frenzyUnit }, recklessAttackFeature()],
+          characterUnitRefs: [
+            supportedBattleUnitRef(frenzyUnit),
+            supportedBattleUnitRef(extraAttackUnit),
+          ],
+          unarmedStrike: testUnarmedStrikeDieAttack(),
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+
+    const attackSubject = fighterAttackSubject("Unarmed Strike");
+    const firstTarget = attackInitialTargetHole(state, attackSubject);
+    const firstRoll = attackRollHoleAfterTarget(
+      state,
+      firstTarget,
+      attackSubject,
+    );
+    const afterRecklessMiss = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: attackSubject,
+        fills: [
+          targetFill(firstTarget, goblinId),
+          attackRollFill(firstRoll, {
+            total: 1,
+            naturalD20: 1,
+            rollMode: "advantage",
+            activatedOngoingFeatureUnitId: "barbarian_reckless_attack",
+          }),
+        ],
+      }),
+    ).state;
+    expect(
+      afterRecklessMiss.currentTurnResources.recklessAttackWhileRagingUsedThisTurn,
+    ).toEqual([]);
+
+    const rageSubject: BattleSubject = {
+      tag: "unitFeature",
+      actorId: fighterId,
+      unitId: "barbarian_rage",
+    };
+    const ragingAfterRecklessMiss = requireResolved(
+      resolveBattleSubject({
+        state: afterRecklessMiss,
+        subject: rageSubject,
+        fills: [],
+      }),
+    ).state;
+
+    const secondTarget = attackInitialTargetHole(
+      ragingAfterRecklessMiss,
+      attackSubject,
+    );
+    const secondRoll = attackRollHoleAfterTarget(
+      ragingAfterRecklessMiss,
+      secondTarget,
+      attackSubject,
+    );
+    const afterSecondHit = resolveBattleSubject({
+      state: ragingAfterRecklessMiss,
+      subject: attackSubject,
+      fills: [
+        targetFill(secondTarget, goblinId),
+        attackRollFill(secondRoll, {
+          total: 15,
+          naturalD20: 10,
+          rollMode: "advantage",
+        }),
+      ],
+    });
+    if (afterSecondHit.tag !== "needsHoles") {
+      throw new Error("Expected second Reckless hit to reach damage roll.");
+    }
+    const damage = findHole(afterSecondHit.holes, "rolledDice");
+    expect(damage).not.toMatchObject({
+      attackDamageRiders: [
+        expect.objectContaining({ unitId: "barbarian_frenzy" }),
+      ],
+    });
   });
 
   test("Reckless Attack cannot be declared before the first attack roll", () => {

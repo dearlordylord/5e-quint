@@ -27,6 +27,7 @@ import {
   effectiveCharacterBattlePreparedSpells,
 } from "../character-battle-resources.ts";
 import type {
+  CharacterUnarmedStrikeActionOption,
   CharacterWeaponAttackActionOption,
   CharacterWeaponAttackAbilityChoice,
   SupportedAttackActionOption,
@@ -75,6 +76,10 @@ import {
   attackTargetConstraint,
   attackRollMissToHitReplacementHolePayloadForAttacker,
 } from "./statblock-attacks.ts";
+import {
+  activeRageSourceKeysForFrenzy,
+  ongoingFeatureProfileIsRecklessAttackForFrenzy,
+} from "./barbarian-frenzy.ts";
 import {
   attackTargetIsLegal,
   attackTargetRangeBand,
@@ -479,7 +484,7 @@ export function attackRollOngoingFeatureActivations(
   if (
     !isCharacterBattleCreatureState(attacker) ||
     state.currentTurnResources.attackRollMadeThisTurn ||
-    attack.kind !== "weapon"
+    (attack.kind !== "weapon" && attack.kind !== "unarmedStrike")
   ) {
     return [];
   }
@@ -561,7 +566,9 @@ export function ongoingFeatureGrantsAttackRollMode(
           modifier.affects === "selfRoll" &&
           modifier.on === "attackRoll" &&
           attackAbilityMatchesModifier(
-            attack?.kind === "weapon" ? attack : null,
+            attack?.kind === "weapon" || attack?.kind === "unarmedStrike"
+              ? attack
+              : null,
             modifier,
           ),
       ),
@@ -575,7 +582,9 @@ export function ongoingFeatureGrantsAttackRollMode(
           modifier.affects === "rollsAgainstSelf" &&
           modifier.on === "attackRoll" &&
           attackAbilityMatchesModifier(
-            attack?.kind === "weapon" ? attack : null,
+            attack?.kind === "weapon" || attack?.kind === "unarmedStrike"
+              ? attack
+              : null,
             modifier,
           ),
       ),
@@ -707,14 +716,26 @@ function attackUsesAbility(
 }
 
 export function attackAbilityMatchesModifier(
-  attack: CharacterWeaponAttackActionOption | null | undefined,
+  attack:
+    | CharacterWeaponAttackActionOption
+    | CharacterUnarmedStrikeActionOption
+    | null
+    | undefined,
   modifier: OngoingFeatureRollModifier | OngoingFeatureDamageModifier,
 ): boolean {
+  const ability =
+    attack?.kind === "weapon"
+      ? attack.ability
+      : attack?.kind === "unarmedStrike"
+        ? attack.attackAbility
+        : undefined;
+  if (modifier.abilityFilter === undefined) {
+    return true;
+  }
   return (
-    modifier.abilityFilter === undefined ||
-    (attack !== null &&
-      attack !== undefined &&
-      modifier.abilityFilter.includes(attack.ability))
+    ability !== undefined &&
+    ability !== "spellcasting" &&
+    modifier.abilityFilter.includes(ability)
   );
 }
 
@@ -1308,6 +1329,18 @@ export function recordAttackRollOngoingFeatures(
   if (attacker === undefined || attackerId !== currentActorId(state)) {
     return state;
   }
+  const recklessAttackWhileRagingUses =
+    isCharacterBattleCreatureState(attacker) &&
+    activatedOngoingFeatureProfile !== null &&
+    ongoingFeatureProfileIsRecklessAttackForFrenzy(activatedOngoingFeatureProfile)
+      ? activeRageSourceKeysForFrenzy(attacker).map((rageSourceKey) => ({
+          attackerId,
+          recklessAttackSourceKey: ongoingFeatureSourceKeyForUnit(
+            activatedOngoingFeatureProfile.unit.id,
+          ),
+          rageSourceKey,
+        }))
+      : [];
   const withActivatedOngoingFeature =
     activatedOngoingFeatureProfile === null
       ? state
@@ -1327,6 +1360,20 @@ export function recordAttackRollOngoingFeatures(
     currentTurnResources: {
       ...withExtendedOngoingFeatures.currentTurnResources,
       attackRollMadeThisTurn: true,
+      recklessAttackWhileRagingUsedThisTurn: [
+        ...withExtendedOngoingFeatures.currentTurnResources
+          .recklessAttackWhileRagingUsedThisTurn,
+        ...recklessAttackWhileRagingUses.filter(
+          (usage) =>
+            !withExtendedOngoingFeatures.currentTurnResources.recklessAttackWhileRagingUsedThisTurn.some(
+              (existing) =>
+                existing.attackerId === usage.attackerId &&
+                existing.recklessAttackSourceKey ===
+                  usage.recklessAttackSourceKey &&
+                existing.rageSourceKey === usage.rageSourceKey,
+            ),
+        ),
+      ],
     },
   };
 }

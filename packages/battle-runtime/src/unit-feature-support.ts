@@ -1022,14 +1022,29 @@ export type SupportedUnitFeatureProfile =
       readonly unit: UnitRecord;
       readonly optional: true;
       readonly usageLimit: "oncePerTurn";
-      readonly weaponFilter: "finesseOrRanged";
+      readonly trigger: "finesseOrRangedAttackWithAdvantageOrAlly";
       readonly eligibility: "advantageOrNonIncapacitatedAllyWithin5ftOfTargetWithoutDisadvantage";
       readonly classLevel: ClassLevel;
-      readonly dieSize: number;
-      readonly diceByLevel: readonly {
-        readonly atLevel: number;
-        readonly count: number;
-      }[];
+      readonly dice: {
+        readonly kind: "classLevelTable";
+        readonly dieSize: number;
+        readonly diceByLevel: readonly {
+          readonly atLevel: number;
+          readonly count: number;
+        }[];
+      };
+    }
+  | {
+      readonly kind: "attackDamageRider";
+      readonly unit: UnitRecord;
+      readonly optional: false;
+      readonly usageLimit: "oncePerTurn";
+      readonly trigger: "rageActiveRecklessStrengthWeaponOrUnarmedStrikeFirstHit";
+      readonly classLevel: ClassLevel;
+      readonly dice: {
+        readonly kind: "rageDamageBonus";
+        readonly dieSize: 6;
+      };
     }
   | {
       readonly kind: "saveDamageReplacement";
@@ -1412,13 +1427,25 @@ export function battleWeaponOrUnarmedCriticalRange19SupportForUnit(
     : "unsupported";
 }
 
-type AttackDamageRiderMechanicsProjection = {
-  readonly dieSize: number;
-  readonly dice: Extract<
+type AttackDamageRiderMechanicsProjection = Omit<
+  Extract<
     SupportedUnitFeatureProfile,
-    { readonly kind: "attackDamageRider" }
-  >["diceByLevel"];
-};
+    {
+      readonly kind: "attackDamageRider";
+      readonly trigger: "finesseOrRangedAttackWithAdvantageOrAlly";
+    }
+  >,
+  "kind" | "unit" | "usageLimit" | "classLevel"
+> | Omit<
+  Extract<
+    SupportedUnitFeatureProfile,
+    {
+      readonly kind: "attackDamageRider";
+      readonly trigger: "rageActiveRecklessStrengthWeaponOrUnarmedStrikeFirstHit";
+    }
+  >,
+  "kind" | "unit" | "usageLimit" | "classLevel"
+>;
 
 export function battleAttackDamageRiderSupportForUnit(
   unit: UnitRecord,
@@ -1445,23 +1472,53 @@ function attackDamageRiderMechanicsProjection(
   }
   const mechanics = unit.mechanics;
   if (
-    mechanics.optional !== true ||
     mechanics.trigger.kind !== "hit_with_attack_roll" ||
-    mechanics.trigger.weaponFilter !== "finesse_or_ranged" ||
-    mechanics.trigger.eligibility !==
-      "advantage_or_non_incapacitated_ally_within_5ft_of_target_without_disadvantage" ||
     !("usageLimit" in mechanics) ||
     mechanics.usageLimit.kind !== "once_per_turn" ||
     mechanics.effect.kind !== "add_attack_damage_dice" ||
-    mechanics.effect.damageType !== "same_as_attack" ||
-    mechanics.effect.dice.kind !== "class_level_table"
+    mechanics.effect.damageType !== "same_as_attack"
   ) {
     return null;
   }
-  return {
-    dieSize: mechanics.effect.dice.dieSize,
-    dice: mechanics.effect.dice.dice,
-  };
+  if (
+    mechanics.optional === true &&
+    "weaponFilter" in mechanics.trigger &&
+    mechanics.trigger.weaponFilter === "finesse_or_ranged" &&
+    mechanics.trigger.eligibility ===
+      "advantage_or_non_incapacitated_ally_within_5ft_of_target_without_disadvantage" &&
+    mechanics.effect.dice.kind === "class_level_table"
+  ) {
+    return {
+      optional: true,
+      trigger: "finesseOrRangedAttackWithAdvantageOrAlly",
+      eligibility:
+        "advantageOrNonIncapacitatedAllyWithin5ftOfTargetWithoutDisadvantage",
+      dice: {
+        kind: "classLevelTable",
+        dieSize: mechanics.effect.dice.dieSize,
+        diceByLevel: mechanics.effect.dice.dice,
+      },
+    };
+  }
+  if (
+    mechanics.optional === false &&
+    "attackFilter" in mechanics.trigger &&
+    mechanics.trigger.attackFilter === "strength_weapon_or_unarmed_strike" &&
+    mechanics.trigger.prerequisite ===
+      "rage_active_and_reckless_attack_used_this_turn" &&
+    mechanics.trigger.hitLimit === "first_target_hit_this_turn" &&
+    mechanics.effect.dice.kind === "rage_damage_bonus"
+  ) {
+    return {
+      optional: false,
+      trigger: "rageActiveRecklessStrengthWeaponOrUnarmedStrikeFirstHit",
+      dice: {
+        kind: "rageDamageBonus",
+        dieSize: mechanics.effect.dice.dieSize,
+      },
+    };
+  }
+  return null;
 }
 
 function sameStringSet(
@@ -3252,17 +3309,26 @@ function parseAttackDamageRiderUnitFeatureProfile(
   if (classLevel === undefined || classLevel < unit.acquiredAtLevel) {
     return null;
   }
+  if (mechanics.optional === true) {
+    return {
+      kind: "attackDamageRider",
+      unit,
+      optional: true,
+      usageLimit: "oncePerTurn",
+      trigger: mechanics.trigger,
+      eligibility: mechanics.eligibility,
+      classLevel,
+      dice: mechanics.dice,
+    };
+  }
   return {
     kind: "attackDamageRider",
     unit,
-    optional: true,
+    optional: false,
     usageLimit: "oncePerTurn",
-    weaponFilter: "finesseOrRanged",
-    eligibility:
-      "advantageOrNonIncapacitatedAllyWithin5ftOfTargetWithoutDisadvantage",
+    trigger: mechanics.trigger,
     classLevel,
-    dieSize: mechanics.dieSize,
-    diceByLevel: mechanics.dice,
+    dice: mechanics.dice,
   };
 }
 

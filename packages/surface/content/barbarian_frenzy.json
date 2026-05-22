@@ -1,0 +1,33 @@
+{
+  "acquiredAtLevel": 3,
+  "className": "barbarian",
+  "description": "While Raging after using Reckless Attack, deal extra damage to the first target you hit on your turn with a Strength-based weapon or Unarmed Strike.",
+  "id": "barbarian_frenzy",
+  "kind": "class_feature",
+  "mechanics": {
+    "effect": {
+      "damageType": "same_as_attack",
+      "dice": {
+        "dieSize": 6,
+        "kind": "rage_damage_bonus"
+      },
+      "kind": "add_attack_damage_dice"
+    },
+    "family": "on_hit_trigger",
+    "optional": false,
+    "trigger": {
+      "attackFilter": "strength_weapon_or_unarmed_strike",
+      "hitLimit": "first_target_hit_this_turn",
+      "kind": "hit_with_attack_roll",
+      "prerequisite": "rage_active_and_reckless_attack_used_this_turn"
+    },
+    "usageLimit": {
+      "kind": "once_per_turn"
+    }
+  },
+  "name": "Frenzy",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Barbarian#Frenzy"
+  }
+}

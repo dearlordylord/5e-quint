@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 403,
-      "numerator": 203,
-      "percent": "50.4%"
+      "denominator": 404,
+      "numerator": 204,
+      "percent": "50.5%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 485,
-      "numerator": 245,
-      "percent": "50.5%"
+      "denominator": 486,
+      "numerator": 246,
+      "percent": "50.6%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 246
+      "value": 247
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 139,
-      "numerator": 139,
+      "denominator": 140,
+      "numerator": 140,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 246,
-      "numerator": 246,
+      "denominator": 247,
+      "numerator": 247,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -92,8 +92,8 @@
       "percent": "96.9%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 141,
-      "numerator": 140,
+      "denominator": 142,
+      "numerator": 141,
       "percent": "99.3%"
     },
     "runtimeMappingCoverage": {
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 139,
-      "numerator": 108,
-      "percent": "77.7%"
+      "denominator": 140,
+      "numerator": 109,
+      "percent": "77.9%"
     },
     "supportedProfileCoverage": {
-      "denominator": 204,
-      "numerator": 139,
-      "percent": "68.1%"
+      "denominator": 205,
+      "numerator": 140,
+      "percent": "68.3%"
     }
   },
   "metricSemantics": [
@@ -5647,8 +5647,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 141,
-          "numerator": 140,
+          "denominator": 142,
+          "numerator": 141,
           "percent": "99.3%"
         }
       },
@@ -5810,6 +5810,25 @@
             }
           ],
           "unitId": "barbarian_fast_movement"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
+              "profileId": "unit-feature.attack-damage-rider",
+              "profileKind": "persistent-effect"
+            }
+          ],
+          "unitId": "barbarian_frenzy"
         },
         {
           "joinStatus": "covered",
@@ -12685,6 +12704,72 @@
       ],
       "sourceRecordPath": "packages/surface/content/fighter_improved_critical.json",
       "unitId": "fighter_improved_critical"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "unit-feature.attack-damage-rider"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "while Rage is active and Reckless Attack has been used this turn, the first target hit by a Strength-based weapon attack or Unarmed Strike takes extra same-type damage",
+          "Frenzy damage dice count is derived from the active Rage Damage bonus and rolled as d6s",
+          "the Frenzy rider is mandatory once eligible and is limited to once per turn"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3-FOLLOWUP-BARBARIAN-FRENZY"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L3-FOLLOWUP-BARBARIAN-FRENZY"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.attack-damage-rider",
+          "profileKind": "persistent-effect",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE9",
+            "QMBT4"
+          ],
+          "title": "Unit feature contributes an attack damage rider",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/barbarian_frenzy.json",
+      "unitId": "barbarian_frenzy"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

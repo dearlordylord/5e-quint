@@ -24,6 +24,7 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Match } from "effect";
 import type { CombatantId } from "../identity.ts";
 import type {
+  CharacterUnarmedStrikeActionOption,
   CharacterWeaponAttackActionOption,
   SupportedAttackActionOption,
 } from "../battle-action-options.ts";
@@ -52,7 +53,6 @@ import {
   attackDamageComponents,
   attackDamageModifier,
 } from "./statblock-attacks.ts";
-import { attackAbilityMatchesModifier } from "./attack-roll.ts";
 import {
   activeCreatureSizeChangeEffect,
   creatureSizeChangeAttackDamageComponent,
@@ -624,7 +624,10 @@ export function ongoingFeatureDamageModifier(
   attacker: BattleCreatureState | undefined,
   attack: SupportedAttackActionOption,
 ): number {
-  if (attacker === undefined || attack.kind !== "weapon") {
+  if (
+    attacker === undefined ||
+    (attack.kind !== "weapon" && attack.kind !== "unarmedStrike")
+  ) {
     return 0;
   }
   return [...activeOngoingFeatureOccurrencesForCombatant(attacker)].reduce(
@@ -700,12 +703,17 @@ export function activeMarkedDamageRiders(
 
 export function ongoingFeatureDamageModifierApplies(
   modifier: OngoingFeatureDamageModifier,
-  attack: CharacterWeaponAttackActionOption,
+  attack: CharacterWeaponAttackActionOption | CharacterUnarmedStrikeActionOption,
 ): boolean {
+  const ability = attack.kind === "weapon" ? attack.ability : attack.attackAbility;
+  const abilityMatches =
+    modifier.abilityFilter === undefined ||
+    (ability !== "spellcasting" && modifier.abilityFilter.includes(ability));
   return (
-    attackAbilityMatchesModifier(attack, modifier) &&
+    abilityMatches &&
     (modifier.weaponUsageFilter === undefined ||
-      modifier.weaponUsageFilter === attack.weapon.usage)
+      (attack.kind === "weapon" &&
+        modifier.weaponUsageFilter === attack.weapon.usage))
   );
 }
 

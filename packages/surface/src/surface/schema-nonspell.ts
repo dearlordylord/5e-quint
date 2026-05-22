@@ -1043,13 +1043,25 @@ export const MasteryTriggerSchema = Schema.Union(
   strictStruct({ kind: Schema.Literal("weapon_hit_with_damage") }),
 );
 
-export const AttackDamageRiderTriggerSchema = strictStruct({
+export const SneakAttackDamageRiderTriggerSchema = strictStruct({
   kind: Schema.Literal("hit_with_attack_roll"),
   weaponFilter: Schema.Literal("finesse_or_ranged"),
   eligibility: Schema.Literal(
     "advantage_or_non_incapacitated_ally_within_5ft_of_target_without_disadvantage",
   ),
 });
+
+export const FrenzyAttackDamageRiderTriggerSchema = strictStruct({
+  kind: Schema.Literal("hit_with_attack_roll"),
+  attackFilter: Schema.Literal("strength_weapon_or_unarmed_strike"),
+  prerequisite: Schema.Literal("rage_active_and_reckless_attack_used_this_turn"),
+  hitLimit: Schema.Literal("first_target_hit_this_turn"),
+});
+
+export const AttackDamageRiderTriggerSchema = Schema.Union(
+  SneakAttackDamageRiderTriggerSchema,
+  FrenzyAttackDamageRiderTriggerSchema,
+);
 
 export const WeaponDamageDiceRerollTriggerSchema = strictStruct({
   kind: Schema.Literal("weapon_hit"),
@@ -1066,9 +1078,14 @@ export const ClassLevelDamageDiceSchema = strictStruct({
   ),
 });
 
+export const RageDamageBonusDiceSchema = strictStruct({
+  kind: Schema.Literal("rage_damage_bonus"),
+  dieSize: Schema.Literal(6),
+});
+
 export const AddAttackDamageDiceRiderSchema = strictStruct({
   kind: Schema.Literal("add_attack_damage_dice"),
-  dice: ClassLevelDamageDiceSchema,
+  dice: Schema.Union(ClassLevelDamageDiceSchema, RageDamageBonusDiceSchema),
   damageType: Schema.Literal("same_as_attack"),
 });
 
@@ -1351,11 +1368,25 @@ export const MasteryMechanicsSchema = Schema.Union(
 
 export const AttackDamageRiderMechanicsSchema = strictStruct({
   ...OnHitTriggerMechanicsBaseFields,
-  optional: Schema.Literal(true),
+  optional: Schema.Boolean,
   trigger: AttackDamageRiderTriggerSchema,
   effect: AddAttackDamageDiceRiderSchema,
   usageLimit: OncePerTurnUsageLimitSchema,
-});
+}).pipe(
+  Schema.filter(
+    (mechanics) =>
+      (mechanics.optional === true &&
+        "weaponFilter" in mechanics.trigger &&
+        mechanics.effect.dice.kind === "class_level_table") ||
+      (mechanics.optional === false &&
+        "attackFilter" in mechanics.trigger &&
+        mechanics.effect.dice.kind === "rage_damage_bonus"),
+    {
+      message: () =>
+        "Attack damage riders must use matching optionality, trigger, and dice source.",
+    },
+  ),
+);
 
 export const WeaponDamageDiceRerollMechanicsSchema = strictStruct({
   ...OnHitTriggerMechanicsBaseFields,

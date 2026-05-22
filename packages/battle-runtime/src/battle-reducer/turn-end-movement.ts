@@ -4797,6 +4797,7 @@ export function resetBattleTurnResources(
     quickenedLevelOnePlusSpellCastsThisTurn: [],
     attackRollMadeThisTurn: false,
     attackDamageRidersUsedThisTurn: [],
+    recklessAttackWhileRagingUsedThisTurn: [],
     weaponDamageDiceRollChoicesUsedThisTurn: [],
     dashMovementBonusFeet: movementFeet(0),
     disengaged: false,
