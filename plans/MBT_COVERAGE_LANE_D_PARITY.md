@@ -133,7 +133,7 @@
     {
       "number": 22,
       "id": "L3-METRIC-SCOPE-EXPANSION-PRECHECK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Level 3 Metric Scope Expansion Precheck"
     },
     {
@@ -177,6 +177,12 @@
       "id": "L3-SPELL-WATER-BREATHING-CLOSURE-SURVEY",
       "status": "ready-for-research",
       "title": "Level 3 Water Breathing Closure Survey"
+    },
+    {
+      "number": 30,
+      "id": "L3-CLASS-SUBCLASS-INVENTORY-SEED",
+      "status": "ready-for-research",
+      "title": "Level 3 Class And Subclass Inventory Seed"
     }
   ]
 }
@@ -387,7 +393,7 @@ Output:
 
 ### Task 22 - L3-METRIC-SCOPE-EXPANSION-PRECHECK - Level 3 Metric Scope Expansion Precheck
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -432,6 +438,10 @@ Acceptance:
 ### Task 24 - L3-RULES-KERNEL-JOIN-PRECHECK - Level 3 Rules-Kernel Join Precheck
 
 Status: `ready-for-research`
+
+Depends on:
+
+- Task 23.
 
 Input:
 
@@ -561,3 +571,40 @@ Acceptance:
 - The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
 - No companion AI/autonomous-control behavior is introduced.
 - No authored identity dispatch is introduced in runtime code.
+
+### Task 30 - L3-CLASS-SUBCLASS-INVENTORY-SEED - Level 3 Class And Subclass Inventory Seed
+
+Status: `ready-for-research`
+
+Depends on:
+
+- Task 22.
+- Task 23.
+
+Input:
+
+- Local RAW under `.references/srd-5.2.1/Classes/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface class, subclass, class-feature, Spell Access, Unit claim, and
+  owner-evidence artifacts.
+
+Output:
+
+- Seed or plan class `level-3` inventory rows from the SRD class feature table
+  rows, class Level 3 headings, subclass selection rows, subclass feature
+  grants, and subclass always-prepared Spell Access rows.
+- Keep class/subclass `level-3` rows separate from `spell-level-3` spell-list
+  pressure and from existing Level 1-2 readiness/support reports.
+- Update generated inventory/report artifacts only where this class/subclass
+  task is the correct owner; otherwise record precise follow-up splits.
+
+Acceptance:
+
+- The 51 pre-scanned class `level-3` rows have checker-visible classification:
+  supported owner evidence, accepted runtime-detached or character-fact closure,
+  or a smaller executable follow-up split.
+- Subclass selection, subclass feature grants, and subclass Spell Access are not
+  collapsed into spell-list pressure or treated as runtime support from catalog
+  admission alone.
+- No companion AI/autonomous-control behavior and no authored identity dispatch
+  are introduced.
