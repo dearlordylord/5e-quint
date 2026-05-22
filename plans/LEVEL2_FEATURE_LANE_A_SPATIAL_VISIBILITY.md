@@ -139,13 +139,13 @@
     {
       "number": 23,
       "id": "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Fly Special Speed Runtime"
     },
     {
       "number": 24,
       "id": "L3-FOLLOWUP-FLY-END-FALL-WITNESS",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Fly End Fall Witness"
     },
     {
@@ -212,8 +212,8 @@ Every task must include:
 | 20 | L3-SPELL-LIGHTNING-BOLT-RUNTIME-SURVEY - Level 3 Lightning Bolt Runtime Survey And Task Split | done | L12G-RECURSIVE-TAIL-LANE-A-2 | none | Lightning Bolt Surface content, line/area damage support, Unit/profile claims, and focused tests | Completed by admitting Lightning Bolt as a supported self-origin Line save-gated damage profile while leaving Line direction, Total Cover blocking, point-of-origin inclusion choice, affected-creature derivation, and map geometry table-owned. |
 | 21 | L3-SPELL-HYPNOTIC-PATTERN-RUNTIME-SURVEY - Level 3 Hypnotic Pattern Runtime Survey And Task Split | done | L12G-RECURSIVE-TAIL-LANE-A-2 | L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR | Hypnotic Pattern Surface content, condition-save/incapacitation support, Unit/profile claims, and focused tests | Completed by recording Hypnotic Pattern as an unsupported-profile follow-up split for Surface sight/escape repair and battle control runtime support; no companion behavior or authored-identity dispatch is claimed. |
 | 22 | L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR - Fly Surface Target Repair | done | L3-SPELL-FLY-RUNTIME-SURVEY | L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME | Fly Surface target shape and sibling touched willing creature spell selection vocabulary | Completed by structurally encoding Fly's touched willing creature target eligibility before runtime admission. |
-| 23 | L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME - Fly Special Speed Runtime | ready-for-research | L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR | L3-FOLLOWUP-FLY-END-FALL-WITNESS | Fly fixed special Speed, hover, movement kind vocabulary, active-effect cleanup, and promoted Quint parity | Promote the active Fly Speed grant after the Surface target repair lands. |
-| 24 | L3-FOLLOWUP-FLY-END-FALL-WITNESS - Fly End Fall Witness | blocked | L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME | none | Fly spell-end falling clause, caller-supplied aloft/can-stop-fall witnesses, and existing falling reaction/landing pipeline | Promote the spell-end fall handoff after the active Fly effect exists. |
+| 23 | L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME - Fly Special Speed Runtime | done | L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR | L3-FOLLOWUP-FLY-END-FALL-WITNESS | Fly fixed special Speed, hover, movement kind vocabulary, active-effect cleanup, and promoted Quint parity | Completed by admitting Fly through the scalar-buff runtime profile with fixed Fly Speed, hover retention, slot-scaled willing targets, movement/Dash projection, cleanup, and promoted Quint parity while leaving spell-end falling to Task 24. |
+| 24 | L3-FOLLOWUP-FLY-END-FALL-WITNESS - Fly End Fall Witness | ready-for-research | L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME | none | Fly spell-end falling clause, caller-supplied aloft/can-stop-fall witnesses, and existing falling reaction/landing pipeline | Promote the spell-end fall handoff now that the active Fly effect exists. |
 | 25 | L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR - Hypnotic Pattern Surface Escape Repair | deferred | L3-SPELL-HYPNOTIC-PATTERN-RUNTIME-SURVEY | L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME | Hypnotic Pattern sight-gated area targeting and target-specific escape facts | Repair typed Surface facts before runtime admission. |
 | 26 | L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME - Hypnotic Pattern Control Runtime | blocked | L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR | none | Hypnotic Pattern linked Charmed/Incapacitated/Speed 0 target effect, damage cleanup, shake-awake action, and promoted Quint parity | Promote the battle control lifecycle after the Surface escape repair lands. |
 
@@ -563,7 +563,7 @@ Completed by structurally encoding Fly's touched willing creature target eligibi
 
 ### Task 23 - L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME - Fly Special Speed Runtime
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR
 
@@ -588,9 +588,11 @@ Acceptance:
 - Automatic pathfinding, map elevation, aloft status, landing legality, and spell-end falling stay caller/table-supplied until Task 24.
 - No companion AI/autonomous-control behavior or authored-identity runtime dispatch is introduced.
 
+Completed by admitting Fly through the scalar-buff runtime profile with fixed Fly Speed, hover retention, slot-scaled willing targets, movement/Dash projection, cleanup, deterministic coverage evidence, and promoted Quint parity while leaving spell-end falling to Task 24.
+
 ### Task 24 - L3-FOLLOWUP-FLY-END-FALL-WITNESS - Fly End Fall Witness
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME
 

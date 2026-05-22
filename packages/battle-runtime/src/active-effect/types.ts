@@ -286,9 +286,22 @@ export type BattleActiveEffect =
     })
   | (BattleSpellEffectBase & {
       readonly kind: "specialSpeedGrant";
-      readonly speedKind: BattleSpecialSpeedKind;
       readonly expiresAt: BattleActiveEffectExpiration;
-    })
+    } & (
+      | {
+          readonly speedKind: Exclude<BattleSpecialSpeedKind, "fly">;
+          readonly speed: { readonly kind: "equalToSpeed" };
+          readonly hover: false;
+        }
+      | {
+          readonly speedKind: Extract<BattleSpecialSpeedKind, "fly">;
+          readonly speed: {
+            readonly kind: "fixed";
+            readonly speedFeet: MovementFeet;
+          };
+          readonly hover: true;
+        }
+    ))
   | (BattleSpellEffectBase & {
       readonly kind: "selfTransformation";
       readonly expiresAt: Extract<

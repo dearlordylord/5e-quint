@@ -91,7 +91,12 @@ export const BATTLE_RUNTIME_COMMANDS = [
   "creatureFalls",
 ] as const;
 export type BattleRuntimeCommand = (typeof BATTLE_RUNTIME_COMMANDS)[number];
-export const BATTLE_MOVEMENT_SPEED_KINDS = ["walk", "climb", "swim"] as const;
+export const BATTLE_MOVEMENT_SPEED_KINDS = [
+  "walk",
+  "climb",
+  "swim",
+  "fly",
+] as const;
 export type BattleMovementSpeedKind =
   (typeof BATTLE_MOVEMENT_SPEED_KINDS)[number];
 export const MONK_FOCUS_PATIENT_DEFENSE_MODES = [

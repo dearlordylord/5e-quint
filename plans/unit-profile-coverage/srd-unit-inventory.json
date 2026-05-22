@@ -202,7 +202,7 @@
     "levelThreeClassRows": 51,
     "spellPressureRows": 367,
     "levelThreeSpellPressureRows": 128,
-    "levelThreeInstalledSpellPressureRows": 17,
+    "levelThreeInstalledSpellPressureRows": 20,
     "levelOneBattleReadiness": {
       "denominator": 367,
       "numerator": 367,
@@ -236,14 +236,14 @@
     },
     "levelThreeSpellBattleReadiness": {
       "denominator": 128,
-      "numerator": 22,
-      "percent": "17.2%",
+      "numerator": 25,
+      "percent": "19.5%",
       "rowsByStatus": {
-        "battle-runtime-required": 65,
+        "battle-runtime-required": 62,
         "accepted-no-battle-effect": 13,
         "partial-battle-runtime": 8,
         "owner-evidence-required": 33,
-        "accepted": 9
+        "accepted": 12
       }
     },
     "levelOneClassContainers": 12,
@@ -270,14 +270,14 @@
       "spell access/list pressure": 5
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 443,
+      "catalog-installed-owner-evidence-present": 446,
       "non-runtime": 36,
       "level-3-follow-up-required": 17,
       "catalog-installed-owner-evidence-required": 2,
       "catalog-only/dead-for-now": 137,
       "missing-authored-record": 58,
       "catalog-authored-review-required": 33,
-      "catalog-authored-executable-follow-up": 8,
+      "catalog-authored-executable-follow-up": 5,
       "catalog-installed-needs-owner-evidence": 1
     },
     "spellPressureRowsByDisposition": {
@@ -289,12 +289,12 @@
     "levelThreeSpellPressureRowsByDisposition": {
       "missing-authored-record": 58,
       "catalog-only/dead-for-now": 13,
-      "catalog-installed-owner-evidence-present": 17,
+      "catalog-installed-owner-evidence-present": 20,
       "catalog-authored-review-required": 33,
-      "catalog-authored-executable-follow-up": 7
+      "catalog-authored-executable-follow-up": 4
     },
     "levelThreeInstalledSpellPressureRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 17
+      "catalog-installed-owner-evidence-present": 20
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -26046,14 +26046,31 @@
         "sourceRecordPath": "packages/surface/content/fly.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "fly"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR, L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME, L3-FOLLOWUP-FLY-END-FALL-WITNESS: L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR owns Repair the Fly Surface target shape so the existing SRD spell definition, fixed 60-foot Fly Speed grant, hover flag, Concentration, and slot-scaled target count structurally encode a touched willing creature target with the same targetKinds and disposition vocabulary used by sibling touched willing creature spells. Required output: Updated Dhall and generated JSON content plus focused Surface/unit-catalog tests proving Fly round-trips with typed touched willing creature target eligibility before runtime admission.; L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME owns Promote Fly's active Speed grant after Surface target repair by admitting the repaired record into the Unit catalog; spending the Magic Action and level-3-or-higher Spell Slot; owning Concentration up to 10 minutes; applying fixed 60-foot Fly Speed and hover to each selected willing touched creature with slot-scaled targets; widening promoted runtime and package-local Quint movement kind vocabulary to include Fly Speed; and projecting effective movement and Dash budgets without duplicating walk Speed or spent Movement state. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, generated coverage artifacts, and promoted Quint/runtime parity for cast admission, Spell Slot spend, Concentration ownership, fixed Fly Speed, hover projection, slot scaling, and cleanup.; L3-FOLLOWUP-FLY-END-FALL-WITNESS owns Connect Fly effect cleanup to a caller-supplied still-aloft and can-stop-fall witness boundary that either opens the existing creatureFalls reaction window for affected targets or records why the target can stop the fall, while preserving Feather Fall's falling-trigger and landing owner and avoiding battle-owned elevation simulation. Required output: Focused tests and promoted Quint/runtime parity for Concentration break, duration expiration, recast or replacement cleanup, hover-relevant fall prevention, and handoff to the existing falling reaction/landing pipeline.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "L3-FOLLOWUP-FLY-END-FALL-WITNESS",
+        "reason": "Fall handoff needs caller-supplied still-aloft and can-stop-fall witnesses; promoted battle runtime does not own elevation simulation, automatic landing legality, or table pathfinding state."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit fly is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME at packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_gaseous_form",
@@ -28653,14 +28670,31 @@
         "sourceRecordPath": "packages/surface/content/fly.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "fly"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR, L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME, L3-FOLLOWUP-FLY-END-FALL-WITNESS: L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR owns Repair the Fly Surface target shape so the existing SRD spell definition, fixed 60-foot Fly Speed grant, hover flag, Concentration, and slot-scaled target count structurally encode a touched willing creature target with the same targetKinds and disposition vocabulary used by sibling touched willing creature spells. Required output: Updated Dhall and generated JSON content plus focused Surface/unit-catalog tests proving Fly round-trips with typed touched willing creature target eligibility before runtime admission.; L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME owns Promote Fly's active Speed grant after Surface target repair by admitting the repaired record into the Unit catalog; spending the Magic Action and level-3-or-higher Spell Slot; owning Concentration up to 10 minutes; applying fixed 60-foot Fly Speed and hover to each selected willing touched creature with slot-scaled targets; widening promoted runtime and package-local Quint movement kind vocabulary to include Fly Speed; and projecting effective movement and Dash budgets without duplicating walk Speed or spent Movement state. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, generated coverage artifacts, and promoted Quint/runtime parity for cast admission, Spell Slot spend, Concentration ownership, fixed Fly Speed, hover projection, slot scaling, and cleanup.; L3-FOLLOWUP-FLY-END-FALL-WITNESS owns Connect Fly effect cleanup to a caller-supplied still-aloft and can-stop-fall witness boundary that either opens the existing creatureFalls reaction window for affected targets or records why the target can stop the fall, while preserving Feather Fall's falling-trigger and landing owner and avoiding battle-owned elevation simulation. Required output: Focused tests and promoted Quint/runtime parity for Concentration break, duration expiration, recast or replacement cleanup, hover-relevant fall prevention, and handoff to the existing falling reaction/landing pipeline.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "L3-FOLLOWUP-FLY-END-FALL-WITNESS",
+        "reason": "Fall handoff needs caller-supplied still-aloft and can-stop-fall witnesses; promoted battle runtime does not own elevation simulation, automatic landing legality, or table pathfinding state."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit fly is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME at packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_gaseous_form",
@@ -33441,14 +33475,31 @@
         "sourceRecordPath": "packages/surface/content/fly.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "fly"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR, L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME, L3-FOLLOWUP-FLY-END-FALL-WITNESS: L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR owns Repair the Fly Surface target shape so the existing SRD spell definition, fixed 60-foot Fly Speed grant, hover flag, Concentration, and slot-scaled target count structurally encode a touched willing creature target with the same targetKinds and disposition vocabulary used by sibling touched willing creature spells. Required output: Updated Dhall and generated JSON content plus focused Surface/unit-catalog tests proving Fly round-trips with typed touched willing creature target eligibility before runtime admission.; L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME owns Promote Fly's active Speed grant after Surface target repair by admitting the repaired record into the Unit catalog; spending the Magic Action and level-3-or-higher Spell Slot; owning Concentration up to 10 minutes; applying fixed 60-foot Fly Speed and hover to each selected willing touched creature with slot-scaled targets; widening promoted runtime and package-local Quint movement kind vocabulary to include Fly Speed; and projecting effective movement and Dash budgets without duplicating walk Speed or spent Movement state. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, generated coverage artifacts, and promoted Quint/runtime parity for cast admission, Spell Slot spend, Concentration ownership, fixed Fly Speed, hover projection, slot scaling, and cleanup.; L3-FOLLOWUP-FLY-END-FALL-WITNESS owns Connect Fly effect cleanup to a caller-supplied still-aloft and can-stop-fall witness boundary that either opens the existing creatureFalls reaction window for affected targets or records why the target can stop the fall, while preserving Feather Fall's falling-trigger and landing owner and avoiding battle-owned elevation simulation. Required output: Focused tests and promoted Quint/runtime parity for Concentration break, duration expiration, recast or replacement cleanup, hover-relevant fall prevention, and handoff to the existing falling reaction/landing pipeline.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "L3-FOLLOWUP-FLY-END-FALL-WITNESS",
+        "reason": "Fall handoff needs caller-supplied still-aloft and can-stop-fall witnesses; promoted battle runtime does not own elevation simulation, automatic landing legality, or table pathfinding state."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit fly is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME at packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_gaseous_form",

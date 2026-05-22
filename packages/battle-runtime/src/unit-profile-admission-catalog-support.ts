@@ -215,6 +215,8 @@ export const faerieFireUnitId = "faerie_fire";
 
 export const flameBladeUnitId = "flame_blade";
 
+export const flyUnitId = "fly";
+
 export const flamingSphereUnitId = "flaming_sphere";
 
 export const spikeGrowthUnitId = "spike_growth";

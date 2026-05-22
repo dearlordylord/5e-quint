@@ -93,6 +93,7 @@ import falseLifeInput from "../../content/false_life.json";
 import fireBoltInput from "../../content/fire_bolt.json";
 import fireballInput from "../../content/fireball.json";
 import flameBladeInput from "../../content/flame_blade.json";
+import flyInput from "../../content/fly.json";
 import findFamiliarInput from "../../content/find_familiar.json";
 import findTrapsInput from "../../content/find_traps.json";
 import flamingSphereInput from "../../content/flaming_sphere.json";
@@ -576,6 +577,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     silenceInput,
     shiningSmiteInput,
     sleepInput,
+    flyInput,
     spiderClimbInput,
     spikeGrowthInput,
     spiritualWeaponInput,

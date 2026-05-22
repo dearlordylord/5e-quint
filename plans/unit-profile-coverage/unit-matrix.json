@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 403,
-      "numerator": 202,
-      "percent": "50.1%"
+      "numerator": 203,
+      "percent": "50.4%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 485,
-      "numerator": 244,
-      "percent": "50.3%"
+      "numerator": 245,
+      "percent": "50.5%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 245
+      "value": 246
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 138,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 245,
-      "numerator": 245,
+      "denominator": 246,
+      "numerator": 246,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "78.3%"
     },
     "supportedProfileCoverage": {
-      "denominator": 203,
+      "denominator": 204,
       "numerator": 138,
-      "percent": "68%"
+      "percent": "67.6%"
     }
   },
   "metricSemantics": [
@@ -2395,9 +2395,10 @@
       "taskRefs": [
         "SRDINV30A",
         "L12G-SPELL-AID",
-        "L12G-SPELL-BARKSKIN"
+        "L12G-SPELL-BARKSKIN",
+        "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME"
       ],
-      "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class bonus/floor, or Hit Point maximum effects",
+      "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, special Speed, Armor Class bonus/floor, or Hit Point maximum effects",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -9484,6 +9485,22 @@
         "spell.scalar-buff"
       ],
       "taskId": "L12G-SPELL-BARKSKIN"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover Fly's Magic Action scalar buff profile, level-3 Spell Slot spend, slot-scaled willing creature targets, Concentration duration, fixed 60-foot Fly Speed grant, Speed-change composition, and duration/concentration cleanup.",
+      "profileIds": [
+        "spell.scalar-buff"
+      ],
+      "taskId": "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests cover Fly catalog admission, known-willing touched-creature target gate, Spell Slot spend, fixed Fly Speed and hover active effect, effective movement and Dash projection, slot scaling, Concentration cleanup, and duration cleanup.",
+      "profileIds": [
+        "spell.scalar-buff"
+      ],
+      "taskId": "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME"
     },
     {
       "claimKind": "qnt-proof",
@@ -17318,9 +17335,10 @@
           "taskRefs": [
             "SRDINV30A",
             "L12G-SPELL-AID",
-            "L12G-SPELL-BARKSKIN"
+            "L12G-SPELL-BARKSKIN",
+            "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME"
           ],
-          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class bonus/floor, or Hit Point maximum effects",
+          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, special Speed, Armor Class bonus/floor, or Hit Point maximum effects",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -17676,9 +17694,10 @@
           "taskRefs": [
             "SRDINV30A",
             "L12G-SPELL-AID",
-            "L12G-SPELL-BARKSKIN"
+            "L12G-SPELL-BARKSKIN",
+            "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME"
           ],
-          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class bonus/floor, or Hit Point maximum effects",
+          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, special Speed, Armor Class bonus/floor, or Hit Point maximum effects",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -19896,9 +19915,10 @@
           "taskRefs": [
             "SRDINV30A",
             "L12G-SPELL-AID",
-            "L12G-SPELL-BARKSKIN"
+            "L12G-SPELL-BARKSKIN",
+            "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME"
           ],
-          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class bonus/floor, or Hit Point maximum effects",
+          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, special Speed, Armor Class bonus/floor, or Hit Point maximum effects",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -21876,9 +21896,10 @@
           "taskRefs": [
             "SRDINV30A",
             "L12G-SPELL-AID",
-            "L12G-SPELL-BARKSKIN"
+            "L12G-SPELL-BARKSKIN",
+            "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME"
           ],
-          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class bonus/floor, or Hit Point maximum effects",
+          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, special Speed, Armor Class bonus/floor, or Hit Point maximum effects",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -24680,9 +24701,10 @@
           "taskRefs": [
             "SRDINV30A",
             "L12G-SPELL-AID",
-            "L12G-SPELL-BARKSKIN"
+            "L12G-SPELL-BARKSKIN",
+            "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME"
           ],
-          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class bonus/floor, or Hit Point maximum effects",
+          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, special Speed, Armor Class bonus/floor, or Hit Point maximum effects",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -25060,6 +25082,87 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "table-spatial-derivation",
+          "owner": "battle-runtime spell invocation/effect lifecycle plus future falling witness owner",
+          "reason": "This task owns Fly cast admission, Spell Slot spend, Concentration, fixed Fly Speed, hover retention, effective movement, Dash projection, and normal duration/concentration cleanup. Spell-end falling remains deferred to the caller-supplied aloft/can-stop-fall witness boundary."
+        },
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "table-spatial-derivation",
+              "owner": "L3-FOLLOWUP-FLY-END-FALL-WITNESS",
+              "reason": "Fall handoff needs caller-supplied still-aloft and can-stop-fall witnesses; promoted battle runtime does not own elevation simulation, automatic landing legality, or table pathfinding state."
+            },
+            "mechanic": "spell-end falling for affected targets that are aloft and cannot stop the fall"
+          }
+        ],
+        "profileIds": [
+          "spell.scalar-buff"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action level-3-or-higher Spell Slot casting from the authored SRD Fly Unit",
+          "caller-supplied known-willing touched creature target admission with one additional target per Spell Slot level above 3",
+          "caster-owned Concentration up to 10 minutes with active-effect cleanup on Concentration break or duration expiry",
+          "fixed 60-foot Fly Speed grant retained as a source-owned active effect instead of duplicating walk Speed or spent Movement state",
+          "hover retained on the Fly Speed grant active effect",
+          "granted Fly Speed appears in effective movement and Dash budgets while the spell effect remains active",
+          "general Speed changes compose with the granted fixed Fly Speed through the shared Speed algebra"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.scalar-buff",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV30A",
+            "L12G-SPELL-AID",
+            "L12G-SPELL-BARKSKIN",
+            "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME"
+          ],
+          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, special Speed, Armor Class bonus/floor, or Hit Point maximum effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/fly.json",
+      "unitId": "fly"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
           "owner": "table/spatial movement owner",
           "reason": "Automatic vertical-surface and ceiling path legality, hands-free traversal presentation, collision/pathfinding, and final-position derivation remain caller/table-owned; battle runtime owns the Spider Climb spell effect and Speed projection."
         },
@@ -25101,9 +25204,10 @@
           "taskRefs": [
             "SRDINV30A",
             "L12G-SPELL-AID",
-            "L12G-SPELL-BARKSKIN"
+            "L12G-SPELL-BARKSKIN",
+            "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME"
           ],
-          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class bonus/floor, or Hit Point maximum effects",
+          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, special Speed, Armor Class bonus/floor, or Hit Point maximum effects",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -27808,53 +27912,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/flesh_to_stone.json",
       "unitId": "flesh_to_stone"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "followUpTasks": [
-          {
-            "id": "L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR",
-            "mechanic": "Repair the Fly Surface target shape so the existing SRD spell definition, fixed 60-foot Fly Speed grant, hover flag, Concentration, and slot-scaled target count structurally encode a touched willing creature target with the same targetKinds and disposition vocabulary used by sibling touched willing creature spells.",
-            "owner": "Surface Spell Definition authoring and Unit catalog admission boundary",
-            "requiredOutput": "Updated Dhall and generated JSON content plus focused Surface/unit-catalog tests proving Fly round-trips with typed touched willing creature target eligibility before runtime admission.",
-            "title": "Fly Surface Target Repair"
-          },
-          {
-            "id": "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME",
-            "mechanic": "Promote Fly's active Speed grant after Surface target repair by admitting the repaired record into the Unit catalog; spending the Magic Action and level-3-or-higher Spell Slot; owning Concentration up to 10 minutes; applying fixed 60-foot Fly Speed and hover to each selected willing touched creature with slot-scaled targets; widening promoted runtime and package-local Quint movement kind vocabulary to include Fly Speed; and projecting effective movement and Dash budgets without duplicating walk Speed or spent Movement state.",
-            "owner": "battle-runtime spell invocation/effect lifecycle, movement Speed projection, and promoted Quint parity",
-            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, generated coverage artifacts, and promoted Quint/runtime parity for cast admission, Spell Slot spend, Concentration ownership, fixed Fly Speed, hover projection, slot scaling, and cleanup.",
-            "title": "Fly Special Speed Runtime"
-          },
-          {
-            "id": "L3-FOLLOWUP-FLY-END-FALL-WITNESS",
-            "mechanic": "Connect Fly effect cleanup to a caller-supplied still-aloft and can-stop-fall witness boundary that either opens the existing creatureFalls reaction window for affected targets or records why the target can stop the fall, while preserving Feather Fall's falling-trigger and landing owner and avoiding battle-owned elevation simulation.",
-            "owner": "battle-runtime spell effect cleanup plus table/spatial falling witness owner",
-            "requiredOutput": "Focused tests and promoted Quint/runtime parity for Concentration break, duration expiration, recast or replacement cleanup, hover-relevant fall prevention, and handoff to the existing falling reaction/landing pipeline.",
-            "title": "Fly End Fall Witness"
-          }
-        ],
-        "futureProfileOwner": "Surface target-shape owner, battle-runtime spell invocation/effect lifecycle, movement Speed projection, and table/spatial falling witness owner",
-        "reason": "The installed SRD 5.2.1 Fly Surface Spell Definition encodes Magic Action level-3-or-higher Spell Slot casting, Touch range, caster-owned Concentration up to 10 minutes, one touched willing creature target with one additional target per Spell Slot level above 3, a fixed 60-foot Fly Speed grant, hover, and spell-end falling if an affected target is aloft and cannot stop the fall. No promoted battle-runtime profile exists yet because the current movement vocabulary admits Walk, Climb, and Swim but not Fly; the special-speed active effect can carry a speed kind but not a fixed 60-foot value or hover permission; and spell-end falling depends on caller-supplied aloft and can-stop-fall witnesses rather than battle-owned elevation or pathfinding state.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/fly.json",
-      "unitId": "fly"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

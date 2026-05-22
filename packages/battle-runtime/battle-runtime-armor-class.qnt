@@ -43,6 +43,7 @@ module battleRuntimeArmorClass {
         | LongstriderSpeedDelta => false
         | ShieldOfFaithArmorClassBonus => false
         | SpiderClimbClimbSpeedGrant(_) => false
+        | FlySpeedHoverGrant(_) => false
         | BarkskinArmorClassFloor(_) => false
         | AidHitPointMaximumIncrease(_) => false
         | HeroismFrightenedImmunity => false
