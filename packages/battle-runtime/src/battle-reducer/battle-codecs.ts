@@ -2411,6 +2411,20 @@ const BattleOngoingSpellEffectRefSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("spellActiveEffect"),
+    activeEffectKind: Schema.Literal(
+      "spellObjectContactDamage",
+      "spiritualWeapon",
+    ),
+    sourceEffectId: BattleSpellEffectOccurrenceId,
+  }),
+);
+const BattleAntimagicFieldOngoingSpellEffectRefSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("spellLightEmitter"),
+    sourceEffectId: BattleSpellEffectOccurrenceId,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("spellActiveEffect"),
     activeEffectKind: Schema.Literal("spellObjectContactDamage"),
     sourceEffectId: BattleSpellEffectOccurrenceId,
   }),
@@ -3402,7 +3416,9 @@ type BattleFillEncoded =
                 }
               | {
                   readonly kind: "spellActiveEffect";
-                  readonly activeEffectKind: "spellObjectContactDamage";
+                  readonly activeEffectKind:
+                    | "spellObjectContactDamage"
+                    | "spiritualWeapon";
                   readonly sourceEffectId: string;
                 };
           };
@@ -3428,7 +3444,9 @@ type BattleFillEncoded =
                   }
                 | {
                     readonly kind: "spellActiveEffect";
-                    readonly activeEffectKind: "spellObjectContactDamage";
+                    readonly activeEffectKind:
+                      | "spellObjectContactDamage"
+                      | "spiritualWeapon";
                     readonly sourceEffectId: string;
                   };
             };
@@ -4329,7 +4347,7 @@ export const BattleFillSchema: Schema.Schema<
           affectedOngoingSpellEffects: Schema.Array(
             Schema.Struct({
               kind: Schema.Literal("antimagicFieldAffectedOngoingSpellEffect"),
-              effect: BattleOngoingSpellEffectRefSchema,
+              effect: BattleAntimagicFieldOngoingSpellEffectRefSchema,
               sourceKind: Schema.Literal(
                 ...BATTLE_ANTIMAGIC_FIELD_ONGOING_SPELL_EFFECT_SOURCE_KINDS,
               ),

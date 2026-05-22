@@ -81,7 +81,7 @@ import {
   spellObjectTargetHole,
 } from "./spells-targeting.ts";
 import {
-  ongoingSpellEffectRefForActiveEffect,
+  antimagicFieldOngoingSpellEffectRefForActiveEffect,
   ongoingSpellEffectSuppressedByAntimagicField,
 } from "./antimagic-field-suppression.ts";
 import { wardingBondSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
@@ -295,7 +295,9 @@ export function resolveObjectContactDamageRepeatSpellAct(input: {
   if (
     ongoingSpellEffectSuppressedByAntimagicField(
       input.input.state,
-      ongoingSpellEffectRefForActiveEffect(input.invocation.activeEffect),
+      antimagicFieldOngoingSpellEffectRefForActiveEffect(
+        input.invocation.activeEffect,
+      ),
     )
   ) {
     return invalidResult(

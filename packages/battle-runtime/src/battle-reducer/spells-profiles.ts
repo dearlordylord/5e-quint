@@ -67,7 +67,7 @@ import {
 import type { CombatantId } from "../identity.ts";
 import { SHIELD_MAGIC_MISSILE_SPELL_ID } from "./domain-constants.ts";
 import {
-  ongoingSpellEffectRefForActiveEffect,
+  antimagicFieldOngoingSpellEffectRefForActiveEffect,
   ongoingSpellEffectSuppressedByAntimagicField,
 } from "./antimagic-field-suppression.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
@@ -2410,7 +2410,7 @@ export function supportedObjectContactDamageRepeatProfile(
         (state !== undefined &&
           ongoingSpellEffectSuppressedByAntimagicField(
             state,
-            ongoingSpellEffectRefForActiveEffect(effect),
+            antimagicFieldOngoingSpellEffectRefForActiveEffect(effect),
           )) ||
         !objectContactDamageRepeatIsDiscoverable(effect, state)
       ) {

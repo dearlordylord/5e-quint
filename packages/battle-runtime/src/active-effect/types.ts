@@ -42,7 +42,7 @@ import type {
   BattleD20RollModifierKind,
   BattleDancingLight,
   BattleDancingLightList,
-  BattleOngoingSpellEffectRef,
+  BattleAntimagicFieldOngoingSpellEffectRef,
   BattleSpecialSpeedKind,
   MagicWeaponEnhancementBonus,
   MarkedDamageRiderAbilityCheckBehavior,
@@ -257,6 +257,8 @@ export type SpellObjectContactDamageActiveEffect = BattleSpellEffectBase & {
 };
 export type SpiritualWeaponActiveEffect = BattleSpellEffectBase & {
   readonly kind: "spiritualWeapon";
+  readonly sourceEffectId: BattleSpellEffectOccurrenceId;
+  readonly sourceSpellLevel: BattleSpellEffectLevel;
   readonly forcePositionId: BattleTablePositionId;
   readonly forceReachFeet: MovementFeet;
   readonly repeatMoveMaxFeet: MovementFeet;
@@ -559,7 +561,7 @@ export type BattleActiveEffect =
       readonly kind: "antimagicFieldOngoingSpellSuppression";
       readonly areaId: BattleAreaId;
       readonly radiusFeet: MovementFeet;
-      readonly suppressedOngoingSpellEffects: readonly BattleOngoingSpellEffectRef[];
+      readonly suppressedOngoingSpellEffects: readonly BattleAntimagicFieldOngoingSpellEffectRef[];
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,
         { readonly kind: "concentration" }

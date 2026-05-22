@@ -10,6 +10,7 @@ module battleRuntimeLight {
   import battleRuntimeAttackFacts.* from "./battle-runtime-attack-facts"
   import battleRuntimeArmorClass.* from "./battle-runtime-armor-class"
   import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
+  import battleRuntimeOngoingSpellDispel.* from "./battle-runtime-ongoing-spell-dispel"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
   import battleRuntimeHidden.* from "./battle-runtime-hidden"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
@@ -381,24 +382,6 @@ module battleRuntimeLight {
       | ObjectInvisibleRevealLightEmitter(_) => true
     })
 
-  pure def dispelMagicEndsTrackedOngoingSpell(
-    slotLevel: int,
-    successfulCheckEffectIds: Set[int],
-    sourceEffectId: int,
-    sourceSpellLevel: int,
-  ): bool =
-    sourceSpellLevel <= slotLevel or successfulCheckEffectIds.contains(sourceEffectId)
-
-  pure def dispelMagicCheckSucceeds(checkTotal: int, sourceSpellLevel: int): bool =
-    checkTotal >= 10 + sourceSpellLevel
-
-  pure def dispelMagicSuccessfulAbilityCheckEffectIds(
-    sourceEffectId: int,
-    checkTotal: int,
-    sourceSpellLevel: int,
-  ): Set[int] =
-    if (dispelMagicCheckSucceeds(checkTotal, sourceSpellLevel)) Set(sourceEffectId) else Set()
-
   pure def spellLightEmitterWithOngoingSpellTracking(
     emitter: LightEmitter,
     sourceEffectId: int,
@@ -490,26 +473,6 @@ module battleRuntimeLight {
       | _ => true
     })
 
-  pure def dispelMagicMagicalEffectTargetActiveEffects(
-    effects: Set[ActiveEffect],
-    effectId: int,
-    slotLevel: int,
-    successfulCheckEffectIds: Set[int],
-  ): Set[ActiveEffect] =
-    effects.filter(effect => match effect {
-      | HeatMetalObjectContactDamage(data) =>
-          not(
-            data.effectId == effectId and
-            dispelMagicEndsTrackedOngoingSpell(
-              slotLevel,
-              successfulCheckEffectIds,
-              data.effectId,
-              data.sourceSpellLevel,
-            )
-          )
-      | _ => true
-    })
-
   pure def ongoingSpellTrackingSourceEffectIdIn(
     tracking: OngoingSpellTracking,
     sourceEffectIds: Set[int],
@@ -556,9 +519,13 @@ module battleRuntimeLight {
     activeEffectsAntimagicSuppressedOngoingSpellEffects(state.fighter.activeEffects)
       .union(activeEffectsAntimagicSuppressedOngoingSpellEffects(state.goblin.activeEffects))
 
-  pure def antimagicSuppressesOngoingSpellActiveEffect(state: BattleState, effectId: int): bool =
+  pure def antimagicSuppressesOngoingSpellActiveEffect(
+    state: BattleState,
+    activeEffectKind: OngoingSpellActiveEffectKind,
+    effectId: int,
+  ): bool =
     antimagicSuppressedOngoingSpellEffects(state)
-      .contains(OngoingSpellActiveEffectRef({ effectId: effectId }))
+      .contains(OngoingSpellActiveEffectRef({ activeEffectKind: activeEffectKind, effectId: effectId }))
 
   pure def lightEmitterSuppressedByAntimagic(
     emitter: LightEmitter,

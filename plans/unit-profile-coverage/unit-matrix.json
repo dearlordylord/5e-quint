@@ -19041,8 +19041,8 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "L12G-FOLLOWUP-BROADER-ONGOING-SPELL-EFFECT-DISPEL",
-            "mechanic": "ongoing spell effects not yet represented as tracked ongoing spell occurrences beyond tracked spell-light emitters and tracked spellObjectContactDamage active-effect occurrences, including broader creature active effects, area effects, and spell-specific dispel exceptions or immunities such as force barriers"
+            "followUpTaskId": "L12G-RECURSIVE-TAIL-LANE-B",
+            "mechanic": "remaining ongoing spell effects not yet represented as tracked ongoing spell occurrences beyond tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences, including broader creature active effects, area effects, object effects, and spell-specific dispel exceptions or immunities such as force barriers"
           },
           {
             "battleReadinessClosure": {
@@ -19055,14 +19055,14 @@
         ],
         "followUpTasks": [
           {
-            "id": "L12G-FOLLOWUP-BROADER-ONGOING-SPELL-EFFECT-DISPEL",
-            "mechanic": "Promote Dispel Magic beyond tracked spell-light emitters and tracked spellObjectContactDamage active-effect occurrences by representing broader ongoing Spell Effect occurrences for additional creature active effects, area effects, object effects, and spell-specific dispel exceptions or immunities with stable occurrence identity, source spell level, target association, and cleanup semantics.",
-            "owner": "battle-runtime Spell Effect occurrence model plus promoted Quint/runtime parity",
-            "requiredOutput": "Supported-profile or profile-subset-supported Dispel Magic claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for ending broader generic ongoing Spell Effect occurrences while preserving explicit closures for spell-specific exceptions and table-owned target identity/range derivation.",
-            "title": "Broader Ongoing Spell Effect Dispel Runtime"
+            "id": "L12G-RECURSIVE-TAIL-LANE-B",
+            "mechanic": "Refresh Lane B metrics and add a concrete remaining Dispel Magic ongoing Spell Effect task if real frontier remains after Task 11.",
+            "owner": "Ralph planning tail",
+            "requiredOutput": "Plan update with any next Ralph-sized Dispel Magic ongoing Spell Effect task, or an explicit closure if no concrete executable frontier remains.",
+            "title": "Lane B Recursive Planning Tail"
           }
         ],
-        "futureProfileOwner": "broader ongoing Spell Effect occurrence model plus spell-specific dispel exception owner",
+        "futureProfileOwner": "Lane B recursive planning tail for remaining ongoing Spell Effect occurrence model plus spell-specific dispel exception owner",
         "profileIds": [
           "spell.invocation-ongoing-spell-ending"
         ],
@@ -19078,7 +19078,9 @@
           "target-scoped ending of tracked spellObjectContactDamage active-effect occurrences whose source spell level is at or below the Dispel Magic slot level",
           "higher-level tracked spellObjectContactDamage active-effect occurrences require the same spellcasting ability check gate or a higher-level slot",
           "same-object multi-owner tracked spellObjectContactDamage occurrences are removed by object target, while magical-effect targeting removes only the selected tracked occurrence by stable occurrence identity",
-          "object-attached Continual Flame cleanup is handled through generic tracked spell-light emitter facts, not a Continual Flame-specific remover registry"
+          "object-attached Continual Flame cleanup is handled through generic tracked spell-light emitter facts, not a Continual Flame-specific remover registry",
+          "target-scoped ending of tracked Spiritual Weapon active-effect occurrences by stable magical-effect identity; Spiritual Weapon cleanup is handled through generic tracked active-effect occurrence facts, not Spiritual Weapon authored identity",
+          "higher-level tracked Spiritual Weapon active-effect occurrences require the same spellcasting ability check gate or a higher-level slot"
         ],
         "tag": "profile-subset-supported"
       },

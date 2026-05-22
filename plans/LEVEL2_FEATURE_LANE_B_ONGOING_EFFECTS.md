@@ -67,7 +67,7 @@
     {
       "number": 11,
       "id": "L12G-FOLLOWUP-BROADER-ONGOING-SPELL-EFFECT-DISPEL",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Broader Ongoing Spell Effect Dispel Runtime"
     },
     {
@@ -274,15 +274,16 @@ Output:
 
 ### Task 11 - L12G-FOLLOWUP-BROADER-ONGOING-SPELL-EFFECT-DISPEL - Broader Ongoing Spell Effect Dispel Runtime
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 - Task 1 Dispel Magic support for tracked spell-light emitters and tracked `spellObjectContactDamage` active-effect occurrences.
 - Existing active-effect, area-effect, and concentration lifecycle models.
 
 Output:
-- Promote Dispel Magic beyond tracked spell-light emitters and tracked `spellObjectContactDamage` occurrences only where broader ongoing Spell Effect occurrences have stable identity, source spell level, target association, and cleanup semantics without duplicated state.
-- Keep spell-specific dispel exceptions or immunities as explicit typed closures instead of identity-dispatched special cases.
+- Promoted Dispel Magic for tracked `spiritualWeapon` active-effect occurrences as stable magical-effect targets with source spell level, occurrence identity, source target association through the hosted active effect, concentration cleanup, and the existing higher-level spellcasting ability check gate.
+- Preserved Antimagic Field's narrower suppression boundary by keeping `spiritualWeapon` out of the Antimagic suppressible occurrence type until Task 12 researches broader suppression.
+- Remaining broader Dispel Magic frontiers, including other creature active effects, area effects, object effects, and spell-specific exceptions or immunities, stay visible through Task 13's recursive planning tail rather than being identity-dispatched here.
 
 ### Task 12 - L12G-FOLLOWUP-ANTIMAGIC-FIELD-PREVENTION-AND-BROADER-SUPPRESSION - Antimagic Field Prevention And Broader Suppression Runtime
 
@@ -307,6 +308,7 @@ Unblock only after all ready Lane B tasks are done or explicitly closed.
 Output:
 - Refresh level-2 ongoing-effect metrics.
 - Add the next concrete, Ralph-sized Lane B tasks only if real frontier remains.
+- Split or close remaining Dispel Magic ongoing Spell Effect frontiers from Task 11's residual set: other creature active effects, area effects, object effects, and spell-specific exceptions or immunities.
 
 ### Task 14 - L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-RUNTIME - Enlarge Reduce Object Runtime Support
 

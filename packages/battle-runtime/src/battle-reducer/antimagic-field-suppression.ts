@@ -2,13 +2,18 @@
 
 import type {
   BattleActiveEffect,
+  BattleAntimagicFieldOngoingSpellEffectRef,
   BattleLightEmitter,
   BattleOngoingSpellEffectRef,
   BattleState,
   BattleTrackedOngoingSpellLightEmitter,
 } from "../battle-reducer.ts";
 
-type TrackedSuppressibleOngoingSpellActiveEffect = Extract<
+type TrackedOngoingSpellActiveEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "spellObjectContactDamage" | "spiritualWeapon" }
+>;
+type TrackedAntimagicFieldOngoingSpellActiveEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "spellObjectContactDamage" }
 >;
@@ -22,9 +27,31 @@ export function ongoingSpellEffectRefForEmitter(
   };
 }
 
+export function antimagicFieldOngoingSpellEffectRefForEmitter(
+  emitter: BattleTrackedOngoingSpellLightEmitter,
+): BattleAntimagicFieldOngoingSpellEffectRef {
+  return {
+    kind: "spellLightEmitter",
+    sourceEffectId: emitter.sourceEffectId,
+  };
+}
+
 export function ongoingSpellEffectRefForActiveEffect(
-  effect: TrackedSuppressibleOngoingSpellActiveEffect,
+  effect: TrackedOngoingSpellActiveEffect,
 ): BattleOngoingSpellEffectRef {
+  return {
+    kind: "spellActiveEffect",
+    activeEffectKind: effect.kind,
+    sourceEffectId:
+      effect.kind === "spellObjectContactDamage"
+        ? effect.effectId
+        : effect.sourceEffectId,
+  };
+}
+
+export function antimagicFieldOngoingSpellEffectRefForActiveEffect(
+  effect: TrackedAntimagicFieldOngoingSpellActiveEffect,
+): BattleAntimagicFieldOngoingSpellEffectRef {
   return {
     kind: "spellActiveEffect",
     activeEffectKind: effect.kind,
@@ -81,7 +108,7 @@ export function antimagicFieldSuppressedOngoingSpellEffectKeys(
 
 export function ongoingSpellEffectSuppressedByAntimagicField(
   state: BattleState,
-  effect: BattleOngoingSpellEffectRef,
+  effect: BattleAntimagicFieldOngoingSpellEffectRef,
 ): boolean {
   return antimagicFieldSuppressedOngoingSpellEffectKeys(state).has(
     ongoingSpellEffectRefKey(effect),

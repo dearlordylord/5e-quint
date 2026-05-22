@@ -47,7 +47,7 @@ export const ONGOING_SPELL_TARGET_CHOICE_HOLE_INSTANCE = holeInstanceKey(
 
 type TrackedDispellableOngoingSpellActiveEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "spellObjectContactDamage" }
+  { readonly kind: "spellObjectContactDamage" | "spiritualWeapon" }
 >;
 
 type BattleTrackedOngoingSpellOccurrence =
@@ -385,10 +385,12 @@ function ongoingSpellTargetChoices(
       if (!isTrackedDispellableOngoingSpellActiveEffect(effect)) {
         continue;
       }
-      pushUniqueOngoingSpellTarget(choices, {
-        kind: "object",
-        objectId: effect.objectId,
-      });
+      if (effect.kind === "spellObjectContactDamage") {
+        pushUniqueOngoingSpellTarget(choices, {
+          kind: "object",
+          objectId: effect.objectId,
+        });
+      }
       pushUniqueOngoingSpellTarget(choices, {
         kind: "magicalEffect",
         effect: ongoingSpellEffectRefForActiveEffect(effect),
@@ -454,7 +456,9 @@ function dispellableActiveEffectMatchesOngoingTarget(
   if (target.kind === "combatant") {
     return false;
   }
-  return effect.objectId === target.objectId;
+  return effect.kind === "spellObjectContactDamage"
+    ? effect.objectId === target.objectId
+    : false;
 }
 
 function ongoingSpellEndUnrelatedFill(
@@ -514,7 +518,10 @@ function pushUniqueOngoingSpellTarget(
 function isTrackedDispellableOngoingSpellActiveEffect(
   effect: BattleActiveEffect,
 ): effect is TrackedDispellableOngoingSpellActiveEffect {
-  return effect.kind === "spellObjectContactDamage";
+  return (
+    effect.kind === "spellObjectContactDamage" ||
+    effect.kind === "spiritualWeapon"
+  );
 }
 
 function ongoingSpellOccurrenceRef(

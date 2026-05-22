@@ -1978,6 +1978,12 @@ export function applySpiritualWeaponAttackProxyEffect(input: {
       kind: "spiritualWeapon" as const,
       sourceSpellId: input.invocation.spell.id,
       sourceCombatantId: input.actorId,
+      sourceEffectId: spiritualWeaponSpellEffectOccurrenceId(
+        input.state,
+        input.actorId,
+        input.invocation,
+      ),
+      sourceSpellLevel: spellInvocationEffectiveSpellLevel(input.invocation),
       forcePositionId: input.forcePositionId,
       forceReachFeet: input.invocation.forceReachFeet,
       repeatMoveMaxFeet: input.invocation.repeatMoveMaxFeet,
@@ -1997,6 +2003,33 @@ export function applySpiritualWeaponAttackProxyEffect(input: {
   ];
   combatants.set(input.actorId, { ...caster, activeEffects });
   return { ...input.state, combatants };
+}
+
+function spiritualWeaponSpellEffectOccurrenceId(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "spiritualWeaponAttackProxy" }
+  >,
+) {
+  const prefix = `${actorId}:${invocation.spell.id}:spiritual-weapon:`;
+  const actor = state.combatants.get(actorId);
+  const nextOrdinal =
+    Math.max(
+      0,
+      ...(actor?.activeEffects.flatMap((effect) => {
+        if (
+          effect.kind !== "spiritualWeapon" ||
+          !effect.sourceEffectId.startsWith(prefix)
+        ) {
+          return [];
+        }
+        const ordinal = Number(effect.sourceEffectId.slice(prefix.length));
+        return Number.isInteger(ordinal) && ordinal > 0 ? [ordinal] : [];
+      }) ?? []),
+    ) + 1;
+  return battleSpellEffectOccurrenceId(`${prefix}${nextOrdinal}`);
 }
 
 export function repositionSpiritualWeaponAttackProxyEffect(input: {

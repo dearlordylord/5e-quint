@@ -661,6 +661,13 @@ export type BattleOngoingSpellEffectRef =
     }
   | {
       readonly kind: "spellActiveEffect";
+      readonly activeEffectKind: "spellObjectContactDamage" | "spiritualWeapon";
+      readonly sourceEffectId: BattleSpellEffectOccurrenceId;
+    };
+export type BattleAntimagicFieldOngoingSpellEffectRef =
+  | Extract<BattleOngoingSpellEffectRef, { readonly kind: "spellLightEmitter" }>
+  | {
+      readonly kind: "spellActiveEffect";
       readonly activeEffectKind: "spellObjectContactDamage";
       readonly sourceEffectId: BattleSpellEffectOccurrenceId;
     };
@@ -1817,7 +1824,7 @@ export type BattleSpellCreatedLightAreaOverlap = {
 };
 export type BattleAntimagicFieldAffectedOngoingSpellEffect = {
   readonly kind: "antimagicFieldAffectedOngoingSpellEffect";
-  readonly effect: BattleOngoingSpellEffectRef;
+  readonly effect: BattleAntimagicFieldOngoingSpellEffectRef;
   readonly sourceKind: BattleAntimagicFieldOngoingSpellEffectSourceKind;
 };
 export type BattleAntimagicFieldAreaChoice = Extract<

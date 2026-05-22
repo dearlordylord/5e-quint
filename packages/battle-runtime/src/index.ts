@@ -307,6 +307,7 @@ export {
   type BattleMagicWeaponTargetItemFact,
   type BattleMagicWeaponTargetItemHole,
   type BattleAntimagicFieldAffectedOngoingSpellEffect,
+  type BattleAntimagicFieldOngoingSpellEffectRef,
   type BattleObscurementZone,
   type BattleMovementFillValue,
   type BattleMovementHole,

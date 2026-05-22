@@ -10,6 +10,7 @@ module battleRuntimeObjectContactDamageTests {
   import battleRuntimeMarkedRiders.* from "./battle-runtime-marked-riders"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeLight.* from "./battle-runtime-light"
+  import battleRuntimeOngoingSpellDispel.* from "./battle-runtime-ongoing-spell-dispel"
   import battleRuntimeGroundCommand.* from "./battle-runtime-ground-command"
   import battleRuntimeObjectContactDamage.* from "./battle-runtime-object-contact-damage"
 
@@ -82,7 +83,10 @@ module battleRuntimeObjectContactDamageTests {
         activeEffects: Set(AntimagicFieldOngoingSpellSuppression({
           areaId: antimagicFieldAreaId,
           radiusFeet: antimagicFieldRadiusFeet,
-          suppressedOngoingSpellEffects: Set(OngoingSpellActiveEffectRef({ effectId: effectId })),
+          suppressedOngoingSpellEffects: Set(OngoingSpellActiveEffectRef({
+            activeEffectKind: OngoingSpellObjectContactDamageEffect,
+            effectId: effectId,
+          })),
           durationTicks: antimagicFieldDurationTicks,
         })),
       },

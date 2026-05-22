@@ -8,6 +8,7 @@ module battleRuntimeSpiritualWeapon {
   import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
+  import battleRuntimeOngoingSpellDispel.* from "./battle-runtime-ongoing-spell-dispel"
 
   // RAW trace: .references/srd-5.2.1/Spells/Descriptions-S-Z.md:512-525.
   // The promoted model covers Spiritual Weapon's Bonus Action level-2 cast,
@@ -40,6 +41,12 @@ module battleRuntimeSpiritualWeapon {
 
   pure def spiritualWeaponDamageDice(slotLevel: int): int =
     if (slotLevel < 2) 0 else 1 + (slotLevel - 2)
+
+  pure def spiritualWeaponEffectId(source: Actor): int =
+    match source {
+      | Fighter => 2101
+      | Goblin => 2102
+    }
 
   pure val spiritualWeaponCastForcePositionHole: SpiritualWeaponForcePositionHole =
     { mode: SpiritualWeaponCastPosition, maxDistanceFeet: spiritualWeaponRangeFeet }
@@ -86,6 +93,8 @@ module battleRuntimeSpiritualWeapon {
   ): ActiveEffect =
     SpiritualWeapon({
       source: source,
+      effectId: spiritualWeaponEffectId(source),
+      sourceSpellLevel: slotLevel,
       forcePositionId: forcePositionId,
       forceReachFeet: spiritualWeaponForceReachFeet,
       repeatMoveMaxFeet: spiritualWeaponRepeatMoveMaxFeet,
@@ -112,6 +121,70 @@ module battleRuntimeSpiritualWeapon {
       | SpiritualWeapon(data) => data.source == source
       | _ => false
     })
+
+  pure def activeEffectsContainSpiritualWeaponEffectId(
+    effects: Set[ActiveEffect],
+    effectId: int,
+  ): bool =
+    effects.exists(effect => match effect {
+      | SpiritualWeapon(data) => data.effectId == effectId
+      | _ => false
+    })
+
+  pure def stateActorHasSpiritualWeapon(state: BattleState, source: Actor): bool =
+    match source {
+      | Fighter => activeEffectsContainSpiritualWeapon(state.fighter.activeEffects, source)
+      | Goblin => activeEffectsContainSpiritualWeapon(state.goblin.activeEffects, source)
+    }
+
+  pure def stateWithSpiritualWeaponConcentrationClearedAfterDispel(
+    before: BattleState,
+    after: BattleState,
+    source: Actor,
+  ): BattleState =
+    if (
+      stateActorHasSpiritualWeapon(before, source)
+      and not(stateActorHasSpiritualWeapon(after, source))
+    )
+      match source {
+        | Fighter => { ...after, fighter: { ...after.fighter, concentrating: false } }
+        | Goblin => { ...after, goblin: { ...after.goblin, concentrating: false } }
+      }
+    else
+      after
+
+  pure def resolveDispelMagicAgainstSpiritualWeaponMagicalEffectTarget(
+    state: BattleState,
+    source: Actor,
+    effectId: int,
+    slotLevel: int,
+    successfulCheckEffectIds: Set[int],
+  ): BattleState = {
+    val dispelled = {
+      ...state,
+      fighter: {
+        ...state.fighter,
+        activeEffects: dispelMagicMagicalEffectTargetActiveEffects(
+          state.fighter.activeEffects,
+          OngoingSpellSpiritualWeaponEffect,
+          effectId,
+          slotLevel,
+          successfulCheckEffectIds,
+        ),
+      },
+      goblin: {
+        ...state.goblin,
+        activeEffects: dispelMagicMagicalEffectTargetActiveEffects(
+          state.goblin.activeEffects,
+          OngoingSpellSpiritualWeaponEffect,
+          effectId,
+          slotLevel,
+          successfulCheckEffectIds,
+        ),
+      },
+    }
+    stateWithSpiritualWeaponConcentrationClearedAfterDispel(state, dispelled, source)
+  }
 
   pure def activeEffectsContainLaterTurnSpiritualWeapon(
     effects: Set[ActiveEffect],
@@ -320,6 +393,8 @@ module battleRuntimeSpiritualWeapon {
       assert(resolved.goblin.hp == 2),
       assert(resolved.fighter.activeEffects.contains(SpiritualWeapon({
         source: Fighter,
+        effectId: spiritualWeaponEffectId(Fighter),
+        sourceSpellLevel: 4,
         forcePositionId: 1,
         forceReachFeet: 5,
         repeatMoveMaxFeet: 20,
@@ -363,6 +438,8 @@ module battleRuntimeSpiritualWeapon {
       assert(repeated.goblin.hp == 3),
       assert(repeated.fighter.activeEffects.contains(SpiritualWeapon({
         source: Fighter,
+        effectId: spiritualWeaponEffectId(Fighter),
+        sourceSpellLevel: 2,
         forcePositionId: 2,
         forceReachFeet: 5,
         repeatMoveMaxFeet: 20,
@@ -424,6 +501,62 @@ module battleRuntimeSpiritualWeapon {
       assert(active.fighter.concentrating),
       assert(not(activeEffectsContainSpiritualWeapon(broken.fighter.activeEffects, Fighter))),
       assert(not(broken.fighter.concentrating)),
+    }
+  }
+
+  run test_dispel_magic_ends_spiritual_weapon_magical_effect_target = {
+    val weapon = spiritualWeaponEffect(Fighter, 1, 2, 3, 1)
+    val weaponState = {
+      ...initialState,
+      fighter: {
+        ...initialState.fighter,
+        activeEffects: Set(weapon),
+        concentrating: true,
+      },
+    }
+    val dispelled = resolveDispelMagicAgainstSpiritualWeaponMagicalEffectTarget(
+      weaponState,
+      Fighter,
+      spiritualWeaponEffectId(Fighter),
+      3,
+      Set(),
+    )
+    all {
+      assert(activeEffectsContainSpiritualWeaponEffectId(weaponState.fighter.activeEffects, spiritualWeaponEffectId(Fighter))),
+      assert(not(activeEffectsContainSpiritualWeaponEffectId(dispelled.fighter.activeEffects, spiritualWeaponEffectId(Fighter)))),
+      assert(not(dispelled.fighter.concentrating)),
+    }
+  }
+
+  run test_dispel_magic_higher_level_spiritual_weapon_uses_check_gate = {
+    val weapon = spiritualWeaponEffect(Fighter, 1, 4, 3, 1)
+    val weaponState = {
+      ...initialState,
+      fighter: {
+        ...initialState.fighter,
+        activeEffects: Set(weapon),
+        concentrating: true,
+      },
+    }
+    val failedCheck = resolveDispelMagicAgainstSpiritualWeaponMagicalEffectTarget(
+      weaponState,
+      Fighter,
+      spiritualWeaponEffectId(Fighter),
+      3,
+      Set(),
+    )
+    val successfulCheck = resolveDispelMagicAgainstSpiritualWeaponMagicalEffectTarget(
+      weaponState,
+      Fighter,
+      spiritualWeaponEffectId(Fighter),
+      3,
+      Set(spiritualWeaponEffectId(Fighter)),
+    )
+    all {
+      assert(activeEffectsContainSpiritualWeaponEffectId(failedCheck.fighter.activeEffects, spiritualWeaponEffectId(Fighter))),
+      assert(failedCheck.fighter.concentrating),
+      assert(not(activeEffectsContainSpiritualWeaponEffectId(successfulCheck.fighter.activeEffects, spiritualWeaponEffectId(Fighter)))),
+      assert(not(successfulCheck.fighter.concentrating)),
     }
   }
 }
