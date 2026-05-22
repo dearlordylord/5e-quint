@@ -208,12 +208,13 @@
     },
     "levelThreeSpellBattleReadiness": {
       "denominator": 128,
-      "numerator": 7,
-      "percent": "5.5%",
+      "numerator": 11,
+      "percent": "8.6%",
       "rowsByStatus": {
         "battle-runtime-required": 58,
-        "owner-evidence-required": 55,
+        "accepted-no-battle-effect": 4,
         "partial-battle-runtime": 8,
+        "owner-evidence-required": 51,
         "accepted": 7
       }
     },
@@ -232,9 +233,9 @@
       "catalog-installed-owner-evidence-present": 413,
       "non-runtime": 24,
       "catalog-installed-owner-evidence-required": 9,
-      "catalog-only/dead-for-now": 120,
+      "catalog-only/dead-for-now": 124,
       "missing-authored-record": 58,
-      "catalog-authored-review-required": 55,
+      "catalog-authored-review-required": 51,
       "catalog-authored-executable-follow-up": 4,
       "catalog-installed-needs-owner-evidence": 1
     },
@@ -246,8 +247,9 @@
     },
     "levelThreeSpellPressureRowsByDisposition": {
       "missing-authored-record": 58,
-      "catalog-authored-review-required": 55,
-      "catalog-installed-owner-evidence-present": 15
+      "catalog-only/dead-for-now": 4,
+      "catalog-installed-owner-evidence-present": 15,
+      "catalog-authored-review-required": 51
     },
     "levelThreeInstalledSpellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 15
@@ -7190,7 +7192,7 @@
       "detail": "Clairvoyance (Divination; C, M)",
       "candidateUnitId": "clairvoyance",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -7201,10 +7203,17 @@
         "state": "not-installed",
         "unitId": "clairvoyance"
       },
-      "finalDisposition": "catalog-authored-review-required",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached table/perception and remote-sensor owner",
+        "reason": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy."
+      },
       "ownerEvidence": [],
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_dispel_magic",
@@ -10114,7 +10123,7 @@
       "detail": "Clairvoyance (Divination; C, M)",
       "candidateUnitId": "clairvoyance",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -10125,10 +10134,17 @@
         "state": "not-installed",
         "unitId": "clairvoyance"
       },
-      "finalDisposition": "catalog-authored-review-required",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached table/perception and remote-sensor owner",
+        "reason": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy."
+      },
       "ownerEvidence": [],
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_create_food_and_water",
@@ -24010,7 +24026,7 @@
       "detail": "Clairvoyance (Divination; C, M)",
       "candidateUnitId": "clairvoyance",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -24021,10 +24037,17 @@
         "state": "not-installed",
         "unitId": "clairvoyance"
       },
-      "finalDisposition": "catalog-authored-review-required",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached table/perception and remote-sensor owner",
+        "reason": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy."
+      },
       "ownerEvidence": [],
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_counterspell",
@@ -31060,7 +31083,7 @@
       "detail": "Clairvoyance (Divination; C, M)",
       "candidateUnitId": "clairvoyance",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -31071,10 +31094,17 @@
         "state": "not-installed",
         "unitId": "clairvoyance"
       },
-      "finalDisposition": "catalog-authored-review-required",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached table/perception and remote-sensor owner",
+        "reason": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy."
+      },
       "ownerEvidence": [],
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_counterspell",

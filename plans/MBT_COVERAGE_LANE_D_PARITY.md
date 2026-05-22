@@ -163,7 +163,7 @@
     {
       "number": 27,
       "id": "L3-SPELL-CLAIRVOYANCE-CLOSURE-SURVEY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Level 3 Clairvoyance Closure Survey"
     },
     {
@@ -508,7 +508,7 @@ Acceptance:
 
 ### Task 27 - L3-SPELL-CLAIRVOYANCE-CLOSURE-SURVEY - Level 3 Clairvoyance Closure Survey
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
