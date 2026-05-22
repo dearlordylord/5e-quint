@@ -1,22 +1,22 @@
 {
   "summary": {
-    "total": 73,
-    "covered": 67,
-    "open": 1,
-    "nonSemantic": 5,
+    "total": 89,
+    "covered": 83,
+    "open": 0,
+    "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 55,
-      "character-creation": 8,
-      "character-sheet": 6,
+      "battle": 65,
+      "character-creation": 12,
+      "character-sheet": 8,
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 67,
+      "covered": 83,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
-      "needs-surface-evidence": 1,
-      "boundary-only": 4,
+      "needs-surface-evidence": 0,
+      "boundary-only": 5,
       "unsupported-by-admission": 1
     }
   },
@@ -195,7 +195,7 @@
       ],
       "profiles": [
         "spell.invocation-damage-save-or-attack",
-        "spell.invocation-web-restraint-hazard",
+        "spell.invocation-see-invisible-observer-sight",
         "spell.reaction-shield",
         "spell.readied-action-time-spell"
       ],
@@ -281,7 +281,8 @@
       ],
       "profiles": [
         "spell.invocation-condition-save",
-        "spell.invocation-hideous-laughter-repeat-save-lifecycle"
+        "spell.invocation-hideous-laughter-repeat-save-lifecycle",
+        "spell.invocation-save-gated-condition-immunity"
       ],
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
@@ -328,6 +329,331 @@
         ".references/srd-5.2.1/Playing-the-Game.md#Making an Attack"
       ],
       "title": "Battle failed-save spell attack-roll Advantage effects from Saving Throw holes through active-effect application and Attack Roll projection"
+    },
+    {
+      "id": "BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-see-invisibility.test.ts"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-see-invisible-observer-sight"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-see-invisibility.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/creature-state-leaves.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#See Invisibility",
+        "packages/surface/content/see_invisibility.dhall",
+        "UBIQUITOUS_LANGUAGE.md#Vision and Light",
+        "UBIQUITOUS_LANGUAGE.md#Conditions"
+      ],
+      "title": "Battle See Invisibility self observer-sight effect reveals visible Invisible creatures, caller-witnessed Invisible objects, and caller-witnessed Ethereal targets without mutating target state"
+    },
+    {
+      "id": "BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/find-familiar-lifecycle.test.ts"
+        }
+      ],
+      "profiles": [
+        "spell.find-familiar-lifecycle"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/find-familiar-lifecycle.ts",
+        "packages/battle-runtime/src/find-familiar-state.ts",
+        "packages/battle-runtime/src/find-familiar-telepathy.ts",
+        "packages/battle-runtime/src/find-familiar-pact-chain.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Find Familiar",
+        ".references/srd-5.2.1/Classes/Warlock.md#Pact of the Chain",
+        "UBIQUITOUS_LANGUAGE.md#Action Lifecycle"
+      ],
+      "title": "Battle Find Familiar companion lifecycle, replacement, form and type choice, telepathy, touch delivery, and Pact reaction-attack state"
+    },
+    {
+      "id": "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-web-restraint-hazard.test.ts"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-web-restraint-hazard"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Web",
+        "UBIQUITOUS_LANGUAGE.md#Movement",
+        "UBIQUITOUS_LANGUAGE.md#Conditions"
+      ],
+      "title": "Battle Web area hazard state, entry/start-turn restraint saves, escape cleanup, difficult-terrain projection, obscurement, and duration cleanup"
+    },
+    {
+      "id": "BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-druid-wild-shape.test.ts"
+        }
+      ],
+      "profiles": [
+        "unit-feature.druid-wild-shape-known-form"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/druid-wild-shape.ts",
+        "packages/battle-runtime/src/battle-reducer/statblock.ts",
+        "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
+        "packages/battle-runtime/src/battle-reducer/creature-state.ts",
+        "packages/battle-runtime/src/battle-reducer/unit-features.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Classes/Druid.md#Level 2: Wild Shape",
+        ".references/srd-5.2.1/Rules-Glossary.md#Shape-Shifting",
+        ".references/srd-5.2.1/Rules-Glossary.md#Temporary Hit Points",
+        "UBIQUITOUS_LANGUAGE.md#Creatures and Stat Blocks"
+      ],
+      "title": "Battle Druid Wild Shape spends a use to assume a known Beast Stat Block form, projects form statistics and Temporary Hit Points, blocks spellcasting, and reverts on supported end conditions"
+    },
+    {
+      "id": "BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-heat-metal.test.ts"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-object-contact-damage"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-object-contact-damage.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Heat Metal",
+        "UBIQUITOUS_LANGUAGE.md#Spellcasting",
+        "UBIQUITOUS_LANGUAGE.md#Action Lifecycle"
+      ],
+      "title": "Battle Heat Metal object-contact occurrence state, immediate and repeat Fire damage, held-or-worn save/drop outcome, fallback penalty, and cleanup"
+    },
+    {
+      "id": "BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gust-of-wind.test.ts"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-gust-of-wind-line"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-gust-of-wind.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Gust of Wind",
+        "UBIQUITOUS_LANGUAGE.md#Movement",
+        "UBIQUITOUS_LANGUAGE.md#Spellcasting"
+      ],
+      "title": "Battle Gust of Wind directional Line state, initial and end-turn Strength saves, failed-save push disposition, closer-to-caster movement cost, direction replacement, and cleanup"
+    },
+    {
+      "id": "BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dispel-magic.test.ts"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-ongoing-spell-ending"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/spells-ongoing-spell-ending.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Dispel Magic",
+        "UBIQUITOUS_LANGUAGE.md#Spellcasting"
+      ],
+      "title": "Battle Dispel Magic target-scoped ongoing spell ending for tracked spell light emitters and object-contact occurrences, including higher-level ability-check gating"
+    },
+    {
+      "id": "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
+      "kind": "resource-sequencing",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+        }
+      ],
+      "profiles": [
+        "unit-feature.metamagic-cast-governor-quickened"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-resources.ts",
+        "packages/battle-runtime/src/battle-subjects.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic",
+        ".references/srd-5.2.1/Classes/Sorcerer.md#Quickened Spell",
+        "UBIQUITOUS_LANGUAGE.md#Action Lifecycle"
+      ],
+      "title": "Battle Quickened Spell Metamagic admits known selections, enforces Sorcery Point affordability and one-option-per-spell gates, rewrites supported action spells to Bonus Action, and applies the same-turn leveled-spell limit"
+    },
+    {
+      "id": "SHEET.SPELL_REST_BENEFIT.APPLICATION",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "deterministicReplayRationale": "Prayer of Healing spell-rest benefit replay is a closed two-case fixture: completed-cast application spends the level-2 Spell Slot, applies caller-supplied Short Rest benefits, heals from the provided rolls, and stores recipient Long Rest lockout; a second application to a locked recipient is rejected before spending another Spell Slot.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/character-sheet-runtime/src/spell-rest-benefit-application.mbt.test.ts",
+          "qntSpecPath": "packages/character-sheet-runtime/character-sheet-spell-rest-benefit-application.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "character-sheet.spell-rest-benefit-application"
+      ],
+      "qntOwners": [
+        "packages/character-sheet-runtime/character-sheet-spell-rest-benefit-application.mbt.qnt"
+      ],
+      "runtime": "character-sheet",
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/index.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-M-P.md#Prayer of Healing",
+        ".references/srd-5.2.1/Rules-Glossary.md#Short Rest"
+      ],
+      "title": "Character Sheet Prayer of Healing spends the completed Spell Slot, grants caller-supplied Short Rest benefits, applies slot-scaled healing, and stores recipient Long Rest lockout state"
+    },
+    {
+      "id": "BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-antimagic-field.test.ts"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-antimagic-field-ongoing-spell-suppression"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Antimagic Field",
+        "UBIQUITOUS_LANGUAGE.md#Spellcasting"
+      ],
+      "title": "Battle Antimagic Field creates a self-origin Emanation and suppresses tracked ongoing spell effects inside it without deleting their occurrence state"
+    },
+    {
+      "id": "BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-spike-growth-movement-hazard.test.ts"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-spike-growth-movement-hazard"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-subjects.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Spike Growth",
+        "UBIQUITOUS_LANGUAGE.md#Movement",
+        "UBIQUITOUS_LANGUAGE.md#Environmental Hazards"
+      ],
+      "title": "Battle Spike Growth active area hazard projects Difficult Terrain and movement-metered Piercing damage from caller-supplied travel distance, then cleans up on Concentration or duration end"
     },
     {
       "id": "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
@@ -881,7 +1207,8 @@
         }
       ],
       "profiles": [
-        "spell.creature-type-protection-and-charm"
+        "spell.creature-type-protection-and-charm",
+        "spell.invocation-save-gated-condition-immunity"
       ],
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-creature-type-protection.qnt"
@@ -1652,6 +1979,7 @@
         }
       ],
       "profiles": [
+        "character-creation.class-feature-advancement-replacement",
         "character-creation.fighter-fighting-style-advancement-replacement"
       ],
       "qntOwners": [
@@ -1776,20 +2104,18 @@
       "title": "Executable BattleHole and BattleFill frontier inventory classifies current reducer hole families, fill kinds, and follow-up task splits"
     },
     {
-      "followUpTaskIds": [
-        "RKBC-NONFEATURE-SURFACE-PROFILE-JOIN-EVIDENCE"
-      ],
       "id": "BATTLE.SURFACE.EXECUTABLE_PROFILE_JOIN",
       "kind": "composition",
       "parityWitnesses": [],
       "profiles": [],
       "qntOwners": [],
+      "reason": "The executable Surface profile join is a generated coverage-artifact boundary rather than reducer semantics. The closure evidence is the profile-obligations mapping from admitted rules-kernel profiles to covered semantic obligations and the generated Unit profile report; future semantic gaps should enter as explicit profile or obligation rows instead of reopening this meta row.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
-      "status": "needs-surface-evidence",
+      "status": "boundary-only",
       "surfaceEvidence": [],
       "title": "Prove each currently admitted executable battle Surface profile points to a covered semantic obligation"
     },
@@ -1858,6 +2184,134 @@
       "title": "Character Creation finalizes Weapon Mastery weapon choices as selected CharacterBuild class-choice refs without owning selected mastery-property behavior"
     },
     {
+      "id": "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/cleric-druid-order-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "character-creation.class-feature-option-projection"
+      ],
+      "qntOwners": [
+        "packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt"
+      ],
+      "runtime": "character-creation",
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/finalization.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Character-Creation.md#Gaining a Level",
+        ".references/srd-5.2.1/Classes/Cleric.md#Level 1: Divine Order",
+        ".references/srd-5.2.1/Classes/Druid.md#Level 1: Primal Order",
+        ".references/srd-5.2.1/Classes/Paladin.md#Level 2: Fighting Style",
+        ".references/srd-5.2.1/Classes/Ranger.md#Level 2: Fighting Style",
+        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic"
+      ],
+      "title": "Character Creation finalizes class-feature option choices as selected CharacterBuild option, Unit ref, proficiency, cantrip, and Ability Check bonus facts without owning downstream option behavior"
+    },
+    {
+      "id": "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/rogue-expertise-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "character-creation.skill-expertise-choice"
+      ],
+      "qntOwners": [
+        "packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.mbt.qnt"
+      ],
+      "runtime": "character-creation",
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/finalization.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Character-Creation.md#Gaining a Level",
+        ".references/srd-5.2.1/Rules-Glossary.md#Expertise",
+        ".references/srd-5.2.1/Classes/Rogue.md#Level 1: Expertise",
+        ".references/srd-5.2.1/Classes/Bard.md#Level 2: Expertise",
+        ".references/srd-5.2.1/Classes/Ranger.md#Level 2: Deft Explorer",
+        ".references/srd-5.2.1/Classes/Wizard.md#Level 2: Scholar"
+      ],
+      "title": "Character Creation finalizes skill Expertise choices over owned skill proficiencies as CharacterBuild Expertise proficiency levels without duplicating skill proficiency state"
+    },
+    {
+      "id": "CREATION.CLASS_FEATURE_RESOURCE.PROJECTION",
+      "kind": "projection-scalar",
+      "parityWitnesses": [
+        {
+          "deterministicReplayRationale": "Character Creation class-feature resource projection replay is a fixed fixture for Monk's Focus use-count resource facts and Sorcerer Font of Magic point-pool facts. The risk is deterministic projection from retained Surface class-feature records and class level, not random draft-fill interleavings.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/character-creation-runtime/src/class-feature-projections.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "character-creation.class-feature-resource-projection"
+      ],
+      "qntOwners": [
+        "packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt"
+      ],
+      "runtime": "character-creation",
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/finalization.ts",
+        "packages/character-creation-runtime/src/monk-focus.ts",
+        "packages/character-creation-runtime/src/sorcerer-font-of-magic.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Classes/Cleric.md#Level 2: Channel Divinity",
+        ".references/srd-5.2.1/Classes/Druid.md#Level 2: Wild Shape",
+        ".references/srd-5.2.1/Classes/Monk.md#Level 2: Monk's Focus",
+        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Font of Magic"
+      ],
+      "title": "Character Creation projects retained class-feature resources from Surface class progression into CharacterBuild resource facts without duplicating resource capacity state"
+    },
+    {
+      "id": "CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION",
+      "kind": "projection-scalar",
+      "parityWitnesses": [
+        {
+          "deterministicReplayRationale": "Character Creation class-feature source fact projection replay is a fixed fixture for Uncanny Metabolism linking to Monk's Focus plus Martial Arts-derived healing facts, and Metamagic known-option facts linking to the shared Font of Magic Sorcery Point resource. The risk is deterministic retained source-fact projection, not random draft-fill interleavings.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/character-creation-runtime/src/class-feature-projections.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "character-creation.class-feature-source-fact-projection"
+      ],
+      "qntOwners": [
+        "packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt"
+      ],
+      "runtime": "character-creation",
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/monk-uncanny-metabolism.ts",
+        "packages/character-creation-runtime/src/sorcerer-metamagic.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Classes/Druid.md#Level 2: Wild Companion",
+        ".references/srd-5.2.1/Classes/Monk.md#Level 2: Uncanny Metabolism",
+        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic"
+      ],
+      "title": "Character Creation projects retained class-feature source facts such as shared-resource links, Martial Arts die source, Metamagic option facts, and spell-use limits without duplicating source state"
+    },
+    {
       "id": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
       "kind": "state-transition",
       "parityWitnesses": [
@@ -1897,6 +2351,38 @@
         ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic"
       ],
       "title": "Character Sheet non-slot feature-resource spend, recovery, reset, conversion, and battle bridge transitions"
+    },
+    {
+      "id": "SHEET.ABILITY_CHECK.PROFICIENCY_BONUS",
+      "kind": "projection-scalar",
+      "parityWitnesses": [
+        {
+          "deterministicReplayRationale": "Character Sheet Ability Check Proficiency Bonus replay is a fixed projection fixture for unproficient Jack of All Trades, rounded-down higher-level Jack of All Trades, ordinary skill proficiency, Expertise, the other-Proficiency-Bonus exclusion, and absence of the Bard level-2 feature. Random action interleavings are not the risk at this scalar sheet projection boundary.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/character-sheet-runtime/src/ability-check-proficiency-bonus.mbt.test.ts",
+          "qntSpecPath": "packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "character-sheet.ability-check-proficiency-bonus"
+      ],
+      "qntOwners": [
+        "packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt"
+      ],
+      "runtime": "character-sheet",
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/index.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Playing-the-Game.md#Ability Checks",
+        ".references/srd-5.2.1/Playing-the-Game.md#Proficiency Bonus",
+        ".references/srd-5.2.1/Rules-Glossary.md#Expertise",
+        ".references/srd-5.2.1/Rules-Glossary.md#Skill",
+        ".references/srd-5.2.1/Classes/Bard.md#Level 2: Jack of All Trades"
+      ],
+      "title": "Character Sheet projects Ability Check Proficiency Bonus from skill proficiency, Expertise, Jack of All Trades, and the no-other-Proficiency-Bonus gate"
     },
     {
       "id": "CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION",
@@ -3816,6 +4302,13 @@
     },
     {
       "obligationIds": [
+        "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
+        "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION"
+      ],
+      "profileId": "spell.invocation-save-gated-condition-immunity"
+    },
+    {
+      "obligationIds": [
         "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS"
       ],
       "profileId": "spell.scalar-buff"
@@ -3950,6 +4443,12 @@
     },
     {
       "obligationIds": [
+        "BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE"
+      ],
+      "profileId": "spell.find-familiar-lifecycle"
+    },
+    {
+      "obligationIds": [
         "BATTLE.COMMAND.OPTION_AND_NEXT_TURN"
       ],
       "profileId": "spell.invocation-command-halt-grovel"
@@ -4066,6 +4565,12 @@
       "obligationIds": [
         "CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT"
       ],
+      "profileId": "character-creation.class-feature-advancement-replacement"
+    },
+    {
+      "obligationIds": [
+        "CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT"
+      ],
       "profileId": "character-creation.fighter-fighting-style-advancement-replacement"
     },
     {
@@ -4088,15 +4593,100 @@
     },
     {
       "obligationIds": [
-        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+        "BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE"
+      ],
+      "profileId": "spell.invocation-dragons-breath-initial"
+    },
+    {
+      "obligationIds": [
+        "CREATION.CLASS_FEATURE_OPTION.PROJECTION"
+      ],
+      "profileId": "character-creation.class-feature-option-projection"
+    },
+    {
+      "obligationIds": [
+        "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION"
+      ],
+      "profileId": "character-creation.skill-expertise-choice"
+    },
+    {
+      "obligationIds": [
+        "CREATION.CLASS_FEATURE_RESOURCE.PROJECTION"
+      ],
+      "profileId": "character-creation.class-feature-resource-projection"
+    },
+    {
+      "obligationIds": [
+        "CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION"
+      ],
+      "profileId": "character-creation.class-feature-source-fact-projection"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE"
       ],
       "profileId": "spell.invocation-web-restraint-hazard"
     },
     {
       "obligationIds": [
-        "BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE"
+        "SHEET.ABILITY_CHECK.PROFICIENCY_BONUS"
       ],
-      "profileId": "spell.invocation-dragons-breath-initial"
+      "profileId": "character-sheet.ability-check-proficiency-bonus"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE"
+      ],
+      "profileId": "unit-feature.druid-wild-shape-known-form"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE"
+      ],
+      "profileId": "spell.invocation-object-contact-damage"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE"
+      ],
+      "profileId": "spell.invocation-gust-of-wind-line"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING"
+      ],
+      "profileId": "spell.invocation-ongoing-spell-ending"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR"
+      ],
+      "profileId": "unit-feature.metamagic-cast-governor-quickened"
+    },
+    {
+      "obligationIds": [
+        "SHEET.SPELL_REST_BENEFIT.APPLICATION"
+      ],
+      "profileId": "character-sheet.spell-rest-benefit-application"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION"
+      ],
+      "profileId": "spell.invocation-antimagic-field-ongoing-spell-suppression"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD"
+      ],
+      "profileId": "spell.invocation-spike-growth-movement-hazard"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT"
+      ],
+      "profileId": "spell.invocation-see-invisible-observer-sight"
     }
   ],
   "generatorReadiness": [

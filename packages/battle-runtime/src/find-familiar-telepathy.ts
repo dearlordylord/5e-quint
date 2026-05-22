@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.find-familiar-lifecycle
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
 import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
 import { movementFeet, type MovementFeet } from "@dnd/shared/types";
 import type { CreatureSense } from "@dnd/surface/surface/types";

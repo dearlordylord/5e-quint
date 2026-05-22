@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: runtime-owner CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION
 import { Either, Option } from "effect";
 import { DAMAGE_DIE_SIZES, type DamageDieSize } from "@dnd/shared/types";
 import type {

@@ -83,18 +83,18 @@
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 123,
-      "numerator": 105,
-      "percent": "85.4%"
+      "numerator": 122,
+      "percent": "99.2%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 123,
-      "numerator": 105,
-      "percent": "85.4%"
+      "numerator": 122,
+      "percent": "99.2%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 136,
-      "numerator": 126,
-      "percent": "92.6%"
+      "numerator": 136,
+      "percent": "100%"
     },
     "runtimeMappingCoverage": {
       "denominator": 90,
@@ -3406,7 +3406,9 @@
     {
       "id": "character-sheet.spell-rest-benefit-application",
       "profileKind": "character-sheet",
-      "qntOwners": [],
+      "qntOwners": [
+        "packages/character-sheet-runtime/character-sheet-spell-rest-benefit-application.mbt.qnt"
+      ],
       "runtimeOwners": [
         "packages/character-sheet-runtime/src/index.ts"
       ],
@@ -3416,6 +3418,10 @@
       ],
       "title": "Character Sheet applies a spell-granted Short Rest benefit with slot-scaled healing and Long Rest recipient lockout",
       "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/character-sheet-runtime/character-sheet-spell-rest-benefit-application.mbt.qnt"
+        },
         {
           "kind": "runtime-test",
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
@@ -3578,13 +3584,13 @@
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 123,
-        "numerator": 105,
-        "percent": "85.4%"
+        "numerator": 122,
+        "percent": "99.2%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 123,
-        "numerator": 105,
-        "percent": "85.4%"
+        "numerator": 122,
+        "percent": "99.2%"
       }
     },
     "profileKinds": [
@@ -4679,8 +4685,21 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle creature-type protection, Charmed/Frightened/possession prevention, and relevant-effect Saving Throw Advantage"
+          },
+          {
+            "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup"
+          }
+        ],
         "profileId": "spell.invocation-save-gated-condition-immunity",
         "profileKind": "spell-invocation"
       },
@@ -4750,8 +4769,15 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Find Familiar companion lifecycle, replacement, form and type choice, telepathy, touch delivery, and Pact reaction-attack state"
+          }
+        ],
         "profileId": "spell.find-familiar-lifecycle",
         "profileKind": "spell-invocation"
       },
@@ -4769,8 +4795,15 @@
         "profileKind": "character-creation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT",
+            "runtime": "character-creation",
+            "status": "covered",
+            "title": "Character Creation Fighter class-level gain replacement rewrites durable CharacterBuild progression and selected Fighting Style ownership without draft state"
+          }
+        ],
         "profileId": "character-creation.class-feature-advancement-replacement",
         "profileKind": "character-creation"
       },
@@ -4827,26 +4860,54 @@
         "profileKind": "character-creation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
+            "runtime": "character-creation",
+            "status": "covered",
+            "title": "Character Creation finalizes class-feature option choices as selected CharacterBuild option, Unit ref, proficiency, cantrip, and Ability Check bonus facts without owning downstream option behavior"
+          }
+        ],
         "profileId": "character-creation.class-feature-option-projection",
         "profileKind": "character-creation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
+            "runtime": "character-creation",
+            "status": "covered",
+            "title": "Character Creation finalizes skill Expertise choices over owned skill proficiencies as CharacterBuild Expertise proficiency levels without duplicating skill proficiency state"
+          }
+        ],
         "profileId": "character-creation.skill-expertise-choice",
         "profileKind": "character-creation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "CREATION.CLASS_FEATURE_RESOURCE.PROJECTION",
+            "runtime": "character-creation",
+            "status": "covered",
+            "title": "Character Creation projects retained class-feature resources from Surface class progression into CharacterBuild resource facts without duplicating resource capacity state"
+          }
+        ],
         "profileId": "character-creation.class-feature-resource-projection",
         "profileKind": "character-creation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION",
+            "runtime": "character-creation",
+            "status": "covered",
+            "title": "Character Creation projects retained class-feature source facts such as shared-resource links, Martial Arts die source, Metamagic option facts, and spell-use limits without duplicating source state"
+          }
+        ],
         "profileId": "character-creation.class-feature-source-fact-projection",
         "profileKind": "character-creation"
       },
@@ -4864,8 +4925,15 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "SHEET.ABILITY_CHECK.PROFICIENCY_BONUS",
+            "runtime": "character-sheet",
+            "status": "covered",
+            "title": "Character Sheet projects Ability Check Proficiency Bonus from skill proficiency, Expertise, Jack of All Trades, and the no-other-Proficiency-Bonus gate"
+          }
+        ],
         "profileId": "character-sheet.ability-check-proficiency-bonus",
         "profileKind": "character-sheet"
       },
@@ -5052,8 +5120,15 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Druid Wild Shape spends a use to assume a known Beast Stat Block form, projects form statistics and Temporary Hit Points, blocks spellcasting, and reverts on supported end conditions"
+          }
+        ],
         "profileId": "unit-feature.druid-wild-shape-known-form",
         "profileKind": "stat-block-control"
       },
@@ -5115,14 +5190,28 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Heat Metal object-contact occurrence state, immediate and repeat Fire damage, held-or-worn save/drop outcome, fallback penalty, and cleanup"
+          }
+        ],
         "profileId": "spell.invocation-object-contact-damage",
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Gust of Wind directional Line state, initial and end-turn Strength saves, failed-save push disposition, closer-to-caster movement cost, direction replacement, and cleanup"
+          }
+        ],
         "profileId": "spell.invocation-gust-of-wind-line",
         "profileKind": "spell-invocation"
       },
@@ -5143,48 +5232,96 @@
         "joinStatus": "covered",
         "obligations": [
           {
-            "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+            "obligationId": "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE",
             "runtime": "battle",
             "status": "covered",
-            "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+            "title": "Battle Web area hazard state, entry/start-turn restraint saves, escape cleanup, difficult-terrain projection, obscurement, and duration cleanup"
           }
         ],
         "profileId": "spell.invocation-web-restraint-hazard",
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Dispel Magic target-scoped ongoing spell ending for tracked spell light emitters and object-contact occurrences, including higher-level ability-check gating"
+          }
+        ],
         "profileId": "spell.invocation-ongoing-spell-ending",
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Quickened Spell Metamagic admits known selections, enforces Sorcery Point affordability and one-option-per-spell gates, rewrites supported action spells to Bonus Action, and applies the same-turn leveled-spell limit"
+          }
+        ],
         "profileId": "unit-feature.metamagic-cast-governor-quickened",
         "profileKind": "bonus-action"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "SHEET.SPELL_REST_BENEFIT.APPLICATION",
+            "runtime": "character-sheet",
+            "status": "covered",
+            "title": "Character Sheet Prayer of Healing spends the completed Spell Slot, grants caller-supplied Short Rest benefits, applies slot-scaled healing, and stores recipient Long Rest lockout state"
+          }
+        ],
         "profileId": "character-sheet.spell-rest-benefit-application",
         "profileKind": "character-sheet"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Antimagic Field creates a self-origin Emanation and suppresses tracked ongoing spell effects inside it without deleting their occurrence state"
+          }
+        ],
         "profileId": "spell.invocation-antimagic-field-ongoing-spell-suppression",
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Spike Growth active area hazard projects Difficult Terrain and movement-metered Piercing damage from caller-supplied travel distance, then cleans up on Concentration or duration end"
+          }
+        ],
         "profileId": "spell.invocation-spike-growth-movement-hazard",
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+          },
+          {
+            "obligationId": "BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle See Invisibility self observer-sight effect reveals visible Invisible creatures, caller-witnessed Invisible objects, and caller-witnessed Ethereal targets without mutating target state"
+          }
+        ],
         "profileId": "spell.invocation-see-invisible-observer-sight",
         "profileKind": "spell-invocation"
       },
@@ -5217,8 +5354,8 @@
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
           "denominator": 136,
-          "numerator": 126,
-          "percent": "92.6%"
+          "numerator": 136,
+          "percent": "100%"
         }
       },
       "units": [
@@ -5495,11 +5632,18 @@
           "unitId": "bard_cutting_words"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "SHEET.ABILITY_CHECK.PROFICIENCY_BONUS",
+                  "runtime": "character-sheet",
+                  "status": "covered",
+                  "title": "Character Sheet projects Ability Check Proficiency Bonus from skill proficiency, Expertise, Jack of All Trades, and the no-other-Proficiency-Bonus gate"
+                }
+              ],
               "profileId": "character-sheet.ability-check-proficiency-bonus",
               "profileKind": "character-sheet"
             }
@@ -5709,11 +5853,18 @@
           "unitId": "chromatic_orb"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.CLASS_FEATURE_RESOURCE.PROJECTION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation projects retained class-feature resources from Surface class progression into CharacterBuild resource facts without duplicating resource capacity state"
+                }
+              ],
               "profileId": "character-creation.class-feature-resource-projection",
               "profileKind": "character-creation"
             }
@@ -5721,11 +5872,18 @@
           "unitId": "cleric_channel_divinity"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation finalizes class-feature option choices as selected CharacterBuild option, Unit ref, proficiency, cantrip, and Ability Check bonus facts without owning downstream option behavior"
+                }
+              ],
               "profileId": "character-creation.class-feature-option-projection",
               "profileKind": "character-creation"
             }
@@ -5980,11 +6138,18 @@
           "unitId": "divine_smite"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation finalizes class-feature option choices as selected CharacterBuild option, Unit ref, proficiency, cantrip, and Ability Check bonus facts without owning downstream option behavior"
+                }
+              ],
               "profileId": "character-creation.class-feature-option-projection",
               "profileKind": "character-creation"
             }
@@ -6546,11 +6711,18 @@
           "unitId": "healing_word"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Heat Metal object-contact occurrence state, immediate and repeat Fire damage, held-or-worn save/drop outcome, fallback penalty, and cleanup"
+                }
+              ],
               "profileId": "spell.invocation-object-contact-damage",
               "profileKind": "spell-invocation"
             }
@@ -7189,11 +7361,18 @@
           "unitId": "monk_unarmored_movement"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation projects retained class-feature source facts such as shared-resource links, Martial Arts die source, Metamagic option facts, and spell-use limits without duplicating source state"
+                }
+              ],
               "profileId": "character-creation.class-feature-source-fact-projection",
               "profileKind": "character-creation"
             },
@@ -7493,11 +7672,18 @@
           "unitId": "protection_from_poison"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation finalizes skill Expertise choices over owned skill proficiencies as CharacterBuild Expertise proficiency levels without duplicating skill proficiency state"
+                }
+              ],
               "profileId": "character-creation.skill-expertise-choice",
               "profileKind": "character-creation"
             }
@@ -7720,11 +7906,18 @@
           "unitId": "rogue_evasion"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation finalizes skill Expertise choices over owned skill proficiencies as CharacterBuild Expertise proficiency levels without duplicating skill proficiency state"
+                }
+              ],
               "profileId": "character-creation.skill-expertise-choice",
               "profileKind": "character-creation"
             }
@@ -7909,11 +8102,24 @@
           "unitId": "searing_smite"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle See Invisibility self observer-sight effect reveals visible Invisible creatures, caller-witnessed Invisible objects, and caller-witnessed Ethereal targets without mutating target state"
+                }
+              ],
               "profileId": "spell.invocation-see-invisible-observer-sight",
               "profileKind": "spell-invocation"
             }
@@ -8375,10 +8581,10 @@
               "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle Web area hazard state, entry/start-turn restraint saves, escape cleanup, difficult-terrain projection, obscurement, and duration cleanup"
                 }
               ],
               "profileId": "spell.invocation-web-restraint-hazard",
@@ -8426,11 +8632,18 @@
           "unitId": "wizard_ritual_adept"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation finalizes skill Expertise choices over owned skill proficiencies as CharacterBuild Expertise proficiency levels without duplicating skill proficiency state"
+                }
+              ],
               "profileId": "character-creation.skill-expertise-choice",
               "profileKind": "character-creation"
             }
@@ -10645,6 +10858,14 @@
     {
       "claimKind": "completed-runtime-parity",
       "note": "Focused Character Sheet runtime tests cover Prayer of Healing Surface-profile admission by shape, completed-cast recipient eligibility consumption, level-2-or-higher Spell Slot spend at completion, existing Short Rest benefit application to each recipient without duplicating the rest algorithm, slot-scaled capped healing, same-spell recipient Long Rest lockout, and Long Rest lockout clearing while range and interruption remain caller/table facts.",
+      "profileIds": [
+        "character-sheet.spell-rest-benefit-application"
+      ],
+      "taskId": "L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Deterministic Character Sheet projection witness records Prayer of Healing Spell Slot spend, Short Rest benefit application, slot-scaled healing, and Long Rest recipient lockout as the profile-specific rules-kernel obligation owner.",
       "profileIds": [
         "character-sheet.spell-rest-benefit-application"
       ],
@@ -20842,7 +21063,9 @@
         {
           "id": "character-sheet.spell-rest-benefit-application",
           "profileKind": "character-sheet",
-          "qntOwners": [],
+          "qntOwners": [
+            "packages/character-sheet-runtime/character-sheet-spell-rest-benefit-application.mbt.qnt"
+          ],
           "runtimeOwners": [
             "packages/character-sheet-runtime/src/index.ts"
           ],
@@ -20852,6 +21075,10 @@
           ],
           "title": "Character Sheet applies a spell-granted Short Rest benefit with slot-scaled healing and Long Rest recipient lockout",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/character-sheet-runtime/character-sheet-spell-rest-benefit-application.mbt.qnt"
+            },
             {
               "kind": "runtime-test",
               "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"

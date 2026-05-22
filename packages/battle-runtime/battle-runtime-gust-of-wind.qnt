@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-gust-of-wind-line
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-gust-of-wind-line
 module battleRuntimeGustOfWind {

@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.find-familiar-lifecycle
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
 import type { BattleState } from "./battle-reducer.ts";
 import type { CombatantId } from "./identity.ts";
 import type { FindFamiliarCreatureTypeOverride } from "./find-familiar-forms.ts";

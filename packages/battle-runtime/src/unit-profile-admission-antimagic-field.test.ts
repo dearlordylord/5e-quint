@@ -1,5 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-ANTIMAGIC-FIELD-GENERIC-SUPPRESSION antimagic_field
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-antimagic-field-ongoing-spell-suppression
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet, Round } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";

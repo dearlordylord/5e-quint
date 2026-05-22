@@ -127,7 +127,7 @@
     {
       "number": 21,
       "id": "RKBC-NONFEATURE-SURFACE-PROFILE-JOIN-EVIDENCE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Surface Profile Join Evidence Closure"
     },
     {
@@ -373,13 +373,13 @@ Output:
 
 ### Task 21 - RKBC-NONFEATURE-SURFACE-PROFILE-JOIN-EVIDENCE - Surface Profile Join Evidence Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 - Task 14.
 
 Output:
-- Prove every currently admitted executable battle Surface profile points to a covered rules-kernel semantic obligation, or record explicit non-runtime or boundary dispositions.
+- Prove every pre-Level-3 admitted executable battle Surface profile points to a covered rules-kernel semantic obligation, or record explicit non-runtime or boundary dispositions.
 
 ## Overnight Backlog Refill
 
@@ -442,6 +442,7 @@ Input:
 Output:
 
 - Survey level-3 supported or likely-supported profiles and identify rules-kernel obligation mappings needed before broad implementation.
+- Resolve the current `spell.invocation-ray-of-enfeeblement-d20-lifecycle` profile join gap by mapping it to a covered rules-kernel obligation or splitting a precise follow-up when that mapping would overclaim current behavior.
 - Updated plan/profile/evidence/report artifacts only when they are the correct owner.
 - Focused verification, `git diff --check`, and reviewer-loop convergence.
 

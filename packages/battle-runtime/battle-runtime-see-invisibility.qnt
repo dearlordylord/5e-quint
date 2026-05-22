@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-see-invisible-observer-sight
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-see-invisible-observer-sight
 

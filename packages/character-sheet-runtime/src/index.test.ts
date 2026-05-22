@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: parity-witness SHEET.SPELL_REST_BENEFIT.APPLICATION
 import type { CharacterBuild } from "@dnd/character-creation-runtime";
 import {
   abilityScoreAssignment,

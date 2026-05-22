@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form unit-feature.martial-arts-attack-projection
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
 // Movement-budget and speed helpers extracted from battle-reducer.ts.
 // Cluster S (movement_speed). Mechanical extraction — no behavior change.
 // Reads creature-state-leaves.ts to avoid cycling back into G.

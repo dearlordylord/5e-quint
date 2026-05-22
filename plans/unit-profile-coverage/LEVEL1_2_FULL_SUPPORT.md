@@ -11,9 +11,9 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | Strict runtime/profile support | 113/171 (66.1%) |
 | Strict target closure | 168/171 (98.2%) |
 | Product readiness | 526/556 (94.6%) |
-| Rules-kernel profile join | 78/85 (91.8%) |
-| Rules-kernel covered profile join | 78/85 (91.8%) |
-| Supported Unit rules-kernel chain | 103/113 (91.2%) |
+| Rules-kernel profile join | 85/85 (100%) |
+| Rules-kernel covered profile join | 85/85 (100%) |
+| Supported Unit rules-kernel chain | 113/113 (100%) |
 
 ## Scope
 
@@ -52,16 +52,7 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 
 | Unit | Status | Profiles Needing Attention |
 | --- | --- | --- |
-| `bard_jack_of_all_trades` | unmapped | `character-sheet.ability-check-proficiency-bonus` (unmapped: no obligation mapping) |
-| `cleric_channel_divinity` | unmapped | `character-creation.class-feature-resource-projection` (unmapped: no obligation mapping) |
-| `cleric_divine_order` | unmapped | `character-creation.class-feature-option-projection` (unmapped: no obligation mapping) |
-| `druid_primal_order` | unmapped | `character-creation.class-feature-option-projection` (unmapped: no obligation mapping) |
-| `heat_metal` | unmapped | `spell.invocation-object-contact-damage` (unmapped: no obligation mapping) |
-| `monk_uncanny_metabolism` | unmapped | `character-creation.class-feature-source-fact-projection` (unmapped: no obligation mapping) |
-| `ranger_deft_explorer` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
-| `rogue_expertise` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
-| `see_invisibility` | unmapped | `spell.invocation-see-invisible-observer-sight` (unmapped: no obligation mapping) |
-| `wizard_scholar` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
+| _none_ | _none_ | _none_ |
 
 ## Non-Supported Frontier Detail
 

@@ -3,6 +3,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
 
 import { Match, Schema } from "effect";
 import { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";

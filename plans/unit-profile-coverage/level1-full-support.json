@@ -963,18 +963,18 @@
     },
     "rulesKernelCoveredProfileJoin": {
       "denominator": 58,
-      "numerator": 56,
-      "percent": "96.6%"
+      "numerator": 58,
+      "percent": "100%"
     },
     "rulesKernelProfileJoin": {
       "denominator": 58,
-      "numerator": 56,
-      "percent": "96.6%"
+      "numerator": 58,
+      "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 78,
-      "numerator": 75,
-      "percent": "96.2%"
+      "numerator": 78,
+      "percent": "100%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 94,
@@ -3246,8 +3246,8 @@
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
         "denominator": 78,
-        "numerator": 75,
-        "percent": "96.2%"
+        "numerator": 78,
+        "percent": "100%"
       }
     },
     "units": [
@@ -3549,11 +3549,18 @@
         "unitId": "chromatic_orb"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
+                "runtime": "character-creation",
+                "status": "covered",
+                "title": "Character Creation finalizes class-feature option choices as selected CharacterBuild option, Unit ref, proficiency, cantrip, and Ability Check bonus facts without owning downstream option behavior"
+              }
+            ],
             "profileId": "character-creation.class-feature-option-projection",
             "profileKind": "character-creation"
           }
@@ -3764,11 +3771,18 @@
         "unitId": "divine_smite"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
+                "runtime": "character-creation",
+                "status": "covered",
+                "title": "Character Creation finalizes class-feature option choices as selected CharacterBuild option, Unit ref, proficiency, cantrip, and Ability Check bonus facts without owning downstream option behavior"
+              }
+            ],
             "profileId": "character-creation.class-feature-option-projection",
             "profileKind": "character-creation"
           }
@@ -4792,11 +4806,18 @@
         "unitId": "resistance"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
+                "runtime": "character-creation",
+                "status": "covered",
+                "title": "Character Creation finalizes skill Expertise choices over owned skill proficiencies as CharacterBuild Expertise proficiency levels without duplicating skill proficiency state"
+              }
+            ],
             "profileId": "character-creation.skill-expertise-choice",
             "profileKind": "character-creation"
           }

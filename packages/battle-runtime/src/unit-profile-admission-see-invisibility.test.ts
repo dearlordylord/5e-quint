@@ -1,5 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT see_invisibility
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-see-invisible-observer-sight
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT
 import { describe, expect, test } from "vitest";
 import {
   combatantCanSee,

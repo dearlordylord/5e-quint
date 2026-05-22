@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE
 
 import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
 import {

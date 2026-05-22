@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
 // Unit feature discovery and resolution extracted from ../battle-reducer.ts.
 // Owns unit-feature act discovery, feature command resolution, ongoing feature
 // activation, failed/successful ability-check feature reactions, and self-heal

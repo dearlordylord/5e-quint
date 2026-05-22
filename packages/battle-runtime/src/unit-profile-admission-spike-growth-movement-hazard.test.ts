@@ -1,5 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME spike_growth
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-spike-growth-movement-hazard
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
 import { describe, expect, test } from "vitest";
 import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
 import {

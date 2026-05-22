@@ -2969,18 +2969,18 @@
     },
     "rulesKernelCoveredProfileJoin": {
       "denominator": 85,
-      "numerator": 78,
-      "percent": "91.8%"
+      "numerator": 85,
+      "percent": "100%"
     },
     "rulesKernelProfileJoin": {
       "denominator": 85,
-      "numerator": 78,
-      "percent": "91.8%"
+      "numerator": 85,
+      "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 113,
-      "numerator": 103,
-      "percent": "91.2%"
+      "numerator": 113,
+      "percent": "100%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 171,
@@ -5414,8 +5414,8 @@
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
         "denominator": 113,
-        "numerator": 103,
-        "percent": "91.2%"
+        "numerator": 113,
+        "percent": "100%"
       }
     },
     "units": [
@@ -5648,11 +5648,18 @@
         "unitId": "bard_bardic_inspiration"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "SHEET.ABILITY_CHECK.PROFICIENCY_BONUS",
+                "runtime": "character-sheet",
+                "status": "covered",
+                "title": "Character Sheet projects Ability Check Proficiency Bonus from skill proficiency, Expertise, Jack of All Trades, and the no-other-Proficiency-Bonus gate"
+              }
+            ],
             "profileId": "character-sheet.ability-check-proficiency-bonus",
             "profileKind": "character-sheet"
           }
@@ -5862,11 +5869,18 @@
         "unitId": "chromatic_orb"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "CREATION.CLASS_FEATURE_RESOURCE.PROJECTION",
+                "runtime": "character-creation",
+                "status": "covered",
+                "title": "Character Creation projects retained class-feature resources from Surface class progression into CharacterBuild resource facts without duplicating resource capacity state"
+              }
+            ],
             "profileId": "character-creation.class-feature-resource-projection",
             "profileKind": "character-creation"
           }
@@ -5874,11 +5888,18 @@
         "unitId": "cleric_channel_divinity"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
+                "runtime": "character-creation",
+                "status": "covered",
+                "title": "Character Creation finalizes class-feature option choices as selected CharacterBuild option, Unit ref, proficiency, cantrip, and Ability Check bonus facts without owning downstream option behavior"
+              }
+            ],
             "profileId": "character-creation.class-feature-option-projection",
             "profileKind": "character-creation"
           }
@@ -6089,11 +6110,18 @@
         "unitId": "divine_smite"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
+                "runtime": "character-creation",
+                "status": "covered",
+                "title": "Character Creation finalizes class-feature option choices as selected CharacterBuild option, Unit ref, proficiency, cantrip, and Ability Check bonus facts without owning downstream option behavior"
+              }
+            ],
             "profileId": "character-creation.class-feature-option-projection",
             "profileKind": "character-creation"
           }
@@ -6560,11 +6588,18 @@
         "unitId": "healing_word"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Heat Metal object-contact occurrence state, immediate and repeat Fire damage, held-or-worn save/drop outcome, fallback penalty, and cleanup"
+              }
+            ],
             "profileId": "spell.invocation-object-contact-damage",
             "profileKind": "spell-invocation"
           }
@@ -7083,11 +7118,18 @@
         "unitId": "monk_unarmored_movement"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION",
+                "runtime": "character-creation",
+                "status": "covered",
+                "title": "Character Creation projects retained class-feature source facts such as shared-resource links, Martial Arts die source, Metamagic option facts, and spell-use limits without duplicating source state"
+              }
+            ],
             "profileId": "character-creation.class-feature-source-fact-projection",
             "profileKind": "character-creation"
           },
@@ -7311,11 +7353,18 @@
         "unitId": "protection_from_poison"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
+                "runtime": "character-creation",
+                "status": "covered",
+                "title": "Character Creation finalizes skill Expertise choices over owned skill proficiencies as CharacterBuild Expertise proficiency levels without duplicating skill proficiency state"
+              }
+            ],
             "profileId": "character-creation.skill-expertise-choice",
             "profileKind": "character-creation"
           }
@@ -7481,11 +7530,18 @@
         "unitId": "rogue_cunning_action"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
+                "runtime": "character-creation",
+                "status": "covered",
+                "title": "Character Creation finalizes skill Expertise choices over owned skill proficiencies as CharacterBuild Expertise proficiency levels without duplicating skill proficiency state"
+              }
+            ],
             "profileId": "character-creation.skill-expertise-choice",
             "profileKind": "character-creation"
           }
@@ -7645,11 +7701,24 @@
         "unitId": "searing_smite"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+              },
+              {
+                "obligationId": "BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle See Invisibility self observer-sight effect reveals visible Invisible creatures, caller-witnessed Invisible objects, and caller-witnessed Ethereal targets without mutating target state"
+              }
+            ],
             "profileId": "spell.invocation-see-invisible-observer-sight",
             "profileKind": "spell-invocation"
           }
@@ -8111,10 +8180,10 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle Web area hazard state, entry/start-turn restraint saves, escape cleanup, difficult-terrain projection, obscurement, and duration cleanup"
               }
             ],
             "profileId": "spell.invocation-web-restraint-hazard",
@@ -8162,11 +8231,18 @@
         "unitId": "wizard_ritual_adept"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
+                "runtime": "character-creation",
+                "status": "covered",
+                "title": "Character Creation finalizes skill Expertise choices over owned skill proficiencies as CharacterBuild Expertise proficiency levels without duplicating skill proficiency state"
+              }
+            ],
             "profileId": "character-creation.skill-expertise-choice",
             "profileKind": "character-creation"
           }

@@ -1,5 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 // Spell resolution dispatch (Cluster L). Mechanical extraction from
 // battle-reducer.ts. The largest cluster in the file: master spell-act
 // resolvers (`resolveSpellAct`, `resolveAttackBurstSaveDamageSpellAct`,

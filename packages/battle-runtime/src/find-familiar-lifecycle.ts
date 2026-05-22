@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.find-familiar-lifecycle
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
 import { spendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { Hp, type PositiveInteger } from "@dnd/shared/types";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";

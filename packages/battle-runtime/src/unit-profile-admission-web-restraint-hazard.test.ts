@@ -1,5 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE web
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-web-restraint-hazard
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE
 import { describe, expect, test } from "vitest";
 import {
   requireCombatant,

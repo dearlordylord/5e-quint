@@ -1,5 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME gust_of_wind
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-gust-of-wind-line
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE
 import { describe, expect, test } from "vitest";
 import {
   movementFill,
