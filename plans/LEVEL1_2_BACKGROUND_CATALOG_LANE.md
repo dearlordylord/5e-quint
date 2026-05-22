@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "L12BG-CHARACTER-CREATION-ADMISSION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Admit SRD Backgrounds In Character Creation"
     },
     {
@@ -116,7 +116,7 @@ Acceptance:
 
 ### Task 2 - L12BG-CHARACTER-CREATION-ADMISSION - Admit SRD Backgrounds In Character Creation
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
