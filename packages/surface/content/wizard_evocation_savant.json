@@ -1,0 +1,46 @@
+{
+  "acquiredAtLevel": 3,
+  "className": "wizard",
+  "description": "Choose two Wizard spells from the Evocation school, each no higher than level 2, and add them to your spellbook for free. Later, whenever you gain access to a new Wizard Spell Slot level, you can add one Wizard Evocation spell of a level for which you have Spell Slots.",
+  "id": "wizard_evocation_savant",
+  "kind": "class_feature",
+  "mechanics": {
+    "family": "wizard_spellbook_learning",
+    "grants": [
+      {
+        "choiceCount": 2,
+        "eligibility": {
+          "className": "wizard",
+          "maximumSpellLevel": 2,
+          "school": "evocation"
+        },
+        "timing": {
+          "kind": "class_feature_acquisition"
+        }
+      },
+      {
+        "choiceCount": 1,
+        "eligibility": {
+          "className": "wizard",
+          "maximumSpellLevel": {
+            "kind": "available_spell_slot_level"
+          },
+          "school": "evocation"
+        },
+        "timing": {
+          "className": "wizard",
+          "kind": "new_spell_slot_level_access"
+        }
+      }
+    ],
+    "spellbookSource": {
+      "className": "wizard",
+      "kind": "class_spellcasting_spellbook"
+    }
+  },
+  "name": "Evocation Savant",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Wizard.md:411-415"
+  }
+}

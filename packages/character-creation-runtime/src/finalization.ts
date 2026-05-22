@@ -3,6 +3,7 @@
 // KERNEL-COVERAGE: runtime-owner CREATION.CLASS_FEATURE_OPTION.PROJECTION CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION
 // KERNEL-COVERAGE: runtime-owner CREATION.CLASS_FEATURE_RESOURCE.PROJECTION
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-prepared-spell-access
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.wizard-spellbook-learning-choice
 import { Either, Match, Option } from "effect";
 import { isValidAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
 import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
@@ -385,6 +386,10 @@ export function executableSupportIssues(
       "Finalized Wizard prepared spells must be selected from the spellbook and match available Spell Slot levels.",
     ),
     ...expectedValueIssue(
+      finalizedWizardSpellbookSelectionsAreDistinct(selections),
+      "Finalized Wizard spellbook selections must be distinct across class and feature grants.",
+    ),
+    ...expectedValueIssue(
       isSupportedEquipmentSelection(selections),
       "Finalized build must own supported purchased equipment.",
     ),
@@ -442,7 +447,7 @@ export function selectedPreparedSpellsAreInSelectedSpellbook(
   }
   const unitChoices = unitChoiceSelections(selections);
   const selectedSpellbook = new Set(
-    selectedUnitRefsForChoice(unitChoices, WIZARD_SPELLBOOK_CHOICE_KEY),
+    selectedWizardSpellbookUnitRefs(unitChoices),
   );
   const selectedPrepared = selectedUnitRefsForChoice(
     unitChoices,
@@ -466,6 +471,17 @@ export function selectedPreparedSpellsAreInSelectedSpellbook(
       slotLevels.has(spellLevel)
     );
   });
+}
+
+function finalizedWizardSpellbookSelectionsAreDistinct(
+  selections: FinalizedCharacterSelections,
+): boolean {
+  const spellbookSpellIds = selectedWizardSpellbookUnitRefs(
+    unitChoiceSelections(selections),
+  );
+  return spellbookSpellIds.every(
+    (spellId, index) => spellbookSpellIds.indexOf(spellId) === index,
+  );
 }
 
 const ExecutableSupportSelections = Symbol("ExecutableSupportSelections");
@@ -1574,6 +1590,11 @@ function supportedFinalizationChoiceHoles(input: {
           ]),
         ),
   );
+  const subclassFeatureHoles = selectedSubclassFeatureGrantChoiceHoles({
+    selections: input.selections,
+    classFactsByUnitId: input.classFactsByUnitId,
+    unitLibrary: input.unitLibrary,
+  });
   const multiclassProficiencyHoles = [...input.classFactsByUnitId].flatMap(
     ([classUnitId, facts]) =>
       classUnitId === startingClassUnitId(input.selections.progression)
@@ -1632,6 +1653,7 @@ function supportedFinalizationChoiceHoles(input: {
     ...classToolProficiencyHoles,
     ...classFeatureHoles,
     ...subclassHoles,
+    ...subclassFeatureHoles,
     ...multiclassProficiencyHoles,
     ...selectedFeatAbilityScoreHoles,
     ...spellcastingHoles,
@@ -1672,6 +1694,52 @@ function supportedFinalizationChoiceHoles(input: {
         : [],
     ),
   ].filter(isPresent);
+}
+
+function selectedSubclassFeatureGrantChoiceHoles(input: {
+  readonly selections: FinalizedCharacterSelections;
+  readonly classFactsByUnitId: ClassFactsByUnitId;
+  readonly unitLibrary: UnitCatalog;
+}): readonly UnitChoiceCreationHole[] {
+  return [...input.classFactsByUnitId].flatMap(([classUnitId, facts]) => {
+    const classLevel = classLevelForUnit(
+      input.selections.progression,
+      classUnitId,
+    );
+    const selectedSubclassIds = input.selections.choices.flatMap((choice) =>
+      choice.kind === "unitChoice" &&
+      choice.source.unitId === classUnitId &&
+      choice.source.choiceKey === CLASS_SUBCLASS_CHOICE_KEY
+        ? choice.options.flatMap((option) =>
+            option.unitRef == null ? [] : [option.unitRef.unitId],
+          )
+        : [],
+    );
+
+    return selectedSubclassIds.flatMap((subclassId) => {
+      const subclass = input.unitLibrary.getUnit(subclassId);
+      if (
+        Option.isNone(subclass) ||
+        subclass.value.kind !== "subclass" ||
+        subclass.value.className !== facts.className
+      ) {
+        return [];
+      }
+
+      return subclass.value.featureGrants
+        .filter((grant) => grant.level <= classLevel)
+        .flatMap((grant) =>
+          classFeatureGrantChoiceHoles(grant.unitId, input.unitLibrary, {
+            classLevel,
+            ownedSkillProficiencies: selectedSkillProficiencies(
+              input.selections,
+              input.unitLibrary,
+            ),
+          }),
+        )
+        .flatMap((hole) => compact([requireUnitChoiceCreationHole(hole)]));
+    });
+  });
 }
 
 function multiclassProficiencyChoiceHoles(
@@ -1876,11 +1944,16 @@ export function characterBuildUnitRefs(
     unitLibrary === undefined
       ? []
       : characterBuildDerivedFeatureUnitIds(build, unitLibrary);
+  const selectedSubclassFeatureUnitIds =
+    unitLibrary === undefined
+      ? []
+      : characterBuildSelectedSubclassFeatureUnitIds(build, unitLibrary);
   return unitRefs(
     ...progressionClassUnitIds(build.progression),
     build.background,
     build.species,
     ...derivedFeatureUnitIds,
+    ...selectedSubclassFeatureUnitIds,
     ...build.features.flatMap((feature) =>
       feature.kind === "selectedClassChoice" ? [feature.unitId] : [],
     ),
@@ -1920,6 +1993,35 @@ function characterBuildDerivedFeatureUnitIds(
     ...backgroundOriginFeatUnitIds(build, unitLibrary),
     ...speciesTraitUnitIds(build, unitLibrary),
   ];
+}
+
+function characterBuildSelectedSubclassFeatureUnitIds(
+  build: Pick<CharacterBuild, "progression" | "features">,
+  unitLibrary: UnitCatalog,
+): readonly UnitRecord["id"][] {
+  return build.features.flatMap((feature) => {
+    if (feature.kind !== "selectedClassChoice") return [];
+    const unit = unitLibrary.getUnit(feature.unitId);
+    if (Option.isNone(unit) || unit.value.kind !== "subclass") return [];
+    const subclassUnit = unit.value;
+    const classLevel = progressionClassUnitIds(build.progression).reduce(
+      (level, classUnitId) => {
+        const classUnit = unitLibrary.getUnit(classUnitId);
+        if (
+          Option.isSome(classUnit) &&
+          classUnit.value.kind === "class" &&
+          classUnit.value.className === subclassUnit.className
+        ) {
+          return classLevelForUnit(build.progression, classUnitId);
+        }
+        return level;
+      },
+      0,
+    );
+    return subclassUnit.featureGrants
+      .filter((grant) => grant.level <= classLevel)
+      .map((grant) => grant.unitId);
+  });
 }
 
 function backgroundOriginFeatUnitIds(
@@ -2341,6 +2443,9 @@ function finalizedBuildSpellcastingSource(input: {
     supportedSelections.unitChoices,
     unitSource(classUnitId, WIZARD_SPELLBOOK_CHOICE_KEY),
   );
+  const featureSpellbook = selectedWizardSpellbookUnitRefs(
+    supportedSelections.unitChoices,
+  ).filter((spellId) => !spellbook.includes(spellId));
   const preparedSpells = selectedUnitRefsForChoiceSource(
     supportedSelections.unitChoices,
     unitSource(classUnitId, WIZARD_PREPARED_SPELL_CHOICE_KEY),
@@ -2359,7 +2464,7 @@ function finalizedBuildSpellcastingSource(input: {
       sourceUnitId: classUnitId,
       spellcastingAbility: spellcasting.spellcastingAbility,
       cantrips,
-      spellbook,
+      spellbook: [...spellbook, ...featureSpellbook],
       preparedSpells,
       spellcastingFocuses: spellcasting.spellcastingFocuses,
     },
@@ -2486,6 +2591,12 @@ function selectedUnitRefsForChoice(
         option.unitRef == null ? [] : [option.unitRef.unitId],
       ),
     );
+}
+
+function selectedWizardSpellbookUnitRefs(
+  unitChoices: readonly UnitChoiceSelection[],
+): readonly UnitRecord["id"][] {
+  return selectedUnitRefsForChoice(unitChoices, WIZARD_SPELLBOOK_CHOICE_KEY);
 }
 
 function selectedUnitRefsForChoiceSource(

@@ -126,6 +126,23 @@ export function traceClassFeatureMechanics(
       });
       return [recoveryId];
     }
+    case "wizard_spellbook_learning": {
+      const learningId = ids("wizard-spellbook-learning");
+      nodes.push({
+        id: learningId,
+        category: "hole",
+        atomKind: "wizard_spellbook_learning",
+        label:
+          `wizard_spellbook_learning\nsource ${m.spellbookSource.className}\n` +
+          m.grants
+            .map(
+              (grant) =>
+                `${grant.timing.kind}\nchoose ${grant.choiceCount} ${grant.eligibility.school}`,
+            )
+            .join("\n"),
+      });
+      return [learningId];
+    }
     case "pact_slot_recovery": {
       const recoveryId = ids("pact");
       nodes.push({

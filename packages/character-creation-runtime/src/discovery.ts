@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner CREATION.CHOICE_DISCOVERY_CARDINALITY CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.wizard-spellbook-learning-choice
 import { Either, Match, Option } from "effect";
 import {
   ALIGNMENT_CHOICES,
@@ -230,6 +231,12 @@ export function discoverClassGrantedHoles(input: {
         : [],
     ),
     ...discoverSubclassHoles(classUnitId, classLevel, facts.value, input),
+    ...discoverSelectedSubclassFeatureGrantHoles(
+      classUnitId,
+      classLevel,
+      facts.value,
+      input,
+    ),
     ...discoverSelectedFeatAbilityScoreIncreaseHoles(input),
     ...selectedClassFeatureAcquisitionGrantChoiceHoles({
       choices: input.draft.selections.choices,
@@ -473,6 +480,49 @@ function discoverSubclassHoles(
         }),
       ),
     );
+}
+
+function discoverSelectedSubclassFeatureGrantHoles(
+  classUnitId: UnitRecord["id"],
+  classLevel: number,
+  facts: ReadableClassCreationFacts,
+  input: {
+    readonly draft: CharacterDraft;
+    readonly unitLibrary: UnitCatalog;
+  },
+): readonly CreationHole[] {
+  const selectedSubclassIds = input.draft.selections.choices.flatMap(
+    (choice) =>
+      choice.kind === "unitChoice" &&
+      choice.source.unitId === classUnitId &&
+      choice.source.choiceKey === CLASS_SUBCLASS_CHOICE_KEY
+        ? choice.options.flatMap((option) =>
+            option.unitRef == null ? [] : [option.unitRef.unitId],
+          )
+        : [],
+  );
+
+  return selectedSubclassIds.flatMap((subclassId) => {
+    const subclass = input.unitLibrary.getUnit(subclassId);
+    if (
+      Option.isNone(subclass) ||
+      subclass.value.kind !== "subclass" ||
+      subclass.value.className !== facts.className
+    ) {
+      return [];
+    }
+
+    return subclass.value.featureGrants.flatMap((grant) =>
+      grant.level <= classLevel
+        ? discoverClassFeatureGrantHoles(
+            grant.unitId,
+            classLevel,
+            input.draft,
+            input.unitLibrary,
+          )
+        : [],
+    );
+  });
 }
 
 function discoverAdditionalClassGrantedHoles(
@@ -1322,12 +1372,115 @@ export function classFeatureGrantChoiceHoles(
     return sorcererMetamagicChoiceHoles(featureUnitId, mechanics, input);
   }
 
+  if (mechanics.family === "wizard_spellbook_learning") {
+    return wizardSpellbookLearningChoiceHoles(
+      featureUnitId,
+      feature.acquiredAtLevel,
+      mechanics,
+      unitLibrary,
+      input,
+    );
+  }
+
   if (isWeaponMasteryChoiceFeature(feature)) {
     const hole = weaponMasteryFeatureHoleSource(feature, unitLibrary);
     return hole === undefined ? [] : [hole];
   }
 
   return [];
+}
+
+function wizardSpellbookLearningChoiceHoles(
+  featureUnitId: UnitRecord["id"],
+  acquiredAtLevel: number,
+  mechanics: Extract<
+    ClassFeatureRecord["mechanics"],
+    { readonly family: "wizard_spellbook_learning" }
+  >,
+  unitLibrary: UnitCatalog,
+  input: { readonly classLevel?: number },
+): readonly ChoiceCreationHole[] {
+  const acquisitionGrant = mechanics.grants.find(
+    (
+      grant,
+    ): grant is Extract<
+      (typeof mechanics.grants)[number],
+      { readonly timing: { readonly kind: "class_feature_acquisition" } }
+    > => grant.timing.kind === "class_feature_acquisition",
+  );
+  if (
+    acquisitionGrant === undefined ||
+    (input.classLevel ?? 1) < acquiredAtLevel
+  ) {
+    return [];
+  }
+
+  const cardinality = exactChoiceCardinality(acquisitionGrant.choiceCount);
+  if (cardinality === undefined) {
+    return [];
+  }
+  const options = wizardSpellbookLearningOptions({
+    unitLibrary,
+    eligibility: acquisitionGrant.eligibility,
+  });
+  if (choiceCardinalityMax(cardinality) > options.length) {
+    return [];
+  }
+
+  const hole = requireChoiceCreationHole(
+    choiceHole({
+      source: unitSource(featureUnitId, WIZARD_SPELLBOOK_CHOICE_KEY),
+      cardinality,
+      options,
+    }),
+  );
+  return hole === undefined ? [] : [hole];
+}
+
+function wizardSpellbookLearningOptions(input: {
+  readonly unitLibrary: UnitCatalog;
+  readonly eligibility: {
+    readonly className: "wizard";
+    readonly school: string;
+    readonly maximumSpellLevel: number;
+  };
+}): readonly CreationChoiceOption[] {
+  const wizard = input.unitLibrary
+    .listUnits()
+    .find(
+      (unit) =>
+        unit.kind === "class" &&
+        unit.className === input.eligibility.className &&
+        "spellcasting" in unit &&
+        unit.spellcasting?.kind === "wizard_spellcasting_creation",
+    );
+  if (
+    wizard === undefined ||
+    !("spellcasting" in wizard) ||
+    wizard.spellcasting?.kind !== "wizard_spellcasting_creation"
+  ) {
+    return [];
+  }
+
+  return wizard.spellcasting.spellbookAccess.spells
+    .filter((spellbookSpell) => {
+      const spell = input.unitLibrary.getUnit(spellbookSpell.spellId);
+      return (
+        spellbookSpell.spellLevel <= input.eligibility.maximumSpellLevel &&
+        Option.isSome(spell) &&
+        spell.value.kind === "spell" &&
+        spell.value.mechanics.level === spellbookSpell.spellLevel &&
+        spell.value.mechanics.school === input.eligibility.school
+      );
+    })
+    .sort((left, right) =>
+      left.spellId < right.spellId ? -1 : left.spellId > right.spellId ? 1 : 0,
+    )
+    .map((spell) => ({
+      optionId: creationChoiceOptionId(spell.spellId),
+      label: spell.spellId,
+      unitRef: { unitId: spell.spellId },
+    }));
 }
 
 function sorcererMetamagicChoiceHoles(

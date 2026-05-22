@@ -82,8 +82,13 @@ let wizard =
                 , { spellId = "sleep", spellLevel = 1 }
                 , { spellId = "thunderwave", spellLevel = 1 }
                 , { spellId = "chromatic_orb", spellLevel = 1 }
+                , { spellId = "continual_flame", spellLevel = 2 }
+                , { spellId = "darkness", spellLevel = 2 }
+                , { spellId = "gust_of_wind", spellLevel = 2 }
                 , { spellId = "mirror_image", spellLevel = 2 }
                 , { spellId = "misty_step", spellLevel = 2 }
+                , { spellId = "scorching_ray", spellLevel = 2 }
+                , { spellId = "shatter", spellLevel = 2 }
                 ] : List SpellbookSpell
               }
           , preparedAccess =
@@ -98,8 +103,13 @@ let wizard =
                 , "sleep"
                 , "thunderwave"
                 , "chromatic_orb"
+                , "continual_flame"
+                , "darkness"
+                , "gust_of_wind"
                 , "mirror_image"
                 , "misty_step"
+                , "scorching_ray"
+                , "shatter"
                 ]
               , changeOn = { kind = "long_rest" }
               }

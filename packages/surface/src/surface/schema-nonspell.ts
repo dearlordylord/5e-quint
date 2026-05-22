@@ -52,6 +52,7 @@ import {
   RangeSchema,
   ReactionTriggerSchema,
   SPELL_SLOT_LEVELS,
+  SpellSchoolSchema,
   SpellRecordSchema,
   SpawnedCreatureStatBlockSchema,
 } from "./schema-spell.ts";
@@ -922,6 +923,46 @@ export const RestSpellSlotRecoveryMechanicsSchema = Schema.Struct({
   }),
 });
 
+const WizardSpellbookLearningEligibilitySchema = Schema.Struct({
+  className: Schema.Literal("wizard"),
+  school: SpellSchoolSchema,
+});
+
+export const WizardSpellbookLearningMechanicsSchema = Schema.Struct({
+  family: Schema.Literal("wizard_spellbook_learning"),
+  spellbookSource: Schema.Struct({
+    kind: Schema.Literal("class_spellcasting_spellbook"),
+    className: Schema.Literal("wizard"),
+  }),
+  grants: Schema.NonEmptyArray(
+    Schema.Union(
+      Schema.Struct({
+        timing: Schema.Struct({
+          kind: Schema.Literal("class_feature_acquisition"),
+        }),
+        choiceCount: Schema.Literal(2),
+        eligibility: Schema.Struct({
+          ...WizardSpellbookLearningEligibilitySchema.fields,
+          maximumSpellLevel: Schema.Literal(2),
+        }),
+      }),
+      Schema.Struct({
+        timing: Schema.Struct({
+          kind: Schema.Literal("new_spell_slot_level_access"),
+          className: Schema.Literal("wizard"),
+        }),
+        choiceCount: Schema.Literal(1),
+        eligibility: Schema.Struct({
+          ...WizardSpellbookLearningEligibilitySchema.fields,
+          maximumSpellLevel: Schema.Struct({
+            kind: Schema.Literal("available_spell_slot_level"),
+          }),
+        }),
+      }),
+    ),
+  ),
+});
+
 export const FailedAbilityCheckResourceBoostMechanicsSchema = Schema.Struct({
   family: Schema.Literal("failed_ability_check_resource_boost"),
   trigger: Schema.Struct({ kind: Schema.Literal("failed_ability_check") }),
@@ -992,6 +1033,7 @@ export const ClassFeatureMechanicsSchema = Schema.Union(
   WeaponMasteryChoiceMechanicsSchema,
   SpellbookRitualAccessMechanicsSchema,
   RestSpellSlotRecoveryMechanicsSchema,
+  WizardSpellbookLearningMechanicsSchema,
   DruidWildCompanionSpellCastMechanicsSchema,
   WarlockPactSlotRecoveryMechanicsSchema,
   FailedAbilityCheckResourceBoostMechanicsSchema,
@@ -1015,6 +1057,7 @@ export const DruidClassFeatureMechanicsSchema = Schema.Union(
 export const WizardClassFeatureMechanicsSchema = Schema.Union(
   SpellbookRitualAccessMechanicsSchema,
   RestSpellSlotRecoveryMechanicsSchema,
+  WizardSpellbookLearningMechanicsSchema,
 );
 
 export const FighterClassFeatureMechanicsSchema =

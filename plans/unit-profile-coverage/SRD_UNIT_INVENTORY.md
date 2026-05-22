@@ -44,13 +44,13 @@ This is the default `%` for level-1 plus level-2 readiness questions. It uses th
 
 This metric is a separate seed for level-3 class feature, subclass selection, subclass feature, and subclass Spell Access rows. It covers both always-prepared subclass grants and choice-derived prepared grants without affecting the Level 1-2 readiness denominator or level-3 spell-list pressure.
 
-- Accepted: 34/51 (66.7%)
+- Accepted: 35/51 (68.6%)
 
 #### Level-3 Class/Subclass Battle Readiness by Status
 
-- accepted: 20
+- accepted: 21
 - accepted-no-battle-effect: 14
-- owner-evidence-required: 17
+- owner-evidence-required: 16
 
 ### Level-3 Spell Battle Readiness
 
@@ -80,10 +80,10 @@ This metric is a separate seed for level-3 spell-list pressure only. It does not
 
 ### Level-3 Class/Subclass Rows by Disposition
 
-- catalog-installed-owner-evidence-present: 20
+- catalog-installed-owner-evidence-present: 21
 - catalog-installed-owner-evidence-required: 1
 - catalog-only/dead-for-now: 2
-- level-3-follow-up-required: 16
+- level-3-follow-up-required: 15
 - non-runtime: 12
 
 ### Level-3 Class/Subclass Rows by Category
@@ -413,7 +413,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 
 | Row | Category | Surface | Authored | Catalog | Unit profile | Disposition | Battle readiness | Readiness closure | Owner evidence | Next action | Source |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-|Barbarian Frenzy|class feature|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-required|owner-evidence-required||Unit catalog/admission: catalog evidence; battle-runtime Rage and Reckless Attack damage-rider owner: owner evidence required|Promote Frenzy as a Rage-gated, Reckless Attack-gated first-hit damage rider: selected Berserker subclass ownership, active Rage state, Reckless Attack use on the turn, first target hit by a Strength-based weapon or Unarmed Strike attack, Rage Damage bonus d6 count, same damage type as the triggering attack, focused runtime tests, and promoted Quint parity.|.references/srd-5.2.1/Classes/Barbarian.md:178|
+|Barbarian Frenzy|class feature|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Barbarian.md:178|
 |Barbarian Primal Knowledge|class feature|current-surface-can-express-source-facts|missing-authored-record|not-installed||level-3-follow-up-required|owner-evidence-required|||Promote Primal Knowledge as a split between a durable Barbarian skill proficiency choice over the Barbarian level-1 skill list and a Rage-active Ability Check substitution for Acrobatics, Intimidation, Perception, Stealth, and Survival that uses Strength without duplicating the underlying Skill proficiency facts.|.references/srd-5.2.1/Classes/Barbarian.md:102|
 |Barbarian level 3 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Barbarian.md:37|
 |Barbarian Subclass|subclass selection|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Barbarian.md:98|
@@ -460,7 +460,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Warlock level 3 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Warlock.md:37|
 |Warlock Subclass|subclass selection|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Warlock.md:96|
 |Warlock Fiend Spells|spell access/list pressure|current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|accepted|profile-subset-remaining-mechanics-closed: future subclass Spell Access progression owner|Unit catalog/admission: catalog evidence; character-sheet-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Warlock.md:464|
-|Wizard Evocation Savant|class feature|current-surface-can-express-source-facts|missing-authored-record|not-installed||level-3-follow-up-required|owner-evidence-required|||Promote Evocation Savant as spellbook acquisition facts: choose two Wizard Evocation spells no higher than level 2 for free at acquisition, then add one Wizard Evocation spell for free whenever the Wizard gains access to a new Spell Slot level, with the chosen spell no higher than an available slot level.|.references/srd-5.2.1/Classes/Wizard.md:411|
+|Wizard Evocation Savant|class feature|current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-required|owner-evidence-required|profile-subset-remaining-mechanics-closed: future character advancement Wizard spell slot level access owner|Unit catalog/admission: catalog evidence; character-creation-runtime and character-sheet spellbook owner: owner evidence required|Promote Evocation Savant as spellbook acquisition facts: choose two Wizard Evocation spells no higher than level 2 for free at acquisition, then add one Wizard Evocation spell for free whenever the Wizard gains access to a new Spell Slot level, with the chosen spell no higher than an available slot level.|.references/srd-5.2.1/Classes/Wizard.md:411|
 |Wizard Potent Cantrip|class feature|current-surface-can-express-source-facts|missing-authored-record|not-installed||level-3-follow-up-required|owner-evidence-required|||Promote Potent Cantrip as a damaging-cantrip rule: when a Wizard cantrip cast at a creature misses with its attack roll or the target succeeds on its Saving Throw, the target takes half the cantrip's damage if any and suffers no additional cantrip effect.|.references/srd-5.2.1/Classes/Wizard.md:417|
 |Wizard level 3 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Wizard.md:37|
 |Wizard Subclass|subclass selection|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Wizard.md:108|

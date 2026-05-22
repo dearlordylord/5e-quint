@@ -298,3 +298,4 @@
 {"unitId":"spiritual_weapon","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME","ownerPath":"packages/battle-runtime/src/unit-profile-admission-spiritual-weapon.test.ts"}}
 {"unitId":"barbarian_frenzy","evidence":{"tag":"deterministic-admission-projection","taskId":"L3-FOLLOWUP-BARBARIAN-FRENZY","ownerPath":"packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"}}
 {"unitId":"barbarian_frenzy","evidence":{"tag":"selected-identity-mbt","taskId":"L3-FOLLOWUP-BARBARIAN-FRENZY","ownerPath":"packages/battle-runtime/src/rule-core-features.mbt.test.ts"}}
+{"unitId":"wizard_evocation_savant","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-WIZARD-EVOKER-EVOCATION-SAVANT","ownerPath":"packages/character-creation-runtime/src/wizard-scholar.test.ts"}}

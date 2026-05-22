@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 404,
-      "numerator": 204,
-      "percent": "50.5%"
+      "denominator": 405,
+      "numerator": 205,
+      "percent": "50.6%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 486,
-      "numerator": 246,
-      "percent": "50.6%"
+      "denominator": 487,
+      "numerator": 247,
+      "percent": "50.7%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 247
+      "value": 248
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 140,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 247,
-      "numerator": 247,
+      "denominator": 248,
+      "numerator": 248,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -82,14 +82,14 @@
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 130,
+      "denominator": 131,
       "numerator": 126,
-      "percent": "96.9%"
+      "percent": "96.2%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 130,
+      "denominator": 131,
       "numerator": 126,
-      "percent": "96.9%"
+      "percent": "96.2%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 142,
@@ -112,9 +112,9 @@
       "percent": "77.9%"
     },
     "supportedProfileCoverage": {
-      "denominator": 205,
+      "denominator": 206,
       "numerator": 140,
-      "percent": "68.3%"
+      "percent": "68%"
     }
   },
   "metricSemantics": [
@@ -2735,6 +2735,26 @@
       ]
     },
     {
+      "id": "character-creation.wizard-spellbook-learning-choice",
+      "profileKind": "character-creation",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/discovery.ts",
+        "packages/character-creation-runtime/src/finalization.ts"
+      ],
+      "sourceBoundary": "Surface wizard_spellbook_learning class-feature facts project acquisition-time Wizard spellbook choices from existing Wizard Spell Access, spell school, and spell level facts without a duplicate Evoker spell roster. Later spell-slot-level access is split to a future character-advancement owner.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-WIZARD-EVOKER-EVOCATION-SAVANT"
+      ],
+      "title": "Character Creation finalizes Wizard spellbook learning choices from class-feature grants",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/wizard-scholar.test.ts"
+        }
+      ]
+    },
+    {
       "id": "spell.invocation-self-ability-check-advantage",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -3807,14 +3827,14 @@
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 130,
+        "denominator": 131,
         "numerator": 126,
-        "percent": "96.9%"
+        "percent": "96.2%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 130,
+        "denominator": 131,
         "numerator": 126,
-        "percent": "96.9%"
+        "percent": "96.2%"
       }
     },
     "profileKinds": [
@@ -5139,6 +5159,12 @@
           }
         ],
         "profileId": "character-creation.class-feature-source-fact-projection",
+        "profileKind": "character-creation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "character-creation.wizard-spellbook-learning-choice",
         "profileKind": "character-creation"
       },
       {
@@ -11670,6 +11696,14 @@
         "spell.invocation-moonbeam-movable-zone"
       ],
       "taskId": "L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-AREA-SUPPRESSION"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Character Creation runtime tests cover Evocation Savant acquisition-time Wizard Evocation spellbook choices, finalized spellbook projection, duplicate spellbook rejection, and retained subclass feature Unit refs. Later spell-slot-level access is split to the future character advancement owner.",
+      "profileIds": [
+        "character-creation.wizard-spellbook-learning-choice"
+      ],
+      "taskId": "L12G-FOLLOWUP-WIZARD-EVOKER-EVOCATION-SAVANT"
     }
   ],
   "units": [
@@ -15987,6 +16021,71 @@
       ],
       "sourceRecordPath": "packages/surface/content/wizard_scholar.json",
       "unitId": "wizard_scholar"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "later-level-only",
+              "owner": "future character advancement Wizard spell slot level access owner",
+              "reason": "The acquisition-time Wizard 3 Evocation Savant spellbook choices are promoted here. The later grant happens only when future Wizard advancement opens a new Spell Slot level, so it belongs to the future character-advancement owner instead of the level-3 acquisition workflow."
+            },
+            "followUpTaskId": "L12G-FOLLOWUP-WIZARD-EVOKER-EVOCATION-SAVANT-LATER-SLOT-ACCESS",
+            "mechanic": "Later one-spell Wizard Evocation spellbook grant whenever Wizard gains access to a new Wizard Spell Slot level"
+          }
+        ],
+        "profileIds": [
+          "character-creation.wizard-spellbook-learning-choice"
+        ],
+        "supportedMechanics": [
+          "Evocation Savant is installed as a level-3 Surface class-feature grant on subclass_wizard_evoker",
+          "Selected Wizard Evoker subclass ownership retains the level-3 Evocation Savant class-feature Unit in CharacterBuild Unit refs when Wizard class level is 3 or higher",
+          "Surface wizard_spellbook_learning represents the level-3 acquisition-time choice as exactly two Wizard Evocation spellbook spells of level 2 or lower",
+          "Character Creation discovers exactly two acquisition-time Wizard Evocation spellbook choices from installed Wizard Spell Access, spell school, and spell level facts without duplicating an Evoker spell roster",
+          "Character Creation finalizes selected Evocation Savant spells into the Wizard spellbook without duplicating spellbook state and rejects duplicate spellbook selections across class and feature grants"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/wizard-scholar.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-WIZARD-EVOKER-EVOCATION-SAVANT"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "character-creation.wizard-spellbook-learning-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/discovery.ts",
+            "packages/character-creation-runtime/src/finalization.ts"
+          ],
+          "sourceBoundary": "Surface wizard_spellbook_learning class-feature facts project acquisition-time Wizard spellbook choices from existing Wizard Spell Access, spell school, and spell level facts without a duplicate Evoker spell roster. Later spell-slot-level access is split to a future character-advancement owner.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-WIZARD-EVOKER-EVOCATION-SAVANT"
+          ],
+          "title": "Character Creation finalizes Wizard spellbook learning choices from class-feature grants",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/wizard-scholar.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/wizard_evocation_savant.json",
+      "unitId": "wizard_evocation_savant"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

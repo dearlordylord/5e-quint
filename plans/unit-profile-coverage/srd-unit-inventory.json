@@ -226,12 +226,12 @@
     },
     "levelThreeClassBattleReadiness": {
       "denominator": 51,
-      "numerator": 34,
-      "percent": "66.7%",
+      "numerator": 35,
+      "percent": "68.6%",
       "rowsByStatus": {
-        "owner-evidence-required": 17,
-        "accepted-no-battle-effect": 14,
-        "accepted": 20
+        "accepted": 21,
+        "owner-evidence-required": 16,
+        "accepted-no-battle-effect": 14
       }
     },
     "levelThreeSpellBattleReadiness": {
@@ -258,11 +258,11 @@
       "catalog-installed-needs-owner-evidence": 1
     },
     "levelThreeClassRowsByDisposition": {
-      "catalog-installed-owner-evidence-required": 1,
-      "level-3-follow-up-required": 16,
+      "catalog-installed-owner-evidence-present": 21,
+      "level-3-follow-up-required": 15,
       "non-runtime": 12,
-      "catalog-installed-owner-evidence-present": 20,
-      "catalog-only/dead-for-now": 2
+      "catalog-only/dead-for-now": 2,
+      "catalog-installed-owner-evidence-required": 1
     },
     "levelThreeClassRowsByCategory": {
       "class feature": 22,
@@ -271,10 +271,10 @@
       "spell access/list pressure": 5
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 447,
+      "catalog-installed-owner-evidence-present": 448,
       "non-runtime": 36,
+      "level-3-follow-up-required": 15,
       "catalog-installed-owner-evidence-required": 2,
-      "level-3-follow-up-required": 16,
       "catalog-only/dead-for-now": 137,
       "missing-authored-record": 58,
       "catalog-authored-review-required": 33,
@@ -4132,7 +4132,7 @@
         "unitId": "barbarian_frenzy"
       },
       "unitProfileDisposition": "supported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -4140,13 +4140,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime Rage and Reckless Attack damage-rider owner",
-          "evidence": "Promote Frenzy as a Rage-gated, Reckless Attack-gated first-hit damage rider: selected Berserker subclass ownership, active Rage state, Reckless Attack use on the turn, first target hit by a Strength-based weapon or Unarmed Strike attack, Rage Damage bonus d6 count, same damage type as the triggering attack, focused runtime tests, and promoted Quint parity.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-FOLLOWUP-BARBARIAN-FRENZY at packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote Frenzy as a Rage-gated, Reckless Attack-gated first-hit damage rider: selected Berserker subclass ownership, active Rage state, Reckless Attack use on the turn, first target hit by a Strength-based weapon or Unarmed Strike attack, Rage Damage bonus d6 count, same damage type as the triggering attack, focused runtime tests, and promoted Quint parity.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/barbarian:level-3:class-feature-grant:barbarian_primal_knowledge",
@@ -29646,14 +29646,34 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "wizard_evocation_savant",
+        "sourceRecordPath": "packages/surface/content/wizard_evocation_savant.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "wizard_evocation_savant"
       },
-      "finalDisposition": "level-3-follow-up-required",
-      "ownerEvidence": [],
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "future character advancement Wizard spell slot level access owner",
+        "reason": "The acquisition-time Wizard 3 Evocation Savant spellbook choices are promoted here. The later grant happens only when future Wizard advancement opens a new Spell Slot level, so it belongs to the future character-advancement owner instead of the level-3 acquisition workflow."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit wizard_evocation_savant is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime and character-sheet spellbook owner",
+          "evidence": "Promote Evocation Savant as spellbook acquisition facts: choose two Wizard Evocation spells no higher than level 2 for free at acquisition, then add one Wizard Evocation spell for free whenever the Wizard gains access to a new Spell Slot level, with the chosen spell no higher than an available slot level.",
+          "status": "owner evidence required"
+        }
+      ],
       "nextAction": "Promote Evocation Savant as spellbook acquisition facts: choose two Wizard Evocation spells no higher than level 2 for free at acquisition, then add one Wizard Evocation spell for free whenever the Wizard gains access to a new Spell Slot level, with the chosen spell no higher than an available slot level.",
       "battleReadinessStatus": "owner-evidence-required"
     },

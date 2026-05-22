@@ -26,19 +26,14 @@
   },
   "name": "Wizard",
   "primaryAbilities": {
-    "abilities": [
-      "int"
-    ],
+    "abilities": ["int"],
     "kind": "all_of"
   },
   "provenance": {
     "kind": "srd-5.2.1",
     "section": "Classes/Wizard.md:3-25,31-36,56-82,94-114,134-190"
   },
-  "savingThrowProficiencies": [
-    "int",
-    "wis"
-  ],
+  "savingThrowProficiencies": ["int", "wis"],
   "skillProficiencyChoice": {
     "choose": 2,
     "options": [
@@ -59,11 +54,7 @@
       },
       "choose": 3,
       "kind": "known_cantrips",
-      "spellIds": [
-        "light",
-        "fire_bolt",
-        "ray_of_frost"
-      ]
+      "spellIds": ["light", "fire_bolt", "ray_of_frost"]
     },
     "featureLevel": 1,
     "kind": "wizard_spellcasting_creation",
@@ -82,8 +73,13 @@
         "sleep",
         "thunderwave",
         "chromatic_orb",
+        "continual_flame",
+        "darkness",
+        "gust_of_wind",
         "mirror_image",
-        "misty_step"
+        "misty_step",
+        "scorching_ray",
+        "shatter"
       ]
     },
     "spellSlotProjection": {
@@ -135,20 +131,37 @@
           "spellLevel": 1
         },
         {
+          "spellId": "continual_flame",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "darkness",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "gust_of_wind",
+          "spellLevel": 2
+        },
+        {
           "spellId": "mirror_image",
           "spellLevel": 2
         },
         {
           "spellId": "misty_step",
           "spellLevel": 2
+        },
+        {
+          "spellId": "scorching_ray",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "shatter",
+          "spellLevel": 2
         }
       ]
     },
     "spellcastingAbility": "int",
-    "spellcastingFocuses": [
-      "arcane_focus",
-      "spellbook"
-    ],
+    "spellcastingFocuses": ["arcane_focus", "spellbook"],
     "spellcastingProgression": [
       {
         "atLevel": 1,
@@ -230,9 +243,7 @@
   "subclassChoices": [
     {
       "level": 3,
-      "options": [
-        "subclass_wizard_evoker"
-      ]
+      "options": ["subclass_wizard_evoker"]
     }
   ],
   "toolProficiencies": {

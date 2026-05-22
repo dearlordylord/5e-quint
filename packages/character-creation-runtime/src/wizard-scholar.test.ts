@@ -33,8 +33,11 @@ import {
 } from "./index.ts";
 import { parseCharacterProgressionShape } from "./character-progression-algebra.ts";
 import {
+  CLASS_SUBCLASS_CHOICE_KEY,
   CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
   CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
+  WIZARD_PREPARED_SPELL_CHOICE_KEY,
+  WIZARD_SPELLBOOK_CHOICE_KEY,
   progressionOptionId,
 } from "./phase1-manifest.ts";
 import { supportedHoleOptionIds } from "./support-gates.ts";
@@ -42,6 +45,8 @@ import { eligibleExpertiseSkills } from "./discovery.ts";
 import { wizardSpellcastingCreationAtLevel } from "./class-spellcasting.ts";
 
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-CLASS-WIZARD-SCHOLAR wizard_scholar
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-WIZARD-EVOKER-EVOCATION-SAVANT wizard_evocation_savant
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.wizard-spellbook-learning-choice
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -62,7 +67,10 @@ describe("Wizard Scholar", () => {
         [testUnitChoiceSourceKey(
           "class_wizard",
           CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
-        )]: [creationChoiceOptionId("insight"), creationChoiceOptionId("arcana")],
+        )]: [
+          creationChoiceOptionId("insight"),
+          creationChoiceOptionId("arcana"),
+        ],
       },
     });
     const selectedScholarExpertise = selectedChoiceOptionIds(
@@ -92,8 +100,9 @@ describe("Wizard Scholar", () => {
     expect(
       wizardBuild.build.spellcasting?.sources[0]?.preparedSpells,
     ).toHaveLength(5);
-    expect(wizardBuild.build.spellcasting?.slotPools.spellcasting?.slots)
-      .toEqual([{ spellLevel: 1, count: 3 }]);
+    expect(
+      wizardBuild.build.spellcasting?.slotPools.spellcasting?.slots,
+    ).toEqual([{ spellLevel: 1, count: 3 }]);
     expect(
       characterBuildUnitRefs(wizardBuild.build, unitLibrary).map(
         (ref) => ref.unitId,
@@ -109,7 +118,10 @@ describe("Wizard Scholar", () => {
         [testUnitChoiceSourceKey(
           "class_wizard",
           CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
-        )]: [creationChoiceOptionId("insight"), creationChoiceOptionId("arcana")],
+        )]: [
+          creationChoiceOptionId("insight"),
+          creationChoiceOptionId("arcana"),
+        ],
       },
     });
     const invalidScholar: CharacterDraft = {
@@ -132,10 +144,11 @@ describe("Wizard Scholar", () => {
       },
     };
 
-    expect(finalizeCharacterDraft({ draft: invalidScholar, unitLibrary }))
-      .toMatchObject({
-        tag: "invalid",
-      });
+    expect(
+      finalizeCharacterDraft({ draft: invalidScholar, unitLibrary }),
+    ).toMatchObject({
+      tag: "invalid",
+    });
   });
 
   test("rejects Scholar Expertise in a skill that already has Expertise", () => {
@@ -148,7 +161,10 @@ describe("Wizard Scholar", () => {
         [testUnitChoiceSourceKey(
           "class_wizard",
           CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
-        )]: [creationChoiceOptionId("arcana"), creationChoiceOptionId("history")],
+        )]: [
+          creationChoiceOptionId("arcana"),
+          creationChoiceOptionId("history"),
+        ],
         [testUnitChoiceSourceKey(
           "wizard_scholar",
           CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
@@ -226,7 +242,132 @@ describe("Wizard Scholar", () => {
 
     expect(
       wizardSpellcastingCreationAtLevel(classFacts.spellcasting, 3),
-    ).toBeUndefined();
+    ).toMatchObject({
+      spellbookAccess: { choose: 10 },
+      preparedAccess: { choose: 6 },
+      spellSlotProjection: {
+        slots: [
+          { spellLevel: 1, count: 4 },
+          { spellLevel: 2, count: 2 },
+        ],
+      },
+    });
+  });
+
+  test("discovers and finalizes Evocation Savant spellbook choices", () => {
+    const wizard = completeSupportedProgressionDraft({
+      draftId: "draft:srd-level-3-wizard-evocation-savant",
+      progression: testProgression("class_wizard", 3),
+      preferredOptionIdsBySource: {
+        [testUnitChoiceSourceKey(
+          "class_wizard",
+          CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
+        )]: [
+          creationChoiceOptionId("insight"),
+          creationChoiceOptionId("arcana"),
+        ],
+        [testUnitChoiceSourceKey("class_wizard", CLASS_SUBCLASS_CHOICE_KEY)]: [
+          creationChoiceOptionId("subclass_wizard_evoker"),
+        ],
+        [testUnitChoiceSourceKey("class_wizard", WIZARD_SPELLBOOK_CHOICE_KEY)]:
+          [
+            creationChoiceOptionId("detect_magic"),
+            creationChoiceOptionId("feather_fall"),
+            creationChoiceOptionId("mage_armor"),
+            creationChoiceOptionId("magic_missile"),
+            creationChoiceOptionId("shield"),
+            creationChoiceOptionId("sleep"),
+            creationChoiceOptionId("thunderwave"),
+            creationChoiceOptionId("chromatic_orb"),
+            creationChoiceOptionId("mirror_image"),
+            creationChoiceOptionId("misty_step"),
+          ],
+        [testUnitChoiceSourceKey(
+          "wizard_evocation_savant",
+          WIZARD_SPELLBOOK_CHOICE_KEY,
+        )]: [
+          creationChoiceOptionId("continual_flame"),
+          creationChoiceOptionId("shatter"),
+        ],
+        [testUnitChoiceSourceKey(
+          "class_wizard",
+          WIZARD_PREPARED_SPELL_CHOICE_KEY,
+        )]: [
+          creationChoiceOptionId("magic_missile"),
+          creationChoiceOptionId("shield"),
+          creationChoiceOptionId("thunderwave"),
+          creationChoiceOptionId("chromatic_orb"),
+          creationChoiceOptionId("continual_flame"),
+          creationChoiceOptionId("shatter"),
+        ],
+      },
+    });
+
+    expect(
+      selectedChoiceOptionIds(
+        wizard,
+        "wizard_evocation_savant",
+        WIZARD_SPELLBOOK_CHOICE_KEY,
+      ),
+    ).toEqual([
+      creationChoiceOptionId("continual_flame"),
+      creationChoiceOptionId("shatter"),
+    ]);
+
+    const wizardBuild = finalizeCharacterDraft({ draft: wizard, unitLibrary });
+    expect(wizardBuild.tag).toBe("ready");
+    if (wizardBuild.tag !== "ready") {
+      return;
+    }
+
+    expect(wizardBuild.build.spellcasting?.sources[0]?.spellbook).toEqual(
+      expect.arrayContaining(["continual_flame", "shatter"]),
+    );
+    expect(wizardBuild.build.spellcasting?.sources[0]?.spellbook).toHaveLength(
+      12,
+    );
+    expect(wizardBuild.build.spellcasting?.sources[0]?.preparedSpells).toEqual(
+      expect.arrayContaining(["continual_flame", "shatter"]),
+    );
+    expect(
+      characterBuildUnitRefs(wizardBuild.build, unitLibrary).map(
+        (ref) => ref.unitId,
+      ),
+    ).toEqual(
+      expect.arrayContaining([
+        "subclass_wizard_evoker",
+        "wizard_evocation_savant",
+      ]),
+    );
+  });
+
+  test("rejects duplicate Evocation Savant spellbook selections", () => {
+    const wizard = completeSupportedProgressionDraft({
+      draftId: "draft:srd-level-3-wizard-duplicate-evocation-savant",
+      progression: testProgression("class_wizard", 3),
+      preferredOptionIdsBySource: {
+        [testUnitChoiceSourceKey(
+          "class_wizard",
+          CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
+        )]: [
+          creationChoiceOptionId("insight"),
+          creationChoiceOptionId("arcana"),
+        ],
+        [testUnitChoiceSourceKey(
+          "wizard_evocation_savant",
+          WIZARD_SPELLBOOK_CHOICE_KEY,
+        )]: [
+          creationChoiceOptionId("magic_missile"),
+          creationChoiceOptionId("continual_flame"),
+        ],
+      },
+    });
+
+    expect(
+      finalizeCharacterDraft({ draft: wizard, unitLibrary }),
+    ).toMatchObject({
+      tag: "invalid",
+    });
   });
 });
 
@@ -272,7 +413,10 @@ function completeSupportedProgressionDraft(input: {
   const progressionOption = progressionOptionId(input.progression);
 
   for (let pass = 0; pass < 8; pass += 1) {
-    const holes = discoverCreationHoles({ draft, unitLibrary: testUnitLibrary });
+    const holes = discoverCreationHoles({
+      draft,
+      unitLibrary: testUnitLibrary,
+    });
     if (holes.length === 0) {
       return draft;
     }

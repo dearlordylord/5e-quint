@@ -145,7 +145,7 @@
     {
       "number": 24,
       "id": "L12G-FOLLOWUP-WIZARD-EVOKER-EVOCATION-SAVANT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Wizard Evoker Evocation Savant Spellbook Projection"
     },
     {
@@ -262,7 +262,7 @@ Output:
 
 ### Task 3 - L12G-FOLLOWUP-SORCERER-METAMAGIC-DAMAGE-SHAPE-OPTIONS - Sorcerer Metamagic Damage Shape Options
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 - Current spell damage pipelines and Metamagic resource bridge.
@@ -836,7 +836,7 @@ Output:
 - Author and link the Evocation Savant class-feature Unit from `subclass_wizard_evoker`.
 - Admit same-class Wizard 3 if still absent.
 - Discover and finalize the two initial Wizard Evocation spellbook choices of level 2 or lower.
-- Project the later one-spell Wizard Evocation spellbook grant whenever Wizard spell slot level access increases, deriving eligibility from existing Wizard Spell Access, spell school, spell level, and spell slot level facts rather than duplicating an Evoker spell roster.
+- Split the later one-spell Wizard Evocation spellbook grant whenever Wizard spell slot level access increases to `L12G-FOLLOWUP-WIZARD-EVOKER-EVOCATION-SAVANT-LATER-SLOT-ACCESS`.
 - Update Unit claims/evidence/report artifacts and focused character-creation or Character Sheet tests for any supported subset.
 
 Acceptance:
@@ -845,6 +845,11 @@ Acceptance:
 - No duplicate Evoker spell roster or parallel spellbook state is introduced.
 - No authored identity runtime dispatch is introduced.
 - Focused verification includes RAW/ubiquitous-language check, relevant Surface/character-creation tests, `pnpm unit-profile-coverage:check`, and promoted battle-runtime parity only if battle behavior changes.
+
+Completion:
+
+- Task 24 promotes the acquisition-time Wizard 3 Evocation Savant spellbook-learning subset.
+- The later spell-slot-level-access grant remains split to `L12G-FOLLOWUP-WIZARD-EVOKER-EVOCATION-SAVANT-LATER-SLOT-ACCESS`, owned by future character advancement.
 
 ### Task 25 - L12G-FOLLOWUP-WIZARD-EVOKER-POTENT-CANTRIP - Wizard Evoker Potent Cantrip Runtime Support
 
