@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 72,
-    "covered": 64,
+    "total": 73,
+    "covered": 65,
     "open": 3,
     "nonSemantic": 5,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 54,
+      "battle": 55,
       "character-creation": 8,
       "character-sheet": 6,
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 64,
+      "covered": 65,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 2,
       "needs-surface-evidence": 1,
@@ -2186,6 +2186,34 @@
         ".references/srd-5.2.1/Rules-Glossary.md#Ritual"
       ],
       "title": "Character Sheet spellbook Ritual invocation projects from existing spellbook Spell Access and Ritual-tagged Spell Definitions"
+    },
+    {
+      "id": "BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dragons-breath.test.ts"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-dragons-breath-initial"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Dragon's Breath"
+      ],
+      "title": "Battle Dragon's Breath initial cast stores target-attached breath effect state"
     }
   ],
   "battleHoleFrontier": [
@@ -4017,6 +4045,12 @@
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "profileId": "spell.invocation-web-restraint-hazard"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE"
+      ],
+      "profileId": "spell.invocation-dragons-breath-initial"
     }
   ],
   "generatorReadiness": [
@@ -4097,6 +4131,7 @@
     "spell.invocation-dancing-lights-movable-dim-light",
     "spell.invocation-direct-condition",
     "spell.invocation-direct-condition-removal",
+    "spell.invocation-dragons-breath-initial",
     "spell.invocation-expeditious-retreat-dash",
     "spell.invocation-feather-fall-mitigation",
     "spell.invocation-flaming-sphere-hazard-ram",

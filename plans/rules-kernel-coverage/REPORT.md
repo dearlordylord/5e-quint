@@ -4,14 +4,14 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Summary
 
-- Total obligations: 72
-- Covered obligations: 64
+- Total obligations: 73
+- Covered obligations: 65
 - Open transitional obligations: 3
 - Boundary or unsupported obligations: 5
 
 | Status | Count |
 | --- | ---: |
-| covered | 64 |
+| covered | 65 |
 | needs-qnt-owner | 0 |
 | needs-parity-witness | 2 |
 | needs-surface-evidence | 1 |
@@ -21,7 +21,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | Runtime | Count |
 | --- | ---: |
 | shared-algebras | 1 |
-| battle | 54 |
+| battle | 55 |
 | character-creation | 8 |
 | character-sheet | 6 |
 | character-battle | 3 |
@@ -102,6 +102,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS` | character-sheet | covered | `character-sheet.pact-slot-recovery`, `character-sheet.short-rest-spell-slot-recovery` |
 | `SHEET.WEAPON_MASTERY.RESELECTION` | character-sheet | covered | `character-sheet.weapon-mastery-reselection` |
 | `SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION` | character-sheet | covered | `character-sheet.spellbook-ritual-invocation` |
+| `BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE` | battle | covered | `spell.invocation-dragons-breath-initial` |
 
 ## Battle Hole Frontier
 

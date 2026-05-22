@@ -279,6 +279,13 @@ module battleRuntimeTimedEffects {
             mode: data.mode,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
+        | DragonsBreathEffect(data) => DragonsBreathEffect({
+            source: data.source,
+            damageType: data.damageType,
+            originalSlotLevel: data.originalSlotLevel,
+            spellSaveDc: data.spellSaveDc,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
         | HideousLaughterEffect(data) => HideousLaughterEffect({
             source: data.source,
             target: data.target,
@@ -382,6 +389,7 @@ module battleRuntimeTimedEffects {
         | SeeInvisibleAndEthereal(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | MindSpikeConcentrationDuration(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | SelfTransformationModeEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | DragonsBreathEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | HideousLaughterEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | GreaseGroundHazard(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | SpikeGrowthMovementHazard(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)

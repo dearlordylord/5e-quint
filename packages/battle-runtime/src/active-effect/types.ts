@@ -12,9 +12,11 @@ import type {
   AttackBonus,
   Condition,
   DamageDieSize,
+  DifficultyClass,
   MovementDeltaFeet,
   MovementFeet,
   Round as RoundType,
+  SpellSlotLevel,
 } from "@dnd/shared/types";
 import type {
   Ability,
@@ -691,6 +693,16 @@ export type BattleActiveEffect =
         BattleActiveEffectExpiration,
         { readonly kind: "duration" }
       >;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "dragonsBreath";
+      readonly damageType: DamageType;
+      readonly originalSlotLevel: SpellSlotLevel;
+      readonly spellSaveDc: DifficultyClass;
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "concentration" }
+      > & { readonly durationTicks: ElapsedTimeTicks };
     })
   | (BattleSpellEffectBase & {
       readonly kind: "featherFallMitigation";

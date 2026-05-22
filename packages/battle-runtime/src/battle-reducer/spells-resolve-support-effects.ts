@@ -1,5 +1,6 @@
 // Support-effect spell resolution extracted from spells-resolve.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dragons-breath-initial
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // Covers healing, scalar buffs, roll modifiers, protection, damage reduction,
@@ -13,6 +14,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE
 
 import { resetDeathSaveRuntimeState } from "@dnd/shared-algebras/death-saves-algebra";
 import {
@@ -43,6 +45,7 @@ import {
   applySeeInvisibleObserverSightSpellEffect,
   applyCreatureTypeProtectionSpellEffect,
   applyDamageReductionSpellEffect,
+  applyDragonsBreathInitialSpellEffect,
   applyJumpMovementReplacementSpellEffect,
   applyMirrorImageHitInterceptionSpellEffect,
   applyRollModifierSpellEffect,
@@ -67,6 +70,7 @@ import {
   validateSpellHealingFill,
 } from "./spells-holes-fills.ts";
 import { THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS } from "./domain-constants.ts";
+import { spellSaveDcForCaster } from "./attack-resolution.ts";
 import {
   applyWardingBondSpellEffect,
   wardingBondCastFactsAreSatisfied,
@@ -1653,6 +1657,133 @@ export function resolveJumpMovementReplacementSpellAct(input: {
     input.input.state,
     input.actorId,
     input.fillSet.targetList.targetIds,
+    input.invocation,
+  );
+  return spendSpellCastResources({
+    state: effected,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+  });
+}
+
+export function resolveDragonsBreathInitialSpellAct(input: {
+  readonly input: BonusActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "dragonsBreathInitial" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  if (
+    input.fillSet.attackRoll !== undefined ||
+    input.fillSet.targetAllocation !== undefined ||
+    input.fillSet.targetId !== undefined ||
+    input.fillSet.objectTarget !== undefined ||
+    input.fillSet.damageRoll !== undefined ||
+    input.fillSet.attackBurstDamageRoll !== undefined ||
+    input.fillSet.healingRoll !== undefined ||
+    input.fillSet.skillChoice !== undefined ||
+    input.fillSet.abilityChoice !== undefined ||
+    input.fillSet.commandOptionChoice !== undefined ||
+    input.fillSet.conditionChoice !== undefined ||
+    input.fillSet.areaChoice !== undefined ||
+    input.fillSet.teleportDestination !== undefined ||
+    input.fillSet.dancingLightsPlacement !== undefined ||
+    input.fillSet.movement !== undefined ||
+    input.fillSet.thaumaturgyActiveOneMinuteEffectCount !== undefined ||
+    input.fillSet.savingThrowOutcomes !== undefined ||
+    input.fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
+    input.fillSet.damageDispositions.length > 0 ||
+    input.fillSet.spellDamageReductionRolls.length > 0 ||
+    input.fillSet.concentrationSavingThrows.length > 0
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Dragon's Breath uses one target-list fill and one damage type choice.",
+    );
+  }
+
+  if (input.fillSet.targetList === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      spellTargetListHole(input.input.state, input.actorId, input.invocation),
+    ]);
+  }
+  const validation = validateSpellTargetList(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+    input.fillSet.targetList.targetIds,
+    input.fillSet.targetList.spatialFacts,
+  );
+  if (validation !== null) {
+    return invalidResult(input.input.state, "invalidFill", validation);
+  }
+  const targetId = input.fillSet.targetList.targetIds[0];
+  if (targetId === undefined) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Dragon's Breath must target one willing creature.",
+    );
+  }
+  if (input.fillSet.damageTypeChoice === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      spellDamageTypeChoiceHole(input.invocation),
+    ]);
+  }
+  if (
+    !input.invocation.damageTypeChoices.includes(
+      input.fillSet.damageTypeChoice.value,
+    )
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Dragon's Breath damage type must be one of the selected spell's choices.",
+    );
+  }
+  const spellSaveDc = spellSaveDcForCaster(input.input.state, input.actorId);
+  if (spellSaveDc === null) {
+    return invalidResult(
+      input.input.state,
+      "unsupportedSubject",
+      "Dragon's Breath requires a caster Spell Save DC.",
+    );
+  }
+
+  const spellCastReactionWindow = maybeOpenReactionWindow(
+    input.input.state,
+    spellCastReactionFrame({
+      casterId: input.actorId,
+      invocation: input.invocation,
+      targetIds: input.fillSet.targetList.targetIds,
+      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+      castingResource: { kind: "bonusAction" },
+      continuation: {
+        kind: "replay",
+        subject: input.input.subject,
+        fills: input.input.fills,
+      },
+    }),
+    input.input.suppressedReactionTrigger,
+  );
+  if (spellCastReactionWindow !== null) {
+    return spellCastReactionWindow;
+  }
+
+  const concentrationBase = breakBattleConcentration(
+    input.input.state,
+    input.actorId,
+  );
+  const effected = applyDragonsBreathInitialSpellEffect(
+    concentrationBase,
+    input.actorId,
+    targetId,
+    input.fillSet.damageTypeChoice.value,
+    spellSaveDc,
     input.invocation,
   );
   return spendSpellCastResources({

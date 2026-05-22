@@ -2152,6 +2152,21 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("dragonsBreathInitial"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("bonusAction"),
+      targeting: Schema.Struct({
+        kind: Schema.Literal("targetList"),
+        minTargets: Schema.Literal(1),
+        maxTargets: Schema.Literal(1),
+      }),
+      activeEffect: BattleRuntimeObjectSchema,
+      damageTypeChoices: Schema.Array(DamageTypeSchema),
+      rangeFeet: MovementFeet,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("selfTeleport"),
       spell: BattleRuntimeObjectSchema,
       actionCost: Schema.Literal("bonusAction"),

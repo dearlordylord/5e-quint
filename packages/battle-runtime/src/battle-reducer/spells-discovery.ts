@@ -868,6 +868,27 @@ export function discoverSupportedSpellInvocations(
           initialHoles: [],
         }));
       }
+      if (invocation.procedure === "dragonsBreathInitial") {
+        const targetHole = spellTargetListHole(state, actorId, invocation);
+        return targetHole.choices.length === 0
+          ? []
+          : [
+              {
+                subject: {
+                  tag: "bonusActionSpell" as const,
+                  actorId,
+                  invocation: supportedSpellInvocationRef(invocation),
+                  mode: { tag: "cast" as const },
+                },
+                label: invocation.spell.name,
+                summary: spellInvocationCastSummary(invocation),
+                initialHoles: [
+                  targetHole,
+                  spellDamageTypeChoiceHole(invocation),
+                ],
+              },
+            ];
+      }
       if (
         invocation.procedure === "jumpMovementReplacement" ||
         invocation.procedure === "sanctuaryTargetingInterdiction"
@@ -1466,6 +1487,9 @@ export function spellInvocationCastSummary(
   if (invocation.procedure === "jumpMovementReplacement") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
+  if (invocation.procedure === "dragonsBreathInitial") {
+    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+  }
   if (invocation.procedure === "sanctuaryTargetingInterdiction") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
@@ -1722,6 +1746,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "markedDamageRider" &&
     invocation.procedure !== "expeditiousRetreatDash" &&
     invocation.procedure !== "jumpMovementReplacement" &&
+    invocation.procedure !== "dragonsBreathInitial" &&
     invocation.procedure !== "selfTeleport" &&
     invocation.procedure !== "sanctuaryTargetingInterdiction" &&
     invocation.procedure !== "directCondition" &&
@@ -1767,6 +1792,7 @@ export function readiedSpellAct(
     invocation.procedure === "markedDamageRider" ||
     invocation.procedure === "expeditiousRetreatDash" ||
     invocation.procedure === "jumpMovementReplacement" ||
+    invocation.procedure === "dragonsBreathInitial" ||
     invocation.procedure === "selfTeleport" ||
     invocation.procedure === "sanctuaryTargetingInterdiction" ||
     invocation.procedure === "directCondition" ||

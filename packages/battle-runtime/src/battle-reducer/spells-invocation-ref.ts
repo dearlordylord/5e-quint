@@ -250,6 +250,14 @@ export function supportedSpellInvocationRef(
       procedure: "jumpMovementReplacement",
     };
   }
+  if (invocation.procedure === "dragonsBreathInitial") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "dragonsBreathInitial",
+    };
+  }
   if (invocation.procedure === "selfTeleport") {
     return {
       tag: "spellSlot",

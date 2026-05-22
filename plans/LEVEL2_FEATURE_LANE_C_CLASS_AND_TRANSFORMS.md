@@ -49,13 +49,13 @@
     {
       "number": 8,
       "id": "L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Dragon's Breath Initial Cast And Effect State"
     },
     {
       "number": 9,
       "id": "L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Dragon's Breath Granted Magic Action"
     },
     {
@@ -175,7 +175,7 @@ Output:
 
 ### Task 8 - L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST - Dragon's Breath Initial Cast And Effect State
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 - SRD Dragon's Breath text and existing spell-created active-effect patterns.
@@ -186,7 +186,7 @@ Output:
 
 ### Task 9 - L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION - Dragon's Breath Granted Magic Action
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on:
 - Task C8.

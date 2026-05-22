@@ -67,6 +67,7 @@ module battleRuntimeConcentration {
         | SeeInvisibleAndEthereal(_) => true
         | MindSpikeConcentrationDuration(_) => false
         | SelfTransformationModeEffect(_) => false
+        | DragonsBreathEffect(_) => false
         | _ => true
       })
 

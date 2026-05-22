@@ -757,6 +757,7 @@ export function spellFillSet(
         invocation.procedure !== "hideousLaughter" &&
         invocation.procedure !== "command" &&
         invocation.procedure !== "jumpMovementReplacement" &&
+        invocation.procedure !== "dragonsBreathInitial" &&
         invocation.procedure !== "featherFallMitigation" &&
         invocation.procedure !== "sanctuaryTargetingInterdiction" &&
         invocation.procedure !== "directCondition" &&
@@ -1144,6 +1145,7 @@ export function spellFillSet(
     if (fill.kind === "damageTypeChoice") {
       if (
         invocation.procedure !== "damageReduction" &&
+        invocation.procedure !== "dragonsBreathInitial" &&
         !(
           invocation.procedure === "spellAttackDamage" &&
           invocation.damage.kind === "sorcerousBurstDamageTypeChoice"

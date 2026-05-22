@@ -1134,6 +1134,40 @@ module battleRuntimeHpArmorBuffSpatialTests {
     }
   }
 
+  run test_dragons_breath_initial_cast_stores_target_attached_effect = {
+    val cast = resolveDragonsBreathInitialSpell(initialState, Goblin, Set(Goblin), Fire, 3, 13)
+    val effect = dragonsBreathInitialEffect(Fighter, Fire, 3, 13)
+    all {
+      assert(cast.goblin.activeEffects.contains(effect)),
+      assert(not(cast.bonusActionAvailable)),
+      assert(battleActorHasCommittedSpellSlotUse(cast, Fighter)),
+      assert(not(cast.fighter.activeEffects.contains(effect))),
+    }
+  }
+
+  run test_dragons_breath_initial_cast_requires_willing_target_and_concentration_cleanup = {
+    val cast = resolveDragonsBreathInitialSpell(initialState, Goblin, Set(Goblin), Acid, 2, 13)
+    val unwilling = resolveDragonsBreathInitialSpell(initialState, Goblin, Set(Fighter), Acid, 2, 13)
+    val cleaned = breakConcentrationSpellEffects(cast, Fighter)
+    all {
+      assert(unwilling == initialState),
+      assert(cast.goblin.activeEffects.contains(dragonsBreathInitialEffect(Fighter, Acid, 2, 13))),
+      assert(not(cleaned.goblin.activeEffects.exists(effect => match effect {
+        | DragonsBreathEffect(_) => true
+        | _ => false
+      }))),
+    }
+  }
+
+  run test_dragons_breath_initial_cast_rejects_non_raw_damage_type = {
+    val illegal = resolveDragonsBreathInitialSpell(initialState, Goblin, Set(Goblin), Radiant, 2, 13)
+    all {
+      assert(dragonsBreathDamageTypeChoiceIsLegal(Fire)),
+      assert(not(dragonsBreathDamageTypeChoiceIsLegal(Radiant))),
+      assert(illegal == initialState),
+    }
+  }
+
   run test_pact_blade_damage_choice_and_charisma_option_projection = {
     all {
       assert(pactBladeDamageTypeChoiceIsLegal(Slashing, Slashing)),
