@@ -1034,22 +1034,66 @@ export function characterBuildFeatureUnitIds(
   unitLibrary: UnitCatalog,
 ): readonly UnitRecord["id"][] {
   return uniqueValues([
-    ...progressionClassUnitIds(build.progression).flatMap((classUnitId) => {
-      const unit = unitLibrary.getUnit(classUnitId);
-      if (Option.isNone(unit)) return [];
-      const facts = readClassCreationFacts(unit.value);
-      if (facts.tag !== "readable") return [];
-      return facts.value.featureGrants
-        .filter(
-          (grant) =>
-            grant.level <= classLevelForUnit(build.progression, classUnitId),
-        )
-        .map((grant) => grant.unitId);
-    }),
-    ...build.features.flatMap((feature) =>
-      feature.kind === "selectedClassChoice" ? [feature.unitId] : [],
-    ),
+    ...classGrantedFeatureUnitIds(build, unitLibrary),
+    ...selectedClassChoiceUnitIds(build),
+    ...selectedSubclassFeatureUnitIds(build, unitLibrary),
   ]);
+}
+
+function classGrantedFeatureUnitIds(
+  build: Pick<CharacterBuild, "progression">,
+  unitLibrary: UnitCatalog,
+): readonly UnitRecord["id"][] {
+  return progressionClassUnitIds(build.progression).flatMap((classUnitId) => {
+    const unit = unitLibrary.getUnit(classUnitId);
+    if (Option.isNone(unit)) return [];
+    const facts = readClassCreationFacts(unit.value);
+    if (facts.tag !== "readable") return [];
+    return facts.value.featureGrants
+      .filter(
+        (grant) =>
+          grant.level <= classLevelForUnit(build.progression, classUnitId),
+      )
+      .map((grant) => grant.unitId);
+  });
+}
+
+function selectedClassChoiceUnitIds(
+  build: Pick<CharacterBuild, "features">,
+): readonly UnitRecord["id"][] {
+  return build.features.flatMap((feature) =>
+    feature.kind === "selectedClassChoice" ? [feature.unitId] : [],
+  );
+}
+
+function selectedSubclassFeatureUnitIds(
+  build: Pick<CharacterBuild, "progression" | "features">,
+  unitLibrary: UnitCatalog,
+): readonly UnitRecord["id"][] {
+  const classUnitIds = progressionClassUnitIds(build.progression);
+  return build.features.flatMap((feature) => {
+    if (feature.kind !== "selectedClassChoice") return [];
+    const selectedUnit = unitLibrary.getUnit(feature.unitId);
+    if (Option.isNone(selectedUnit) || selectedUnit.value.kind !== "subclass") {
+      return [];
+    }
+    const selectedSubclass = selectedUnit.value;
+    const classUnitId = classUnitIds.find((candidateClassUnitId) => {
+      const classUnit = unitLibrary.getUnit(candidateClassUnitId);
+      if (Option.isNone(classUnit) || !("className" in classUnit.value)) {
+        return false;
+      }
+      return (
+        classUnit.value.kind === "class" &&
+        classUnit.value.className === selectedSubclass.className
+      );
+    });
+    if (classUnitId === undefined) return [];
+    const classLevel = classLevelForUnit(build.progression, classUnitId);
+    return selectedSubclass.featureGrants
+      .filter((grant) => grant.level <= classLevel)
+      .map((grant) => grant.unitId);
+  });
 }
 
 function finalizedClassFeatureLanguages(
@@ -1811,18 +1855,26 @@ export function characterBuildUnitRefs(
   >,
   unitLibrary?: UnitCatalog,
 ): readonly UnitRef[] {
-  const derivedFeatureUnitIds =
+  const classFeatureUnitIds =
     unitLibrary === undefined
       ? []
-      : characterBuildDerivedFeatureUnitIds(build, unitLibrary);
+      : classGrantedFeatureUnitIds(build, unitLibrary);
+  const originGrantedUnitIds =
+    unitLibrary === undefined
+      ? []
+      : characterBuildOriginGrantedUnitIds(build, unitLibrary);
+  const selectedSubclassGrantUnitIds =
+    unitLibrary === undefined
+      ? []
+      : selectedSubclassFeatureUnitIds(build, unitLibrary);
   return unitRefs(
     ...progressionClassUnitIds(build.progression),
     build.background,
     build.species,
-    ...derivedFeatureUnitIds,
-    ...build.features.flatMap((feature) =>
-      feature.kind === "selectedClassChoice" ? [feature.unitId] : [],
-    ),
+    ...classFeatureUnitIds,
+    ...originGrantedUnitIds,
+    ...selectedClassChoiceUnitIds(build),
+    ...selectedSubclassGrantUnitIds,
     ...build.equipment.owned.map((item) => item.unitId),
     ...(build.spellcasting?.sources.flatMap((source) => [
       source.sourceUnitId,
@@ -1839,23 +1891,11 @@ export function characterBuildUnitRefs(
   );
 }
 
-function characterBuildDerivedFeatureUnitIds(
-  build: Pick<CharacterBuild, "progression" | "background" | "species">,
+function characterBuildOriginGrantedUnitIds(
+  build: Pick<CharacterBuild, "background" | "species">,
   unitLibrary: UnitCatalog,
 ): readonly UnitRecord["id"][] {
   return [
-    ...progressionClassUnitIds(build.progression).flatMap((classUnitId) => {
-      const unit = unitLibrary.getUnit(classUnitId);
-      if (Option.isNone(unit)) return [];
-      const facts = readClassCreationFacts(unit.value);
-      if (facts.tag !== "readable") return [];
-      return facts.value.featureGrants
-        .filter(
-          (grant) =>
-            grant.level <= classLevelForUnit(build.progression, classUnitId),
-        )
-        .map((grant) => grant.unitId);
-    }),
     ...backgroundOriginFeatUnitIds(build, unitLibrary),
     ...speciesTraitUnitIds(build, unitLibrary),
   ];

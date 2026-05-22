@@ -85,53 +85,59 @@
     {
       "number": 14,
       "id": "L3-FIGHTER-CHAMPION-SUBCLASS-SURVEY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Level 3 Fighter Champion Survey"
     },
     {
       "number": 15,
+      "id": "L3-FOLLOWUP-FIGHTER-CHAMPION-REMARKABLE-ATHLETE",
+      "status": "blocked",
+      "title": "Fighter Champion Remarkable Athlete Runtime Split"
+    },
+    {
+      "number": 16,
       "id": "L3-WIZARD-EVOKER-SUBCLASS-SURVEY",
       "status": "ready-for-research",
       "title": "Level 3 Wizard Evoker Survey"
     },
     {
-      "number": 16,
+      "number": 17,
       "id": "L3-SPELL-HASTE-RUNTIME-SURVEY",
       "status": "ready-for-research",
       "title": "Level 3 Haste Runtime Survey"
     },
     {
-      "number": 17,
+      "number": 18,
       "id": "L3-SPELL-SLOW-RUNTIME-SURVEY",
       "status": "ready-for-research",
       "title": "Level 3 Slow Runtime Survey"
     },
     {
-      "number": 18,
+      "number": 19,
       "id": "L3-SPELL-PROTECTION-FROM-ENERGY-RUNTIME-SURVEY",
       "status": "ready-for-research",
       "title": "Level 3 Protection From Energy Runtime Survey"
     },
     {
-      "number": 19,
+      "number": 20,
       "id": "L12G-FOLLOWUP-SHAPESHIFT-TRUE-FORM-RUNTIME",
       "status": "ready-for-research",
       "title": "Shared Shape-Shifted True-Form Runtime State"
     },
     {
-      "number": 20,
+      "number": 21,
       "id": "L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-AREA-SUPPRESSION",
       "status": "blocked",
       "title": "Moonbeam Shape-Shift Area Suppression Rider"
     },
     {
-      "number": 21,
+      "number": 22,
       "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION",
       "status": "ready-for-research",
       "title": "Druid Wild Shape D20 Statistic Projection"
     },
     {
-      "number": 22,
+      "number": 23,
       "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME",
       "status": "blocked",
       "title": "Druid Wild Shape Shape-Shifting Runtime And Promoted Parity"
@@ -352,7 +358,7 @@ Verification notes:
 
 ### Task 14 - L3-FIGHTER-CHAMPION-SUBCLASS-SURVEY - Level 3 Fighter Champion Survey
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -372,7 +378,53 @@ Acceptance:
 - No companion AI/autonomous-control behavior is introduced.
 - No authored identity dispatch is introduced in runtime code.
 
-### Task 15 - L3-WIZARD-EVOKER-SUBCLASS-SURVEY - Level 3 Wizard Evoker Survey
+Result:
+
+- Rechecked SRD Fighter level-3 subclass and Champion RAW. Fighter Subclass grants chosen subclass features whose Fighter level is met; Champion level 3 grants Improved Critical and Remarkable Athlete.
+- Authored `subclass_fighter_champion` to grant the existing supported `fighter_improved_critical` Unit at Fighter level 3.
+- Updated character creation feature and Unit-ref projection so selected subclass feature grants are derived from the selected subclass record and owning class level. The finalized build still stores only the selected subclass ref, avoiding duplicate feature state.
+- Split unimplemented Remarkable Athlete work to `L3-FOLLOWUP-FIGHTER-CHAMPION-REMARKABLE-ATHLETE`: Surface authoring for `fighter_remarkable_athlete`, Initiative and Strength (Athletics) Advantage support, and post-critical-hit movement ownership.
+
+Verification notes:
+
+- RAW/ubiquitous-language check: SRD 5.2.1 `Classes/Fighter.md#Level 3: Fighter Subclass`, `#Level 3: Improved Critical`, and `#Level 3: Remarkable Athlete`; `UBIQUITOUS_LANGUAGE.md` terms for Character Building, Character Sheet, Attack Roll, Critical Hit, Initiative, Advantage, Ability Check, Speed, Movement, and Opportunity Attack.
+- Focused verification: `pnpm --filter @dnd/surface exec vitest run src/surface/unit-catalog.test.ts -t "authors Fighter Champion feature grants"`; `pnpm --filter @dnd/character-creation-runtime exec vitest run src/index.test.ts -t "retains selected subclass Unit refs"`; `pnpm --filter @dnd/character-creation-runtime exec vitest run src/index.test.ts -t "finalizes the complete Orc Soldier Fighter manifest"`; `pnpm --filter @dnd/character-creation-runtime typecheck`; `pnpm --filter @dnd/surface typecheck`; `pnpm unit-profile-coverage:check -- --write`; `pnpm unit-profile-coverage:check`; `git diff --check 969412f50ec1e433a3f9d801f6fb6b6f7474833f`.
+- Full diagnostic character-creation test still has two unrelated invalid-vs-incomplete baseline failures; the Task 14 ordering and subclass projection tests pass. No battle runtime behavior changed, so MBT is not applicable.
+
+### Task 15 - L3-FOLLOWUP-FIGHTER-CHAMPION-REMARKABLE-ATHLETE - Fighter Champion Remarkable Athlete Runtime Split
+
+Status: `blocked`
+
+Depends on: Task 14 accepted in the Ralph run and synchronized to the external Ralph plan.
+
+Owner:
+
+- Surface authoring for the SRD Champion class-feature Unit.
+- Character-creation Unit admission/projection for the authored feature.
+- Character Sheet or battle-runtime roll-mode owner for Initiative and Strength (Athletics) Advantage, as determined by existing roll-mode boundaries.
+- Battle runtime owner decision for the post-critical-hit movement window.
+
+Input:
+
+- SRD 5.2.1 Fighter Champion `Level 3: Remarkable Athlete`.
+- `UBIQUITOUS_LANGUAGE.md` terms for Initiative, Advantage, Ability Check, Critical Hit, Speed, Movement, and Opportunity Attack.
+- Existing roll-mode profiles and movement/critical-hit runtime owners.
+
+Output:
+
+- Author `fighter_remarkable_athlete` as an SRD Champion level-3 class-feature Unit or record a valid owner-accepted closure if authoring is blocked.
+- Promote or precisely close the Initiative Advantage and Strength (Athletics) Advantage subset without duplicating roll-mode state.
+- Promote, split, or precisely close the immediate optional movement up to half Speed after scoring a Critical Hit without provoking Opportunity Attacks.
+- Update Unit claims/evidence/report artifacts and focused tests for any supported subset.
+
+Acceptance:
+
+- Remarkable Athlete lands as supported, accepted-closed/runtime-detached, or further split into smaller executable tasks with concrete owners.
+- No authored identity runtime dispatch is introduced.
+- No companion AI/autonomous-control behavior is introduced.
+- Focused verification includes RAW/ubiquitous-language check, relevant Surface/character-creation tests, `pnpm unit-profile-coverage:check`, and promoted battle-runtime parity only if battle behavior changes.
+
+### Task 16 - L3-WIZARD-EVOKER-SUBCLASS-SURVEY - Level 3 Wizard Evoker Survey
 
 Status: `ready-for-research`
 
@@ -394,7 +446,7 @@ Acceptance:
 - No companion AI/autonomous-control behavior is introduced.
 - No authored identity dispatch is introduced in runtime code.
 
-### Task 16 - L3-SPELL-HASTE-RUNTIME-SURVEY - Level 3 Haste Runtime Survey
+### Task 17 - L3-SPELL-HASTE-RUNTIME-SURVEY - Level 3 Haste Runtime Survey
 
 Status: `ready-for-research`
 
@@ -416,7 +468,7 @@ Acceptance:
 - No companion AI/autonomous-control behavior is introduced.
 - No authored identity dispatch is introduced in runtime code.
 
-### Task 17 - L3-SPELL-SLOW-RUNTIME-SURVEY - Level 3 Slow Runtime Survey
+### Task 18 - L3-SPELL-SLOW-RUNTIME-SURVEY - Level 3 Slow Runtime Survey
 
 Status: `ready-for-research`
 
@@ -438,7 +490,7 @@ Acceptance:
 - No companion AI/autonomous-control behavior is introduced.
 - No authored identity dispatch is introduced in runtime code.
 
-### Task 18 - L3-SPELL-PROTECTION-FROM-ENERGY-RUNTIME-SURVEY - Level 3 Protection From Energy Runtime Survey
+### Task 19 - L3-SPELL-PROTECTION-FROM-ENERGY-RUNTIME-SURVEY - Level 3 Protection From Energy Runtime Survey
 
 Status: `ready-for-research`
 
@@ -460,7 +512,7 @@ Acceptance:
 - No companion AI/autonomous-control behavior is introduced.
 - No authored identity dispatch is introduced in runtime code.
 
-### Task 19 - L12G-FOLLOWUP-SHAPESHIFT-TRUE-FORM-RUNTIME - Shared Shape-Shifted True-Form Runtime State
+### Task 20 - L12G-FOLLOWUP-SHAPESHIFT-TRUE-FORM-RUNTIME - Shared Shape-Shifted True-Form Runtime State
 
 Status: `ready-for-research`
 
@@ -483,17 +535,17 @@ Acceptance:
 - No companion AI/autonomous-control behavior is introduced.
 - No authored identity dispatch is introduced in runtime code.
 
-### Task 20 - L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-AREA-SUPPRESSION - Moonbeam Shape-Shift Area Suppression Rider
+### Task 21 - L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-AREA-SUPPRESSION - Moonbeam Shape-Shift Area Suppression Rider
 
 Status: `blocked`
 
 Depends on:
 
-- Task 19.
+- Task 20.
 
 Input:
 
-- Task 19 shared shape-shifted true-form runtime owner.
+- Task 20 shared shape-shifted true-form runtime owner.
 - Local RAW under `.references/srd-5.2.1/Spells/Descriptions-M-P.md#Moonbeam`.
 - `UBIQUITOUS_LANGUAGE.md`.
 - Promoted Moonbeam movable-zone runtime, table/spatial trigger boundary, and coverage artifacts.
@@ -511,7 +563,7 @@ Acceptance:
 - No companion AI/autonomous-control behavior is introduced.
 - No authored identity dispatch is introduced in runtime code.
 
-### Task 21 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION - Druid Wild Shape D20 Statistic Projection
+### Task 22 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION - Druid Wild Shape D20 Statistic Projection
 
 Status: `ready-for-research`
 
@@ -539,7 +591,7 @@ Acceptance:
 - No companion AI/autonomous-control behavior is introduced.
 - No authored identity dispatch is introduced in runtime code.
 
-### Task 22 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME - Druid Wild Shape Shape-Shifting Runtime And Promoted Parity
+### Task 23 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME - Druid Wild Shape Shape-Shifting Runtime And Promoted Parity
 
 Status: `blocked`
 

@@ -5023,6 +5023,21 @@ describe("SRD Unit catalog boundary", () => {
     }
   });
 
+  test("authors Fighter Champion feature grants through canonical Unit ids", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const champion = result.catalog.requireUnit("subclass_fighter_champion");
+
+      expect(champion).toMatchObject({
+        kind: "subclass",
+        className: "fighter",
+        featureGrants: [{ level: 3, unitId: "fighter_improved_critical" }],
+      });
+    }
+  });
+
   test("keeps Action Surge authored through one canonical content record", () => {
     expect(
       existsSync(

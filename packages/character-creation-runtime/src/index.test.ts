@@ -4776,6 +4776,18 @@ describe("character creation finalization", () => {
     };
     const originalProgressions = profile.supportedProgressions;
     const fighterThree = testProgression("class_fighter", 3);
+    const champion = unitLibrary.requireUnit("subclass_fighter_champion");
+    if (champion.kind !== "subclass") {
+      expect(champion.kind).toBe("subclass");
+      return;
+    }
+    const championWithImprovedCriticalGrant = {
+      ...champion,
+      featureGrants: [{ level: 3, unitId: "fighter_improved_critical" }],
+    } satisfies Extract<UnitRecord, { readonly kind: "subclass" }>;
+    const widenedUnitLibrary = unitLibraryReplacingUnits([
+      championWithImprovedCriticalGrant,
+    ]);
     profile.supportedProgressions = [...originalProgressions, fighterThree];
     try {
       const complete = completeManifestDraft();
@@ -4795,7 +4807,10 @@ describe("character creation finalization", () => {
         },
       };
 
-      const result = finalizeCharacterDraft({ draft, unitLibrary });
+      const result = finalizeCharacterDraft({
+        draft,
+        unitLibrary: widenedUnitLibrary,
+      });
 
       expect(result).toMatchObject({
         tag: "ready",
@@ -4809,6 +4824,26 @@ describe("character creation finalization", () => {
           ]),
         },
       });
+      if (result.tag === "ready") {
+        expect(
+          characterBuildFeatureUnitIds(result.build, widenedUnitLibrary),
+        ).toEqual(
+          expect.arrayContaining([
+            "subclass_fighter_champion",
+            "fighter_improved_critical",
+          ]),
+        );
+        expect(
+          characterBuildUnitRefs(result.build, widenedUnitLibrary).map(
+            (ref) => ref.unitId,
+          ),
+        ).toEqual(
+          expect.arrayContaining([
+            "subclass_fighter_champion",
+            "fighter_improved_critical",
+          ]),
+        );
+      }
     } finally {
       profile.supportedProgressions = originalProgressions;
     }
