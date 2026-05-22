@@ -53,6 +53,7 @@
 {"profileId":"spell.invocation-sleep-repeat-save-lifecycle","obligationIds":["BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE"]}
 {"profileId":"spell.invocation-make-stable","obligationIds":["BATTLE.SPELL.MAKE_STABLE_LIFECYCLE"]}
 {"profileId":"spell.invocation-roll-modifier","obligationIds":["BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS"]}
+{"profileId":"spell.invocation-ray-of-enfeeblement-d20-lifecycle","obligationIds":["BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE"]}
 {"profileId":"spell.creature-type-protection-and-charm","obligationIds":["BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION"]}
 {"profileId":"spell.invocation-attack-roll-advantage-save","obligationIds":["BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE"]}
 {"profileId":"spell.invocation-condition-immunity-turn-start-temporary-hit-points","obligationIds":["BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS"]}

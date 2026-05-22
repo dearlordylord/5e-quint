@@ -83,13 +83,13 @@
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 123,
-      "numerator": 122,
-      "percent": "99.2%"
+      "numerator": 123,
+      "percent": "100%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 123,
-      "numerator": 122,
-      "percent": "99.2%"
+      "numerator": 123,
+      "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 136,
@@ -3584,13 +3584,13 @@
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 123,
-        "numerator": 122,
-        "percent": "99.2%"
+        "numerator": 123,
+        "percent": "100%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 123,
-        "numerator": 122,
-        "percent": "99.2%"
+        "numerator": 123,
+        "percent": "100%"
       }
     },
     "profileKinds": [
@@ -5326,8 +5326,15 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Ray of Enfeeblement D20 Test lifecycle applies save-gated next-attack Disadvantage, failed-save Strength D20 Test Disadvantage, repeat-save cleanup, and Concentration cleanup"
+          }
+        ],
         "profileId": "spell.invocation-ray-of-enfeeblement-d20-lifecycle",
         "profileKind": "spell-invocation"
       },

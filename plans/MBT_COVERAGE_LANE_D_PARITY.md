@@ -145,7 +145,7 @@
     {
       "number": 24,
       "id": "L3-RULES-KERNEL-JOIN-PRECHECK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Level 3 Rules-Kernel Join Precheck"
     },
     {
@@ -437,7 +437,7 @@ Acceptance:
 
 ### Task 24 - L3-RULES-KERNEL-JOIN-PRECHECK - Level 3 Rules-Kernel Join Precheck
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 

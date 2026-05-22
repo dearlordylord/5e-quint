@@ -4,14 +4,14 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Summary
 
-- Total obligations: 89
-- Covered obligations: 83
+- Total obligations: 90
+- Covered obligations: 84
 - Open transitional obligations: 0
 - Boundary or unsupported obligations: 6
 
 | Status | Count |
 | --- | ---: |
-| covered | 83 |
+| covered | 84 |
 | needs-qnt-owner | 0 |
 | needs-parity-witness | 0 |
 | needs-surface-evidence | 0 |
@@ -21,7 +21,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | Runtime | Count |
 | --- | ---: |
 | shared-algebras | 1 |
-| battle | 65 |
+| battle | 66 |
 | character-creation | 12 |
 | character-sheet | 8 |
 | character-battle | 3 |
@@ -40,6 +40,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` | battle | covered | `spell.invocation-condition-save`, `spell.invocation-hideous-laughter-repeat-save-lifecycle`, `spell.invocation-save-gated-condition-immunity` |
 | `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE` | battle | covered | `spell.invocation-attack-roll-advantage-save` |
 | `BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT` | battle | covered | `spell.invocation-see-invisible-observer-sight` |
+| `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE` | battle | covered | `spell.invocation-ray-of-enfeeblement-d20-lifecycle` |
 | `BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE` | battle | covered | `spell.find-familiar-lifecycle` |
 | `BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE` | battle | covered | `spell.invocation-web-restraint-hazard` |
 | `BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE` | battle | covered | `unit-feature.druid-wild-shape-known-form` |
