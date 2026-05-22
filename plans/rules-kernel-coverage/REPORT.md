@@ -4,14 +4,14 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Summary
 
-- Total obligations: 91
-- Covered obligations: 85
+- Total obligations: 92
+- Covered obligations: 86
 - Open transitional obligations: 0
 - Boundary or unsupported obligations: 6
 
 | Status | Count |
 | --- | ---: |
-| covered | 85 |
+| covered | 86 |
 | needs-qnt-owner | 0 |
 | needs-parity-witness | 0 |
 | needs-surface-evidence | 0 |
@@ -21,7 +21,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | Runtime | Count |
 | --- | ---: |
 | shared-algebras | 1 |
-| battle | 67 |
+| battle | 68 |
 | character-creation | 12 |
 | character-sheet | 8 |
 | character-battle | 3 |
@@ -41,6 +41,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE` | battle | covered | `spell.invocation-attack-roll-advantage-save` |
 | `BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT` | battle | covered | `spell.invocation-see-invisible-observer-sight` |
 | `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE` | battle | covered | `spell.invocation-ray-of-enfeeblement-d20-lifecycle` |
+| `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY` | battle | covered | `spell.invocation-ray-of-enfeeblement-damage-penalty` |
 | `BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE` | battle | covered | `spell.find-familiar-lifecycle` |
 | `BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE` | battle | covered | `spell.invocation-web-restraint-hazard` |
 | `BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE` | battle | covered | `unit-feature.druid-wild-shape-known-form` |
@@ -113,7 +114,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.PROTOCOL.MALFORMED_PAYLOAD_REJECTION` | battle | boundary-only | _outside reducer semantics_ |
 | `CREATION.PROTOCOL.MALFORMED_FILL_REJECTION` | character-creation | boundary-only | _outside reducer semantics_ |
 | `BATTLE.SURFACE.CATALOG_ONLY_RECORDS` | battle | unsupported-by-admission | _outside reducer semantics_ |
-| `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | battle | boundary-only | `spell.invocation-spiritual-weapon-attack-proxy` |
+| `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | battle | boundary-only | _outside reducer semantics_ |
 | `SHARED.HIT_POINTS.POSITIVE_DAMAGE` | shared-algebras | covered | `spell.invocation-flaming-sphere-hazard-ram`, `spell.invocation-moonbeam-movable-zone`, `spell.invocation-spell-created-held-object` |
 | `SHEET.HP_REST_HIT_DICE.TRANSITIONS` | character-sheet | covered | _direct reducer entrypoint_ |
 | `SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS` | character-sheet | covered | `character-sheet.pact-slot-recovery`, `character-sheet.short-rest-spell-slot-recovery` |

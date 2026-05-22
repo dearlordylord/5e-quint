@@ -83,18 +83,18 @@
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 130,
-      "numerator": 124,
-      "percent": "95.4%"
+      "numerator": 126,
+      "percent": "96.9%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 130,
-      "numerator": 125,
-      "percent": "96.2%"
+      "numerator": 126,
+      "percent": "96.9%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 141,
-      "numerator": 138,
-      "percent": "97.9%"
+      "denominator": 142,
+      "numerator": 141,
+      "percent": "99.3%"
     },
     "runtimeMappingCoverage": {
       "denominator": 95,
@@ -3807,13 +3807,13 @@
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 130,
-        "numerator": 124,
-        "percent": "95.4%"
+        "numerator": 126,
+        "percent": "96.9%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 130,
-        "numerator": 125,
-        "percent": "96.2%"
+        "numerator": 126,
+        "percent": "96.9%"
       }
     },
     "profileKinds": [
@@ -5574,8 +5574,15 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Ray of Enfeeblement failed-save source damage-roll penalty subtracts 1d8 from supported damage rolls before target-side damage handling"
+          }
+        ],
         "profileId": "spell.invocation-ray-of-enfeeblement-damage-penalty",
         "profileKind": "spell-invocation"
       },
@@ -5618,19 +5625,13 @@
         "profileKind": "character-sheet"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
             "runtime": "battle",
             "status": "covered",
             "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
-          },
-          {
-            "obligationId": "BATTLE.TABLE.HOLE_FACT_BOUNDARIES",
-            "runtime": "battle",
-            "status": "boundary-only",
-            "title": "Battle holes and fills that carry table-owned target, route, placement, object, or other spatial facts remain boundary facts rather than reducer-owned world modeling"
           }
         ],
         "profileId": "spell.invocation-spiritual-weapon-attack-proxy",
@@ -5645,9 +5646,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 141,
-          "numerator": 138,
-          "percent": "97.9%"
+          "denominator": 142,
+          "numerator": 141,
+          "percent": "99.3%"
         }
       },
       "units": [
@@ -6447,6 +6448,38 @@
             }
           ],
           "unitId": "divine_smite"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Dragon's Breath initial cast stores target-attached breath effect state"
+                }
+              ],
+              "profileId": "spell.invocation-dragons-breath-initial",
+              "profileKind": "spell-invocation"
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Dragon's Breath target-granted Magic action resolves Cone save-for-half damage"
+                }
+              ],
+              "profileId": "spell.invocation-dragons-breath-granted-action",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "dragons_breath"
         },
         {
           "joinStatus": "unmapped",
@@ -8109,7 +8142,7 @@
           "unitId": "ranger_weapon_mastery"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
               "joinStatus": "covered",
@@ -8125,8 +8158,15 @@
               "profileKind": "spell-invocation"
             },
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Ray of Enfeeblement failed-save source damage-roll penalty subtracts 1d8 from supported damage rolls before target-side damage handling"
+                }
+              ],
               "profileId": "spell.invocation-ray-of-enfeeblement-damage-penalty",
               "profileKind": "spell-invocation"
             }
@@ -8765,22 +8805,16 @@
           "unitId": "spider_climb"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
                   "runtime": "battle",
                   "status": "covered",
                   "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
-                },
-                {
-                  "obligationId": "BATTLE.TABLE.HOLE_FACT_BOUNDARIES",
-                  "runtime": "battle",
-                  "status": "boundary-only",
-                  "title": "Battle holes and fills that carry table-owned target, route, placement, object, or other spatial facts remain boundary facts rather than reducer-owned world modeling"
                 }
               ],
               "profileId": "spell.invocation-spiritual-weapon-attack-proxy",
@@ -27847,20 +27881,14 @@
         "status": "not-in-unit-catalog"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "battle-runtime target-granted action lifecycle plus promoted Quint parity",
-              "reason": "Task 8 promotes only the initial cast and retained effect state; the target-side breath action still needs target-granted action lifecycle support plus caller/table-owned Cone placement and affected-creature membership witnesses."
-            },
-            "followUpTaskId": "L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION",
-            "mechanic": "target-granted Magic action discovery and execution for the attached creature, including 15-foot Cone placement, affected-creature area membership, Dexterity save-for-half damage, slot-scaled breath damage, action-economy spending, and expiry behavior"
-          }
-        ],
-        "futureProfileOwner": "battle-runtime target-granted action lifecycle plus promoted Quint parity",
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "table/spatial witness owner",
+          "reason": "Promoted battle runtime owns the Dragon's Breath initial cast, target-attached granted-action state, Magic action discovery and spending, save-for-half damage, slot scaling, and cleanup. Automatic Cone geometry and affected-creature membership derivation remain caller/table spatial witnesses consumed by the runtime."
+        },
         "profileIds": [
-          "spell.invocation-dragons-breath-initial"
+          "spell.invocation-dragons-breath-initial",
+          "spell.invocation-dragons-breath-granted-action"
         ],
         "rawRequirementIds": [
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
@@ -27871,9 +27899,14 @@
           "one willing touched creature target attachment through caller-supplied target facts",
           "caster-owned Concentration for up to 1 minute",
           "target-attached active effect stores chosen damage type, original slot level, and the caster Spell Save DC captured at cast time",
-          "active effect is removed when the caster's Concentration ends"
+          "target-granted Magic action discovery and execution for the attached creature",
+          "caller/table-owned 15-foot Cone placement and affected-creature area membership witnesses consumed by the breath action",
+          "Dexterity save-for-half damage using the retained caster Spell Save DC",
+          "slot-scaled breath damage using the retained original slot level and chosen damage type",
+          "target Magic action spending on accepted breath execution",
+          "active effect is removed when the caster's Concentration ends or its duration expires"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [],
@@ -27897,6 +27930,35 @@
             "L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST"
           ],
           "title": "Spell invocation stores Dragon's Breath target-attached breath effect state",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dragons-breath.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "spell.invocation-dragons-breath-granted-action",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/dragons-breath.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+            "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+            "packages/battle-runtime/src/battle-subjects.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the target-attached Dragon's Breath effect created by the initial cast, caller/table 15-foot Cone area membership facts, Dexterity Saving Throw outcomes, and a slot-scaled damage roll. It owns target-side Magic action discovery and spending, retained damage type and original slot-level damage dice, retained caster Spell Save DC for the Dexterity save, failed-save full damage, successful-save half damage, and shared damage lifecycle integration for Concentration and zero-Hit-Point follow-up holes. Automatic Cone geometry and affected-creature derivation remain table/caller facts at the fill boundary.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION"
+          ],
+          "title": "Spell invocation grants Dragon's Breath target Magic action with Cone save-for-half damage",
           "verificationOwners": [
             {
               "kind": "qnt-proof",

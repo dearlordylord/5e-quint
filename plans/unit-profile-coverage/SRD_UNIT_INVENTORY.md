@@ -36,21 +36,21 @@ This is the default `%` for level-1 plus level-2 readiness questions. It uses th
 
 - accepted: 391
 - accepted-no-battle-effect: 147
-- battle-runtime-required: 3
+- battle-runtime-required: 5
 - owner-evidence-required: 2
-- partial-battle-runtime: 13
+- partial-battle-runtime: 11
 
 ### Level-3 Class/Subclass Battle Readiness
 
 This metric is a separate seed for level-3 class feature, subclass selection, subclass feature, and subclass Spell Access rows. It covers both always-prepared subclass grants and choice-derived prepared grants without affecting the Level 1-2 readiness denominator or level-3 spell-list pressure.
 
-- Accepted: 35/51 (68.6%)
+- Accepted: 34/51 (66.7%)
 
 #### Level-3 Class/Subclass Battle Readiness by Status
 
-- accepted: 21
+- accepted: 20
 - accepted-no-battle-effect: 14
-- owner-evidence-required: 16
+- owner-evidence-required: 17
 
 ### Level-3 Spell Battle Readiness
 
@@ -80,7 +80,8 @@ This metric is a separate seed for level-3 spell-list pressure only. It does not
 
 ### Level-3 Class/Subclass Rows by Disposition
 
-- catalog-installed-owner-evidence-present: 21
+- catalog-installed-owner-evidence-present: 20
+- catalog-installed-owner-evidence-required: 1
 - catalog-only/dead-for-now: 2
 - level-3-follow-up-required: 16
 - non-runtime: 12
@@ -412,7 +413,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 
 | Row | Category | Surface | Authored | Catalog | Unit profile | Disposition | Battle readiness | Readiness closure | Owner evidence | Next action | Source |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-|Barbarian Frenzy|class feature|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Barbarian.md:178|
+|Barbarian Frenzy|class feature|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-required|owner-evidence-required||Unit catalog/admission: catalog evidence; battle-runtime Rage and Reckless Attack damage-rider owner: owner evidence required|Promote Frenzy as a Rage-gated, Reckless Attack-gated first-hit damage rider: selected Berserker subclass ownership, active Rage state, Reckless Attack use on the turn, first target hit by a Strength-based weapon or Unarmed Strike attack, Rage Damage bonus d6 count, same damage type as the triggering attack, focused runtime tests, and promoted Quint parity.|.references/srd-5.2.1/Classes/Barbarian.md:178|
 |Barbarian Primal Knowledge|class feature|current-surface-can-express-source-facts|missing-authored-record|not-installed||level-3-follow-up-required|owner-evidence-required|||Promote Primal Knowledge as a split between a durable Barbarian skill proficiency choice over the Barbarian level-1 skill list and a Rage-active Ability Check substitution for Acrobatics, Intimidation, Perception, Stealth, and Survival that uses Strength without duplicating the underlying Skill proficiency facts.|.references/srd-5.2.1/Classes/Barbarian.md:102|
 |Barbarian level 3 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Barbarian.md:37|
 |Barbarian Subclass|subclass selection|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Barbarian.md:98|

@@ -220,18 +220,18 @@
         "accepted": 391,
         "accepted-no-battle-effect": 147,
         "owner-evidence-required": 2,
-        "partial-battle-runtime": 13,
-        "battle-runtime-required": 3
+        "partial-battle-runtime": 11,
+        "battle-runtime-required": 5
       }
     },
     "levelThreeClassBattleReadiness": {
       "denominator": 51,
-      "numerator": 35,
-      "percent": "68.6%",
+      "numerator": 34,
+      "percent": "66.7%",
       "rowsByStatus": {
-        "accepted": 21,
-        "owner-evidence-required": 16,
-        "accepted-no-battle-effect": 14
+        "owner-evidence-required": 17,
+        "accepted-no-battle-effect": 14,
+        "accepted": 20
       }
     },
     "levelThreeSpellBattleReadiness": {
@@ -258,9 +258,10 @@
       "catalog-installed-needs-owner-evidence": 1
     },
     "levelThreeClassRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 21,
+      "catalog-installed-owner-evidence-required": 1,
       "level-3-follow-up-required": 16,
       "non-runtime": 12,
+      "catalog-installed-owner-evidence-present": 20,
       "catalog-only/dead-for-now": 2
     },
     "levelThreeClassRowsByCategory": {
@@ -270,10 +271,10 @@
       "spell access/list pressure": 5
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 448,
+      "catalog-installed-owner-evidence-present": 447,
       "non-runtime": 36,
+      "catalog-installed-owner-evidence-required": 2,
       "level-3-follow-up-required": 16,
-      "catalog-installed-owner-evidence-required": 1,
       "catalog-only/dead-for-now": 137,
       "missing-authored-record": 58,
       "catalog-authored-review-required": 33,
@@ -4131,7 +4132,7 @@
         "unitId": "barbarian_frenzy"
       },
       "unitProfileDisposition": "supported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -4139,13 +4140,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-FOLLOWUP-BARBARIAN-FRENZY at packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
-          "status": "owner evidence present"
+          "owner": "battle-runtime Rage and Reckless Attack damage-rider owner",
+          "evidence": "Promote Frenzy as a Rage-gated, Reckless Attack-gated first-hit damage rider: selected Berserker subclass ownership, active Rage state, Reckless Attack use on the turn, first target hit by a Strength-based weapon or Unarmed Strike attack, Rage Damage bonus d6 count, same damage type as the triggering attack, focused runtime tests, and promoted Quint parity.",
+          "status": "owner evidence required"
         }
       ],
-      "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "accepted"
+      "nextAction": "Promote Frenzy as a Rage-gated, Reckless Attack-gated first-hit damage rider: selected Berserker subclass ownership, active Rage state, Reckless Attack use on the turn, first target hit by a Strength-based weapon or Unarmed Strike attack, Rage Damage bonus d6 count, same damage type as the triggering attack, focused runtime tests, and promoted Quint parity.",
+      "battleReadinessStatus": "owner-evidence-required"
     },
     {
       "id": "srd521:classes/barbarian:level-3:class-feature-grant:barbarian_primal_knowledge",
@@ -24926,17 +24927,17 @@
         "state": "not-installed",
         "unitId": "dragons_breath"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "battle-runtime target-granted action lifecycle plus promoted Quint parity",
-        "reason": "Task 8 promotes only the initial cast and retained effect state; the target-side breath action still needs target-granted action lifecycle support plus caller/table-owned Cone placement and affected-creature membership witnesses."
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial witness owner",
+        "reason": "Promoted battle runtime owns the Dragon's Breath initial cast, target-attached granted-action state, Magic action discovery and spending, save-for-half damage, slot scaling, and cleanup. Automatic Cone geometry and affected-creature membership derivation remain caller/table spatial witnesses consumed by the runtime."
       },
       "ownerEvidence": [],
       "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_enhance_ability",
@@ -32115,17 +32116,17 @@
         "state": "not-installed",
         "unitId": "dragons_breath"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "battle-runtime target-granted action lifecycle plus promoted Quint parity",
-        "reason": "Task 8 promotes only the initial cast and retained effect state; the target-side breath action still needs target-granted action lifecycle support plus caller/table-owned Cone placement and affected-creature membership witnesses."
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial witness owner",
+        "reason": "Promoted battle runtime owns the Dragon's Breath initial cast, target-attached granted-action state, Magic action discovery and spending, save-for-half damage, slot scaling, and cleanup. Automatic Cone geometry and affected-creature membership derivation remain caller/table spatial witnesses consumed by the runtime."
       },
       "ownerEvidence": [],
       "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_enhance_ability",
