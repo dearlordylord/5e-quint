@@ -2324,7 +2324,9 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       rangeFeet: MovementFeet,
     }),
     SupportedHealingSpellInvocationSchema,
-  ) as unknown as Schema.Schema<SupportedSpellInvocation>;
+  ).annotations({
+    identifier: "SupportedSpellInvocation",
+  }) as unknown as Schema.Schema<SupportedSpellInvocation>;
 
 const BattleSavingThrowRollModeProjectionSchema = Schema.Struct({
   targetId: CombatantId,
@@ -3075,7 +3077,7 @@ export const BattleHoleSchema = Schema.Union(
       ),
     ),
   }),
-);
+).annotations({ identifier: "BattleHole" });
 
 const BattleDieRollResultSchema = Schema.Number.pipe(
   Schema.int(),
@@ -5219,4 +5221,4 @@ export const BattleSnapshotSchema = Schema.Struct({
     BattlePendingReactionSnapshotSchema,
     Schema.Null,
   ),
-});
+}).annotations({ identifier: "BattleSnapshot" });

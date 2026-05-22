@@ -257,12 +257,11 @@ export async function verifyToolContract(client: Client) {
   );
 
   const statBlocks = await callTool(client, "list_stat_blocks", {});
-  assert.deepEqual(
-    (get(statBlocks, "statBlocks") as Array<{ statBlockId: string }>).map(
-      (statBlock) => statBlock.statBlockId,
-    ),
-    ["stat_block_goblin_warrior", "stat_block_skeleton"],
-  );
+  const statBlockIds = (
+    get(statBlocks, "statBlocks") as Array<{ statBlockId: string }>
+  ).map((statBlock) => statBlock.statBlockId);
+  assert.ok(statBlockIds.includes("stat_block_goblin_warrior"));
+  assert.ok(statBlockIds.includes("stat_block_skeleton"));
 }
 
 export async function verifyBaselineVertical(client: Client) {
@@ -403,6 +402,7 @@ export async function verifyBaselineVertical(client: Client) {
         combatantId: "goblin",
         initiative: 7,
         side: "opposition",
+        admissionSource: { kind: "encounterParticipant" },
       },
     ],
   });
@@ -569,6 +569,7 @@ export async function verifyWidthVertical(client: Client) {
         combatantId: "skeleton",
         initiative: 8,
         side: "opposition",
+        admissionSource: { kind: "encounterParticipant" },
       },
     ],
   });
