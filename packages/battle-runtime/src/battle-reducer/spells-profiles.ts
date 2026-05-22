@@ -17,6 +17,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
 
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
@@ -163,6 +164,7 @@ import {
   supportedPreparedFeatherFallMitigationSpellProfile,
   supportedPreparedJumpMovementReplacementSpellProfile,
   supportedPreparedHealingSpellProfile,
+  supportedPreparedLevitatedCreatureSpellProfile,
   supportedPreparedMarkedDamageRiderSpellProfile,
   supportedPreparedMagicWeaponEnhancementSpellProfile,
   supportedPreparedMirrorImageHitInterceptionSpellProfile,
@@ -428,6 +430,13 @@ export function supportedSpellActs(
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedCreatureSizeChangeSpellProfile(
+        actor.combatantId,
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      supportedPreparedLevitatedCreatureSpellProfile(
         actor.combatantId,
         spell,
         spellcasting.spellSlots,

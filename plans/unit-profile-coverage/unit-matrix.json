@@ -72,24 +72,24 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 91,
-      "numerator": 91,
+      "denominator": 92,
+      "numerator": 92,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 91,
-      "numerator": 91,
+      "denominator": 92,
+      "numerator": 92,
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 124,
+      "denominator": 125,
       "numerator": 105,
-      "percent": "84.7%"
+      "percent": "84%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 124,
+      "denominator": 125,
       "numerator": 105,
-      "percent": "84.7%"
+      "percent": "84%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 136,
@@ -97,13 +97,13 @@
       "percent": "92.6%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 91,
-      "numerator": 91,
+      "denominator": 92,
+      "numerator": 92,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 91,
-      "numerator": 91,
+      "denominator": 92,
+      "numerator": 92,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -3379,6 +3379,43 @@
       ]
     },
     {
+      "id": "spell.invocation-levitated-creature",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-levitate-creature.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/levitate-creature.ts",
+        "packages/battle-runtime/src/battle-reducer/readied-release.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-subjects.ts"
+      ],
+      "sourceBoundary": "The runtime consumes the authored Levitate creature branch plus caller-supplied visible target, target-within-range, willingness, initial-rise, fixed-object-or-surface movement, and ongoing caster-range witnesses. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration up to 10 minutes, initial suspension up to 20 feet, Constitution save gating for unwilling creatures, active levitated creature state, Magic Action altitude changes up to 20 feet while the target remains within range, target self-movement altitude adjustment when a fixed object or surface within reach is supplied, and cleanup on Concentration or duration end. Loose objects, automatic elevation/pathfinding, horizontal dragging, and fixed-object or surface discovery remain outside this creature-profile subset.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME"
+      ],
+      "title": "Spell invocation suspends and controls one levitated creature with table-supplied movement witnesses",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-levitate-creature.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-levitate.test.ts"
+        }
+      ]
+    },
+    {
       "id": "spell.invocation-ongoing-spell-ending",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -3609,14 +3646,14 @@
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 124,
+        "denominator": 125,
         "numerator": 105,
-        "percent": "84.7%"
+        "percent": "84%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 124,
+        "denominator": 125,
         "numerator": 105,
-        "percent": "84.7%"
+        "percent": "84%"
       }
     },
     "profileKinds": [
@@ -5188,6 +5225,12 @@
           }
         ],
         "profileId": "spell.invocation-web-restraint-hazard",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-levitated-creature",
         "profileKind": "spell-invocation"
       },
       {
@@ -10852,6 +10895,22 @@
         "spell.invocation-roll-modifier"
       ],
       "taskId": "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover Levitate's creature subset: Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration up to 10 minutes, caller-supplied visible creature target, caller-selected initial rise up to 20 feet, unwilling-target Constitution save gate, active levitated creature altitude state, 20-foot caster altitude control, target self-movement with a fixed-object-or-surface witness, and cleanup when Concentration ends.",
+      "profileIds": [
+        "spell.invocation-levitated-creature"
+      ],
+      "taskId": "L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Levitate Surface admission, willing target active-effect application with caller-selected initial rise, unwilling target Constitution save success with resource spend and no effect, caller-supplied levitated target movement witness validation, target self altitude adjustment, caster Magic Action altitude control, range witness rejection, active altitude update, and concentration/duration cleanup.",
+      "profileIds": [
+        "spell.invocation-levitated-creature"
+      ],
+      "taskId": "L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME"
     }
   ],
   "units": [
@@ -20435,14 +20494,21 @@
         "status": "installed"
       },
       "claim": {
-        "followUpTasks": [
+        "deferredMechanics": [
           {
-            "id": "L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME",
-            "mechanic": "Promote Levitate's creature branch: Magic Action and level-2+ Spell Slot spend, one visible creature target within 60 feet, caster-owned Concentration up to 10 minutes, unwilling-creature Constitution save gate, active levitated-target state with initial rise up to 20 feet, suspended/aloft projection, target movement only through caller-supplied fixed-object or surface-within-reach witnesses as if climbing, caster Magic Action altitude changes up to 20 feet while the target remains within range, self-target altitude changes as part of the target's move, and gentle-grounding cleanup when Concentration or duration ends.",
-            "owner": "battle-runtime spell invocation/effect lifecycle plus table/spatial vertical movement witness boundary",
-            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without loose-object target behavior or automatic elevation/pathfinding derivation.",
-            "title": "Levitate Creature Runtime Support"
+            "followUpTaskId": "L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH",
+            "mechanic": "Levitate loose-object branch: one visible loose object target within 60 feet weighing up to 500 pounds, spell-owned suspension and altitude changes, and gentle grounding for objects."
           },
+          {
+            "battleReadinessClosure": {
+              "kind": "table-spatial-derivation",
+              "owner": "table/spatial vertical movement witness boundary",
+              "reason": "Promoted battle runtime records active levitated altitude and consumes explicit fixed-object/surface and within-range witnesses; it does not derive map geometry, available surfaces, or routes."
+            },
+            "mechanic": "automatic elevation, pathfinding, route legality, range derivation, fixed-object discovery, surface reach derivation, and map geometry remain caller/table supplied facts rather than runtime-derived position state"
+          }
+        ],
+        "followUpTasks": [
           {
             "id": "L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH",
             "mechanic": "Represent and promote or close Levitate's loose object branch: one visible loose object target within 60 feet weighing up to 500 pounds, no creature saving throw, spell-owned suspension and altitude changes, fixed-object or surface movement restrictions where relevant, range-gated caster movement, and gentle grounding when the spell ends without inventing spell-specific object position state.",
@@ -20451,15 +20517,76 @@
             "title": "Levitate Loose Object Branch"
           }
         ],
-        "futureProfileOwner": "battle-runtime spell invocation/effect lifecycle plus table/spatial vertical movement witness boundary and object lifecycle owner",
-        "reason": "Levitate is authored and installed as an SRD Surface Spell Definition with Magic Action Spell Slot casting, one visible creature-or-loose-object target within 60 feet, a loose-object 500-pound target limit, an unwilling-creature Constitution save gate, an initial vertical rise up to 20 feet, duration-long suspension, target movement only by pushing or pulling a fixed object or surface within reach as if climbing, caster and self altitude-control clauses, and gentle grounding when the spell ends. Task 2 claims no promoted battle-runtime profile yet because runtime has no levitated-target active effect owner, no elevation or aloft state projection, no fixed-object or surface-within-reach witness boundary, no vertical altitude-control action or movement protocol, and no loose-object lifecycle owner.",
-        "tag": "unsupported-profile"
+        "futureProfileOwner": "battle-runtime object lifecycle owner plus table/spatial vertical movement witness boundary",
+        "profileIds": [
+          "spell.invocation-levitated-creature"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action prepared spell cast with a level-2-or-higher Spell Slot",
+          "one visible creature target within 60 feet through caller-supplied target facts",
+          "unwilling creature Constitution Saving Throw gate, with successful saves spending the action and slot without starting Concentration",
+          "known willing creature targets bypass the Saving Throw",
+          "caller/table-selected initial rise from 0 to 20 feet",
+          "caster-owned Concentration for up to 10 minutes",
+          "target-attached levitated active effect stores the selected initial altitude, 20-foot altitude-change limit, 60-foot spell range, and duration-owned Concentration expiration",
+          "levitated target Movement requires a caller-supplied fixed-object or surface-within-reach witness and may carry self altitude changes as part of the target move",
+          "caster Magic Action altitude control changes altitude by up to 20 feet while consuming a caller-supplied fact that the target remains within spell range",
+          "Concentration or duration cleanup removes the levitated active effect, leaving no duplicate elevation state outside the spell-owned projection"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-levitate.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-levitated-creature",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-levitate-creature.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+            "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+            "packages/battle-runtime/src/battle-reducer/levitate-creature.ts",
+            "packages/battle-runtime/src/battle-reducer/readied-release.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+            "packages/battle-runtime/src/battle-subjects.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the authored Levitate creature branch plus caller-supplied visible target, target-within-range, willingness, initial-rise, fixed-object-or-surface movement, and ongoing caster-range witnesses. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration up to 10 minutes, initial suspension up to 20 feet, Constitution save gating for unwilling creatures, active levitated creature state, Magic Action altitude changes up to 20 feet while the target remains within range, target self-movement altitude adjustment when a fixed object or surface within reach is supplied, and cleanup on Concentration or duration end. Loose objects, automatic elevation/pathfinding, horizontal dragging, and fixed-object or surface discovery remain outside this creature-profile subset.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME"
+          ],
+          "title": "Spell invocation suspends and controls one levitated creature with table-supplied movement witnesses",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-levitate-creature.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-levitate.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/levitate.json",
       "unitId": "levitate"
     },

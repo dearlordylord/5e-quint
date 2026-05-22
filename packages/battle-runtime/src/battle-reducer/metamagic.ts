@@ -108,6 +108,7 @@ const QUICKENED_ACTION_REWRITE_PROCEDURE_DISPOSITIONS = {
   heldLightHurl: "actionSpellResolverNotRewritten",
   hideousLaughter: "actionSpellResolverNotRewritten",
   jumpMovementReplacement: "notActionSpellCasting",
+  levitatedCreature: "actionSpellResolverNotRewritten",
   magicWeaponEnhancement: "notActionSpellCasting",
   magicalDarknessPointOrigin: "actionSpellResolverNotRewritten",
   makeStable: "actionSpellResolverNotRewritten",

@@ -125,6 +125,8 @@ export const dragonsBreathUnitId = "dragons_breath";
 
 export const jumpUnitId = "jump";
 
+export const levitateUnitId = "levitate";
+
 export const mistyStepUnitId = "misty_step";
 
 export const mirrorImageUnitId = "mirror_image";

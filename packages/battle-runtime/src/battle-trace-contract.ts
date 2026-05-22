@@ -40,6 +40,8 @@ export const BATTLE_TRACE_HOLE_KINDS = [
   "reactionDecision",
   "unitFeatureDecision",
   "movement",
+  "levitateAltitudeChange",
+  "levitateInitialRise",
   "abilityCheck",
   "spellcastingAbilityCheck",
   "grappleOutcome",

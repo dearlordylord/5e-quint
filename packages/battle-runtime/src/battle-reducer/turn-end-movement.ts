@@ -8,6 +8,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE BATTLE.COMMAND.OPTION_AND_NEXT_TURN BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE
@@ -111,6 +112,7 @@ import { hideousLaughterRepeatSavingThrowOutcomeHole } from "./hideous-laughter-
 
 import { needsHolesResult } from "./hole-helpers.ts";
 import { maxJumpMovementReplacementDistanceFeet } from "./jump-movement-replacement.ts";
+import { validateLevitatedMovementFact } from "./levitate-creature.ts";
 export { resolveOpportunityAttackCommand } from "./opportunity-attacks.ts";
 export {
   applyBattleMovement,
@@ -919,9 +921,7 @@ function abilityD20TestRollModeEndTurnSaveEffects(
   return combatant === undefined
     ? []
     : combatant.activeEffects.filter(
-        (
-          effect,
-        ): effect is AbilityD20TestRollModeEndTurnSaveEffect =>
+        (effect): effect is AbilityD20TestRollModeEndTurnSaveEffect =>
           effect.kind === "abilityD20TestRollModeEndTurnSave",
       );
 }
@@ -4731,8 +4731,9 @@ export function resolveEndTurnCommand(
           : wardingBondSavingThrowFlatBonusProjectionsForTarget(actor),
       ),
     }));
-  const abilityD20TestEndTurnSaveHoles =
-    abilityD20TestEndTurnSaveRequests.map((request) => request.hole);
+  const abilityD20TestEndTurnSaveHoles = abilityD20TestEndTurnSaveRequests.map(
+    (request) => request.hole,
+  );
   const needsDeathSavingThrow = startTurnDeathSavingThrowRequired(nextActor);
   const rechargeHole = statBlockRechargeRollHole(nextActor);
   const startTurnDamageEffects = spellTurnStartDamageEffects(nextActor);
@@ -4848,14 +4849,15 @@ export function resolveEndTurnCommand(
       return fill === undefined ? [] : [fill];
     },
   );
-  const abilityD20TestEndTurnSaves =
-    abilityD20TestEndTurnSaveRequests.flatMap((request) => {
+  const abilityD20TestEndTurnSaves = abilityD20TestEndTurnSaveRequests.flatMap(
+    (request) => {
       const fill = abilityD20TestRollModeEndTurnSavingThrowOutcomeFor(
         savingThrowOutcomeFills,
         request.hole,
       );
       return fill === undefined ? [] : [fill];
-    });
+    },
+  );
   const missingSleepRepeatSaveHoles = sleepRepeatSaveRequests.flatMap(
     (request) =>
       sleepRepeatSavingThrowOutcomeFor(
@@ -5789,18 +5791,32 @@ export function parseBattleMovement(
       message: areaMovementCostValidation,
     };
   }
+  const areaExtraCostFeet = areaMovementExtraCostFeet(state, fill.value);
   const jumpMovementValidation = validateJumpMovementReplacementFact(
     state,
     moverId,
     fill.value.jumpMovementReplacement,
     options.jumpMovementReplacement,
     fill.value.movementCostFeet,
-    areaMovementExtraCostFeet(state, fill.value),
+    areaExtraCostFeet,
   );
   if (jumpMovementValidation !== null) {
     return {
       tag: "invalid",
       message: jumpMovementValidation,
+    };
+  }
+  const levitatedMovementValidation = validateLevitatedMovementFact({
+    combatant: mover,
+    fact: fill.value.levitatedMovement,
+    speedKind: fill.value.speedKind,
+    movementCostFeet: fill.value.movementCostFeet,
+    areaExtraCostFeet,
+  });
+  if (levitatedMovementValidation !== null) {
+    return {
+      tag: "invalid",
+      message: levitatedMovementValidation,
     };
   }
   const commandApproachValidation = validateCommandApproachMovementFact(
@@ -5892,6 +5908,9 @@ export function parseBattleMovement(
       ...(fill.value.jumpMovementReplacement === undefined
         ? {}
         : { jumpMovementReplacement: fill.value.jumpMovementReplacement }),
+      ...(fill.value.levitatedMovement === undefined
+        ? {}
+        : { levitatedMovement: fill.value.levitatedMovement }),
     },
   };
 }
@@ -6551,7 +6570,10 @@ function validateAreaMovementCostFacts(
   ) {
     return "Area movement-cost facts must agree on total Movement distance.";
   }
-  if (value.jumpMovementReplacement !== undefined) {
+  if (
+    value.jumpMovementReplacement !== undefined ||
+    value.levitatedMovement?.altitudeChange !== undefined
+  ) {
     return null;
   }
   const expectedCostFeet = movementFeet(

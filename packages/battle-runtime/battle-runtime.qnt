@@ -133,6 +133,7 @@ module battleRuntime {
   import battleRuntimeMonkFocus.* from "./battle-runtime-monk-focus"
   import battleRuntimeDruidWildShape.* from "./battle-runtime-druid-wild-shape"
   import battleRuntimeCreatureSizeChange.* from "./battle-runtime-creature-size-change"
+  import battleRuntimeLevitateCreature.* from "./battle-runtime-levitate-creature"
 
   // SRD traceability for this canonical battle runtime spec:
   // - Playing-the-Game.md lines 479-495: combat proceeds in rounds and turns

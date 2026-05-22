@@ -112,6 +112,16 @@ export type SpellCreatureSizeChangeActiveEffect = BattleSpellEffectBase & {
     { readonly kind: "concentration" }
   > & { readonly durationTicks: ElapsedTimeTicks };
 };
+export type SpellLevitatedCreatureActiveEffect = BattleSpellEffectBase & {
+  readonly kind: "spellLevitatedCreature";
+  readonly altitudeFeet: MovementFeet;
+  readonly maxAltitudeChangeFeet: MovementFeet;
+  readonly rangeFeet: MovementFeet;
+  readonly expiresAt: Extract<
+    BattleActiveEffectExpiration,
+    { readonly kind: "concentration" }
+  > & { readonly durationTicks: ElapsedTimeTicks };
+};
 export type BattleUnitFeatureEffectBase = {
   readonly sourceUnitId: UnitRecord["id"];
   readonly sourceCombatantId: CombatantId;
@@ -285,6 +295,7 @@ export type BattleActiveEffect =
         { readonly kind: "concentration" }
       > & { readonly durationTicks: ElapsedTimeTicks };
     } & SelfTransformationModeEffectPayload)
+  | SpellLevitatedCreatureActiveEffect
   | (BattleSpellEffectBase & {
       readonly kind: "spellArmorClassBonus";
       readonly bonus: number;

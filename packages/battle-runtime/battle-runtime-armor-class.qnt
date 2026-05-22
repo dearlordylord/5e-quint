@@ -102,6 +102,7 @@ module battleRuntimeArmorClass {
         | MindSpikeConcentrationDuration(_) => false
         | RayOfEnfeeblementD20Lifecycle(_) => false
         | CreatureSizeChange(_) => false
+        | LevitatedCreature(_) => false
         | SleepPendingRepeatSave(_) => false
         | SleepUnconscious(_) => false
         | HideousLaughterEffect(_) => false

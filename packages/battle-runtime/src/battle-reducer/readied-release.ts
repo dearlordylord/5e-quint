@@ -1,4 +1,5 @@
 // Readied spell and movement release handling extracted from turn-end-movement.ts.
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 
 import type { BattleReactionTrigger } from "../battle-reaction-triggers.ts";
 import { sameBattleSubject, type BattleSubject } from "../battle-subjects.ts";
@@ -27,6 +28,7 @@ import {
   readiedMovementBudgetForActor,
   resolveMovementEffectsAfterMovement,
 } from "./turn-end-movement.ts";
+import { updateLevitatedCreatureAltitude } from "./levitate-creature.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state.ts";
 import { normalizeBattleGrapples } from "./creature-state-leaves.ts";
 import { breakBattleConcentration } from "./damage-apply.ts";
@@ -92,10 +94,20 @@ export function applyBattleMovement(
     movement.moverId,
     landedMover,
   );
-  return normalizeBattleGrapples({
+  const movedState = normalizeBattleGrapples({
     ...state,
     combatants,
   });
+  const levitatedMovement = movement.levitatedMovement;
+  return levitatedMovement?.altitudeChange === undefined
+    ? movedState
+    : updateLevitatedCreatureAltitude({
+        state: movedState,
+        targetId: movement.moverId,
+        sourceCombatantId: levitatedMovement.sourceCombatantId,
+        sourceSpellId: levitatedMovement.sourceSpellId,
+        change: levitatedMovement.altitudeChange,
+      });
 }
 
 export function readiedSpellInitialHoles(

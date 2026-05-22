@@ -282,6 +282,13 @@ module battleRuntimeTimedEffects {
             mode: data.mode,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
+        | LevitatedCreature(data) => LevitatedCreature({
+            source: data.source,
+            altitudeFeet: data.altitudeFeet,
+            maxAltitudeChangeFeet: data.maxAltitudeChangeFeet,
+            rangeFeet: data.rangeFeet,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
         | SelfTransformationModeEffect(data) => SelfTransformationModeEffect({
             source: data.source,
             mode: data.mode,
@@ -397,6 +404,7 @@ module battleRuntimeTimedEffects {
         | SeeInvisibleAndEthereal(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | MindSpikeConcentrationDuration(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | CreatureSizeChange(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | LevitatedCreature(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | SelfTransformationModeEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | DragonsBreathEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | HideousLaughterEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)

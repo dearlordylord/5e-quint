@@ -90,7 +90,9 @@ type MbtHole =
   | "DamageRoll"
   | "SpellDamageRoll"
   | "DeathSavingThrow"
-  | "StatBlockRechargeRoll";
+  | "StatBlockRechargeRoll"
+  | "LevitateAltitudeChange"
+  | "LevitateInitialRise";
 type MbtLastResult = "init" | "needsHoles" | "resolved" | "invalid";
 type MbtLastInvalidReason = "" | "invalidFill" | "staleSubject" | "wrongActor";
 type DeathSavingThrowMbtTurnRole = "actor" | "target";
@@ -3620,6 +3622,12 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
       "Battle runtime MBT does not model spellcasting ability check holes.",
     );
   }
+  if (hole.kind === "levitateAltitudeChange") {
+    return ["LevitateAltitudeChange"];
+  }
+  if (hole.kind === "levitateInitialRise") {
+    return ["LevitateInitialRise"];
+  }
   return [
     Match.value(hole).pipe(
       Match.when({ kind: "targetChoice" }, () => "TargetChoice" as const),
@@ -3712,7 +3720,9 @@ function holeName(raw: unknown): MbtHole {
     tag === "DamageRoll" ||
     tag === "SpellDamageRoll" ||
     tag === "DeathSavingThrow" ||
-    tag === "StatBlockRechargeRoll"
+    tag === "StatBlockRechargeRoll" ||
+    tag === "LevitateAltitudeChange" ||
+    tag === "LevitateInitialRise"
   ) {
     return tag;
   }

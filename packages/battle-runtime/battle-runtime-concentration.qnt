@@ -72,6 +72,7 @@ module battleRuntimeConcentration {
         | RayOfEnfeeblementNextAttackDisadvantage(_) => false
         | RayOfEnfeeblementD20Lifecycle(_) => false
         | CreatureSizeChange(_) => false
+        | LevitatedCreature(_) => false
         | SelfTransformationModeEffect(_) => false
         | DragonsBreathEffect(_) => false
         | _ => true

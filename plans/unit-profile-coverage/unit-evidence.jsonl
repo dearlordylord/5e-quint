@@ -291,3 +291,4 @@
 {"unitId":"dragons_breath","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST","ownerPath":"packages/battle-runtime/src/unit-profile-admission-dragons-breath.test.ts"}}
 {"unitId":"enlarge_reduce","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME","ownerPath":"packages/battle-runtime/src/unit-profile-admission-enlarge-reduce.test.ts"}}
 {"unitId":"enthrall","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME","ownerPath":"packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"}}
+{"unitId":"levitate","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME","ownerPath":"packages/battle-runtime/src/unit-profile-admission-levitate.test.ts"}}

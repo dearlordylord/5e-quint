@@ -1603,14 +1603,14 @@
     },
     {
       "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
+      "claimTag": "profile-subset-supported",
       "closureKinds": [
         "follow-up-split"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME: Promote Levitate's creature branch: Magic Action and level-2+ Spell Slot spend, one visible creature target within 60 feet, caster-owned Concentration up to 10 minutes, unwilling-creature Constitution save gate, active levitated-target state with initial rise up to 20 feet, suspended/aloft projection, target movement only through caller-supplied fixed-object or surface-within-reach witnesses as if climbing, caster Magic Action altitude changes up to 20 feet while the target remains within range, self-target altitude changes as part of the target's move, and gentle-grounding cleanup when Concentration or duration ends. Owner: battle-runtime spell invocation/effect lifecycle plus table/spatial vertical movement witness boundary. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without loose-object target behavior or automatic elevation/pathfinding derivation.; L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH: Represent and promote or close Levitate's loose object branch: one visible loose object target within 60 feet weighing up to 500 pounds, no creature saving throw, spell-owned suspension and altitude changes, fixed-object or surface movement restrictions where relevant, range-gated caster movement, and gentle grounding when the spell ends without inventing spell-specific object position state. Owner: surface Spell Definition authoring plus battle-runtime object lifecycle owner decision. Required output: Focused Surface/runtime owner decision with tests or accepted runtime-detached closure for loose-object suspension, altitude control, range, and gentle-grounding facts, reusing any future object lifecycle owner rather than duplicating object state inside Levitate.",
+      "reason": "L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH: Represent and promote or close Levitate's loose object branch: one visible loose object target within 60 feet weighing up to 500 pounds, no creature saving throw, spell-owned suspension and altitude changes, fixed-object or surface movement restrictions where relevant, range-gated caster movement, and gentle grounding when the spell ends without inventing spell-specific object position state. Owner: surface Spell Definition authoring plus battle-runtime object lifecycle owner decision. Required output: Focused Surface/runtime owner decision with tests or accepted runtime-detached closure for loose-object suspension, altitude control, range, and gentle-grounding facts, reusing any future object lifecycle owner rather than duplicating object state inside Levitate.",
       "sourceRecordPath": "packages/surface/content/levitate.json",
       "sourceRows": [
         {
@@ -2969,9 +2969,9 @@
       "rowsByStatus": {
         "accepted": 385,
         "accepted-no-battle-effect": 147,
-        "battle-runtime-required": 4,
+        "battle-runtime-required": 2,
         "owner-evidence-required": 2,
-        "partial-battle-runtime": 18
+        "partial-battle-runtime": 20
       }
     },
     "rulesKernelCoveredProfileJoin": {
@@ -8203,9 +8203,9 @@
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
       "missing": 1,
-      "profile-subset-supported": 27,
+      "profile-subset-supported": 28,
       "supported-profile": 113,
-      "unsupported-profile": 30
+      "unsupported-profile": 29
     },
     "groupsByStatus": {
       "blocked-follow-up-split": 10,

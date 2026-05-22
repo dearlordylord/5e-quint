@@ -416,6 +416,7 @@ export function subjectName(
   | "movableZoneReposition"
   | "movableZoneRam"
   | "jumpMovementReplacement"
+  | "levitateAltitudeControl"
   | "replaceSelfTransformationMode"
   | "commandGrovel"
   | "commandDrop"

@@ -17,7 +17,7 @@ import {
 export function supportedSpellInvocationRef(
   invocation: SupportedSpellInvocation,
 ): SpellInvocationRef {
-  if (isCreatureSizeChangeSpellInvocation(invocation)) {
+  if (isCreatureSizeChangeOrLevitateSpellInvocation(invocation)) {
     return {
       tag: "spellSlot",
       spellId: spellId(invocation.spell.id),
@@ -562,17 +562,21 @@ export function supportedSpellInvocationRef(
   );
 }
 
-function isCreatureSizeChangeSpellInvocation(
+function isCreatureSizeChangeOrLevitateSpellInvocation(
   invocation: SupportedSpellInvocation,
 ): invocation is Extract<
   SupportedSpellInvocation,
   {
-    readonly procedure: "creatureSizeIncrease" | "creatureSizeDecrease";
+    readonly procedure:
+      | "creatureSizeIncrease"
+      | "creatureSizeDecrease"
+      | "levitatedCreature";
   }
 > {
   return (
     invocation.procedure === "creatureSizeIncrease" ||
-    invocation.procedure === "creatureSizeDecrease"
+    invocation.procedure === "creatureSizeDecrease" ||
+    invocation.procedure === "levitatedCreature"
   );
 }
 

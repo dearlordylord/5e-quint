@@ -2,6 +2,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // Extracted from ../battle-reducer.ts; this module owns Effect Schema values,
 // while domain types remain exported by the reducer facade.
 
@@ -903,6 +904,13 @@ const BattleTargetSpatialFactSchema = Schema.Union(
     casterId: CombatantId,
     targetId: CombatantId,
     spellId: Schema.String,
+    rangeFeet: MovementFeet,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("levitatedTargetWithinSpellRange"),
+    sourceCombatantId: CombatantId,
+    sourceSpellId: Schema.String,
+    targetId: CombatantId,
     rangeFeet: MovementFeet,
   }),
   Schema.Struct({
@@ -1986,6 +1994,23 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("levitatedCreature"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      ability: Schema.Literal("con"),
+      dc: DcSourceSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("targetList"),
+        minTargets: Schema.Literal(1),
+        maxTargets: Schema.Literal(1),
+      }),
+      activeEffect: BattleRuntimeObjectSchema,
+      maxInitialRiseFeet: MovementFeet,
+      rangeFeet: MovementFeet,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("blurAttackRollDefense"),
       spell: BattleRuntimeObjectSchema,
       actionCost: Schema.Literal("magicAction"),
@@ -2952,6 +2977,24 @@ export const BattleHoleSchema = Schema.Union(
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
+    kind: Schema.Literal("levitateAltitudeChange"),
+    label: Schema.String,
+    actorId: CombatantId,
+    targetId: CombatantId,
+    maxDistanceFeet: MovementFeet,
+    directions: Schema.Array(Schema.Literal("up", "down")),
+    requiresTargetWithinRangeFact: Schema.Literal(true),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("levitateInitialRise"),
+    label: Schema.String,
+    actorId: CombatantId,
+    targetId: CombatantId,
+    maxDistanceFeet: MovementFeet,
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
     kind: Schema.Literal("abilityCheck"),
     label: Schema.String,
     ability: AbilitySchema,
@@ -3857,6 +3900,32 @@ type BattleFillEncoded =
                 readonly difficultTerrainAcrobatics: "failed";
               };
         };
+        readonly levitatedMovement?: {
+          readonly kind: "levitatedMovement";
+          readonly sourceCombatantId: string;
+          readonly sourceSpellId: string;
+          readonly fixedObjectOrSurfaceWithinReach: true;
+          readonly altitudeChange?: {
+            readonly direction: "up" | "down";
+            readonly distanceFeet: number;
+          };
+        };
+      };
+    }
+  | {
+      readonly kind: "levitateAltitudeChange";
+      readonly holeId: string;
+      readonly value: {
+        readonly direction: "up" | "down";
+        readonly distanceFeet: number;
+      };
+      readonly spatialFacts: readonly unknown[];
+    }
+  | {
+      readonly kind: "levitateInitialRise";
+      readonly holeId: string;
+      readonly value: {
+        readonly distanceFeet: number;
       };
     }
   | {
@@ -4515,6 +4584,38 @@ export const BattleFillSchema: Schema.Schema<
           }),
           { exact: true },
         ),
+        levitatedMovement: Schema.optionalWith(
+          Schema.Struct({
+            kind: Schema.Literal("levitatedMovement"),
+            sourceCombatantId: CombatantId,
+            sourceSpellId: Schema.String,
+            fixedObjectOrSurfaceWithinReach: Schema.Literal(true),
+            altitudeChange: Schema.optionalWith(
+              Schema.Struct({
+                direction: Schema.Literal("up", "down"),
+                distanceFeet: MovementFeet,
+              }),
+              { exact: true },
+            ),
+          }),
+          { exact: true },
+        ),
+      }),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("levitateAltitudeChange"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Struct({
+        direction: Schema.Literal("up", "down"),
+        distanceFeet: MovementFeet,
+      }),
+      spatialFacts: BattleTargetSpatialFactsSchema,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("levitateInitialRise"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Struct({
+        distanceFeet: MovementFeet,
       }),
     }),
     Schema.Struct({

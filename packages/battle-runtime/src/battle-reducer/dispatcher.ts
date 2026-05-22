@@ -5,6 +5,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard spell.invocation-spike-growth-movement-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // Owns subject resolution, reaction windows, interrupted-procedure replay,
 // turn snapshots, and reaction-choice orchestration.
 
@@ -56,6 +57,12 @@ import {
 import { CombatantId, battleReplayStackDepth } from "../identity.ts";
 
 import { currentActorId } from "./creature-state-leaves.ts";
+import {
+  activeLevitatedCreatureEffect,
+  levitatedTargetWithinSpellRangeFactPresent,
+  levitateAltitudeChangeHole,
+  updateLevitatedCreatureAltitude,
+} from "./levitate-creature.ts";
 
 import {
   battleSubjectActorId,
@@ -880,6 +887,12 @@ export function resolveBattleSubjectInternal(
     }
     if (
       subject.tag === "runtimeCommand" &&
+      subject.command === "levitateAltitudeControl"
+    ) {
+      return resolveLevitateAltitudeControlCommand({ ...input, subject });
+    }
+    if (
+      subject.tag === "runtimeCommand" &&
       subject.command === "greaseGroundHazardSave"
     ) {
       return resolveGreaseGroundHazardSaveCommand({
@@ -1205,8 +1218,120 @@ function subjectSuppressedByCommandHalt(subject: BattleSubject): boolean {
     (subject.command === "move" ||
       subject.command === "standFromProne" ||
       subject.command === "jumpMovementReplacement" ||
+      subject.command === "levitateAltitudeControl" ||
       subject.command === "replaceSelfTransformationMode")
   );
+}
+
+function resolveLevitateAltitudeControlCommand(
+  input: BattleResolutionInputForSubject<
+    Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "levitateAltitudeControl";
+      }
+    >
+  >,
+): BattleResolutionResult {
+  if (input.subject.actorId !== input.subject.sourceCombatantId) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Levitate altitude control belongs to the spell's caster.",
+    );
+  }
+  const actor = input.state.combatants.get(input.subject.actorId);
+  if (
+    !combatantCanTakeActions(actor) ||
+    !canSpendAction(input.state.currentTurnResources, "magic")
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Magic action is no longer available for Levitate altitude control.",
+    );
+  }
+  const target = input.state.combatants.get(input.subject.targetId);
+  const effect = activeLevitatedCreatureEffect(target, {
+    sourceCombatantId: input.subject.sourceCombatantId,
+    sourceSpellId: input.subject.sourceSpellId,
+  });
+  if (target === undefined || effect === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Levitate altitude control is no longer active for the target.",
+    );
+  }
+  const hole = levitateAltitudeChangeHole({
+    actorId: input.subject.actorId,
+    targetId: input.subject.targetId,
+    maxDistanceFeet: effect.maxAltitudeChangeFeet,
+  });
+  const fill = input.fills[0];
+  if (input.fills.length > 1) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Levitate altitude control uses one altitude-change fill.",
+    );
+  }
+  if (fill === undefined) {
+    return needsHolesResult(input.state, input.subject, [hole]);
+  }
+  if (fill.kind !== "levitateAltitudeChange" || fill.holeId !== hole.holeId) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Levitate altitude control requires the selected altitude-change fill.",
+    );
+  }
+  if (
+    !hole.directions.includes(fill.value.direction) ||
+    fill.value.distanceFeet <= 0 ||
+    fill.value.distanceFeet > hole.maxDistanceFeet ||
+    !Number.isInteger(fill.value.distanceFeet)
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Levitate altitude change must be a positive whole number no greater than the spell limit.",
+    );
+  }
+  if (
+    !levitatedTargetWithinSpellRangeFactPresent({
+      facts: fill.spatialFacts,
+      sourceCombatantId: input.subject.sourceCombatantId,
+      sourceSpellId: input.subject.sourceSpellId,
+      targetId: input.subject.targetId,
+      rangeFeet: effect.rangeFeet,
+    })
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Levitate altitude control requires a table fact that the target remains within the spell's range.",
+    );
+  }
+  const spentState = {
+    ...input.state,
+    currentTurnResources: Either.getOrThrow(
+      spendAction(input.state.currentTurnResources, "magic"),
+    ),
+  };
+  const nextState = updateLevitatedCreatureAltitude({
+    state: spentState,
+    targetId: input.subject.targetId,
+    sourceCombatantId: input.subject.sourceCombatantId,
+    sourceSpellId: input.subject.sourceSpellId,
+    change: fill.value,
+  });
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
 }
 
 function resolveReplaceSelfTransformationModeCommand(

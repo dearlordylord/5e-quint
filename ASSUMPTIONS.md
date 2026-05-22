@@ -421,3 +421,13 @@ When explicit prepared-spell input is absent, the TypeScript machine and `creatu
 **Rationale:** The promoted battle runtime exposes one effective creature Size, one Strength roll-mode projection, and one attack-hit damage adjustment for this profile. Allowing overlapping increase and decrease effects would create contradictory executable state that the SRD does not resolve. Target-exclusive replacement keeps the promoted state deterministic while preserving caster-owned Concentration cleanup.
 
 **Changes:** `packages/battle-runtime/src/battle-reducer/creature-size-change-effects.ts` replaces existing creature size-change effects when applying a new one, and `packages/battle-runtime/src/battle-reducer/spells-active-effects.ts` clears displaced-source Concentration when no matching spell effects remain.
+
+## A49: Levitate creature altitude effects are target-exclusive
+
+**Assumption:** In the promoted creature branch of Levitate, a creature can have at most one active spell-owned levitated altitude effect. A successful new creature-branch Levitate effect on a target replaces any existing Levitate creature effect on that target, regardless of caster. If the displaced effect's source has no remaining active effects from that spell, the runtime clears that source's stale Concentration state.
+
+**Rules basis:** SRD 5.2.1 Levitate says one creature or loose object rises vertically up to 20 feet and remains suspended there for the duration. The spell also gives one caster-owned altitude-control procedure for another target and one target-owned movement procedure for a self target or a target reaching a fixed object or surface. The SRD passage does not define stacking or simultaneous-control behavior for multiple overlapping Levitate castings on the same creature.
+
+**Rationale:** The promoted battle runtime exposes one effective suspended altitude and one active movement/control projection for this profile. Allowing overlapping Levitate creature effects would create contradictory altitude and controller state that the SRD does not resolve. Target-exclusive replacement keeps the promoted state deterministic while preserving caster-owned Concentration cleanup.
+
+**Changes:** `packages/battle-runtime/src/battle-reducer/spells-active-effects.ts` replaces existing Levitate creature effects when applying a new one and clears displaced-source Concentration when no matching spell effects remain.

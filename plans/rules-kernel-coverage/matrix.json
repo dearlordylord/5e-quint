@@ -24,13 +24,13 @@
     "obligations[].profiles": "Derived from profileObligations by obligation id; authored obligations.jsonl rows must not contain profiles."
   },
   "battleHoleFrontierSummary": {
-    "total": 99,
+    "total": 103,
     "bySubject": {
-      "battle-hole-family": 62,
-      "battle-fill-kind": 37
+      "battle-hole-family": 64,
+      "battle-fill-kind": 39
     },
     "byClassification": {
-      "semantic-frontier": 76,
+      "semantic-frontier": 80,
       "deterministic-boundary-projection": 0,
       "table-owned-fact": 23,
       "unsupported-dead-branch": 0
@@ -3359,6 +3359,54 @@
       "subject": "battle-fill-kind"
     },
     {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "levitateAltitudeChange",
+      "id": "BattleLevitateAltitudeChangeHole",
+      "reason": "Levitate altitude-control holes choose a reducer-visible up/down distance for an active levitated creature while the caller supplies the separate target-within-range spatial witness. The reducer owns Magic Action spending, the 20-foot control limit, and active altitude state; range, elevation geometry, fixed objects, and surfaces remain caller/table facts.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "fillKind": "levitateAltitudeChange",
+      "followUpTaskIds": [],
+      "id": "levitateAltitudeChange",
+      "reason": "Levitate altitude-change fills supply the command direction and distance consumed by the supported creature spell profile. The fill changes active spell altitude state, while the target-within-range fact remains table-owned spatial evidence rather than derived map state.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "levitateInitialRise",
+      "id": "BattleLevitateInitialRiseHole",
+      "reason": "Levitate initial-rise holes choose the caller/table-selected vertical rise for the creature branch after a legal target and save outcome are known. The reducer owns the 0-to-20-foot spell limit and active altitude state, while ceiling, route, and table placement constraints remain caller/table facts.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "fillKind": "levitateInitialRise",
+      "followUpTaskIds": [],
+      "id": "levitateInitialRise",
+      "reason": "Levitate initial-rise fills supply the selected starting altitude up to 20 feet for the supported creature spell profile. The fill initializes spell-owned levitated altitude without deriving table geometry, ceilings, or automatic pathfinding.",
+      "subject": "battle-fill-kind"
+    },
+    {
       "classification": "table-owned-fact",
       "coveredByObligationIds": [
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES",
@@ -4172,6 +4220,7 @@
     "spell.invocation-condition-immunity-turn-start-temporary-hit-points",
     "spell.invocation-condition-removal-protection",
     "spell.invocation-condition-save",
+    "spell.invocation-creature-size-change",
     "spell.invocation-damage-reduction",
     "spell.invocation-damage-save-or-attack",
     "spell.invocation-dancing-lights-movable-dim-light",
@@ -4189,6 +4238,7 @@
     "spell.invocation-hideous-laughter-repeat-save-lifecycle",
     "spell.invocation-independent-attack-sequence",
     "spell.invocation-jump-movement-replacement",
+    "spell.invocation-levitated-creature",
     "spell.invocation-magic-weapon-enhancement",
     "spell.invocation-magical-darkness-point-origin",
     "spell.invocation-make-stable",

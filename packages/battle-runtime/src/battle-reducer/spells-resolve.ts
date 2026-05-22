@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // Spell resolution dispatch (Cluster L). Mechanical extraction from
 // battle-reducer.ts. The largest cluster in the file: master spell-act
@@ -217,6 +218,7 @@ export {
   resolveDirectConditionRemovalSpellAct,
   resolveDirectConditionSpellAct,
   resolveJumpMovementReplacementSpellAct,
+  resolveLevitatedCreatureSpellAct,
   resolveMakeStableSpellAct,
   resolveMirrorImageHitInterceptionSpellAct,
   resolvePreparedHealingSpellAct,
@@ -260,6 +262,7 @@ import {
   resolveDirectConditionRemovalSpellAct,
   resolveDirectConditionSpellAct,
   resolveJumpMovementReplacementSpellAct,
+  resolveLevitatedCreatureSpellAct,
   resolveMakeStableSpellAct,
   resolveMirrorImageHitInterceptionSpellAct,
   resolvePreparedHealingSpellAct,
@@ -475,6 +478,7 @@ export function resolveSpellAct(
       invocation.procedure === "rollModifier" ||
       invocation.procedure === "creatureSizeIncrease" ||
       invocation.procedure === "creatureSizeDecrease" ||
+      invocation.procedure === "levitatedCreature" ||
       invocation.procedure === "wardingBond" ||
       invocation.procedure === "thaumaturgyBoomingVoice" ||
       invocation.procedure === "creatureTypeProtection" ||
@@ -845,6 +849,14 @@ export function resolveSpellAct(
     invocation.procedure === "creatureSizeDecrease"
   ) {
     return resolveCreatureSizeChangeSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "levitatedCreature") {
+    return resolveLevitatedCreatureSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

@@ -1585,6 +1585,7 @@ export function spellActivationInvocationCastSummary(
         | "creatureTypeProtection"
         | "creatureSizeIncrease"
         | "creatureSizeDecrease"
+        | "levitatedCreature"
         | "blurAttackRollDefense"
         | "seeInvisibleObserverSight"
         | "mirrorImageHitInterception"
