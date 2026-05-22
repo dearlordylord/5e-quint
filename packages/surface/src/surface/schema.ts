@@ -116,6 +116,7 @@ export {
   TargetCountThresholdTiersSchema,
   TargetCastingRequirementSchema,
   TargetDispositionSchema,
+  TargetRelativePositionSchema,
   TargetSelectionSchema,
   TargetStateFilterSchema,
   TargetTypeFilterSchema,

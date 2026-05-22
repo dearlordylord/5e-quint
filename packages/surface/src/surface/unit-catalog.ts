@@ -196,6 +196,7 @@ import shockingGraspInput from "../../content/shocking_grasp.json";
 import sleepInput from "../../content/sleep.json";
 import spiderClimbInput from "../../content/spider_climb.json";
 import spikeGrowthInput from "../../content/spike_growth.json";
+import spiritualWeaponInput from "../../content/spiritual_weapon.json";
 import sacredFlameInput from "../../content/sacred_flame.json";
 import scorchingRayInput from "../../content/scorching_ray.json";
 import seeInvisibilityInput from "../../content/see_invisibility.json";
@@ -545,6 +546,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     sleepInput,
     spiderClimbInput,
     spikeGrowthInput,
+    spiritualWeaponInput,
     suggestionInput,
     zoneOfTruthInput,
     thunderwaveInput,

@@ -2497,12 +2497,7 @@
       "unitId": "spike_growth"
     },
     {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
+      "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
         "follow-up-split"
@@ -2510,7 +2505,7 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "L12G-FOLLOWUP-SPIRITUAL-WEAPON-SURFACE-PROXY-SHAPE: Replace or verify the Spiritual Weapon Surface shape so it represents the RAW spectral force as a spell-owned proxy/effect, not a creature companion or ordinary object; preserve Bonus Action casting, Concentration up to 1 minute, 60-foot placement, immediate attack target within 5 feet of the force, slot-scaled Force damage, and a later-turn single Bonus Action operation that may move the force up to 20 feet and repeat the attack. Owner: surface Spell Definition authoring. Required output: Spiritual Weapon Dhall and JSON content, plus schema/tracer support where required, make the coupled force placement, later movement, repeat attack, Concentration, and slot scaling executable source facts without representing movement and repeat attack as two separately spendable Bonus Action operations.; L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME: Promote Spiritual Weapon as a level-2 prepared Spell Invocation that spends the Bonus Action and Spell Slot, starts caster-owned Concentration up to 1 minute, consumes caller-supplied force placement and target-adjacency facts, resolves the immediate melee Spell Attack, applies slot-scaled Force damage, records the spell-owned attack proxy, offers a later-turn Bonus Action to move the proxy up to 20 feet from caller-supplied destination facts and repeat the attack, and cleans up on Concentration or duration end without introducing companion actions, object Hit Points, or duplicated proxy state. Owner: battle-runtime spell invocation/effect lifecycle plus table/spatial owner. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial casting, Spell Slot spend, Concentration ownership, proxy placement, immediate attack, later Bonus Action movement and repeat attack, slot scaling, and cleanup while leaving automatic geometry and adjacency derivation table-owned.",
+      "reason": "L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME: Promote Spiritual Weapon as a level-2 prepared Spell Invocation that spends the Bonus Action and Spell Slot, starts caster-owned Concentration up to 1 minute, consumes caller-supplied force placement and target-adjacency facts, resolves the immediate melee Spell Attack, applies slot-scaled Force damage, records the spell-owned attack proxy, offers a later-turn Bonus Action to move the proxy up to 20 feet from caller-supplied destination facts and repeat the attack, and cleans up on Concentration or duration end without introducing companion actions, object Hit Points, or duplicated proxy state. Owner: battle-runtime spell invocation/effect lifecycle plus table/spatial owner. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial casting, Spell Slot spend, Concentration ownership, proxy placement, immediate attack, later Bonus Action movement and repeat attack, slot scaling, and cleanup while leaving automatic geometry and adjacency derivation table-owned.",
       "sourceRecordPath": "packages/surface/content/spiritual_weapon.json",
       "sourceRows": [
         {

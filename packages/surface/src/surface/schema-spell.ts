@@ -1573,6 +1573,7 @@ type OngoingEffect =
     }
   | {
       readonly kind: "attack_roll";
+      readonly attachment?: CreatureTargetAttachment;
       readonly attackKind: "ranged_spell_attack" | "melee_spell_attack";
       readonly onHit: ReadonlyNonEmptyArray<EffectAtom>;
       readonly onMiss: ReadonlyNonEmptyArray<EffectAtom>;
@@ -1775,6 +1776,12 @@ const CreatureOrObjectTargetKindsSchema = Schema.Union(
   Schema.Tuple(Schema.Literal("object"), Schema.Literal("creature")),
 );
 
+export const TargetRelativePositionSchema = strictStruct({
+  kind: Schema.Literal("within_feet_of_attachment"),
+  attachmentHoleId: HoleIdSchema,
+  feet: PositiveIntegerSchema,
+});
+
 export const CreatureTargetSelectionSchema = strictStruct({
   mode: Schema.Literal("one"),
   targetKinds: CreatureTargetKindsSchema,
@@ -1782,6 +1789,7 @@ export const CreatureTargetSelectionSchema = strictStruct({
   creatureSizeFilter: optionalExact(
     Schema.suspend(() => CreatureSizeFilterSchema),
   ),
+  relativePosition: optionalExact(TargetRelativePositionSchema),
 });
 
 export const TargetCastingRequirementSchema = strictStruct({
@@ -3672,6 +3680,7 @@ export const OngoingEffectSchema: Schema.suspend<
     }),
     Schema.Struct({
       kind: Schema.Literal("attack_roll"),
+      attachment: optionalExact(CreatureTargetAttachmentSchema),
       attackKind: Schema.Literal("ranged_spell_attack", "melee_spell_attack"),
       onHit: nonEmpty(EffectAtomSchema),
       onMiss: nonEmpty(EffectAtomSchema),

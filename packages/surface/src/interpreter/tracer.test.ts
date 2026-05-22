@@ -15,6 +15,7 @@ import moonbeamInput from "../../content/moonbeam.json";
 import prayerOfHealingInput from "../../content/prayer_of_healing.json";
 import ropeTrickInput from "../../content/rope_trick.json";
 import silenceInput from "../../content/silence.json";
+import spiritualWeaponInput from "../../content/spiritual_weapon.json";
 import zoneOfTruthInput from "../../content/zone_of_truth.json";
 import wardingBondInput from "../../content/warding_bond.json";
 import { decodeUnitRecordSync } from "../surface/schema.ts";
@@ -403,6 +404,51 @@ describe("Surface trace interpreter", () => {
       (e) => e.to === "moonbeam_save_per_turn" && e.relation === "limits",
     );
     expect(limitsEdges).toHaveLength(4);
+  });
+
+  test("renders Spiritual Weapon later movement and repeat attack behind one Bonus Action window", () => {
+    const trace = traceUnit(decodeUnitRecordSync(spiritualWeaponInput));
+
+    const bonusActionWindows = trace.nodes.filter(
+      (n) => n.atomKind === "bonus_action_window",
+    );
+    expect(bonusActionWindows).toEqual([
+      expect.objectContaining({
+        label:
+          "bonus_action_window\n(caster spends Bonus Action, later turns only)",
+      }),
+    ]);
+    expect(trace.nodes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          atomKind: "composite_ongoing",
+          label: "composite_ongoing\n(2 effects)",
+        }),
+        expect.objectContaining({
+          atomKind: "reposition_attachment",
+          label: expect.stringContaining("20 ft"),
+        }),
+        expect.objectContaining({
+          atomKind: "attack_roll",
+          label: "attack_roll\nmelee_spell_attack",
+        }),
+      ]),
+    );
+    const forceReachTargetNodes = trace.nodes.filter(
+      (n) =>
+        n.atomKind === "hole" &&
+        n.label.includes("creature within 5 feet of the force") &&
+        n.label.includes(
+          "relative: within 5 ft of attachment spiritual_weapon_force",
+        ),
+    );
+    expect(forceReachTargetNodes).toHaveLength(2);
+    const repeatAttackTargetIds = new Set(
+      trace.edges.filter((e) => e.relation === "targets").map((e) => e.to),
+    );
+    expect(
+      forceReachTargetNodes.some((node) => repeatAttackTargetIds.has(node.id)),
+    ).toBe(true);
   });
 
   test("renders Rope Trick as an extradimensional refuge", () => {

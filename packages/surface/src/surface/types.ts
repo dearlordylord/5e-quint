@@ -318,6 +318,9 @@ export type AreaOccupantDispositionFilter = Schema.Schema.Type<
 export type TargetCastingRequirement = Schema.Schema.Type<
   typeof SurfaceSchema.TargetCastingRequirementSchema
 >;
+export type TargetRelativePosition = Schema.Schema.Type<
+  typeof SurfaceSchema.TargetRelativePositionSchema
+>;
 export type TargetSelection = Schema.Schema.Type<
   typeof SurfaceSchema.TargetSelectionSchema
 >;

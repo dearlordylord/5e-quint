@@ -1803,6 +1803,99 @@ describe("SRD Unit catalog boundary", () => {
     }
   });
 
+  test("decodes Spiritual Weapon as one later-turn move-and-attack Bonus Action", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const spiritualWeapon = result.catalog.requireUnit("spiritual_weapon");
+      expect(spiritualWeapon.kind).toBe("spell");
+      if (spiritualWeapon.kind !== "spell") return;
+      expect(spiritualWeapon.mechanics.family).toBe("ongoing_effect");
+      if (spiritualWeapon.mechanics.family !== "ongoing_effect") return;
+
+      const forceDamage = {
+        kind: "damage",
+        damageType: "force",
+        amount: {
+          kind: "linear_per_level",
+          axis: "slot",
+          base: { dice: 1, dieSize: 8, spellcastingMod: true },
+          perLevel: { dice: 1, dieSize: 8 },
+          startingAtLevel: 2,
+        },
+      };
+      const targetWithinForceReach = {
+        kind: "within_feet_of_attachment",
+        attachmentHoleId: "spiritual_weapon_force",
+        feet: 5,
+      };
+      const forceAttackTarget = {
+        kind: "hole",
+        holeId: "spiritual_weapon_attack_target",
+        label: "creature within 5 feet of the force",
+        value: {
+          kind: "target",
+          selection: {
+            mode: "one",
+            targetKinds: ["creature"],
+            relativePosition: targetWithinForceReach,
+          },
+        },
+      };
+
+      expect(spiritualWeapon.mechanics.castingTime).toEqual({
+        kind: "bonus_action",
+      });
+      expect(spiritualWeapon.mechanics.duration).toEqual({
+        kind: "concentration",
+        upTo: { unit: "minute", amount: 1 },
+      });
+      expect(spiritualWeapon.mechanics.range).toEqual({
+        kind: "point",
+        feet: 60,
+      });
+      expect(spiritualWeapon.mechanics.attachment).toEqual({
+        kind: "hole",
+        holeId: "spiritual_weapon_force",
+        label: "spectral force",
+        value: {
+          kind: "location",
+          description: "space within range",
+        },
+      });
+      expect(spiritualWeapon.mechanics.initialPhase).toEqual({
+        kind: "attack_roll",
+        attachment: forceAttackTarget,
+        attackKind: "melee_spell_attack",
+        onHit: [forceDamage],
+        onMiss: [{ kind: "none" }],
+      });
+      expect(spiritualWeapon.mechanics.operations).toEqual([
+        {
+          trigger: {
+            kind: "on_caster_spends_action",
+            cost: { kind: "bonus_action" },
+            laterTurnsOnly: true,
+          },
+          effect: {
+            kind: "composite_ongoing",
+            effects: [
+              { kind: "reposition_attachment", maxMoveFeet: 20 },
+              {
+                kind: "attack_roll",
+                attachment: forceAttackTarget,
+                attackKind: "melee_spell_attack",
+                onHit: [forceDamage],
+                onMiss: [{ kind: "none" }],
+              },
+            ],
+          },
+        },
+      ]);
+    }
+  });
+
   test("decodes Shillelagh as a held-weapon attack override", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 

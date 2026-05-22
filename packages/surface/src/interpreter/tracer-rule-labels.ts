@@ -44,6 +44,7 @@ import type {
   SpellAccessMode,
   SpellMechanics,
   TargetCastingRequirement,
+  TargetRelativePosition,
   TargetSelection,
   TimeSpanDurationValue,
   ThresholdTiers,
@@ -320,13 +321,21 @@ export function describeTargetSelection(s: TargetSelection): string {
     "castingRequirement" in s && s.castingRequirement !== undefined
       ? `\ncasting requirement: ${describeTargetCastingRequirement(s.castingRequirement)}`
       : "";
+  const relativePosition =
+    "relativePosition" in s && s.relativePosition !== undefined
+      ? `\nrelative: ${describeTargetRelativePosition(s.relativePosition)}`
+      : "";
   if (s.mode === "one") {
-    return `one${targetKinds}${typeFilter}${creatureSizeFilter}${objectFilter}${stateFilter}${disposition}${creatureDisposition}${castingRequirement}`;
+    return `one${targetKinds}${typeFilter}${creatureSizeFilter}${objectFilter}${stateFilter}${disposition}${creatureDisposition}${castingRequirement}${relativePosition}`;
   }
   if (s.mode === "any_number")
-    return `any_number${targetKinds}${typeFilter}${creatureSizeFilter}${objectFilter}${stateFilter}${disposition}${creatureDisposition}${castingRequirement}`;
+    return `any_number${targetKinds}${typeFilter}${creatureSizeFilter}${objectFilter}${stateFilter}${disposition}${creatureDisposition}${castingRequirement}${relativePosition}`;
   const repeats = s.repeatsAllowed === true ? " (repeats allowed)" : "";
-  return `choose_up_to: ${describeScaling(s.count)}${repeats}${targetKinds}${typeFilter}${creatureSizeFilter}${objectFilter}${stateFilter}${disposition}${creatureDisposition}${castingRequirement}`;
+  return `choose_up_to: ${describeScaling(s.count)}${repeats}${targetKinds}${typeFilter}${creatureSizeFilter}${objectFilter}${stateFilter}${disposition}${creatureDisposition}${castingRequirement}${relativePosition}`;
+}
+
+function describeTargetRelativePosition(r: TargetRelativePosition): string {
+  return `within ${r.feet} ft of attachment ${r.attachmentHoleId}`;
 }
 
 function describeTargetCastingRequirement(

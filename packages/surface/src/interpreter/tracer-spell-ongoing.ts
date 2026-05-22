@@ -633,6 +633,18 @@ export function traceOngoingOpEffect(
       });
       edges.push({ from: hostId, to: arId, relation: hostRelation });
       edges.push({ from: arId, to: attId, relation: "attaches_to" });
+      if (eff.attachment !== undefined) {
+        const targetId = traceAttachment(eff.attachment, range, nodes, ids);
+        edges.push({ from: arId, to: targetId, relation: "targets" });
+        traceTargetCountScaling(
+          eff.attachment,
+          targetId,
+          slotId,
+          nodes,
+          edges,
+          ids,
+        );
+      }
       for (const hit of eff.onHit) {
         const hitId = traceEffectAtom(hit, nodes, ids, edges);
         if (hitId !== null) {
