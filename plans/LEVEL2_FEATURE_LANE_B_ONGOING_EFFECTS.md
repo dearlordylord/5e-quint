@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Enthrall Perception Penalty Runtime Support"
     },
     {
@@ -262,7 +262,7 @@ Output:
 
 ### Task 10 - L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME - Enthrall Perception Penalty Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 - Existing roll-mode profile readers and observer/target table facts.
