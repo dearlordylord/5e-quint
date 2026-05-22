@@ -2,6 +2,7 @@
 import type {
   BattleActiveEffect,
   BattleCreatureState,
+  CreatureSizeChangeSpellInvocation,
   SpellAttackDamageComponent,
 } from "../battle-reducer.ts";
 import type { SupportedAttackActionOption } from "../battle-action-options.ts";
@@ -10,6 +11,18 @@ import { attackDamage } from "./statblock-attacks.ts";
 export type SpellCreatureSizeChangeEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "spellCreatureSizeChange" }
+>;
+
+export const CREATURE_SIZE_CHANGE_DAMAGE_DICE = 1;
+export const CREATURE_SIZE_CHANGE_DAMAGE_DIE_SIZE = 4;
+export const CREATURE_SIZE_CHANGE_MINIMUM_DAMAGE_TOTAL = 1;
+
+const CREATURE_SIZE_CHANGE_PROCEDURE_BY_DIRECTION = {
+  increase: "creatureSizeIncrease",
+  decrease: "creatureSizeDecrease",
+} as const satisfies Record<
+  SpellCreatureSizeChangeEffect["direction"],
+  CreatureSizeChangeSpellInvocation["procedure"]
 >;
 
 export function isSpellCreatureSizeChangeEffect(
@@ -39,7 +52,9 @@ export function activeEffectsWithCreatureSizeChangeReplaced(
   readonly activeEffects: readonly BattleActiveEffect[];
   readonly displacedEffects: readonly SpellCreatureSizeChangeEffect[];
 } {
-  const displacedEffects = activeEffects.filter(isSpellCreatureSizeChangeEffect);
+  const displacedEffects = activeEffects.filter(
+    isSpellCreatureSizeChangeEffect,
+  );
   return {
     activeEffects: [
       ...activeEffectsWithoutCreatureSizeChange(activeEffects),
@@ -55,6 +70,12 @@ export function creatureSizeChangeStrengthRollMode(
   return effect.direction === "increase" ? "advantage" : "disadvantage";
 }
 
+export function creatureSizeChangeProcedure(
+  effect: SpellCreatureSizeChangeEffect,
+): CreatureSizeChangeSpellInvocation["procedure"] {
+  return CREATURE_SIZE_CHANGE_PROCEDURE_BY_DIRECTION[effect.direction];
+}
+
 export function creatureSizeChangeAttackDamageComponent(
   effect: SpellCreatureSizeChangeEffect,
   attack: SupportedAttackActionOption,
@@ -64,10 +85,15 @@ export function creatureSizeChangeAttackDamageComponent(
     sourceSpellId: effect.sourceSpellId,
     sourceCombatantId: effect.sourceCombatantId,
     damage: {
-      expr: { dice: 1, dieSize: 4 },
+      expr: {
+        dice: CREATURE_SIZE_CHANGE_DAMAGE_DICE,
+        dieSize: CREATURE_SIZE_CHANGE_DAMAGE_DIE_SIZE,
+      },
       damageType: attackDamage(attack).damageType,
     },
     operation: decrease ? "subtract" : "add",
-    ...(decrease ? { minimumDamageTotal: 1 as const } : {}),
+    ...(decrease
+      ? { minimumDamageTotal: CREATURE_SIZE_CHANGE_MINIMUM_DAMAGE_TOTAL }
+      : {}),
   };
 }

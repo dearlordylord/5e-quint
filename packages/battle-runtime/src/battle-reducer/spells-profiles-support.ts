@@ -86,6 +86,12 @@ import {
 } from "../character-battle-resources.ts";
 import type { CombatantId } from "../identity.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
+import {
+  CREATURE_SIZE_CHANGE_DAMAGE_DICE,
+  CREATURE_SIZE_CHANGE_DAMAGE_DIE_SIZE,
+  CREATURE_SIZE_CHANGE_MINIMUM_DAMAGE_TOTAL,
+  creatureSizeChangeProcedure,
+} from "./creature-size-change-effects.ts";
 import { activeMarkedDamageRiderEffect } from "./damage-helpers.ts";
 import {
   BATTLE_D20_ROLL_MODIFIER_DIE_SIZES,
@@ -1350,12 +1356,7 @@ function creatureSizeChangeSpellProjection(
   spell: SpellRecord,
 ): readonly Pick<
   CreatureSizeChangeSpellInvocation,
-  | "procedure"
-  | "ability"
-  | "dc"
-  | "targeting"
-  | "activeEffect"
-  | "rangeFeet"
+  "procedure" | "ability" | "dc" | "targeting" | "activeEffect" | "rangeFeet"
 >[] {
   if (
     spell.mechanics.family !== "activation" ||
@@ -1383,7 +1384,9 @@ function creatureSizeChangeSpellProjection(
   }
   const targetSelection = phase.attachment.value.selection;
   const objectFilter =
-    "objectFilter" in targetSelection ? targetSelection.objectFilter : undefined;
+    "objectFilter" in targetSelection
+      ? targetSelection.objectFilter
+      : undefined;
   if (
     targetSelection?.mode !== "one" ||
     targetSelection.targetKinds === undefined ||
@@ -1424,10 +1427,7 @@ function creatureSizeChangeSpellProjection(
       }
       return [
         {
-          procedure:
-            activeEffect.direction === "increase"
-              ? "creatureSizeIncrease"
-              : "creatureSizeDecrease",
+          procedure: creatureSizeChangeProcedure(activeEffect),
           ability: "con",
           dc: phase.dc,
           targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
@@ -1495,8 +1495,8 @@ function creatureSizeChangeActiveEffect(
     !Array.isArray(savingThrow.saveAbilityFilter) ||
     !sameStringSet(savingThrow.saveAbilityFilter, ["str"]) ||
     damage.delta.kind !== "fixed_dice" ||
-    damage.delta.dice !== 1 ||
-    damage.delta.dieSize !== 4 ||
+    damage.delta.dice !== CREATURE_SIZE_CHANGE_DAMAGE_DICE ||
+    damage.delta.dieSize !== CREATURE_SIZE_CHANGE_DAMAGE_DIE_SIZE ||
     damage.damageSourceFilter?.kind !== "attack_hit" ||
     damage.damageSourceFilter.attackRollFilter !== "weapon_or_unarmed_strike"
   ) {
@@ -1510,7 +1510,8 @@ function creatureSizeChangeActiveEffect(
     (size.direction === "decrease" &&
       (abilityCheck.mode !== "disadvantage" ||
         damage.delta.sign !== "-" ||
-        damage.minimumDamageTotal !== 1))
+        damage.minimumDamageTotal !==
+          CREATURE_SIZE_CHANGE_MINIMUM_DAMAGE_TOTAL))
   ) {
     return null;
   }

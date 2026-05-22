@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Enlarge Reduce Creature Runtime Support"
     },
     {
@@ -81,6 +81,12 @@
       "id": "L12G-RECURSIVE-TAIL-LANE-B",
       "status": "blocked",
       "title": "Lane B Recursive Planning Tail"
+    },
+    {
+      "number": 14,
+      "id": "L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Enlarge Reduce Object Runtime Support"
     },
     {
       "number": 21,
@@ -244,7 +250,7 @@ Output:
 
 ### Task 9 - L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME - Enlarge Reduce Creature Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 - Existing size, weapon damage, Strength check/save, and concentration effect projections.
@@ -301,6 +307,22 @@ Unblock only after all ready Lane B tasks are done or explicitly closed.
 Output:
 - Refresh level-2 ongoing-effect metrics.
 - Add the next concrete, Ralph-sized Lane B tasks only if real frontier remains.
+
+### Task 14 - L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-RUNTIME - Enlarge Reduce Object Runtime Support
+
+Status: `ready-for-research`
+
+Depends on:
+- Task 9 creature-target Enlarge/Reduce runtime support.
+
+Input:
+- Existing Enlarge/Reduce creature-target runtime support and Surface target shape.
+- SRD Enlarge/Reduce object branch text.
+- Current object, item, attack-damage, Concentration, and active-effect lifecycle owners.
+
+Output:
+- Research and either promote or split the object-target branch: visible non-worn/non-carried object targeting, object Size-category lifecycle and cleanup, carried or worn item size changes while a creature branch is active, dropped-item normalization, and thrown weapon or ammunition normalization immediately after hit or miss.
+- Do not rework the Task 9 creature-target profile unless object support exposes a shared owner that must change to avoid duplicated state.
 
 ### Task 21 - L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL - Continual Flame Dispel And Suppression Removal
 
