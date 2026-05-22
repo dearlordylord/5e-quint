@@ -5537,6 +5537,40 @@
         "packages/shared-algebras/proofs/rule-core/hit-point-damage.qnt"
       ],
       "status": "fixture-bound"
+    },
+    {
+      "blockedBy": [
+        "run-block-coupled",
+        "unsupported-construct"
+      ],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "range",
+        "set-operators",
+        "membership"
+      ],
+      "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple-inductive.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt"
+      ],
+      "status": "fixture-bound"
     }
   ],
   "kernelIrBoundaries": [

@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "MBTRUST-A-MOVEMENT-OBLIGATION-READINESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Movement Obligation Generator Readiness Row"
     },
     {
@@ -240,7 +240,7 @@ Output:
 
 ### Task 7 - MBTRUST-A-MOVEMENT-OBLIGATION-READINESS - Movement Obligation Generator Readiness Row
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
