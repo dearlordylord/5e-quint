@@ -5,6 +5,7 @@
 
 // KERNEL-COVERAGE: runtime-owner BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 import { Match } from "effect";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { difficultyClass, type DifficultyClass } from "@dnd/shared/types";
@@ -244,6 +245,8 @@ function activeAbilityCheckRollModeEffectMatches(
       (effect) =>
         ((effect.kind === "abilityCheckRollMode" &&
           effect.ability === ability) ||
+          (effect.kind === "abilityD20TestRollModeEndTurnSave" &&
+            effect.ability === ability) ||
           (effect.kind === "selfAttackRollAndAbilityCheckRollMode" &&
             !ongoingSpellEffectSuppressedByAntimagicField(state, {
               kind: "spellActiveEffect",

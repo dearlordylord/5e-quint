@@ -18,6 +18,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-direct-condition
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-direct-condition-removal
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS BATTLE.STAT_BLOCK.ATTACK_CONTROL
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE
@@ -2002,6 +2003,10 @@ export type TargetListSpellInvocation =
       >;
     })
   | Extract<SupportedSpellInvocation, { readonly procedure: "rollModifier" }>
+  | Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "abilityD20TestRollModeSaveGate" }
+    >
   | Extract<SupportedSpellInvocation, { readonly procedure: "damageReduction" }>
   | (Extract<
       SupportedSpellInvocation,
@@ -2901,6 +2906,28 @@ export type SupportedSpellInvocation =
   | {
       readonly access: PreparedSpellAccess;
       readonly resource: SpellSlotInvocationResource;
+      readonly procedure: "abilityD20TestRollModeSaveGate";
+      readonly spell: SpellRecord;
+      readonly actionCost: "magicAction";
+      readonly ability: Extract<Ability, "con">;
+      readonly dc: DcSource;
+      readonly targeting: Extract<
+        SpellTargeting,
+        { readonly kind: "targetList" }
+      >;
+      readonly rangeFeet: MovementFeet;
+      readonly successEffect: Extract<
+        BattleActiveEffect,
+        { readonly kind: "nextAttackRollBySelf" }
+      >;
+      readonly failedSaveEffect: Extract<
+        BattleActiveEffect,
+        { readonly kind: "abilityD20TestRollModeEndTurnSave" }
+      >;
+    }
+  | {
+      readonly access: PreparedSpellAccess;
+      readonly resource: SpellSlotInvocationResource;
       readonly procedure: "sleepTargetAdmission";
       readonly spell: SpellRecord;
       readonly ability: Extract<Ability, "wis">;
@@ -3231,6 +3258,7 @@ type AnySupportedDamageSpellInvocation = Exclude<
       | "saveGatedCondition"
       | "saveGatedConditionImmunity"
       | "saveGatedAttackRollAdvantage"
+      | "abilityD20TestRollModeSaveGate"
       | "sleepTargetAdmission"
       | "hideousLaughter"
       | "command"
@@ -4002,6 +4030,7 @@ export type BattleSpellTargetListHole = {
         | "directHitPointRestoration"
         | "rollModifier"
         | "saveGatedDamage"
+        | "abilityD20TestRollModeSaveGate"
         | "saveGatedCondition"
         | "saveGatedConditionImmunity"
         | "saveGatedAttackRollAdvantage"
@@ -4276,6 +4305,24 @@ export type BattleSpellConditionEndTurnSavingThrowOutcomeHole = {
     readonly sourceSpellId: SpellRecord["id"];
     readonly sourceCombatantId: CombatantId;
     readonly condition: Condition;
+    readonly save: SpellConditionRepeatSave;
+  };
+  readonly ability: Ability;
+  readonly dc: DcSource;
+  readonly areaChoices: readonly [];
+  readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
+  readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
+};
+export type BattleAbilityD20TestRollModeEndTurnSavingThrowOutcomeHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "savingThrowOutcome";
+  readonly label: string;
+  readonly abilityD20TestRollModeEndTurnSave: {
+    readonly targetId: CombatantId;
+    readonly sourceSpellId: SpellRecord["id"];
+    readonly sourceCombatantId: CombatantId;
+    readonly affectedAbility: Ability;
     readonly save: SpellConditionRepeatSave;
   };
   readonly ability: Ability;
@@ -4654,6 +4701,7 @@ export type BattleSpellSavingThrowOutcomeHole = {
     {
       readonly procedure:
         | "attackBurstSaveDamage"
+        | "abilityD20TestRollModeSaveGate"
         | "rollModifier"
         | "saveGatedDamage"
         | "saveGatedCondition"
@@ -4912,6 +4960,7 @@ export type BattleHole =
   | BattleGustOfWindLineSavingThrowOutcomeHole
   | BattleGustOfWindLineDirectionChoiceHole
   | BattleSpellConditionEndTurnSavingThrowOutcomeHole
+  | BattleAbilityD20TestRollModeEndTurnSavingThrowOutcomeHole
   | BattleFlamingSphereRamMovementHole
   | BattleMovableZoneRepositionMovementHole
   | BattleFlamingSphereSavingThrowOutcomeHole

@@ -72,24 +72,24 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 88,
-      "numerator": 88,
+      "denominator": 89,
+      "numerator": 89,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 88,
-      "numerator": 88,
+      "denominator": 89,
+      "numerator": 89,
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 121,
+      "denominator": 122,
       "numerator": 101,
-      "percent": "83.5%"
+      "percent": "82.8%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 121,
+      "denominator": 122,
       "numerator": 104,
-      "percent": "86%"
+      "percent": "85.2%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 136,
@@ -97,13 +97,13 @@
       "percent": "90.4%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 88,
-      "numerator": 88,
+      "denominator": 89,
+      "numerator": 89,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 88,
-      "numerator": 88,
+      "denominator": 89,
+      "numerator": 89,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -3507,20 +3507,56 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-see-invisibility.test.ts"
         }
       ]
+    },
+    {
+      "id": "spell.invocation-ray-of-enfeeblement-d20-lifecycle",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt",
+        "packages/battle-runtime/battle-runtime-model.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
+        "packages/battle-runtime/battle-runtime-spell-attack.qnt",
+        "packages/battle-runtime/battle-runtime-timed-effects.qnt",
+        "packages/battle-runtime/battle-runtime-concentration.qnt",
+        "packages/battle-runtime/battle-runtime-armor-class.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-profiles-save-gates.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
+        "packages/battle-runtime/src/battle-reducer/hole-helpers.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+      ],
+      "taskRefs": [
+        "L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE"
+      ],
+      "title": "Spell save gate applies Ray of Enfeeblement D20 Test lifecycle effects",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-ray-of-enfeeblement.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 121,
+        "denominator": 122,
         "numerator": 101,
-        "percent": "83.5%"
+        "percent": "82.8%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 121,
+        "denominator": 122,
         "numerator": 104,
-        "percent": "86%"
+        "percent": "85.2%"
       }
     },
     "profileKinds": [
@@ -5122,6 +5158,12 @@
         "joinStatus": "unmapped",
         "obligations": [],
         "profileId": "spell.invocation-see-invisible-observer-sight",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-ray-of-enfeeblement-d20-lifecycle",
         "profileKind": "spell-invocation"
       }
     ],
@@ -10659,6 +10701,30 @@
       "note": "Focused Character Battle tests cover Font of Magic created Spell Slots entering battle only as aggregate Spell Slot capacity, absence of a battle Unit feature Bonus Action for Creating Spell Slots, and source-ambiguous ordinary-versus-created Spell Slot handoff rejection. The closure keeps Character Sheet as the canonical owner of created Spell Slot source state and avoids a duplicate battle-local Spell Slot source pool or source ledger.",
       "profileIds": [],
       "taskId": "L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE"
+    },
+    {
+      "claimKind": "runtime-test",
+      "note": "Focused runtime tests cover Ray of Enfeeblement D20 lifecycle admission, success-side next-attack Disadvantage, failed-save Strength D20 Test Disadvantage, repeat saves, and Concentration cleanup.",
+      "profileIds": [
+        "spell.invocation-ray-of-enfeeblement-d20-lifecycle"
+      ],
+      "taskId": "L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted Quint facts cover Ray of Enfeeblement target-list/save admission, success-side next-attack Disadvantage and start-turn/next-attack cleanup, failed-save Strength attack/Ability Check/Saving Throw Disadvantage, end-turn Constitution repeat-save cleanup, and Concentration cleanup when no Ray effect remains.",
+      "profileIds": [
+        "spell.invocation-ray-of-enfeeblement-d20-lifecycle"
+      ],
+      "taskId": "L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused runtime tests and promoted Quint facts cover the Ray D20 lifecycle slice: cast/save admission, success-side next-attack Disadvantage, failed-save Strength D20 Test Disadvantage, repeat saves, and Concentration cleanup.",
+      "profileIds": [
+        "spell.invocation-ray-of-enfeeblement-d20-lifecycle"
+      ],
+      "taskId": "L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE"
     }
   ],
   "units": [
@@ -28365,14 +28431,13 @@
         "status": "not-in-unit-catalog"
       },
       "claim": {
-        "followUpTasks": [
+        "deferredMechanics": [
           {
-            "id": "L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE",
-            "mechanic": "Promote Ray of Enfeeblement's cast/save/lifecycle branch: Magic Action and level-2-or-higher Spell Slot spend, one creature target within 60 feet, Constitution save, success-side Disadvantage on the target's next attack roll until the start of the caster's next turn, failed-save Disadvantage on Strength-based D20 Tests, end-of-target-turn Constitution repeat saves ending the spell on success, and Concentration cleanup without modeling the damage-roll penalty in this slice.",
-            "owner": "battle-runtime spell invocation/effect lifecycle plus promoted Quint parity",
-            "requiredOutput": "Profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for cast/save/lifecycle and Strength D20 roll-mode behavior while leaving damage-roll subtraction to the separate damage pipeline task.",
-            "title": "Ray Of Enfeeblement D20 Lifecycle Runtime"
-          },
+            "followUpTaskId": "L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY",
+            "mechanic": "failed-save subtraction of 1d8 from all damage rolls made by the affected target"
+          }
+        ],
+        "followUpTasks": [
           {
             "id": "L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY",
             "mechanic": "Promote Ray of Enfeeblement's failed-save source-side damage penalty: subtract 1d8 from all damage rolls made by the affected target while the spell effect is active, covering attack, spell, and other battle-owned damage rolls through one generic spell damage-roll penalty hole/fill path that applies before target-side Resistance, damage reductions, Concentration saves, and damage disposition.",
@@ -28381,15 +28446,62 @@
             "title": "Ray Of Enfeeblement Damage Roll Penalty Runtime"
           }
         ],
-        "futureProfileOwner": "battle-runtime spell invocation/effect lifecycle plus promoted Quint parity and damage-roll pipeline",
-        "reason": "Ray of Enfeeblement is authored as an SRD Surface Spell Definition with Magic Action Spell Slot casting, one creature within 60 feet, a Constitution save, a success-side next-attack Disadvantage rider until the start of the caster's next turn, and a failed-save Concentration effect that imposes Disadvantage on Strength-based D20 Tests, subtracts 1d8 from all damage rolls, and grants end-of-target-turn Constitution repeat saves. Task 42 claims no promoted battle-runtime profile yet because the runtime has no safe single Spell Effect that combines ability-scoped D20 Test roll modes, end-turn save-to-end lifecycle, success-side one-attack rider, and source-side all-damage-roll subtraction without either duplicating active state or silently omitting one RAW branch.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "spell.invocation-ray-of-enfeeblement-d20-lifecycle"
+        ],
+        "supportedMechanics": [
+          "Magic Action and level-2-or-higher Spell Slot spend",
+          "one creature target within 60 feet",
+          "Constitution save gate",
+          "success-side Disadvantage on the target's next attack roll until the start of the caster's next turn",
+          "failed-save Disadvantage on Strength-based D20 Tests: Strength attack rolls with explicit attack ability, Strength Ability Checks, and Strength Saving Throws",
+          "end-of-target-turn Constitution repeat save ending the active spell effect on success",
+          "caster Concentration cleanup for success and failed-save D20 lifecycle effects"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-ray-of-enfeeblement-d20-lifecycle",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt",
+            "packages/battle-runtime/battle-runtime-model.qnt",
+            "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
+            "packages/battle-runtime/battle-runtime-spell-attack.qnt",
+            "packages/battle-runtime/battle-runtime-timed-effects.qnt",
+            "packages/battle-runtime/battle-runtime-concentration.qnt",
+            "packages/battle-runtime/battle-runtime-armor-class.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-profiles-save-gates.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
+            "packages/battle-runtime/src/battle-reducer/hole-helpers.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+          ],
+          "taskRefs": [
+            "L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE"
+          ],
+          "title": "Spell save gate applies Ray of Enfeeblement D20 Test lifecycle effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-ray-of-enfeeblement.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/ray_of_enfeeblement.json",
       "unitId": "ray_of_enfeeblement"
     },

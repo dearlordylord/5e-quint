@@ -342,6 +342,16 @@ export type BattleActiveEffect =
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleSpellEffectBase & {
+      readonly kind: "abilityD20TestRollModeEndTurnSave";
+      readonly ability: Ability;
+      readonly mode: AttackRollMode;
+      readonly save: SpellConditionRepeatSave;
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "concentration" }
+      > & { readonly durationTicks: ElapsedTimeTicks };
+    })
+  | (BattleSpellEffectBase & {
       readonly kind: "possession";
       readonly save: SpellConditionRepeatSave;
       readonly expiresAt: BattleActiveEffectExpiration;

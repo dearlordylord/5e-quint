@@ -56,6 +56,7 @@ export function isTargetListSpellInvocation(
     (invocation.procedure === "scalarBuff" &&
       invocation.targeting.kind === "targetList") ||
     invocation.procedure === "rollModifier" ||
+    invocation.procedure === "abilityD20TestRollModeSaveGate" ||
     invocation.procedure === "damageReduction" ||
     (invocation.procedure === "saveGatedCondition" &&
       invocation.targeting.kind === "targetList") ||

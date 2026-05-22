@@ -195,6 +195,7 @@ export {
 } from "./spells-resolve-resources.ts";
 export {
   resolveCommandSpellAct,
+  resolveAbilityD20TestRollModeSaveGateSpellAct,
   resolveGreaseGroundHazardSpellAct,
   resolveHideousLaughterSpellAct,
   resolveSaveGateAttackRollAdvantageSpellAct,
@@ -272,6 +273,7 @@ import { resolveAttackBurstSaveDamageSpellAct } from "./spells-resolve-attack-bu
 
 import {
   resolveCommandSpellAct,
+  resolveAbilityD20TestRollModeSaveGateSpellAct,
   resolveGreaseGroundHazardSpellAct,
   resolveHideousLaughterSpellAct,
   resolveSaveGateAttackRollAdvantageSpellAct,
@@ -672,6 +674,14 @@ export function resolveSpellAct(
       invocation,
       fillSet,
       metamagicApplications: metamagicAdmission.applications,
+    });
+  }
+  if (invocation.procedure === "abilityD20TestRollModeSaveGate") {
+    return resolveAbilityD20TestRollModeSaveGateSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
     });
   }
   if (invocation.procedure === "sleepTargetAdmission") {

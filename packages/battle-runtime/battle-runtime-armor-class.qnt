@@ -1,5 +1,7 @@
 // -*- mode: Bluespec; -*-
 
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
+
 module battleRuntimeArmorClass {
   import battleRuntimeModel.* from "./battle-runtime-model"
 
@@ -66,6 +68,7 @@ module battleRuntimeArmorClass {
         | ShockingGraspOpportunityAttackDenied => false
         | GuidingBoltNextAttackAdvantage => false
         | ViciousMockeryNextAttackDisadvantage => false
+        | RayOfEnfeeblementNextAttackDisadvantage(_) => false
         | WeaponMasterySapNextAttackDisadvantage(_) => false
         | Blurred => false
         | MirrorImageDuplicates(_) => false
@@ -95,6 +98,7 @@ module battleRuntimeArmorClass {
         | InvisibilityCondition(_) => false
         | SeeInvisibleAndEthereal(_) => false
         | MindSpikeConcentrationDuration(_) => false
+        | RayOfEnfeeblementD20Lifecycle(_) => false
         | SleepPendingRepeatSave(_) => false
         | SleepUnconscious(_) => false
         | HideousLaughterEffect(_) => false

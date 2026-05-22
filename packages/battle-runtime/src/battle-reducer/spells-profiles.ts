@@ -74,6 +74,7 @@ import {
   supportedCantripSaveGateDamageProfile,
   supportedDamageAmountExpr,
   supportedPreparedSaveGateAttackRollAdvantageProfile,
+  supportedPreparedAbilityD20TestRollModeSaveGateProfile,
   supportedPreparedSaveGateConditionProfile,
   supportedPreparedSaveGateConditionImmunityProfile,
   supportedPreparedCommandProfile,
@@ -315,6 +316,13 @@ export function supportedSpellActs(
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedSaveGateAttackRollAdvantageProfile(
+        actor.combatantId,
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      supportedPreparedAbilityD20TestRollModeSaveGateProfile(
         actor.combatantId,
         spell,
         spellcasting.spellSlots,

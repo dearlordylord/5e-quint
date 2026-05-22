@@ -7,6 +7,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE BATTLE.COMMAND.OPTION_AND_NEXT_TURN BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE
@@ -132,10 +133,12 @@ import { invalidResult } from "./result-helpers.ts";
 
 import {
   combatantsAfterConcentrationSpellEffectsEndedIfNoEffects,
+  combatantsAfterConcentrationSpellEffectsEndedIfNoEffectsForSources,
   combatantsAfterHideousLaughterSpellEndedIfNoEffects,
   conditionsAfterApplyingSpellConditionEffects,
   conditionsAfterExpiringSpellConditionEffects,
   conditionHadNonSpellSourceBeforeSpellEffect,
+  spellConcentrationEffectSourceFromEffect,
 } from "./spell-condition-effects-helpers.ts";
 import { battleCreatureWithSpellCreatedHeldObjectHandStateFromActiveEffects } from "./spell-created-held-object.ts";
 
@@ -195,6 +198,7 @@ import type {
   BattleFlamingSphereTrigger,
   BattleAreaDifficultTerrainMovementFact,
   BattleAreaDifficultTerrainSource,
+  BattleAbilityD20TestRollModeEndTurnSavingThrowOutcomeHole,
   BattleGustOfWindLineDirectionChoiceHole,
   BattleGustOfWindLineMovementFact,
   BattleGustOfWindLineSavingThrowOutcomeHole,
@@ -250,6 +254,10 @@ export function resolveEndTurn(
     { readonly kind: "savingThrowOutcome" }
   >[] = [],
   spellConditionEndTurnSaves: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[] = [],
+  abilityD20TestRollModeEndTurnSaves: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[] = [],
@@ -341,8 +349,14 @@ export function resolveEndTurn(
       currentActorId(state),
       spellConditionEndTurnSaves,
     );
+  const combatantsAfterAbilityD20TestRepeatSaves =
+    applyAbilityD20TestRollModeEndTurnSaveFills(
+      combatantsAfterSpellConditionRepeatSaves,
+      currentActorId(state),
+      abilityD20TestRollModeEndTurnSaves,
+    );
   const combatantsAfterEndEffects = expireEndOfTurnEffects(
-    combatantsAfterSpellConditionRepeatSaves,
+    combatantsAfterAbilityD20TestRepeatSaves,
     currentActorId(state),
     state.initiative.round,
   );
@@ -524,12 +538,26 @@ export function expireStartOfTurnEffects(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   actorId: CombatantId,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
-  return expireActiveEffects(
-    combatants,
-    (effect) =>
-      "expiresAt" in effect &&
-      effect.expiresAt.kind === "startOfTurn" &&
-      effect.expiresAt.combatantId === actorId,
+  const shouldExpire = (effect: BattleActiveEffect) =>
+    "expiresAt" in effect &&
+    effect.expiresAt.kind === "startOfTurn" &&
+    effect.expiresAt.combatantId === actorId;
+  const expiringSpellSources = [...combatants.values()].flatMap((combatant) =>
+    combatant.activeEffects.filter(
+      (
+        effect,
+      ): effect is Extract<
+        BattleActiveEffect,
+        { readonly kind: "nextAttackRollBySelf" }
+      > => effect.kind === "nextAttackRollBySelf" && shouldExpire(effect),
+    ),
+  );
+  return combatantsAfterConcentrationSpellEffectsEndedIfNoEffectsForSources(
+    expireActiveEffects(combatants, shouldExpire),
+    expiringSpellSources.flatMap((effect) => {
+      const source = spellConcentrationEffectSourceFromEffect(effect);
+      return source === null ? [] : [source];
+    }),
   );
 }
 
@@ -747,6 +775,10 @@ type SpellConditionEndTurnSaveEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "spellConditionEndTurnSave" }
 >;
+type AbilityD20TestRollModeEndTurnSaveEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "abilityD20TestRollModeEndTurnSave" }
+>;
 type HideousLaughterEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "hideousLaughter" }
@@ -875,6 +907,69 @@ function spellConditionEndTurnSavingThrowOutcomeFor(
     { readonly kind: "savingThrowOutcome" }
   >[],
   hole: BattleSpellConditionEndTurnSavingThrowOutcomeHole,
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
+  return fills.find((fill) => fill.holeId === hole.holeId);
+}
+
+function abilityD20TestRollModeEndTurnSaveEffects(
+  combatant: BattleCreatureState | undefined,
+): readonly AbilityD20TestRollModeEndTurnSaveEffect[] {
+  return combatant === undefined
+    ? []
+    : combatant.activeEffects.filter(
+        (
+          effect,
+        ): effect is AbilityD20TestRollModeEndTurnSaveEffect =>
+          effect.kind === "abilityD20TestRollModeEndTurnSave",
+      );
+}
+
+function abilityD20TestRollModeEndTurnSavingThrowOutcomeHole(
+  targetId: CombatantId,
+  effect: AbilityD20TestRollModeEndTurnSaveEffect,
+  state?: BattleState,
+  targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[] = [],
+): BattleAbilityD20TestRollModeEndTurnSavingThrowOutcomeHole {
+  const key = [
+    "battle:ability-d20-test-end-turn-save",
+    targetId,
+    effect.sourceCombatantId,
+    effect.sourceSpellId,
+    effect.ability,
+  ]
+    .map(String)
+    .join(":");
+  return {
+    kind: "savingThrowOutcome",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: `${effect.sourceSpellId} ${effect.ability.toUpperCase()} D20 Test end-turn save`,
+    abilityD20TestRollModeEndTurnSave: {
+      targetId,
+      sourceSpellId: effect.sourceSpellId,
+      sourceCombatantId: effect.sourceCombatantId,
+      affectedAbility: effect.ability,
+      save: effect.save,
+    },
+    ability: effect.save.ability,
+    dc: effect.save.dc,
+    areaChoices: [],
+    targetRollModes:
+      state === undefined
+        ? []
+        : savingThrowRollModeProjections(state, effect.save.ability).filter(
+            (projection) => projection.targetId === targetId,
+          ),
+    targetFlatBonuses,
+  };
+}
+
+function abilityD20TestRollModeEndTurnSavingThrowOutcomeFor(
+  fills: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[],
+  hole: BattleAbilityD20TestRollModeEndTurnSavingThrowOutcomeHole,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
   return fills.find((fill) => fill.holeId === hole.holeId);
 }
@@ -3982,6 +4077,62 @@ function applySpellConditionEndTurnSaveFills(
   }, combatants);
 }
 
+function applyAbilityD20TestRollModeEndTurnSaveFills(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  actorId: CombatantId,
+  saves: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[],
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  const actor = combatants.get(actorId);
+  const effects = abilityD20TestRollModeEndTurnSaveEffects(actor);
+  if (actor === undefined || effects.length === 0) {
+    return combatants;
+  }
+  return effects.reduce((nextCombatants, effect) => {
+    const hole = abilityD20TestRollModeEndTurnSavingThrowOutcomeHole(
+      actorId,
+      effect,
+    );
+    const save = abilityD20TestRollModeEndTurnSavingThrowOutcomeFor(
+      saves,
+      hole,
+    );
+    if (save?.value.outcomes[0]?.succeeded !== true) {
+      return nextCombatants;
+    }
+    return removeAbilityD20TestRollModeEffectFromCombatants(
+      nextCombatants,
+      actorId,
+      effect,
+    );
+  }, combatants);
+}
+
+function removeAbilityD20TestRollModeEffectFromCombatants(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  targetId: CombatantId,
+  expiringEffect: AbilityD20TestRollModeEndTurnSaveEffect,
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  const target = combatants.get(targetId);
+  if (
+    target === undefined ||
+    !target.activeEffects.some((effect) => effect === expiringEffect)
+  ) {
+    return combatants;
+  }
+  return combatantsAfterConcentrationSpellEffectsEndedIfNoEffects(
+    new Map(combatants).set(targetId, {
+      ...target,
+      activeEffects: target.activeEffects.filter(
+        (effect) => effect !== expiringEffect,
+      ),
+    }),
+    expiringEffect,
+  );
+}
+
 function removeSpellConditionEffectFromCombatants(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   targetId: CombatantId,
@@ -4566,6 +4717,20 @@ export function resolveEndTurnCommand(
   const spellConditionEndTurnSaveHoles = spellConditionEndTurnSaveRequests.map(
     (request) => request.hole,
   );
+  const abilityD20TestEndTurnSaveRequests =
+    abilityD20TestRollModeEndTurnSaveEffects(actor).map((effect) => ({
+      effect,
+      hole: abilityD20TestRollModeEndTurnSavingThrowOutcomeHole(
+        actorId,
+        effect,
+        input.state,
+        actor === undefined
+          ? []
+          : wardingBondSavingThrowFlatBonusProjectionsForTarget(actor),
+      ),
+    }));
+  const abilityD20TestEndTurnSaveHoles =
+    abilityD20TestEndTurnSaveRequests.map((request) => request.hole);
   const needsDeathSavingThrow = startTurnDeathSavingThrowRequired(nextActor);
   const rechargeHole = statBlockRechargeRollHole(nextActor);
   const startTurnDamageEffects = spellTurnStartDamageEffects(nextActor);
@@ -4601,6 +4766,7 @@ export function resolveEndTurnCommand(
     ...sleepRepeatSaveHoles,
     ...hideousLaughterRepeatSaveHoles,
     ...spellConditionEndTurnSaveHoles,
+    ...abilityD20TestEndTurnSaveHoles,
     ...(needsDeathSavingThrow ? [deathSavingThrowHole(nextActorId)] : []),
     ...(rechargeHole === null ? [] : [rechargeHole]),
     ...startTurnDamageHoles,
@@ -4680,6 +4846,14 @@ export function resolveEndTurnCommand(
       return fill === undefined ? [] : [fill];
     },
   );
+  const abilityD20TestEndTurnSaves =
+    abilityD20TestEndTurnSaveRequests.flatMap((request) => {
+      const fill = abilityD20TestRollModeEndTurnSavingThrowOutcomeFor(
+        savingThrowOutcomeFills,
+        request.hole,
+      );
+      return fill === undefined ? [] : [fill];
+    });
   const missingSleepRepeatSaveHoles = sleepRepeatSaveRequests.flatMap(
     (request) =>
       sleepRepeatSavingThrowOutcomeFor(
@@ -4720,6 +4894,20 @@ export function resolveEndTurnCommand(
   if (missingSpellConditionEndTurnSaveHoles.length > 0) {
     return needsHolesResult(input.state, input.subject, [
       ...missingSpellConditionEndTurnSaveHoles,
+    ]);
+  }
+  const missingAbilityD20TestEndTurnSaveHoles =
+    abilityD20TestEndTurnSaveRequests.flatMap((request) =>
+      abilityD20TestRollModeEndTurnSavingThrowOutcomeFor(
+        savingThrowOutcomeFills,
+        request.hole,
+      ) === undefined
+        ? [request.hole]
+        : [],
+    );
+  if (missingAbilityD20TestEndTurnSaveHoles.length > 0) {
+    return needsHolesResult(input.state, input.subject, [
+      ...missingAbilityD20TestEndTurnSaveHoles,
     ]);
   }
   const startTurnDamageRolls = startTurnDamageRequests.flatMap((request) => {
@@ -4847,6 +5035,7 @@ export function resolveEndTurnCommand(
       ...sleepRepeatSaveHoles,
       ...hideousLaughterRepeatSaveHoles,
       ...spellConditionEndTurnSaveHoles,
+      ...abilityD20TestEndTurnSaveHoles,
       ...startTurnSaveHoles,
       ...startTurnHideousLaughterDamageRepeatSaveHoles,
     ].map((hole) => hole.holeId),
@@ -4869,6 +5058,7 @@ export function resolveEndTurnCommand(
     sleepRepeatSaves.length +
       hideousLaughterRepeatSaves.length +
       spellConditionEndTurnSaves.length +
+      abilityD20TestEndTurnSaves.length +
       startTurnSaves.length +
       startTurnHideousLaughterDamageRepeatSaves.length
   ) {
@@ -4912,6 +5102,22 @@ export function resolveEndTurnCommand(
   }
   for (const request of spellConditionEndTurnSaveRequests) {
     const fill = spellConditionEndTurnSavingThrowOutcomeFor(
+      savingThrowOutcomeFills,
+      request.hole,
+    );
+    if (fill === undefined) {
+      continue;
+    }
+    const validation = validateSpellConditionEndTurnSavingThrowOutcome(
+      fill.value,
+      actorId,
+    );
+    if (validation !== null) {
+      return invalidResult(input.state, "invalidFill", validation);
+    }
+  }
+  for (const request of abilityD20TestEndTurnSaveRequests) {
+    const fill = abilityD20TestRollModeEndTurnSavingThrowOutcomeFor(
       savingThrowOutcomeFills,
       request.hole,
     );
@@ -5112,6 +5318,7 @@ export function resolveEndTurnCommand(
     sleepRepeatSaves,
     hideousLaughterRepeatSaves,
     spellConditionEndTurnSaves,
+    abilityD20TestEndTurnSaves,
     startTurnDamageRolls,
     startTurnSaves,
     startTurnHideousLaughterDamageRepeatSaves,

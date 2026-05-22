@@ -1,3 +1,4 @@
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // Attack roll mode/hole/ongoing-feature helpers extracted from
 // battle-reducer.ts. Cluster T (attack_roll). Mechanical extraction — no
 // behavior change. Cycle #20 resolved by importing the shared ongoing-feature
@@ -16,6 +17,7 @@ import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
   abilityModifier,
   difficultyClass,
+  type Ability,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
@@ -44,6 +46,7 @@ import {
   ATTACK_ROLL_HOLE_ID,
   ATTACK_ROLL_HOLE_INSTANCE,
   type AttackRollFeatureActivation,
+  type BattleActiveEffect,
   type BattleAttackRollHole,
   type BattleDamageRollHole,
   type BattleAttackRollResult,
@@ -91,6 +94,10 @@ import {
   ongoingFeatureProfileHasExtensionTrigger,
 } from "./ongoing-feature-helpers.ts";
 import { battleCreatureType } from "./domain-helpers.ts";
+import {
+  combatantsAfterConcentrationSpellEffectsEndedIfNoEffectsForSources,
+  spellConcentrationEffectSourceFromEffect,
+} from "./spell-condition-effects-helpers.ts";
 import {
   WEAPON_MASTERY_TOPPLE_SAVE_HOLE_ID,
   WEAPON_MASTERY_TOPPLE_SAVE_HOLE_INSTANCE,
@@ -217,6 +224,7 @@ function attackRollSourceFlags(
     ) ||
     activeEffectGrantsAttackRollMode(state, attacker, target, "advantage", {
       attackerCanSeeTarget,
+      attack,
     }) ||
     ongoingFeatureGrantsAttackRollMode(attacker, target, "advantage", attack);
   const hasDisadvantage =
@@ -228,6 +236,7 @@ function attackRollSourceFlags(
     hasCondition(attacker?.conditions ?? EMPTY_CONDITION_STATE, "poisoned") ||
     activeEffectGrantsAttackRollMode(state, attacker, target, "disadvantage", {
       attackerCanSeeTarget,
+      attack,
       targetSpatialFacts,
     }) ||
     ongoingFeatureGrantsAttackRollMode(
@@ -619,6 +628,7 @@ export function activeEffectGrantsAttackRollMode(
   target: BattleCreatureState | undefined,
   mode: AttackRollMode,
   context: {
+    readonly attack?: SupportedAttackActionOption | undefined;
     readonly attackerCanSeeTarget?: boolean;
     readonly targetSpatialFacts?: readonly BattleTargetSpatialFact[];
   } = {},
@@ -634,6 +644,8 @@ export function activeEffectGrantsAttackRollMode(
     attacker?.activeEffects.some(
       (effect) =>
         (effect.kind === "nextAttackRollBySelf" ||
+          (effect.kind === "abilityD20TestRollModeEndTurnSave" &&
+            attackUsesAbility(context.attack, effect.ability)) ||
           (effect.kind === "selfAttackRollAndAbilityCheckRollMode" &&
             !ongoingSpellEffectSuppressedByAntimagicField(state, {
               kind: "spellActiveEffect",
@@ -679,6 +691,19 @@ function attackerPerceivesBlurredTargetWithBypassSense(
       fact.attackerId === attackerId &&
       fact.targetId === targetId,
   );
+}
+
+function attackUsesAbility(
+  attack: SupportedAttackActionOption | undefined,
+  ability: Ability,
+): boolean {
+  if (attack?.kind === "weapon") {
+    return attack.ability === ability;
+  }
+  if (attack?.kind === "unarmedStrike") {
+    return attack.attackAbility === ability;
+  }
+  return false;
 }
 
 export function attackAbilityMatchesModifier(
@@ -1118,18 +1143,34 @@ export function consumeSelfAttackRollEffects(
   if (attacker === undefined) {
     return state;
   }
+  const consumed = attacker.activeEffects.filter(
+    (
+      effect,
+    ): effect is Extract<
+      BattleActiveEffect,
+      { readonly kind: "nextAttackRollBySelf" }
+    > => effect.kind === "nextAttackRollBySelf",
+  );
   const activeEffects = attacker.activeEffects.filter(
     (effect) => effect.kind !== "nextAttackRollBySelf",
   );
   if (activeEffects.length === attacker.activeEffects.length) {
     return state;
   }
+  const combatants = new Map(state.combatants).set(attackerId, {
+    ...attacker,
+    activeEffects,
+  });
   return {
     ...state,
-    combatants: new Map(state.combatants).set(attackerId, {
-      ...attacker,
-      activeEffects,
-    }),
+    combatants:
+      combatantsAfterConcentrationSpellEffectsEndedIfNoEffectsForSources(
+        combatants,
+        consumed.flatMap((effect) => {
+          const source = spellConcentrationEffectSourceFromEffect(effect);
+          return source === null ? [] : [source];
+        }),
+      ),
   };
 }
 

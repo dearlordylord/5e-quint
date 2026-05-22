@@ -54,6 +54,17 @@ export type SpellConcentrationEffectSource = {
   readonly sourceSpellId: string;
 };
 
+export function spellConcentrationEffectSourceFromEffect(
+  effect: BattleActiveEffect,
+): SpellConcentrationEffectSource | null {
+  return "sourceSpellId" in effect
+    ? {
+        sourceCombatantId: effect.sourceCombatantId,
+        sourceSpellId: effect.sourceSpellId,
+      }
+    : null;
+}
+
 export type BattlePossessionAttemptInput = {
   readonly state: BattleState;
   readonly sourceCombatantId: CombatantId;
@@ -725,6 +736,28 @@ export function combatantsAfterConcentrationSpellEffectsEndedIfNoEffects(
     ...sourceCombatant,
     concentration: null,
   });
+}
+
+export function combatantsAfterConcentrationSpellEffectsEndedIfNoEffectsForSources(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  sources: readonly SpellConcentrationEffectSource[],
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  const uniqueSources = [
+    ...new Map(
+      sources.map((source) => [
+        `${source.sourceCombatantId}\u0000${source.sourceSpellId}`,
+        source,
+      ]),
+    ).values(),
+  ];
+  return uniqueSources.reduce(
+    (nextCombatants, source) =>
+      combatantsAfterConcentrationSpellEffectsEndedIfNoEffects(
+        nextCombatants,
+        source,
+      ),
+    combatants,
+  );
 }
 
 function isHideousLaughterEffect(
