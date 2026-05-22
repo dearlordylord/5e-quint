@@ -125,10 +125,17 @@ const durableSocialKnowledgeClosureKind =
 const laterLevelOnlyClosureKind = battleReadinessClosureKind.laterLevelOnly;
 const outsideBattleRuntimeClosureKind =
   battleReadinessClosureKind.outsideBattleRuntime;
+const tableSpatialDerivationClosureKind =
+  battleReadinessClosureKind.tableSpatialDerivation;
 const companionControlBoundaryClosureKind =
   battleReadinessClosureKind.companionControlBoundary;
 const characterFactRuntimeDetachedSplitClosureKind =
   battleReadinessClosureKind.characterFactRuntimeDetachedSplit;
+const strictClosedResidualClosureKinds = new Set([
+  outsideBattleRuntimeClosureKind,
+  tableSpatialDerivationClosureKind,
+  battleReadinessClosureKind.outsideRuntimePresentationExploration,
+]);
 const d20RollModeResidualTerms = [
   "ability-check roll-mode",
   "finding advantage",
@@ -310,6 +317,28 @@ function hasOnlyOutsideBattleRuntimeResiduals(claim) {
   );
 }
 
+function hasOnlyStrictClosedResiduals(claim) {
+  if (claim?.tag !== "profile-subset-supported") return false;
+  return (
+    claim.deferredMechanics.length > 0 &&
+    claim.deferredMechanics.every((entry) => {
+      const closureKind = entry.battleReadinessClosure?.kind;
+      return (
+        closureKind !== undefined &&
+        strictClosedResidualClosureKinds.has(closureKind)
+      );
+    })
+  );
+}
+
+function hasOutsideBattleRuntimeResidual(claim) {
+  if (claim?.tag !== "profile-subset-supported") return false;
+  return claim.deferredMechanics.some(
+    (entry) =>
+      entry.battleReadinessClosure?.kind === outsideBattleRuntimeClosureKind,
+  );
+}
+
 function hasCharacterFactRuntimeDetachedSplit(claim) {
   if (claim?.tag === "profile-subset-supported") {
     return claim.deferredMechanics.some(
@@ -372,6 +401,17 @@ function strictStatusForUnit(unit) {
       reason:
         closureReasonForClaim(claim) ||
         "The remaining profile subset residuals are closed outside promoted battle-runtime ownership.",
+    };
+  }
+  if (hasOnlyStrictClosedResiduals(claim)) {
+    const status = hasOutsideBattleRuntimeResidual(claim)
+      ? "closed-outside-battle-runtime-boundary"
+      : "closed-runtime-detached-table-adjudication";
+    return {
+      status,
+      reason:
+        closureReasonForClaim(claim) ||
+        "The remaining profile subset residuals are closed at explicit non-runtime or table-owned boundaries.",
     };
   }
   if (

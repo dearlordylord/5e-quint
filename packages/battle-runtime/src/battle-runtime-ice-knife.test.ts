@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-ray-of-enfeeblement-damage-penalty
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY
 import {
   startBattleRight,
   requireResolved,
