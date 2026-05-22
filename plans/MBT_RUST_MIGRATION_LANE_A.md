@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "MBTRUST-A-SOURCE-OF-TRUTH-DRY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Generator Readiness Source Of Truth DRY Pass"
     },
     {
@@ -135,7 +135,7 @@ Every task must include:
 
 ### Task 1 - MBTRUST-A-SOURCE-OF-TRUTH-DRY - Generator Readiness Source Of Truth DRY Pass
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
