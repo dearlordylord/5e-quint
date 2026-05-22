@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Enlarge Reduce Creature Runtime Support"
     },
     {
@@ -167,7 +167,7 @@ Every task must include:
 | 6 | L12G-MISSING-SUGGESTION - Suggestion Definition And Closure | done | none | none | SRD Suggestion; table-owned/player-choice terminology | Completed Surface definition and runtime-detached closure. |
 | 7 | L12G-MISSING-ZONE-OF-TRUTH - Zone Of Truth Definition And Closure | done | none | none | SRD Zone of Truth; truth/knowledge/table adjudication boundaries | Completed Surface definition and runtime-detached closure. |
 | 8 | L12G-RECURSIVE-TAIL-LANE-A - Lane A Recursive Planning Tail | done | completed ready Lane A tasks | L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME, L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME, L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME | Refreshed Unit metrics and checker-readable follow-up splits | Completed by adding the next concrete Lane A frontier batch. |
-| 9 | L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME - Enlarge Reduce Creature Runtime Support | ready-for-research | L12G-RECURSIVE-TAIL-LANE-A | L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH, L12G-RECURSIVE-TAIL-LANE-A-2 | SRD Enlarge/Reduce creature branch; current unsupported-profile split | Next executable Enlarge/Reduce creature branch research/implementation task. |
+| 9 | L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME - Enlarge Reduce Creature Runtime Support | done | L12G-RECURSIVE-TAIL-LANE-A | L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH, L12G-RECURSIVE-TAIL-LANE-A-2 | SRD Enlarge/Reduce creature branch; current unsupported-profile split | Next executable Enlarge/Reduce creature branch research/implementation task. |
 | 10 | L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH - Enlarge Reduce Object Branch | blocked | L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME | L12G-RECURSIVE-TAIL-LANE-A-2 | SRD Enlarge/Reduce object and worn/carried item text; object/item lifecycle boundaries | Blocked until the creature branch establishes the shared active effect and item-size boundary. |
 | 11 | L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME - Enthrall Perception Penalty Runtime Support | ready-for-research | L12G-RECURSIVE-TAIL-LANE-A | L12G-RECURSIVE-TAIL-LANE-A-2 | SRD Enthrall; target-list, Saving Throw, fixed d20-roll modifier, Passive Check projection boundaries | Independent executable Enthrall Perception subset research/implementation task. |
 | 12 | L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME - Levitate Creature Runtime Support | ready-for-research | L12G-RECURSIVE-TAIL-LANE-A | L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH, L12G-RECURSIVE-TAIL-LANE-A-2 | SRD Levitate creature branch; movement and table/spatial witness boundaries | Independent executable Levitate creature branch research/implementation task. |
@@ -289,7 +289,7 @@ Verification completed:
 
 ### Task 9 - L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME - Enlarge Reduce Creature Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: L12G-RECURSIVE-TAIL-LANE-A
 
