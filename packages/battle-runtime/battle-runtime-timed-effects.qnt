@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE
 
 module battleRuntimeTimedEffects {
   import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"

@@ -1,8 +1,8 @@
 {
   "summary": {
     "total": 72,
-    "covered": 60,
-    "open": 7,
+    "covered": 61,
+    "open": 6,
     "nonSemantic": 5,
     "byRuntime": {
       "shared-algebras": 1,
@@ -12,9 +12,9 @@
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 60,
+      "covered": 61,
       "needs-qnt-owner": 0,
-      "needs-parity-witness": 6,
+      "needs-parity-witness": 5,
       "needs-surface-evidence": 1,
       "boundary-only": 4,
       "unsupported-by-admission": 1
@@ -236,26 +236,36 @@
       "title": "Battle spell Hit Point restoration target selection, healing-roll holes, zero-Hit-Point recovery, and multi-target healing projection"
     },
     {
-      "followUpTaskIds": [
-        "RKBC-NONFEATURE-DIRECT-CONDITION-LIFECYCLE-WITNESS"
-      ],
       "id": "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
       "kind": "active-effect-lifecycle",
-      "parityWitnesses": [],
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-invisibility.test.ts"
+        }
+      ],
       "profiles": [
         "spell.invocation-direct-condition"
       ],
       "qntOwners": [
         "packages/battle-runtime/battle-runtime.qnt",
-        "packages/battle-runtime/battle-runtime-sanctuary.qnt"
+        "packages/battle-runtime/battle-runtime-sanctuary.qnt",
+        "packages/battle-runtime/battle-runtime-concentration.qnt",
+        "packages/battle-runtime/battle-runtime-timed-effects.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts",
-        "packages/battle-runtime/src/battle-reducer/sanctuary-targeting-interdiction.ts"
+        "packages/battle-runtime/src/battle-reducer/spells-profiles-direct-condition.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/sanctuary-targeting-interdiction.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
       ],
-      "status": "needs-parity-witness",
-      "surfaceEvidence": [],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Invisibility"
+      ],
       "title": "Battle direct spell-owned condition application, concentration cleanup, duration cleanup, and target-action early end"
     },
     {

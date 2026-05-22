@@ -2846,8 +2846,8 @@
     },
     "rulesKernelCoveredProfileJoin": {
       "denominator": 84,
-      "numerator": 72,
-      "percent": "85.7%"
+      "numerator": 73,
+      "percent": "86.9%"
     },
     "rulesKernelProfileJoin": {
       "denominator": 84,
@@ -2856,8 +2856,8 @@
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 112,
-      "numerator": 96,
-      "percent": "85.7%"
+      "numerator": 97,
+      "percent": "86.6%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 168,
@@ -5420,8 +5420,8 @@
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
         "denominator": 112,
-        "numerator": 96,
-        "percent": "85.7%"
+        "numerator": 97,
+        "percent": "86.6%"
       }
     },
     "units": [
@@ -6786,15 +6786,15 @@
         "unitId": "inflict_wounds"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
                 "obligationId": "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
                 "runtime": "battle",
-                "status": "needs-parity-witness",
+                "status": "covered",
                 "title": "Battle direct spell-owned condition application, concentration cleanup, duration cleanup, and target-action early end"
               }
             ],
