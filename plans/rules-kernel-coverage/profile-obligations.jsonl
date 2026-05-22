@@ -103,3 +103,4 @@
 {"profileId":"character-creation.eldritch-invocation-choice","obligationIds":["CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE"]}
 {"profileId":"spell.invocation-web-restraint-hazard","obligationIds":["BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"spell.invocation-dragons-breath-initial","obligationIds":["BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE"]}
+{"profileId":"spell.invocation-dragons-breath-granted-action","obligationIds":["BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION"]}

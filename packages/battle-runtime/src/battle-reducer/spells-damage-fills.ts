@@ -76,6 +76,7 @@ import {
   type BattleSpellHealingRollHole,
   type BattleSpellSavingThrowOutcomeHole,
   type BattleSpellSkillChoiceHole,
+  type BattleSpellTargetAbilityChoicesHole,
   type BattleThaumaturgyActiveOneMinuteEffectCountHole,
   type BattleSpellTargetAllocation,
   type BattleSpellTargetListHole,
@@ -729,6 +730,47 @@ export function spellRollModifierAbilityChoiceHole(
       `battle:spell:ability-choice:${invocation.spell.id}`,
     ),
     label: `${invocation.spell.name} ability`,
+    spell: invocation,
+    choices: invocation.abilityChoices ?? [],
+  };
+}
+
+export function rollModifierUsesTargetAbilityChoices(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "rollModifier" }
+  >,
+): boolean {
+  return (
+    invocation.abilityChoices !== null &&
+    invocation.abilityChoiceApplication === "perTarget" &&
+    invocation.targeting.kind === "targetList" &&
+    invocation.targeting.maxTargets > 1
+  );
+}
+
+export function spellRollModifierTargetAbilityChoicesHoleId(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "rollModifier" }
+  >,
+): BattleHoleId {
+  return holeId(`battle:spell:target-ability-choices:${invocation.spell.id}`);
+}
+
+export function spellRollModifierTargetAbilityChoicesHole(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "rollModifier" }
+  >,
+): BattleSpellTargetAbilityChoicesHole {
+  return {
+    kind: "targetAbilityChoices",
+    holeId: spellRollModifierTargetAbilityChoicesHoleId(invocation),
+    holeInstanceKey: holeInstanceKey(
+      `battle:spell:target-ability-choices:${invocation.spell.id}`,
+    ),
+    label: `${invocation.spell.name} abilities by target`,
     spell: invocation,
     choices: invocation.abilityChoices ?? [],
   };

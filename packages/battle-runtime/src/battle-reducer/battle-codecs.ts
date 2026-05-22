@@ -1106,6 +1106,43 @@ const SpellFailedSaveConditionEffectSchema = Schema.Union(
   SpellFailedSaveConditionChoiceEffectSchema,
 );
 
+const RollModifierSpellTargetingSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("targetList"),
+    minTargets: Schema.Literal(1),
+    maxTargets: Schema.Number,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("targetList"),
+    minTargets: Schema.Literal(1),
+    maxTargets: Schema.Literal("allLegalTargets"),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("selfAndChosenLegalTargets"),
+    minTargets: Schema.Literal(1),
+  }),
+);
+const RollModifierSpellSaveGateSchema = Schema.NullOr(
+  Schema.Struct({
+    ability: AbilitySchema,
+    dc: DcSourceSchema,
+  }),
+);
+const RollModifierSpellInvocationBaseSchemaFields = {
+  access: Schema.Union(PreparedSpellAccessSchema, ClassCantripSpellAccessSchema),
+  resource: Schema.Union(
+    SpellSlotInvocationResourceSchema,
+    NoSpellInvocationResourceSchema,
+  ),
+  procedure: Schema.Literal("rollModifier"),
+  spell: BattleRuntimeObjectSchema,
+  actionCost: Schema.Literal("magicAction"),
+  targeting: RollModifierSpellTargetingSchema,
+  effect: BattleRuntimeObjectSchema,
+  rangeFeet: MovementFeet,
+  saveGate: RollModifierSpellSaveGateSchema,
+} as const;
+
 // Schema.Union preserves the runtime parser but infers a wider structural
 // union for nested BattleRuntimeObjectSchema fields than the authored
 // SupportedSpellInvocation variants. The variant discriminants below cover
@@ -1911,47 +1948,20 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       rangeFeet: MovementFeet,
     }),
     Schema.Struct({
-      access: Schema.Union(
-        PreparedSpellAccessSchema,
-        ClassCantripSpellAccessSchema,
-      ),
-      resource: Schema.Union(
-        SpellSlotInvocationResourceSchema,
-        NoSpellInvocationResourceSchema,
-      ),
-      procedure: Schema.Literal("rollModifier"),
-      spell: BattleRuntimeObjectSchema,
-      actionCost: Schema.Literal("magicAction"),
-      targeting: Schema.Union(
-        Schema.Struct({
-          kind: Schema.Literal("targetList"),
-          minTargets: Schema.Literal(1),
-          maxTargets: Schema.Number,
-        }),
-        Schema.Struct({
-          kind: Schema.Literal("targetList"),
-          minTargets: Schema.Literal(1),
-          maxTargets: Schema.Literal("allLegalTargets"),
-        }),
-        Schema.Struct({
-          kind: Schema.Literal("selfAndChosenLegalTargets"),
-          minTargets: Schema.Literal(1),
-        }),
-      ),
-      effect: BattleRuntimeObjectSchema,
-      rangeFeet: MovementFeet,
-      saveGate: Schema.NullOr(
-        Schema.Struct({
-          ability: AbilitySchema,
-          dc: DcSourceSchema,
-        }),
-      ),
+      ...RollModifierSpellInvocationBaseSchemaFields,
       skillChoices: Schema.NullOr(
         Schema.Array(Schema.Literal(...BATTLE_SURFACE_SKILLS)),
       ),
-      abilityChoices: Schema.NullOr(
-        Schema.Array(Schema.Literal(...BATTLE_SURFACE_ABILITIES)),
-      ),
+      abilityChoices: Schema.Literal(null),
+      abilityChoiceApplication: Schema.optionalWith(Schema.Never, {
+        exact: true,
+      }),
+    }),
+    Schema.Struct({
+      ...RollModifierSpellInvocationBaseSchemaFields,
+      skillChoices: Schema.Literal(null),
+      abilityChoices: Schema.Array(Schema.Literal(...BATTLE_SURFACE_ABILITIES)),
+      abilityChoiceApplication: Schema.Literal("single", "perTarget"),
     }),
     Schema.Struct({
       access: ClassCantripSpellAccessSchema,

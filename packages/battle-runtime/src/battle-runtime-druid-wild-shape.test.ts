@@ -9,8 +9,11 @@ import {
   activeDruidWildShapeForm,
   activeDruidWildShapeEffect,
   battleDruidWildShapeKnownForms,
+  battleShapeShiftedRuntimeState,
   combatantHasActiveDruidWildShape,
+  combatantIsShapeShifted,
   parseSupportedUnitFeatureProfile,
+  revertShapeShiftedCombatantToTrueForm,
   startBattle,
   type BattleCreatureState,
   type BattleState,
@@ -297,6 +300,56 @@ test("projects automatic reversion when Wild Shape ends from Incapacitated", () 
   const snapshot = snapshotCreature(snapshotBattle(state), druidId);
   expect(snapshot.size).toBe("medium");
   expect(Number(snapshot.movement.speedFeet)).toBe(30);
+});
+
+test("shared shape-shift owner projects and reverts active Wild Shape", () => {
+  const initial = druidWildShapeBattle();
+  const assumed = requireResolved(
+    resolveDruidWildShape(
+      initial,
+      wildShapeSubject(initial, {
+        action: "assumeForm",
+        formStatBlockId: ridingHorseId,
+      }),
+    ),
+  );
+  const shapeShiftedDruid = requireCharacter(assumed.state, druidId);
+  expect(combatantIsShapeShifted(shapeShiftedDruid)).toBe(true);
+  expect(battleShapeShiftedRuntimeState(shapeShiftedDruid)).toMatchObject({
+    kind: "shapeShifted",
+    trueForm: { kind: "combatantBaseState" },
+    source: { kind: "classFeature" },
+    replacementForm: { kind: "runtimeCreatureForm", creatureSize: "large" },
+    reversionOwner: { kind: "druidWildShapeActiveEffect" },
+  });
+
+  const result = revertShapeShiftedCombatantToTrueForm({
+    state: assumed.state,
+    combatantId: druidId,
+  });
+  expect(result.tag).toBe("reverted");
+  const revertedState = result.state;
+
+  const revertedDruid = requireCharacter(revertedState, druidId);
+  expect(combatantIsShapeShifted(revertedDruid)).toBe(false);
+  expect(activeDruidWildShapeForm(revertedDruid)).toBe(null);
+  const snapshot = snapshotCreature(snapshotBattle(revertedState), druidId);
+  expect(snapshot.size).toBe("medium");
+  expect(Number(snapshot.movement.speedFeet)).toBe(30);
+});
+
+test("shape-shift reversion reports a missing combatant distinctly", () => {
+  const initial = druidWildShapeBattle();
+  const missingId = combatantId("missing-shape-shift-combatant");
+  const result = revertShapeShiftedCombatantToTrueForm({
+    state: initial,
+    combatantId: missingId,
+  });
+
+  expect(result).toMatchObject({
+    tag: "missingCombatant",
+    combatantId: missingId,
+  });
 });
 
 test("rejects level 18 Wild Shape until Beast Spells is modeled", () => {

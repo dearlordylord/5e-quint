@@ -41,6 +41,7 @@ import { spellAttackSequencePartName } from "./spells-profile-shared.ts";
 import { representedMovementSpeedKinds } from "./movement-speed.ts";
 import {
   carefulSpellProtectedTargetsHole,
+  rollModifierUsesTargetAbilityChoices,
   scalarBuffInitialHoles,
   commandOptionChoiceHole,
   heightenedSpellTargetChoiceHole,
@@ -54,6 +55,7 @@ import {
   spellAreaChoiceHole,
   spellRollModifierAbilityChoiceHole,
   spellRollModifierSkillChoiceHole,
+  spellRollModifierTargetAbilityChoicesHole,
   spellSavingThrowAbility,
   spellSavingThrowTargeting,
   spellSavingThrowOutcomeHole,
@@ -496,7 +498,9 @@ export function discoverSupportedSpellInvocations(
                   : [spellRollModifierSkillChoiceHole(invocation)]),
                 ...(invocation.abilityChoices === null
                   ? []
-                  : [spellRollModifierAbilityChoiceHole(invocation)]),
+                  : rollModifierUsesTargetAbilityChoices(invocation)
+                    ? [spellRollModifierTargetAbilityChoicesHole(invocation)]
+                    : [spellRollModifierAbilityChoiceHole(invocation)]),
               ];
         const castActs =
           initialHoles.length === 0
@@ -1168,10 +1172,7 @@ export function discoverSupportedSpellInvocations(
                 initialHoles: [targetHole],
               },
             ];
-      return [
-        ...castActs,
-        ...readiedSpellAct(state, actorId, invocation),
-      ];
+      return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
     },
   );
   return acts
@@ -1185,7 +1186,12 @@ export function discoverSupportedSpellInvocations(
       }),
     )
     .map((act) =>
-      spellCastReactionFactsAct(actorId, invocations, counterspellReactors, act),
+      spellCastReactionFactsAct(
+        actorId,
+        invocations,
+        counterspellReactors,
+        act,
+      ),
     );
 }
 

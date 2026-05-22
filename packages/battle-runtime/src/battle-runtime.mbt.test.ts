@@ -3628,6 +3628,11 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
   if (hole.kind === "levitateInitialRise") {
     return ["LevitateInitialRise"];
   }
+  if (hole.kind === "targetAbilityChoices") {
+    throw new Error(
+      "Battle runtime MBT does not model target ability choices holes.",
+    );
+  }
   return [
     Match.value(hole).pipe(
       Match.when({ kind: "targetChoice" }, () => "TargetChoice" as const),

@@ -23,6 +23,7 @@ export const BATTLE_TRACE_HOLE_KINDS = [
   "rolledDice",
   "skillChoice",
   "abilityChoice",
+  "targetAbilityChoices",
   "conditionChoice",
   "commandOptionChoice",
   "selfTransformationModeChoice",

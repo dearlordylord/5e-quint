@@ -213,6 +213,12 @@ export const CastTimeChoiceAbilitySchema = Schema.Struct({
 export const AbilityFilterSchema = Schema.Union(
   nonEmpty(AbilitySchema),
   makeHoleSchema(CastTimeChoiceAbilitySchema),
+  Schema.Struct({
+    kind: Schema.Literal("per_target_hole"),
+    holeId: HoleIdSchema,
+    value: CastTimeChoiceAbilitySchema,
+    label: optionalExact(HoleLabelSchema),
+  }),
 );
 
 export const DamageTypeRefBaseSchema = Schema.Union(

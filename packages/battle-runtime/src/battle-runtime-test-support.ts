@@ -417,6 +417,7 @@ export function subjectName(
   | "movableZoneRam"
   | "jumpMovementReplacement"
   | "levitateAltitudeControl"
+  | "dragonsBreathExhale"
   | "replaceSelfTransformationMode"
   | "commandGrovel"
   | "commandDrop"

@@ -2203,7 +2203,7 @@ describe("SRD Unit catalog boundary", () => {
             affects: "self_roll",
             on: ["ability_check"],
             abilityFilter: {
-              kind: "hole",
+              kind: "per_target_hole",
               holeId: "enhance_ability_chosen_ability",
               label: "chosen ability",
               value: {
@@ -5116,6 +5116,21 @@ describe("SRD Unit catalog boundary", () => {
           family: "failed_ability_check_resource_boost",
           spends: { resourceUnitId: "fighter_second_wind" },
         },
+      });
+    }
+  });
+
+  test("authors Fighter Champion feature grants through canonical Unit ids", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const champion = result.catalog.requireUnit("subclass_fighter_champion");
+
+      expect(champion).toMatchObject({
+        kind: "subclass",
+        className: "fighter",
+        featureGrants: [{ level: 3, unitId: "fighter_improved_critical" }],
       });
     }
   });
