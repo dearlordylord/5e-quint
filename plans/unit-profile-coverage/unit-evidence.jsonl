@@ -287,3 +287,4 @@
 {"unitId":"prayer_of_healing","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
 {"unitId":"spike_growth","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME","ownerPath":"packages/battle-runtime/src/unit-profile-admission-spike-growth-movement-hazard.test.ts"}}
 {"unitId":"see_invisibility","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT","ownerPath":"packages/battle-runtime/src/unit-profile-admission-see-invisibility.test.ts"}}
+{"unitId":"ray_of_enfeeblement","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE","ownerPath":"packages/battle-runtime/src/unit-profile-admission-ray-of-enfeeblement.test.ts"}}

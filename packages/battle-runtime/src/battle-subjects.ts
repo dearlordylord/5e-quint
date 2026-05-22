@@ -167,6 +167,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "magicWeaponEnhancement",
   "afterHitDamage",
   "afterHitSaveGatedCondition",
+  "abilityD20TestRollModeSaveGate",
   "afterHitTimedDamageAndSave",
   "afterHitDamageAndIllumination",
   "markedDamageRider",

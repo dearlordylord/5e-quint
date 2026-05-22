@@ -1,6 +1,8 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE
 
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
+
 module battleRuntimeTimedEffects {
   import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
@@ -27,6 +29,7 @@ module battleRuntimeTimedEffects {
   ): Set[ActiveEffect] =
     effects.filter(effect => match effect {
       | WeaponMasterySapNextAttackDisadvantage(data) => data.source != actor
+      | RayOfEnfeeblementNextAttackDisadvantage(data) => data.source != actor
       | HeatMetalHoldingWearingPenalty(data) => data.expiresAtActor != actor
       | _ => true
     })

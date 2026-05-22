@@ -200,8 +200,8 @@
         "accepted": 377,
         "accepted-no-battle-effect": 137,
         "owner-evidence-required": 2,
-        "partial-battle-runtime": 16,
-        "battle-runtime-required": 24
+        "partial-battle-runtime": 18,
+        "battle-runtime-required": 22
       }
     },
     "levelOneClassContainers": 12,
@@ -23434,11 +23434,11 @@
         "state": "not-installed",
         "unitId": "ray_of_enfeeblement"
       },
-      "unitProfileDisposition": "unsupported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE, L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY: L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE owns Promote Ray of Enfeeblement's cast/save/lifecycle branch: Magic Action and level-2-or-higher Spell Slot spend, one creature target within 60 feet, Constitution save, success-side Disadvantage on the target's next attack roll until the start of the caster's next turn, failed-save Disadvantage on Strength-based D20 Tests, end-of-target-turn Constitution repeat saves ending the spell on success, and Concentration cleanup without modeling the damage-roll penalty in this slice. Required output: Profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for cast/save/lifecycle and Strength D20 roll-mode behavior while leaving damage-roll subtraction to the separate damage pipeline task.; L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY owns Promote Ray of Enfeeblement's failed-save source-side damage penalty: subtract 1d8 from all damage rolls made by the affected target while the spell effect is active, covering attack, spell, and other battle-owned damage rolls through one generic spell damage-roll penalty hole/fill path that applies before target-side Resistance, damage reductions, Concentration saves, and damage disposition. Required output: Supported-profile or profile-subset-supported Unit claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Ray damage-roll subtraction without duplicating damage state.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY: L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY owns Promote Ray of Enfeeblement's failed-save source-side damage penalty: subtract 1d8 from all damage rolls made by the affected target while the spell effect is active, covering attack, spell, and other battle-owned damage rolls through one generic spell damage-roll penalty hole/fill path that applies before target-side Resistance, damage reductions, Concentration saves, and damage disposition. Required output: Supported-profile or profile-subset-supported Unit claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Ray damage-roll subtraction without duplicating damage state.",
+      "battleReadinessStatus": "partial-battle-runtime"
     },
     {
       "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_spider_climb",
@@ -27257,11 +27257,11 @@
         "state": "not-installed",
         "unitId": "ray_of_enfeeblement"
       },
-      "unitProfileDisposition": "unsupported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE, L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY: L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE owns Promote Ray of Enfeeblement's cast/save/lifecycle branch: Magic Action and level-2-or-higher Spell Slot spend, one creature target within 60 feet, Constitution save, success-side Disadvantage on the target's next attack roll until the start of the caster's next turn, failed-save Disadvantage on Strength-based D20 Tests, end-of-target-turn Constitution repeat saves ending the spell on success, and Concentration cleanup without modeling the damage-roll penalty in this slice. Required output: Profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for cast/save/lifecycle and Strength D20 roll-mode behavior while leaving damage-roll subtraction to the separate damage pipeline task.; L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY owns Promote Ray of Enfeeblement's failed-save source-side damage penalty: subtract 1d8 from all damage rolls made by the affected target while the spell effect is active, covering attack, spell, and other battle-owned damage rolls through one generic spell damage-roll penalty hole/fill path that applies before target-side Resistance, damage reductions, Concentration saves, and damage disposition. Required output: Supported-profile or profile-subset-supported Unit claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Ray damage-roll subtraction without duplicating damage state.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY: L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY owns Promote Ray of Enfeeblement's failed-save source-side damage penalty: subtract 1d8 from all damage rolls made by the affected target while the spell effect is active, covering attack, spell, and other battle-owned damage rolls through one generic spell damage-roll penalty hole/fill path that applies before target-side Resistance, damage reductions, Concentration saves, and damage disposition. Required output: Supported-profile or profile-subset-supported Unit claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Ray damage-roll subtraction without duplicating damage state.",
+      "battleReadinessStatus": "partial-battle-runtime"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_rope_trick",

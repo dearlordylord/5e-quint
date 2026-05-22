@@ -119,6 +119,7 @@ const QUICKENED_ACTION_REWRITE_PROCEDURE_DISPOSITIONS = {
   repeatedDamageAllocation: "actionSpellResolverNotRewritten",
   rollModifier: "actionSpellResolverNotRewritten",
   sanctuaryTargetingInterdiction: "notActionSpellCasting",
+  abilityD20TestRollModeSaveGate: "actionSpellResolverNotRewritten",
   saveGatedAttackRollAdvantage: "actionSpellResolverNotRewritten",
   saveGatedCondition: "actionSpellResolverNotRewritten",
   saveGatedConditionImmunity: "actionSpellResolverNotRewritten",

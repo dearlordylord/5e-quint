@@ -24,13 +24,13 @@
     "obligations[].profiles": "Derived from profileObligations by obligation id; authored obligations.jsonl rows must not contain profiles."
   },
   "battleHoleFrontierSummary": {
-    "total": 98,
+    "total": 99,
     "bySubject": {
-      "battle-hole-family": 61,
+      "battle-hole-family": 62,
       "battle-fill-kind": 37
     },
     "byClassification": {
-      "semantic-frontier": 75,
+      "semantic-frontier": 76,
       "deterministic-boundary-projection": 0,
       "table-owned-fact": 23,
       "unsupported-dead-branch": 0
@@ -2572,6 +2572,17 @@
       "subject": "battle-hole-family"
     },
     {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "savingThrowOutcome",
+      "id": "BattleAbilityD20TestRollModeEndTurnSavingThrowOutcomeHole",
+      "reason": "End-turn Ability D20 Test roll-mode Saving Throw outcomes decide whether a spell-owned D20 Test penalty persists or is removed; the Ray of Enfeeblement lifecycle profile owns the current executable branch.",
+      "subject": "battle-hole-family"
+    },
+    {
       "classification": "table-owned-fact",
       "coveredByObligationIds": [
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
@@ -4117,6 +4128,7 @@
     "spell.invocation-object-contact-damage",
     "spell.invocation-object-light",
     "spell.invocation-ongoing-spell-ending",
+    "spell.invocation-ray-of-enfeeblement-d20-lifecycle",
     "spell.invocation-roll-modifier",
     "spell.invocation-sanctuary-targeting-interdiction",
     "spell.invocation-save-gated-condition-immunity",

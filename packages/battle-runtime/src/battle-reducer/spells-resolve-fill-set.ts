@@ -752,6 +752,7 @@ export function spellFillSet(
         invocation.procedure !== "directHitPointRestoration" &&
         invocation.procedure !== "scalarBuff" &&
         invocation.procedure !== "rollModifier" &&
+        invocation.procedure !== "abilityD20TestRollModeSaveGate" &&
         invocation.procedure !== "damageReduction" &&
         invocation.procedure !== "saveGatedCondition" &&
         invocation.procedure !== "hideousLaughter" &&
@@ -772,6 +773,8 @@ export function spellFillSet(
         (invocation.procedure === "scalarBuff" &&
           !isScalarBuffTargetListInvocation(invocation)) ||
         (invocation.procedure === "saveGatedCondition" &&
+          !isTargetListSpellInvocation(invocation)) ||
+        (invocation.procedure === "abilityD20TestRollModeSaveGate" &&
           !isTargetListSpellInvocation(invocation)) ||
         (invocation.procedure === "hideousLaughter" &&
           !isTargetListSpellInvocation(invocation)) ||
@@ -885,6 +888,7 @@ export function spellFillSet(
         invocation.procedure !== "saveGatedConditionImmunity" &&
         invocation.procedure !== "afterHitSaveGatedCondition" &&
         invocation.procedure !== "saveGatedAttackRollAdvantage" &&
+        invocation.procedure !== "abilityD20TestRollModeSaveGate" &&
         invocation.procedure !== "counterspell" &&
         invocation.procedure !== "sleepTargetAdmission" &&
         invocation.procedure !== "hideousLaughter" &&
@@ -1551,6 +1555,7 @@ export function spellFillSetSavingThrowTargeting(
         invocation.procedure === "saveGatedConditionImmunity" ||
         invocation.procedure === "afterHitSaveGatedCondition" ||
         invocation.procedure === "saveGatedAttackRollAdvantage" ||
+        invocation.procedure === "abilityD20TestRollModeSaveGate" ||
         invocation.procedure === "counterspell" ||
         invocation.procedure === "sleepTargetAdmission" ||
         invocation.procedure === "hideousLaughter" ||

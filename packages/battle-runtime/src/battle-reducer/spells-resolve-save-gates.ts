@@ -1,3 +1,4 @@
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // Save-gated spell resolution extracted from spells-resolve.ts.
 // Owns save-gated damage, condition, and attack-roll-advantage procedures.
 
@@ -766,6 +767,183 @@ export function resolveHideousLaughterSpellAct(input: {
     state: nextState,
     snapshot: snapshotBattle(nextState),
   };
+}
+
+export function resolveAbilityD20TestRollModeSaveGateSpellAct(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "abilityD20TestRollModeSaveGate" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  const targetHole = spellTargetListHole(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+  );
+  if (input.fillSet.targetList === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      targetHole,
+    ]);
+  }
+  if (
+    input.fillSet.targetId !== undefined ||
+    input.fillSet.attackRoll !== undefined ||
+    input.fillSet.damageRoll !== undefined ||
+    input.fillSet.concentrationSavingThrows.length > 0 ||
+    input.fillSet.damageDispositions.length > 0
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Ability D20 Test save-gate spells use target-list and Saving Throw outcome fills.",
+    );
+  }
+  const targetValidation = validateSpellTargetList(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+    input.fillSet.targetList.targetIds,
+    input.fillSet.targetList.spatialFacts,
+  );
+  if (targetValidation !== null) {
+    return invalidResult(input.input.state, "invalidFill", targetValidation);
+  }
+  const savingThrowHole = spellSavingThrowOutcomeHole(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+  );
+  if (input.fillSet.savingThrowOutcomes === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      savingThrowHole,
+    ]);
+  }
+  const savingThrowValidation = validateSavingThrowOutcomes(
+    input.fillSet.savingThrowOutcomes,
+    savingThrowHole,
+    input.input.state,
+    input.actorId,
+    undefined,
+    input.fillSet.targetList.targetIds,
+  );
+  if (savingThrowValidation !== null) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      savingThrowValidation,
+    );
+  }
+  const failedTargets = input.fillSet.savingThrowOutcomes.outcomes.flatMap(
+    (outcome) => (outcome.succeeded ? [] : [outcome.targetId]),
+  );
+  const successfulTargets = input.fillSet.savingThrowOutcomes.outcomes.flatMap(
+    (outcome) => (outcome.succeeded ? [outcome.targetId] : []),
+  );
+  if (failedTargets.length > 0) {
+    const saveFailedReactionWindow = maybeOpenReactionWindow(
+      input.input.state,
+      {
+        trigger: "saveFailed",
+        targetId: failedTargets[0]!,
+        sourceSpellId: input.invocation.spell.id,
+        continuation: {
+          kind: "replay",
+          subject:
+            input.input.reactionContinuationSubject ?? input.input.subject,
+          fills: input.input.fills,
+        },
+      },
+      input.input.suppressedReactionTrigger,
+    );
+    if (saveFailedReactionWindow !== null) {
+      return saveFailedReactionWindow;
+    }
+  }
+  const resourced = spendSpellCastResources({
+    state: input.input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+    startConcentration: true,
+  });
+  if (resourced.tag === "invalid") {
+    return resourced;
+  }
+  const effected = applyAbilityD20TestRollModeSaveGateEffects(
+    resourced.state,
+    failedTargets,
+    successfulTargets,
+    input.invocation,
+  );
+  const nextState = extendSavingThrowOngoingFeatures(
+    effected,
+    input.actorId,
+    input.fillSet.targetList.targetIds,
+  );
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function applyAbilityD20TestRollModeSaveGateEffects(
+  state: BattleState,
+  failedTargetIds: readonly CombatantId[],
+  successfulTargetIds: readonly CombatantId[],
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "abilityD20TestRollModeSaveGate" }
+  >,
+): BattleState {
+  const combatants = new Map(state.combatants);
+  for (const targetId of successfulTargetIds) {
+    const target = combatants.get(targetId);
+    if (target === undefined) {
+      continue;
+    }
+    combatants.set(targetId, {
+      ...target,
+      activeEffects: [
+        ...target.activeEffects.filter(
+          (effect) =>
+            !(
+              effect.kind === "nextAttackRollBySelf" &&
+              "sourceSpellId" in effect &&
+              effect.sourceSpellId === invocation.spell.id &&
+              effect.sourceCombatantId === invocation.successEffect.sourceCombatantId
+            ),
+        ),
+        invocation.successEffect,
+      ],
+    });
+  }
+  for (const targetId of failedTargetIds) {
+    const target = combatants.get(targetId);
+    if (target === undefined) {
+      continue;
+    }
+    combatants.set(targetId, {
+      ...target,
+      activeEffects: [
+        ...target.activeEffects.filter(
+          (effect) =>
+            !(
+              effect.kind === "abilityD20TestRollModeEndTurnSave" &&
+              effect.sourceSpellId === invocation.spell.id &&
+              effect.sourceCombatantId ===
+                invocation.failedSaveEffect.sourceCombatantId &&
+              effect.ability === invocation.failedSaveEffect.ability
+            ),
+        ),
+        invocation.failedSaveEffect,
+      ],
+    });
+  }
+  return { ...state, combatants };
 }
 export function resolveSaveGateDamageSpellRelease(input: {
   readonly input: ActionSpellBattleResolutionInput;

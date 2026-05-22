@@ -356,6 +356,7 @@ export function discoverSupportedSpellInvocations(
         invocation.procedure === "saveGatedCondition" ||
         invocation.procedure === "saveGatedConditionImmunity" ||
         invocation.procedure === "saveGatedAttackRollAdvantage" ||
+        invocation.procedure === "abilityD20TestRollModeSaveGate" ||
         invocation.procedure === "sleepTargetAdmission" ||
         invocation.procedure === "hideousLaughter" ||
         invocation.procedure === "greaseGroundHazard" ||
@@ -364,7 +365,8 @@ export function discoverSupportedSpellInvocations(
         if (
           invocation.targeting.kind === "singleCombatant" ||
           ((invocation.procedure === "saveGatedCondition" ||
-            invocation.procedure === "hideousLaughter") &&
+            invocation.procedure === "hideousLaughter" ||
+            invocation.procedure === "abilityD20TestRollModeSaveGate") &&
             invocation.targeting.kind === "targetList")
         ) {
           const targetHole =
@@ -1524,6 +1526,7 @@ export function spellActivationInvocationCastSummary(
         | "saveGatedCondition"
         | "saveGatedConditionImmunity"
         | "saveGatedAttackRollAdvantage"
+        | "abilityD20TestRollModeSaveGate"
         | "sleepTargetAdmission"
         | "hideousLaughter"
         | "command"

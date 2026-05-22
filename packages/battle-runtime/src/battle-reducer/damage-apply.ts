@@ -1599,8 +1599,10 @@ function nonConcentrationEffectFromBrokenSpellConcentration(
 ): boolean {
   return (
     concentration?.effectKind === "spellEffect" &&
-    effect.kind === "selfAttackRollAndAbilityCheckRollMode" &&
+    (effect.kind === "selfAttackRollAndAbilityCheckRollMode" ||
+      effect.kind === "nextAttackRollBySelf") &&
     effect.sourceCombatantId === combatantId &&
+    "sourceSpellId" in effect &&
     effect.sourceSpellId === concentration.sourceSpellId
   );
 }

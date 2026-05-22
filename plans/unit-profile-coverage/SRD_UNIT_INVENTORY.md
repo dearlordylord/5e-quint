@@ -33,9 +33,9 @@ This is the default `%` for level-1 plus level-2 readiness questions. It uses th
 
 - accepted: 377
 - accepted-no-battle-effect: 137
-- battle-runtime-required: 24
+- battle-runtime-required: 22
 - owner-evidence-required: 2
-- partial-battle-runtime: 16
+- partial-battle-runtime: 18
 
 ### Level-1 Rows by Disposition
 

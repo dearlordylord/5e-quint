@@ -1,3 +1,4 @@
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // Save-gated and attack-damage spell profile projections extracted from spells-profiles.ts.
 
 import {
@@ -8,6 +9,7 @@ import {
   movementDeltaFeet,
   movementFeet,
   spellSlotLevel,
+  type Ability,
   type Condition,
   type MovementFeet,
   type SpellSlotLevel,
@@ -17,6 +19,7 @@ import type {
   ActivationPhase,
   Attachment,
   DiceExpr,
+  EffectAtom,
   SpellRecord,
   DiceAmount as SurfaceDiceAmount,
   TargetSelection,
@@ -158,6 +161,19 @@ type ModifyRollAdvantageEffect = Extract<
   SaveGateFailedEffect,
   { readonly kind: "modify_roll_advantage" }
 >;
+type RayOfEnfeeblementPhase = Extract<
+  ActivationPhase,
+  { readonly kind: "save_gate" }
+> & {
+  readonly ability: "con";
+  readonly attachment: {
+    readonly kind: "hole";
+    readonly value: {
+      readonly kind: "target";
+      readonly selection: TargetSelection;
+    };
+  };
+};
 
 const FIREBALL_BASE_SPELL_LEVEL = 3;
 const FIREBALL_RANGE_FEET = 150;
@@ -194,6 +210,10 @@ const CALM_EMOTIONS_CONDITION_IMMUNITIES = [
 const CALM_EMOTIONS_TARGET_CREATURE_TYPES = [
   "humanoid",
 ] as const satisfies readonly [CreatureType, ...CreatureType[]];
+const RAY_OF_ENFEEBLEMENT_BASE_SPELL_LEVEL = 2;
+const RAY_OF_ENFEEBLEMENT_RANGE_FEET = 60;
+const RAY_OF_ENFEEBLEMENT_DURATION_AMOUNT = 1;
+const RAY_OF_ENFEEBLEMENT_DURATION_UNIT = "minute";
 
 export function hasSaveGateRepeatSaves(
   phase: ActivationPhase | undefined,
@@ -302,6 +322,38 @@ export function supportedPreparedSaveGateAttackRollAdvantageProfile(
         targeting: attackRollAdvantageSpell.targeting,
         effect: attackRollAdvantageSpell.effect,
         rangeFeet: attackRollAdvantageSpell.rangeFeet,
+      },
+    ];
+  });
+}
+
+export function supportedPreparedAbilityD20TestRollModeSaveGateProfile(
+  actorId: CombatantId,
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  const d20Lifecycle = abilityD20TestRollModeSaveGateSpell(actorId, spell);
+  if (d20Lifecycle === null) {
+    return [];
+  }
+
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+    if (Number(slot.spellLevel) < spell.mechanics.level) {
+      return [];
+    }
+    return [
+      {
+        access: { tag: "prepared" },
+        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+        procedure: "abilityD20TestRollModeSaveGate",
+        spell,
+        actionCost: "magicAction",
+        ability: d20Lifecycle.phase.ability,
+        dc: d20Lifecycle.phase.dc,
+        targeting: d20Lifecycle.targeting,
+        rangeFeet: d20Lifecycle.rangeFeet,
+        successEffect: d20Lifecycle.successEffect,
+        failedSaveEffect: d20Lifecycle.failedSaveEffect,
       },
     ];
   });
@@ -836,6 +888,142 @@ function hideousLaughterSpell(spell: SpellRecord): {
     }),
     rangeFeet: movementFeet(spell.mechanics.range.feet),
   };
+}
+
+function abilityD20TestRollModeSaveGateSpell(
+  actorId: CombatantId,
+  spell: SpellRecord,
+): {
+  readonly phase: RayOfEnfeeblementPhase;
+  readonly targeting: Extract<SpellTargeting, { readonly kind: "targetList" }>;
+  readonly rangeFeet: MovementFeet;
+  readonly successEffect: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "abilityD20TestRollModeSaveGate" }
+  >["successEffect"];
+  readonly failedSaveEffect: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "abilityD20TestRollModeSaveGate" }
+  >["failedSaveEffect"];
+} | null {
+  if (spell.mechanics.family !== "activation") {
+    return null;
+  }
+  const phase = spell.mechanics.phases[0];
+  const durationTicks =
+    spell.mechanics.duration.kind === "concentration"
+      ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.upTo)
+      : null;
+  if (
+    spell.mechanics.level !== RAY_OF_ENFEEBLEMENT_BASE_SPELL_LEVEL ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "point" ||
+    spell.mechanics.range.feet !== RAY_OF_ENFEEBLEMENT_RANGE_FEET ||
+    spell.mechanics.duration.kind !== "concentration" ||
+    spell.mechanics.duration.upTo.unit !== RAY_OF_ENFEEBLEMENT_DURATION_UNIT ||
+    spell.mechanics.duration.upTo.amount !==
+      RAY_OF_ENFEEBLEMENT_DURATION_AMOUNT ||
+    spell.mechanics.phases.length !== 1 ||
+    durationTicks === null ||
+    Either.isLeft(durationTicks) ||
+    !isRayOfEnfeeblementD20LifecyclePhase(phase)
+  ) {
+    return null;
+  }
+  return {
+    phase,
+    targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
+    rangeFeet: movementFeet(RAY_OF_ENFEEBLEMENT_RANGE_FEET),
+    successEffect: {
+      kind: "nextAttackRollBySelf",
+      sourceSpellId: spell.id,
+      sourceCombatantId: actorId,
+      mode: "disadvantage",
+      expiresAt: { kind: "startOfTurn", combatantId: actorId },
+    },
+    failedSaveEffect: {
+      kind: "abilityD20TestRollModeEndTurnSave",
+      sourceSpellId: spell.id,
+      sourceCombatantId: actorId,
+      ability: "str",
+      mode: "disadvantage",
+      save: { ability: "con", dc: { kind: "caster_spell_save_dc" } },
+      expiresAt: {
+        kind: "concentration",
+        combatantId: actorId,
+        durationTicks: durationTicks.right,
+      },
+    },
+  };
+}
+
+function isRayOfEnfeeblementD20LifecyclePhase(
+  phase: ActivationPhase | undefined,
+): phase is RayOfEnfeeblementPhase {
+  const repeatSaves = phase?.kind === "save_gate" ? (phase.repeatSaves ?? []) : [];
+  const repeatSave = repeatSaves.length === 1 ? repeatSaves[0] : undefined;
+  const success = phase?.kind === "save_gate" ? phase.onSuccess : undefined;
+  const successDisadvantage =
+    success?.kind === "modify_roll_advantage" ? success : undefined;
+  const failedEffects =
+    phase?.kind === "save_gate" && phase.onFail.kind === "composite"
+      ? phase.onFail.effects
+      : [];
+  const d20DisadvantageEffects = failedEffects.filter(
+    isRayStrengthD20DisadvantageEffect,
+  );
+  const damagePenalty = failedEffects.find(
+    (effect) => effect.kind === "modify_damage_numeric",
+  );
+  return (
+    phase?.kind === "save_gate" &&
+    phase.ability === "con" &&
+    phase.dc.kind === "caster_spell_save_dc" &&
+    phase.attachment.kind === "hole" &&
+    phase.attachment.value.kind === "target" &&
+    phase.attachment.value.selection.mode === "one" &&
+    successDisadvantage?.mode === "disadvantage" &&
+    sameStringSet(successDisadvantage.on, ["attack_roll"]) &&
+    successDisadvantage.count === 1 &&
+    successDisadvantage.expiresOn?.kind === "caster_turn_start" &&
+    successDisadvantage.abilityFilter === undefined &&
+    successDisadvantage.skillFilter === undefined &&
+    successDisadvantage.conditionFilter === undefined &&
+    d20DisadvantageEffects.length === 1 &&
+    damagePenalty?.kind === "modify_damage_numeric" &&
+    damagePenalty.delta.kind === "fixed_dice" &&
+    damagePenalty.delta.sign === "-" &&
+    damagePenalty.delta.dice === 1 &&
+    damagePenalty.delta.dieSize === 8 &&
+    failedEffects.length === 2 &&
+    repeatSave !== undefined &&
+    repeatSave.cadence === "end_of_target_turn" &&
+    repeatSave.onSuccess === "ends_on_target" &&
+    repeatSave.rollMode === undefined &&
+    repeatSave.onFailAgain === undefined
+  );
+}
+
+function isRayStrengthD20DisadvantageEffect(
+  effect: EffectAtom,
+): effect is ModifyRollAdvantageEffect {
+  return (
+    effect.kind === "modify_roll_advantage" &&
+    effect.mode === "disadvantage" &&
+    sameStringSet(effect.on, ["attack_roll", "ability_check", "saving_throw"]) &&
+    sameAbilitySet(effect.abilityFilter, ["str"]) &&
+    effect.skillFilter === undefined &&
+    effect.conditionFilter === undefined &&
+    effect.count === undefined &&
+    effect.expiresOn === undefined
+  );
+}
+
+function sameAbilitySet(
+  actual: ModifyRollAdvantageEffect["abilityFilter"],
+  expected: readonly Ability[],
+): boolean {
+  return Array.isArray(actual) && sameStringSet(actual, expected);
 }
 
 function isHideousLaughterPhase(

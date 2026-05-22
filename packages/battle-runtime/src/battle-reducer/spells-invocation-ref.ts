@@ -94,6 +94,14 @@ export function supportedSpellInvocationRef(
       procedure: "hideousLaughter",
     };
   }
+  if (invocation.procedure === "abilityD20TestRollModeSaveGate") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "abilityD20TestRollModeSaveGate",
+    };
+  }
   if (invocation.procedure === "greaseGroundHazard") {
     return {
       tag: "spellSlot",

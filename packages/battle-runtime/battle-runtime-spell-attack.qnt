@@ -1,6 +1,8 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE
 
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
+
 module battleRuntimeSpellAttack {
   import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
@@ -323,6 +325,7 @@ module battleRuntimeSpellAttack {
   pure def activeEffectsGrantSelfAttackRollDisadvantage(attackerEffects: Set[ActiveEffect]): bool =
     attackerEffects.contains(ViciousMockeryNextAttackDisadvantage)
     or attackerEffects.exists(effect => match effect {
+      | RayOfEnfeeblementNextAttackDisadvantage(_) => true
       | WeaponMasterySapNextAttackDisadvantage(_) => true
       | HeatMetalHoldingWearingPenalty(_) => true
       | _ => false

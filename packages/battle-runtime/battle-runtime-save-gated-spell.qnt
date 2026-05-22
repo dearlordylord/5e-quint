@@ -1,6 +1,8 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE
 
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
+
 module battleRuntimeSaveGatedSpell {
   import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
@@ -120,6 +122,153 @@ module battleRuntimeSaveGatedSpell {
     )
 
   pure def mindSpikeDurationTicks: int = 60 * 10
+  pure def rayOfEnfeeblementD20LifecycleDurationTicks: int = 10
+
+  pure def rayOfEnfeeblementD20LifecycleTargeting: SaveGatedTargeting =
+    TargetListSaveTargets({
+      minTargets: 1,
+      baseSlotLevel: 2,
+      baseTargets: 1,
+      additionalTargetsPerSlotLevel: 0,
+    })
+
+  pure def rayOfEnfeeblementD20LifecycleSavingThrowAbility: Ability = ConAbility
+
+  pure def rayOfEnfeeblementD20LifecycleSuccessActiveEffects(source: Actor): Set[ActiveEffect] =
+    Set(RayOfEnfeeblementNextAttackDisadvantage({ source: source }))
+
+  pure def rayOfEnfeeblementD20LifecycleFailedSaveActiveEffects(source: Actor): Set[ActiveEffect] =
+    Set(RayOfEnfeeblementD20Lifecycle({
+      source: source,
+      durationTicks: rayOfEnfeeblementD20LifecycleDurationTicks,
+    }))
+
+  pure def rayOfEnfeeblementD20LifecycleEffectFromSource(
+    effect: ActiveEffect,
+    source: Actor,
+  ): bool =
+    match effect {
+      | RayOfEnfeeblementNextAttackDisadvantage(data) => data.source == source
+      | RayOfEnfeeblementD20Lifecycle(data) => data.source == source
+      | _ => false
+    }
+
+  pure def rayOfEnfeeblementD20LifecycleHasActiveEffect(
+    effects: Set[ActiveEffect],
+    source: Actor,
+  ): bool =
+    effects.exists(effect => rayOfEnfeeblementD20LifecycleEffectFromSource(effect, source))
+
+  pure def rayOfEnfeeblementD20LifecycleConcentratingAfterEffectsChange(
+    effects: Set[ActiveEffect],
+    source: Actor,
+    sourceConcentrating: bool,
+  ): bool =
+    sourceConcentrating and rayOfEnfeeblementD20LifecycleHasActiveEffect(effects, source)
+
+  pure def rayOfEnfeeblementD20LifecycleActiveEffectsAfterNextAttack(
+    effects: Set[ActiveEffect],
+    source: Actor,
+  ): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | RayOfEnfeeblementNextAttackDisadvantage(data) => data.source != source
+      | _ => true
+    })
+
+  pure def rayOfEnfeeblementD20LifecycleEndTurnRepeatSaveAbility: Ability = ConAbility
+
+  pure def rayOfEnfeeblementD20LifecycleActiveEffectsAfterRepeatSave(
+    effects: Set[ActiveEffect],
+    source: Actor,
+    savingThrowSucceeded: bool,
+  ): Set[ActiveEffect] =
+    if (savingThrowSucceeded)
+      effects.filter(effect => match effect {
+        | RayOfEnfeeblementD20Lifecycle(data) => data.source != source
+        | _ => true
+      })
+    else
+      effects
+
+  pure def rayOfEnfeeblementD20LifecycleAttackRollMode(
+    effects: Set[ActiveEffect],
+    attackAbility: Ability,
+  ): SpellAttackRollMode =
+    if (
+      attackAbility == StrAbility
+        and effects.exists(effect => match effect {
+          | RayOfEnfeeblementD20Lifecycle(_) => true
+          | _ => false
+        })
+    )
+      DisadvantageSpellAttackRoll
+    else
+      NormalSpellAttackRoll
+
+  pure def rayOfEnfeeblementD20LifecycleAbilityCheckRollMode(
+    effects: Set[ActiveEffect],
+    ability: Ability,
+  ): AbilityCheckRollMode =
+    if (
+      ability == StrAbility
+        and effects.exists(effect => match effect {
+          | RayOfEnfeeblementD20Lifecycle(_) => true
+          | _ => false
+        })
+    )
+      DisadvantageAbilityCheck
+    else
+      NormalAbilityCheck
+
+  pure def rayOfEnfeeblementD20LifecycleSavingThrowRollMode(
+    effects: Set[ActiveEffect],
+    ability: Ability,
+  ): SavingThrowRollMode =
+    if (
+      ability == StrAbility
+        and effects.exists(effect => match effect {
+          | RayOfEnfeeblementD20Lifecycle(_) => true
+          | _ => false
+        })
+    )
+      DisadvantageSavingThrow
+    else
+      NormalSavingThrow
+
+  pure def rayOfEnfeeblementD20LifecycleTargetAfterSave(
+    target: Combatant,
+    source: Actor,
+    savingThrowSucceeded: bool,
+  ): Combatant =
+    if (savingThrowSucceeded)
+      { ...target, activeEffects: target.activeEffects.union(rayOfEnfeeblementD20LifecycleSuccessActiveEffects(source)) }
+    else
+      { ...target, activeEffects: target.activeEffects.union(rayOfEnfeeblementD20LifecycleFailedSaveActiveEffects(source)) }
+
+  pure def resolveRayOfEnfeeblementD20Lifecycle(
+    state: BattleState,
+    target: Actor,
+    savingThrowSucceeded: bool,
+  ): BattleState =
+    match target {
+      | Fighter => {
+          ...state,
+          fighter: rayOfEnfeeblementD20LifecycleTargetAfterSave(
+            { ...state.fighter, concentrating: true },
+            Fighter,
+            savingThrowSucceeded,
+          ),
+        }
+      | Goblin => {
+          ...state,
+          fighter: { ...state.fighter, concentrating: true },
+          goblin: rayOfEnfeeblementD20LifecycleTargetAfterSave(
+            state.goblin,
+            Fighter,
+            savingThrowSucceeded,
+          ),
+        }
+    }
 
   pure def saveGatedDamageConcentrationDurationEffects(
     invocation: SaveGatedDamageInvocation,

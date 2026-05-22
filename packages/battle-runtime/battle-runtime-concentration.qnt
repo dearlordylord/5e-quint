@@ -2,6 +2,8 @@
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE
 
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
+
 module battleRuntimeConcentration {
   import battleRuntimeConcentrationBridge.* from "./battle-runtime-concentration-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
@@ -66,6 +68,8 @@ module battleRuntimeConcentration {
         | InvisibilityCondition(_) => false
         | SeeInvisibleAndEthereal(_) => true
         | MindSpikeConcentrationDuration(_) => false
+        | RayOfEnfeeblementNextAttackDisadvantage(_) => false
+        | RayOfEnfeeblementD20Lifecycle(_) => false
         | SelfTransformationModeEffect(_) => false
         | _ => true
       })

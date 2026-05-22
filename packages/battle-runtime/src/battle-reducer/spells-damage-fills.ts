@@ -3,6 +3,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.passive-saving-throw-roll-mode
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
 
@@ -797,6 +798,7 @@ export function spellSavingThrowOutcomeHole(
     {
       readonly procedure:
         | "attackBurstSaveDamage"
+        | "abilityD20TestRollModeSaveGate"
         | "afterHitSaveGatedCondition"
         | "rollModifier"
         | "saveGatedDamage"
@@ -947,6 +949,7 @@ export function spellSavingThrowAbility(
     {
       readonly procedure:
         | "attackBurstSaveDamage"
+        | "abilityD20TestRollModeSaveGate"
         | "afterHitSaveGatedCondition"
         | "rollModifier"
         | "saveGatedDamage"
@@ -977,6 +980,7 @@ export function spellSavingThrowTargeting(
     {
       readonly procedure:
         | "attackBurstSaveDamage"
+        | "abilityD20TestRollModeSaveGate"
         | "afterHitSaveGatedCondition"
         | "saveGatedDamage"
         | "saveGatedCondition"
@@ -1051,6 +1055,7 @@ export function savingThrowRollModeProjections(
   const baseProjections = [
     ...dodgeProjections,
     ...passiveRollModeProjections,
+    ...activeAbilityD20TestSavingThrowRollModeProjections(state, ability),
     ...conditionSavingThrowRollModeProjections(
       state,
       rollModeContext?.condition,
@@ -1153,6 +1158,20 @@ function conditionSavingThrowRollModeProjections(
           effect.condition === condition,
       )
       .map((effect) => ({ targetId, rollMode: effect.mode })),
+  );
+}
+
+function activeAbilityD20TestSavingThrowRollModeProjections(
+  state: BattleState,
+  ability: Ability,
+): readonly BattleSavingThrowRollModeProjection[] {
+  return [...state.combatants].flatMap(([targetId, target]) =>
+    target.activeEffects.flatMap((effect) =>
+      effect.kind === "abilityD20TestRollModeEndTurnSave" &&
+      effect.ability === ability
+        ? [{ targetId, rollMode: effect.mode }]
+        : [],
+    ),
   );
 }
 

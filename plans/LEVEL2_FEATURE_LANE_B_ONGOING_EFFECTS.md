@@ -8,8 +8,8 @@
     {"number":2,"id":"L12G-FOLLOWUP-ANTIMAGIC-FIELD-GENERIC-SUPPRESSION","status":"done","title":"Antimagic Field Generic Suppression Runtime"},
     {"number":3,"id":"L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST","status":"done","title":"Prayer Of Healing Surface Rest Shape"},
     {"number":4,"id":"L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST","status":"done","title":"Prayer Of Healing Character Sheet Rest Runtime"},
-    {"number":5,"id":"L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE","status":"ready-for-research","title":"Ray Of Enfeeblement D20 Lifecycle Runtime"},
-    {"number":6,"id":"L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY","status":"blocked","title":"Ray Of Enfeeblement Damage Roll Penalty Runtime"},
+    {"number":5,"id":"L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE","status":"done","title":"Ray Of Enfeeblement D20 Lifecycle Runtime"},
+    {"number":6,"id":"L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY","status":"ready-for-research","title":"Ray Of Enfeeblement Damage Roll Penalty Runtime"},
     {"number":7,"id":"L12G-FOLLOWUP-SPIRITUAL-WEAPON-SURFACE-PROXY-SHAPE","status":"ready-for-research","title":"Spiritual Weapon Proxy Surface Shape"},
     {"number":8,"id":"L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME","status":"blocked","title":"Spiritual Weapon Persistent Attack Runtime"},
     {"number":9,"id":"L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME","status":"ready-for-research","title":"Enlarge Reduce Creature Runtime Support"},
@@ -93,7 +93,7 @@ Output:
 
 ### Task 5 - L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE - Ray Of Enfeeblement D20 Lifecycle Runtime
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 - Existing save-gated condition/effect lifecycle and roll-mode projections.
@@ -104,7 +104,7 @@ Output:
 
 ### Task 6 - L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY - Ray Of Enfeeblement Damage Roll Penalty Runtime
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on:
 - Task B5.
