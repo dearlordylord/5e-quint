@@ -48,6 +48,7 @@ import {
   type UnitChoiceKey,
 } from "./index.ts";
 import { supportedHoleOptionIds } from "./support-gates.ts";
+import { soldierBackgroundFixtureOptionIds } from "./background-fixture.test-support.ts";
 
 const TASK_ID = "L1D2-WEAPON-MASTERY-CONTAINERS";
 const WEAPON_MASTERY_CONTAINER_RESULTS = [
@@ -267,11 +268,7 @@ const weaponMasteryContainerProfiles = [
     classUnitId: "class_fighter",
     featureUnitId: "fighter_weapon_mastery",
     result: "fighterFinalized",
-    selectedWeaponUnitIds: [
-      "weapon_longsword",
-      "weapon_spear",
-      "weapon_flail",
-    ],
+    selectedWeaponUnitIds: ["weapon_longsword", "weapon_spear", "weapon_flail"],
   },
   {
     classUnitId: "class_barbarian",
@@ -411,10 +408,7 @@ const quintStateSchema = z.object({
     z.literal("weapon_spear"),
     z.literal("weapon_shortsword"),
   ]),
-  qThirdWeaponUnitId: z.union([
-    z.literal("none"),
-    z.literal("weapon_flail"),
-  ]),
+  qThirdWeaponUnitId: z.union([z.literal("none"), z.literal("weapon_flail")]),
   qSelectedMasteryChoiceCount: z.bigint(),
   qBuildMasteryFeatureCount: z.bigint(),
   qOpenHoleCount: z.bigint(),
@@ -614,9 +608,8 @@ function completeSupportedWeaponMasteryDraft(
     ),
   });
   const progression = levelOneProgression(profile.classUnitId);
-  const preferredOptionIdsBySource = preferredWeaponMasteryOptionIdsBySource(
-    profile,
-  );
+  const preferredOptionIdsBySource =
+    preferredWeaponMasteryOptionIdsBySource(profile);
 
   for (let pass = 0; pass < 8; pass += 1) {
     const holes = discoverCreationHoles({ draft, unitLibrary });
@@ -731,9 +724,11 @@ function preferredOptionIdsForHole(input: {
     return undefined;
   }
 
-  return input.preferredOptionIdsBySource[
-    choiceSourceKey(source.unitId, source.choiceKey)
-  ];
+  return (
+    input.preferredOptionIdsBySource[
+      choiceSourceKey(source.unitId, source.choiceKey)
+    ] ?? soldierBackgroundFixtureOptionIds(source)
+  );
 }
 
 function abilityScoreFill(hole: AbilityScoreCreationHole): CreationFill {
@@ -762,8 +757,9 @@ function weaponMasteryContainerFacts(input: {
     input.profile.featureUnitId,
     WEAPON_MASTERY_OPTIONS_CHOICE_KEY,
   );
-  const expectedMasteryWeapons =
-    input.profile.selectedWeaponUnitIds.map(creationChoiceOptionId);
+  const expectedMasteryWeapons = input.profile.selectedWeaponUnitIds.map(
+    creationChoiceOptionId,
+  );
   if (!sameOptionList(selectedMasteryWeapons, expectedMasteryWeapons)) {
     throw new Error(
       `Expected ${input.profile.featureUnitId} selections ${expectedMasteryWeapons.join(",")}, received ${selectedMasteryWeapons.join(",")}.`,
@@ -774,7 +770,9 @@ function weaponMasteryContainerFacts(input: {
     input.build,
     input.profile.featureUnitId,
   );
-  if (!sameUnitList(selectedBuildFeatures, input.profile.selectedWeaponUnitIds)) {
+  if (
+    !sameUnitList(selectedBuildFeatures, input.profile.selectedWeaponUnitIds)
+  ) {
     throw new Error(
       `Expected ${input.profile.featureUnitId} CharacterBuild selected refs ${input.profile.selectedWeaponUnitIds.join(",")}, received ${selectedBuildFeatures.join(",")}.`,
     );
@@ -783,10 +781,7 @@ function weaponMasteryContainerFacts(input: {
   const unitRefIds = characterBuildUnitRefs(input.build, unitLibrary).map(
     (ref) => ref.unitId,
   );
-  const featureUnitIds = characterBuildFeatureUnitIds(
-    input.build,
-    unitLibrary,
-  );
+  const featureUnitIds = characterBuildFeatureUnitIds(input.build, unitLibrary);
   return {
     selectedMasteryChoiceCount: selectedMasteryWeapons.length,
     buildMasteryFeatureCount: selectedBuildFeatures.length,

@@ -134,7 +134,7 @@ This package supports these character-creation profiles:
 - supported level-1 Weapon Mastery choices for Fighter, Barbarian, Paladin,
   Ranger, and Rogue as retained build Unit refs for selected weapons;
 - Orc species;
-- Soldier background;
+- SRD Acolyte, Criminal, Sage, and Soldier backgrounds;
 - Standard Array ability assignment;
 - background ability-score increase;
 - Common plus selected standard languages;

@@ -108,6 +108,7 @@ import {
 import {
   CHARACTER_CREATION_SUPPORT_PROFILE,
   isSupportedProgression,
+  supportedBackgroundUnitIds,
   supportedLoadoutChoiceForSource,
   supportedLoadoutChoices,
   supportedPurchasableEquipmentUnitIdsForClass,
@@ -328,9 +329,8 @@ export function executableSupportIssues(
 ): readonly CreationFinalizationIssue[] {
   return [
     ...expectedValueIssue(
-      selections.background ===
-        CHARACTER_CREATION_SUPPORT_PROFILE.manifest.backgroundUnitId,
-      "Finalized build must use the supported manifest background.",
+      supportedBackgroundUnitIds().includes(selections.background),
+      "Finalized build must use a supported background.",
     ),
     ...expectedValueIssue(
       supportedSpeciesUnitIds().includes(selections.species),
@@ -352,13 +352,13 @@ export function executableSupportIssues(
       "Finalized build must use a supported ability-score generation method.",
     ),
     ...expectedValueIssue(
-      isSupportedManifestBackgroundAbilityScoreIncrease(
+      isSupportedBackgroundAbilityScoreIncrease(
         selections.backgroundAbilityScoreIncrease,
         unitLibrary,
         selections.background,
         selections.abilityScoreGeneration.assignedScores,
       ),
-      "Finalized build must use the supported manifest background ability-score increase.",
+      "Finalized build must use a supported background ability-score increase.",
     ),
     ...expectedValueIssue(
       sameOptionIdMultiset(selections.languages, [
@@ -628,27 +628,6 @@ export function isSupportedBackgroundAbilityScoreIncrease(
   );
 }
 
-export function isSupportedManifestBackgroundAbilityScoreIncrease(
-  selection: BackgroundAbilityScoreIncreaseSelection,
-  unitLibrary: UnitCatalog,
-  backgroundUnitId: UnitRecord["id"],
-  baseScores: AbilityScoreAssignment,
-): boolean {
-  return (
-    sameBackgroundAbilityScoreIncreaseSelection(
-      selection,
-      CHARACTER_CREATION_SUPPORT_PROFILE.manifest
-        .backgroundAbilityScoreIncrease,
-    ) &&
-    isSupportedBackgroundAbilityScoreIncrease(
-      selection,
-      unitLibrary,
-      backgroundUnitId,
-      baseScores,
-    )
-  );
-}
-
 function allClassFactsForFinalization(
   progression: CharacterProgression,
   unitLibrary: UnitCatalog,
@@ -704,25 +683,6 @@ function fixedProficiencySubjects(
     return proficiency.fixed;
   }
   return [];
-}
-
-export function sameBackgroundAbilityScoreIncreaseSelection(
-  left: BackgroundAbilityScoreIncreaseSelection,
-  right: BackgroundAbilityScoreIncreaseSelection,
-): boolean {
-  if (left.kind !== right.kind) {
-    return false;
-  }
-
-  if (left.kind === "oneEach") {
-    return true;
-  }
-
-  if (right.kind === "oneEach") {
-    return false;
-  }
-
-  return left.plusTwo === right.plusTwo && left.plusOne === right.plusOne;
 }
 
 export function buildCharacterBuild(input: {

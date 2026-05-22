@@ -657,6 +657,7 @@ export const MUSICAL_INSTRUMENT_TOOL_PROFICIENCY_IDS = [
 ] as const;
 export const CHARACTER_BUILD_TOOL_PROFICIENCY_IDS = [
   "tool_dice_set",
+  "calligraphers_supplies",
   "herbalism_kit",
   "thieves_tools",
   ...MUSICAL_INSTRUMENT_TOOL_PROFICIENCY_IDS,

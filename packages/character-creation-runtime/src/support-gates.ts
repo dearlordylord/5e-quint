@@ -27,11 +27,7 @@ import {
   LOADOUT_WEAPON_SLOT,
   PHASE1_ALIGNMENT_OPTION_ID,
   PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID,
-  PHASE1_BACKGROUND_ABILITY_SCORE_INCREASE_OPTION_ID,
-  PHASE1_BACKGROUND_ABILITY_SCORE_INCREASE_SELECTION,
   PHASE1_BACKGROUND_EQUIPMENT_OPTION_ID,
-  PHASE1_BACKGROUND_SOLDIER_UNIT_ID,
-  PHASE1_BACKGROUND_TOOL_OPTION_ID,
   PHASE1_CLASS_EQUIPMENT_OPTION_ID,
   PHASE1_CLASS_FIGHTER_UNIT_ID,
   SRD_BARD_CLASS_UNIT_ID,
@@ -76,7 +72,6 @@ import {
 import { LEVEL_ONE_ELDRITCH_INVOCATION_OPTIONS } from "./eldritch-invocations.ts";
 import { SORCERER_METAMAGIC_OPTION_IDS } from "@dnd/surface/surface/schema";
 import type {
-  BackgroundAbilityScoreIncreaseSelection,
   CharacterAlignment,
   CharacterBuildLoadout,
   CharacterDraftPath,
@@ -93,6 +88,7 @@ import {
   CHARACTER_BUILD_TOOL_PROFICIENCY_IDS,
   MUSICAL_INSTRUMENT_TOOL_PROFICIENCY_IDS,
   creationChoiceOptionId,
+  isCharacterBuildToolProficiencyId,
 } from "./types.ts";
 import {
   classUnitId,
@@ -159,8 +155,6 @@ export type CharacterCreationSupportProfile = {
   >;
   readonly loadoutChoices: readonly SupportedLoadoutChoice[];
   readonly manifest: {
-    readonly backgroundUnitId: UnitRecord["id"];
-    readonly backgroundAbilityScoreIncrease: BackgroundAbilityScoreIncreaseSelection;
     readonly languages: CharacterStartingLanguages;
     readonly alignment: CharacterAlignment;
   };
@@ -401,10 +395,6 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
       creationChoiceOptionId("scorching_ray"),
       creationChoiceOptionId("shatter"),
     ],
-    [BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY]: [
-      PHASE1_BACKGROUND_ABILITY_SCORE_INCREASE_OPTION_ID,
-    ],
-    [BACKGROUND_TOOL_CHOICE_KEY]: [PHASE1_BACKGROUND_TOOL_OPTION_ID],
     [EQUIPMENT_PURCHASE_CHOICE_KEY]: SUPPORTED_PURCHASE_OPTION_IDS,
   },
   backgroundUnitIds: SUPPORTED_BACKGROUND_UNIT_IDS,
@@ -418,9 +408,12 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
       ]),
     ),
     [PHASE1_CLASS_FIGHTER_UNIT_ID]: [PHASE1_CLASS_EQUIPMENT_OPTION_ID],
-    [PHASE1_BACKGROUND_SOLDIER_UNIT_ID]: [
-      PHASE1_BACKGROUND_EQUIPMENT_OPTION_ID,
-    ],
+    ...Object.fromEntries(
+      SUPPORTED_BACKGROUND_UNIT_IDS.map((backgroundUnitId) => [
+        backgroundUnitId,
+        [PHASE1_BACKGROUND_EQUIPMENT_OPTION_ID],
+      ]),
+    ),
   },
   loadoutChoices: [
     {
@@ -455,9 +448,6 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
     },
   ],
   manifest: {
-    backgroundUnitId: PHASE1_BACKGROUND_SOLDIER_UNIT_ID,
-    backgroundAbilityScoreIncrease:
-      PHASE1_BACKGROUND_ABILITY_SCORE_INCREASE_SELECTION,
     languages: ["Common", "Dwarvish", "Goblin"],
     alignment: { order: "lawful", morality: "good" },
   },
@@ -496,6 +486,24 @@ export function supportedHoleOptionIds(
       source.choiceKey === CLASS_PREPARED_SPELL_CHOICE_KEY)
   ) {
     return hole.options.map((option) => option.optionId);
+  }
+
+  if (
+    hole.kind === "choice" &&
+    source.choiceKey === BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY
+  ) {
+    return hole.options.map((option) => option.optionId);
+  }
+
+  if (
+    hole.kind === "choice" &&
+    source.choiceKey === BACKGROUND_TOOL_CHOICE_KEY
+  ) {
+    return hole.options
+      .map((option) => option.optionId)
+      .filter((optionId) =>
+        isCharacterBuildToolProficiencyId(String(optionId)),
+      );
   }
 
   return supportedUnitOptionIdsForSource(source);

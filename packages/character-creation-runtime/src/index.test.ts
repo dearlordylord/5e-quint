@@ -102,6 +102,7 @@ import {
   type CharacterProgression,
   type CharacterBuildClassLevelGain,
   type ClassHitPointRule,
+  type UnitChoiceKey,
 } from "./index.ts";
 import {
   classFeatureGrantChoiceHoles,
@@ -146,6 +147,7 @@ import {
   decodeProficiencyGrantSubjectOptionId,
   proficiencyGrantSubjectOption,
 } from "./choice-option-codecs.ts";
+import { soldierBackgroundFixtureOptionIds } from "./background-fixture.test-support.ts";
 
 const SRD_SORCERY_POINTS_POOL_ID = "sorcery_points";
 
@@ -829,7 +831,16 @@ describe("character creation hole discovery", () => {
           "12:class_wizard|13:class_fighter:level_2:fixed_hp_gain",
         ],
       ],
-      ["choice", "cc:draft:draft.background", ["background_soldier"]],
+      [
+        "choice",
+        "cc:draft:draft.background",
+        [
+          "background_acolyte",
+          "background_criminal",
+          "background_sage",
+          "background_soldier",
+        ],
+      ],
       [
         "choice",
         "cc:draft:draft.species",
@@ -1717,6 +1728,84 @@ describe("character creation hole discovery", () => {
     ).toBeUndefined();
   });
 
+  test.each([
+    {
+      backgroundUnitId: "background_acolyte",
+      expectedAsiOptions: [
+        "two_and_one:int:wis",
+        "two_and_one:int:cha",
+        "two_and_one:wis:int",
+        "two_and_one:wis:cha",
+        "two_and_one:cha:int",
+        "two_and_one:cha:wis",
+        "one_each",
+      ],
+      expectedToolOptions: ["calligraphers_supplies"],
+    },
+    {
+      backgroundUnitId: "background_criminal",
+      expectedAsiOptions: [
+        "two_and_one:dex:con",
+        "two_and_one:dex:int",
+        "two_and_one:con:dex",
+        "two_and_one:con:int",
+        "two_and_one:int:dex",
+        "two_and_one:int:con",
+        "one_each",
+      ],
+      expectedToolOptions: ["thieves_tools"],
+    },
+    {
+      backgroundUnitId: "background_sage",
+      expectedAsiOptions: [
+        "two_and_one:con:int",
+        "two_and_one:con:wis",
+        "two_and_one:int:con",
+        "two_and_one:int:wis",
+        "two_and_one:wis:con",
+        "two_and_one:wis:int",
+        "one_each",
+      ],
+      expectedToolOptions: ["calligraphers_supplies"],
+    },
+  ] as const)(
+    "opens selected Background facts for $backgroundUnitId",
+    ({ backgroundUnitId, expectedAsiOptions, expectedToolOptions }) => {
+      const holes = discoverCreationHoles({
+        draft: draftWithSelections({
+          progression: testProgression("class_fighter", 1),
+          background: backgroundUnitId,
+        }),
+        unitLibrary,
+      });
+
+      const asiHole = requireHoleById(
+        holes,
+        testUnitHoleId(backgroundUnitId, "background_ability_score_increase"),
+      );
+      expect(optionIds(asiHole)).toEqual(expectedAsiOptions);
+      expect(supportedHoleOptionIds(asiHole)).toEqual(expectedAsiOptions);
+
+      const toolHole = requireHoleById(
+        holes,
+        testUnitHoleId(backgroundUnitId, "background_tool_choice"),
+      );
+      expect(optionIds(toolHole)).toEqual(expectedToolOptions);
+      expect(supportedHoleOptionIds(toolHole)).toEqual(expectedToolOptions);
+
+      const equipmentHole = requireHoleById(
+        holes,
+        testUnitHoleId(backgroundUnitId, "background_equipment_choice"),
+      );
+      expect(equipmentHole).toMatchObject({
+        kind: "choice",
+        cardinality: { tag: "exactly", count: 1 },
+        options: [{ optionId: "option_a" }, { optionId: "option_b" }],
+      });
+      expect(supportedHoleOptionIds(equipmentHole)).toEqual(["option_b"]);
+    },
+  );
+
   test("opens purchase after the manifest coin equipment path is selected", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
@@ -1820,6 +1909,47 @@ describe("character creation hole discovery", () => {
     expect(
       holeById(holes, testUnitHoleId("class_fighter", "equipment_purchase")),
     ).toBeUndefined();
+  });
+
+  test("reports non-coin background equipment as unsupported, not invalid", () => {
+    const draft = requireAcceptedBatch(
+      fillCreationHoles({
+        draft: createTestDraft("draft:background-option-a"),
+        unitLibrary,
+        expectedRevision: draftRevision(0),
+        fills: [
+          choiceFill(
+            "cc:draft:draft.progression.initial",
+            "13:class_fighter:level_1:maximum_hit_die",
+          ),
+          choiceFill("cc:draft:draft.background", "background_acolyte"),
+        ],
+      }),
+    );
+
+    const result = fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: [
+        choiceFill(
+          testUnitHoleId("background_acolyte", "background_equipment_choice"),
+          "option_a",
+        ),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "rejected",
+      issues: [
+        {
+          tag: "illegalFill",
+          code: "unsupportedChoice",
+          message:
+            "Unsupported choice option_a for character creation hole: cc:unit-source:u:18:background_acolyte:c:background_equipment_choice",
+        },
+      ],
+    });
   });
 
   test("does not open purchase for Fighter item-bundle equipment choices", () => {
@@ -3033,6 +3163,94 @@ describe("character creation finalization", () => {
     ]);
   });
 
+  test.each([
+    {
+      backgroundUnitId: "background_acolyte",
+      asiOptionId: "two_and_one:int:wis",
+      toolOptionId: "calligraphers_supplies",
+      expectedAbilityScores: {
+        str: 15,
+        dex: 14,
+        con: 13,
+        int: 10,
+        wis: 11,
+        cha: 12,
+      },
+      expectedSkills: ["insight", "religion", "perception", "survival"],
+      expectedOriginFeatUnitId: "feat_magic_initiate_cleric",
+    },
+    {
+      backgroundUnitId: "background_criminal",
+      asiOptionId: "two_and_one:dex:con",
+      toolOptionId: "thieves_tools",
+      expectedAbilityScores: {
+        str: 15,
+        dex: 16,
+        con: 14,
+        int: 8,
+        wis: 10,
+        cha: 12,
+      },
+      expectedSkills: ["sleight_of_hand", "stealth", "perception", "survival"],
+      expectedOriginFeatUnitId: "alert",
+    },
+    {
+      backgroundUnitId: "background_sage",
+      asiOptionId: "two_and_one:int:wis",
+      toolOptionId: "calligraphers_supplies",
+      expectedAbilityScores: {
+        str: 15,
+        dex: 14,
+        con: 13,
+        int: 10,
+        wis: 11,
+        cha: 12,
+      },
+      expectedSkills: ["arcana", "history", "perception", "survival"],
+      expectedOriginFeatUnitId: "feat_magic_initiate_wizard",
+    },
+  ] as const)(
+    "finalizes $backgroundUnitId option B without duplicated background state",
+    ({
+      backgroundUnitId,
+      asiOptionId,
+      toolOptionId,
+      expectedAbilityScores,
+      expectedSkills,
+      expectedOriginFeatUnitId,
+    }) => {
+      const draft = completeFighterDraftForBackground({
+        backgroundUnitId,
+        asiOptionId,
+        toolOptionId,
+      });
+      const result = finalizeCharacterDraft({ draft, unitLibrary });
+
+      expect(result.tag).toBe("ready");
+      if (result.tag !== "ready") {
+        return;
+      }
+
+      expect(result.build.background).toBe(backgroundUnitId);
+      expect(result.build.abilityScores).toEqual(expectedAbilityScores);
+      expect(
+        expectRight(characterBuildProficiencies(result.build, unitLibrary)),
+      ).toMatchObject({
+        skills: expectedSkills,
+        tools: [toolOptionId],
+      });
+      expect(
+        characterBuildUnitRefs(result.build, unitLibrary).map(
+          (ref) => ref.unitId,
+        ),
+      ).toEqual(
+        expect.arrayContaining([backgroundUnitId, expectedOriginFeatUnitId]),
+      );
+      expect("backgroundSkillProficiencies" in result.build).toBe(false);
+      expect("backgroundToolProficiency" in result.build).toBe(false);
+    },
+  );
+
   test("finalizes non-Orc species admission with retained trait Unit refs", () => {
     const cases = [
       {
@@ -3989,7 +4207,7 @@ describe("character creation finalization", () => {
     expect(result).toMatchObject({ tag: "invalid" });
     if (result.tag !== "invalid") return;
     expect(result.issues.map((issue) => issue.message)).toContain(
-      "Finalized build must use the supported manifest background ability-score increase.",
+      "Finalized build must use a supported background ability-score increase.",
     );
   });
 
@@ -4959,7 +5177,8 @@ describe("character creation finalization", () => {
       const isSupportedLevelThreeProgression =
         CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions.some(
           (progression) =>
-            progressionOptionId(progression) === progressionOptionId(classThree),
+            progressionOptionId(progression) ===
+            progressionOptionId(classThree),
         );
       if (!isSupportedLevelThreeProgression) {
         continue;
@@ -6672,18 +6891,22 @@ describe("character creation finalization", () => {
     });
   });
 
-  test("keeps drafts with unsupported ability-score increases incomplete", () => {
+  test("keeps drafts with off-background ability-score increases incomplete", () => {
     const complete = completeManifestDraft();
-    const oneEachDraft: CharacterDraft = {
+    const offBackgroundAsiDraft: CharacterDraft = {
       ...complete,
       selections: {
         ...complete.selections,
-        backgroundAbilityScoreIncrease: { kind: "oneEach" },
+        backgroundAbilityScoreIncrease: {
+          kind: "twoAndOne",
+          plusTwo: "cha",
+          plusOne: "con",
+        },
       },
     };
 
     const finalization = finalizeCharacterDraft({
-      draft: oneEachDraft,
+      draft: offBackgroundAsiDraft,
       unitLibrary,
     });
 
@@ -7249,8 +7472,11 @@ function supportedFillForHole(
   const holeOptionIds = hole.options.map((option) => option.optionId);
   const preferredOptionIds =
     hole.source.tag === "unitChoice"
-      ? preferredOptionIdsBySource?.[unitChoiceSourceKey(hole.source)]
-      : undefined;
+      ? (preferredOptionIdsBySource?.[unitChoiceSourceKey(hole.source)] ??
+        manifestFixtureOptionIds(hole.source))
+      : hole.source.tag === "draft" && hole.source.path === "draft.background"
+        ? [creationChoiceOptionId("background_soldier")]
+        : undefined;
   const holeOptionIdSet = new Set(holeOptionIds);
   const selectedOptionIds = (preferredOptionIds ?? holeOptionIds)
     .filter((optionId) => holeOptionIdSet.has(optionId))
@@ -7269,6 +7495,23 @@ function supportedFillForHole(
     holeId: hole.holeId,
     optionIds: selectedOptionIds,
   };
+}
+
+function manifestFixtureOptionIds(source: {
+  readonly unitId: UnitRecord["id"];
+  readonly choiceKey: UnitChoiceKey;
+}): readonly CreationChoiceOptionId[] | undefined {
+  if (
+    source.unitId === "wizard_evocation_savant" &&
+    source.choiceKey === WIZARD_SPELLBOOK_CHOICE_KEY
+  ) {
+    return [
+      creationChoiceOptionId("gust_of_wind"),
+      creationChoiceOptionId("shatter"),
+    ];
+  }
+
+  return soldierBackgroundFixtureOptionIds(source);
 }
 
 function readableClassFacts(classUnitId: UnitRecord["id"]) {
@@ -7784,6 +8027,118 @@ function completeManifestDraftAfterProgression(
         ),
         choiceFill(
           testUnitHoleId("background_soldier", "background_equipment_choice"),
+          "option_b",
+        ),
+      ],
+    }),
+  );
+  const afterPurchase = requireAcceptedBatch(
+    fillCreationHoles({
+      draft: afterChoices,
+      unitLibrary,
+      expectedRevision: afterChoices.revision,
+      fills: [
+        choiceFill(
+          testUnitHoleId("class_fighter", "equipment_purchase"),
+          "armor_chain_mail",
+          "weapon_longsword",
+          "equipment_shield",
+        ),
+      ],
+    }),
+  );
+
+  return requireAcceptedBatch(
+    fillCreationHoles({
+      draft: afterPurchase,
+      unitLibrary,
+      expectedRevision: afterPurchase.revision,
+      fills: [
+        choiceFill(testLoadoutHoleId("armor_chain_mail", "armor"), "worn"),
+        choiceFill(testLoadoutHoleId("equipment_shield", "shield"), "wielded"),
+        choiceFill(
+          testLoadoutHoleId("weapon_longsword", "weapon"),
+          "wielded_one_handed",
+        ),
+      ],
+    }),
+  );
+}
+
+function completeFighterDraftForBackground(input: {
+  readonly backgroundUnitId: UnitRecord["id"];
+  readonly asiOptionId: string;
+  readonly toolOptionId: string;
+}): CharacterDraft {
+  const draft = createTestDraft(`draft:complete-${input.backgroundUnitId}`);
+  const afterInitial = requireAcceptedBatch(
+    fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: [
+        choiceFill(
+          "cc:draft:draft.progression.initial",
+          "13:class_fighter:level_1:maximum_hit_die",
+        ),
+        choiceFill("cc:draft:draft.background", input.backgroundUnitId),
+        choiceFill("cc:draft:draft.species", "species_orc"),
+        {
+          kind: "abilityScores",
+          holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
+          method: "standardArray",
+          value: testAbilityScoreAssignment({
+            str: 15,
+            dex: 14,
+            con: 13,
+            int: 8,
+            wis: 10,
+            cha: 12,
+          }),
+        },
+        choiceFill("cc:draft:draft.languages", "Dwarvish", "Goblin"),
+        choiceFill("cc:draft:draft.alignment", "lawful_good"),
+      ],
+    }),
+  );
+  const afterChoices = requireAcceptedBatch(
+    fillCreationHoles({
+      draft: afterInitial,
+      unitLibrary,
+      expectedRevision: afterInitial.revision,
+      fills: [
+        choiceFill(
+          testUnitHoleId("class_fighter", "class_skill_proficiency_choice"),
+          "perception",
+          "survival",
+        ),
+        choiceFill(
+          testUnitHoleId("fighter_fighting_style", "class_feature_feat_choice"),
+          "defense",
+        ),
+        choiceFill(
+          testUnitHoleId("fighter_weapon_mastery", "weapon_mastery_options"),
+          "weapon_longsword",
+          "weapon_spear",
+          "weapon_flail",
+        ),
+        choiceFill(
+          testUnitHoleId(
+            input.backgroundUnitId,
+            "background_ability_score_increase",
+          ),
+          input.asiOptionId,
+        ),
+        choiceFill(
+          testUnitHoleId(input.backgroundUnitId, "background_tool_choice"),
+          input.toolOptionId,
+        ),
+        choiceFill(
+          testUnitHoleId("class_fighter", "class_equipment_choice"),
+          "option_c",
+        ),
+        choiceFill(
+          testUnitHoleId(input.backgroundUnitId, "background_equipment_choice"),
           "option_b",
         ),
       ],
@@ -8681,6 +9036,18 @@ function holeById(
   holeId: string,
 ): CreationHole | undefined {
   return holes.find((hole) => hole.holeId === holeId);
+}
+
+function requireHoleById(
+  holes: readonly CreationHole[],
+  holeId: string,
+): CreationHole {
+  const hole = holeById(holes, holeId);
+  if (hole == null) {
+    throw new Error(`Missing expected test hole: ${holeId}`);
+  }
+
+  return hole;
 }
 
 function optionIds(hole: CreationHole | undefined): readonly string[] {

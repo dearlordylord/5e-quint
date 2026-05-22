@@ -49,6 +49,7 @@ import {
   SRD_ROGUE_CLASS_UNIT_ID,
 } from "./phase1-manifest.ts";
 import { supportedHoleOptionIds } from "./support-gates.ts";
+import { soldierBackgroundFixtureOptionIds } from "./background-fixture.test-support.ts";
 
 const ROGUE_EXPERTISE_UNIT_ID = "rogue_expertise";
 const LEVEL_ONE_ROGUE_SKILL_PROFICIENCIES = [
@@ -536,13 +537,18 @@ function preferredOptionIdsForHole(input: {
   if (source.tag === "draft" && source.path === "draft.progression.initial") {
     return [progressionOptionId(input.progression)];
   }
+  if (source.tag === "draft" && source.path === "draft.background") {
+    return [creationChoiceOptionId("background_soldier")];
+  }
   if (source.tag !== "unitChoice") {
     return undefined;
   }
 
-  return input.preferredOptionIdsBySource[
-    choiceSourceKey(source.unitId, source.choiceKey)
-  ];
+  return (
+    input.preferredOptionIdsBySource[
+      choiceSourceKey(source.unitId, source.choiceKey)
+    ] ?? soldierBackgroundFixtureOptionIds(source)
+  );
 }
 
 function rogueExpertiseFacts(input: {

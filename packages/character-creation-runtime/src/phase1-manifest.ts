@@ -41,9 +41,9 @@ export const INITIAL_CHARACTER_DRAFT_PATHS = [
 // Array, fixed initial languages/alignment, level-1 Fighter choices, Chain
 // Mail + Shield + one-handed Longsword, and the Goblin Warrior battle setup.
 // Hole discovery may expose broader legal SRD options, but finalization is
-// intentionally gated to the support profile that now widens selected class
-// facts and SRD species admission while keeping Soldier origin facts
-// manifest-owned.
+// intentionally gated to the support profile: selected class facts, selected
+// Background origin facts, SRD species admission, and the remaining
+// manifest-owned languages/alignment/equipment projections.
 export const PHASE1_CLASS_FIGHTER_UNIT_ID = "class_fighter";
 export const SRD_BARD_CLASS_UNIT_ID = "class_bard";
 export const SRD_CLERIC_CLASS_UNIT_ID = "class_cleric";
@@ -83,6 +83,12 @@ export const SRD_LEVEL_THREE_SUBCLASS_UNIT_IDS = [
   "subclass_wizard_evoker",
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 export const PHASE1_BACKGROUND_SOLDIER_UNIT_ID = "background_soldier";
+export const SRD_CHARACTER_ADMISSION_BACKGROUND_UNIT_IDS = [
+  "background_acolyte",
+  "background_criminal",
+  "background_sage",
+  PHASE1_BACKGROUND_SOLDIER_UNIT_ID,
+] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 export const PHASE1_SPECIES_ORC_UNIT_ID = "species_orc";
 export const SRD_CHARACTER_ADMISSION_SPECIES_UNIT_IDS = [
   "species_dragonborn",
@@ -102,9 +108,8 @@ export const PHASE1_SHIELD_UNIT_ID = "equipment_shield";
 export const PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID = "defense";
 export const PHASE1_FIGHTING_STYLE_ARCHERY_UNIT_ID = "feat_archery";
 
-export const SUPPORTED_BACKGROUND_UNIT_IDS = [
-  PHASE1_BACKGROUND_SOLDIER_UNIT_ID,
-] as const satisfies ReadonlyArray<UnitRecord["id"]>;
+export const SUPPORTED_BACKGROUND_UNIT_IDS =
+  SRD_CHARACTER_ADMISSION_BACKGROUND_UNIT_IDS;
 export const SUPPORTED_PURCHASE_UNIT_IDS = [
   PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID,
   PHASE1_WEAPON_LONGSWORD_UNIT_ID,
@@ -141,7 +146,7 @@ function progressionOptionClassPath(progression: CharacterProgression): string {
     .join(optionClassPathSeparator);
 }
 export const SUPPORTED_BACKGROUND_OPTION_IDS = [
-  creationChoiceOptionId(PHASE1_BACKGROUND_SOLDIER_UNIT_ID),
+  ...SUPPORTED_BACKGROUND_UNIT_IDS.map(creationChoiceOptionId),
 ] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
 export const SUPPORTED_SPECIES_OPTION_IDS = [
   ...SRD_CHARACTER_ADMISSION_SPECIES_UNIT_IDS.map(creationChoiceOptionId),

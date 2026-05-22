@@ -47,6 +47,7 @@ import {
   PRIMAL_ORDER_CHOICE_KEY,
 } from "./phase1-manifest.ts";
 import { supportedHoleOptionIds } from "./support-gates.ts";
+import { soldierBackgroundFixtureOptionIds } from "./background-fixture.test-support.ts";
 
 const CLERIC_CLASS_UNIT_ID = "class_cleric";
 const DRUID_CLASS_UNIT_ID = "class_druid";
@@ -130,8 +131,9 @@ const orderProjectionBaseSchema = {
   orderUnitRefPresent: z.literal(true),
   totalLevel: z.literal(1),
 } as const;
-const clericDruidOrderSelectedIdentityProjectionSchema =
-  z.discriminatedUnion("lastResult", [
+const clericDruidOrderSelectedIdentityProjectionSchema = z.discriminatedUnion(
+  "lastResult",
+  [
     z.object({
       lastResult: z.literal("init"),
       selectedOrderUnitId: z.literal("none"),
@@ -200,7 +202,8 @@ const clericDruidOrderSelectedIdentityProjectionSchema =
       abilityCheckBonusKind: z.literal("none"),
       abilityCheckBonusFeatureCount: z.literal(0),
     }),
-  ]);
+  ],
+);
 type ClericDruidOrderSelectedIdentityProjection = z.infer<
   typeof clericDruidOrderSelectedIdentityProjectionSchema
 >;
@@ -219,10 +222,7 @@ const selectedUnitIdentityReplays = [
   {
     taskId: "L1D2-CLERIC-DRUID-ORDER",
     unitId: "cleric_divine_order",
-    actions: [
-      "doSelectClericProtectorOrder",
-      "doSelectClericThaumaturgeOrder",
-    ],
+    actions: ["doSelectClericProtectorOrder", "doSelectClericThaumaturgeOrder"],
     sequences: [
       {
         name: "cleric-one-finalizes-protector-divine-order",
@@ -600,11 +600,16 @@ function supportProfileFillForHole(
     );
   }
   const supportedOptionIdSet = new Set(supportedOptionIds);
-  const holeOptionIdSet = new Set(hole.options.map((option) => option.optionId));
+  const holeOptionIdSet = new Set(
+    hole.options.map((option) => option.optionId),
+  );
   const preferredOptionIds =
-    hole.source.tag === "unitChoice"
-      ? preferredOptionIdsBySource[unitChoiceSourceKey(hole.source)]
-      : undefined;
+    hole.source.tag === "draft" && hole.source.path === "draft.background"
+      ? [creationChoiceOptionId("background_soldier")]
+      : hole.source.tag === "unitChoice"
+        ? (preferredOptionIdsBySource[unitChoiceSourceKey(hole.source)] ??
+          soldierBackgroundFixtureOptionIds(hole.source))
+        : undefined;
   const defaultOptionIds = hole.options.map((option) => option.optionId);
   const selectedOptionIds = (preferredOptionIds ?? defaultOptionIds)
     .filter((optionId) => holeOptionIdSet.has(optionId))
@@ -794,7 +799,10 @@ function selectedChoiceOptionIds(
   );
 }
 
-function orderChoiceSourceKey(unitId: string, choiceKey: UnitChoiceKey): string {
+function orderChoiceSourceKey(
+  unitId: string,
+  choiceKey: UnitChoiceKey,
+): string {
   return unitChoiceSourceKey({
     tag: "unitChoice",
     unitId: expectRight(unitChoiceSourceUnitId(unitId)),
@@ -850,8 +858,7 @@ function normalizeQuintState(
     ),
     orderUnitRefPresent: parsed.qOrderUnitRefPresent,
     extraCantripUnitRefPresent: parsed.qExtraCantripUnitRefPresent,
-    martialWeaponProficiencyPresent:
-      parsed.qMartialWeaponProficiencyPresent,
+    martialWeaponProficiencyPresent: parsed.qMartialWeaponProficiencyPresent,
     heavyArmorTrainingPresent: parsed.qHeavyArmorTrainingPresent,
     mediumArmorTrainingPresent: parsed.qMediumArmorTrainingPresent,
     abilityCheckBonusKind: parsed.qAbilityCheckBonusKind,

@@ -52,6 +52,7 @@ import {
   EQUIPMENT_PURCHASE_CHOICE_KEY,
 } from "./phase1-manifest.ts";
 import { supportedHoleOptionIds } from "./support-gates.ts";
+import { soldierBackgroundFixtureOptionIds } from "./background-fixture.test-support.ts";
 
 const WARLOCK_CLASS_UNIT_ID = "class_warlock";
 const WARLOCK_ELDRITCH_INVOCATIONS_UNIT_ID = "warlock_eldritch_invocations";
@@ -1005,13 +1006,18 @@ function preferredOptionIdsForHole(input: {
   if (source.tag === "draft" && source.path === "draft.progression.initial") {
     return [progressionOptionId(input.progression)];
   }
+  if (source.tag === "draft" && source.path === "draft.background") {
+    return [creationChoiceOptionId("background_soldier")];
+  }
   if (source.tag !== "unitChoice") {
     return undefined;
   }
 
-  return input.preferredOptionIdsBySource[
-    choiceSourceKey(source.unitId, source.choiceKey)
-  ];
+  return (
+    input.preferredOptionIdsBySource[
+      choiceSourceKey(source.unitId, source.choiceKey)
+    ] ?? soldierBackgroundFixtureOptionIds(source)
+  );
 }
 
 function warlockProgression(): CharacterProgression {

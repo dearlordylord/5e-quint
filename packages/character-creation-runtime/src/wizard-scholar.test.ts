@@ -41,6 +41,7 @@ import {
   progressionOptionId,
 } from "./phase1-manifest.ts";
 import { supportedHoleOptionIds } from "./support-gates.ts";
+import { soldierBackgroundFixtureOptionIds } from "./background-fixture.test-support.ts";
 import { eligibleExpertiseSkills } from "./discovery.ts";
 import { wizardSpellcastingCreationAtLevel } from "./class-spellcasting.ts";
 
@@ -487,11 +488,14 @@ function supportedFillForHole(input: {
     input.hole.source.tag === "draft" &&
     input.hole.source.path === "draft.progression.initial"
       ? [input.progressionOption]
-      : input.hole.source.tag === "unitChoice"
-        ? input.preferredOptionIdsBySource?.[
-            unitChoiceSourceKey(input.hole.source)
-          ]
-        : undefined;
+      : input.hole.source.tag === "draft" &&
+          input.hole.source.path === "draft.background"
+        ? [creationChoiceOptionId("background_soldier")]
+        : input.hole.source.tag === "unitChoice"
+          ? (input.preferredOptionIdsBySource?.[
+              unitChoiceSourceKey(input.hole.source)
+            ] ?? soldierBackgroundFixtureOptionIds(input.hole.source))
+          : undefined;
   const holeOptionIdSet = new Set(holeOptionIds);
   const selectedOptionIds = (preferredOptionIds ?? holeOptionIds)
     .filter((optionId) => holeOptionIdSet.has(optionId))

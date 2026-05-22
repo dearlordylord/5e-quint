@@ -14,6 +14,7 @@ import {
   choiceCardinalityBounds,
   classUnitIdFromUnitId,
   createCharacterDraft,
+  creationChoiceOptionId,
   discoverCreationHoles,
   fillCreationHoles,
   finalizeCharacterDraft,
@@ -30,6 +31,7 @@ import {
   progressionOptionId,
 } from "./phase1-manifest.ts";
 import { supportedHoleOptionIds } from "./support-gates.ts";
+import { soldierBackgroundFixtureOptionIds } from "./background-fixture.test-support.ts";
 
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT rogue_expertise
 
@@ -163,11 +165,18 @@ function supportedFillForHole(
     );
   }
   const supportedOptionIdSet = new Set(supportedOptionIds);
-  const holeOptionIdSet = new Set(hole.options.map((option) => option.optionId));
+  const holeOptionIdSet = new Set(
+    hole.options.map((option) => option.optionId),
+  );
   const preferredOptionIds =
     "path" in hole.source && hole.source.path === "draft.progression.initial"
       ? [progressionOption]
-      : hole.options.map((option) => option.optionId);
+      : "path" in hole.source && hole.source.path === "draft.background"
+        ? [creationChoiceOptionId("background_soldier")]
+        : hole.source.tag === "unitChoice"
+          ? (soldierBackgroundFixtureOptionIds(hole.source) ??
+            hole.options.map((option) => option.optionId))
+          : hole.options.map((option) => option.optionId);
   const selectedOptionIds = preferredOptionIds
     .filter((optionId) => holeOptionIdSet.has(optionId))
     .filter((optionId) => supportedOptionIdSet.has(optionId))
