@@ -97,7 +97,7 @@
     {
       "number": 16,
       "id": "L12G-FOLLOWUP-SPIKE-GROWTH-PROFILE-ACCOUNTING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Spike Growth Profile Accounting Closure"
     },
     {
@@ -491,7 +491,7 @@ Acceptance:
 
 ### Task 16 - L12G-FOLLOWUP-SPIKE-GROWTH-PROFILE-ACCOUNTING - Spike Growth Profile Accounting Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -501,9 +501,28 @@ Input:
 
 Output:
 
-- Resolve the remaining open-profile-accounting status for Spike Growth after movement hazard and recognition work: update claims/evidence/reports so the metric is supported, target-closed, or split into a smaller concrete follow-up.
-- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
-- Focused verification, `git diff --check`, and reviewer-loop convergence.
+- Accepted target-closed/profile-accounting closure for Spike Growth:
+  `plans/unit-profile-coverage/unit-claims.jsonl` records
+  `profile-subset-supported` for `spell.invocation-spike-growth-movement-hazard`,
+  `plans/unit-profile-coverage/unit-evidence.jsonl` records deterministic
+  admission/projection evidence, and the generated strict report classifies
+  `spike_growth` as `closed-runtime-detached-table-adjudication` rather than
+  `open-profile-accounting`.
+- The supported profile remains Magic Action and level-2-or-higher Spell Slot
+  casting, caller-supplied 20-foot-radius Sphere area identity, caster-owned
+  Concentration up to 10 minutes, active Difficult Terrain movement-cost
+  projection from caller-supplied movement distance, 2d4 Piercing damage per
+  5 feet traveled into or within the area, and Concentration/duration cleanup.
+- The camouflaged-terrain recognition clause remains an accepted
+  runtime-detached table Search/perception witness boundary: visibility at cast
+  time, Search Action declaration before entry, Wisdom (Perception or Survival)
+  check result against the caster's Spell Save DC, and recognized-hazard
+  witness are not duplicated in promoted battle runtime.
+- No smaller Spike Growth follow-up is needed for this lane; automatic geometry,
+  pathfinding, and per-observer terrain-knowledge derivation remain table-owned.
+- Verification completed with local RAW/ubiquitous-language review,
+  `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop
+  convergence.
 
 Acceptance:
 
