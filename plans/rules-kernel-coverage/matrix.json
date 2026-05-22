@@ -5604,6 +5604,39 @@
         "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
       ],
       "status": "fixture-bound"
+    },
+    {
+      "blockedBy": [
+        "run-block-coupled",
+        "fixture-world-coupled",
+        "unsupported-construct"
+      ],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "membership"
+      ],
+      "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+      ],
+      "status": "fixture-bound"
     }
   ],
   "kernelIrBoundaries": [

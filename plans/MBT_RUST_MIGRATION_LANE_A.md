@@ -55,13 +55,13 @@
     {
       "number": 9,
       "id": "MBTRUST-A-SPELL-PROCEDURE-READINESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Spell Procedure Generator Readiness Row"
     },
     {
       "number": 10,
       "id": "MBTRUST-A-CLOSURE-REPORT",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Generator Readiness Closure Report"
     }
   ]
@@ -269,7 +269,7 @@ Output:
 
 ### Task 9 - MBTRUST-A-SPELL-PROCEDURE-READINESS - Spell Procedure Generator Readiness Row
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -283,7 +283,7 @@ Output:
 
 ### Task 10 - MBTRUST-A-CLOSURE-REPORT - Generator Readiness Closure Report
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on:
 
