@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "MBTRUST-A-GENERATION-SUBSET-CATALOG",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Generation Subset Catalog And Blocker Vocabulary"
     },
     {
@@ -189,7 +189,7 @@ Output:
 
 ### Task 4 - MBTRUST-A-GENERATION-SUBSET-CATALOG - Generation Subset Catalog And Blocker Vocabulary
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
