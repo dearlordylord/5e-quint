@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L12BG-SURFACE-ACOLYTE-CRIMINAL-SAGE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Author Missing SRD Background Surface Records"
     },
     {
@@ -82,7 +82,7 @@ Every task must include:
 
 ### Task 1 - L12BG-SURFACE-ACOLYTE-CRIMINAL-SAGE - Author Missing SRD Background Surface Records
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
