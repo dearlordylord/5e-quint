@@ -4,6 +4,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
@@ -41,6 +42,7 @@ import {
 import type {
   BattleAreaId,
   BattleLineDirectionId,
+  BattleTablePositionId,
   CombatantId,
 } from "../identity.ts";
 import {
@@ -1946,6 +1948,80 @@ export function applyFlamingSphereCastEffect(input: {
     },
   ];
   combatants.set(input.actorId, { ...caster, activeEffects });
+  return { ...input.state, combatants };
+}
+
+export function applySpiritualWeaponAttackProxyEffect(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly forcePositionId: BattleTablePositionId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "spiritualWeaponAttackProxy" }
+  >;
+}): BattleState {
+  const combatants = new Map(input.state.combatants);
+  const caster = combatants.get(input.actorId);
+  if (caster === undefined) {
+    return input.state;
+  }
+  const activeEffects = [
+    ...caster.activeEffects.filter(
+      (effect) =>
+        !(
+          effect.kind === "spiritualWeapon" &&
+          effect.sourceSpellId === input.invocation.spell.id &&
+          effect.sourceCombatantId === input.actorId
+        ),
+    ),
+    {
+      kind: "spiritualWeapon" as const,
+      sourceSpellId: input.invocation.spell.id,
+      sourceCombatantId: input.actorId,
+      forcePositionId: input.forcePositionId,
+      forceReachFeet: input.invocation.forceReachFeet,
+      repeatMoveMaxFeet: input.invocation.repeatMoveMaxFeet,
+      startedOn: {
+        actorId: input.actorId,
+        round: input.state.initiative.round,
+      },
+      damage: input.invocation.damage,
+      attackKind: input.invocation.attackKind,
+      attackBonus: input.invocation.attackBonus,
+      expiresAt: {
+        kind: "concentration" as const,
+        combatantId: input.actorId,
+        durationTicks: input.invocation.durationTicks,
+      },
+    },
+  ];
+  combatants.set(input.actorId, { ...caster, activeEffects });
+  return { ...input.state, combatants };
+}
+
+export function repositionSpiritualWeaponAttackProxyEffect(input: {
+  readonly state: BattleState;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "spiritualWeaponRepeatAttack" }
+  >;
+  readonly forcePositionId: BattleTablePositionId;
+}): BattleState {
+  const combatants = new Map(input.state.combatants);
+  const caster = combatants.get(
+    input.invocation.activeEffect.sourceCombatantId,
+  );
+  if (caster === undefined) {
+    return input.state;
+  }
+  combatants.set(input.invocation.activeEffect.sourceCombatantId, {
+    ...caster,
+    activeEffects: caster.activeEffects.map((effect) =>
+      effect === input.invocation.activeEffect
+        ? { ...effect, forcePositionId: input.forcePositionId }
+        : effect,
+    ),
+  });
   return { ...input.state, combatants };
 }
 

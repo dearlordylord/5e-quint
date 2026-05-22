@@ -74,6 +74,7 @@ module battleRuntimeConcentration {
         | CreatureSizeChange(_) => false
         | LevitatedCreature(_) => false
         | RayOfEnfeeblementDamageRollPenalty(_) => false
+        | SpiritualWeapon(_) => false
         | SelfTransformationModeEffect(_) => false
         | DragonsBreathEffect(_) => false
         | _ => true

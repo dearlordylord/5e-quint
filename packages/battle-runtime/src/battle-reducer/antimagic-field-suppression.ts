@@ -87,4 +87,3 @@ export function ongoingSpellEffectSuppressedByAntimagicField(
     ongoingSpellEffectRefKey(effect),
   );
 }
-

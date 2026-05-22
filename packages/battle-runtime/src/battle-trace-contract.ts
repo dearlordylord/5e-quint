@@ -32,6 +32,7 @@ export const BATTLE_TRACE_HOLE_KINDS = [
   "spellAreaChoice",
   "gustOfWindLineDirectionChoice",
   "teleportDestination",
+  "spiritualWeaponForcePosition",
   "movableZoneRamMovement",
   "movableZoneRepositionMovement",
   "savingThrowOutcome",

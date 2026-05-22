@@ -102,6 +102,8 @@ const QUICKENED_ACTION_REWRITE_PROCEDURE_DISPOSITIONS = {
   expeditiousRetreatDash: "notActionSpellCasting",
   featherFallMitigation: "notActionSpellCasting",
   flamingSphere: "actionSpellResolverNotRewritten",
+  spiritualWeaponAttackProxy: "actionSpellResolverNotRewritten",
+  spiritualWeaponRepeatAttack: "notActionSpellCasting",
   fogCloudObscurement: "actionSpellResolverNotRewritten",
   greaseGroundHazard: "actionSpellResolverNotRewritten",
   gustOfWindLine: "actionSpellResolverNotRewritten",

@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Spiritual Weapon Persistent Attack Runtime"
     },
     {
@@ -233,7 +233,7 @@ Output:
 
 ### Task 8 - L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME - Spiritual Weapon Persistent Attack Runtime
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 - Task B7.

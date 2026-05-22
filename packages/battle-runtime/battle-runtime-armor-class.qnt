@@ -119,6 +119,7 @@ module battleRuntimeArmorClass {
         | HeatMetalObjectContactDamage(_) => false
         | HeatMetalHoldingWearingPenalty(_) => false
         | CommandPending(_) => false
+        | SpiritualWeapon(_) => false
         | SelfTransformationModeEffect(_) => false
       })) 13 + dexMod else baseAc
       val shieldBonus = if (effects.contains(ShieldArmorClassBonus)) 5 else 0

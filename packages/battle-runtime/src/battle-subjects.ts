@@ -4,6 +4,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dragons-breath-granted-action
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
@@ -151,6 +152,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "magicalDarknessPointOrigin",
   "antimagicFieldOngoingSpellSuppression",
   "flamingSphere",
+  "spiritualWeaponAttackProxy",
   "spikeGrowthMovementHazard",
   "moonbeam",
   "objectContactDamage",
@@ -225,6 +227,7 @@ export const SpellInvocationRefSchema = Schema.Union(
     procedure: Schema.Literal(
       "markedDamageRiderTransfer",
       "objectContactDamageRepeat",
+      "spiritualWeaponRepeatAttack",
       "spellCreatedHeldObjectAttack",
       "spellCreatedHeldObjectReEvoke",
     ),
@@ -263,6 +266,7 @@ export function spellEffectInvocationRef(
   procedure:
     | "markedDamageRiderTransfer"
     | "objectContactDamageRepeat"
+    | "spiritualWeaponRepeatAttack"
     | "spellCreatedHeldObjectAttack"
     | "spellCreatedHeldObjectReEvoke",
 ): SpellInvocationRef {

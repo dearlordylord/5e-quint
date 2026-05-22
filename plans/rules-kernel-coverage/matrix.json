@@ -24,15 +24,15 @@
     "obligations[].profiles": "Derived from profileObligations by obligation id; authored obligations.jsonl rows must not contain profiles."
   },
   "battleHoleFrontierSummary": {
-    "total": 108,
+    "total": 110,
     "bySubject": {
-      "battle-hole-family": 68,
-      "battle-fill-kind": 40
+      "battle-hole-family": 69,
+      "battle-fill-kind": 41
     },
     "byClassification": {
       "semantic-frontier": 85,
       "deterministic-boundary-projection": 0,
-      "table-owned-fact": 23,
+      "table-owned-fact": 25,
       "unsupported-dead-branch": 0
     }
   },
@@ -196,6 +196,7 @@
       "profiles": [
         "spell.invocation-damage-save-or-attack",
         "spell.invocation-see-invisible-observer-sight",
+        "spell.invocation-spiritual-weapon-attack-proxy",
         "spell.reaction-shield",
         "spell.readied-action-time-spell"
       ],
@@ -2575,7 +2576,9 @@
       "id": "BATTLE.TABLE.HOLE_FACT_BOUNDARIES",
       "kind": "boundary-protocol",
       "parityWitnesses": [],
-      "profiles": [],
+      "profiles": [
+        "spell.invocation-spiritual-weapon-attack-proxy"
+      ],
       "qntOwners": [],
       "reason": "The battle reducer may validate and consume caller/table facts, but it does not derive map geometry, route selection, object inventory, line of sight, target willingness, area identity, or presentation-only effect counts as rules-kernel state.",
       "runtime": "battle",
@@ -4108,6 +4111,30 @@
       "id": "BattleSpikeGrowthMovementDamageRollHole",
       "reason": "Spike Growth movement damage consumes caller-supplied movement-distance facts, scales 2d4 Piercing per 5 feet traveled into or within the area, and reuses shared HP damage and the generic damage-disposition split; automatic geometry and pathfinding remain boundary evidence.",
       "subject": "battle-hole-family"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "spiritualWeaponForcePosition",
+      "id": "BattleSpiritualWeaponForcePositionHole",
+      "reason": "Spiritual Weapon force placement and later force movement are caller/table spatial facts. The reducer consumes typed placement and movement-distance witnesses without deriving map geometry, pathfinding, or force-space identity from duplicated runtime state.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "fillKind": "spiritualWeaponForcePosition",
+      "followUpTaskIds": [],
+      "id": "spiritualWeaponForcePosition",
+      "reason": "Spiritual Weapon force-position fills supply the table-verified cast position or later reposition for the spell-owned attack proxy; target adjacency remains a separate table spatial fact consumed by the spell target fill.",
+      "subject": "battle-fill-kind"
     }
   ],
   "profileObligations": [
@@ -4878,6 +4905,13 @@
         "BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT"
       ],
       "profileId": "spell.invocation-see-invisible-observer-sight"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "profileId": "spell.invocation-spiritual-weapon-attack-proxy"
     }
   ],
   "generatorReadiness": [
@@ -4998,6 +5032,7 @@
     "spell.invocation-spell-created-held-object",
     "spell.invocation-spell-hosted-weapon-attack",
     "spell.invocation-spike-growth-movement-hazard",
+    "spell.invocation-spiritual-weapon-attack-proxy",
     "spell.invocation-warding-bond-linked-effect",
     "spell.invocation-weapon-attack-override",
     "spell.invocation-weapon-damage-rider",

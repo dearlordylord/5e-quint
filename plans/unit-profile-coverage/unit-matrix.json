@@ -62,8 +62,8 @@
       "value": 244
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 137,
-      "numerator": 137,
+      "denominator": 138,
+      "numerator": 138,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -72,49 +72,49 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 94,
-      "numerator": 94,
+      "denominator": 95,
+      "numerator": 95,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 94,
-      "numerator": 94,
+      "denominator": 95,
+      "numerator": 95,
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 129,
+      "denominator": 130,
       "numerator": 124,
-      "percent": "96.1%"
+      "percent": "95.4%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 129,
-      "numerator": 124,
-      "percent": "96.1%"
+      "denominator": 130,
+      "numerator": 125,
+      "percent": "96.2%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 138,
+      "denominator": 139,
       "numerator": 136,
-      "percent": "98.6%"
+      "percent": "97.8%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 94,
-      "numerator": 94,
+      "denominator": 95,
+      "numerator": 95,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 94,
-      "numerator": 94,
+      "denominator": 95,
+      "numerator": 95,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 137,
+      "denominator": 138,
       "numerator": 108,
-      "percent": "78.8%"
+      "percent": "78.3%"
     },
     "supportedProfileCoverage": {
       "denominator": 202,
-      "numerator": 137,
-      "percent": "67.8%"
+      "numerator": 138,
+      "percent": "68.3%"
     }
   },
   "metricSemantics": [
@@ -3761,20 +3761,54 @@
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
         }
       ]
+    },
+    {
+      "id": "spell.invocation-spiritual-weapon-attack-proxy",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-spiritual-weapon.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+        "packages/battle-runtime/src/battle-subjects.ts"
+      ],
+      "sourceBoundary": "The runtime consumes the authored Spiritual Weapon ongoing-effect shape plus caller-supplied force placement, force movement, and target-within-force-reach facts. It owns Bonus Action and level-2-or-higher Spell Slot spending, caster-owned Concentration up to 1 minute, a spell-owned attack proxy active effect, immediate and later melee Spell Attacks, slot-scaled Force damage, later-turn Bonus Action movement up to 20 feet, and cleanup on Concentration or duration end. Automatic map geometry, pathfinding, force-space derivation, and target adjacency derivation remain caller/table spatial facts.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME"
+      ],
+      "title": "Spell invocation creates and moves a Spiritual Weapon attack proxy with table-supplied force witnesses",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-spiritual-weapon.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-spiritual-weapon.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 129,
+        "denominator": 130,
         "numerator": 124,
-        "percent": "96.1%"
+        "percent": "95.4%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 129,
-        "numerator": 124,
-        "percent": "96.1%"
+        "denominator": 130,
+        "numerator": 125,
+        "percent": "96.2%"
       }
     },
     "profileKinds": [
@@ -5577,6 +5611,25 @@
         "obligations": [],
         "profileId": "character-sheet.druid-circle-land-spell-access",
         "profileKind": "character-sheet"
+      },
+      {
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+          },
+          {
+            "obligationId": "BATTLE.TABLE.HOLE_FACT_BOUNDARIES",
+            "runtime": "battle",
+            "status": "boundary-only",
+            "title": "Battle holes and fills that carry table-owned target, route, placement, object, or other spatial facts remain boundary facts rather than reducer-owned world modeling"
+          }
+        ],
+        "profileId": "spell.invocation-spiritual-weapon-attack-proxy",
+        "profileKind": "spell-invocation"
       }
     ],
     "sourceArtifacts": {
@@ -5587,9 +5640,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 138,
+          "denominator": 139,
           "numerator": 136,
-          "percent": "98.6%"
+          "percent": "97.8%"
         }
       },
       "units": [
@@ -8663,6 +8716,31 @@
           "unitId": "spider_climb"
         },
         {
+          "joinStatus": "mapped-open",
+          "profiles": [
+            {
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                },
+                {
+                  "obligationId": "BATTLE.TABLE.HOLE_FACT_BOUNDARIES",
+                  "runtime": "battle",
+                  "status": "boundary-only",
+                  "title": "Battle holes and fills that carry table-owned target, route, placement, object, or other spatial facts remain boundary facts rather than reducer-owned world modeling"
+                }
+              ],
+              "profileId": "spell.invocation-spiritual-weapon-attack-proxy",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "spiritual_weapon"
+        },
+        {
           "joinStatus": "covered",
           "profiles": [
             {
@@ -11382,6 +11460,22 @@
         "character-sheet.druid-circle-land-spell-access"
       ],
       "taskId": "L12G-FOLLOWUP-DRUID-CIRCLE-LAND-SPELL-ACCESS"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Spiritual Weapon Surface admission, Bonus Action and level-2-or-higher Spell Slot spending, caller-supplied force placement and target-adjacency facts, immediate melee Spell Attack, slot-scaled Force damage, caster-owned Concentration, spell-owned attack proxy state, later-turn Bonus Action force movement and repeat attack, and concentration cleanup while automatic geometry remains table-owned.",
+      "profileIds": [
+        "spell.invocation-spiritual-weapon-attack-proxy"
+      ],
+      "taskId": "L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint coverage in battle-runtime-spiritual-weapon.qnt models Spiritual Weapon's Bonus Action level-2-or-higher cast, caller-supplied force-position hole, 60-foot placement gate, target reach fact bound to the selected force position, immediate spell attack damage, caster-owned concentration proxy state, later Bonus Action reposition up to 20 feet, repeat attack, and no-slot repeat behavior.",
+      "profileIds": [
+        "spell.invocation-spiritual-weapon-attack-proxy"
+      ],
+      "taskId": "L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME"
     }
   ],
   "units": [
@@ -25095,24 +25189,76 @@
         "status": "installed"
       },
       "claim": {
-        "followUpTasks": [
-          {
-            "id": "L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME",
-            "mechanic": "Promote Spiritual Weapon as a level-2 prepared Spell Invocation that spends the Bonus Action and Spell Slot, starts caster-owned Concentration up to 1 minute, consumes caller-supplied force placement and target-adjacency facts, resolves the immediate melee Spell Attack, applies slot-scaled Force damage, records the spell-owned attack proxy, offers a later-turn Bonus Action to move the proxy up to 20 feet from caller-supplied destination facts and repeat the attack, and cleans up on Concentration or duration end without introducing companion actions, object Hit Points, or duplicated proxy state.",
-            "owner": "battle-runtime spell invocation/effect lifecycle plus table/spatial owner",
-            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial casting, Spell Slot spend, Concentration ownership, proxy placement, immediate attack, later Bonus Action movement and repeat attack, slot scaling, and cleanup while leaving automatic geometry and adjacency derivation table-owned.",
-            "title": "Spiritual Weapon Persistent Attack Runtime"
-          }
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "table/spatial owner",
+          "reason": "Automatic force-space derivation, path geometry, and target adjacency are table-supplied facts; battle runtime consumes typed force position, movement distance, and force-reach target witnesses."
+        },
+        "profileIds": [
+          "spell.invocation-spiritual-weapon-attack-proxy"
         ],
-        "futureProfileOwner": "battle-runtime spell invocation/effect lifecycle plus table/spatial owner",
-        "reason": "The installed SRD 5.2.1 Spiritual Weapon Surface Spell Definition encodes Bonus Action level-2-or-higher Spell Slot casting, Concentration up to 1 minute, a spell-owned floating spectral force placed within 60 feet, immediate and later melee Spell Attacks against one creature structurally constrained to be within 5 feet of that force, Force damage equal to 1d8 plus the spellcasting ability modifier with +1d8 per slot level above 2, and a later-turn single Bonus Action operation that moves the force up to 20 feet and repeats the attack. No promoted battle-runtime profile exists yet because runtime has no spell-owned attack-proxy active effect, no table-spatial witness boundary for proxy placement, movement, and target adjacency, and no later-turn Bonus Action repeat-attack lifecycle tied to that proxy without treating it as a companion or ordinary object.",
-        "tag": "unsupported-profile"
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "RAW source .references/srd-5.2.1/Spells/Descriptions-S-Z.md:512-525 for Spiritual Weapon constants",
+          "Bonus Action level-2-or-higher Spell Slot casting",
+          "caster-owned Concentration up to 1 minute",
+          "caller-supplied spectral force position within 60 feet at cast",
+          "immediate melee Spell Attack against a caller-supplied creature within 5 feet of the force",
+          "Force damage equal to 1d8 plus spellcasting ability modifier with +1d8 per slot level above 2",
+          "spell-owned attack proxy state retaining the force position, attack and damage facts, movement limit, and concentration expiration",
+          "later-turn Bonus Action caller-supplied force movement up to 20 feet and repeat melee Spell Attack against a caller-supplied creature within 5 feet of the force",
+          "Concentration and duration cleanup remove the spell-owned attack proxy without companion actions, object Hit Points, or duplicated geometry state"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-spiritual-weapon.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-spiritual-weapon-attack-proxy",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-spiritual-weapon.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+            "packages/battle-runtime/src/battle-subjects.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the authored Spiritual Weapon ongoing-effect shape plus caller-supplied force placement, force movement, and target-within-force-reach facts. It owns Bonus Action and level-2-or-higher Spell Slot spending, caster-owned Concentration up to 1 minute, a spell-owned attack proxy active effect, immediate and later melee Spell Attacks, slot-scaled Force damage, later-turn Bonus Action movement up to 20 feet, and cleanup on Concentration or duration end. Automatic map geometry, pathfinding, force-space derivation, and target adjacency derivation remain caller/table spatial facts.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME"
+          ],
+          "title": "Spell invocation creates and moves a Spiritual Weapon attack proxy with table-supplied force witnesses",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-spiritual-weapon.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-spiritual-weapon.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/spiritual_weapon.json",
       "unitId": "spiritual_weapon"
     },
