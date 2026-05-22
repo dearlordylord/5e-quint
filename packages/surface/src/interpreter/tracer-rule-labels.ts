@@ -43,6 +43,7 @@ import type {
   SlotScaling,
   SpellAccessMode,
   SpellMechanics,
+  TargetCastingRequirement,
   TargetSelection,
   TimeSpanDurationValue,
   ThresholdTiers,
@@ -315,13 +316,30 @@ export function describeTargetSelection(s: TargetSelection): string {
     "creatureDisposition" in s && s.creatureDisposition !== undefined
       ? `\ncreature disposition: ${s.creatureDisposition}`
       : "";
+  const castingRequirement =
+    "castingRequirement" in s && s.castingRequirement !== undefined
+      ? `\ncasting requirement: ${describeTargetCastingRequirement(s.castingRequirement)}`
+      : "";
   if (s.mode === "one") {
-    return `one${targetKinds}${typeFilter}${creatureSizeFilter}${objectFilter}${stateFilter}${disposition}${creatureDisposition}`;
+    return `one${targetKinds}${typeFilter}${creatureSizeFilter}${objectFilter}${stateFilter}${disposition}${creatureDisposition}${castingRequirement}`;
   }
   if (s.mode === "any_number")
-    return `any_number${targetKinds}${typeFilter}${creatureSizeFilter}${objectFilter}${stateFilter}${disposition}${creatureDisposition}`;
+    return `any_number${targetKinds}${typeFilter}${creatureSizeFilter}${objectFilter}${stateFilter}${disposition}${creatureDisposition}${castingRequirement}`;
   const repeats = s.repeatsAllowed === true ? " (repeats allowed)" : "";
-  return `choose_up_to: ${describeScaling(s.count)}${repeats}${targetKinds}${typeFilter}${creatureSizeFilter}${objectFilter}${stateFilter}${disposition}${creatureDisposition}`;
+  return `choose_up_to: ${describeScaling(s.count)}${repeats}${targetKinds}${typeFilter}${creatureSizeFilter}${objectFilter}${stateFilter}${disposition}${creatureDisposition}${castingRequirement}`;
+}
+
+function describeTargetCastingRequirement(
+  requirement: TargetCastingRequirement | undefined,
+): string {
+  if (requirement === undefined) return "";
+  return Match.value(requirement).pipe(
+    Match.when(
+      { kind: "remain_within_spell_range_for_entire_casting" },
+      () => "remain within spell range for entire casting",
+    ),
+    Match.exhaustive,
+  );
 }
 
 export function describeAreaOrigin(

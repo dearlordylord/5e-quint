@@ -300,7 +300,7 @@ module battleRuntimeGroundCommandTests {
       resolveAntimagicFieldOngoingSpellSuppression(
         initial,
         antimagicFieldAreaId,
-        Set(continualFlameSourceEffectId),
+        Set(OngoingSpellLightEffectRef({ sourceEffectId: continualFlameSourceEffectId })),
         8,
       )
     val broken = breakConcentrationSpellEffects(resolved, Fighter)

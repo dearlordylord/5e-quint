@@ -44,6 +44,12 @@ Current executable state:
   Spell Slot refund. Arcane Recovery uses Wizard level to enforce the
   half-level rounded-up recovery budget, rejects level 6+ slots, and records a
   distinct rest feature use until Long Rest.
+- `applyCharacterSheetSpellRestBenefit` consumes an installed spell
+  rest-benefit Surface shape and caller-provided completed-cast recipient
+  eligibility, spends the Spell Slot at completion, applies existing Short Rest
+  benefits and capped spell healing to each recipient, records a same-spell
+  recipient lockout, and leaves range maintenance and interruption tracking to
+  caller/table facts.
 - `completeLongRest` requires at least 1 current HP, restores HP to
   `maximumHp`, clears Temporary Hit Points, restores spent Hit Dice, restores
   ordinary Spell Slots and Pact Slots, and recharges tracked rest feature uses

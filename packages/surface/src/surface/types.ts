@@ -315,6 +315,9 @@ export type TargetTypeFilter = Schema.Schema.Type<
 export type AreaOccupantDispositionFilter = Schema.Schema.Type<
   typeof SurfaceSchema.AreaOccupantDispositionFilterSchema
 >;
+export type TargetCastingRequirement = Schema.Schema.Type<
+  typeof SurfaceSchema.TargetCastingRequirementSchema
+>;
 export type TargetSelection = Schema.Schema.Type<
   typeof SurfaceSchema.TargetSelectionSchema
 >;

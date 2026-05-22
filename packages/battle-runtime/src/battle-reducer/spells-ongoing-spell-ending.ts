@@ -9,7 +9,8 @@ import {
   maybeOpenReactionWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
-  type BattleLightEmitter,
+  type BattleActiveEffect,
+  type BattleCreatureState,
   type BattleOngoingSpellEffectRef,
   type BattleOngoingSpellTarget,
   type BattleOngoingSpellTargetChoiceHole,
@@ -23,7 +24,16 @@ import {
 import type { CombatantId } from "../identity.ts";
 import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
+import {
+  isTrackedOngoingSpellLightEmitter,
+  ongoingSpellEffectRefEquals,
+  ongoingSpellEffectRefForActiveEffect,
+  ongoingSpellEffectRefForEmitter,
+  ongoingSpellEffectRefKey,
+} from "./antimagic-field-suppression.ts";
+import { combatantsAfterConcentrationSpellEffectsEndedIfNoEffects } from "./spell-condition-effects-helpers.ts";
 import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
+import type { BattleSpellEffectLevel } from "./spells-effective-level.ts";
 import type { SpellFillSet } from "./spells-resolve-fill-set.ts";
 import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 
@@ -33,6 +43,21 @@ export const ONGOING_SPELL_TARGET_CHOICE_HOLE_ID = holeId(
 export const ONGOING_SPELL_TARGET_CHOICE_HOLE_INSTANCE = holeInstanceKey(
   "battle:spell:ongoing-end:target",
 );
+
+type TrackedDispellableOngoingSpellActiveEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "spellObjectContactDamage" }
+>;
+
+type BattleTrackedOngoingSpellOccurrence =
+  | {
+      readonly kind: "lightEmitter";
+      readonly emitter: BattleTrackedOngoingSpellLightEmitter;
+    }
+  | {
+      readonly kind: "activeEffect";
+      readonly effect: TrackedDispellableOngoingSpellActiveEffect;
+    };
 
 export function ongoingSpellTargetChoiceHole(
   state: BattleState,
@@ -52,15 +77,6 @@ export function ongoingSpellTargetChoiceHole(
     spellId: invocation.spell.id,
     rangeFeet: invocation.rangeFeet,
     choices: ongoingSpellTargetChoices(state),
-  };
-}
-
-export function ongoingSpellEffectRefForEmitter(
-  emitter: BattleTrackedOngoingSpellLightEmitter,
-): BattleOngoingSpellEffectRef {
-  return {
-    kind: "spellLightEmitter",
-    sourceEffectId: emitter.sourceEffectId,
   };
 }
 
@@ -171,23 +187,25 @@ export function resolveOngoingSpellEndSpellAct(input: {
     return spellCastReactionWindow;
   }
 
-  const targetEmitters = matchingTrackedSpellLightEmitters(
+  const targetOccurrences = matchingTrackedOngoingSpellOccurrences(
     input.input.state,
     selectedTarget,
   );
   const casterSlotLevel = Number(input.invocation.resource.slotLevel);
-  const automaticallyEnded = targetEmitters.filter(
-    (emitter) => emitter.sourceSpellLevel <= casterSlotLevel,
+  const automaticallyEnded = targetOccurrences.filter(
+    (occurrence) =>
+      ongoingSpellOccurrenceSourceSpellLevel(occurrence) <= casterSlotLevel,
   );
-  const gatedEmitters = targetEmitters.filter(
-    (emitter) => emitter.sourceSpellLevel > casterSlotLevel,
+  const gatedOccurrences = targetOccurrences.filter(
+    (occurrence) =>
+      ongoingSpellOccurrenceSourceSpellLevel(occurrence) > casterSlotLevel,
   );
-  const gatedHoles = gatedEmitters.map((emitter) =>
+  const gatedHoles = gatedOccurrences.map((occurrence) =>
     ongoingSpellEndAbilityCheckHole(
       input.actorId,
       input.invocation,
       selectedTarget,
-      emitter,
+      occurrence,
     ),
   );
   const abilityCheckByHoleId = new Map(
@@ -214,28 +232,79 @@ export function resolveOngoingSpellEndSpellAct(input: {
     );
   }
 
-  const successfullyChecked = gatedEmitters.filter((emitter) => {
+  const successfullyChecked = gatedOccurrences.filter((occurrence) => {
     const hole = ongoingSpellEndAbilityCheckHole(
       input.actorId,
       input.invocation,
       selectedTarget,
-      emitter,
+      occurrence,
     );
     const fill = abilityCheckByHoleId.get(hole.holeId);
     return fill !== undefined && fill.value.total >= Number(hole.dc);
   });
   const endedKeys = new Set(
-    [...automaticallyEnded, ...successfullyChecked].map((emitter) =>
-      ongoingSpellEffectRefKey(ongoingSpellEffectRefForEmitter(emitter)),
+    [...automaticallyEnded, ...successfullyChecked].map((occurrence) =>
+      ongoingSpellEffectRefKey(ongoingSpellOccurrenceRef(occurrence)),
     ),
+  );
+  const combatantsWithoutDispelledEffects: ReadonlyMap<
+    CombatantId,
+    BattleCreatureState
+  > = new Map(
+    [...input.input.state.combatants].map(([combatantId, combatant]) => {
+      let removedTrackedEffect = false;
+      const activeEffects = combatant.activeEffects.filter((effect) => {
+        const keep =
+          !isTrackedDispellableOngoingSpellActiveEffect(effect) ||
+          !endedKeys.has(
+            ongoingSpellEffectRefKey(
+              ongoingSpellEffectRefForActiveEffect(effect),
+            ),
+          );
+        if (!keep) {
+          removedTrackedEffect = true;
+        }
+        return keep;
+      });
+      const nextCombatant = removedTrackedEffect
+        ? { ...combatant, activeEffects }
+        : combatant;
+      return [combatantId, nextCombatant] as const;
+    }),
+  );
+  const concentrationSources = uniqueConcentrationSources(
+    [...automaticallyEnded, ...successfullyChecked].flatMap((occurrence) =>
+      occurrence.kind === "activeEffect" &&
+      occurrence.effect.expiresAt.kind === "concentration"
+        ? [
+            {
+              sourceCombatantId: occurrence.effect.sourceCombatantId,
+              sourceSpellId: occurrence.effect.sourceSpellId,
+            },
+          ]
+        : [],
+    ),
+  );
+  const combatants = concentrationSources.reduce<
+    ReadonlyMap<CombatantId, BattleCreatureState>
+  >(
+    (currentCombatants, source) =>
+      combatantsAfterConcentrationSpellEffectsEndedIfNoEffects(
+        currentCombatants,
+        source,
+      ),
+    combatantsWithoutDispelledEffects,
   );
   const effected: BattleState = {
     ...input.input.state,
+    combatants,
     lightEmitters: input.input.state.lightEmitters.filter(
       (emitter) =>
-        !isTrackedOngoingSpellLightEmitter(emitter) ||
-        !endedKeys.has(
-          ongoingSpellEffectRefKey(ongoingSpellEffectRefForEmitter(emitter)),
+        !(
+          isTrackedOngoingSpellLightEmitter(emitter) &&
+          endedKeys.has(
+            ongoingSpellEffectRefKey(ongoingSpellEffectRefForEmitter(emitter)),
+          )
         ),
     ),
   };
@@ -261,10 +330,11 @@ export function ongoingSpellEndAbilityCheckHole(
     { readonly procedure: "ongoingSpellEnd" }
   >,
   target: BattleOngoingSpellTarget,
-  emitter: BattleTrackedOngoingSpellLightEmitter,
+  occurrence: BattleTrackedOngoingSpellOccurrence,
 ): BattleSpellcastingAbilityCheckHole {
-  const effect = ongoingSpellEffectRefForEmitter(emitter);
-  const dc = difficultyClass(10 + emitter.sourceSpellLevel);
+  const effect = ongoingSpellOccurrenceRef(occurrence);
+  const contestedSpellLevel = ongoingSpellOccurrenceSourceSpellLevel(occurrence);
+  const dc = difficultyClass(10 + contestedSpellLevel);
   return {
     holeInstanceKey: holeInstanceKey(
       `battle:spell:ongoing-end:check:${ongoingSpellEffectRefKey(effect)}`,
@@ -280,7 +350,7 @@ export function ongoingSpellEndAbilityCheckHole(
       sourceSpellId: invocation.spell.id,
       target,
       effect,
-      contestedSpellLevel: emitter.sourceSpellLevel,
+      contestedSpellLevel,
     },
   };
 }
@@ -309,18 +379,43 @@ function ongoingSpellTargetChoices(
       effect: ongoingSpellEffectRefForEmitter(emitter),
     });
   }
+  for (const combatant of state.combatants.values()) {
+    for (const effect of combatant.activeEffects) {
+      if (!isTrackedDispellableOngoingSpellActiveEffect(effect)) {
+        continue;
+      }
+      pushUniqueOngoingSpellTarget(choices, {
+        kind: "object",
+        objectId: effect.objectId,
+      });
+      pushUniqueOngoingSpellTarget(choices, {
+        kind: "magicalEffect",
+        effect: ongoingSpellEffectRefForActiveEffect(effect),
+      });
+    }
+  }
   return choices;
 }
 
-function matchingTrackedSpellLightEmitters(
+function matchingTrackedOngoingSpellOccurrences(
   state: BattleState,
   target: BattleOngoingSpellTarget,
-): readonly BattleTrackedOngoingSpellLightEmitter[] {
-  return state.lightEmitters.filter(
-    (emitter): emitter is BattleTrackedOngoingSpellLightEmitter =>
-      isTrackedOngoingSpellLightEmitter(emitter) &&
-      spellLightEmitterMatchesOngoingTarget(emitter, target),
+): readonly BattleTrackedOngoingSpellOccurrence[] {
+  const lightEmitters = state.lightEmitters.flatMap((emitter) =>
+    isTrackedOngoingSpellLightEmitter(emitter) &&
+    spellLightEmitterMatchesOngoingTarget(emitter, target)
+      ? [{ kind: "lightEmitter" as const, emitter }]
+      : [],
   );
+  const activeEffects = [...state.combatants.values()].flatMap((combatant) =>
+    combatant.activeEffects.flatMap((effect) =>
+      isTrackedDispellableOngoingSpellActiveEffect(effect) &&
+      dispellableActiveEffectMatchesOngoingTarget(effect, target)
+        ? [{ kind: "activeEffect" as const, effect }]
+        : [],
+    ),
+  );
+  return [...lightEmitters, ...activeEffects];
 }
 
 function spellLightEmitterMatchesOngoingTarget(
@@ -343,6 +438,22 @@ function spellLightEmitterMatchesOngoingTarget(
     emitter.attachment.kind === "object" &&
     emitter.attachment.objectId === target.objectId
   );
+}
+
+function dispellableActiveEffectMatchesOngoingTarget(
+  effect: TrackedDispellableOngoingSpellActiveEffect,
+  target: BattleOngoingSpellTarget,
+): boolean {
+  if (target.kind === "magicalEffect") {
+    return ongoingSpellEffectRefEquals(
+      ongoingSpellEffectRefForActiveEffect(effect),
+      target.effect,
+    );
+  }
+  if (target.kind === "combatant") {
+    return false;
+  }
+  return effect.objectId === target.objectId;
 }
 
 function ongoingSpellEndUnrelatedFill(
@@ -399,23 +510,47 @@ function pushUniqueOngoingSpellTarget(
   }
 }
 
-function ongoingSpellEffectRefEquals(
-  left: BattleOngoingSpellEffectRef,
-  right: BattleOngoingSpellEffectRef,
-): boolean {
-  return left.sourceEffectId === right.sourceEffectId;
+function isTrackedDispellableOngoingSpellActiveEffect(
+  effect: BattleActiveEffect,
+): effect is TrackedDispellableOngoingSpellActiveEffect {
+  return effect.kind === "spellObjectContactDamage";
 }
 
-function ongoingSpellEffectRefKey(ref: BattleOngoingSpellEffectRef): string {
-  return ref.sourceEffectId;
+function ongoingSpellOccurrenceRef(
+  occurrence: BattleTrackedOngoingSpellOccurrence,
+): BattleOngoingSpellEffectRef {
+  return occurrence.kind === "lightEmitter"
+    ? ongoingSpellEffectRefForEmitter(occurrence.emitter)
+    : ongoingSpellEffectRefForActiveEffect(occurrence.effect);
 }
 
-function isTrackedOngoingSpellLightEmitter(
-  emitter: BattleLightEmitter,
-): emitter is BattleTrackedOngoingSpellLightEmitter {
-  return (
-    emitter.kind === "spellLightEmitter" &&
-    "sourceEffectId" in emitter &&
-    "sourceSpellLevel" in emitter
-  );
+function ongoingSpellOccurrenceSourceSpellLevel(
+  occurrence: BattleTrackedOngoingSpellOccurrence,
+): BattleSpellEffectLevel {
+  return occurrence.kind === "lightEmitter"
+    ? occurrence.emitter.sourceSpellLevel
+    : occurrence.effect.sourceSpellLevel;
+}
+
+function uniqueConcentrationSources(
+  sources: readonly {
+    readonly sourceCombatantId: CombatantId;
+    readonly sourceSpellId: string;
+  }[],
+): readonly {
+  readonly sourceCombatantId: CombatantId;
+  readonly sourceSpellId: string;
+}[] {
+  const unique: (typeof sources)[number][] = [];
+  for (const source of sources) {
+    const alreadyTracked = unique.some(
+      (tracked) =>
+        tracked.sourceCombatantId === source.sourceCombatantId &&
+        tracked.sourceSpellId === source.sourceSpellId,
+    );
+    if (!alreadyTracked) {
+      unique.push(source);
+    }
+  }
+  return unique;
 }

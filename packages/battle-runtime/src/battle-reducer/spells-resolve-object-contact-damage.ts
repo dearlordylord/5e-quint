@@ -58,6 +58,7 @@ import {
   spellDamageHole,
   validateSpellDamageFill,
 } from "./spells-damage-fills.ts";
+import { spellInvocationEffectiveSpellLevel } from "./spells-effective-level.ts";
 import { type SpellFillSet } from "./spells-resolve-fill-set.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import { spendSpellCastResources } from "./spells-resolve-resources.ts";
@@ -67,6 +68,10 @@ import {
   spellObjectContactTargetsHoleId,
   spellObjectTargetHole,
 } from "./spells-targeting.ts";
+import {
+  ongoingSpellEffectRefForActiveEffect,
+  ongoingSpellEffectSuppressedByAntimagicField,
+} from "./antimagic-field-suppression.ts";
 import { wardingBondSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
 
 type ObjectContactDamageInvocation = Extract<
@@ -274,6 +279,18 @@ export function resolveObjectContactDamageRepeatSpellAct(input: {
   );
   if (unrelatedFills !== null) {
     return invalidResult(input.input.state, "invalidFill", unrelatedFills);
+  }
+  if (
+    ongoingSpellEffectSuppressedByAntimagicField(
+      input.input.state,
+      ongoingSpellEffectRefForActiveEffect(input.invocation.activeEffect),
+    )
+  ) {
+    return invalidResult(
+      input.input.state,
+      "staleSubject",
+      "Object-contact damage is suppressed by Antimagic Field.",
+    );
   }
   const contactSelection = validateObjectContactTargets({
     state: input.input.state,
@@ -1148,6 +1165,7 @@ function applyObjectContactDamageActiveEffect(input: {
     }),
     sourceSpellId: input.invocation.spell.id,
     sourceCombatantId: input.actorId,
+    sourceSpellLevel: spellInvocationEffectiveSpellLevel(input.invocation),
     objectId: input.objectId,
     rangeFeet: input.invocation.rangeFeet,
     damage: input.invocation.damage,

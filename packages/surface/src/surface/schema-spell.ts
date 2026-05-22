@@ -667,6 +667,16 @@ type EffectAtom =
       readonly target: "self" | "target_creature";
     }
   | {
+      readonly kind: "grant_rest_benefit";
+      readonly benefit: "short_rest";
+      readonly target: "target_creature";
+    }
+  | {
+      readonly kind: "spell_recipient_rest_lockout";
+      readonly resetBy: "target_finishes_long_rest";
+      readonly target: "target_creature";
+    }
+  | {
       readonly kind: "prevent_hit_point_regain";
       readonly expiresAt: "end_of_caster_next_turn";
     }
@@ -1758,6 +1768,10 @@ export const CreatureTargetSelectionSchema = strictStruct({
   ),
 });
 
+export const TargetCastingRequirementSchema = strictStruct({
+  kind: Schema.Literal("remain_within_spell_range_for_entire_casting"),
+});
+
 export const TargetSelectionSchema = Schema.Union(
   strictStruct({
     mode: Schema.Literal("one"),
@@ -1794,6 +1808,7 @@ export const TargetSelectionSchema = Schema.Union(
     repeatsAllowed: optionalExact(Schema.Literal(true)),
     targetKinds: optionalExact(nonEmpty(TargetKindSchema)),
     typeFilter: optionalExact(TargetTypeFilterSchema),
+    castingRequirement: optionalExact(TargetCastingRequirementSchema),
   }),
   strictStruct({
     mode: Schema.Literal("choose_up_to"),
@@ -2488,6 +2503,16 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         kind: Schema.Literal("heal_hp"),
         amount: DiceAmountSchema,
         target: Schema.Literal("self", "target_creature"),
+      }),
+      strictStruct({
+        kind: Schema.Literal("grant_rest_benefit"),
+        benefit: Schema.Literal("short_rest"),
+        target: Schema.Literal("target_creature"),
+      }),
+      strictStruct({
+        kind: Schema.Literal("spell_recipient_rest_lockout"),
+        resetBy: Schema.Literal("target_finishes_long_rest"),
+        target: Schema.Literal("target_creature"),
       }),
       Schema.Struct({
         kind: Schema.Literal("prevent_hit_point_regain"),
@@ -3343,7 +3368,9 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       Schema.Struct({ kind: Schema.Literal("area_is_heavily_obscured") }),
       Schema.Struct({ kind: Schema.Literal("area_is_magical_darkness") }),
       Schema.Struct({
-        kind: Schema.Literal("end_overlapping_spell_created_bright_or_dim_light"),
+        kind: Schema.Literal(
+          "end_overlapping_spell_created_bright_or_dim_light",
+        ),
         maxSpellLevel: Schema.Number,
       }),
       strictStruct({

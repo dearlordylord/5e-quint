@@ -1,7 +1,7 @@
-// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-ANTIMAGIC-FIELD-TRACKED-LIGHT-SUPPRESSION antimagic_field
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-antimagic-field-tracked-light-suppression
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-ANTIMAGIC-FIELD-GENERIC-SUPPRESSION antimagic_field
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-antimagic-field-ongoing-spell-suppression
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { movementFeet } from "@dnd/shared/types";
+import { movementFeet, Round } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
@@ -9,12 +9,19 @@ import { battleSpellEffectOccurrenceId } from "./identity.ts";
 import {
   antimagicFieldUnitId,
   continualFlameUnitId,
+  heatMetalUnitId,
   spellCasterId,
   spellTargetId,
 } from "./unit-profile-admission-catalog-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
-import { requireHole } from "./unit-profile-admission-creature-fixture-support.ts";
-import { spellAct } from "./unit-profile-admission-spell-fill-support.ts";
+import {
+  requireCombatant,
+  requireHole,
+} from "./unit-profile-admission-creature-fixture-support.ts";
+import {
+  maybeBonusSpellAct,
+  spellAct,
+} from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
   battleAreaId,
@@ -24,7 +31,8 @@ import {
   resolveBattleSubject,
   snapshotBattle,
   spellSlotInvocationRef,
-  type BattleAntimagicFieldAffectedOngoingSpellLight,
+  type BattleActiveEffect,
+  type BattleAntimagicFieldAffectedOngoingSpellEffect,
   type BattleFill,
   type BattleHole,
   type BattleLightEmitter,
@@ -33,8 +41,11 @@ import {
 } from "./index.ts";
 
 const antimagicFieldAreaId = battleAreaId("unit-profile-antimagic-field-area");
+type SpellBattleSlots = NonNullable<
+  Parameters<typeof spellBattle>[0]["spellSlots"]
+>;
 
-describe("SRD Antimagic Field tracked spell-light suppression admission", () => {
+describe("SRD Antimagic Field ongoing spell suppression admission", () => {
   test("antimagic field is admitted as a level-8 self Emanation suppression spell", () => {
     const state = antimagicFieldBattle();
 
@@ -107,7 +118,12 @@ describe("SRD Antimagic Field tracked spell-light suppression admission", () => 
       sourceCombatantId: spellCasterId,
       areaId: antimagicFieldAreaId,
       radiusFeet: movementFeet(10),
-      suppressedSpellLightEffectIds: [continualFlameEffectId],
+      suppressedOngoingSpellEffects: [
+        {
+          kind: "spellLightEmitter",
+          sourceEffectId: continualFlameEffectId,
+        },
+      ],
       expiresAt: {
         kind: "concentration",
         combatantId: spellCasterId,
@@ -160,23 +176,118 @@ describe("SRD Antimagic Field tracked spell-light suppression admission", () => 
 
     expect(casterTurn.state.lightEmitters).toEqual([]);
   });
+
+  test("suppresses tracked object-contact spell effects without deleting the occurrence", () => {
+    const objectId = battleObjectId("unit-profile-antimagic-heat-metal-object");
+    const sourceEffectId = battleSpellEffectOccurrenceId(
+      `${spellCasterId}:${heatMetalUnitId}:${objectId}`,
+    );
+    const heatMetalEffect = heatMetalObjectContactDamageEffect({
+      objectId,
+      effectId: sourceEffectId,
+      durationTicks: elapsedTimeTicks(3),
+    });
+    const state = antimagicFieldBattle({
+      activeEffects: [heatMetalEffect],
+      preparedSpells: [
+        spellRecord(antimagicFieldUnitId),
+        spellRecord(heatMetalUnitId),
+      ],
+      spellSlots: [
+        { spellLevel: 8, count: 1 },
+        { spellLevel: 2, count: 1 },
+      ],
+    });
+    const suppressed = antimagicFieldSuppressing(state, [
+      antimagicAffectedSpellObjectContactDamage(sourceEffectId, "ordinarySpell"),
+    ]);
+
+    expect(
+      suppressed.combatants
+        .get(spellCasterId)
+        ?.activeEffects.some(
+          (effect) =>
+            effect.kind === "spellObjectContactDamage" &&
+            effect.effectId === sourceEffectId,
+        ),
+    ).toBe(true);
+    expect(
+      maybeBonusSpellAct({ state: suppressed, spellId: heatMetalUnitId }),
+    ).toBeUndefined();
+
+    const targetTurn = endTurn({
+      state: suppressed,
+      actorId: spellCasterId,
+    });
+    expect(targetTurn.tag).toBe("resolved");
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected target turn.");
+    }
+    const casterTurn = endTurn({
+      state: targetTurn.state,
+      actorId: spellTargetId,
+    });
+    expect(casterTurn.tag).toBe("resolved");
+    if (casterTurn.tag !== "resolved") {
+      throw new Error("Expected caster turn.");
+    }
+
+    const tickedEffect = casterTurn.state.combatants
+      .get(spellCasterId)
+      ?.activeEffects.find(
+        (effect) =>
+          effect.kind === "spellObjectContactDamage" &&
+          effect.effectId === sourceEffectId,
+      );
+    expect(tickedEffect).toMatchObject({
+      kind: "spellObjectContactDamage",
+      expiresAt: {
+        kind: "concentration",
+        durationTicks: elapsedTimeTicks(2),
+      },
+    });
+
+    const restored = breakBattleConcentration(suppressed, spellTargetId);
+    expect(
+      maybeBonusSpellAct({ state: restored, spellId: heatMetalUnitId }),
+    ).toBeDefined();
+  });
 });
 
 function antimagicFieldBattle(input?: {
   readonly lightEmitters?: readonly BattleLightEmitter[];
+  readonly activeEffects?: readonly BattleActiveEffect[];
+  readonly preparedSpells?: readonly ReturnType<typeof spellRecord>[];
+  readonly spellSlots?: SpellBattleSlots;
 }): BattleState {
+  const base = spellBattle({
+    preparedSpells: input?.preparedSpells ?? [spellRecord(antimagicFieldUnitId)],
+    spellSlots: input?.spellSlots ?? [{ spellLevel: 8, count: 1 }],
+  });
+  if (input?.activeEffects === undefined) {
+    return {
+      ...base,
+      lightEmitters: input?.lightEmitters ?? [],
+    };
+  }
+  const caster = requireCombatant(base, spellCasterId);
   return {
-    ...spellBattle({
-      preparedSpells: [spellRecord(antimagicFieldUnitId)],
-      spellSlots: [{ spellLevel: 8, count: 1 }],
-    }),
+    ...base,
     lightEmitters: input?.lightEmitters ?? [],
+    combatants: new Map(base.combatants).set(spellCasterId, {
+      ...caster,
+      activeEffects: input.activeEffects,
+      concentration: {
+        sourceSpellId: heatMetalUnitId,
+        effectKind: "spellEffect",
+      },
+    }),
   };
 }
 
 function castAntimagicField(
   state: BattleState,
-  affectedOngoingSpellLights: readonly BattleAntimagicFieldAffectedOngoingSpellLight[],
+  affectedOngoingSpellEffects: readonly BattleAntimagicFieldAffectedOngoingSpellEffect[],
 ): Extract<ReturnType<typeof resolveBattleSubject>, { readonly tag: "resolved" }> {
   const act = spellAct({
     state,
@@ -190,7 +301,7 @@ function castAntimagicField(
     fills: [
       antimagicFieldAreaFill({
         hole: areaHole,
-        affectedOngoingSpellLights,
+        affectedOngoingSpellEffects,
       }),
     ],
   });
@@ -203,7 +314,7 @@ function castAntimagicField(
 
 function antimagicFieldAreaFill(input: {
   readonly hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>;
-  readonly affectedOngoingSpellLights: readonly BattleAntimagicFieldAffectedOngoingSpellLight[];
+  readonly affectedOngoingSpellEffects: readonly BattleAntimagicFieldAffectedOngoingSpellEffect[];
 }): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
   return {
     kind: "spellAreaChoice",
@@ -211,19 +322,69 @@ function antimagicFieldAreaFill(input: {
     value: {
       kind: "antimagicFieldSelfEmanation",
       areaId: antimagicFieldAreaId,
-      affectedOngoingSpellLights: input.affectedOngoingSpellLights,
+      affectedOngoingSpellEffects: input.affectedOngoingSpellEffects,
     },
   };
 }
 
 function antimagicAffectedLight(
   sourceEffectId: ReturnType<typeof battleSpellEffectOccurrenceId>,
-  sourceKind: BattleAntimagicFieldAffectedOngoingSpellLight["sourceKind"],
-): BattleAntimagicFieldAffectedOngoingSpellLight {
+  sourceKind: BattleAntimagicFieldAffectedOngoingSpellEffect["sourceKind"],
+): BattleAntimagicFieldAffectedOngoingSpellEffect {
   return {
-    kind: "antimagicFieldAffectedOngoingSpellLight",
-    sourceEffectId,
+    kind: "antimagicFieldAffectedOngoingSpellEffect",
+    effect: { kind: "spellLightEmitter", sourceEffectId },
     sourceKind,
+  };
+}
+
+function antimagicAffectedSpellObjectContactDamage(
+  sourceEffectId: ReturnType<typeof battleSpellEffectOccurrenceId>,
+  sourceKind: BattleAntimagicFieldAffectedOngoingSpellEffect["sourceKind"],
+): BattleAntimagicFieldAffectedOngoingSpellEffect {
+  return {
+    kind: "antimagicFieldAffectedOngoingSpellEffect",
+    effect: {
+      kind: "spellActiveEffect",
+      activeEffectKind: "spellObjectContactDamage",
+      sourceEffectId,
+    },
+    sourceKind,
+  };
+}
+
+function antimagicFieldSuppressing(
+  state: BattleState,
+  affectedOngoingSpellEffects: readonly BattleAntimagicFieldAffectedOngoingSpellEffect[],
+): BattleState {
+  const antimagicCaster = requireCombatant(state, spellTargetId);
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(spellTargetId, {
+      ...antimagicCaster,
+      concentration: {
+        sourceSpellId: antimagicFieldUnitId,
+        effectKind: "spellEffect",
+      },
+      activeEffects: [
+        ...antimagicCaster.activeEffects,
+        {
+          kind: "antimagicFieldOngoingSpellSuppression",
+          sourceSpellId: antimagicFieldUnitId,
+          sourceCombatantId: spellTargetId,
+          areaId: antimagicFieldAreaId,
+          radiusFeet: movementFeet(10),
+          suppressedOngoingSpellEffects: affectedOngoingSpellEffects
+            .filter((effect) => effect.sourceKind === "ordinarySpell")
+            .map((effect) => effect.effect),
+          expiresAt: {
+            kind: "concentration",
+            combatantId: spellTargetId,
+            durationTicks: elapsedTimeTicks(600),
+          },
+        },
+      ],
+    }),
   };
 }
 
@@ -255,5 +416,38 @@ function trackedObjectSpellLightEmitter(input: {
     },
     opaqueCoverInteraction: { kind: "blocksEmission" },
     expiresAt: input.expiresAt ?? { kind: "untilDispelled" },
+  };
+}
+
+function heatMetalObjectContactDamageEffect(input: {
+  readonly objectId: ReturnType<typeof battleObjectId>;
+  readonly effectId: ReturnType<typeof battleSpellEffectOccurrenceId>;
+  readonly durationTicks: ReturnType<typeof elapsedTimeTicks>;
+}): Extract<BattleActiveEffect, { readonly kind: "spellObjectContactDamage" }> {
+  const sourceSpellLevel = parseBattleSpellEffectLevel(2);
+  if (sourceSpellLevel === null) {
+    throw new Error("Expected valid Heat Metal spell effect level.");
+  }
+  return {
+    kind: "spellObjectContactDamage",
+    effectId: input.effectId,
+    sourceSpellId: heatMetalUnitId,
+    sourceCombatantId: spellCasterId,
+    sourceSpellLevel,
+    objectId: input.objectId,
+    rangeFeet: movementFeet(60),
+    damage: {
+      expr: { dice: 2, dieSize: 8 },
+      damageType: "fire",
+    },
+    startedOn: {
+      actorId: spellTargetId,
+      round: Round(1),
+    },
+    expiresAt: {
+      kind: "concentration",
+      combatantId: spellCasterId,
+      durationTicks: input.durationTicks,
+    },
   };
 }

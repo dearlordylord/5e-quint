@@ -82,14 +82,14 @@
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 120,
+      "denominator": 121,
       "numerator": 75,
-      "percent": "62.5%"
+      "percent": "62%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 120,
+      "denominator": 121,
       "numerator": 104,
-      "percent": "86.7%"
+      "percent": "86%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 136,
@@ -3350,9 +3350,10 @@
         "packages/battle-runtime/src/battle-reducer.ts",
         "packages/battle-runtime/src/battle-reducer/spells-ongoing-spell-ending.ts"
       ],
-      "sourceBoundary": "The runtime consumes the authored Dispel Magic ongoing-spell-ending Surface shape, caller-selected creature/object/magical-effect target identity, caller-supplied target-within-range facts, tracked ongoing Spell Effect facts carried by BattleSpellLightEmitter source spell level, and caller-supplied spellcasting ability check totals for higher-level contested spells. It owns Magic Action and Spell Slot spending, target-scoped removal of tracked spell-light emitters whose source spell level is at or below the Dispel Magic slot level, DC 10 plus source spell level check gating for higher-level tracked emitters, and generic object-attached Continual Flame cleanup without dispatching on Continual Flame identity. Broader non-light active spell effects, spell-specific dispel immunities, automatic geometry, and table selection of magical-effect identity remain outside this subset boundary.",
+      "sourceBoundary": "The runtime consumes the authored Dispel Magic ongoing-spell-ending Surface shape, caller-selected creature/object/magical-effect target identity, caller-supplied target-within-range facts, tracked ongoing Spell Effect facts carried by BattleSpellLightEmitter source spell level, tracked spellObjectContactDamage active-effect occurrences with stable occurrence identity and source spell level, and caller-supplied spellcasting ability check totals for higher-level contested spells. It owns Magic Action and Spell Slot spending, target-scoped removal of tracked spell-light emitters and tracked spellObjectContactDamage active-effect occurrences whose source spell level is at or below the Dispel Magic slot level, DC 10 plus source spell level check gating for higher-level tracked occurrences, same-object multi-owner cleanup keyed by magical-effect identity, and generic object-attached Continual Flame cleanup without dispatching on Continual Flame identity. Broader not-yet-tracked active spell effects, area effects, spell-specific dispel immunities, automatic geometry, and table selection of magical-effect identity remain outside this subset boundary.",
       "taskRefs": [
-        "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING"
+        "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING",
+        "L12G-FOLLOWUP-GENERIC-ONGOING-SPELL-EFFECT-DISPEL"
       ],
       "title": "Spell invocation ends tracked ongoing spell effects on a selected target",
       "verificationOwners": [
@@ -3397,7 +3398,26 @@
       ]
     },
     {
-      "id": "spell.invocation-antimagic-field-tracked-light-suppression",
+      "id": "character-sheet.spell-rest-benefit-application",
+      "profileKind": "character-sheet",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "Character Sheet consumes an installed Surface Spell Definition shape with caller-selected creature recipients, slot-scaled Hit Point healing, a granted Short Rest benefit, and a same-spell recipient lockout reset by the recipient finishing a Long Rest. The runtime spends one Spell Slot at completion, applies existing Short Rest benefit logic per selected Character Sheet without duplicating rest algorithms, applies capped spell healing from caller-supplied dice, stores only the same-spell recipient lockout source reference in Long Rest-cleared sheet rest state, and leaves completed 10-minute casting, range maintenance, and interruption tracking to caller/table facts.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST"
+      ],
+      "title": "Character Sheet applies a spell-granted Short Rest benefit with slot-scaled healing and Long Rest recipient lockout",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.invocation-antimagic-field-ongoing-spell-suppression",
       "profileKind": "spell-invocation",
       "qntOwners": [
         "packages/battle-runtime/battle-runtime.qnt"
@@ -3408,11 +3428,12 @@
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
       ],
-      "sourceBoundary": "The runtime consumes the authored Antimagic Field ongoing-spell suppression shape, a self-origin 10-foot Emanation area identity, and caller-supplied affected tracked ongoing spell-light facts. It owns Magic Action and level-8-or-higher Spell Slot spending, caster-owned Concentration up to 1 hour, active Antimagic Field suppression state, suppression of ordinary tracked spell-created light emitters without deleting the ongoing spell occurrence, duration ticking while suppressed, exclusion of artifact/deity spell sources from suppression, and cleanup on Concentration or duration end. Spellcasting prevention, Magic Action prevention, magical targeting prevention, magic item suppression, magical area clipping, teleportation/planar travel blocking, portal closure, Dispel Magic immunity on the aura, and generic non-light ongoing Spell Effect suppression remain outside this tracked-light subset.",
+      "sourceBoundary": "The runtime consumes the authored Antimagic Field ongoing-spell suppression shape, a self-origin 10-foot Emanation area identity, and caller-supplied affected tracked ongoing Spell Effect facts. It owns Magic Action and level-8-or-higher Spell Slot spending, caster-owned Concentration up to 1 hour, active Antimagic Field suppression state, suppression of ordinary tracked spell-created light emitters and tracked spellObjectContactDamage active-effect occurrences without deleting the ongoing spell occurrence, duration ticking while suppressed, exclusion of artifact/deity spell sources from suppression, and cleanup on Concentration or duration end. Spellcasting prevention, Magic Action prevention, magical targeting prevention, magic item suppression, magical area clipping, teleportation/planar travel blocking, portal closure, Dispel Magic immunity on the aura, and broader not-yet-tracked ongoing Spell Effect suppression remain outside this tracked-effect subset.",
       "taskRefs": [
-        "L12G-ANTIMAGIC-FIELD-TRACKED-LIGHT-SUPPRESSION"
+        "L12G-ANTIMAGIC-FIELD-TRACKED-LIGHT-SUPPRESSION",
+        "L12G-FOLLOWUP-ANTIMAGIC-FIELD-GENERIC-SUPPRESSION"
       ],
-      "title": "Spell invocation suppresses tracked ongoing spell light inside Antimagic Field",
+      "title": "Spell invocation suppresses tracked ongoing spell effects inside Antimagic Field",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -3486,14 +3507,14 @@
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 120,
+        "denominator": 121,
         "numerator": 75,
-        "percent": "62.5%"
+        "percent": "62%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 120,
+        "denominator": 121,
         "numerator": 104,
-        "percent": "86.7%"
+        "percent": "86%"
       }
     },
     "profileKinds": [
@@ -5076,7 +5097,13 @@
       {
         "joinStatus": "unmapped",
         "obligations": [],
-        "profileId": "spell.invocation-antimagic-field-tracked-light-suppression",
+        "profileId": "character-sheet.spell-rest-benefit-application",
+        "profileKind": "character-sheet"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-antimagic-field-ongoing-spell-suppression",
         "profileKind": "spell-invocation"
       },
       {
@@ -10463,6 +10490,22 @@
       "taskId": "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING"
     },
     {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests extend Dispel Magic beyond tracked spell-light emitters to tracked spellObjectContactDamage active-effect occurrences, including object targeting cleanup, higher-level spellcasting ability check gating, same-object multi-owner removal, and magical-effect targeting by stable occurrence identity while leaving broader not-yet-tracked active effects and area effects deferred.",
+      "profileIds": [
+        "spell.invocation-ongoing-spell-ending"
+      ],
+      "taskId": "L12G-FOLLOWUP-GENERIC-ONGOING-SPELL-EFFECT-DISPEL"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Focused package-local Quint proofs extend Dispel Magic beyond tracked spell-light emitters to tracked spellObjectContactDamage active-effect occurrences, covering slot-level automatic ending, failed and successful higher-level gating, same-object multi-owner object-target cleanup, and magical-effect targeting by stable occurrence identity while leaving broader generic ongoing spell occurrences deferred.",
+      "profileIds": [
+        "spell.invocation-ongoing-spell-ending"
+      ],
+      "taskId": "L12G-FOLLOWUP-GENERIC-ONGOING-SPELL-EFFECT-DISPEL"
+    },
+    {
       "claimKind": "qnt-proof",
       "note": "Package-local battle-runtime Quint facts model typed Metamagic option admission, known-option and Sorcery Point gates, one-option-per-spell plus stacking exception facts, Quickened Spell rewriting supported direct Hit Point restoration action spells to Bonus Action, rejection of unsupported second-option effects before Sorcery Point spending, Bonus Action rather than Magic Action spending, Spell Slot turn ledger commit, level-1-plus spell cast turn fact commit, and rejection after a same-turn level-1-plus spell cast including a non-slot prior cast witness.",
       "profileIds": [
@@ -10482,7 +10525,7 @@
       "claimKind": "qnt-proof",
       "note": "Package-local promoted Quint facts cover Antimagic Field's Magic Action and level-8-or-higher Spell Slot spend, caller-supplied self-origin 10-foot Emanation identity, active suppression effect, suppression of ordinary tracked spell-light emitters by source effect id, artifact/deity source exclusion, duration ticking while suppressed, and cleanup on Concentration or duration end.",
       "profileIds": [
-        "spell.invocation-antimagic-field-tracked-light-suppression"
+        "spell.invocation-antimagic-field-ongoing-spell-suppression"
       ],
       "taskId": "L12G-ANTIMAGIC-FIELD-TRACKED-LIGHT-SUPPRESSION"
     },
@@ -10490,9 +10533,33 @@
       "claimKind": "completed-runtime-parity",
       "note": "Focused battle-runtime tests cover Antimagic Field Surface-profile admission, level-8 Spell Slot self-emanation casting, area-choice fill validation, suppression of ordinary tracked spell light without deleting the occurrence, artifact/deity spell-light exclusion, suppressed duration ticking, and cleanup through Concentration or duration end.",
       "profileIds": [
-        "spell.invocation-antimagic-field-tracked-light-suppression"
+        "spell.invocation-antimagic-field-ongoing-spell-suppression"
       ],
       "taskId": "L12G-ANTIMAGIC-FIELD-TRACKED-LIGHT-SUPPRESSION"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests extend Antimagic Field beyond tracked spell-light emitters to tracked spellObjectContactDamage active-effect occurrences, covering stable occurrence-reference suppression, no deletion of the suppressed occurrence, duration ticking while suppressed, Bonus Action repeat suppression, and restoration when the Antimagic Field concentration effect ends.",
+      "profileIds": [
+        "spell.invocation-antimagic-field-ongoing-spell-suppression"
+      ],
+      "taskId": "L12G-FOLLOWUP-ANTIMAGIC-FIELD-GENERIC-SUPPRESSION"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Focused package-local Quint proofs extend Antimagic Field suppression from tracked spell-light source effect ids to generic ongoing Spell Effect refs, covering tracked spell-light suppression plus tracked Heat Metal spellObjectContactDamage suppression without deleting the occurrence while duration continues to tick.",
+      "profileIds": [
+        "spell.invocation-antimagic-field-ongoing-spell-suppression"
+      ],
+      "taskId": "L12G-FOLLOWUP-ANTIMAGIC-FIELD-GENERIC-SUPPRESSION"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Character Sheet runtime tests cover Prayer of Healing Surface-profile admission by shape, completed-cast recipient eligibility consumption, level-2-or-higher Spell Slot spend at completion, existing Short Rest benefit application to each recipient without duplicating the rest algorithm, slot-scaled capped healing, same-spell recipient Long Rest lockout, and Long Rest lockout clearing while range and interruption remain caller/table facts.",
+      "profileIds": [
+        "character-sheet.spell-rest-benefit-application"
+      ],
+      "taskId": "L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST"
     },
     {
       "claimKind": "qnt-proof",
@@ -16137,22 +16204,22 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "L12G-FOLLOWUP-ANTIMAGIC-FIELD-GENERIC-SUPPRESSION",
-            "mechanic": "spellcasting prevention, Magic Action prevention, magical targeting prevention, magic item suppression, magical area clipping, teleportation and planar travel blocking, portal closure, Dispel Magic immunity on the aura, and non-light ongoing Spell Effect suppression"
+            "followUpTaskId": "L12G-FOLLOWUP-ANTIMAGIC-FIELD-PREVENTION-AND-BROADER-SUPPRESSION",
+            "mechanic": "spellcasting prevention, Magic Action prevention, magical targeting prevention, magic item suppression, magical area clipping, teleportation and planar travel blocking, portal closure, Dispel Magic immunity on the aura, and broader not-yet-tracked ongoing Spell Effect suppression"
           }
         ],
         "followUpTasks": [
           {
-            "id": "L12G-FOLLOWUP-ANTIMAGIC-FIELD-GENERIC-SUPPRESSION",
-            "mechanic": "Promote Antimagic Field beyond tracked spell-light emitters by representing generic ongoing Spell Effect suppression, spellcasting and Magic Action prevention, magical targeting prevention, magic item suppression, magical area clipping, teleportation/planar travel blocking, portal closure, and the aura's Dispel Magic immunity without deleting suppressed occurrences or duplicating effect state.",
-            "owner": "battle-runtime magical prevention and generic ongoing Spell Effect suppression owner",
-            "requiredOutput": "Supported-profile or profile-subset-supported Antimagic Field claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for generic suppression/prevention while preserving table-owned area membership and spatial witnesses.",
-            "title": "Antimagic Field Generic Suppression Runtime"
+            "id": "L12G-FOLLOWUP-ANTIMAGIC-FIELD-PREVENTION-AND-BROADER-SUPPRESSION",
+            "mechanic": "Split and promote Antimagic Field clauses whose owners are still absent: spellcasting and Magic Action prevention, magical targeting prevention, magic item suppression, magical area clipping, teleportation/planar travel blocking, portal closure, Dispel Magic immunity on the aura, and suppression of ongoing Spell Effects beyond tracked spell-light emitters and tracked spellObjectContactDamage occurrences.",
+            "owner": "battle-runtime magical prevention owners plus broader ongoing Spell Effect occurrence model",
+            "requiredOutput": "Focused owner-specific runtime profiles or accepted closures with tests and promoted Quint/runtime parity; suppressed occurrences must keep ticking and must not be deleted while suppressed.",
+            "title": "Antimagic Field Prevention And Broader Suppression Runtime"
           }
         ],
-        "futureProfileOwner": "generic Antimagic Field prevention and ongoing Spell Effect suppression owner",
+        "futureProfileOwner": "Antimagic Field prevention boundaries plus broader ongoing Spell Effect occurrence model",
         "profileIds": [
-          "spell.invocation-antimagic-field-tracked-light-suppression"
+          "spell.invocation-antimagic-field-ongoing-spell-suppression"
         ],
         "rawRequirementIds": [
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
@@ -16161,10 +16228,11 @@
           "Magic Action prepared spell cast with a level-8-or-higher Spell Slot",
           "caller-supplied self-origin 10-foot Emanation area identity",
           "caster-owned Concentration up to 1 hour",
-          "caller-supplied affected tracked ongoing spell-light facts identify ordinary spell-created light emitters inside the aura",
+          "caller-supplied affected tracked ongoing Spell Effect facts identify ordinary spell-created light emitters and tracked spellObjectContactDamage active-effect occurrences inside the aura",
           "tracked spell-created light emitters are suppressed while inside the aura without deleting their ongoing spell occurrence",
-          "suppressed tracked spell-light durations continue ticking while suppressed",
-          "artifact/deity spell-light sources are excluded from suppression",
+          "tracked spellObjectContactDamage active-effect occurrences are suppressed while inside the aura without deleting their ongoing spell occurrence",
+          "suppressed tracked spell-light and spellObjectContactDamage durations continue ticking while suppressed",
+          "artifact/deity spell-effect sources are excluded from suppression",
           "Concentration and duration cleanup remove the active suppression field"
         ],
         "tag": "profile-subset-supported"
@@ -16174,14 +16242,14 @@
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-antimagic-field.test.ts",
           "tag": "deterministic-admission-projection",
-          "taskId": "L12G-ANTIMAGIC-FIELD-TRACKED-LIGHT-SUPPRESSION"
+          "taskId": "L12G-FOLLOWUP-ANTIMAGIC-FIELD-GENERIC-SUPPRESSION"
         }
       ],
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [
         {
-          "id": "spell.invocation-antimagic-field-tracked-light-suppression",
+          "id": "spell.invocation-antimagic-field-ongoing-spell-suppression",
           "profileKind": "spell-invocation",
           "qntOwners": [
             "packages/battle-runtime/battle-runtime.qnt"
@@ -16192,11 +16260,12 @@
             "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
             "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
           ],
-          "sourceBoundary": "The runtime consumes the authored Antimagic Field ongoing-spell suppression shape, a self-origin 10-foot Emanation area identity, and caller-supplied affected tracked ongoing spell-light facts. It owns Magic Action and level-8-or-higher Spell Slot spending, caster-owned Concentration up to 1 hour, active Antimagic Field suppression state, suppression of ordinary tracked spell-created light emitters without deleting the ongoing spell occurrence, duration ticking while suppressed, exclusion of artifact/deity spell sources from suppression, and cleanup on Concentration or duration end. Spellcasting prevention, Magic Action prevention, magical targeting prevention, magic item suppression, magical area clipping, teleportation/planar travel blocking, portal closure, Dispel Magic immunity on the aura, and generic non-light ongoing Spell Effect suppression remain outside this tracked-light subset.",
+          "sourceBoundary": "The runtime consumes the authored Antimagic Field ongoing-spell suppression shape, a self-origin 10-foot Emanation area identity, and caller-supplied affected tracked ongoing Spell Effect facts. It owns Magic Action and level-8-or-higher Spell Slot spending, caster-owned Concentration up to 1 hour, active Antimagic Field suppression state, suppression of ordinary tracked spell-created light emitters and tracked spellObjectContactDamage active-effect occurrences without deleting the ongoing spell occurrence, duration ticking while suppressed, exclusion of artifact/deity spell sources from suppression, and cleanup on Concentration or duration end. Spellcasting prevention, Magic Action prevention, magical targeting prevention, magic item suppression, magical area clipping, teleportation/planar travel blocking, portal closure, Dispel Magic immunity on the aura, and broader not-yet-tracked ongoing Spell Effect suppression remain outside this tracked-effect subset.",
           "taskRefs": [
-            "L12G-ANTIMAGIC-FIELD-TRACKED-LIGHT-SUPPRESSION"
+            "L12G-ANTIMAGIC-FIELD-TRACKED-LIGHT-SUPPRESSION",
+            "L12G-FOLLOWUP-ANTIMAGIC-FIELD-GENERIC-SUPPRESSION"
           ],
-          "title": "Spell invocation suppresses tracked ongoing spell light inside Antimagic Field",
+          "title": "Spell invocation suppresses tracked ongoing spell effects inside Antimagic Field",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -17210,10 +17279,6 @@
             "mechanic": "Darkness overlap dispelling spell-created Bright Light or Dim Light from level-2-or-lower spells is blocked on a Darkness runtime/profile owner that can consume generic spell-created light facts such as Continual Flame without dispatching on spell identity; the SRD Darkness Unit is authored separately by Task 9."
           },
           {
-            "followUpTaskId": "L12G-FOLLOWUP-ANTIMAGIC-FIELD-SPELL-EFFECT-SUPPRESSION",
-            "mechanic": "Antimagic Field suppression of ongoing spells in its area is blocked on a generic Spell Effect suppression owner that can suppress object-attached light emitters without deleting their spell occurrence or duplicating emitter state."
-          },
-          {
             "battleReadinessClosure": {
               "kind": "outside-battle-runtime",
               "owner": "character inventory/equipment spell-component legality owner",
@@ -17244,16 +17309,9 @@
             "owner": "battle-runtime Darkness area and spell-created light overlap owner",
             "requiredOutput": "Focused tests and promoted Quint/runtime parity or accepted closure for overlap-triggered dispel of spell-created light; Continual Flame cleanup must remain represented through generic spell-created light facts.",
             "title": "Darkness Spell-Created Light Dispel"
-          },
-          {
-            "id": "L12G-FOLLOWUP-ANTIMAGIC-FIELD-SPELL-EFFECT-SUPPRESSION",
-            "mechanic": "Promote Antimagic Field's suppression of ongoing spells in its area, excluding artifact/deity spell sources, so object-attached light emitters such as Continual Flame stop functioning while suppressed and resume from the same spell occurrence without duplicating emitter state.",
-            "owner": "Antimagic Field Unit support plus generic ongoing Spell Effect suppression owner",
-            "requiredOutput": "Supported Antimagic Field profile or accepted closure with focused tests and promoted Quint/runtime parity for suppressing and restoring ongoing Spell Effects, including object-attached until-dispelled light emitters.",
-            "title": "Antimagic Field Spell Effect Suppression"
           }
         ],
-        "futureProfileOwner": "Dispel Magic ongoing Spell Effect ending plus Darkness runtime spell-created light overlap support plus Antimagic Field Spell Effect suppression plus character inventory/equipment component legality plus runtime-detached object presentation owner",
+        "futureProfileOwner": "Dispel Magic ongoing Spell Effect ending plus Darkness runtime spell-created light overlap support plus character inventory/equipment component legality plus runtime-detached object presentation owner",
         "profileIds": [
           "spell.invocation-object-light"
         ],
@@ -17267,7 +17325,8 @@
           "until-dispelled persistence represented by a non-ticking light-emitter expiration",
           "preserves prior Continual Flame emitters from the same caster because SRD Continual Flame has no recast-ending clause",
           "caller-supplied emitter projection facts derive Bright Light, Dim Light, and opaque-cover suppression from the object emitter",
-          "derived Dim Light illumination projects Lightly Obscured sight consequences and Darkvision-adjusted sight consequences without duplicating emitter state"
+          "derived Dim Light illumination projects Lightly Obscured sight consequences and Darkvision-adjusted sight consequences without duplicating emitter state",
+          "Antimagic Field suppresses ordinary tracked object-attached Continual Flame spell-light occurrences without deleting their ongoing spell occurrence; until-dispelled duration remains represented by the original non-ticking emitter expiration."
         ],
         "tag": "profile-subset-supported"
       },
@@ -17503,12 +17562,8 @@
       "claim": {
         "deferredMechanics": [
           {
-            "battleReadinessClosure": {
-              "kind": "outside-runtime-presentation-exploration",
-              "owner": "runtime-detached object-area identity and object-cover adjudication owner",
-              "reason": "The promoted Darkness profile owns point-origin area identity plus sight/light witness consequences. It does not yet own a durable object-attached magical Darkness zone, object-motion updates for that zone, or opaque-cover suppression for Darkness rather than a light emitter, so the alternative object-origin branch remains table/spatial/object adjudication outside the current runtime boundary."
-            },
-            "mechanic": "Object-origin branch: target object not worn or carried, 15-foot Emanation originating from that object, movement with the object, and opaque-cover blocking stay outside promoted runtime because the current owner consumes point-origin area ids and area witnesses, not a moving object-attached Darkness zone."
+            "followUpTaskId": "L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH",
+            "mechanic": "Object-origin branch: target object not worn or carried, 15-foot Emanation originating from that object, movement with the object, and opaque-cover blocking remain blocked on the object-origin spell-area and opaque-cover witness owner."
           },
           {
             "followUpTaskId": "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL",
@@ -17517,6 +17572,13 @@
         ],
         "followUpTasks": [
           {
+            "id": "L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH",
+            "mechanic": "Represent and promote or close Darkness's object branch: target object not worn or carried, 15-foot Emanation originating from that object, object-origin area identity, and opaque-cover blocking, consuming existing object and opaque-cover witness facts without adding duplicate map or cover state.",
+            "owner": "Surface Spell Definition authoring plus battle-runtime object-origin spell-area and opaque-cover witness boundary",
+            "requiredOutput": "Darkness Surface content and runtime owner decision with focused tests for the object-origin branch, or accepted closure if object attachment, movement, and opaque-cover blocking stay outside promoted runtime.",
+            "title": "Darkness Object-Origin Branch"
+          },
+          {
             "id": "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL",
             "mechanic": "Promote or close the overlap rule that dispels another level-2-or-lower spell when Darkness overlaps Bright Light or Dim Light created by that spell, consuming generic spell-created light facts such as Continual Flame rather than spell identity.",
             "owner": "Darkness Surface definition plus battle-runtime Darkness area and spell-created light overlap owner",
@@ -17524,7 +17586,7 @@
             "title": "Darkness Spell-Created Light Dispel"
           }
         ],
-        "futureProfileOwner": "battle-runtime Darkness spell-created light overlap owner plus runtime-detached object-area identity and object-cover adjudication owner",
+        "futureProfileOwner": "battle-runtime object-origin spell-area and opaque-cover witness boundary plus spell-created light overlap owner",
         "profileIds": [
           "spell.invocation-magical-darkness-point-origin"
         ],
@@ -17616,8 +17678,8 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "L12G-FOLLOWUP-GENERIC-ONGOING-SPELL-EFFECT-DISPEL",
-            "mechanic": "ongoing spell effects not yet represented as tracked BattleSpellLightEmitter occurrences, including broader creature active effects, area effects, and spell-specific dispel exceptions or immunities such as force barriers"
+            "followUpTaskId": "L12G-FOLLOWUP-BROADER-ONGOING-SPELL-EFFECT-DISPEL",
+            "mechanic": "ongoing spell effects not yet represented as tracked ongoing spell occurrences beyond tracked spell-light emitters and tracked spellObjectContactDamage active-effect occurrences, including broader creature active effects, area effects, and spell-specific dispel exceptions or immunities such as force barriers"
           },
           {
             "battleReadinessClosure": {
@@ -17630,14 +17692,14 @@
         ],
         "followUpTasks": [
           {
-            "id": "L12G-FOLLOWUP-GENERIC-ONGOING-SPELL-EFFECT-DISPEL",
-            "mechanic": "Promote Dispel Magic beyond tracked spell-light emitters by representing generic ongoing Spell Effect occurrences for creature active effects, area effects, object effects, and spell-specific dispel exceptions or immunities with stable occurrence identity, source spell level, target association, and cleanup semantics.",
+            "id": "L12G-FOLLOWUP-BROADER-ONGOING-SPELL-EFFECT-DISPEL",
+            "mechanic": "Promote Dispel Magic beyond tracked spell-light emitters and tracked spellObjectContactDamage active-effect occurrences by representing broader ongoing Spell Effect occurrences for additional creature active effects, area effects, object effects, and spell-specific dispel exceptions or immunities with stable occurrence identity, source spell level, target association, and cleanup semantics.",
             "owner": "battle-runtime Spell Effect occurrence model plus promoted Quint/runtime parity",
-            "requiredOutput": "Supported-profile or profile-subset-supported Dispel Magic claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for ending generic ongoing Spell Effect occurrences while preserving explicit closures for spell-specific exceptions and table-owned target identity/range derivation.",
-            "title": "Generic Ongoing Spell Effect Dispel Runtime"
+            "requiredOutput": "Supported-profile or profile-subset-supported Dispel Magic claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for ending broader generic ongoing Spell Effect occurrences while preserving explicit closures for spell-specific exceptions and table-owned target identity/range derivation.",
+            "title": "Broader Ongoing Spell Effect Dispel Runtime"
           }
         ],
-        "futureProfileOwner": "generic ongoing Spell Effect occurrence model plus spell-specific dispel exception owner",
+        "futureProfileOwner": "broader ongoing Spell Effect occurrence model plus spell-specific dispel exception owner",
         "profileIds": [
           "spell.invocation-ongoing-spell-ending"
         ],
@@ -17650,6 +17712,9 @@
           "target-scoped ending of tracked ongoing spell-light effects whose source spell level is at or below the Dispel Magic slot level",
           "higher-level tracked ongoing spell-light effects require a spellcasting ability check total against DC 10 plus the tracked source spell level",
           "higher-level slot gate automatically ends tracked ongoing spell-light effects whose source spell level is equal to or below the slot level used",
+          "target-scoped ending of tracked spellObjectContactDamage active-effect occurrences whose source spell level is at or below the Dispel Magic slot level",
+          "higher-level tracked spellObjectContactDamage active-effect occurrences require the same spellcasting ability check gate or a higher-level slot",
+          "same-object multi-owner tracked spellObjectContactDamage occurrences are removed by object target, while magical-effect targeting removes only the selected tracked occurrence by stable occurrence identity",
           "object-attached Continual Flame cleanup is handled through generic tracked spell-light emitter facts, not a Continual Flame-specific remover registry"
         ],
         "tag": "profile-subset-supported"
@@ -17675,9 +17740,10 @@
             "packages/battle-runtime/src/battle-reducer.ts",
             "packages/battle-runtime/src/battle-reducer/spells-ongoing-spell-ending.ts"
           ],
-          "sourceBoundary": "The runtime consumes the authored Dispel Magic ongoing-spell-ending Surface shape, caller-selected creature/object/magical-effect target identity, caller-supplied target-within-range facts, tracked ongoing Spell Effect facts carried by BattleSpellLightEmitter source spell level, and caller-supplied spellcasting ability check totals for higher-level contested spells. It owns Magic Action and Spell Slot spending, target-scoped removal of tracked spell-light emitters whose source spell level is at or below the Dispel Magic slot level, DC 10 plus source spell level check gating for higher-level tracked emitters, and generic object-attached Continual Flame cleanup without dispatching on Continual Flame identity. Broader non-light active spell effects, spell-specific dispel immunities, automatic geometry, and table selection of magical-effect identity remain outside this subset boundary.",
+          "sourceBoundary": "The runtime consumes the authored Dispel Magic ongoing-spell-ending Surface shape, caller-selected creature/object/magical-effect target identity, caller-supplied target-within-range facts, tracked ongoing Spell Effect facts carried by BattleSpellLightEmitter source spell level, tracked spellObjectContactDamage active-effect occurrences with stable occurrence identity and source spell level, and caller-supplied spellcasting ability check totals for higher-level contested spells. It owns Magic Action and Spell Slot spending, target-scoped removal of tracked spell-light emitters and tracked spellObjectContactDamage active-effect occurrences whose source spell level is at or below the Dispel Magic slot level, DC 10 plus source spell level check gating for higher-level tracked occurrences, same-object multi-owner cleanup keyed by magical-effect identity, and generic object-attached Continual Flame cleanup without dispatching on Continual Flame identity. Broader not-yet-tracked active spell effects, area effects, spell-specific dispel immunities, automatic geometry, and table selection of magical-effect identity remain outside this subset boundary.",
           "taskRefs": [
-            "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING"
+            "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING",
+            "L12G-FOLLOWUP-GENERIC-ONGOING-SPELL-EFFECT-DISPEL"
           ],
           "title": "Spell invocation ends tracked ongoing spell effects on a selected target",
           "verificationOwners": [
@@ -20542,31 +20608,58 @@
         "status": "installed"
       },
       "claim": {
-        "followUpTasks": [
+        "deferredMechanics": [
           {
-            "id": "L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST",
-            "mechanic": "Replace Prayer of Healing's partial mechanics with a lossless SRD Surface shape for 10-minute non-ritual casting, up-to-five recipients that remain within 30 feet for the entire casting, slot-scaled 2d8 plus 1d8 per slot above 2 Hit Point restoration, granted Short Rest benefits, and per-recipient immunity to being affected again until that creature finishes a Long Rest.",
-            "owner": "surface Spell Definition authoring",
-            "requiredOutput": "Prayer of Healing Dhall and JSON content, with schema and tracer support where required, represent the Short Rest benefit and Long Rest recipient lockout as executable source facts instead of comments or prose-only description.",
-            "title": "Prayer Of Healing Surface Rest Shape"
-          },
-          {
-            "id": "L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST",
-            "mechanic": "Apply Prayer of Healing after the completed 10-minute cast by spending the spell slot at completion, consuming caller-supplied recipient eligibility facts, granting each selected Character Sheet the existing Short Rest benefits without duplicating rest algorithms, applying the slot-scaled healing roll capped by Hit Point maximum, and recording/clearing the per-recipient Long Rest lockout from the same rest state owner.",
-            "owner": "character-sheet-runtime plus spellcasting resource owner",
-            "requiredOutput": "Supported profile or profile-subset evidence, focused runtime tests, and owner evidence for Prayer of Healing's Character Sheet rest-benefit application, healing, Spell Slot spend timing, and Long Rest recipient lockout while leaving automatic range tracking and encounter-time casting interruption as caller/table facts.",
-            "title": "Prayer Of Healing Character Sheet Rest Runtime"
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "caller/table completed-cast and range-maintenance witness provider",
+              "reason": "Prayer of Healing application consumes completed-cast recipient eligibility facts; map geometry, range over the entire casting, Magic-action sequencing for the 10-minute cast, and interruption detection are not stored as parallel Character Sheet state."
+            },
+            "mechanic": "automatic 10-minute casting progress, range maintenance tracking, and encounter-time casting interruption detection"
           }
         ],
-        "futureProfileOwner": "surface Spell Definition authoring plus character-sheet-runtime rest application plus spellcasting resource owner",
-        "reason": "Prayer of Healing is authored and installed as an SRD Surface Spell Definition with its 10-minute spell shell, fixed up-to-five target count, and slot-scaled 2d8 Hit Point restoration only. The local SRD 5.2.1 passage additionally grants each recipient the benefits of a Short Rest and prevents that creature from being affected by the spell again until it finishes a Long Rest. Task 40 claims no battle-runtime support and leaves the row blocked by the concrete follow-up split listed on this claim.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "character-sheet.spell-rest-benefit-application"
+        ],
+        "supportedMechanics": [
+          "Character Sheet admits the installed Surface Spell Definition shape for caller-selected creature recipients, slot-scaled healing, granted Short Rest benefit, and same-spell recipient lockout reset by Long Rest",
+          "After a completed 10-minute cast, the Character Sheet runtime spends one level-2-or-higher Spell Slot at completion, with explicit source selection when ordinary and created Spell Slots of that level are both available",
+          "Each selected recipient consumes caller-supplied remained-within-range-for-entire-casting eligibility, receives existing Short Rest benefit processing without a duplicate rest algorithm, receives slot-scaled healing capped by Hit Point maximum, and records a same-spell Long Rest lockout in the recipient's Long Rest-cleared rest state",
+          "Finishing a Long Rest clears the recipient lockout through existing Character Sheet rest state"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-sheet.spell-rest-benefit-application",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Character Sheet consumes an installed Surface Spell Definition shape with caller-selected creature recipients, slot-scaled Hit Point healing, a granted Short Rest benefit, and a same-spell recipient lockout reset by the recipient finishing a Long Rest. The runtime spends one Spell Slot at completion, applies existing Short Rest benefit logic per selected Character Sheet without duplicating rest algorithms, applies capped spell healing from caller-supplied dice, stores only the same-spell recipient lockout source reference in Long Rest-cleared sheet rest state, and leaves completed 10-minute casting, range maintenance, and interruption tracking to caller/table facts.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST"
+          ],
+          "title": "Character Sheet applies a spell-granted Short Rest benefit with slot-scaled healing and Long Rest recipient lockout",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/prayer_of_healing.json",
       "unitId": "prayer_of_healing"
     },

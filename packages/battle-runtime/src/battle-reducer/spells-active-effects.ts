@@ -3,7 +3,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-tracked-light-suppression
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
 
 // KERNEL-COVERAGE: runtime-owner BATTLE.COMMAND.OPTION_AND_NEXT_TURN
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
@@ -57,7 +57,7 @@ import {
   type BattleDancingLightList,
   type BattleDancingLightsPlacementValue,
   type BattleFill,
-  type BattleAntimagicFieldAffectedOngoingSpellLight,
+  type BattleAntimagicFieldAffectedOngoingSpellEffect,
   type BattleIllumination,
   type BattleLightEmitter,
   type BattleLightEmitterAttachment,
@@ -74,7 +74,6 @@ import {
   type BattleSightObscurement,
   type BattleSpellAreaChoice,
   type BattleState,
-  type BattleTrackedOngoingSpellLightEmitter,
   type SpellCreatedHeldObjectActiveEffect,
   type SpellCreatedHeldObjectState,
   type BattleSpecialSpeedKind,
@@ -93,6 +92,12 @@ import {
   type BattleWebRestraintTrigger,
 } from "../battle-reducer.ts";
 import type { BattleObjectId } from "../identity.ts";
+import {
+  antimagicFieldSuppressedOngoingSpellEffectKeys,
+  isTrackedOngoingSpellLightEmitter,
+  ongoingSpellEffectRefForEmitter,
+  ongoingSpellEffectRefKey,
+} from "./antimagic-field-suppression.ts";
 import { HIDEOUS_LAUGHTER_DURATION_TICKS } from "./domain-constants.ts";
 import {
   battleCreatureWithSpellCreatedHeldObjectHand,
@@ -310,8 +315,8 @@ export function applySpellActiveEffects(
 export function battleLightEmitters(
   state: BattleState,
 ): readonly BattleLightEmitter[] {
-  const suppressedEffectIds =
-    antimagicFieldSuppressedSpellLightEffectIds(state);
+  const suppressedEffectKeys =
+    antimagicFieldSuppressedOngoingSpellEffectKeys(state);
   const outlineLightEmitters = [...state.combatants.values()].flatMap(
     (combatant): readonly BattleLightEmitter[] =>
       combatant.activeEffects.flatMap(
@@ -399,39 +404,17 @@ export function battleLightEmitters(
     ...outlineLightEmitters,
     ...state.objectOutlines.map(faerieFireObjectDimLightEmitter),
   ];
-  return suppressedEffectIds.size === 0
+  return suppressedEffectKeys.size === 0
     ? emitters
     : emitters.filter(
         (emitter) =>
           !(
             isTrackedOngoingSpellLightEmitter(emitter) &&
-            suppressedEffectIds.has(emitter.sourceEffectId)
+            suppressedEffectKeys.has(
+              ongoingSpellEffectRefKey(ongoingSpellEffectRefForEmitter(emitter)),
+            )
           ),
       );
-}
-
-function antimagicFieldSuppressedSpellLightEffectIds(
-  state: BattleState,
-): ReadonlySet<BattleTrackedOngoingSpellLightEmitter["sourceEffectId"]> {
-  return new Set(
-    [...state.combatants.values()].flatMap((combatant) =>
-      combatant.activeEffects.flatMap((effect) =>
-        effect.kind === "antimagicFieldOngoingSpellSuppression"
-          ? effect.suppressedSpellLightEffectIds
-          : [],
-      ),
-    ),
-  );
-}
-
-function isTrackedOngoingSpellLightEmitter(
-  emitter: BattleLightEmitter,
-): emitter is BattleTrackedOngoingSpellLightEmitter {
-  return (
-    emitter.kind === "spellLightEmitter" &&
-    "sourceEffectId" in emitter &&
-    "sourceSpellLevel" in emitter
-  );
 }
 
 export function battleLightEmitterProjection(
@@ -1862,7 +1845,7 @@ export function applyAntimagicFieldOngoingSpellSuppressionCastEffect(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly areaId: BattleAreaId;
-  readonly affectedOngoingSpellLights: readonly BattleAntimagicFieldAffectedOngoingSpellLight[];
+  readonly affectedOngoingSpellEffects: readonly BattleAntimagicFieldAffectedOngoingSpellEffect[];
   readonly invocation: Extract<
     SupportedSpellInvocation,
     { readonly procedure: "antimagicFieldOngoingSpellSuppression" }
@@ -1880,10 +1863,9 @@ export function applyAntimagicFieldOngoingSpellSuppressionCastEffect(input: {
       effect.sourceCombatantId === input.actorId &&
       effect.areaId === input.areaId,
   );
-  const suppressedSpellLightEffectIds = input.affectedOngoingSpellLights.flatMap(
-    (light) =>
-      light.sourceKind === "ordinarySpell" ? [light.sourceEffectId] : [],
-  );
+  const suppressedOngoingSpellEffects = input.affectedOngoingSpellEffects
+    .filter((effect) => effect.sourceKind === "ordinarySpell")
+    .map((effect) => effect.effect);
   const activeEffects = [
     ...caster.activeEffects.filter((effect) => !replacing.includes(effect)),
     {
@@ -1892,7 +1874,7 @@ export function applyAntimagicFieldOngoingSpellSuppressionCastEffect(input: {
       sourceCombatantId: input.actorId,
       areaId: input.areaId,
       radiusFeet: input.invocation.targeting.radiusFeet,
-      suppressedSpellLightEffectIds,
+      suppressedOngoingSpellEffects,
       expiresAt: {
         kind: "concentration" as const,
         combatantId: input.actorId,

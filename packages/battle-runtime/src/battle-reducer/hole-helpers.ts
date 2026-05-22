@@ -18,6 +18,7 @@ import type {
 import type { SupportedAttackActionOption } from "../battle-action-options.ts";
 import type { CharacterBattleResourceState } from "../character-battle-resources.ts";
 import { resourceHasUsesRemaining } from "../character-battle-resources.ts";
+import { ongoingSpellEffectSuppressedByAntimagicField } from "./antimagic-field-suppression.ts";
 import {
   BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
   type AlternateActionCostAction,
@@ -243,7 +244,12 @@ function activeAbilityCheckRollModeEffectMatches(
       (effect) =>
         ((effect.kind === "abilityCheckRollMode" &&
           effect.ability === ability) ||
-          effect.kind === "selfAttackRollAndAbilityCheckRollMode") &&
+          (effect.kind === "selfAttackRollAndAbilityCheckRollMode" &&
+            !ongoingSpellEffectSuppressedByAntimagicField(state, {
+              kind: "spellActiveEffect",
+              activeEffectKind: "spellObjectContactDamage",
+              sourceEffectId: effect.sourceEffectId,
+            }))) &&
         effect.mode === mode,
     ) ?? false
   );

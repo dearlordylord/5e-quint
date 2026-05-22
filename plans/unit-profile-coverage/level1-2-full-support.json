@@ -504,7 +504,7 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING: Promote Dispel Magic's target creature, object, or magical effect procedure so it ends ongoing spells on the target, including object-attached Continual Flame occurrences, using spell-level and higher-slot gates from the Dispel Magic RAW without adding a Continual Flame-specific removal registry. Owner: Dispel Magic Unit support plus battle-runtime ongoing Spell Effect lifecycle owner. Required output: Supported Dispel Magic profile or accepted closure with focused tests and promoted Quint/runtime parity for ending ongoing spell occurrences on targets, including object-attached until-dispelled light emitters exposed by the object-light profile.; L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL: Promote or close the overlap rule that dispels another level-2-or-lower spell when Darkness overlaps Bright Light or Dim Light created by that spell, consuming generic spell-created light facts such as Continual Flame rather than spell identity. Owner: battle-runtime Darkness area and spell-created light overlap owner. Required output: Focused tests and promoted Quint/runtime parity or accepted closure for overlap-triggered dispel of spell-created light; Continual Flame cleanup must remain represented through generic spell-created light facts.; L12G-FOLLOWUP-ANTIMAGIC-FIELD-SPELL-EFFECT-SUPPRESSION: Promote Antimagic Field's suppression of ongoing spells in its area, excluding artifact/deity spell sources, so object-attached light emitters such as Continual Flame stop functioning while suppressed and resume from the same spell occurrence without duplicating emitter state. Owner: Antimagic Field Unit support plus generic ongoing Spell Effect suppression owner. Required output: Supported Antimagic Field profile or accepted closure with focused tests and promoted Quint/runtime parity for suppressing and restoring ongoing Spell Effects, including object-attached until-dispelled light emitters.",
+      "reason": "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING: Promote Dispel Magic's target creature, object, or magical effect procedure so it ends ongoing spells on the target, including object-attached Continual Flame occurrences, using spell-level and higher-slot gates from the Dispel Magic RAW without adding a Continual Flame-specific removal registry. Owner: Dispel Magic Unit support plus battle-runtime ongoing Spell Effect lifecycle owner. Required output: Supported Dispel Magic profile or accepted closure with focused tests and promoted Quint/runtime parity for ending ongoing spell occurrences on targets, including object-attached until-dispelled light emitters exposed by the object-light profile.; L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL: Promote or close the overlap rule that dispels another level-2-or-lower spell when Darkness overlaps Bright Light or Dim Light created by that spell, consuming generic spell-created light facts such as Continual Flame rather than spell identity. Owner: battle-runtime Darkness area and spell-created light overlap owner. Required output: Focused tests and promoted Quint/runtime parity or accepted closure for overlap-triggered dispel of spell-created light; Continual Flame cleanup must remain represented through generic spell-created light facts.",
       "sourceRecordPath": "packages/surface/content/continual_flame.json",
       "sourceRows": [
         {
@@ -557,7 +557,7 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL: Promote or close the overlap rule that dispels another level-2-or-lower spell when Darkness overlaps Bright Light or Dim Light created by that spell, consuming generic spell-created light facts such as Continual Flame rather than spell identity. Owner: Darkness Surface definition plus battle-runtime Darkness area and spell-created light overlap owner. Required output: Focused tests and promoted Quint/runtime parity or accepted closure for overlap-triggered dispel of spell-created light; Continual Flame cleanup must remain represented through generic spell-created light facts.",
+      "reason": "L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH: Represent and promote or close Darkness's object branch: target object not worn or carried, 15-foot Emanation originating from that object, object-origin area identity, and opaque-cover blocking, consuming existing object and opaque-cover witness facts without adding duplicate map or cover state. Owner: Surface Spell Definition authoring plus battle-runtime object-origin spell-area and opaque-cover witness boundary. Required output: Darkness Surface content and runtime owner decision with focused tests for the object-origin branch, or accepted closure if object attachment, movement, and opaque-cover blocking stay outside promoted runtime.; L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL: Promote or close the overlap rule that dispels another level-2-or-lower spell when Darkness overlaps Bright Light or Dim Light created by that spell, consuming generic spell-created light facts such as Continual Flame rather than spell identity. Owner: Darkness Surface definition plus battle-runtime Darkness area and spell-created light overlap owner. Required output: Focused tests and promoted Quint/runtime parity or accepted closure for overlap-triggered dispel of spell-created light; Continual Flame cleanup must remain represented through generic spell-created light facts.",
       "sourceRecordPath": "packages/surface/content/darkness.json",
       "sourceRows": [
         {
@@ -2061,14 +2061,14 @@
     },
     {
       "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
+      "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "follow-up-split"
+        "outside-battle-runtime"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST: Replace Prayer of Healing's partial mechanics with a lossless SRD Surface shape for 10-minute non-ritual casting, up-to-five recipients that remain within 30 feet for the entire casting, slot-scaled 2d8 plus 1d8 per slot above 2 Hit Point restoration, granted Short Rest benefits, and per-recipient immunity to being affected again until that creature finishes a Long Rest. Owner: surface Spell Definition authoring. Required output: Prayer of Healing Dhall and JSON content, with schema and tracer support where required, represent the Short Rest benefit and Long Rest recipient lockout as executable source facts instead of comments or prose-only description.; L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST: Apply Prayer of Healing after the completed 10-minute cast by spending the spell slot at completion, consuming caller-supplied recipient eligibility facts, granting each selected Character Sheet the existing Short Rest benefits without duplicating rest algorithms, applying the slot-scaled healing roll capped by Hit Point maximum, and recording/clearing the per-recipient Long Rest lockout from the same rest state owner. Owner: character-sheet-runtime plus spellcasting resource owner. Required output: Supported profile or profile-subset evidence, focused runtime tests, and owner evidence for Prayer of Healing's Character Sheet rest-benefit application, healing, Spell Slot spend timing, and Long Rest recipient lockout while leaving automatic range tracking and encounter-time casting interruption as caller/table facts.",
+      "reason": "Prayer of Healing application consumes completed-cast recipient eligibility facts; map geometry, range over the entire casting, Magic-action sequencing for the 10-minute cast, and interruption detection are not stored as parallel Character Sheet state.",
       "sourceRecordPath": "packages/surface/content/prayer_of_healing.json",
       "sourceRows": [
         {
@@ -2096,8 +2096,8 @@
           }
         }
       ],
-      "status": "blocked-follow-up-split",
-      "strictTargetClosed": true,
+      "status": "open-profile-accounting",
+      "strictTargetClosed": false,
       "unitId": "prayer_of_healing"
     },
     {
@@ -2709,7 +2709,7 @@
       ]
     },
     {
-      "count": 16,
+      "count": 15,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
@@ -2724,7 +2724,6 @@
         "levitate",
         "monk_monks_focus",
         "moonbeam",
-        "prayer_of_healing",
         "ray_of_enfeeblement",
         "sorcerer_font_of_magic",
         "sorcerer_metamagic",
@@ -2754,19 +2753,20 @@
       ]
     },
     {
+      "count": 2,
+      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
+      "status": "open-profile-accounting",
+      "unitIds": [
+        "prayer_of_healing",
+        "spike_growth"
+      ]
+    },
+    {
       "count": 1,
       "description": "Companion lifecycle and control residuals are closed at the companion control boundary.",
       "status": "closed-companion-control-boundary",
       "unitIds": [
         "druid_wild_companion"
-      ]
-    },
-    {
-      "count": 1,
-      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
-      "status": "open-profile-accounting",
-      "unitIds": [
-        "spike_growth"
       ]
     },
     {
@@ -2781,12 +2781,12 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 512,
-      "percent": "92.1%",
+      "numerator": 514,
+      "percent": "92.4%",
       "rowsByStatus": {
-        "accepted": 375,
+        "accepted": 377,
         "accepted-no-battle-effect": 137,
-        "battle-runtime-required": 26,
+        "battle-runtime-required": 24,
         "owner-evidence-required": 2,
         "partial-battle-runtime": 16
       }
@@ -2813,16 +2813,17 @@
     },
     "strictTargetClosure": {
       "denominator": 168,
-      "numerator": 166,
-      "percent": "98.8%"
+      "numerator": 165,
+      "percent": "98.2%"
     }
   },
   "openFrontier": [
     {
-      "count": 1,
+      "count": 2,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
+        "prayer_of_healing",
         "spike_growth"
       ]
     },
@@ -8158,17 +8159,17 @@
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
       "missing": 1,
-      "profile-subset-supported": 22,
+      "profile-subset-supported": 23,
       "supported-profile": 113,
-      "unsupported-profile": 32
+      "unsupported-profile": 31
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 16,
+      "blocked-follow-up-split": 15,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 28,
-      "open-profile-accounting": 1,
+      "open-profile-accounting": 2,
       "open-runtime-behavior": 1,
       "supported-profile": 113
     },

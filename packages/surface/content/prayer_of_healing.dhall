@@ -11,22 +11,72 @@
 -- Casting Time: 10 minutes. Range: 30 ft. Duration: Instantaneous.
 -- Components: V.
 --
--- PARTIAL VALIDATION REFERENCE. Encodes the SRD 5.2.1 spell shell and
--- fixed healing dice that fit the existing surface:
+-- Encodes the SRD 5.2.1 spell shell and full recipient-facing effect:
 --   • CastingTime.minutes with amount=10, ritual=False (second
 --     instance after Alarm — confirms the 10-minute-cast shape
 --     generalizes to non-ritual spells).
 --   • TargetSelection.choose_up_to with fixed numeric count 5 (no
 --     SlotScaling — the cap doesn't widen per slot; the per-target
---     heal does). Validation reference for TargetSelection.count's
---     `number | SlotScaling<number>` union (fixed-count branch).
+--     heal does), creature targets, and the SRD requirement that each
+--     recipient remain within range for the spell's entire casting.
 --   • heal_hp with linear_per_level DiceAmount (2d8, +1d8 per slot
 --     above 2; no spellcasting ability modifier in SRD 5.2.1).
---
--- DEFERRED / omitted. This Surface schema has no lossless spell effect
--- atom for granting Short Rest benefits, nor a per-recipient "can't be
--- affected again until Long Rest" lockout. "Who remain within range for
--- the spell's entire casting" is spatial/session-owned positioning.
+--   • grant_rest_benefit(short_rest) and spell_recipient_rest_lockout
+--     as executable source facts. Character Sheet rest application,
+--     Spell Slot spend timing, and lockout state remain runtime-owner
+--     follow-up work.
+
+let DiceExpr : Type = { dice : Natural, dieSize : Natural }
+
+let DiceExprDelta : Type = { dice : Natural, dieSize : Optional Natural }
+
+let DiceAmount : Type =
+      { kind : Text
+      , axis : Optional Text
+      , base : Optional DiceExpr
+      , perLevel : Optional DiceExprDelta
+      , startingAtLevel : Optional Natural
+      }
+
+let Effect : Type =
+      { kind : Text
+      , amount : Optional DiceAmount
+      , target : Optional Text
+      , benefit : Optional Text
+      , resetBy : Optional Text
+      }
+
+let healingAmount : DiceAmount =
+      { kind = "linear_per_level"
+      , axis = Some "slot"
+      , base = Some { dice = 2, dieSize = 8 }
+      , perLevel = Some { dice = 1, dieSize = None Natural }
+      , startingAtLevel = Some 2
+      }
+
+let healing : Effect =
+      { kind = "heal_hp"
+      , amount = Some healingAmount
+      , target = Some "target_creature"
+      , benefit = None Text
+      , resetBy = None Text
+      }
+
+let shortRestBenefit : Effect =
+      { kind = "grant_rest_benefit"
+      , amount = None DiceAmount
+      , target = Some "target_creature"
+      , benefit = Some "short_rest"
+      , resetBy = None Text
+      }
+
+let recipientLockout : Effect =
+      { kind = "spell_recipient_rest_lockout"
+      , amount = None DiceAmount
+      , target = Some "target_creature"
+      , benefit = None Text
+      , resetBy = Some "target_finishes_long_rest"
+      }
 
 let prayerOfHealing =
       { kind = "spell"
@@ -61,24 +111,15 @@ let prayerOfHealing =
                         , selection =
                             { mode = "choose_up_to"
                             , count = 5
+                            , targetKinds = [ "creature" ]
+                            , castingRequirement =
+                                { kind =
+                                    "remain_within_spell_range_for_entire_casting"
+                                }
                             }
                         }
                     }
-                , effects =
-                    [ { kind = "heal_hp"
-                      , amount =
-                          { kind = "linear_per_level"
-                          , axis = "slot"
-                          , base =
-                              { dice = 2
-                              , dieSize = 8
-                              }
-                          , perLevel = { dice = 1 }
-                          , startingAtLevel = 2
-                          }
-                      , target = "target_creature"
-                      }
-                    ]
+                , effects = [ healing, shortRestBenefit, recipientLockout ]
                 }
               ]
           }

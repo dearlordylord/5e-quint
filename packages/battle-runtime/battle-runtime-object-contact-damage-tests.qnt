@@ -9,13 +9,17 @@ module battleRuntimeObjectContactDamageTests {
   import battleRuntimeSpellAttack.* from "./battle-runtime-spell-attack"
   import battleRuntimeMarkedRiders.* from "./battle-runtime-marked-riders"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
+  import battleRuntimeLight.* from "./battle-runtime-light"
+  import battleRuntimeGroundCommand.* from "./battle-runtime-ground-command"
   import battleRuntimeObjectContactDamage.* from "./battle-runtime-object-contact-damage"
 
   run test_heat_metal_records_object_contact_effect_and_immediate_damage = {
     val resolved = resolveHeatMetal(initialState, heatMetalObjectId, Set(Goblin), Set(), Set(), Set(), Set(), 2, 7, true, true)
     all {
       assert(resolved.fighter.activeEffects.contains(HeatMetalObjectContactDamage({
+        effectId: heatMetalObjectContactDamageEffectId(Fighter, heatMetalObjectId),
         objectId: heatMetalObjectId,
+        sourceSpellLevel: 2,
         damageDice: 2,
         durationTicks: heatMetalDurationTicks,
         startedRound: 1,
@@ -65,12 +69,129 @@ module battleRuntimeObjectContactDamageTests {
     }
   }
 
+  run test_antimagic_field_suppresses_heat_metal_without_deleting_it = {
+    val effectId = heatMetalObjectContactDamageEffectId(Fighter, heatMetalObjectId)
+    val active = {
+      ...endTurn(initialState),
+      fighter: {
+        ...initialState.fighter,
+        activeEffects: Set(heatMetalObjectContactDamageEffect(initialState, Fighter, heatMetalObjectId, 2)),
+      },
+      goblin: {
+        ...initialState.goblin,
+        activeEffects: Set(AntimagicFieldOngoingSpellSuppression({
+          areaId: antimagicFieldAreaId,
+          radiusFeet: antimagicFieldRadiusFeet,
+          suppressedOngoingSpellEffects: Set(OngoingSpellActiveEffectRef({ effectId: effectId })),
+          durationTicks: antimagicFieldDurationTicks,
+        })),
+      },
+    }
+    val ticked = endTurn(endTurn(active))
+    all {
+      assert(heatMetalObjectContactDamageActiveForCombatant(active.fighter, heatMetalObjectId)),
+      assert(not(heatMetalRepeatAvailable(active, heatMetalObjectId, true))),
+      assert(heatMetalObjectContactDamageActiveForCombatant(ticked.fighter, heatMetalObjectId)),
+      assert(not(heatMetalObjectContactDamageActive(ticked, heatMetalObjectId))),
+    }
+  }
+
   run test_heat_metal_concentration_break_removes_object_contact_effect = {
     val resolved = resolveHeatMetal(initialState, heatMetalObjectId, Set(), Set(), Set(), Set(), Set(), 2, 0, true, true)
     val broken = breakConcentrationSpellEffects(resolved, Fighter)
     all {
       assert(not(broken.fighter.concentrating)),
       assert(not(heatMetalObjectContactDamageActive(broken, heatMetalObjectId))),
+    }
+  }
+
+  run test_dispel_magic_object_target_ends_heat_metal_object_contact_effect_and_clears_concentration = {
+    val cast = resolveHeatMetal(initialState, heatMetalObjectId, Set(), Set(), Set(), Set(), Set(), 2, 0, true, true)
+    val dispelled = resolveDispelMagicAgainstHeatMetalObjectTarget(cast, Fighter, heatMetalObjectId, 3, Set())
+    all {
+      assert(not(dispelled.fighter.concentrating)),
+      assert(not(heatMetalObjectContactDamageActive(dispelled, heatMetalObjectId))),
+    }
+  }
+
+  run test_dispel_magic_higher_level_check_gate_for_heat_metal_object_contact_effect = {
+    val higherSlotCast = resolveHeatMetal(initialState, heatMetalObjectId, Set(), Set(), Set(), Set(), Set(), 4, 0, true, true)
+    val effectId = heatMetalObjectContactDamageEffectId(Fighter, heatMetalObjectId)
+    val failedCheckIds = dispelMagicSuccessfulAbilityCheckEffectIds(effectId, 13, 4)
+    val succeededCheckIds = dispelMagicSuccessfulAbilityCheckEffectIds(effectId, 14, 4)
+    val failed = resolveDispelMagicAgainstHeatMetalObjectTarget(higherSlotCast, Fighter, heatMetalObjectId, 3, failedCheckIds)
+    val succeeded = resolveDispelMagicAgainstHeatMetalObjectTarget(higherSlotCast, Fighter, heatMetalObjectId, 3, succeededCheckIds)
+    val higherSlot = resolveDispelMagicAgainstHeatMetalObjectTarget(higherSlotCast, Fighter, heatMetalObjectId, 4, Set())
+    all {
+      assert(failed.fighter.concentrating),
+      assert(heatMetalObjectContactDamageActive(failed, heatMetalObjectId)),
+      assert(not(succeeded.fighter.concentrating)),
+      assert(not(heatMetalObjectContactDamageActive(succeeded, heatMetalObjectId))),
+      assert(not(higherSlot.fighter.concentrating)),
+      assert(not(heatMetalObjectContactDamageActive(higherSlot, heatMetalObjectId))),
+      assert(failedCheckIds == Set()),
+      assert(succeededCheckIds == Set(effectId)),
+    }
+  }
+
+  run test_dispel_magic_object_target_ends_same_object_heat_metal_effects_from_multiple_owners = {
+    val state = {
+      ...initialState,
+      fighter: {
+        ...initialState.fighter,
+        concentrating: true,
+        activeEffects: Set(
+          heatMetalObjectContactDamageEffect(initialState, Fighter, heatMetalObjectId, 2),
+        ),
+      },
+      goblin: {
+        ...initialState.goblin,
+        concentrating: true,
+        activeEffects: Set(
+          heatMetalObjectContactDamageEffect(initialState, Goblin, heatMetalObjectId, 2),
+        ),
+      },
+    }
+    val dispelled = resolveDispelMagicAgainstHeatMetalObjectTarget(state, Fighter, heatMetalObjectId, 3, Set())
+    all {
+      assert(not(dispelled.fighter.concentrating)),
+      assert(not(dispelled.goblin.concentrating)),
+      assert(not(heatMetalObjectContactDamageActiveForCombatant(dispelled.fighter, heatMetalObjectId))),
+      assert(not(heatMetalObjectContactDamageActiveForCombatant(dispelled.goblin, heatMetalObjectId))),
+    }
+  }
+
+  run test_dispel_magic_magical_effect_target_removes_only_selected_same_object_heat_metal_effect = {
+    val state = {
+      ...initialState,
+      fighter: {
+        ...initialState.fighter,
+        concentrating: true,
+        activeEffects: Set(
+          heatMetalObjectContactDamageEffect(initialState, Fighter, heatMetalObjectId, 2),
+        ),
+      },
+      goblin: {
+        ...initialState.goblin,
+        concentrating: true,
+        activeEffects: Set(
+          heatMetalObjectContactDamageEffect(initialState, Goblin, heatMetalObjectId, 2),
+        ),
+      },
+    }
+    val dispelled =
+      resolveDispelMagicAgainstHeatMetalMagicalEffectTarget(
+        state,
+        Fighter,
+        heatMetalObjectContactDamageEffectId(Fighter, heatMetalObjectId),
+        3,
+        Set(),
+      )
+    all {
+      assert(not(dispelled.fighter.concentrating)),
+      assert(dispelled.goblin.concentrating),
+      assert(not(heatMetalObjectContactDamageActiveForCombatant(dispelled.fighter, heatMetalObjectId))),
+      assert(heatMetalObjectContactDamageActiveForCombatant(dispelled.goblin, heatMetalObjectId)),
     }
   }
 

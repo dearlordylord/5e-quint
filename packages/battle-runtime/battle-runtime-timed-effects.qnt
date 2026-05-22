@@ -308,7 +308,7 @@ module battleRuntimeTimedEffects {
         | AntimagicFieldOngoingSpellSuppression(data) => AntimagicFieldOngoingSpellSuppression({
             areaId: data.areaId,
             radiusFeet: data.radiusFeet,
-            suppressedSourceEffectIds: data.suppressedSourceEffectIds,
+            suppressedOngoingSpellEffects: data.suppressedOngoingSpellEffects,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
         | FlamingSphere(data) => FlamingSphere({
@@ -336,7 +336,9 @@ module battleRuntimeTimedEffects {
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
         | HeatMetalObjectContactDamage(data) => HeatMetalObjectContactDamage({
+            effectId: data.effectId,
             objectId: data.objectId,
+            sourceSpellLevel: data.sourceSpellLevel,
             damageDice: data.damageDice,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
             startedRound: data.startedRound,

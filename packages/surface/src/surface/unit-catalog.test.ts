@@ -398,7 +398,14 @@ describe("SRD Unit catalog boundary", () => {
             attachment: {
               value: {
                 kind: "target",
-                selection: { count: 5, mode: "choose_up_to" },
+                selection: {
+                  castingRequirement: {
+                    kind: "remain_within_spell_range_for_entire_casting",
+                  },
+                  count: 5,
+                  mode: "choose_up_to",
+                  targetKinds: ["creature"],
+                },
               },
             },
             effects: [
@@ -410,6 +417,16 @@ describe("SRD Unit catalog boundary", () => {
                   startingAtLevel: 2,
                 },
                 kind: "heal_hp",
+              },
+              {
+                benefit: "short_rest",
+                kind: "grant_rest_benefit",
+                target: "target_creature",
+              },
+              {
+                kind: "spell_recipient_rest_lockout",
+                resetBy: "target_finishes_long_rest",
+                target: "target_creature",
               },
             ],
           },

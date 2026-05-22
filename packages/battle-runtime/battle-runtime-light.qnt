@@ -471,6 +471,44 @@ module battleRuntimeLight {
       | ObjectInvisibleRevealLightEmitter(_) => true
     })
 
+  pure def dispelMagicObjectTargetActiveEffects(
+    effects: Set[ActiveEffect],
+    objectId: int,
+    slotLevel: int,
+    successfulCheckEffectIds: Set[int],
+  ): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | HeatMetalObjectContactDamage(data) =>
+          data.objectId != objectId
+          or not(dispelMagicEndsTrackedOngoingSpell(
+            slotLevel,
+            successfulCheckEffectIds,
+            data.effectId,
+            data.sourceSpellLevel,
+          ))
+      | _ => true
+    })
+
+  pure def dispelMagicMagicalEffectTargetActiveEffects(
+    effects: Set[ActiveEffect],
+    effectId: int,
+    slotLevel: int,
+    successfulCheckEffectIds: Set[int],
+  ): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | HeatMetalObjectContactDamage(data) =>
+          not(
+            data.effectId == effectId and
+            dispelMagicEndsTrackedOngoingSpell(
+              slotLevel,
+              successfulCheckEffectIds,
+              data.effectId,
+              data.sourceSpellLevel,
+            )
+          )
+      | _ => true
+    })
+
   pure def ongoingSpellTrackingSourceEffectIdIn(
     tracking: OngoingSpellTracking,
     sourceEffectIds: Set[int],
@@ -505,25 +543,35 @@ module battleRuntimeLight {
       | ObjectInvisibleRevealLightEmitter(_) => true
     })
 
-  pure def activeEffectsAntimagicSuppressedSourceEffectIds(effects: Set[ActiveEffect]): Set[int] =
+  pure def activeEffectsAntimagicSuppressedOngoingSpellEffects(effects: Set[ActiveEffect]): Set[OngoingSpellEffectRef] =
     effects
       .map(effect => match effect {
-        | AntimagicFieldOngoingSpellSuppression(data) => data.suppressedSourceEffectIds
+        | AntimagicFieldOngoingSpellSuppression(data) => data.suppressedOngoingSpellEffects
         | _ => Set()
       })
       .fold(Set(), (left, right) => left.union(right))
 
-  pure def antimagicSuppressedSourceEffectIds(state: BattleState): Set[int] =
-    activeEffectsAntimagicSuppressedSourceEffectIds(state.fighter.activeEffects)
-      .union(activeEffectsAntimagicSuppressedSourceEffectIds(state.goblin.activeEffects))
+  pure def antimagicSuppressedOngoingSpellEffects(state: BattleState): Set[OngoingSpellEffectRef] =
+    activeEffectsAntimagicSuppressedOngoingSpellEffects(state.fighter.activeEffects)
+      .union(activeEffectsAntimagicSuppressedOngoingSpellEffects(state.goblin.activeEffects))
+
+  pure def antimagicSuppressesOngoingSpellActiveEffect(state: BattleState, effectId: int): bool =
+    antimagicSuppressedOngoingSpellEffects(state)
+      .contains(OngoingSpellActiveEffectRef({ effectId: effectId }))
 
   pure def lightEmitterSuppressedByAntimagic(
     emitter: LightEmitter,
-    suppressedSourceEffectIds: Set[int],
+    suppressedOngoingSpellEffects: Set[OngoingSpellEffectRef],
   ): bool =
     match emitter {
       | SpellLightEmitter(data) =>
-          ongoingSpellTrackingSourceEffectIdIn(data.ongoingSpellTracking, suppressedSourceEffectIds)
+          match data.ongoingSpellTracking {
+            | UntrackedSpellLightEmitter => false
+            | TrackedOngoingSpellLightEmitter(tracking) =>
+                suppressedOngoingSpellEffects.contains(
+                  OngoingSpellLightEffectRef({ sourceEffectId: tracking.sourceEffectId })
+                )
+          }
       | ObjectInvisibleRevealLightEmitter(_) => false
     }
 
@@ -696,7 +744,7 @@ module battleRuntimeLight {
     })
 
   pure def battleRuntimeLightEmitters(state: BattleState): Set[LightEmitter] = {
-    val suppressedSourceEffectIds = antimagicSuppressedSourceEffectIds(state)
+    val suppressedOngoingSpellEffects = antimagicSuppressedOngoingSpellEffects(state)
     state.lightEmitters
       .union(produceFlameHeldLightEmitters(state.fighter.activeEffects))
       .union(flameBladeHeldLightEmitters(state.fighter.activeEffects))
@@ -706,7 +754,7 @@ module battleRuntimeLight {
       .union(shiningSmiteCombatantBrightLightEmitters(Fighter, state.fighter.activeEffects))
       .union(shiningSmiteCombatantBrightLightEmitters(Goblin, state.goblin.activeEffects))
       .union(faerieFireObjectDimLightEmitters(state.objectOutlines))
-      .filter(emitter => not(lightEmitterSuppressedByAntimagic(emitter, suppressedSourceEffectIds)))
+      .filter(emitter => not(lightEmitterSuppressedByAntimagic(emitter, suppressedOngoingSpellEffects)))
   }
 
   pure def fighterWithoutProduceFlameHeldLight(state: BattleState): Combatant =

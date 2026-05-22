@@ -315,7 +315,7 @@ module battleRuntimeGroundCommand {
   pure def resolveAntimagicFieldOngoingSpellSuppression(
     state: BattleState,
     areaId: int,
-    suppressedSourceEffectIds: Set[int],
+    suppressedOngoingSpellEffects: Set[OngoingSpellEffectRef],
     slotLevel: int,
   ): BattleState =
     if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)) or slotLevel < 8)
@@ -331,7 +331,7 @@ module battleRuntimeGroundCommand {
             .union(Set(AntimagicFieldOngoingSpellSuppression({
               areaId: areaId,
               radiusFeet: antimagicFieldRadiusFeet,
-              suppressedSourceEffectIds: suppressedSourceEffectIds,
+              suppressedOngoingSpellEffects: suppressedOngoingSpellEffects,
               durationTicks: antimagicFieldDurationTicks,
             }))),
         },

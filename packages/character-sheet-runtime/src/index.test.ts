@@ -29,8 +29,10 @@ import {
 import {
   buildUnitCatalog,
   srdUnitCollection,
+  type UnitCatalog,
 } from "@dnd/surface/surface/unit-catalog";
-import { Either } from "effect";
+import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
+import { Either, Option } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -39,6 +41,7 @@ import {
   CHARACTER_SHEET_LONG_REST_BASE_TICKS,
   CHARACTER_SHEET_LONG_REST_WAIT_TICKS,
   CHARACTER_SHEET_SHORT_REST_TICKS,
+  applyCharacterSheetSpellRestBenefit,
   applyLayOnHands,
   characterSheetAbilityCheckProficiencyBonus,
   characterSheetArmorClassState,
@@ -95,6 +98,7 @@ import {
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.font-of-magic-sorcery-points-to-spell-slot
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.metamagic-battle-resource-bridge
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.monk-uncanny-metabolism-initiative-recovery
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.spell-rest-benefit-application
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B barbarian_unarmored_defense monk_unarmored_defense paladin_lay_on_hands wizard_arcane_recovery wizard_ritual_adept
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-04 fighter_weapon_mastery barbarian_weapon_mastery paladin_weapon_mastery ranger_weapon_mastery rogue_weapon_mastery
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-CLASS-BARD-JACK-OF-ALL-TRADES bard_jack_of_all_trades
@@ -104,6 +108,7 @@ import {
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS monk_uncanny_metabolism
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS sorcerer_font_of_magic
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS sorcerer_metamagic
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST prayer_of_healing
 
 const build = armorClassBuild({ startingClass: "class_fighter" });
 
@@ -166,6 +171,12 @@ const uncannyMetabolismInitiativeGatesTestName =
   "rejects Uncanny Metabolism Initiative use outside its die and Long Rest gates";
 const uncannyMetabolismRejectsUnownedUseStateTestName =
   "rejects Uncanny Metabolism use state without the retained Monk feature";
+const prayerOfHealingRestBenefitApplicationTestName =
+  "Prayer of Healing spends its Spell Slot at completion and grants recipient Short Rest benefits, healing, and Long Rest lockout";
+const prayerOfHealingRestBenefitAdmissionGateTestName =
+  "Prayer of Healing rest benefit rejects unsupported Surface spell shapes";
+const prayerOfHealingStoredLockoutGateTestName =
+  "rejects stored Prayer of Healing recipient lockouts for unknown or unsupported spell ids";
 const druidWildShapeFixtureKnownFormStatBlockIds = [
   "stat_block_rat",
   "stat_block_riding_horse",
@@ -2962,6 +2973,289 @@ describe("Character Sheet runtime", () => {
     ]);
   });
 
+  test(prayerOfHealingRestBenefitApplicationTestName, () => {
+    const caster = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:prayer-caster"),
+        build: prayerOfHealingClericBuild(),
+        maximumHp: Hp(18),
+        currentHp: Hp(10),
+        tempHp: Hp(0),
+        unitLibrary,
+        spellSlots: [
+          {
+            spellLevel: spellSlotLevel(1),
+            count: resourceCount(4),
+            expended: resourceCount(1),
+          },
+          {
+            spellLevel: spellSlotLevel(2),
+            count: resourceCount(2),
+            expended: resourceCount(0),
+          },
+        ],
+      }),
+    );
+    const woundedWizard = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:prayer-wizard"),
+        build: wizardWarlockBuild(),
+        maximumHp: Hp(18),
+        currentHp: Hp(3),
+        tempHp: Hp(2),
+        unitLibrary,
+        spellSlots: [
+          {
+            spellLevel: spellSlotLevel(1),
+            count: resourceCount(2),
+            expended: resourceCount(1),
+          },
+        ],
+        pactSlots: { expended: resourceCount(1) },
+      }),
+    );
+    const woundedFighter = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:prayer-fighter"),
+        build: armorClassBuild({ startingClass: "class_fighter" }),
+        maximumHp: Hp(12),
+        currentHp: Hp(0),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+
+    const result = requireRight(
+      applyCharacterSheetSpellRestBenefit({
+        caster,
+        spellId: "prayer_of_healing",
+        unitLibrary,
+        castLevel: spellSlotLevel(2),
+        recipients: [
+          {
+            sheet: woundedWizard,
+            eligibility: { remainedWithinRangeForEntireCasting: true },
+            spendHitDice: [
+              { classUnitId: "class_wizard", roll: DieRollResult(4) },
+            ],
+            healingRolls: [DieRollResult(7), DieRollResult(6)],
+          },
+          {
+            sheet: woundedFighter,
+            eligibility: { remainedWithinRangeForEntireCasting: true },
+            healingRolls: [DieRollResult(5), DieRollResult(6)],
+          },
+          {
+            sheet: caster,
+            eligibility: { remainedWithinRangeForEntireCasting: true },
+            healingRolls: [DieRollResult(4), DieRollResult(4)],
+          },
+        ],
+      }),
+    );
+
+    expect(characterSheetSpellSlots(result.caster)).toEqual([
+      { spellLevel: 1, count: 4, expended: 1 },
+      { spellLevel: 2, count: 2, expended: 1 },
+    ]);
+    expect(characterSheetCurrentHp(result.caster)).toBe(18);
+    expect(result.caster.restFeatureUses).toEqual([
+      {
+        tag: "spellRecipientRestLockout",
+        spellId: "prayer_of_healing",
+        usedSinceLongRest: true,
+      },
+    ]);
+    expect(characterSheetCurrentHp(result.recipients[0])).toBe(18);
+    expect(characterSheetTempHp(result.recipients[0])).toBe(2);
+    expect(characterSheetPactSlots(result.recipients[0])).toEqual({
+      slotLevel: 1,
+      count: 1,
+      expended: 0,
+    });
+    expect(
+      requireRight(characterSheetHitDice(result.recipients[0], unitLibrary)),
+    ).toEqual([
+      { classUnitId: "class_wizard", dieSize: 6, total: 1, spent: 1 },
+    ]);
+    expect(characterSheetCurrentHp(result.recipients[1])).toBe(11);
+    expect(
+      result.recipients.map((recipient) => recipient.restFeatureUses),
+    ).toEqual([
+      [
+        {
+          tag: "spellRecipientRestLockout",
+          spellId: "prayer_of_healing",
+          usedSinceLongRest: true,
+        },
+      ],
+      [
+        {
+          tag: "spellRecipientRestLockout",
+          spellId: "prayer_of_healing",
+          usedSinceLongRest: true,
+        },
+      ],
+      [
+        {
+          tag: "spellRecipientRestLockout",
+          spellId: "prayer_of_healing",
+          usedSinceLongRest: true,
+        },
+      ],
+    ]);
+    expect(
+      applyCharacterSheetSpellRestBenefit({
+        caster: result.caster,
+        spellId: "prayer_of_healing",
+        unitLibrary,
+        castLevel: spellSlotLevel(2),
+        recipients: [
+          {
+            sheet: result.recipients[0],
+            eligibility: { remainedWithinRangeForEntireCasting: true },
+            healingRolls: [DieRollResult(1), DieRollResult(1)],
+          },
+        ],
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Spell rest benefit recipient cannot be affected by this spell again until finishing a Long Rest.",
+      },
+    });
+
+    const longRestedRecipient = requireRight(
+      completeLongRest({ sheet: result.recipients[0], unitLibrary }),
+    );
+    expect(longRestedRecipient.restFeatureUses).toEqual([]);
+  });
+
+  test(prayerOfHealingRestBenefitAdmissionGateTestName, () => {
+    const caster = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:prayer-admission-caster"),
+        build: prayerOfHealingClericBuild(),
+        maximumHp: Hp(18),
+        currentHp: Hp(18),
+        tempHp: Hp(0),
+        unitLibrary,
+        spellSlots: [
+          {
+            spellLevel: spellSlotLevel(1),
+            count: resourceCount(4),
+            expended: resourceCount(0),
+          },
+          {
+            spellLevel: spellSlotLevel(2),
+            count: resourceCount(2),
+            expended: resourceCount(0),
+          },
+        ],
+      }),
+    );
+    const recipient = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:prayer-admission-target"),
+        build: armorClassBuild({ startingClass: "class_fighter" }),
+        maximumHp: Hp(12),
+        currentHp: Hp(6),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const malformedLibraries = [
+      prayerOfHealingUnitLibraryWith((spell) =>
+        replacePrayerOfHealingDirectPhase(spell, (phase) => {
+          const { castingRequirement: _omitted, ...selection } =
+            phase.attachment.value.selection;
+          return {
+            ...phase,
+            attachment: {
+              ...phase.attachment,
+              value: {
+                ...phase.attachment.value,
+                selection,
+              },
+            },
+          } as PrayerOfHealingDirectPhase;
+        }),
+      ),
+      prayerOfHealingUnitLibraryWith((spell) => ({
+        ...spell,
+        mechanics: {
+          ...spell.mechanics,
+          castingTime: { kind: "action" },
+        },
+      })),
+      prayerOfHealingUnitLibraryWith((spell) => ({
+        ...spell,
+        mechanics: {
+          ...spell.mechanics,
+          range: { kind: "touch" },
+        },
+      })),
+      prayerOfHealingUnitLibraryWith((spell) =>
+        replacePrayerOfHealingDirectPhase(
+          spell,
+          (phase) =>
+            ({
+              ...phase,
+              effects: [...phase.effects, { kind: "none" }],
+            }) as unknown as PrayerOfHealingDirectPhase,
+        ),
+      ),
+    ];
+
+    for (const malformedUnitLibrary of malformedLibraries) {
+      expect(
+        applyCharacterSheetSpellRestBenefit({
+          caster,
+          spellId: "prayer_of_healing",
+          unitLibrary: malformedUnitLibrary,
+          castLevel: spellSlotLevel(2),
+          recipients: [
+            {
+              sheet: recipient,
+              eligibility: { remainedWithinRangeForEntireCasting: true },
+              healingRolls: [DieRollResult(1), DieRollResult(1)],
+            },
+          ],
+        }),
+      ).toMatchObject({ _tag: "Left" });
+    }
+  });
+
+  test(prayerOfHealingStoredLockoutGateTestName, () => {
+    for (const spellId of ["missing_spell", "class_fighter", "cure_wounds"]) {
+      expect(
+        parseCharacterSheet(
+          {
+            ...storedAvailableSheetInput({
+              characterId: `character:stored-lockout-${spellId}`,
+              build: armorClassBuild({ startingClass: "class_fighter" }),
+            }),
+            restFeatureUses: [
+              {
+                tag: "spellRecipientRestLockout",
+                spellId,
+                usedSinceLongRest: true,
+              },
+            ],
+          },
+          unitLibrary,
+        ),
+      ).toMatchObject({
+        _tag: "Left",
+        left: {
+          message:
+            "Spell recipient rest lockout requires an admitted spell rest-benefit profile.",
+        },
+      });
+    }
+  });
+
   test("rest interruptions apply only the RAW rest benefits they grant", () => {
     const sheet = requireRight(
       createFreshCharacterSheet({
@@ -3108,9 +3402,9 @@ describe("Character Sheet runtime", () => {
     ).toEqual([
       { classUnitId: "class_wizard", dieSize: 6, total: 2, spent: 1 },
     ]);
-    expect(characterSheetSpellSlots(lateLongRestInterruption.rest.sheet)).toEqual(
-      [{ spellLevel: 1, count: 3, expended: 1 }],
-    );
+    expect(
+      characterSheetSpellSlots(lateLongRestInterruption.rest.sheet),
+    ).toEqual([{ spellLevel: 1, count: 3, expended: 1 }]);
   });
 
   test("Short Rest applies minimum healing to each spent Hit Die", () => {
@@ -3611,6 +3905,82 @@ function storedAvailableSheetInput(input: {
   };
 }
 
+type ActivationSpellMechanics = Extract<
+  SpellRecord["mechanics"],
+  { readonly family: "activation" }
+>;
+type DirectSpellPhase = Extract<
+  ActivationSpellMechanics["phases"][number],
+  { readonly kind: "direct" }
+>;
+type PrayerOfHealingDirectPhase = DirectSpellPhase & {
+  readonly attachment: {
+    readonly kind: "hole";
+    readonly holeId: string;
+    readonly label?: string;
+    readonly value: {
+      readonly kind: "target";
+      readonly selection: Readonly<Record<string, unknown>>;
+    };
+  };
+  readonly effects: readonly unknown[];
+};
+
+function prayerOfHealingUnitLibraryWith(
+  transform: (spell: SpellRecord) => SpellRecord,
+): UnitCatalog {
+  const base = unitLibrary.requireUnit("prayer_of_healing");
+  if (base.kind !== "spell") {
+    throw new Error("Prayer of Healing test fixture must be a Spell.");
+  }
+  const replacement = transform(base);
+  return {
+    getUnit: (id: UnitRecord["id"]) =>
+      id === replacement.id
+        ? Option.some(replacement)
+        : unitLibrary.getUnit(id),
+    requireUnit: (id: UnitRecord["id"]) =>
+      id === replacement.id ? replacement : unitLibrary.requireUnit(id),
+    listUnits: () =>
+      unitLibrary
+        .listUnits()
+        .map((unit) => (unit.id === replacement.id ? replacement : unit)),
+  };
+}
+
+function replacePrayerOfHealingDirectPhase(
+  spell: SpellRecord,
+  transform: (phase: PrayerOfHealingDirectPhase) => PrayerOfHealingDirectPhase,
+): SpellRecord {
+  const phase = prayerOfHealingDirectPhase(spell);
+  return {
+    ...spell,
+    mechanics: {
+      ...spell.mechanics,
+      phases: [transform(phase)],
+    },
+  } as SpellRecord;
+}
+
+function prayerOfHealingDirectPhase(
+  spell: SpellRecord,
+): PrayerOfHealingDirectPhase {
+  if (spell.mechanics.family !== "activation") {
+    throw new Error("Prayer of Healing test fixture must be an activation.");
+  }
+  const phase = spell.mechanics.phases[0];
+  if (
+    phase === undefined ||
+    phase.kind !== "direct" ||
+    phase.attachment.kind !== "hole" ||
+    phase.attachment.value.kind !== "target" ||
+    phase.effects === undefined
+  ) {
+    throw new Error("Prayer of Healing test fixture must have target effects.");
+  }
+  return phase as PrayerOfHealingDirectPhase;
+}
+
 function requireRight<A, E>(either: Either.Either<A, E>): A {
   if (Either.isRight(either)) return either.right;
   throw new Error(`Expected Either.right, got ${JSON.stringify(either.left)}.`);
@@ -3922,6 +4292,36 @@ function wizardWarlockBuild(): CharacterBuild {
           kind: "pactMagic",
           slotLevel: 1,
           count: 1,
+        },
+      },
+    },
+  };
+}
+
+function prayerOfHealingClericBuild(): CharacterBuild {
+  return {
+    ...armorClassBuild({
+      startingClass: "class_cleric",
+      advancements: ["class_cleric", "class_cleric"],
+    }),
+    spellcasting: {
+      sources: [
+        {
+          sourceUnitId: "class_cleric",
+          spellcastingAbility: "wis",
+          cantrips: [],
+          spellbook: [],
+          preparedSpells: ["prayer_of_healing"],
+          spellcastingFocuses: ["holy_symbol"],
+        },
+      ],
+      slotPools: {
+        spellcasting: {
+          kind: "spellcasting",
+          slots: [
+            { spellLevel: 1, count: 4 },
+            { spellLevel: 2, count: 2 },
+          ],
         },
       },
     },

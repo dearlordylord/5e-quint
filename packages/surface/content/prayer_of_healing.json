@@ -27,8 +27,14 @@
           "value": {
             "kind": "target",
             "selection": {
+              "castingRequirement": {
+                "kind": "remain_within_spell_range_for_entire_casting"
+              },
               "count": 5,
-              "mode": "choose_up_to"
+              "mode": "choose_up_to",
+              "targetKinds": [
+                "creature"
+              ]
             }
           }
         },
@@ -47,6 +53,16 @@
               "startingAtLevel": 2
             },
             "kind": "heal_hp",
+            "target": "target_creature"
+          },
+          {
+            "benefit": "short_rest",
+            "kind": "grant_rest_benefit",
+            "target": "target_creature"
+          },
+          {
+            "kind": "spell_recipient_rest_lockout",
+            "resetBy": "target_finishes_long_rest",
             "target": "target_creature"
           }
         ],
