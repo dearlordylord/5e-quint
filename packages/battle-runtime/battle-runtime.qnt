@@ -1097,6 +1097,7 @@ module battleRuntime {
       | GuidanceRollModifier => 1
       | PassWithoutTraceRollModifier => Set(Fighter, Goblin).size()
       | EnhanceAbilityRollModifier => 1
+      | EnthrallRollModifier => Set(Fighter, Goblin).size()
     }
 
   pure def rollModifierActiveEffect(
@@ -1106,8 +1107,11 @@ module battleRuntime {
   ): ActiveEffect =
     rollModifierChoiceActiveEffect(invocation, chosenAbility, chosenSkill)
 
+  pure def rollModifierPassivePerceptionDelta(effects: Set[ActiveEffect]): int =
+    passivePerceptionModifierDelta(effects)
+
   pure def rollModifierRequiresFailedSave(invocation: RollModifierSpell): bool =
-    invocation == BaneRollModifier
+    invocation == BaneRollModifier or invocation == EnthrallRollModifier
 
   pure def rollModifierSpendsLevelOneSlot(invocation: RollModifierSpell): bool =
     invocation != GuidanceRollModifier

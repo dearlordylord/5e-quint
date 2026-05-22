@@ -2225,10 +2225,11 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
-      "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets or table-supplied area membership, optional skill or ability choice fills, and optional Saving Throw outcomes; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 numeric modifiers, and chosen-ability Ability Check roll-mode active effects.",
+      "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets or table-supplied area membership, optional skill or ability choice fills, optional Saving Throw outcomes, and explicit any-number target-list selection facts; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 dice and fixed-number modifiers, chosen-ability Ability Check roll-mode active effects, and Passive Perception deltas derived from active Perception modifiers.",
       "taskRefs": [
         "SRDINV30B",
-        "L12G-MISSING-ENHANCE-ABILITY"
+        "L12G-MISSING-ENHANCE-ABILITY",
+        "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME"
       ],
       "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
       "verificationOwners": [
@@ -10835,6 +10836,22 @@
         "spell.invocation-creature-size-change"
       ],
       "taskId": "L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover Enthrall's Magic Action and level-2-or-higher Spell Slot spend, unbounded caller-supplied target list, Wisdom save gate, failed-save Perception penalty active effect, Passive Perception derivation from the same fixed modifier, and Concentration cleanup.",
+      "profileIds": [
+        "spell.invocation-roll-modifier"
+      ],
+      "taskId": "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Enthrall Surface-profile admission by shape, any-number target-list discovery capped by current legal choices, Magic Action and Spell Slot spending, Wisdom Saving Throw outcomes for selected targets, failed-save fixed -10 Wisdom (Perception) Ability Check modifiers, derived Passive Perception delta, successful-save no-effect targets, and Concentration-owned cleanup/recast behavior through the shared roll-modifier effect lifecycle.",
+      "profileIds": [
+        "spell.invocation-roll-modifier"
+      ],
+      "taskId": "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME"
     }
   ],
   "units": [
@@ -16735,10 +16752,11 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
-          "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets or table-supplied area membership, optional skill or ability choice fills, and optional Saving Throw outcomes; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 numeric modifiers, and chosen-ability Ability Check roll-mode active effects.",
+          "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets or table-supplied area membership, optional skill or ability choice fills, optional Saving Throw outcomes, and explicit any-number target-list selection facts; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 dice and fixed-number modifiers, chosen-ability Ability Check roll-mode active effects, and Passive Perception deltas derived from active Perception modifiers.",
           "taskRefs": [
             "SRDINV30B",
-            "L12G-MISSING-ENHANCE-ABILITY"
+            "L12G-MISSING-ENHANCE-ABILITY",
+            "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME"
           ],
           "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [
@@ -16796,10 +16814,11 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
-          "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets or table-supplied area membership, optional skill or ability choice fills, and optional Saving Throw outcomes; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 numeric modifiers, and chosen-ability Ability Check roll-mode active effects.",
+          "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets or table-supplied area membership, optional skill or ability choice fills, optional Saving Throw outcomes, and explicit any-number target-list selection facts; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 dice and fixed-number modifiers, chosen-ability Ability Check roll-mode active effects, and Passive Perception deltas derived from active Perception modifiers.",
           "taskRefs": [
             "SRDINV30B",
-            "L12G-MISSING-ENHANCE-ABILITY"
+            "L12G-MISSING-ENHANCE-ABILITY",
+            "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME"
           ],
           "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [
@@ -18292,10 +18311,11 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
-          "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets or table-supplied area membership, optional skill or ability choice fills, and optional Saving Throw outcomes; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 numeric modifiers, and chosen-ability Ability Check roll-mode active effects.",
+          "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets or table-supplied area membership, optional skill or ability choice fills, optional Saving Throw outcomes, and explicit any-number target-list selection facts; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 dice and fixed-number modifiers, chosen-ability Ability Check roll-mode active effects, and Passive Perception deltas derived from active Perception modifiers.",
           "taskRefs": [
             "SRDINV30B",
-            "L12G-MISSING-ENHANCE-ABILITY"
+            "L12G-MISSING-ENHANCE-ABILITY",
+            "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME"
           ],
           "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [
@@ -18522,24 +18542,71 @@
         "status": "installed"
       },
       "claim": {
-        "followUpTasks": [
+        "deferredMechanics": [
           {
-            "id": "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME",
-            "mechanic": "Promote Enthrall's battle-visible Perception subset: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caller-supplied eligible creature target list after applying the fighting-caster-or-companions auto-success predicate at the table boundary, Wisdom save, failed-save active -10 modifier to Wisdom (Perception) Ability Checks, derived Passive Perception consequence from the same modifier, and cleanup when Concentration or duration ends.",
-            "owner": "battle-runtime spell invocation/effect lifecycle plus promoted Quint parity",
-            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Enthrall's Perception penalty without modeling social attention state.",
-            "title": "Enthrall Perception Penalty Runtime Support"
+            "battleReadinessClosure": {
+              "kind": "social-knowledge-effect",
+              "owner": "table/social target eligibility owner",
+              "reason": "The SRD fight/attention clauses depend on table relationship and social attention facts outside promoted battle-runtime state; the runtime consumes caller-selected eligible targets and records battle-visible failed-save Perception effects."
+            },
+            "mechanic": "social attention/diversion adjudication and target eligibility predicate for creatures fighting the caster or caster's companions"
           }
         ],
-        "futureProfileOwner": "battle-runtime roll-modifier spell invocation plus table/social owner",
-        "reason": "Enthrall is authored as an SRD Surface Spell Definition with Magic Action Spell Slot casting, Concentration up to 1 minute, any-number creature target selection, a Wisdom save gate, and a failed-save -10 modifier to Wisdom (Perception) Ability Checks. Task 62 claims no promoted battle-runtime profile yet because runtime roll-modifier spell targeting has no unbounded any-number target-list projection, active d20 roll modifiers do not support fixed-number deltas such as -10, and the fighting-caster-or-companions auto-success predicate is allegiance/table state rather than a current battle-runtime target predicate. Passive Perception remains derived from the Wisdom (Perception) check bonus rather than duplicated as separate Surface state; broader social attention adjudication remains runtime-detached.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "spell.invocation-roll-modifier"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action prepared spell cast with a level-2-or-higher Spell Slot",
+          "caller-supplied eligible creature target list with any-number target selection after the table applies the fighting-caster-or-companions automatic-success boundary",
+          "Wisdom Saving Throw against the caster Spell Save DC for each selected target",
+          "failed-save caster-owned Concentration active effect applying a fixed -10 modifier to Wisdom (Perception) Ability Checks",
+          "Passive Perception consequence derives from the same active Perception modifier instead of duplicated passive state",
+          "Concentration cleanup and same-caster recast replacement remove the Perception modifier"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-roll-modifier",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets or table-supplied area membership, optional skill or ability choice fills, optional Saving Throw outcomes, and explicit any-number target-list selection facts; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 dice and fixed-number modifiers, chosen-ability Ability Check roll-mode active effects, and Passive Perception deltas derived from active Perception modifiers.",
+          "taskRefs": [
+            "SRDINV30B",
+            "L12G-MISSING-ENHANCE-ABILITY",
+            "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME"
+          ],
+          "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/enthrall.json",
       "unitId": "enthrall"
     },
@@ -19387,10 +19454,11 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
-          "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets or table-supplied area membership, optional skill or ability choice fills, and optional Saving Throw outcomes; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 numeric modifiers, and chosen-ability Ability Check roll-mode active effects.",
+          "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets or table-supplied area membership, optional skill or ability choice fills, optional Saving Throw outcomes, and explicit any-number target-list selection facts; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 dice and fixed-number modifiers, chosen-ability Ability Check roll-mode active effects, and Passive Perception deltas derived from active Perception modifiers.",
           "taskRefs": [
             "SRDINV30B",
-            "L12G-MISSING-ENHANCE-ABILITY"
+            "L12G-MISSING-ENHANCE-ABILITY",
+            "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME"
           ],
           "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [
@@ -20762,10 +20830,11 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
-          "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets or table-supplied area membership, optional skill or ability choice fills, and optional Saving Throw outcomes; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 numeric modifiers, and chosen-ability Ability Check roll-mode active effects.",
+          "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets or table-supplied area membership, optional skill or ability choice fills, optional Saving Throw outcomes, and explicit any-number target-list selection facts; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 dice and fixed-number modifiers, chosen-ability Ability Check roll-mode active effects, and Passive Perception deltas derived from active Perception modifiers.",
           "taskRefs": [
             "SRDINV30B",
-            "L12G-MISSING-ENHANCE-ABILITY"
+            "L12G-MISSING-ENHANCE-ABILITY",
+            "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME"
           ],
           "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [

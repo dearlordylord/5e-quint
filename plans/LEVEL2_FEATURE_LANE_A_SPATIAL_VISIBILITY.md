@@ -67,7 +67,7 @@
     {
       "number": 11,
       "id": "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Enthrall Perception Penalty Runtime Support"
     },
     {
@@ -169,7 +169,7 @@ Every task must include:
 | 8 | L12G-RECURSIVE-TAIL-LANE-A - Lane A Recursive Planning Tail | done | completed ready Lane A tasks | L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME, L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME, L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME | Refreshed Unit metrics and checker-readable follow-up splits | Completed by adding the next concrete Lane A frontier batch. |
 | 9 | L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME - Enlarge Reduce Creature Runtime Support | done | L12G-RECURSIVE-TAIL-LANE-A | L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH, L12G-RECURSIVE-TAIL-LANE-A-2 | SRD Enlarge/Reduce creature branch; current unsupported-profile split | Next executable Enlarge/Reduce creature branch research/implementation task. |
 | 10 | L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH - Enlarge Reduce Object Branch | done | L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME | L12G-RECURSIVE-TAIL-LANE-A-2 | SRD Enlarge/Reduce object and worn/carried item text; object/item lifecycle boundaries | Completed Surface object-target support and accepted runtime-detached closure for object/item Size lifecycle residuals. |
-| 11 | L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME - Enthrall Perception Penalty Runtime Support | ready-for-research | L12G-RECURSIVE-TAIL-LANE-A | L12G-RECURSIVE-TAIL-LANE-A-2 | SRD Enthrall; target-list, Saving Throw, fixed d20-roll modifier, Passive Check projection boundaries | Independent executable Enthrall Perception subset research/implementation task. |
+| 11 | L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME - Enthrall Perception Penalty Runtime Support | done | L12G-RECURSIVE-TAIL-LANE-A | L12G-RECURSIVE-TAIL-LANE-A-2 | SRD Enthrall; target-list, Saving Throw, fixed d20-roll modifier, Passive Check projection boundaries | Completed Enthrall Perception penalty subset through the promoted roll-modifier profile. |
 | 12 | L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME - Levitate Creature Runtime Support | ready-for-research | L12G-RECURSIVE-TAIL-LANE-A | L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH, L12G-RECURSIVE-TAIL-LANE-A-2 | SRD Levitate creature branch; movement and table/spatial witness boundaries | Independent executable Levitate creature branch research/implementation task. |
 | 13 | L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH - Levitate Loose Object Branch | blocked | L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME | L12G-RECURSIVE-TAIL-LANE-A-2 | SRD Levitate loose object branch; shared object lifecycle or table/spatial witness owner | Blocked until the creature branch establishes the shared levitated-target and altitude-control boundary. |
 | 14 | L12G-RECURSIVE-TAIL-LANE-A-2 - Lane A Recursive Planning Tail 2 | blocked | L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH, L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME, L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH | next Lane A frontier if any | Refreshed level-2 feature metrics after this appended batch | Unblock only after the appended Lane A follow-up batch is done or explicitly closed. |
@@ -346,7 +346,7 @@ Output:
 
 ### Task 11 - L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME - Enthrall Perception Penalty Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: L12G-RECURSIVE-TAIL-LANE-A
 

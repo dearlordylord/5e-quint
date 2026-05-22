@@ -529,10 +529,17 @@ export type BattleD20RollModifierKind = Extract<
   "ability_check" | "attack_roll" | "saving_throw"
 >;
 export type BattleD20RollModifierDelta = {
-  readonly dice: number;
-  readonly dieSize: BattleD20RollModifierDieSize;
   readonly sign: "+" | "-";
-};
+} & (
+  | {
+      readonly kind: "fixedNumber";
+      readonly amount: number;
+    }
+  | {
+      readonly dice: number;
+      readonly dieSize: BattleD20RollModifierDieSize;
+    }
+);
 export type BattlePassiveSpeedProfile =
   | BattlePassiveSpeedBonusSupportProfile
   | BattlePassiveSpeedKindGrantsSupportProfile;
@@ -2084,7 +2091,11 @@ export type ScalarBuffSpellEffect =
       >;
     };
 export type RollModifierSpellTargeting =
-  | SpellTargetListTargeting
+  | {
+      readonly kind: "targetList";
+      readonly minTargets: 1;
+      readonly maxTargets: number | "allLegalTargets";
+    }
   | {
       readonly kind: "selfAndChosenLegalTargets";
       readonly minTargets: 1;

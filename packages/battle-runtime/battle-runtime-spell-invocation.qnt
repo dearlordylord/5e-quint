@@ -118,6 +118,7 @@ module battleRuntimeSpellInvocation {
       | Guidance => false
       | PassWithoutTrace => true
       | EnhanceAbility => true
+      | Enthrall => true
       | Thaumaturgy => false
       | DivineFavor => true
       | DivineSmite => true
@@ -153,7 +154,6 @@ module battleRuntimeSpellInvocation {
       | MirrorImage => true
       | MindSpike => true
       | AlterSelf => true
-      | DragonsBreath => true
     }
 
   pure def canExpendSpellSlotThisTurn(state: BattleState): bool =

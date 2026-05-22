@@ -290,3 +290,4 @@
 {"unitId":"ray_of_enfeeblement","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE","ownerPath":"packages/battle-runtime/src/unit-profile-admission-ray-of-enfeeblement.test.ts"}}
 {"unitId":"dragons_breath","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST","ownerPath":"packages/battle-runtime/src/unit-profile-admission-dragons-breath.test.ts"}}
 {"unitId":"enlarge_reduce","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME","ownerPath":"packages/battle-runtime/src/unit-profile-admission-enlarge-reduce.test.ts"}}
+{"unitId":"enthrall","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME","ownerPath":"packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"}}

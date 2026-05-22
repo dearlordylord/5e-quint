@@ -93,7 +93,9 @@ module battleRuntimeSpellFactsTests {
       assert(rollModifierMaximumTargets(BaneRollModifier, 3) == 5),
       assert(rollModifierMaximumTargets(GuidanceRollModifier, 0) == 1),
       assert(rollModifierMaximumTargets(PassWithoutTraceRollModifier, 2) == 2),
+      assert(rollModifierMaximumTargets(EnthrallRollModifier, 2) == 2),
       assert(rollModifierRequiresFailedSave(BaneRollModifier)),
+      assert(rollModifierRequiresFailedSave(EnthrallRollModifier)),
       assert(not(rollModifierRequiresFailedSave(BlessRollModifier))),
       assert(rollModifierMaximumTargets(EnhanceAbilityRollModifier, 3) == 1),
       assert(rollModifierActiveEffect(BaneRollModifier, StrAbility, StealthSkill) == BaneD20RollPenalty),
@@ -101,6 +103,8 @@ module battleRuntimeSpellFactsTests {
       assert(rollModifierActiveEffect(GuidanceRollModifier, StrAbility, StealthSkill) == GuidanceAbilityCheckBonus({ skill: StealthSkill })),
       assert(rollModifierActiveEffect(PassWithoutTraceRollModifier, StrAbility, StealthSkill) == PassWithoutTraceStealthBonus),
       assert(rollModifierActiveEffect(EnhanceAbilityRollModifier, DexAbility, StealthSkill) == EnhanceAbilityCheckAdvantage({ ability: DexAbility })),
+      assert(rollModifierActiveEffect(EnthrallRollModifier, DexAbility, StealthSkill) == EnthrallPerceptionPenalty),
+      assert(rollModifierPassivePerceptionDelta(Set(EnthrallPerceptionPenalty)) == -10),
       assert(creatureSizeChangeActiveEffect(Fighter, EnlargeCreatureMode) == CreatureSizeChange({
         source: Fighter,
         mode: EnlargeCreatureMode,

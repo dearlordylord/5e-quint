@@ -45,6 +45,7 @@ module battleRuntimeConcentration {
         | SpiderClimbClimbSpeedGrant(_) => false
         | GuidanceAbilityCheckBonus(_) => false
         | EnhanceAbilityCheckAdvantage(_) => false
+        | EnthrallPerceptionPenalty => false
         | EnsnaringStrikeRestrained(_) => false
         | SearingSmiteBurning(_) => false
         | ShiningSmiteIllumination(_) => false

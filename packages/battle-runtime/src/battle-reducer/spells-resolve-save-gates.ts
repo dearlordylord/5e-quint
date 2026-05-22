@@ -2558,7 +2558,8 @@ export function validateSavingThrowOutcomes(
     if (hole.spell.targeting.kind === "selfAndChosenLegalTargets") {
       return null;
     }
-    return outcomes.length <= hole.spell.targeting.maxTargets
+    return hole.spell.targeting.maxTargets === "allLegalTargets" ||
+      outcomes.length <= hole.spell.targeting.maxTargets
       ? null
       : "Save-gated roll modifier spell Saving Throw outcomes exceed the selected spell's target count.";
   }

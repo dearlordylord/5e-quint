@@ -3737,6 +3737,9 @@ export function rollModifierSpellTargeting(
   if (attachment.kind !== "hole" || attachment.value.kind !== "target") {
     return null;
   }
+  if (attachment.value.selection.mode === "any_number") {
+    return { kind: "targetList", minTargets: 1, maxTargets: "allLegalTargets" };
+  }
   const targetCount = scalarBuffSpellTargetCount(
     attachment.value.selection,
     spellLevel,
@@ -3911,6 +3914,14 @@ export function damageReductionSpellProjection(
 export function rollModifierDelta(
   delta: Extract<EffectAtom, { readonly kind: "modify_roll_numeric" }>["delta"],
 ): BattleD20RollModifierDelta | null {
+  if (
+    delta.kind === "fixed_number" &&
+    Number.isInteger(delta.amount) &&
+    delta.amount > 0 &&
+    (delta.sign === "+" || delta.sign === "-")
+  ) {
+    return { kind: "fixedNumber", amount: delta.amount, sign: delta.sign };
+  }
   return delta.kind === "fixed_dice" &&
     rollModifierDeltaDieSizeIsSupported(delta.dieSize) &&
     (delta.sign === "+" || delta.sign === "-")
@@ -3936,9 +3947,9 @@ function rollModifierSpellRangeFeet(
 
 function rollModifierDeltaDieSizeIsSupported(
   dieSize: number,
-): dieSize is BattleD20RollModifierDelta["dieSize"] {
+): dieSize is (typeof BATTLE_D20_ROLL_MODIFIER_DIE_SIZES)[number] {
   return BATTLE_D20_ROLL_MODIFIER_DIE_SIZES.includes(
-    dieSize as BattleD20RollModifierDelta["dieSize"],
+    dieSize as (typeof BATTLE_D20_ROLL_MODIFIER_DIE_SIZES)[number],
   );
 }
 

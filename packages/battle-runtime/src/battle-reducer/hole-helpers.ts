@@ -238,6 +238,43 @@ export function requiredAbilityCheckRollMode(
   return hasAdvantage ? "advantage" : "disadvantage";
 }
 
+export function passivePerceptionModifierDelta(
+  state: BattleState,
+  actorId: CombatantId,
+): number {
+  return activeFixedAbilityCheckModifierDelta(state, actorId, {
+    skill: "perception",
+  });
+}
+
+function activeFixedAbilityCheckModifierDelta(
+  state: BattleState,
+  actorId: CombatantId,
+  context: {
+    readonly skill: Skill;
+  },
+): number {
+  const actor = state.combatants.get(actorId);
+  return (
+    actor?.activeEffects.reduce((total, effect) => {
+      if (
+        effect.kind !== "d20RollModifier" ||
+        !effect.on.includes("ability_check") ||
+        (effect.skill !== null && effect.skill !== context.skill)
+      ) {
+        return total;
+      }
+      const magnitude =
+        "amount" in effect.delta
+          ? effect.delta.amount
+          : effect.delta.dieSize === 1
+            ? effect.delta.dice
+            : 0;
+      return total + (effect.delta.sign === "-" ? -magnitude : magnitude);
+    }, 0) ?? 0
+  );
+}
+
 function activeAbilityCheckRollModeEffectMatches(
   state: BattleState,
   actorId: CombatantId,

@@ -1227,14 +1227,14 @@
     },
     {
       "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
+      "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "follow-up-split"
+        "social-knowledge-effect"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME: Promote Enthrall's battle-visible Perception subset: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caller-supplied eligible creature target list after applying the fighting-caster-or-companions auto-success predicate at the table boundary, Wisdom save, failed-save active -10 modifier to Wisdom (Perception) Ability Checks, derived Passive Perception consequence from the same modifier, and cleanup when Concentration or duration ends. Owner: battle-runtime spell invocation/effect lifecycle plus promoted Quint parity. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Enthrall's Perception penalty without modeling social attention state.",
+      "reason": "The SRD fight/attention clauses depend on table relationship and social attention facts outside promoted battle-runtime state; the runtime consumes caller-selected eligible targets and records battle-visible failed-save Perception effects.",
       "sourceRecordPath": "packages/surface/content/enthrall.json",
       "sourceRows": [
         {
@@ -1262,7 +1262,7 @@
           }
         }
       ],
-      "status": "blocked-follow-up-split",
+      "status": "closed-runtime-detached-table-adjudication",
       "strictTargetClosed": true,
       "unitId": "enthrall"
     },
@@ -2847,7 +2847,7 @@
       ]
     },
     {
-      "count": 33,
+      "count": 34,
       "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
@@ -2864,6 +2864,7 @@
         "detect_magic",
         "detect_poison_and_disease",
         "detect_thoughts",
+        "enthrall",
         "find_traps",
         "gentle_repose",
         "gust_of_wind",
@@ -2887,7 +2888,7 @@
       ]
     },
     {
-      "count": 11,
+      "count": 10,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
@@ -2896,7 +2897,6 @@
         "darkness",
         "druid_wild_shape",
         "enhance_ability",
-        "enthrall",
         "levitate",
         "moonbeam",
         "ray_of_enfeeblement",
@@ -2964,12 +2964,12 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 530,
-      "percent": "95.3%",
+      "numerator": 532,
+      "percent": "95.7%",
       "rowsByStatus": {
-        "accepted": 383,
+        "accepted": 385,
         "accepted-no-battle-effect": 147,
-        "battle-runtime-required": 6,
+        "battle-runtime-required": 4,
         "owner-evidence-required": 2,
         "partial-battle-runtime": 18
       }
@@ -8203,17 +8203,17 @@
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
       "missing": 1,
-      "profile-subset-supported": 26,
+      "profile-subset-supported": 27,
       "supported-profile": 113,
-      "unsupported-profile": 31
+      "unsupported-profile": 30
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 11,
+      "blocked-follow-up-split": 10,
       "closed-character-fact-and-runtime-detached-split": 3,
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
       "closed-outside-battle-runtime-boundary": 2,
-      "closed-runtime-detached-table-adjudication": 33,
+      "closed-runtime-detached-table-adjudication": 34,
       "open-profile-accounting": 1,
       "open-runtime-behavior": 1,
       "supported-profile": 113

@@ -118,6 +118,17 @@ module battleRuntimeSaveSpellTests {
     }
   }
 
+  run test_enthrall_applies_perception_penalty_to_failed_wisdom_save_targets = {
+    val result = resolveRollModifierSpell(initialState, EnthrallRollModifier, Set(Fighter, Goblin), Set(Goblin), 2, StrAbility, PerceptionSkill)
+    all {
+      assert(result.fighter.concentrating),
+      assert(not(result.fighter.activeEffects.contains(EnthrallPerceptionPenalty))),
+      assert(result.goblin.activeEffects.contains(EnthrallPerceptionPenalty)),
+      assert(rollModifierPassivePerceptionDelta(result.goblin.activeEffects) == -10),
+      assert(battleActorHasCommittedSpellSlotUse(result, Fighter)),
+    }
+  }
+
   run test_guidance_preserves_existing_turn_spell_slot_guard = {
     val alreadySpent = commitActorSpellSlotUse(initialState, Fighter)
     val result = resolveRollModifierSpell(alreadySpent, GuidanceRollModifier, Set(Fighter), Set(), 0, StrAbility, StealthSkill)

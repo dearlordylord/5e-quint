@@ -1920,6 +1920,11 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
           maxTargets: Schema.Number,
         }),
         Schema.Struct({
+          kind: Schema.Literal("targetList"),
+          minTargets: Schema.Literal(1),
+          maxTargets: Schema.Literal("allLegalTargets"),
+        }),
+        Schema.Struct({
           kind: Schema.Literal("selfAndChosenLegalTargets"),
           minTargets: Schema.Literal(1),
         }),

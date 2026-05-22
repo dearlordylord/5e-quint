@@ -54,6 +54,7 @@ module battleRuntimeArmorClass {
         | GuidanceAbilityCheckBonus(_) => false
         | PassWithoutTraceStealthBonus => false
         | EnhanceAbilityCheckAdvantage(_) => false
+        | EnthrallPerceptionPenalty => false
         | ThaumaturgyBoomingVoice(_) => false
         | ResistanceDamageReduction(_) => false
         | ProtectionFromPoisonSavingThrowAdvantage(_) => false

@@ -194,14 +194,14 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 530,
-      "percent": "95.3%",
+      "numerator": 532,
+      "percent": "95.7%",
       "rowsByStatus": {
-        "accepted": 383,
+        "accepted": 385,
         "accepted-no-battle-effect": 147,
         "owner-evidence-required": 2,
         "partial-battle-runtime": 18,
-        "battle-runtime-required": 6
+        "battle-runtime-required": 4
       }
     },
     "levelOneClassContainers": 12,
@@ -216,18 +216,18 @@
       "catalog-installed-needs-owner-evidence": 1
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 402,
+      "catalog-installed-owner-evidence-present": 404,
       "non-runtime": 24,
-      "catalog-installed-owner-evidence-required": 5,
+      "catalog-installed-owner-evidence-required": 3,
       "catalog-only/dead-for-now": 120,
       "catalog-authored-executable-follow-up": 4,
       "catalog-installed-needs-owner-evidence": 1
     },
     "spellPressureRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 239,
+      "catalog-installed-owner-evidence-present": 241,
       "catalog-only/dead-for-now": 120,
-      "catalog-installed-owner-evidence-required": 4,
-      "catalog-authored-executable-follow-up": 4
+      "catalog-authored-executable-follow-up": 4,
+      "catalog-installed-owner-evidence-required": 2
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -6450,8 +6450,14 @@
         "state": "installed",
         "unitId": "enthrall"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "table/social target eligibility owner",
+        "reason": "The SRD fight/attention clauses depend on table relationship and social attention facts outside promoted battle-runtime state; the runtime consumes caller-selected eligible targets and records battle-visible failed-save Perception effects."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -6459,13 +6465,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/effect lifecycle plus promoted Quint parity",
-          "evidence": "Promote follow-up split L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME: L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME owns Promote Enthrall's battle-visible Perception subset: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caller-supplied eligible creature target list after applying the fighting-caster-or-companions auto-success predicate at the table boundary, Wisdom save, failed-save active -10 modifier to Wisdom (Perception) Ability Checks, derived Passive Perception consequence from the same modifier, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Enthrall's Perception penalty without modeling social attention state.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME at packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME: L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME owns Promote Enthrall's battle-visible Perception subset: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caller-supplied eligible creature target list after applying the fighting-caster-or-companions auto-success predicate at the table boundary, Wisdom save, failed-save active -10 modifier to Wisdom (Perception) Ability Checks, derived Passive Perception consequence from the same modifier, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Enthrall's Perception penalty without modeling social attention state.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_heat_metal",
@@ -23352,8 +23358,14 @@
         "state": "installed",
         "unitId": "enthrall"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "table/social target eligibility owner",
+        "reason": "The SRD fight/attention clauses depend on table relationship and social attention facts outside promoted battle-runtime state; the runtime consumes caller-selected eligible targets and records battle-visible failed-save Perception effects."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -23361,13 +23373,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/effect lifecycle plus promoted Quint parity",
-          "evidence": "Promote follow-up split L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME: L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME owns Promote Enthrall's battle-visible Perception subset: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caller-supplied eligible creature target list after applying the fighting-caster-or-companions auto-success predicate at the table boundary, Wisdom save, failed-save active -10 modifier to Wisdom (Perception) Ability Checks, derived Passive Perception consequence from the same modifier, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Enthrall's Perception penalty without modeling social attention state.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME at packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME: L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME owns Promote Enthrall's battle-visible Perception subset: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caller-supplied eligible creature target list after applying the fighting-caster-or-companions auto-success predicate at the table boundary, Wisdom save, failed-save active -10 modifier to Wisdom (Perception) Ability Checks, derived Passive Perception consequence from the same modifier, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Enthrall's Perception penalty without modeling social attention state.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_hold_person",
