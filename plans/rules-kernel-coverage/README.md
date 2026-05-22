@@ -65,6 +65,9 @@ that boundary coverage never substitutes for reducer-semantic ownership.
 `generator-readiness.jsonl` records the separate C-axis question defined in
 [Generator Readiness Source Of Truth](#generator-readiness-source-of-truth).
 Generated reports summarize those rows but are not the source of truth.
+The Ralph Lane A closeout summary is
+[`GENERATOR_READINESS_CLOSURE_REPORT.md`](GENERATOR_READINESS_CLOSURE_REPORT.md);
+it links back to the checker-owned artifacts rather than replacing them.
 
 `kernel-ir-boundaries.jsonl` records the future kernel IR boundary inventory.
 It is descriptive C-lane evidence, not a new runtime abstraction. Each row names

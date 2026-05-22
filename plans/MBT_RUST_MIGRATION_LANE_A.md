@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "MBTRUST-A-CLOSURE-REPORT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Generator Readiness Closure Report"
     }
   ]
@@ -283,7 +283,7 @@ Output:
 
 ### Task 10 - MBTRUST-A-CLOSURE-REPORT - Generator Readiness Closure Report
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
