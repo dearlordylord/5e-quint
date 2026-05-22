@@ -939,52 +939,6 @@
       "unitId": "detect_thoughts"
     },
     {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "table-spatial-derivation"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Task 8 promotes only the initial cast and retained effect state; the target-side breath action still needs target-granted action lifecycle support plus caller/table-owned Cone placement and affected-creature membership witnesses.",
-      "sourceRecordPath": "packages/surface/content/dragons_breath.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Dragon's Breath",
-          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_dragons_breath",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 276,
-            "lineStart": 276,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Dragon's Breath",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_dragons_breath",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 208,
-            "lineStart": 208,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
-      "unitId": "dragons_breath"
-    },
-    {
       "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
@@ -2727,7 +2681,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 113,
+      "count": 114,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -2758,6 +2712,7 @@
         "dissonant_whispers",
         "divine_favor",
         "divine_smite",
+        "dragons_breath",
         "druid_primal_order",
         "eldritch_blast",
         "ensnaring_strike",
@@ -2929,20 +2884,19 @@
       ]
     },
     {
-      "count": 2,
-      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
-      "status": "open-profile-accounting",
-      "unitIds": [
-        "dragons_breath",
-        "prayer_of_healing"
-      ]
-    },
-    {
       "count": 1,
       "description": "Companion lifecycle and control residuals are closed at the companion control boundary.",
       "status": "closed-companion-control-boundary",
       "unitIds": [
         "druid_wild_companion"
+      ]
+    },
+    {
+      "count": 1,
+      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
+      "status": "open-profile-accounting",
+      "unitIds": [
+        "prayer_of_healing"
       ]
     },
     {
@@ -2962,44 +2916,43 @@
       "rowsByStatus": {
         "accepted": 379,
         "accepted-no-battle-effect": 147,
-        "battle-runtime-required": 10,
+        "battle-runtime-required": 12,
         "owner-evidence-required": 2,
-        "partial-battle-runtime": 18
+        "partial-battle-runtime": 16
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 85,
-      "numerator": 78,
-      "percent": "91.8%"
+      "denominator": 87,
+      "numerator": 80,
+      "percent": "92%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 85,
-      "numerator": 78,
-      "percent": "91.8%"
+      "denominator": 87,
+      "numerator": 80,
+      "percent": "92%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 113,
-      "numerator": 103,
+      "denominator": 114,
+      "numerator": 104,
       "percent": "91.2%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 171,
-      "numerator": 113,
-      "percent": "66.1%"
+      "numerator": 114,
+      "percent": "66.7%"
     },
     "strictTargetClosure": {
       "denominator": 171,
-      "numerator": 168,
-      "percent": "98.2%"
+      "numerator": 169,
+      "percent": "98.8%"
     }
   },
   "openFrontier": [
     {
-      "count": 2,
+      "count": 1,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
-        "dragons_breath",
         "prayer_of_healing"
       ]
     },
@@ -5413,8 +5366,8 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 113,
-        "numerator": 103,
+        "denominator": 114,
+        "numerator": 104,
         "percent": "91.2%"
       }
     },
@@ -6087,6 +6040,38 @@
           }
         ],
         "unitId": "divine_smite"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Dragon's Breath initial cast stores target-attached breath effect state"
+              }
+            ],
+            "profileId": "spell.invocation-dragons-breath-initial",
+            "profileKind": "spell-invocation"
+          },
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Dragon's Breath target-granted Magic action resolves Cone save-for-half damage"
+              }
+            ],
+            "profileId": "spell.invocation-dragons-breath-granted-action",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "dragons_breath"
       },
       {
         "joinStatus": "unmapped",
@@ -8197,8 +8182,8 @@
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
       "missing": 1,
-      "profile-subset-supported": 25,
-      "supported-profile": 113,
+      "profile-subset-supported": 24,
+      "supported-profile": 114,
       "unsupported-profile": 32
     },
     "groupsByStatus": {
@@ -8207,11 +8192,11 @@
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 33,
-      "open-profile-accounting": 2,
+      "open-profile-accounting": 1,
       "open-runtime-behavior": 1,
-      "supported-profile": 113
+      "supported-profile": 114
     },
-    "nonSupportedFrontier": 58,
+    "nonSupportedFrontier": 57,
     "strictDenominator": 171
   }
 }

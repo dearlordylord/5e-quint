@@ -2,7 +2,9 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dragons-breath-granted-action
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION
 
 import { Match, Schema } from "effect";
 import { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
@@ -77,6 +79,7 @@ export const BATTLE_RUNTIME_COMMANDS = [
   "disperseFogCloud",
   "wardingBondSeparation",
   "jumpMovementReplacement",
+  "dragonsBreathExhale",
   "replaceSelfTransformationMode",
   "commandGrovel",
   "commandDrop",
@@ -727,6 +730,13 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("jumpMovementReplacement"),
+    sourceCombatantId: CombatantId,
+    sourceSpellId: SpellId,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("dragonsBreathExhale"),
     sourceCombatantId: CombatantId,
     sourceSpellId: SpellId,
   }),

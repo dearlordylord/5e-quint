@@ -2,11 +2,12 @@
 
 // KERNEL-COVERAGE: qnt-owner BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE
-// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-mirror-image-hit-interception
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-self-transformation-mode
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-dragons-breath-initial
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-dragons-breath-granted-action
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-ongoing-spell-ending
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-antimagic-field-ongoing-spell-suppression
@@ -70,6 +71,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-direct-condition-removal
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-moonbeam-movable-zone
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-self-transformation-mode
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-dragons-breath-granted-action
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.druid-wild-shape-known-form
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-web-restraint-hazard
 // RAW trace: SRD 5.2.1 Spells/Descriptions-A-D#Darkness says magical
@@ -928,6 +930,9 @@ module battleRuntime {
   pure def dragonsBreathDamageTypeChoiceIsLegal(damageType: DamageType): bool =
     Set(Acid, Cold, Fire, Lightning, Poison).contains(damageType)
 
+  pure def dragonsBreathDamageDice(slotLevel: int): int =
+    slotLevel + 1
+
   pure def dragonsBreathInitialEffect(source: Actor, damageType: DamageType, slotLevel: int, spellSaveDc: int): ActiveEffect =
     DragonsBreathEffect({
       source: source,
@@ -945,6 +950,101 @@ module battleRuntime {
 
   pure def combatantWithDragonsBreathEffect(target: Combatant, effect: ActiveEffect, source: Actor): Combatant =
     { ...target, activeEffects: activeEffectsWithoutDragonsBreathFrom(target.activeEffects, source).union(Set(effect)) }
+
+  pure def actorCanExhaleDragonsBreath(
+    state: BattleState,
+    actor: Actor,
+    source: Actor,
+    damageType: DamageType,
+    slotLevel: int,
+    spellSaveDc: int,
+  ): bool = {
+    val combatant = combatantForActor(state, actor)
+    currentActor(state) == actor and
+      state.actionAvailable and
+      not(combatant.unconscious) and
+      not(combatant.incapacitated) and
+      combatant.activeEffects.contains(dragonsBreathInitialEffect(source, damageType, slotLevel, spellSaveDc))
+  }
+
+  pure def dragonsBreathDamageForTarget(
+    damageType: DamageType,
+    damageRoll: int,
+    saveSucceeded: bool,
+  ): int =
+    damageAfterAdjustments(
+      if (saveSucceeded) damageRoll / 2 else damageRoll,
+      damageType,
+      Set(),
+      Set(),
+      Set(),
+    )
+
+  pure def stateAfterDragonsBreathDamageToTarget(
+    state: BattleState,
+    damageSource: Actor,
+    targetActor: Actor,
+    damageType: DamageType,
+    damageRoll: int,
+    saveSucceeded: bool,
+    concentrationSaveSucceeded: bool,
+  ): BattleState = {
+    val target = combatantForActor(state, targetActor)
+    val damage = dragonsBreathDamageForTarget(damageType, damageRoll, saveSucceeded)
+    stateWithActorCombatant(
+      state,
+      targetActor,
+      applyDamageFromSource(target, damage, 1, concentrationSaveSucceeded, OrdinaryDamage, damageSource),
+    )
+  }
+
+  pure def resolveDragonsBreathExhale(
+    state: BattleState,
+    actor: Actor,
+    source: Actor,
+    damageType: DamageType,
+    slotLevel: int,
+    spellSaveDc: int,
+    affectedTargets: Set[Actor],
+    saveSucceededTargets: Set[Actor],
+    damageRoll: int,
+    concentrationSaveSucceeded: bool,
+  ): BattleState =
+    if (
+      actorCanExhaleDragonsBreath(state, actor, source, damageType, slotLevel, spellSaveDc) and
+      affectedTargets.forall(target => Set(Fighter, Goblin).contains(target)) and
+      saveSucceededTargets.forall(target => affectedTargets.contains(target)) and
+      damageRoll >= dragonsBreathDamageDice(slotLevel) and
+      damageRoll <= dragonsBreathDamageDice(slotLevel) * 6
+    ) {
+      val spent = { ...state, actionAvailable: false }
+      val afterFighter = if (affectedTargets.contains(Fighter))
+        stateAfterDragonsBreathDamageToTarget(
+          spent,
+          actor,
+          Fighter,
+          damageType,
+          damageRoll,
+          saveSucceededTargets.contains(Fighter),
+          concentrationSaveSucceeded,
+        )
+      else
+        spent
+      if (affectedTargets.contains(Goblin))
+        stateAfterDragonsBreathDamageToTarget(
+          afterFighter,
+          actor,
+          Goblin,
+          damageType,
+          damageRoll,
+          saveSucceededTargets.contains(Goblin),
+          concentrationSaveSucceeded,
+        )
+      else
+        afterFighter
+    } else {
+      state
+    }
 
   pure def resolveDragonsBreathInitialSpell(
     state: BattleState,

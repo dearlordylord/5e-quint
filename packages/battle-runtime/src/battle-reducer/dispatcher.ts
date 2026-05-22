@@ -5,6 +5,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard spell.invocation-spike-growth-movement-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dragons-breath-granted-action
 // Owns subject resolution, reaction windows, interrupted-procedure replay,
 // turn snapshots, and reaction-choice orchestration.
 
@@ -14,6 +15,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-damage-illumination spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-feather-fall-mitigation spell.invocation-mirror-image-hit-interception spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE BATTLE.SPELL.REACTION_CASTING_TIME
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION
 
 import {
   canSpendAction,
@@ -268,6 +270,7 @@ import {
   resolveCommandFleeAfterMovement,
   resolveCommandFleeCommand,
   resolveCommandGrovelCommand,
+  resolveDragonsBreathExhaleCommand,
   resolveFlamingSphereRepositionCommand,
   resolveFlamingSphereRamCommand,
   resolveFlamingSphereSaveCommand,
@@ -868,6 +871,12 @@ export function resolveBattleSubjectInternal(
       subject.command === "jumpMovementReplacement"
     ) {
       return resolveJumpMovementReplacementCommand({ ...input, subject });
+    }
+    if (
+      subject.tag === "runtimeCommand" &&
+      subject.command === "dragonsBreathExhale"
+    ) {
+      return resolveDragonsBreathExhaleCommand({ ...input, subject });
     }
     if (
       subject.tag === "runtimeCommand" &&

@@ -72,38 +72,38 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 90,
-      "numerator": 90,
+      "denominator": 91,
+      "numerator": 91,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 90,
-      "numerator": 90,
+      "denominator": 91,
+      "numerator": 91,
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 123,
-      "numerator": 105,
-      "percent": "85.4%"
+      "denominator": 124,
+      "numerator": 106,
+      "percent": "85.5%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 123,
-      "numerator": 105,
-      "percent": "85.4%"
+      "denominator": 124,
+      "numerator": 106,
+      "percent": "85.5%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 136,
-      "numerator": 126,
-      "percent": "92.6%"
+      "denominator": 137,
+      "numerator": 127,
+      "percent": "92.7%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 90,
-      "numerator": 90,
+      "denominator": 91,
+      "numerator": 91,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 90,
-      "numerator": 90,
+      "denominator": 91,
+      "numerator": 91,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -3571,20 +3571,49 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dragons-breath.test.ts"
         }
       ]
+    },
+    {
+      "id": "spell.invocation-dragons-breath-granted-action",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/dragons-breath.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-subjects.ts"
+      ],
+      "sourceBoundary": "The runtime consumes the target-attached Dragon's Breath effect created by the initial cast, caller/table 15-foot Cone area membership facts, Dexterity Saving Throw outcomes, and a slot-scaled damage roll. It owns target-side Magic action discovery and spending, retained damage type and original slot-level damage dice, retained caster Spell Save DC for the Dexterity save, failed-save full damage, successful-save half damage, and shared damage lifecycle integration for Concentration and zero-Hit-Point follow-up holes. Automatic Cone geometry and affected-creature derivation remain table/caller facts at the fill boundary.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION"
+      ],
+      "title": "Spell invocation grants Dragon's Breath target Magic action with Cone save-for-half damage",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dragons-breath.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 123,
-        "numerator": 105,
-        "percent": "85.4%"
+        "denominator": 124,
+        "numerator": 106,
+        "percent": "85.5%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 123,
-        "numerator": 105,
-        "percent": "85.4%"
+        "denominator": 124,
+        "numerator": 106,
+        "percent": "85.5%"
       }
     },
     "profileKinds": [
@@ -5206,6 +5235,19 @@
         ],
         "profileId": "spell.invocation-dragons-breath-initial",
         "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Dragon's Breath target-granted Magic action resolves Cone save-for-half damage"
+          }
+        ],
+        "profileId": "spell.invocation-dragons-breath-granted-action",
+        "profileKind": "spell-invocation"
       }
     ],
     "sourceArtifacts": {
@@ -5216,9 +5258,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 136,
-          "numerator": 126,
-          "percent": "92.6%"
+          "denominator": 137,
+          "numerator": 127,
+          "percent": "92.7%"
         }
       },
       "units": [
@@ -5978,6 +6020,38 @@
             }
           ],
           "unitId": "divine_smite"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Dragon's Breath initial cast stores target-attached breath effect state"
+                }
+              ],
+              "profileId": "spell.invocation-dragons-breath-initial",
+              "profileKind": "spell-invocation"
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Dragon's Breath target-granted Magic action resolves Cone save-for-half damage"
+                }
+              ],
+              "profileId": "spell.invocation-dragons-breath-granted-action",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "dragons_breath"
         },
         {
           "joinStatus": "unmapped",
@@ -10782,6 +10856,22 @@
         "spell.invocation-dragons-breath-initial"
       ],
       "taskId": "L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover Dragon's Breath target-side Magic action availability from the retained effect, action spending, retained damage type and slot-scaled damage dice, Dexterity save-for-half damage, and stale/no-action rejection. Cone geometry and affected-creature membership remain caller/table facts.",
+      "profileIds": [
+        "spell.invocation-dragons-breath-granted-action"
+      ],
+      "taskId": "L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover discovery of the target-granted Dragon's Breath Magic action, caller-supplied 15-foot Cone Saving Throw outcome fill validation, retained spell save DC, retained damage type, slot-scaled damage roll, full failed-save damage, shared Concentration damage lifecycle, and Magic action spending.",
+      "profileIds": [
+        "spell.invocation-dragons-breath-granted-action"
+      ],
+      "taskId": "L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION"
     }
   ],
   "units": [
@@ -26050,33 +26140,14 @@
         "status": "not-in-unit-catalog"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "battle-runtime target-granted action lifecycle plus promoted Quint parity",
-              "reason": "Task 8 promotes only the initial cast and retained effect state; the target-side breath action still needs target-granted action lifecycle support plus caller/table-owned Cone placement and affected-creature membership witnesses."
-            },
-            "followUpTaskId": "L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION",
-            "mechanic": "target-granted Magic action discovery and execution for the attached creature, including 15-foot Cone placement, affected-creature area membership, Dexterity save-for-half damage, slot-scaled breath damage, action-economy spending, and expiry behavior"
-          }
-        ],
-        "futureProfileOwner": "battle-runtime target-granted action lifecycle plus promoted Quint parity",
         "profileIds": [
-          "spell.invocation-dragons-breath-initial"
+          "spell.invocation-dragons-breath-initial",
+          "spell.invocation-dragons-breath-granted-action"
         ],
         "rawRequirementIds": [
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
         ],
-        "supportedMechanics": [
-          "Bonus Action prepared spell cast with a level-2-or-higher Spell Slot",
-          "caster-selected damage type retained from the authored Acid, Cold, Fire, Lightning, or Poison choice hole at cast time",
-          "one willing touched creature target attachment through caller-supplied target facts",
-          "caster-owned Concentration for up to 1 minute",
-          "target-attached active effect stores chosen damage type, original slot level, and the caster Spell Save DC captured at cast time",
-          "active effect is removed when the caster's Concentration ends"
-        ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [],
@@ -26100,6 +26171,35 @@
             "L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST"
           ],
           "title": "Spell invocation stores Dragon's Breath target-attached breath effect state",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dragons-breath.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "spell.invocation-dragons-breath-granted-action",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/dragons-breath.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+            "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+            "packages/battle-runtime/src/battle-subjects.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the target-attached Dragon's Breath effect created by the initial cast, caller/table 15-foot Cone area membership facts, Dexterity Saving Throw outcomes, and a slot-scaled damage roll. It owns target-side Magic action discovery and spending, retained damage type and original slot-level damage dice, retained caster Spell Save DC for the Dexterity save, failed-save full damage, successful-save half damage, and shared damage lifecycle integration for Concentration and zero-Hit-Point follow-up holes. Automatic Cone geometry and affected-creature derivation remain table/caller facts at the fill boundary.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION"
+          ],
+          "title": "Spell invocation grants Dragon's Breath target Magic action with Cone save-for-half damage",
           "verificationOwners": [
             {
               "kind": "qnt-proof",

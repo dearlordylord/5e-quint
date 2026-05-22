@@ -1168,6 +1168,60 @@ module battleRuntimeHpArmorBuffSpatialTests {
     }
   }
 
+  run test_dragons_breath_target_exhale_spends_magic_action_and_damages_area = {
+    val cast = resolveDragonsBreathInitialSpell(initialState, Goblin, Set(Goblin), Fire, 2, 13)
+    val goblinTurn = endTurn(cast)
+    val result = resolveDragonsBreathExhale(
+      goblinTurn,
+      Goblin,
+      Fighter,
+      Fire,
+      2,
+      13,
+      Set(Fighter),
+      Set(),
+      6,
+      true,
+    )
+    all {
+      assert(result.fighter.hp == goblinTurn.fighter.hp - 6),
+      assert(not(result.actionAvailable)),
+      assert(result.goblin.activeEffects.contains(dragonsBreathInitialEffect(Fighter, Fire, 2, 13))),
+    }
+  }
+
+  run test_dragons_breath_target_exhale_halves_successful_save_damage = {
+    val cast = resolveDragonsBreathInitialSpell(initialState, Goblin, Set(Goblin), Cold, 3, 13)
+    val goblinTurn = endTurn(cast)
+    val result = resolveDragonsBreathExhale(
+      goblinTurn,
+      Goblin,
+      Fighter,
+      Cold,
+      3,
+      13,
+      Set(Fighter),
+      Set(Fighter),
+      11,
+      true,
+    )
+    all {
+      assert(dragonsBreathDamageDice(3) == 4),
+      assert(result.fighter.hp == goblinTurn.fighter.hp - 5),
+      assert(not(result.actionAvailable)),
+    }
+  }
+
+  run test_dragons_breath_target_exhale_requires_active_effect_and_magic_action = {
+    val noEffect = endTurn(initialState)
+    val cast = resolveDragonsBreathInitialSpell(initialState, Goblin, Set(Goblin), Lightning, 2, 13)
+    val noAction = { ...endTurn(cast), actionAvailable: false }
+    all {
+      assert(resolveDragonsBreathExhale(noEffect, Goblin, Fighter, Lightning, 2, 13, Set(Fighter), Set(), 6, true) == noEffect),
+      assert(resolveDragonsBreathExhale(noAction, Goblin, Fighter, Lightning, 2, 13, Set(Fighter), Set(), 6, true) == noAction),
+    }
+  }
+
   run test_pact_blade_damage_choice_and_charisma_option_projection = {
     all {
       assert(pactBladeDamageTypeChoiceIsLegal(Slashing, Slashing)),

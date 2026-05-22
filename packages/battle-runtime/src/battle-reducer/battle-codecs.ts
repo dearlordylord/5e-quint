@@ -2542,6 +2542,19 @@ export const BattleHoleSchema = Schema.Union(
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("rolledDice"),
+    dragonsBreath: Schema.Struct({
+      sourceCombatantId: CombatantId,
+      sourceSpellId: Schema.String,
+      damageType: DamageTypeSchema,
+      expr: Schema.Struct({
+        dice: Schema.Number,
+        dieSize: Schema.Number,
+      }),
+    }),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("rolledDice"),
     spellDamageReduction: Schema.Struct({
       sourceSpellId: Schema.String,
       sourceCombatantId: CombatantId,
@@ -2857,6 +2870,21 @@ export const BattleHoleSchema = Schema.Union(
     spell: SupportedSpellInvocationSchema,
     ability: Schema.String,
     dc: BattleRuntimeObjectSchema,
+    areaChoices: Schema.Array(BattleSpellAreaChoiceSchema),
+    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("savingThrowOutcome"),
+    label: Schema.String,
+    dragonsBreath: Schema.Struct({
+      sourceCombatantId: CombatantId,
+      sourceSpellId: Schema.String,
+      lengthFeet: Schema.Literal(15),
+    }),
+    ability: Schema.Literal("dex"),
+    dc: DcSourceSchema,
     areaChoices: Schema.Array(BattleSpellAreaChoiceSchema),
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
     targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),

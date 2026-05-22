@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Dragon's Breath Granted Magic Action"
     },
     {
@@ -228,7 +228,7 @@ Output:
 
 ### Task 9 - L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION - Dragon's Breath Granted Magic Action
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 - Task C8.

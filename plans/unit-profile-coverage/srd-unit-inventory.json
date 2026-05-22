@@ -200,8 +200,8 @@
         "accepted": 379,
         "accepted-no-battle-effect": 147,
         "owner-evidence-required": 2,
-        "partial-battle-runtime": 18,
-        "battle-runtime-required": 10
+        "partial-battle-runtime": 16,
+        "battle-runtime-required": 12
       }
     },
     "levelOneClassContainers": 12,
@@ -21000,17 +21000,11 @@
         "state": "not-installed",
         "unitId": "dragons_breath"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
-      "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "battle-runtime target-granted action lifecycle plus promoted Quint parity",
-        "reason": "Task 8 promotes only the initial cast and retained effect state; the target-side breath action still needs target-granted action lifecycle support plus caller/table-owned Cone placement and affected-creature membership witnesses."
-      },
       "ownerEvidence": [],
       "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_enhance_ability",
@@ -26733,17 +26727,11 @@
         "state": "not-installed",
         "unitId": "dragons_breath"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
-      "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "battle-runtime target-granted action lifecycle plus promoted Quint parity",
-        "reason": "Task 8 promotes only the initial cast and retained effect state; the target-side breath action still needs target-granted action lifecycle support plus caller/table-owned Cone placement and affected-creature membership witnesses."
-      },
       "ownerEvidence": [],
       "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_enhance_ability",

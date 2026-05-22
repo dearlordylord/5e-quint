@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 73,
-    "covered": 67,
+    "total": 74,
+    "covered": 68,
     "open": 1,
     "nonSemantic": 5,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 55,
+      "battle": 56,
       "character-creation": 8,
       "character-sheet": 6,
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 67,
+      "covered": 68,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 1,
@@ -24,13 +24,13 @@
     "obligations[].profiles": "Derived from profileObligations by obligation id; authored obligations.jsonl rows must not contain profiles."
   },
   "battleHoleFrontierSummary": {
-    "total": 99,
+    "total": 101,
     "bySubject": {
-      "battle-hole-family": 62,
+      "battle-hole-family": 64,
       "battle-fill-kind": 37
     },
     "byClassification": {
-      "semantic-frontier": 76,
+      "semantic-frontier": 78,
       "deterministic-boundary-projection": 0,
       "table-owned-fact": 23,
       "unsupported-dead-branch": 0
@@ -2248,6 +2248,38 @@
         ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Dragon's Breath"
       ],
       "title": "Battle Dragon's Breath initial cast stores target-attached breath effect state"
+    },
+    {
+      "id": "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dragons-breath.test.ts"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-dragons-breath-granted-action"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "reason": "The target-attached Dragon's Breath effect grants the current target a Magic action. The reducer validates caller/table Cone membership facts, applies Dexterity save-for-half slot-scaled damage of the retained type, spends the target's Magic action, and reuses the shared damage lifecycle for Concentration and zero-Hit-Point follow-up holes.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/dragons-breath.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-subjects.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Dragon's Breath",
+        ".references/srd-5.2.1/Rules-Glossary.md#Cone",
+        ".references/srd-5.2.1/Rules-Glossary.md#Concentration"
+      ],
+      "title": "Battle Dragon's Breath target-granted Magic action resolves Cone save-for-half damage"
     }
   ],
   "battleHoleFrontier": [
@@ -2434,6 +2466,20 @@
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
+        "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
+        "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
+        "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
+        "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "rolledDice",
+      "id": "BattleDragonsBreathDamageRollHole",
+      "reason": "Dragon's Breath exhale damage rolls determine slot-scaled retained-type breath damage after table-supplied Cone membership and Dexterity save outcomes; shared HP, by-type adjustment, and zero-Hit-Point disposition semantics are reused by the granted-action obligation.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION"
       ],
@@ -2575,6 +2621,18 @@
       "holeKind": "savingThrowOutcome",
       "id": "BattleSpellSavingThrowOutcomeHole",
       "reason": "Spell Saving Throw outcomes determine damage, conditions, Command consequences, Counterspell, timed after-hit continuations, area results, and failed-save Attack Roll Advantage effects. Covered branches point to their semantic obligations.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "savingThrowOutcome",
+      "id": "BattleDragonsBreathSavingThrowOutcomeHole",
+      "reason": "Dragon's Breath exhale Saving Throw outcomes pair caller/table Cone membership facts with reducer-visible Dexterity save success or failure; table geometry stays boundary-owned while the granted-action obligation owns action spend and save-for-half damage resolution.",
       "subject": "battle-hole-family"
     },
     {
@@ -4097,6 +4155,12 @@
         "BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE"
       ],
       "profileId": "spell.invocation-dragons-breath-initial"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION"
+      ],
+      "profileId": "spell.invocation-dragons-breath-granted-action"
     }
   ],
   "generatorReadiness": [
@@ -4177,6 +4241,7 @@
     "spell.invocation-dancing-lights-movable-dim-light",
     "spell.invocation-direct-condition",
     "spell.invocation-direct-condition-removal",
+    "spell.invocation-dragons-breath-granted-action",
     "spell.invocation-dragons-breath-initial",
     "spell.invocation-expeditious-retreat-dash",
     "spell.invocation-feather-fall-mitigation",
