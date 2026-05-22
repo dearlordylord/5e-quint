@@ -1,0 +1,74 @@
+{
+  "abilityScoreIncrease": {
+    "abilities": [
+      "dex",
+      "con",
+      "int"
+    ],
+    "methods": [
+      {
+        "kind": "two_scores",
+        "maxScore": 20,
+        "primaryIncrease": 2,
+        "secondaryIncrease": 1
+      },
+      {
+        "eachIncrease": 1,
+        "kind": "three_scores",
+        "maxScore": 20
+      }
+    ]
+  },
+  "description": "Minimum SRD Criminal background facts for ability scores, proficiencies, feat, and equipment.",
+  "id": "background_criminal",
+  "kind": "background",
+  "name": "Criminal",
+  "originFeatId": "alert",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Character-Origins.md:11-29,41-47"
+  },
+  "skillProficiencies": [
+    "sleight_of_hand",
+    "stealth"
+  ],
+  "startingEquipment": [
+    {
+      "coinsGp": 16,
+      "id": "option_a",
+      "items": [
+        {
+          "kind": "unit_ref",
+          "quantity": 2,
+          "unitId": "weapon_dagger"
+        },
+        {
+          "kind": "selected_tool_proficiency"
+        },
+        {
+          "itemName": "Crowbar",
+          "kind": "draft_owned_item"
+        },
+        {
+          "itemName": "Pouches",
+          "kind": "draft_owned_item",
+          "quantity": 2
+        },
+        {
+          "itemName": "Traveler's Clothes",
+          "kind": "draft_owned_item"
+        }
+      ],
+      "kind": "item_bundle"
+    },
+    {
+      "coinsGp": 50,
+      "id": "option_b",
+      "kind": "coin_grant"
+    }
+  ],
+  "toolProficiency": {
+    "kind": "specific_tool",
+    "toolId": "thieves_tools"
+  }
+}

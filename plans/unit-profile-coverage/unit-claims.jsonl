@@ -10,6 +10,9 @@
 {"unitId":"class_sorcerer","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Class container record; Spell Access and executable mechanics live on narrower spell-access and granted feature Units."}}
 {"unitId":"class_warlock","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Class container record; battle/runtime executable mechanics live on granted feature Units."}}
 {"unitId":"class_wizard","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Class container and spell access record; executable pressure is carried by spell Units and class features."}}
+{"unitId":"background_acolyte","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Character-creation authored data only; no promoted execution profile yet."}}
+{"unitId":"background_criminal","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Character-creation authored data only; no promoted execution profile yet."}}
+{"unitId":"background_sage","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Character-creation authored data only; no promoted execution profile yet."}}
 {"unitId":"background_soldier","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Character-creation authored data only; no promoted execution profile yet."}}
 {"unitId":"species_dragonborn","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Species admission container record; character creation retains the selected species source fact and authored trait Unit refs, while executable battle pressure lives on species trait Units."}}
 {"unitId":"species_dwarf","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Species admission container record; character creation retains the selected species source fact and authored trait Unit refs, while executable battle pressure lives on species trait Units."}}

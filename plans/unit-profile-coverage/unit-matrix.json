@@ -48,9 +48,9 @@
       "percent": "50.6%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 487,
-      "numerator": 247,
-      "percent": "50.7%"
+      "denominator": 490,
+      "numerator": 250,
+      "percent": "51%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 248
+      "value": 251
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 140,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 248,
-      "numerator": 248,
+      "denominator": 251,
+      "numerator": 251,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -11922,6 +11922,60 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/class_wizard.json",
       "unitId": "class_wizard"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Character-creation authored data only; no promoted execution profile yet.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "background",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/background_acolyte.json",
+      "unitId": "background_acolyte"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Character-creation authored data only; no promoted execution profile yet.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "background",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/background_criminal.json",
+      "unitId": "background_criminal"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Character-creation authored data only; no promoted execution profile yet.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "background",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/background_sage.json",
+      "unitId": "background_sage"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

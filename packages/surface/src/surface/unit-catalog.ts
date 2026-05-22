@@ -10,6 +10,9 @@ import animalMessengerInput from "../../content/animal_messenger.json";
 import antimagicFieldInput from "../../content/antimagic_field.json";
 import arcanistsMagicAuraInput from "../../content/arcanists_magic_aura.json";
 import auguryInput from "../../content/augury.json";
+import backgroundAcolyteInput from "../../content/background_acolyte.json";
+import backgroundCriminalInput from "../../content/background_criminal.json";
+import backgroundSageInput from "../../content/background_sage.json";
 import backgroundSoldierInput from "../../content/background_soldier.json";
 import bardBardicInspirationInput from "../../content/bard_bardic_inspiration.json";
 import bardCuttingWordsInput from "../../content/bard_cutting_words.json";
@@ -373,6 +376,9 @@ export const srdUnitCollection = defineSrdUnitCollection({
     classSorcererInput,
     classWarlockInput,
     classWizardInput,
+    backgroundAcolyteInput,
+    backgroundCriminalInput,
+    backgroundSageInput,
     backgroundSoldierInput,
     speciesDragonbornInput,
     speciesDwarfInput,

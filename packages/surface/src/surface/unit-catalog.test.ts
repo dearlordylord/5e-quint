@@ -91,6 +91,9 @@ const requiredFirstVerticalUnitIds = [
   "class_sorcerer",
   "class_warlock",
   "class_wizard",
+  "background_acolyte",
+  "background_criminal",
+  "background_sage",
   "background_soldier",
   "species_dragonborn",
   "species_dwarf",
@@ -5283,33 +5286,92 @@ describe("SRD Unit catalog boundary", () => {
     ).toBe(false);
   });
 
-  test("keeps Soldier option A free of unresolved Unit refs", () => {
-    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+  test.each([
+    {
+      coinsGp: 8,
+      expectedItems: [
+        { kind: "selected_tool_proficiency" },
+        { itemName: "Book (prayers)", kind: "draft_owned_item" },
+        { itemName: "Holy Symbol", kind: "draft_owned_item" },
+        { itemName: "Parchment", kind: "draft_owned_item", quantity: 10 },
+        { itemName: "Robe", kind: "draft_owned_item" },
+      ],
+      unitId: "background_acolyte",
+    },
+    {
+      coinsGp: 16,
+      expectedItems: [
+        { kind: "unit_ref", unitId: "weapon_dagger", quantity: 2 },
+        { kind: "selected_tool_proficiency" },
+        { itemName: "Crowbar", kind: "draft_owned_item" },
+        { itemName: "Pouches", kind: "draft_owned_item", quantity: 2 },
+        { itemName: "Traveler's Clothes", kind: "draft_owned_item" },
+      ],
+      unitId: "background_criminal",
+    },
+    {
+      coinsGp: 8,
+      expectedItems: [
+        { kind: "unit_ref", unitId: "weapon_quarterstaff" },
+        { kind: "selected_tool_proficiency" },
+        { itemName: "Book (history)", kind: "draft_owned_item" },
+        { itemName: "Parchment", kind: "draft_owned_item", quantity: 8 },
+        { itemName: "Robe", kind: "draft_owned_item" },
+      ],
+      unitId: "background_sage",
+    },
+    {
+      coinsGp: 14,
+      expectedItems: [
+        { kind: "unit_ref", unitId: "weapon_spear" },
+        { kind: "unit_ref", unitId: "weapon_shortbow" },
+        { itemName: "Arrows", kind: "draft_owned_item", quantity: 20 },
+        { itemName: "Healer's Kit", kind: "draft_owned_item" },
+        { itemName: "Quiver", kind: "draft_owned_item" },
+        { itemName: "Traveler's Clothes", kind: "draft_owned_item" },
+      ],
+      unitId: "background_soldier",
+    },
+  ])(
+    "keeps $unitId option A free of unresolved Unit refs",
+    ({ coinsGp, expectedItems, unitId }) => {
+      const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 
-    expect(result.tag).toBe("ok");
-    if (result.tag === "ok") {
-      const soldier = result.catalog.requireUnit("background_soldier");
+      expect(result.tag).toBe("ok");
+      if (result.tag === "ok") {
+        const background = result.catalog.requireUnit(unitId);
+        const optionA =
+          background.kind === "background"
+            ? background.startingEquipment.find(
+                (choice) => choice.id === "option_a",
+              )
+            : undefined;
 
-      expect(soldier).toMatchObject({
-        kind: "background",
-        startingEquipment: expect.arrayContaining([
-          {
-            coinsGp: 14,
-            id: "option_a",
-            items: expect.arrayContaining([
-              { kind: "unit_ref", unitId: "weapon_spear" },
-              { kind: "unit_ref", unitId: "weapon_shortbow" },
-              { itemName: "Arrows", kind: "draft_owned_item", quantity: 20 },
-              { itemName: "Healer's Kit", kind: "draft_owned_item" },
-              { itemName: "Quiver", kind: "draft_owned_item" },
-              { itemName: "Traveler's Clothes", kind: "draft_owned_item" },
-            ]),
-            kind: "item_bundle",
-          },
-        ]),
-      });
-    }
-  });
+        expect(background).toMatchObject({
+          kind: "background",
+          startingEquipment: expect.arrayContaining([
+            {
+              coinsGp,
+              id: "option_a",
+              items: expect.arrayContaining(expectedItems),
+              kind: "item_bundle",
+            },
+          ]),
+        });
+
+        expect(optionA?.kind).toBe("item_bundle");
+        if (optionA?.kind === "item_bundle") {
+          for (const item of optionA.items) {
+            if (item.kind === "unit_ref") {
+              expect(Option.isSome(result.catalog.getUnit(item.unitId))).toBe(
+                true,
+              );
+            }
+          }
+        }
+      }
+    },
+  );
 
   test("authors Savage Attacker as an optional weapon-hit damage-dice reroll", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });

@@ -1,6 +1,9 @@
 import { Either, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
+import backgroundAcolyteInput from "../../content/background_acolyte.json";
+import backgroundCriminalInput from "../../content/background_criminal.json";
+import backgroundSageInput from "../../content/background_sage.json";
 import backgroundSoldierInput from "../../content/background_soldier.json";
 import classBardInput from "../../content/class_bard.json";
 import classClericInput from "../../content/class_cleric.json";
@@ -1391,15 +1394,100 @@ describe("character-creation Surface records", () => {
     }
   });
 
-  test("decodes and reads Soldier background creation facts", () => {
-    const backgroundRecord = decodeBackgroundRecordSync(backgroundSoldierInput);
-    const unit = decodeUnitRecordSync(backgroundSoldierInput);
-    const result = readBackgroundCreationFacts(unit);
-
-    expect(backgroundRecord.kind).toBe("background");
-    expect(result).toMatchObject({
-      tag: "readable",
-      value: {
+  test.each([
+    {
+      input: backgroundAcolyteInput,
+      expected: {
+        recordId: "background_acolyte",
+        abilityScoreIncrease: {
+          abilities: ["int", "wis", "cha"],
+          methods: [
+            {
+              kind: "two_scores",
+              primaryIncrease: 2,
+              secondaryIncrease: 1,
+              maxScore: 20,
+            },
+            {
+              kind: "three_scores",
+              eachIncrease: 1,
+              maxScore: 20,
+            },
+          ],
+        },
+        originFeatId: "feat_magic_initiate_cleric",
+        skillProficiencies: ["insight", "religion"],
+        toolProficiency: {
+          kind: "specific_tool",
+          toolId: "calligraphers_supplies",
+        },
+        startingEquipment: expect.arrayContaining([
+          { id: "option_b", kind: "coin_grant", coinsGp: 50 },
+        ]),
+      },
+    },
+    {
+      input: backgroundCriminalInput,
+      expected: {
+        recordId: "background_criminal",
+        abilityScoreIncrease: {
+          abilities: ["dex", "con", "int"],
+          methods: [
+            {
+              kind: "two_scores",
+              primaryIncrease: 2,
+              secondaryIncrease: 1,
+              maxScore: 20,
+            },
+            {
+              kind: "three_scores",
+              eachIncrease: 1,
+              maxScore: 20,
+            },
+          ],
+        },
+        originFeatId: "alert",
+        skillProficiencies: ["sleight_of_hand", "stealth"],
+        toolProficiency: { kind: "specific_tool", toolId: "thieves_tools" },
+        startingEquipment: expect.arrayContaining([
+          { id: "option_b", kind: "coin_grant", coinsGp: 50 },
+        ]),
+      },
+    },
+    {
+      input: backgroundSageInput,
+      expected: {
+        recordId: "background_sage",
+        abilityScoreIncrease: {
+          abilities: ["con", "int", "wis"],
+          methods: [
+            {
+              kind: "two_scores",
+              primaryIncrease: 2,
+              secondaryIncrease: 1,
+              maxScore: 20,
+            },
+            {
+              kind: "three_scores",
+              eachIncrease: 1,
+              maxScore: 20,
+            },
+          ],
+        },
+        originFeatId: "feat_magic_initiate_wizard",
+        skillProficiencies: ["arcana", "history"],
+        toolProficiency: {
+          kind: "specific_tool",
+          toolId: "calligraphers_supplies",
+        },
+        startingEquipment: expect.arrayContaining([
+          { id: "option_b", kind: "coin_grant", coinsGp: 50 },
+        ]),
+      },
+    },
+    {
+      input: backgroundSoldierInput,
+      expected: {
         recordId: "background_soldier",
         abilityScoreIncrease: {
           abilities: ["str", "dex", "con"],
@@ -1419,10 +1507,30 @@ describe("character-creation Surface records", () => {
         },
         originFeatId: "feat_savage_attacker",
         skillProficiencies: ["athletics", "intimidation"],
-        toolProficiency: { kind: "tool_category_choice" },
+        toolProficiency: {
+          kind: "tool_category_choice",
+          category: "gaming_set",
+          choose: 1,
+        },
+        startingEquipment: expect.arrayContaining([
+          { id: "option_b", kind: "coin_grant", coinsGp: 50 },
+        ]),
       },
-    });
-  });
+    },
+  ])(
+    "decodes and reads $expected.recordId background creation facts",
+    ({ expected, input }) => {
+      const backgroundRecord = decodeBackgroundRecordSync(input);
+      const unit = decodeUnitRecordSync(input);
+      const result = readBackgroundCreationFacts(unit);
+
+      expect(backgroundRecord.kind).toBe("background");
+      expect(result).toMatchObject({
+        tag: "readable",
+        value: expected,
+      });
+    },
+  );
 
   test("decodes and reads Orc as one aggregate species record", () => {
     const speciesRecord = decodeSpeciesRecordSync(speciesOrcInput);

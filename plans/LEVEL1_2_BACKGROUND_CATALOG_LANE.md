@@ -100,6 +100,9 @@ Output:
 - Wire the three records into the SRD Unit catalog.
 - Add focused Surface/catalog tests proving all four SRD backgrounds decode,
   read creation facts, and have no unresolved Unit refs in option A equipment.
+- Add the required non-runtime Unit profile disposition claims for the three
+  newly installed Background Units and regenerate coverage artifacts so
+  `pnpm unit-profile-coverage:check` stays green after catalog wiring.
 - If a referenced feat/equipment/tool cannot be represented exactly by current
   Surface types, split a precise follow-up and keep the record lossless for the
   fields current Surface can represent.
@@ -166,11 +169,9 @@ Input:
 
 Output:
 
-- Add explicit Unit claim/accounting rows for `background_acolyte`,
-  `background_criminal`, and `background_sage`, matching the background domain
-  boundary: character-creation authored data, not standalone battle execution.
-- Add any necessary profile/evidence rows for the widened character-creation
-  Background admission path.
+- Reconcile the Background Unit profile claims and add any necessary
+  profile/evidence rows for the widened character-creation Background admission
+  path from Task 2.
 - Regenerate unit profile and full-support artifacts so the SRD Background gate
   is complete.
 
