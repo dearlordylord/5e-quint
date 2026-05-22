@@ -43,9 +43,12 @@ import {
 } from "./spell-effects.ts";
 import {
   addDamageAmountForType,
+  applyAvailableSourceDamageRollPenalty,
   applyAvailableSpellDamageReduction,
   damageAmountAfterTargetAdjustments,
+  damageAmountByTypeEntriesToMap,
   damageAmountByTypeAfterTargetAdjustments,
+  damageAmountByTypeMapEntries,
 } from "./damage-helpers.ts";
 import { applyBattleHitPointDamage } from "./damage-apply.ts";
 import {
@@ -746,6 +749,7 @@ export function rollModifierUsesTargetAbilityChoices(
     invocation.abilityChoices !== null &&
     invocation.abilityChoiceApplication === "perTarget" &&
     invocation.targeting.kind === "targetList" &&
+    typeof invocation.targeting.maxTargets === "number" &&
     invocation.targeting.maxTargets > 1
   );
 }
@@ -1626,6 +1630,10 @@ type SpellDamageContext = {
   readonly spellDamageReductionRollHoleForReduction?:
     | Parameters<typeof applyAvailableSpellDamageReduction>[3]
     | undefined;
+  readonly sourceDamageRollPenaltyRoll?:
+    | Extract<BattleFill, { readonly kind: "rolledDice" }>
+    | undefined;
+  readonly sourcePenaltyDamageByType?: ReadonlyMap<DamageType, number> | undefined;
   readonly damageSourceId?: CombatantId | undefined;
 };
 
@@ -1651,18 +1659,39 @@ export function applySpellDamage(
     spellMarkedDamageRiders = [],
     spellDamageReductionRoll,
     spellDamageReductionRollHoleForReduction,
+    sourceDamageRollPenaltyRoll,
+    sourcePenaltyDamageByType,
     damageSourceId,
   } = context;
+  const spellDamageByType = spellDamageByTypeForTarget(
+    target,
+    invocation,
+    damageRoll,
+    saveDamageResult,
+    spellMarkedDamageRiders,
+    critical,
+  );
+  const sourcePenalty =
+    sourcePenaltyDamageByType === undefined
+      ? applyAvailableSourceDamageRollPenalty(
+          damageSourceId === undefined
+            ? undefined
+            : state.combatants.get(damageSourceId),
+          spellDamageByType,
+          damageRoll.holeId,
+          sourceDamageRollPenaltyRoll,
+        )
+      : {
+          tag: "ok" as const,
+          damageByType: damageAmountByTypeAfterSaveDamageResult(
+            sourcePenaltyDamageByType,
+            saveDamageResult,
+          ),
+        };
+  if (sourcePenalty.tag !== "ok") return state;
   const reduction = applyAvailableSpellDamageReduction(
     target,
-    spellDamageByTypeForTarget(
-      target,
-      invocation,
-      damageRoll,
-      saveDamageResult,
-      spellMarkedDamageRiders,
-      critical,
-    ),
+    sourcePenalty.damageByType,
     spellDamageReductionRoll,
     spellDamageReductionRollHoleForReduction,
   );
@@ -1827,6 +1856,45 @@ export function spellDamageByTypeForTarget(
   );
 }
 
+export function spellBurstDamageByTypeForTarget(
+  _target: BattleCreatureState,
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "attackBurstSaveDamage" }
+  >,
+  damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+  saveDamageResult: SaveDamageResult,
+): ReadonlyMap<DamageType, number> {
+  const diceTotal = damageRoll.value.reduce(
+    (total: number, group: RolledDiceGroup): number =>
+      total +
+      group.results.reduce(
+        (groupTotal: number, dieResult: DieRollResult): number =>
+          groupTotal + Number(dieResult),
+        0,
+      ),
+    0,
+  );
+  const flat = invocation.burst.damage.expr.flat ?? 0;
+  return addDamageAmountForType(
+    new Map(),
+    invocation.burst.damage.damageType,
+    applySaveDamageResult(diceTotal + flat, saveDamageResult),
+  );
+}
+
+export function damageAmountByTypeAfterSaveDamageResult(
+  damageByType: ReadonlyMap<DamageType, number>,
+  saveDamageResult: SaveDamageResult,
+): ReadonlyMap<DamageType, number> {
+  return damageAmountByTypeEntriesToMap(
+    damageAmountByTypeMapEntries(damageByType).map((entry) => ({
+      ...entry,
+      amount: applySaveDamageResult(entry.amount, saveDamageResult),
+    })),
+  );
+}
+
 export function spellObjectDamageOutcome(input: {
   readonly objectId: BattleObjectId;
   readonly invocation: SpellObjectDamageInvocation;
@@ -1840,6 +1908,57 @@ export function spellObjectDamageOutcome(input: {
     input.critical,
   );
   const damageType = input.invocation.damage.damageType;
+  return Match.value(input.disposition).pipe(
+    Match.when({ kind: "tableResolved" }, () => ({
+      kind: "tableResolved" as const,
+      objectId: input.objectId,
+      damageType,
+      rolledDamage: damageAmount(rolledDamage),
+    })),
+    Match.when({ kind: "hitPoints" }, (disposition) =>
+      objectHitPointDamageOutcome({
+        objectId: input.objectId,
+        damageType,
+        rolledDamage,
+        priorHitPoints: disposition.hitPoints,
+        damageThreshold: null,
+      }),
+    ),
+    Match.when({ kind: "hitPointsWithDamageThreshold" }, (disposition) =>
+      objectHitPointDamageOutcome({
+        objectId: input.objectId,
+        damageType,
+        rolledDamage,
+        priorHitPoints: disposition.hitPoints,
+        damageThreshold: disposition.damageThreshold,
+      }),
+    ),
+    Match.exhaustive,
+  );
+}
+
+export function spellObjectDamageByType(
+  invocation: SpellObjectDamageInvocation,
+  damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+  critical: boolean,
+): ReadonlyMap<DamageType, number> {
+  return addDamageAmountForType(
+    new Map(),
+    invocation.damage.damageType,
+    spellObjectRolledDamage(invocation, damageRoll, critical),
+  );
+}
+
+export function spellObjectDamageOutcomeFromDamageByType(input: {
+  readonly objectId: BattleObjectId;
+  readonly damageType?: DamageType | undefined;
+  readonly damageByType: ReadonlyMap<DamageType, number>;
+  readonly disposition: BattleObjectDamageDisposition;
+}): BattleObjectDamageOutcome {
+  const entries = damageAmountByTypeMapEntries(input.damageByType);
+  const [firstEntry] = entries;
+  const damageType = input.damageType ?? firstEntry?.damageType ?? "force";
+  const rolledDamage = entries.reduce((total, entry) => total + entry.amount, 0);
   return Match.value(input.disposition).pipe(
     Match.when({ kind: "tableResolved" }, () => ({
       kind: "tableResolved" as const,
