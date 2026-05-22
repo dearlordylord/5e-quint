@@ -139,7 +139,7 @@
     {
       "number": 23,
       "id": "L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Fly Special Speed Runtime"
     },
     {
