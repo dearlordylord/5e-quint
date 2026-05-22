@@ -63,6 +63,7 @@ import {
   activeLevitatedCreatureTargetsControlledBy,
   levitateAltitudeChangeHole,
 } from "./levitate-creature.ts";
+import { dragonsBreathExhaleActs } from "./dragons-breath.ts";
 
 import {
   combatantCanTakeActions,
@@ -302,6 +303,7 @@ export function discoverBattleActs(
   acts.push(...startTurnWebActs);
   acts.push(...selfTransformationModeReplacementActs(state, actorId));
   acts.push(...levitateAltitudeControlActs(state, actorId));
+  acts.push(...dragonsBreathExhaleActs(state, actorId));
   const attackActionOptions = attackActionOptionsForActor(
     state,
     actorId,

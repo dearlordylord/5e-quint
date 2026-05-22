@@ -210,6 +210,7 @@ import {
   resolveSpellAct,
 } from "./spells-resolve.ts";
 import { resolveReleaseSpellCreatedHeldObjectCommand } from "./spells-resolve-release.ts";
+import { resolveDragonsBreathExhaleCommand } from "./dragons-breath.ts";
 import {
   spellFillSet,
   spellFillSetContainsOnlySpellCastReactionFacts,
@@ -1095,6 +1096,15 @@ export function resolveBattleSubjectInternal(
         state: input.state,
         snapshot: snapshotBattle(input.state),
       };
+    }
+    if (
+      subject.tag === "runtimeCommand" &&
+      subject.command === "dragonsBreathExhale"
+    ) {
+      return resolveDragonsBreathExhaleCommand({
+        ...input,
+        subject,
+      });
     }
     const _exhaustive: never = subject;
     return _exhaustive;
