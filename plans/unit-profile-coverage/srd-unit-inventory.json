@@ -18113,7 +18113,7 @@
       "detail": "Find Steed (Conjuration; —)",
       "candidateUnitId": "find_steed",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -18124,9 +18124,16 @@
         "state": "not-installed",
         "unitId": "find_steed"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "companion-control-boundary",
+        "owner": "future mount companion lifecycle/control owner",
+        "reason": "Find Steed's Surface-represented runtime behavior is closed at the companion-control boundary: a future mount companion owner must model summoned mount lifecycle, rider/control state, stat-block projection and actions, disappearance, and item-drop boundaries without autonomous companion action selection or authored-identity dispatch in generic runtime code."
+      },
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
+      "nextAction": "Find Steed's Surface-represented runtime behavior is closed at the companion-control boundary: a future mount companion owner must model summoned mount lifecycle, rider/control state, stat-block projection and actions, disappearance, and item-drop boundaries without autonomous companion action selection or authored-identity dispatch in generic runtime code.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {

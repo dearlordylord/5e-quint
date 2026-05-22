@@ -109,7 +109,7 @@
     {
       "number": 18,
       "id": "L12G-FOLLOWUP-FIND-STEED-COMPANION-BOUNDARY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Find Steed Companion Boundary Closure"
     },
     {
@@ -174,6 +174,7 @@ Every task must include:
 | 13 | L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH - Levitate Loose Object Branch | done | L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME | L12G-RECURSIVE-TAIL-LANE-A-2 | SRD Levitate loose object branch; shared object lifecycle or table/spatial witness owner | Completed as accepted runtime-detached closure for loose-object lifecycle and table/spatial vertical movement residuals. |
 | 14 | L12G-RECURSIVE-TAIL-LANE-A-2 - Lane A Recursive Planning Tail 2 | done | L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH, L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME, L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH | L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL, L12G-FOLLOWUP-SPIKE-GROWTH-PROFILE-ACCOUNTING, L12G-FOLLOWUP-PRAYER-OF-HEALING-PROFILE-ACCOUNTING, L12G-FOLLOWUP-FIND-STEED-COMPANION-BOUNDARY, L3-SPELL-FLY-RUNTIME-SURVEY, L3-SPELL-LIGHTNING-BOLT-RUNTIME-SURVEY, L3-SPELL-HYPNOTIC-PATTERN-RUNTIME-SURVEY | Refreshed level-2 feature metrics after this appended batch | Completed by confirming generated metrics and keeping the already-appended Level 2 completion / Level 3 kickoff refill tasks as the concrete frontier. |
 | 17 | L12G-FOLLOWUP-PRAYER-OF-HEALING-PROFILE-ACCOUNTING - Prayer Of Healing Profile Accounting Closure | done | L12G-RECURSIVE-TAIL-LANE-A-2 | none | Current Prayer of Healing Surface content, Character Sheet rest profile claim, owner evidence, and focused tests | Completed by confirming existing profile artifacts already classify Prayer of Healing as `profile-subset-supported` with Character Sheet owner evidence and outside-battle-runtime closure for automatic casting progress, range maintenance, and interruption tracking. |
+| 18 | L12G-FOLLOWUP-FIND-STEED-COMPANION-BOUNDARY - Find Steed Companion Boundary Closure | done | L12G-RECURSIVE-TAIL-LANE-A-2 | none | Find Steed Surface content, mounted-combat text, Unit/profile claims, owner evidence, and focused tests | Completed by recording `find_steed` as an `unsupported-profile` closed at the companion-control boundary, without Unit catalog admission, companion AI, autonomous control behavior, or authored-identity dispatch. |
 
 ## Tasks
 
@@ -572,7 +573,7 @@ Acceptance:
 
 ### Task 18 - L12G-FOLLOWUP-FIND-STEED-COMPANION-BOUNDARY - Find Steed Companion Boundary Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -582,9 +583,27 @@ Input:
 
 Output:
 
-- Resolve the open-runtime-behavior row for Find Steed by documenting whether it is covered by the companion-control boundary or by adding the smallest non-companion runtime/accounting support needed without implementing autonomous companion AI.
-- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
-- Focused verification, `git diff --check`, and reviewer-loop convergence.
+- Accepted unsupported-profile closure for Find Steed:
+  `plans/unit-profile-coverage/unit-claims.jsonl` records a top-level
+  `companion-control-boundary` battle-readiness closure, and the generated
+  strict report classifies `find_steed` as
+  `closed-companion-control-boundary` rather than `open-runtime-behavior`.
+- The Surface record remains partial structured input for a future
+  mount companion owner: it records SRD provenance, core casting facts, inline
+  Otherworldly Steed stat-block facts, caster-chosen creature type mode,
+  slot-scaled AC and Hit Points, Life Bond, shared-Initiative control metadata,
+  and disappearance metadata, but does not claim promoted runtime support.
+- Future mount companion ownership must model summoned mount lifecycle,
+  rider/control state, stat-block projection and actions, disappearance, and
+  item-drop boundaries without autonomous companion action selection or
+  authored-identity dispatch in generic runtime code.
+- No smaller Find Steed follow-up is needed for this lane; the remaining work
+  belongs to a future mount companion lifecycle/control owner rather than this
+  level-2 strict closure task.
+- Verification completed with local mounted-combat RAW and ubiquitous-language
+  review, local Surface-content review,
+  `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop
+  convergence.
 
 Acceptance:
 

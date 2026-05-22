@@ -9,7 +9,7 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | Metric | Covered |
 | --- | ---: |
 | Strict runtime/profile support | 114/171 (66.7%) |
-| Strict target closure | 169/171 (98.8%) |
+| Strict target closure | 170/171 (99.4%) |
 | Product readiness | 534/556 (96%) |
 | Rules-kernel profile join | 86/87 (98.9%) |
 | Rules-kernel covered profile join | 86/87 (98.9%) |
@@ -36,16 +36,14 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | closed-later-level-only | 6 | `barbarian_weapon_mastery`, `bard_expertise`, `fighter_weapon_mastery`, `paladin_fighting_style`, `ranger_favored_enemy`, `ranger_fighting_style` |
 | closed-character-fact-and-runtime-detached-split | 3 | `druid_druidic`, `rogue_thieves_cant`, `sorcerer_font_of_magic` |
 | closed-outside-battle-runtime-boundary | 3 | `enlarge_reduce`, `levitate`, `prayer_of_healing` |
-| closed-companion-control-boundary | 1 | `druid_wild_companion` |
+| closed-companion-control-boundary | 2 | `druid_wild_companion`, `find_steed` |
 | open-profile-accounting | 1 | `dragons_breath` |
-| open-runtime-behavior | 1 | `find_steed` |
 
 ## Open Frontier
 
 | Status | Count | Units |
 | --- | ---: | --- |
 | open-profile-accounting | 1 | `dragons_breath` |
-| open-runtime-behavior | 1 | `find_steed` |
 
 ## Rules-Kernel Join
 
@@ -85,7 +83,7 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `enlarge_reduce` | closed-outside-battle-runtime-boundary | profile-subset-supported | installed | outside-battle-runtime | Promoted battle runtime has no canonical object Size state, carried/worn item Size state, dropped-item location state, or thrown weapon/ammunition occurrence lifecycle to mutate and clean up. The existing creature branch already models the battle-visible attack damage consequence without duplicating item state, so object and item Size normalization remain outside promoted battle runtime until a generic object/item lifecycle owner exists. |
 | `enthrall` | closed-runtime-detached-table-adjudication | profile-subset-supported | installed | social-knowledge-effect | The SRD fight/attention clauses depend on table relationship and social attention facts outside promoted battle-runtime state; the runtime consumes caller-selected eligible targets and records battle-visible failed-save Perception effects. |
 | `fighter_weapon_mastery` | closed-later-level-only | profile-subset-supported | installed | later-level-only | The remaining Fighter Weapon Mastery selected-weapon count increases occur only after level 1. |
-| `find_steed` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
+| `find_steed` | closed-companion-control-boundary | unsupported-profile | not-in-unit-catalog | companion-control-boundary | Find Steed's Surface-represented runtime behavior is closed at the companion-control boundary: a future mount companion owner must model summoned mount lifecycle, rider/control state, stat-block projection and actions, disappearance, and item-drop boundaries without autonomous companion action selection or authored-identity dispatch in generic runtime code. |
 | `find_traps` | closed-runtime-detached-table-adjudication | unsupported-profile | installed | outside-runtime-presentation-exploration | Trap presence, line of sight, non-location warning, and general-danger disclosure are exploration/detection facts supplied by the table rather than promoted battle runtime state. |
 | `gentle_repose` | closed-runtime-detached-table-adjudication | unsupported-profile | not-in-unit-catalog | outside-runtime-presentation-exploration | Corpse/remains preservation, Undead prevention, and raise-dead deadline extension are corpse/remains lifecycle and resurrection/adjudication facts supplied by the table or a future character/rest owner rather than promoted battle runtime state. |
 | `gust_of_wind` | closed-runtime-detached-table-adjudication | profile-subset-supported | installed | outside-runtime-presentation-exploration | Gust of Wind's Line records the authored strong-wind area fact, and promoted Fog Cloud owns strong-wind dispersal as a caller/table-supplied cleanup command. The Gust profile does not derive overlap with gas, vapor, fog, smoke, or other cloud effects; those gas/vapor area owners consume the same table-supplied strong-wind witness at their own effect boundary instead of adding spell-local gas state; Candle and lantern flame state, protected versus unprotected flame classification, wild flame presentation, and the 50 percent extinguishing chance are object/environment presentation facts with no promoted battle-runtime owner; Gust of Wind does not add duplicate flame, candle, lantern, or environmental wind state. |

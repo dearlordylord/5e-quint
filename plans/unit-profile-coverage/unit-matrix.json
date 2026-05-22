@@ -27585,6 +27585,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "companion-control-boundary",
+          "owner": "future mount companion lifecycle/control owner",
+          "reason": "Find Steed's Surface-represented runtime behavior is closed at the companion-control boundary: a future mount companion owner must model summoned mount lifecycle, rider/control state, stat-block projection and actions, disappearance, and item-drop boundaries without autonomous companion action selection or authored-identity dispatch in generic runtime code."
+        },
+        "reason": "Find Steed's Surface record has SRD provenance and partial structured spawned-creature facts for Action casting, 30-foot range, V/S components, instantaneous duration, an inline Otherworldly Steed stat block, caster-chosen Celestial/Fey/Fiend creature type mode, slot-scaled AC and Hit Points, walking and level-4+ flying Speeds, ability scores, Saving Throw proficiencies, caster-language projection, a Radiant placeholder Slam action, Life Bond healing, shared-Initiative control metadata, and disappearance metadata for 0 Hit Points, spell end, caster 0 Hit Points, and equipment left behind. No promoted battle-runtime profile is claimed because these represented clauses require a mount companion owner for summoned steed identity, rider/control state, stat-block projection and action execution, disappearance, and item-drop boundaries; the existing Find Familiar profile is source-specific and is not admission evidence for Find Steed.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
