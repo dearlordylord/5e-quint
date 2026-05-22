@@ -4,27 +4,132 @@
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    {"number":1,"id":"RKBC-HANDOFF-IDENTITY-CONFLICTS","status":"done","title":"Character Battle Identity And Max HP Conflict Handling"},
-    {"number":2,"id":"RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY","status":"done","title":"Spell Direct Condition Removal And Protection Parity Witnesses"},
-    {"number":3,"id":"RKBC-SPELL-SAVE-GATED-CONDITION-PARITY","status":"done","title":"Spell Save-Gated Condition Parity Witnesses"},
-    {"number":4,"id":"RKBC-SPELL-ROLL-SCALAR-PARITY","status":"done","title":"Spell Roll Modifier And Scalar Buff Parity Witnesses"},
-    {"number":5,"id":"RKBC-SPELL-MAKE-STABLE-PARITY","status":"done","title":"Spell Make Stable Parity Witness"},
-    {"number":6,"id":"RKBC-SPELL-SELF-TRANSFORMATION-PARITY","status":"done","title":"Spell Self Transformation Mode Parity Witness"},
-    {"number":7,"id":"RKBC-SPELL-REACTION-CASTING-PARITY","status":"done","title":"Spell Reaction Casting Parity Witnesses"},
-    {"number":8,"id":"RKBC-SPELL-AFTER-HIT-RIDERS-PARITY","status":"done","title":"Spell After-Hit Rider Parity Witnesses"},
-    {"number":9,"id":"RKBC-SPELL-WEAPON-HOSTED-PARITY","status":"done","title":"Spell Weapon-Hosted Attack And Rider Parity Witnesses"},
-    {"number":10,"id":"RKBC-SPELL-MARKED-RIDER-PARITY","status":"done","title":"Spell Marked Damage Rider Parity Witnesses"},
-    {"number":11,"id":"RKBC-SPELL-ATTACK-SEQUENCES-PARITY","status":"done","title":"Spell Attack Sequence Parity Witnesses"},
-    {"number":12,"id":"RKBC-SPELL-MIRROR-IMAGE-PARITY","status":"done","title":"Mirror Image Hit Interception Parity Witness"},
-    {"number":13,"id":"RKBC-SPELL-LINKED-EFFECT-PARITY","status":"done","title":"Linked Spell Effect Damage Sharing Parity Witness"},
-    {"number":14,"id":"RKBC-FINAL-COVERAGE-CLOSURE-GATE","status":"done","title":"Final MBT Coverage Closure Gate"},
-    {"number":15,"id":"RKBC-NONFEATURE-DIRECT-CONDITION-LIFECYCLE-WITNESS","status":"ready-for-research","title":"Direct Condition Lifecycle Coverage Witness"},
-    {"number":16,"id":"RKBC-NONFEATURE-SAVE-GATED-ATTACK-ADVANTAGE-WITNESS","status":"ready-for-research","title":"Save-Gated Attack Advantage Coverage Witness"},
-    {"number":17,"id":"RKBC-NONFEATURE-MOONBEAM-MOVABLE-ZONE-WITNESS","status":"ready-for-research","title":"Moonbeam Movable Zone Coverage Witness"},
-    {"number":18,"id":"RKBC-NONFEATURE-CREATURE-TYPE-PROTECTION-WITNESS","status":"ready-for-research","title":"Creature-Type Protection Coverage Witness"},
-    {"number":19,"id":"RKBC-NONFEATURE-CONDITION-IMMUNITY-THP-WITNESS","status":"ready-for-research","title":"Condition Immunity Temporary Hit Point Coverage Witness"},
-    {"number":20,"id":"RKBC-NONFEATURE-CONDITION-REMOVAL-PROTECTION-WITNESS","status":"ready-for-research","title":"Condition Removal And Protection Coverage Witness"},
-    {"number":21,"id":"RKBC-NONFEATURE-SURFACE-PROFILE-JOIN-EVIDENCE","status":"ready-for-research","title":"Surface Profile Join Evidence Closure"}
+    {
+      "number": 1,
+      "id": "RKBC-HANDOFF-IDENTITY-CONFLICTS",
+      "status": "done",
+      "title": "Character Battle Identity And Max HP Conflict Handling"
+    },
+    {
+      "number": 2,
+      "id": "RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY",
+      "status": "done",
+      "title": "Spell Direct Condition Removal And Protection Parity Witnesses"
+    },
+    {
+      "number": 3,
+      "id": "RKBC-SPELL-SAVE-GATED-CONDITION-PARITY",
+      "status": "done",
+      "title": "Spell Save-Gated Condition Parity Witnesses"
+    },
+    {
+      "number": 4,
+      "id": "RKBC-SPELL-ROLL-SCALAR-PARITY",
+      "status": "done",
+      "title": "Spell Roll Modifier And Scalar Buff Parity Witnesses"
+    },
+    {
+      "number": 5,
+      "id": "RKBC-SPELL-MAKE-STABLE-PARITY",
+      "status": "done",
+      "title": "Spell Make Stable Parity Witness"
+    },
+    {
+      "number": 6,
+      "id": "RKBC-SPELL-SELF-TRANSFORMATION-PARITY",
+      "status": "done",
+      "title": "Spell Self Transformation Mode Parity Witness"
+    },
+    {
+      "number": 7,
+      "id": "RKBC-SPELL-REACTION-CASTING-PARITY",
+      "status": "done",
+      "title": "Spell Reaction Casting Parity Witnesses"
+    },
+    {
+      "number": 8,
+      "id": "RKBC-SPELL-AFTER-HIT-RIDERS-PARITY",
+      "status": "done",
+      "title": "Spell After-Hit Rider Parity Witnesses"
+    },
+    {
+      "number": 9,
+      "id": "RKBC-SPELL-WEAPON-HOSTED-PARITY",
+      "status": "done",
+      "title": "Spell Weapon-Hosted Attack And Rider Parity Witnesses"
+    },
+    {
+      "number": 10,
+      "id": "RKBC-SPELL-MARKED-RIDER-PARITY",
+      "status": "done",
+      "title": "Spell Marked Damage Rider Parity Witnesses"
+    },
+    {
+      "number": 11,
+      "id": "RKBC-SPELL-ATTACK-SEQUENCES-PARITY",
+      "status": "done",
+      "title": "Spell Attack Sequence Parity Witnesses"
+    },
+    {
+      "number": 12,
+      "id": "RKBC-SPELL-MIRROR-IMAGE-PARITY",
+      "status": "done",
+      "title": "Mirror Image Hit Interception Parity Witness"
+    },
+    {
+      "number": 13,
+      "id": "RKBC-SPELL-LINKED-EFFECT-PARITY",
+      "status": "done",
+      "title": "Linked Spell Effect Damage Sharing Parity Witness"
+    },
+    {
+      "number": 14,
+      "id": "RKBC-FINAL-COVERAGE-CLOSURE-GATE",
+      "status": "done",
+      "title": "Final MBT Coverage Closure Gate"
+    },
+    {
+      "number": 15,
+      "id": "RKBC-NONFEATURE-DIRECT-CONDITION-LIFECYCLE-WITNESS",
+      "status": "done",
+      "title": "Direct Condition Lifecycle Coverage Witness"
+    },
+    {
+      "number": 16,
+      "id": "RKBC-NONFEATURE-SAVE-GATED-ATTACK-ADVANTAGE-WITNESS",
+      "status": "ready-for-research",
+      "title": "Save-Gated Attack Advantage Coverage Witness"
+    },
+    {
+      "number": 17,
+      "id": "RKBC-NONFEATURE-MOONBEAM-MOVABLE-ZONE-WITNESS",
+      "status": "ready-for-research",
+      "title": "Moonbeam Movable Zone Coverage Witness"
+    },
+    {
+      "number": 18,
+      "id": "RKBC-NONFEATURE-CREATURE-TYPE-PROTECTION-WITNESS",
+      "status": "ready-for-research",
+      "title": "Creature-Type Protection Coverage Witness"
+    },
+    {
+      "number": 19,
+      "id": "RKBC-NONFEATURE-CONDITION-IMMUNITY-THP-WITNESS",
+      "status": "ready-for-research",
+      "title": "Condition Immunity Temporary Hit Point Coverage Witness"
+    },
+    {
+      "number": 20,
+      "id": "RKBC-NONFEATURE-CONDITION-REMOVAL-PROTECTION-WITNESS",
+      "status": "ready-for-research",
+      "title": "Condition Removal And Protection Coverage Witness"
+    },
+    {
+      "number": 21,
+      "id": "RKBC-NONFEATURE-SURFACE-PROFILE-JOIN-EVIDENCE",
+      "status": "ready-for-research",
+      "title": "Surface Profile Join Evidence Closure"
+    }
   ]
 }
 -->
@@ -160,7 +265,7 @@ Output:
 
 ### Task 15 - RKBC-NONFEATURE-DIRECT-CONDITION-LIFECYCLE-WITNESS - Direct Condition Lifecycle Coverage Witness
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 - Task 14.
