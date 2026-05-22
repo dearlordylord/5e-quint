@@ -2841,7 +2841,7 @@
         "packages/character-sheet-runtime/src/index.ts",
         "packages/character-battle-runtime/src/index.ts"
       ],
-      "sourceBoundary": "Character Sheet consumes retained Font of Magic source facts, the shared Sorcery Point point-pool expenditure, and the Creating Spell Slots table from the installed Surface feature. This is a Character Sheet conversion-state boundary: it spends the table cost, enforces the Sorcerer-level minimum and level-5 table cap, stores only created Spell Slot delta state, exposes aggregate Spell Slot capacity to Character Battle init, rejects source-ambiguous battle handoff expenditure for levels with both ordinary and created slots, and clears created slots on Long Rest. Bonus Action execution and source-aware battle spell spending remain deferred to L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE.",
+      "sourceBoundary": "Character Sheet consumes retained Font of Magic source facts, the shared Sorcery Point point-pool expenditure, and the Creating Spell Slots table from the installed Surface feature. This is a Character Sheet conversion-state boundary: it spends the table cost, enforces the Sorcerer-level minimum and level-5 table cap, stores only created Spell Slot delta state, exposes aggregate Spell Slot capacity to Character Battle init, rejects source-ambiguous battle handoff expenditure for levels with both ordinary and created slots, and clears created slots on Long Rest. Character Battle does not advertise this conversion as a Unit feature Bonus Action or duplicate ordinary-vs-created source pools; battle use remains aggregate and source-ambiguous settlement is rejected.",
       "taskRefs": [
         "L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS"
       ],
@@ -10031,7 +10031,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused Character Sheet and Character Battle tests cover Font of Magic Sorcery Point spending through the installed Creating Spell Slots table as a Character Sheet state transition, RAW point-cost and minimum-Sorcerer-level gates, level-5 table cap rejection, source-aware conversion of ordinary and created Spell Slots back into Sorcery Points, created Spell Slot aggregate projection into battle, source-exact handoff preservation when aggregate battle state is unambiguous, source-ambiguous handoff rejection, and Long Rest expiry. Bonus Action action-economy execution and source-aware battle spell spending remain split to L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE.",
+      "note": "Focused Character Sheet and Character Battle tests cover Font of Magic Sorcery Point spending through the installed Creating Spell Slots table as a Character Sheet state transition, RAW point-cost and minimum-Sorcerer-level gates, level-5 table cap rejection, source-aware conversion of ordinary and created Spell Slots back into Sorcery Points, created Spell Slot aggregate projection into battle, source-exact handoff preservation when aggregate battle state is unambiguous, source-ambiguous handoff rejection, and Long Rest expiry. Battle Bonus Action/source handling was later closed by L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE at the Character Sheet conversion and aggregate handoff boundary.",
       "profileIds": [
         "character-sheet.font-of-magic-sorcery-points-to-spell-slot",
         "character-sheet.font-of-magic-slot-to-sorcery-points"
@@ -10444,6 +10444,12 @@
         "spell.invocation-jump-movement-replacement"
       ],
       "taskId": "L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME"
+    },
+    {
+      "claimKind": "accepted-runtime-closure",
+      "note": "Focused Character Battle tests cover Font of Magic created Spell Slots entering battle only as aggregate Spell Slot capacity, absence of a battle Unit feature Bonus Action for Creating Spell Slots, and source-ambiguous ordinary-versus-created Spell Slot handoff rejection. The closure keeps Character Sheet as the canonical owner of created Spell Slot source state and avoids a duplicate battle-local Spell Slot source pool or source ledger.",
+      "profileIds": [],
+      "taskId": "L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE"
     }
   ],
   "units": [
@@ -13586,17 +13592,12 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE",
+            "battleReadinessClosure": {
+              "kind": "character-fact-and-runtime-detached-split",
+              "owner": "Character Sheet Font of Magic conversion state plus Character Battle aggregate Spell Slot handoff",
+              "reason": "RAW distinguishes the Bonus Action resource conversion from spell execution, and the existing Character Sheet boundary is the canonical owner of ordinary-vs-created Spell Slot source state. Character Battle intentionally carries only aggregate Spell Slot capacity and the shared Sorcery Point pool, rejects source-ambiguous handoff when both ordinary and created slots of the same level could have been spent, and does not introduce a second battle-local Spell Slot source pool or source ledger."
+            },
             "mechanic": "Font of Magic Creating Spell Slots Bonus Action action-economy execution and source-aware battle Spell Slot spending/handoff when ordinary and created slots of the same level coexist"
-          }
-        ],
-        "followUpTasks": [
-          {
-            "id": "L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE",
-            "mechanic": "Execute Font of Magic Creating Spell Slots at an action-economy boundary that spends a Bonus Action, and carry ordinary-versus-created Spell Slot source through battle spell casting and handoff when both sources of the same level are available.",
-            "owner": "character-sheet-runtime plus character-battle-runtime and battle-runtime spell invocation lifecycle",
-            "requiredOutput": "Supported-profile Unit claim update with focused Character Sheet, Character Battle, and promoted battle-runtime tests; if battle-runtime spell invocation state changes, update package-local Quint parity and run the appropriate MBT tier under the repository protocol.",
-            "title": "Sorcerer Font Of Magic Bonus Action And Battle Slot Source"
           }
         ],
         "profileIds": [
@@ -13612,7 +13613,8 @@
           "Character Sheet converts a source-aware ordinary or created Spell Slot into Sorcery Points, requiring explicit source selection when both sources of the same level are available",
           "Character Sheet transforms Sorcery Points into created Spell Slot delta state from the Creating Spell Slots table, enforcing point cost, minimum Sorcerer level, and level-5 cap",
           "Created Spell Slot delta state is aggregated for Character Battle init, preserved exactly when handoff is source-unambiguous, rejected when handoff is source-ambiguous, and cleared on Long Rest",
-          "Character Battle carries the existing Font of Magic Sorcery Point point-pool into battle state for Metamagic, exposes remaining points without a Metamagic-local pool, and persists battle point spending back to the Character Sheet pointPoolResource expenditure"
+          "Character Battle carries the existing Font of Magic Sorcery Point point-pool into battle state for Metamagic, exposes remaining points without a Metamagic-local pool, and persists battle point spending back to the Character Sheet pointPoolResource expenditure",
+          "Character Battle keeps Font of Magic Creating Spell Slots at the Character Sheet conversion boundary during battle: no battle Unit feature action is advertised, aggregate Spell Slot capacity is consumed without duplicating ordinary-vs-created source pools, and source-ambiguous settlement remains rejected"
         ],
         "tag": "profile-subset-supported"
       },
@@ -13627,6 +13629,11 @@
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS"
+        },
+        {
+          "ownerPath": "packages/character-battle-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE"
         }
       ],
       "executableMechanics": true,
@@ -13701,7 +13708,7 @@
             "packages/character-sheet-runtime/src/index.ts",
             "packages/character-battle-runtime/src/index.ts"
           ],
-          "sourceBoundary": "Character Sheet consumes retained Font of Magic source facts, the shared Sorcery Point point-pool expenditure, and the Creating Spell Slots table from the installed Surface feature. This is a Character Sheet conversion-state boundary: it spends the table cost, enforces the Sorcerer-level minimum and level-5 table cap, stores only created Spell Slot delta state, exposes aggregate Spell Slot capacity to Character Battle init, rejects source-ambiguous battle handoff expenditure for levels with both ordinary and created slots, and clears created slots on Long Rest. Bonus Action execution and source-aware battle spell spending remain deferred to L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE.",
+          "sourceBoundary": "Character Sheet consumes retained Font of Magic source facts, the shared Sorcery Point point-pool expenditure, and the Creating Spell Slots table from the installed Surface feature. This is a Character Sheet conversion-state boundary: it spends the table cost, enforces the Sorcerer-level minimum and level-5 table cap, stores only created Spell Slot delta state, exposes aggregate Spell Slot capacity to Character Battle init, rejects source-ambiguous battle handoff expenditure for levels with both ordinary and created slots, and clears created slots on Long Rest. Character Battle does not advertise this conversion as a Unit feature Bonus Action or duplicate ordinary-vs-created source pools; battle use remains aggregate and source-ambiguous settlement is rejected.",
           "taskRefs": [
             "L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS"
           ],

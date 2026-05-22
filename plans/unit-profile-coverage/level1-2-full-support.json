@@ -2377,12 +2377,12 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "follow-up-split"
+        "character-fact-and-runtime-detached-split"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE: Execute Font of Magic Creating Spell Slots at an action-economy boundary that spends a Bonus Action, and carry ordinary-versus-created Spell Slot source through battle spell casting and handoff when both sources of the same level are available. Owner: character-sheet-runtime plus character-battle-runtime and battle-runtime spell invocation lifecycle. Required output: Supported-profile Unit claim update with focused Character Sheet, Character Battle, and promoted battle-runtime tests; if battle-runtime spell invocation state changes, update package-local Quint parity and run the appropriate MBT tier under the repository protocol.",
+      "reason": "RAW distinguishes the Bonus Action resource conversion from spell execution, and the existing Character Sheet boundary is the canonical owner of ordinary-vs-created Spell Slot source state. Character Battle intentionally carries only aggregate Spell Slot capacity and the shared Sorcery Point pool, rejects source-ambiguous handoff when both ordinary and created slots of the same level could have been spent, and does not introduce a second battle-local Spell Slot source pool or source ledger.",
       "sourceRecordPath": "packages/surface/content/sorcerer_font_of_magic.json",
       "sourceRows": [
         {
@@ -2398,7 +2398,7 @@
           }
         }
       ],
-      "status": "blocked-follow-up-split",
+      "status": "closed-character-fact-and-runtime-detached-split",
       "strictTargetClosed": true,
       "unitId": "sorcerer_font_of_magic"
     },
@@ -2769,7 +2769,7 @@
       ]
     },
     {
-      "count": 17,
+      "count": 16,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
@@ -2786,7 +2786,6 @@
         "prayer_of_healing",
         "ray_of_enfeeblement",
         "see_invisibility",
-        "sorcerer_font_of_magic",
         "sorcerer_metamagic",
         "spike_growth",
         "spiritual_weapon"
@@ -2806,12 +2805,13 @@
       ]
     },
     {
-      "count": 2,
+      "count": 3,
       "description": "Character facts are owned while only runtime-detached adjudication remains.",
       "status": "closed-character-fact-and-runtime-detached-split",
       "unitIds": [
         "druid_druidic",
-        "rogue_thieves_cant"
+        "rogue_thieves_cant",
+        "sorcerer_font_of_magic"
       ]
     },
     {
@@ -8196,8 +8196,8 @@
       "unsupported-profile": 34
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 17,
-      "closed-character-fact-and-runtime-detached-split": 2,
+      "blocked-follow-up-split": 16,
+      "closed-character-fact-and-runtime-detached-split": 3,
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 29,

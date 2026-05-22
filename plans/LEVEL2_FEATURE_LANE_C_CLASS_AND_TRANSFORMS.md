@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Sorcerer Font Of Magic Bonus Action And Battle Slot Source"
     },
     {
@@ -154,7 +154,7 @@ Output:
 
 ### Task 6 - L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE - Sorcerer Font Of Magic Bonus Action And Battle Slot Source
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 - Current Font of Magic Character Sheet resource facts and battle bridge.

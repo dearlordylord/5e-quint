@@ -251,6 +251,7 @@
 {"unitId":"monk_uncanny_metabolism","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
 {"unitId":"sorcerer_font_of_magic","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"sorcerer_font_of_magic","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
+{"unitId":"sorcerer_font_of_magic","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE","ownerPath":"packages/character-battle-runtime/src/index.test.ts"}}
 {"unitId":"sorcerer_metamagic","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"sorcerer_metamagic","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
 {"unitId":"monk_uncanny_metabolism","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME","ownerPath":"packages/character-battle-runtime/src/index.test.ts"}}
