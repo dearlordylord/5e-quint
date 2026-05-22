@@ -103,7 +103,7 @@
     {
       "number": 17,
       "id": "L12G-FOLLOWUP-PRAYER-OF-HEALING-PROFILE-ACCOUNTING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Prayer Of Healing Profile Accounting Closure"
     },
     {
@@ -173,6 +173,7 @@ Every task must include:
 | 12 | L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME - Levitate Creature Runtime Support | done | L12G-RECURSIVE-TAIL-LANE-A | L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH, L12G-RECURSIVE-TAIL-LANE-A-2 | SRD Levitate creature branch; movement and table/spatial witness boundaries | Completed Levitate creature runtime subset with active levitated-target state and altitude-control witness boundaries. |
 | 13 | L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH - Levitate Loose Object Branch | done | L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME | L12G-RECURSIVE-TAIL-LANE-A-2 | SRD Levitate loose object branch; shared object lifecycle or table/spatial witness owner | Completed as accepted runtime-detached closure for loose-object lifecycle and table/spatial vertical movement residuals. |
 | 14 | L12G-RECURSIVE-TAIL-LANE-A-2 - Lane A Recursive Planning Tail 2 | done | L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH, L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME, L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH | L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL, L12G-FOLLOWUP-SPIKE-GROWTH-PROFILE-ACCOUNTING, L12G-FOLLOWUP-PRAYER-OF-HEALING-PROFILE-ACCOUNTING, L12G-FOLLOWUP-FIND-STEED-COMPANION-BOUNDARY, L3-SPELL-FLY-RUNTIME-SURVEY, L3-SPELL-LIGHTNING-BOLT-RUNTIME-SURVEY, L3-SPELL-HYPNOTIC-PATTERN-RUNTIME-SURVEY | Refreshed level-2 feature metrics after this appended batch | Completed by confirming generated metrics and keeping the already-appended Level 2 completion / Level 3 kickoff refill tasks as the concrete frontier. |
+| 17 | L12G-FOLLOWUP-PRAYER-OF-HEALING-PROFILE-ACCOUNTING - Prayer Of Healing Profile Accounting Closure | done | L12G-RECURSIVE-TAIL-LANE-A-2 | none | Current Prayer of Healing Surface content, Character Sheet rest profile claim, owner evidence, and focused tests | Completed by confirming existing profile artifacts already classify Prayer of Healing as `profile-subset-supported` with Character Sheet owner evidence and outside-battle-runtime closure for automatic casting progress, range maintenance, and interruption tracking. |
 
 ## Tasks
 
@@ -532,7 +533,7 @@ Acceptance:
 
 ### Task 17 - L12G-FOLLOWUP-PRAYER-OF-HEALING-PROFILE-ACCOUNTING - Prayer Of Healing Profile Accounting Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -542,9 +543,26 @@ Input:
 
 Output:
 
-- Resolve the remaining open-profile-accounting status for Prayer of Healing after Surface and Character Sheet rest runtime work: update claims/evidence/reports so the metric is supported, target-closed, or split into a smaller concrete follow-up.
-- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
-- Focused verification, `git diff --check`, and reviewer-loop convergence.
+- Accepted profile-subset-supported closure for Prayer of Healing:
+  `plans/unit-profile-coverage/unit-claims.jsonl` records the
+  `character-sheet.spell-rest-benefit-application` supported subset,
+  `plans/unit-profile-coverage/unit-evidence.jsonl` records deterministic
+  admission/projection evidence, and the generated strict report classifies
+  `prayer_of_healing` as supported rather than open profile accounting.
+- The supported profile remains completed-cast Character Sheet application:
+  the runtime spends a level-2-or-higher Spell Slot at completion, applies the
+  existing Short Rest benefit per caller-selected recipient, applies
+  slot-scaled healing capped by Hit Point maximum, records the same-spell
+  recipient Long Rest lockout, and clears that lockout through existing Long
+  Rest state.
+- Automatic 10-minute casting progress, range maintenance tracking, and
+  encounter-time interruption detection remain accepted outside-battle-runtime
+  caller/table witness responsibilities; no parallel Character Sheet or battle
+  runtime state is introduced for them.
+- No smaller Prayer of Healing follow-up is needed for this lane.
+- Verification completed with local RAW/ubiquitous-language review,
+  `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop
+  convergence.
 
 Acceptance:
 
