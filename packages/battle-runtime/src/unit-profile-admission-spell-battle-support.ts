@@ -47,7 +47,7 @@ export function spellBattle(input: {
     { readonly kind: "character" }
   >["attack"];
   readonly spellSlots?: readonly {
-    readonly spellLevel: 1 | 2 | 3 | 4 | 5 | 6;
+    readonly spellLevel: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
     readonly count: number;
   }[];
   readonly extraTargetIds?: readonly CombatantId[];

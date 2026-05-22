@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 396,
-      "numerator": 190,
-      "percent": "48%"
+      "numerator": 191,
+      "percent": "48.2%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 468,
-      "numerator": 222,
-      "percent": "47.4%"
+      "numerator": 223,
+      "percent": "47.6%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 223
+      "value": 224
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 135,
@@ -67,29 +67,29 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 223,
-      "numerator": 223,
+      "denominator": 224,
+      "numerator": 224,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 85,
-      "numerator": 85,
+      "denominator": 86,
+      "numerator": 86,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 85,
-      "numerator": 84,
-      "percent": "98.8%"
+      "denominator": 86,
+      "numerator": 86,
+      "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 117,
+      "denominator": 118,
       "numerator": 75,
-      "percent": "64.1%"
+      "percent": "63.6%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 117,
+      "denominator": 118,
       "numerator": 104,
-      "percent": "88.9%"
+      "percent": "88.1%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 135,
@@ -97,13 +97,13 @@
       "percent": "63%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 85,
-      "numerator": 85,
+      "denominator": 86,
+      "numerator": 86,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 85,
-      "numerator": 85,
+      "denominator": 86,
+      "numerator": 86,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -112,9 +112,9 @@
       "percent": "77.8%"
     },
     "supportedProfileCoverage": {
-      "denominator": 191,
+      "denominator": 192,
       "numerator": 135,
-      "percent": "70.7%"
+      "percent": "70.3%"
     }
   },
   "metricSemantics": [
@@ -3204,6 +3204,10 @@
       "title": "Spell invocation creates and moves a Moonbeam Cylinder with table-supplied area witnesses",
       "verificationOwners": [
         {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-moonbeam.test.ts"
         }
@@ -3391,20 +3395,48 @@
           "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
         }
       ]
+    },
+    {
+      "id": "spell.invocation-antimagic-field-tracked-light-suppression",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
+      ],
+      "sourceBoundary": "The runtime consumes the authored Antimagic Field ongoing-spell suppression shape, a self-origin 10-foot Emanation area identity, and caller-supplied affected tracked ongoing spell-light facts. It owns Magic Action and level-8-or-higher Spell Slot spending, caster-owned Concentration up to 1 hour, active Antimagic Field suppression state, suppression of ordinary tracked spell-created light emitters without deleting the ongoing spell occurrence, duration ticking while suppressed, exclusion of artifact/deity spell sources from suppression, and cleanup on Concentration or duration end. Spellcasting prevention, Magic Action prevention, magical targeting prevention, magic item suppression, magical area clipping, teleportation/planar travel blocking, portal closure, Dispel Magic immunity on the aura, and generic non-light ongoing Spell Effect suppression remain outside this tracked-light subset.",
+      "taskRefs": [
+        "L12G-ANTIMAGIC-FIELD-TRACKED-LIGHT-SUPPRESSION"
+      ],
+      "title": "Spell invocation suppresses tracked ongoing spell light inside Antimagic Field",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-antimagic-field.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 117,
+        "denominator": 118,
         "numerator": 75,
-        "percent": "64.1%"
+        "percent": "63.6%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 117,
+        "denominator": 118,
         "numerator": 104,
-        "percent": "88.9%"
+        "percent": "88.1%"
       }
     },
     "profileKinds": [
@@ -4983,6 +5015,12 @@
         "obligations": [],
         "profileId": "unit-feature.metamagic-cast-governor-quickened",
         "profileKind": "bonus-action"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-antimagic-field-tracked-light-suppression",
+        "profileKind": "spell-invocation"
       }
     ],
     "sourceArtifacts": {
@@ -10208,6 +10246,14 @@
       "taskId": "L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME"
     },
     {
+      "claimKind": "qnt-proof",
+      "note": "Promoted package-local Moonbeam Quint facts cover Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration, active movable Cylinder effect state with 5-foot radius and 40-foot height, slot-scaled Radiant damage with half damage on a successful Constitution save, once-per-creature-per-turn save limiting across area triggers with turn-bound reset, Magic-action reposition up to 60 feet, and Concentration/duration cleanup.",
+      "profileIds": [
+        "spell.invocation-moonbeam-movable-zone"
+      ],
+      "taskId": "L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME"
+    },
+    {
       "claimKind": "completed-runtime-parity",
       "note": "Focused battle-runtime tests and package-local QNT self-tests cover the Heat Metal contact-damage slice: catalog admission, manufactured metal object target fill validation, contact-creature witness fill validation, Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration, durable object-contact spell occurrence state, immediate Fire damage with slot scaling, later-turn Bonus Action repeat damage requiring object-within-range and contact witnesses, no same-turn repeat discovery, Concentration cleanup, and no-contact casts without damage-roll holes.",
       "profileIds": [
@@ -10350,6 +10396,22 @@
         "unit-feature.metamagic-cast-governor-quickened"
       ],
       "taskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Package-local promoted Quint facts cover Antimagic Field's Magic Action and level-8-or-higher Spell Slot spend, caller-supplied self-origin 10-foot Emanation identity, active suppression effect, suppression of ordinary tracked spell-light emitters by source effect id, artifact/deity source exclusion, duration ticking while suppressed, and cleanup on Concentration or duration end.",
+      "profileIds": [
+        "spell.invocation-antimagic-field-tracked-light-suppression"
+      ],
+      "taskId": "L12G-ANTIMAGIC-FIELD-TRACKED-LIGHT-SUPPRESSION"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Antimagic Field Surface-profile admission, level-8 Spell Slot self-emanation casting, area-choice fill validation, suppression of ordinary tracked spell light without deleting the occurrence, artifact/deity spell-light exclusion, suppressed duration ticking, and cleanup through Concentration or duration end.",
+      "profileIds": [
+        "spell.invocation-antimagic-field-tracked-light-suppression"
+      ],
+      "taskId": "L12G-ANTIMAGIC-FIELD-TRACKED-LIGHT-SUPPRESSION"
     }
   ],
   "units": [
@@ -15952,6 +16014,90 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/animal_messenger.json",
       "unitId": "animal_messenger"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "L12G-FOLLOWUP-ANTIMAGIC-FIELD-GENERIC-SUPPRESSION",
+            "mechanic": "spellcasting prevention, Magic Action prevention, magical targeting prevention, magic item suppression, magical area clipping, teleportation and planar travel blocking, portal closure, Dispel Magic immunity on the aura, and non-light ongoing Spell Effect suppression"
+          }
+        ],
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-ANTIMAGIC-FIELD-GENERIC-SUPPRESSION",
+            "mechanic": "Promote Antimagic Field beyond tracked spell-light emitters by representing generic ongoing Spell Effect suppression, spellcasting and Magic Action prevention, magical targeting prevention, magic item suppression, magical area clipping, teleportation/planar travel blocking, portal closure, and the aura's Dispel Magic immunity without deleting suppressed occurrences or duplicating effect state.",
+            "owner": "battle-runtime magical prevention and generic ongoing Spell Effect suppression owner",
+            "requiredOutput": "Supported-profile or profile-subset-supported Antimagic Field claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for generic suppression/prevention while preserving table-owned area membership and spatial witnesses.",
+            "title": "Antimagic Field Generic Suppression Runtime"
+          }
+        ],
+        "futureProfileOwner": "generic Antimagic Field prevention and ongoing Spell Effect suppression owner",
+        "profileIds": [
+          "spell.invocation-antimagic-field-tracked-light-suppression"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action prepared spell cast with a level-8-or-higher Spell Slot",
+          "caller-supplied self-origin 10-foot Emanation area identity",
+          "caster-owned Concentration up to 1 hour",
+          "caller-supplied affected tracked ongoing spell-light facts identify ordinary spell-created light emitters inside the aura",
+          "tracked spell-created light emitters are suppressed while inside the aura without deleting their ongoing spell occurrence",
+          "suppressed tracked spell-light durations continue ticking while suppressed",
+          "artifact/deity spell-light sources are excluded from suppression",
+          "Concentration and duration cleanup remove the active suppression field"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-antimagic-field.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-ANTIMAGIC-FIELD-TRACKED-LIGHT-SUPPRESSION"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-antimagic-field-tracked-light-suppression",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the authored Antimagic Field ongoing-spell suppression shape, a self-origin 10-foot Emanation area identity, and caller-supplied affected tracked ongoing spell-light facts. It owns Magic Action and level-8-or-higher Spell Slot spending, caster-owned Concentration up to 1 hour, active Antimagic Field suppression state, suppression of ordinary tracked spell-created light emitters without deleting the ongoing spell occurrence, duration ticking while suppressed, exclusion of artifact/deity spell sources from suppression, and cleanup on Concentration or duration end. Spellcasting prevention, Magic Action prevention, magical targeting prevention, magic item suppression, magical area clipping, teleportation/planar travel blocking, portal closure, Dispel Magic immunity on the aura, and generic non-light ongoing Spell Effect suppression remain outside this tracked-light subset.",
+          "taskRefs": [
+            "L12G-ANTIMAGIC-FIELD-TRACKED-LIGHT-SUPPRESSION"
+          ],
+          "title": "Spell invocation suppresses tracked ongoing spell light inside Antimagic Field",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-antimagic-field.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/antimagic_field.json",
+      "unitId": "antimagic_field"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -22421,6 +22567,10 @@
           "title": "Spell invocation creates and moves a Moonbeam Cylinder with table-supplied area witnesses",
           "verificationOwners": [
             {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-moonbeam.test.ts"
             }
@@ -24321,24 +24471,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/antilife_shell.json",
       "unitId": "antilife_shell"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/antimagic_field.json",
-      "unitId": "antimagic_field"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

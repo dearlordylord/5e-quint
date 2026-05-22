@@ -14,16 +14,15 @@
 --
 -- Family: ongoing_effect (Concentration, up to 10 minutes).
 -- Attachment: area (sphere r=15, point_within_range) — primary mode.
--- Operation: passive → area_is_magical_darkness.
--- This atom carries the stronger SRD fact: magical Darkness fills the area,
--- Darkvision cannot see through it, and nonmagical light cannot illuminate it.
+-- Operations:
+--   1. passive → area_is_magical_darkness.
+--   2. passive → end_overlapping_spell_created_bright_or_dim_light
+--      (max spell level 2).
 --
 -- OMITTED (separate owner/follow-up work):
 --   1. Object-attachment mode and opaque-cover blocking require a cast-time
 --      attachment choice plus an object-origin Emanation/cover witness.
---   2. Level-2-or-lower spell-created Bright/Dim Light overlap dispel
---      requires a generic spell-created-light overlap owner.
---   3. Nonmagical-light denial is a light/visibility witness consequence,
+--   2. Nonmagical-light denial is a light/visibility witness consequence,
 --      not a Darkness-local duplicate light state.
 
 let darkness =
@@ -64,6 +63,13 @@ let darkness =
           , operations =
               [ { trigger = { kind = "passive" }
                 , effect = { kind = "area_is_magical_darkness" }
+                }
+              , { trigger = { kind = "passive" }
+                , effect =
+                    { kind =
+                        "end_overlapping_spell_created_bright_or_dim_light"
+                    , maxSpellLevel = 2
+                    }
                 }
               ]
           }

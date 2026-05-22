@@ -24,10 +24,18 @@ module battleRuntimeGroundCommand {
   pure val darknessDurationTicks = 100
   pure val darknessAreaId = 5
   pure val darknessRadiusFeet = 15
+  pure val antimagicFieldDurationTicks = 600
+  pure val antimagicFieldAreaId = 6
+  pure val antimagicFieldRadiusFeet = 10
   pure val flamingSphereDurationTicks = 10
   pure val flamingSphereAreaId = 3
   pure val flamingSphereDiameterFeet = 5
   pure val flamingSphereRamMaxMoveFeet = 30
+  pure val moonbeamDurationTicks = 10
+  pure val moonbeamAreaId = 6
+  pure val moonbeamRadiusFeet = 5
+  pure val moonbeamHeightFeet = 40
+  pure val moonbeamRepositionMaxMoveFeet = 60
   pure val webDurationTicks = 600
   pure val webAreaId = 4
   pure val webSideFeet = 20
@@ -167,6 +175,12 @@ module battleRuntimeGroundCommand {
       | _ => true
     })
 
+  pure def activeEffectsWithoutAntimagicFieldOngoingSpellSuppression(effects: Set[ActiveEffect], areaId: int): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | AntimagicFieldOngoingSpellSuppression(data) => data.areaId != areaId
+      | _ => true
+    })
+
   pure def resolveDarknessPointOrigin(
     state: BattleState,
     areaId: int,
@@ -209,6 +223,39 @@ module battleRuntimeGroundCommand {
       DarknessIllumination
     else
       baseIllumination
+
+  pure def resolveAntimagicFieldOngoingSpellSuppression(
+    state: BattleState,
+    areaId: int,
+    suppressedSourceEffectIds: Set[int],
+    slotLevel: int,
+  ): BattleState =
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)) or slotLevel < 8)
+      state
+    else {
+      val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
+      commitActorSpellSlotUse({
+        ...withoutPrior,
+        fighter: {
+          ...withoutPrior.fighter,
+          concentrating: true,
+          activeEffects: activeEffectsWithoutAntimagicFieldOngoingSpellSuppression(withoutPrior.fighter.activeEffects, areaId)
+            .union(Set(AntimagicFieldOngoingSpellSuppression({
+              areaId: areaId,
+              radiusFeet: antimagicFieldRadiusFeet,
+              suppressedSourceEffectIds: suppressedSourceEffectIds,
+              durationTicks: antimagicFieldDurationTicks,
+            }))),
+        },
+        actionAvailable: false,
+      }, Fighter)
+    }
+
+  pure def antimagicFieldOngoingSpellSuppressionActive(state: BattleState, areaId: int): bool =
+    state.fighter.activeEffects.exists(effect => match effect {
+      | AntimagicFieldOngoingSpellSuppression(data) => data.areaId == areaId
+      | _ => false
+    })
 
   pure def flamingSphereDamageDice(slotLevel: int): int =
     2 + (slotLevel - 2)
@@ -357,6 +404,169 @@ module battleRuntimeGroundCommand {
       state
     else
       { ...state, bonusActionAvailable: false }
+
+  pure def moonbeamDamageDice(slotLevel: int): int =
+    2 + (slotLevel - 2)
+
+  pure def activeEffectsWithoutMoonbeamMovableZone(effects: Set[ActiveEffect], areaId: int): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | MoonbeamMovableZone(data) => data.areaId != areaId
+      | _ => true
+    })
+
+  pure def resolveMoonbeam(
+    state: BattleState,
+    areaId: int,
+    slotLevel: int,
+  ): BattleState =
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)) or slotLevel < 2)
+      state
+    else {
+      val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
+      commitActorSpellSlotUse({
+        ...withoutPrior,
+        fighter: {
+          ...withoutPrior.fighter,
+          concentrating: true,
+          activeEffects: activeEffectsWithoutMoonbeamMovableZone(withoutPrior.fighter.activeEffects, areaId)
+            .union(Set(MoonbeamMovableZone({
+              areaId: areaId,
+              damageDice: moonbeamDamageDice(slotLevel),
+              durationTicks: moonbeamDurationTicks,
+              repositionMaxMoveFeet: moonbeamRepositionMaxMoveFeet,
+              savedThisTurn: Set(),
+            }))),
+        },
+        actionAvailable: false,
+      }, Fighter)
+    }
+
+  pure def moonbeamActive(state: BattleState, areaId: int): bool =
+    state.fighter.activeEffects.exists(effect => match effect {
+      | MoonbeamMovableZone(data) => data.areaId == areaId
+      | _ => false
+    })
+
+  pure def moonbeamActiveDamageDice(state: BattleState, areaId: int): int =
+    state.fighter.activeEffects
+      .map(effect => match effect {
+        | MoonbeamMovableZone(data) => if (data.areaId == areaId) data.damageDice else 0
+        | _ => 0
+      })
+      .fold(0, (highest, damageDice) => if (highest > damageDice) highest else damageDice)
+
+  pure def moonbeamActiveRepositionMaxMoveFeet(state: BattleState, areaId: int): int =
+    state.fighter.activeEffects
+      .map(effect => match effect {
+        | MoonbeamMovableZone(data) => if (data.areaId == areaId) data.repositionMaxMoveFeet else 0
+        | _ => 0
+      })
+      .fold(0, (highest, moveFeet) => if (highest > moveFeet) highest else moveFeet)
+
+  pure def moonbeamSavedThisTurn(state: BattleState, targetActor: Actor, areaId: int): bool =
+    state.fighter.activeEffects.exists(effect => match effect {
+      | MoonbeamMovableZone(data) => data.areaId == areaId and data.savedThisTurn.contains(targetActor)
+      | _ => false
+    })
+
+  pure def markMoonbeamSavedThisTurn(state: BattleState, targetActor: Actor, areaId: int): BattleState =
+    {
+      ...state,
+      fighter: {
+        ...state.fighter,
+        activeEffects: state.fighter.activeEffects.map(effect => match effect {
+          | MoonbeamMovableZone(data) =>
+              if (data.areaId == areaId)
+                MoonbeamMovableZone({ ...data, savedThisTurn: data.savedThisTurn.union(Set(targetActor)) })
+              else
+                effect
+          | _ => effect
+        }),
+      },
+    }
+
+  pure def resetMoonbeamSavedThisTurn(state: BattleState): BattleState =
+    {
+      ...state,
+      fighter: {
+        ...state.fighter,
+        activeEffects: state.fighter.activeEffects.map(effect => match effect {
+          | MoonbeamMovableZone(data) => MoonbeamMovableZone({ ...data, savedThisTurn: Set() })
+          | _ => effect
+        }),
+      },
+    }
+
+  pure def moonbeamDamageAfterSave(rolledDamage: int, savingThrowSucceeded: bool): int =
+    if (savingThrowSucceeded)
+      rolledDamage / 2
+    else
+      rolledDamage
+
+  pure def moonbeamAdjustedDamage(rolledDamage: int, savingThrowSucceeded: bool): int =
+    damageAfterAdjustments(
+      moonbeamDamageAfterSave(rolledDamage, savingThrowSucceeded),
+      Radiant,
+      Set(),
+      Set(),
+      Set(),
+    )
+
+  pure def combatantWithMoonbeamDamage(
+    target: Combatant,
+    rolledDamage: int,
+    savingThrowSucceeded: bool,
+  ): Combatant =
+    applyDamageFromSource(
+      target,
+      moonbeamAdjustedDamage(rolledDamage, savingThrowSucceeded),
+      1,
+      true,
+      OrdinaryDamage,
+      Fighter,
+    )
+
+  pure def resolveMoonbeamSave(
+    state: BattleState,
+    targetActor: Actor,
+    areaId: int,
+    savingThrowSucceeded: bool,
+    rolledDamage: int,
+  ): BattleState =
+    if (not(moonbeamActive(state, areaId)) or moonbeamSavedThisTurn(state, targetActor, areaId))
+      state
+    else {
+      val marked = markMoonbeamSavedThisTurn(state, targetActor, areaId)
+      match targetActor {
+        | Fighter => { ...marked, fighter: combatantWithMoonbeamDamage(marked.fighter, rolledDamage, savingThrowSucceeded) }
+        | Goblin => { ...marked, goblin: combatantWithMoonbeamDamage(marked.goblin, rolledDamage, savingThrowSucceeded) }
+      }
+    }
+
+  pure def endTurnWithMoonbeamSave(
+    state: BattleState,
+    targetActor: Actor,
+    areaId: int,
+    savingThrowSucceeded: bool,
+    rolledDamage: int,
+  ): BattleState =
+    endTurn(resetMoonbeamSavedThisTurn(resolveMoonbeamSave(state, targetActor, areaId, savingThrowSucceeded, rolledDamage)))
+
+  pure def resolveMoonbeamReposition(
+    state: BattleState,
+    areaId: int,
+    moveFeet: int,
+  ): BattleState =
+    if (
+      not(moonbeamActive(state, areaId)) or
+      currentActor(state) != Fighter or
+      not(state.actionAvailable) or
+      moveFeet <= 0 or
+      moveFeet > moonbeamActiveRepositionMaxMoveFeet(state, areaId)
+    )
+      state
+    else
+      { ...state, actionAvailable: false }
 
   pure def activeEffectsWithoutWebRestraintHazard(effects: Set[ActiveEffect], areaId: int): Set[ActiveEffect] =
     effects.filter(effect => match effect {

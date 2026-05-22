@@ -631,6 +631,7 @@ export function spellFillSet(
       if (
         invocation.procedure !== "fogCloudObscurement" &&
         invocation.procedure !== "magicalDarknessPointOrigin" &&
+        invocation.procedure !== "antimagicFieldOngoingSpellSuppression" &&
         invocation.procedure !== "flamingSphere" &&
         invocation.procedure !== "moonbeam" &&
         invocation.procedure !== "webRestraintHazard"

@@ -209,6 +209,7 @@ export function traceEffectAtomScaling(
     case "area_is_lightly_obscured":
     case "area_is_heavily_obscured":
     case "area_is_magical_darkness":
+    case "end_overlapping_spell_created_bright_or_dim_light":
     case "area_anchor_or_layering_requirement":
     case "area_has_strong_wind":
     case "prevent_ranged_weapon_attacks":

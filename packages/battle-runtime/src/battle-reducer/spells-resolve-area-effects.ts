@@ -2,12 +2,16 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-tracked-light-suppression
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
 import type {
   ActionSpellBattleResolutionInput,
+  BattleAntimagicFieldAreaChoice,
+  BattleMagicalDarknessAreaChoice,
   BattleSpellAreaChoice,
   BattleResolutionResult,
+  BattleTrackedOngoingSpellLightEmitter,
   SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import type { CombatantId } from "../identity.ts";
@@ -17,6 +21,7 @@ import {
   applyFlamingSphereCastEffect,
   applyFogCloudObscurementCastEffect,
   applyGustOfWindLineCastEffect,
+  applyAntimagicFieldOngoingSpellSuppressionCastEffect,
   applyMagicalDarknessPointOriginCastEffect,
   applyMoonbeamCastEffect,
   applyWebRestraintHazardCastEffect,
@@ -152,6 +157,14 @@ export function resolveMagicalDarknessPointOriginSpellAct(input: {
       "Darkness area id must be a non-empty magical Darkness area.",
     );
   }
+  const invalidOverlap = magicalDarknessAreaChoiceInvalidReason(
+    input.input.state,
+    input.fillSet.areaChoice,
+    input.invocation,
+  );
+  if (invalidOverlap !== null) {
+    return invalidResult(input.input.state, "invalidFill", invalidOverlap);
+  }
 
   const resourced = spendSpellCastResources({
     state: input.input.state,
@@ -165,7 +178,7 @@ export function resolveMagicalDarknessPointOriginSpellAct(input: {
   const nextState = applyMagicalDarknessPointOriginCastEffect({
     state: resourced.state,
     actorId: input.actorId,
-    areaId: input.fillSet.areaChoice.areaId,
+    areaChoice: input.fillSet.areaChoice,
     invocation: input.invocation,
   });
   return {
@@ -173,6 +186,153 @@ export function resolveMagicalDarknessPointOriginSpellAct(input: {
     state: nextState,
     snapshot: snapshotBattle(nextState),
   };
+}
+
+export function resolveAntimagicFieldOngoingSpellSuppressionAct(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "antimagicFieldOngoingSpellSuppression" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  if (
+    input.fillSet.targetId !== undefined ||
+    input.fillSet.objectTarget !== undefined ||
+    input.fillSet.targetAllocation !== undefined ||
+    input.fillSet.targetList !== undefined ||
+    input.fillSet.attackRoll !== undefined ||
+    input.fillSet.savingThrowOutcomes !== undefined ||
+    input.fillSet.skillChoice !== undefined ||
+    input.fillSet.abilityChoice !== undefined ||
+    input.fillSet.commandOptionChoice !== undefined ||
+    input.fillSet.damageTypeChoice !== undefined ||
+    input.fillSet.concentrationSavingThrows.length > 0 ||
+    input.fillSet.damageDispositions.length > 0 ||
+    input.fillSet.damageRoll !== undefined ||
+    input.fillSet.movement !== undefined ||
+    input.fillSet.spellDamageReductionRolls.length > 0 ||
+    input.fillSet.attackBurstDamageRoll !== undefined ||
+    input.fillSet.healingRoll !== undefined
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Antimagic Field uses one table-supplied antimagic Emanation fill.",
+    );
+  }
+  if (input.fillSet.areaChoice === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      spellAreaChoiceHole(input.invocation),
+    ]);
+  }
+  if (
+    input.fillSet.areaChoice.kind !== "antimagicFieldSelfEmanation" ||
+    input.fillSet.areaChoice.areaId.length === 0
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Antimagic Field area id must be a non-empty antimagic Emanation area.",
+    );
+  }
+  const invalidAffectedLights = antimagicFieldAreaChoiceInvalidReason(
+    input.input.state,
+    input.fillSet.areaChoice,
+  );
+  if (invalidAffectedLights !== null) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      invalidAffectedLights,
+    );
+  }
+
+  const resourced = spendSpellCastResources({
+    state: input.input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+  });
+  if (resourced.tag === "invalid") {
+    return resourced;
+  }
+  const nextState = applyAntimagicFieldOngoingSpellSuppressionCastEffect({
+    state: resourced.state,
+    actorId: input.actorId,
+    areaId: input.fillSet.areaChoice.areaId,
+    affectedOngoingSpellLights:
+      input.fillSet.areaChoice.affectedOngoingSpellLights,
+    invocation: input.invocation,
+  });
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function magicalDarknessAreaChoiceInvalidReason(
+  state: ActionSpellBattleResolutionInput["state"],
+  areaChoice: BattleMagicalDarknessAreaChoice,
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "magicalDarknessPointOrigin" }
+  >,
+): string | null {
+  const trackedEmitters = trackedOngoingSpellLightEmittersByEffectId(state);
+  for (const overlap of areaChoice.spellCreatedLightOverlaps) {
+    const emitter = trackedEmitters.get(overlap.sourceEffectId);
+    if (emitter === undefined) {
+      return "Darkness spell-light overlap must reference a tracked ongoing spell light.";
+    }
+    if (
+      emitter.sourceSpellLevel >
+      invocation.dispelledSpellCreatedLightMaxSpellLevel
+    ) {
+      return "Darkness can only dispel overlapping spell-created light at or below its supported spell level limit.";
+    }
+  }
+  return null;
+}
+
+function antimagicFieldAreaChoiceInvalidReason(
+  state: ActionSpellBattleResolutionInput["state"],
+  areaChoice: BattleAntimagicFieldAreaChoice,
+): string | null {
+  const trackedEmitters = trackedOngoingSpellLightEmittersByEffectId(state);
+  for (const affected of areaChoice.affectedOngoingSpellLights) {
+    if (!trackedEmitters.has(affected.sourceEffectId)) {
+      return "Antimagic Field affected light must reference a tracked ongoing spell light.";
+    }
+  }
+  return null;
+}
+
+function trackedOngoingSpellLightEmittersByEffectId(
+  state: ActionSpellBattleResolutionInput["state"],
+): ReadonlyMap<
+  BattleTrackedOngoingSpellLightEmitter["sourceEffectId"],
+  BattleTrackedOngoingSpellLightEmitter
+> {
+  return new Map(
+    state.lightEmitters.flatMap((emitter) =>
+      isTrackedOngoingSpellLightEmitter(emitter)
+        ? [[emitter.sourceEffectId, emitter]]
+        : [],
+    ),
+  );
+}
+
+function isTrackedOngoingSpellLightEmitter(
+  emitter: ActionSpellBattleResolutionInput["state"]["lightEmitters"][number],
+): emitter is BattleTrackedOngoingSpellLightEmitter {
+  return (
+    emitter.kind === "spellLightEmitter" &&
+    "sourceEffectId" in emitter &&
+    "sourceSpellLevel" in emitter
+  );
 }
 
 export function resolveFlamingSphereSpellAct(input: {

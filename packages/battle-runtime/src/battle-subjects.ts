@@ -142,6 +142,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "gustOfWindLine",
   "fogCloudObscurement",
   "magicalDarknessPointOrigin",
+  "antimagicFieldOngoingSpellSuppression",
   "flamingSphere",
   "moonbeam",
   "objectContactDamage",

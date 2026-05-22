@@ -54,6 +54,8 @@ Each task attempt also gets a generated `task-context.md` packet. It summarizes 
 
 Codex implementer rounds intentionally keep one stable session per task attempt. The first round runs non-ephemerally and stores the exact Codex session id in `implementation-implementer.session`; later review rounds resume that id. Chooser, reviewer, and decider sessions remain fresh-context so they can still catch stale assumptions and shared blind spots. The harness never resumes with `--last`.
 
+If a Codex implementer resume fails during remote pre-sampling compaction, the harness treats that specific failure as runner-context corruption rather than as a meaningful implementation result. It archives the failed session file as `implementation-implementer.session.compaction-failed.<timestamp>`, starts a fresh Codex implementer in the same task worktree with the current task prompt and reviewer feedback, and records a `codex-implementer-compaction-fallback` event. Other non-zero implementer exits are still reviewed normally because they may leave useful partial diffs.
+
 After the decider returns, Ralph writes `matrix-before.json`, `matrix-after.json`, and `matrix-delta.md` for the attempt. This is diagnostic: it shows whether generated inventory/matrix metrics moved, but it does not by itself decide task success.
 
 On non-final attempts, the decider may classify the task as `retry-same-task` and leave it runnable. On the final allowed attempt, the decider must choose one of:

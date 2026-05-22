@@ -38,7 +38,9 @@ module battleRuntimeConcentration {
         | ShiningSmiteIllumination(_) => false
         | FogCloudObscurement(_) => false
         | MagicalDarknessPointOrigin(_) => false
+        | AntimagicFieldOngoingSpellSuppression(_) => false
         | FlamingSphere(_) => false
+        | MoonbeamMovableZone(_) => false
         | WebRestraintHazard(_) => false
         | WebRestrained(_) => false
         | HeatMetalObjectContactDamage(_) => false

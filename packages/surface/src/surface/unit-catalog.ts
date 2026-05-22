@@ -7,6 +7,7 @@ import aidInput from "../../content/aid.json";
 import alterSelfInput from "../../content/alter_self.json";
 import animalFriendshipInput from "../../content/animal_friendship.json";
 import animalMessengerInput from "../../content/animal_messenger.json";
+import antimagicFieldInput from "../../content/antimagic_field.json";
 import arcanistsMagicAuraInput from "../../content/arcanists_magic_aura.json";
 import auguryInput from "../../content/augury.json";
 import backgroundSoldierInput from "../../content/background_soldier.json";
@@ -436,6 +437,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     alterSelfInput,
     animalFriendshipInput,
     animalMessengerInput,
+    antimagicFieldInput,
     arcanistsMagicAuraInput,
     auguryInput,
     barkskinInput,

@@ -15,6 +15,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-tracked-light-suppression
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
 
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
@@ -61,6 +62,7 @@ import {
 import type { CombatantId } from "../identity.ts";
 import { SHIELD_MAGIC_MISSILE_SPELL_ID } from "./domain-constants.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
+import { parseBattleSpellEffectLevel } from "./spells-effective-level.ts";
 
 import {
   hasSaveGateRepeatSaves,
@@ -345,6 +347,12 @@ export function supportedSpellActs(
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedMagicalDarknessPointOriginProfile(
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      supportedPreparedAntimagicFieldOngoingSpellSuppressionProfile(
         spell,
         spellcasting.spellSlots,
       ),
@@ -1162,7 +1170,13 @@ export function supportedPreparedMagicalDarknessPointOriginProfile(
     return [];
   }
   const attachment = spell.mechanics.attachment;
-  const operation = spell.mechanics.operations[0];
+  const darknessOperation = spell.mechanics.operations[0];
+  const overlapOperation = spell.mechanics.operations[1];
+  const maxSpellLevel =
+    overlapOperation?.effect.kind ===
+    "end_overlapping_spell_created_bright_or_dim_light"
+      ? parseBattleSpellEffectLevel(overlapOperation.effect.maxSpellLevel)
+      : null;
   const durationTicks =
     spell.mechanics.duration.kind === "concentration"
       ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.upTo)
@@ -1188,9 +1202,11 @@ export function supportedPreparedMagicalDarknessPointOriginProfile(
     spell.mechanics.duration.upTo.unit !== "minute" ||
     spell.mechanics.duration.upTo.amount !== 10 ||
     earlyEnd.length !== 0 ||
-    spell.mechanics.operations.length !== 1 ||
-    operation?.trigger.kind !== "passive" ||
-    operation.effect.kind !== "area_is_magical_darkness" ||
+    spell.mechanics.operations.length !== 2 ||
+    darknessOperation?.trigger.kind !== "passive" ||
+    darknessOperation.effect.kind !== "area_is_magical_darkness" ||
+    overlapOperation?.trigger.kind !== "passive" ||
+    maxSpellLevel === null ||
     area?.origin.kind !== "point_within_range" ||
     radius !== 15 ||
     durationTicks === null ||
@@ -1215,9 +1231,85 @@ export function supportedPreparedMagicalDarknessPointOriginProfile(
         },
         durationTicks: durationTicks.right,
         rangeFeet: movementFeet(rangeFeet),
+        dispelledSpellCreatedLightMaxSpellLevel: maxSpellLevel,
       },
     ];
   });
+}
+
+export function supportedPreparedAntimagicFieldOngoingSpellSuppressionProfile(
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  const profile = antimagicFieldOngoingSpellSuppressionSpell(spell);
+  if (profile === null) {
+    return [];
+  }
+
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+    if (Number(slot.spellLevel) < spell.mechanics.level) {
+      return [];
+    }
+    return [
+      {
+        access: { tag: "prepared" },
+        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+        procedure: "antimagicFieldOngoingSpellSuppression",
+        spell,
+        targeting: {
+          kind: "selfOriginEmanation",
+          radiusFeet: movementFeet(profile.radiusFeet),
+        },
+        durationTicks: profile.durationTicks,
+        rangeFeet: movementFeet(0),
+      },
+    ];
+  });
+}
+
+function antimagicFieldOngoingSpellSuppressionSpell(spell: SpellRecord): {
+  readonly radiusFeet: number;
+  readonly durationTicks: ElapsedTimeTicks;
+} | null {
+  if (spell.mechanics.family !== "ongoing_effect") {
+    return null;
+  }
+  const attachment = spell.mechanics.attachment;
+  const durationTicks =
+    spell.mechanics.duration.kind === "concentration"
+      ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.upTo)
+      : null;
+  const suppressOperation = spell.mechanics.operations.find(
+    (operation) =>
+      operation.trigger.kind === "passive" &&
+      operation.effect.kind === "suppress_ongoing_magic_effects",
+  );
+  if (
+    spell.mechanics.level !== 8 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "self" ||
+    spell.mechanics.duration.kind !== "concentration" ||
+    spell.mechanics.duration.upTo.unit !== "hour" ||
+    spell.mechanics.duration.upTo.amount !== 1 ||
+    attachment.kind !== "area" ||
+    attachment.origin.kind !== "self" ||
+    attachment.shape.kind !== "emanation" ||
+    attachment.shape.radiusFeet !== 10 ||
+    suppressOperation?.effect.kind !== "suppress_ongoing_magic_effects" ||
+    suppressOperation.effect.suppressedTimeCountsAgainstDuration !== true ||
+    !sameStringSet(suppressOperation.effect.exceptSources ?? [], [
+      "artifact",
+      "deity",
+    ]) ||
+    durationTicks === null ||
+    Either.isLeft(durationTicks)
+  ) {
+    return null;
+  }
+  return {
+    radiusFeet: attachment.shape.radiusFeet,
+    durationTicks: durationTicks.right,
+  };
 }
 
 export function supportedPreparedGustOfWindLineProfile(

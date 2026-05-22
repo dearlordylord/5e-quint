@@ -126,6 +126,14 @@ export function supportedSpellInvocationRef(
       procedure: "magicalDarknessPointOrigin",
     };
   }
+  if (invocation.procedure === "antimagicFieldOngoingSpellSuppression") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "antimagicFieldOngoingSpellSuppression",
+    };
+  }
   if (invocation.procedure === "webRestraintHazard") {
     return {
       tag: "spellSlot",

@@ -193,6 +193,21 @@ export function discoverSupportedSpellInvocations(
           },
         ];
       }
+      if (invocation.procedure === "antimagicFieldOngoingSpellSuppression") {
+        return [
+          {
+            subject: {
+              tag: "actionSpell" as const,
+              actorId,
+              invocation: supportedSpellInvocationRef(invocation),
+              mode: { tag: "cast" as const },
+            },
+            label: invocation.spell.name,
+            summary: `${spellActivationInvocationCastSummary(invocation)} The table supplies the antimagic Emanation area identity and affected ongoing spell lights.`,
+            initialHoles: [spellAreaChoiceHole(invocation)],
+          },
+        ];
+      }
       if (invocation.procedure === "webRestraintHazard") {
         return [
           {
@@ -1262,6 +1277,7 @@ export function spellActivationInvocationCastSummary(
         | "gustOfWindLine"
         | "fogCloudObscurement"
         | "magicalDarknessPointOrigin"
+        | "antimagicFieldOngoingSpellSuppression"
         | "flamingSphere"
         | "moonbeam"
         | "objectContactDamage"
@@ -1463,6 +1479,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "gustOfWindLine" &&
     invocation.procedure !== "fogCloudObscurement" &&
     invocation.procedure !== "magicalDarknessPointOrigin" &&
+    invocation.procedure !== "antimagicFieldOngoingSpellSuppression" &&
     invocation.procedure !== "flamingSphere" &&
     invocation.procedure !== "spellAttackSequence" &&
     invocation.procedure !== "shieldReaction"
@@ -1522,6 +1539,7 @@ export function readiedSpellAct(
     invocation.procedure === "gustOfWindLine" ||
     invocation.procedure === "fogCloudObscurement" ||
     invocation.procedure === "magicalDarknessPointOrigin" ||
+    invocation.procedure === "antimagicFieldOngoingSpellSuppression" ||
     invocation.procedure === "flamingSphere" ||
     invocation.procedure === "shieldReaction" ||
     (invocation.procedure === "spellAttackDamage" &&

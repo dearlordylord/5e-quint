@@ -487,6 +487,16 @@ export type BattleActiveEffect =
       >;
     })
   | (BattleSpellEffectBase & {
+      readonly kind: "antimagicFieldOngoingSpellSuppression";
+      readonly areaId: BattleAreaId;
+      readonly radiusFeet: MovementFeet;
+      readonly suppressedSpellLightEffectIds: readonly BattleSpellEffectOccurrenceId[];
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "concentration" }
+      >;
+    })
+  | (BattleSpellEffectBase & {
       readonly kind: "commandPending";
       readonly option: BattleCommandOption;
       readonly expiresAt: Extract<

@@ -175,6 +175,8 @@ export const acidSplashUnitId = "acid_splash";
 
 export const animalFriendshipUnitId = "animal_friendship";
 
+export const antimagicFieldUnitId = "antimagic_field";
+
 export const aidUnitId = "aid";
 
 export const alterSelfUnitId = "alter_self";

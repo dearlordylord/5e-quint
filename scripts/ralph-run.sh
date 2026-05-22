@@ -1526,6 +1526,39 @@ process.exit(1)
 NODE
 }
 
+codex_log_has_remote_compaction_failure() {
+  local log_file="$1"
+  [[ -f "$log_file" ]] || return 1
+  rg -q 'compact_remote|Failed to run pre-sampling compact|Error running remote compact task' "$log_file"
+}
+
+run_codex_persistent_implementer() {
+  local workspace="$1"
+  local prompt="$2"
+  local log_file="$3"
+  local output_file="$4"
+  local heartbeat_phase="$5"
+  local status=0
+  local -a args=(exec --json --dangerously-bypass-approvals-and-sandbox -C "$workspace" -o "$output_file")
+
+  if [[ -n "$codex_model" ]]; then
+    args+=("--model" "$codex_model")
+  fi
+
+  log "codex-persistent: $(quote_cmd codex "${args[@]}" -)"
+  set +e
+  if [[ "${RALPH_STREAM_LOGS:-0}" == "1" ]]; then
+    codex "${args[@]}" - <"$prompt" 2>&1 | tee -a "$log_file" >&2
+    status=${PIPESTATUS[0]}
+  else
+    codex "${args[@]}" - <"$prompt" >>"$log_file" 2>&1 &
+    wait_with_heartbeat "$!" "$heartbeat_phase" "$log_file" "$output_file"
+    status=$?
+  fi
+  set -e
+  return "$status"
+}
+
 run_codex_implementer() {
   local workspace="$1"
   local prompt="$2"
@@ -1554,22 +1587,20 @@ run_codex_implementer() {
       status=$?
     fi
     set -e
+    if [[ "$status" -ne 0 ]] && codex_log_has_remote_compaction_failure "$log_file"; then
+      local failed_session_file="$session_file.compaction-failed.$(date -u +%Y%m%dT%H%M%SZ)"
+      mv "$session_file" "$failed_session_file"
+      {
+        printf '\n[ralph] codex resume failed during remote compaction; archived session in %s\n' "$failed_session_file"
+        printf '[ralph] restarting implementer from fresh Codex context in the same task worktree\n'
+      } >>"$log_file"
+      note "task" "codex-implementer-compaction-fallback session=$session_id archived=$failed_session_file"
+      status=0
+      run_codex_persistent_implementer "$workspace" "$prompt" "$log_file" "$output_file" "codex-implementer-fresh-after-compaction" || status=$?
+    fi
   else
-    args=(exec --json --dangerously-bypass-approvals-and-sandbox -C "$workspace" -o "$output_file")
-    if [[ -n "$codex_model" ]]; then
-      args+=("--model" "$codex_model")
-    fi
-    log "codex-persistent: $(quote_cmd codex "${args[@]}" -)"
-    set +e
-    if [[ "${RALPH_STREAM_LOGS:-0}" == "1" ]]; then
-      codex "${args[@]}" - <"$prompt" 2>&1 | tee "$log_file" >&2
-      status=${PIPESTATUS[0]}
-    else
-      codex "${args[@]}" - <"$prompt" >"$log_file" 2>&1 &
-      wait_with_heartbeat "$!" "codex-implementer" "$log_file" "$output_file"
-      status=$?
-    fi
-    set -e
+    : >"$log_file"
+    run_codex_persistent_implementer "$workspace" "$prompt" "$log_file" "$output_file" "codex-implementer" || status=$?
   fi
 
   local observed_session_id=""

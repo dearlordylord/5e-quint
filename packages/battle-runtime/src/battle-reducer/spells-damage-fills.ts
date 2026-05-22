@@ -940,6 +940,10 @@ export function spellAreaTargetingLabel(
     Match.when({ kind: "selfOriginCone" }, () => "self-origin Cone"),
     Match.when({ kind: "selfOriginLine" }, () => "self-origin Line"),
     Match.when(
+      { kind: "selfOriginEmanation" },
+      () => "self-origin Emanation",
+    ),
+    Match.when(
       { kind: "primaryTargetOriginEmanation" },
       () => "primary-target-origin Emanation",
     ),

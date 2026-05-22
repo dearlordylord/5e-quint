@@ -1350,6 +1350,10 @@ type EffectAtom =
   | { readonly kind: "area_is_heavily_obscured" }
   | { readonly kind: "area_is_magical_darkness" }
   | {
+      readonly kind: "end_overlapping_spell_created_bright_or_dim_light";
+      readonly maxSpellLevel: number;
+    }
+  | {
       readonly kind: "area_anchor_or_layering_requirement";
       readonly anchor: {
         readonly kind: "between_solid_masses";
@@ -3338,6 +3342,10 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       Schema.Struct({ kind: Schema.Literal("area_is_lightly_obscured") }),
       Schema.Struct({ kind: Schema.Literal("area_is_heavily_obscured") }),
       Schema.Struct({ kind: Schema.Literal("area_is_magical_darkness") }),
+      Schema.Struct({
+        kind: Schema.Literal("end_overlapping_spell_created_bright_or_dim_light"),
+        maxSpellLevel: Schema.Number,
+      }),
       strictStruct({
         kind: Schema.Literal("area_anchor_or_layering_requirement"),
         anchor: strictStruct({
