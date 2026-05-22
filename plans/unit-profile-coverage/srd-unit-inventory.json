@@ -208,13 +208,13 @@
     },
     "levelThreeSpellBattleReadiness": {
       "denominator": 128,
-      "numerator": 16,
-      "percent": "12.5%",
+      "numerator": 20,
+      "percent": "15.6%",
       "rowsByStatus": {
         "battle-runtime-required": 58,
-        "accepted-no-battle-effect": 9,
+        "accepted-no-battle-effect": 13,
         "partial-battle-runtime": 8,
-        "owner-evidence-required": 46,
+        "owner-evidence-required": 42,
         "accepted": 7
       }
     },
@@ -233,9 +233,9 @@
       "catalog-installed-owner-evidence-present": 413,
       "non-runtime": 24,
       "catalog-installed-owner-evidence-required": 9,
-      "catalog-only/dead-for-now": 129,
+      "catalog-only/dead-for-now": 133,
       "missing-authored-record": 58,
-      "catalog-authored-review-required": 46,
+      "catalog-authored-review-required": 42,
       "catalog-authored-executable-follow-up": 4,
       "catalog-installed-needs-owner-evidence": 1
     },
@@ -247,9 +247,9 @@
     },
     "levelThreeSpellPressureRowsByDisposition": {
       "missing-authored-record": 58,
-      "catalog-only/dead-for-now": 9,
+      "catalog-only/dead-for-now": 13,
       "catalog-installed-owner-evidence-present": 15,
-      "catalog-authored-review-required": 46
+      "catalog-authored-review-required": 42
     },
     "levelThreeInstalledSpellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 15
@@ -13896,7 +13896,7 @@
       "detail": "Water Breathing (Transmutation; R)",
       "candidateUnitId": "water_breathing",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -13907,10 +13907,17 @@
         "state": "not-installed",
         "unitId": "water_breathing"
       },
-      "finalDisposition": "catalog-authored-review-required",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached table/environment suffocation and underwater-breathing owner",
+        "reason": "Water Breathing supplies a table-facing breathing capability for willing targets, but promoted battle runtime does not own underwater environment membership, breath availability, hold-breath clocks, suffocation turn progression, or restoration cleanup for this spell. Those facts belong to a table/environment hazard owner rather than duplicate spell-local state."
+      },
       "ownerEvidence": [],
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Water Breathing supplies a table-facing breathing capability for willing targets, but promoted battle runtime does not own underwater environment membership, breath availability, hold-breath clocks, suffocation turn progression, or restoration cleanup for this spell. Those facts belong to a table/environment hazard owner rather than duplicate spell-local state.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_water_walk",
@@ -19767,7 +19774,7 @@
       "detail": "Water Breathing (Transmutation; R)",
       "candidateUnitId": "water_breathing",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -19778,10 +19785,17 @@
         "state": "not-installed",
         "unitId": "water_breathing"
       },
-      "finalDisposition": "catalog-authored-review-required",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached table/environment suffocation and underwater-breathing owner",
+        "reason": "Water Breathing supplies a table-facing breathing capability for willing targets, but promoted battle runtime does not own underwater environment membership, breath availability, hold-breath clocks, suffocation turn progression, or restoration cleanup for this spell. Those facts belong to a table/environment hazard owner rather than duplicate spell-local state."
+      },
       "ownerEvidence": [],
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Water Breathing supplies a table-facing breathing capability for willing targets, but promoted battle runtime does not own underwater environment membership, breath availability, hold-breath clocks, suffocation turn progression, or restoration cleanup for this spell. Those facts belong to a table/environment hazard owner rather than duplicate spell-local state.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_water_walk",
@@ -24646,7 +24660,7 @@
       "detail": "Water Breathing (Transmutation; R)",
       "candidateUnitId": "water_breathing",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -24657,10 +24671,17 @@
         "state": "not-installed",
         "unitId": "water_breathing"
       },
-      "finalDisposition": "catalog-authored-review-required",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached table/environment suffocation and underwater-breathing owner",
+        "reason": "Water Breathing supplies a table-facing breathing capability for willing targets, but promoted battle runtime does not own underwater environment membership, breath availability, hold-breath clocks, suffocation turn progression, or restoration cleanup for this spell. Those facts belong to a table/environment hazard owner rather than duplicate spell-local state."
+      },
       "ownerEvidence": [],
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Water Breathing supplies a table-facing breathing capability for willing targets, but promoted battle runtime does not own underwater environment membership, breath availability, hold-breath clocks, suffocation turn progression, or restoration cleanup for this spell. Those facts belong to a table/environment hazard owner rather than duplicate spell-local state.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_water_walk",
@@ -31918,7 +31939,7 @@
       "detail": "Water Breathing (Transmutation; R)",
       "candidateUnitId": "water_breathing",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -31929,10 +31950,17 @@
         "state": "not-installed",
         "unitId": "water_breathing"
       },
-      "finalDisposition": "catalog-authored-review-required",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached table/environment suffocation and underwater-breathing owner",
+        "reason": "Water Breathing supplies a table-facing breathing capability for willing targets, but promoted battle runtime does not own underwater environment membership, breath availability, hold-breath clocks, suffocation turn progression, or restoration cleanup for this spell. Those facts belong to a table/environment hazard owner rather than duplicate spell-local state."
+      },
       "ownerEvidence": [],
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Water Breathing supplies a table-facing breathing capability for willing targets, but promoted battle runtime does not own underwater environment membership, breath availability, hold-breath clocks, suffocation turn progression, or restoration cleanup for this spell. Those facts belong to a table/environment hazard owner rather than duplicate spell-local state.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     }
   ]
 }
