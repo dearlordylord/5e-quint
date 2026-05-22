@@ -91,7 +91,7 @@
     {
       "number": 21,
       "id": "L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Continual Flame Dispel And Suppression Removal"
     },
     {
@@ -335,7 +335,7 @@ Output:
 
 ### Task 21 - L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL - Continual Flame Dispel And Suppression Removal
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `continual_flame`. Follow-up split from Task 28.
 
