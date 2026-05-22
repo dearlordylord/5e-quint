@@ -1,7 +1,7 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE
 
-// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle spell.invocation-ray-of-enfeeblement-damage-penalty
 
 module battleRuntimeSaveGatedSpell {
   import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"
@@ -141,6 +141,9 @@ module battleRuntimeSaveGatedSpell {
     Set(RayOfEnfeeblementD20Lifecycle({
       source: source,
       durationTicks: rayOfEnfeeblementD20LifecycleDurationTicks,
+    }), RayOfEnfeeblementDamageRollPenalty({
+      source: source,
+      durationTicks: rayOfEnfeeblementD20LifecycleDurationTicks,
     }))
 
   pure def rayOfEnfeeblementD20LifecycleEffectFromSource(
@@ -150,6 +153,7 @@ module battleRuntimeSaveGatedSpell {
     match effect {
       | RayOfEnfeeblementNextAttackDisadvantage(data) => data.source == source
       | RayOfEnfeeblementD20Lifecycle(data) => data.source == source
+      | RayOfEnfeeblementDamageRollPenalty(data) => data.source == source
       | _ => false
     }
 
@@ -185,10 +189,114 @@ module battleRuntimeSaveGatedSpell {
     if (savingThrowSucceeded)
       effects.filter(effect => match effect {
         | RayOfEnfeeblementD20Lifecycle(data) => data.source != source
+        | RayOfEnfeeblementDamageRollPenalty(data) => data.source != source
         | _ => true
       })
     else
       effects
+
+  pure def rayOfEnfeeblementDamageRollPenaltyApplies(
+    effects: Set[ActiveEffect],
+    source: Actor,
+  ): bool =
+    effects.exists(effect => match effect {
+      | RayOfEnfeeblementDamageRollPenalty(data) => data.source == source
+      | _ => false
+    })
+
+  pure def damageAfterRayOfEnfeeblementDamageRollPenalty(
+    effects: Set[ActiveEffect],
+    source: Actor,
+    rolledDamage: int,
+    penaltyRoll: int,
+  ): int =
+    if (rolledDamage > 0 and rayOfEnfeeblementDamageRollPenaltyApplies(effects, source))
+      if (rolledDamage - penaltyRoll < 0) 0 else rolledDamage - penaltyRoll
+    else
+      rolledDamage
+
+  pure def saveGatedDamageAfterRayPenaltyAndTargetAdjustments(
+    invocation: SaveGatedDamageInvocation,
+    sourceEffects: Set[ActiveEffect],
+    source: Actor,
+    rolledDamage: int,
+    penaltyRoll: int,
+    savingThrowSucceeded: bool,
+    resistances: Set[DamageType],
+    vulnerabilities: Set[DamageType],
+    immunities: Set[DamageType],
+  ): int = {
+    val sourceAdjustedDamage =
+      damageAfterRayOfEnfeeblementDamageRollPenalty(sourceEffects, source, rolledDamage, penaltyRoll)
+    damageAfterAdjustments(
+      saveGatedDamageAmount(invocation, sourceAdjustedDamage, savingThrowSucceeded),
+      saveGatedDamageType(invocation),
+      resistances,
+      vulnerabilities,
+      immunities,
+    )
+  }
+
+  pure def saveGatedDamageAfterRayPenaltyResistanceSpellReduction(
+    invocation: SaveGatedDamageInvocation,
+    sourceEffects: Set[ActiveEffect],
+    targetEffects: Set[ActiveEffect],
+    source: Actor,
+    rolledDamage: int,
+    penaltyRoll: int,
+    savingThrowSucceeded: bool,
+    resistances: Set[DamageType],
+    vulnerabilities: Set[DamageType],
+    immunities: Set[DamageType],
+    reductionRoll: int,
+  ): int =
+    damageAfterResistanceSpellReduction(
+      saveGatedDamageAfterRayPenaltyAndTargetAdjustments(
+        invocation,
+        sourceEffects,
+        source,
+        rolledDamage,
+        penaltyRoll,
+        savingThrowSucceeded,
+        resistances,
+        vulnerabilities,
+        immunities,
+      ),
+      saveGatedDamageType(invocation),
+      targetEffects,
+      reductionRoll,
+    )
+
+  pure def saveGatedDamageTargetAfterRayPenaltyLifecycle(
+    invocation: SaveGatedDamageInvocation,
+    target: Combatant,
+    sourceEffects: Set[ActiveEffect],
+    source: Actor,
+    rolledDamage: int,
+    penaltyRoll: int,
+    savingThrowSucceeded: bool,
+    resistances: Set[DamageType],
+    vulnerabilities: Set[DamageType],
+    immunities: Set[DamageType],
+    reductionRoll: int,
+    concentrationSaveSucceeded: bool,
+  ): Combatant = {
+    val reducedDamage =
+      saveGatedDamageAfterRayPenaltyResistanceSpellReduction(
+        invocation,
+        sourceEffects,
+        target.activeEffects,
+        source,
+        rolledDamage,
+        penaltyRoll,
+        savingThrowSucceeded,
+        resistances,
+        vulnerabilities,
+        immunities,
+        reductionRoll,
+      )
+    applyDamageFromSource(target, reducedDamage, 1, concentrationSaveSucceeded, OrdinaryDamage, source)
+  }
 
   pure def rayOfEnfeeblementD20LifecycleAttackRollMode(
     effects: Set[ActiveEffect],

@@ -1,13 +1,17 @@
 // Chained spell attack-damage resolution, currently Chromatic Orb.
 // Extracted from spells-resolve.ts as a procedure-local resolver slice.
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import {
   attackRollHits,
   attackRollResultIsValid,
 } from "@dnd/shared-algebras/attack-roll-algebra";
-import { validateRolledDiceForDiceExpr } from "@dnd/shared-algebras/runtime-dice-algebra";
+import {
+  rolledDiceTotal,
+  validateRolledDiceForDiceExpr,
+} from "@dnd/shared-algebras/runtime-dice-algebra";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import type { DamageType } from "@dnd/surface/surface/types";
 import {
@@ -51,7 +55,14 @@ import {
   damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
   damageLifecycleHideousLaughterDamageRepeatSaveHoles,
 } from "./damage-apply.ts";
-import { damageAmountAfterTargetAdjustments } from "./damage-helpers.ts";
+import {
+  addDamageAmountForType,
+  applyAvailableSourceDamageRollPenalty,
+  damageAmountByTypeAfterTargetAdjustments,
+  damageAmountAfterTargetAdjustments,
+  isSourceDamageRollPenaltyRollFill,
+  sourceDamageRollPenaltyRollForDamageRoll,
+} from "./damage-helpers.ts";
 import { isHideousLaughterDamageRepeatSaveFill } from "./hideous-laughter-repeat-save.ts";
 import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
@@ -112,6 +123,10 @@ export type ChainedSpellFillSet =
       readonly damageDispositions: readonly Extract<
         BattleFill,
         { readonly kind: "attackDamageDisposition" }
+      >[];
+      readonly sourceDamageRollPenaltyRolls: readonly Extract<
+        BattleFill,
+        { readonly kind: "rolledDice" }
       >[];
       readonly reactionSpellTargetFacts: readonly BattleSpellCastReactionFact[];
     }
@@ -487,11 +502,38 @@ export function resolveChainedSpellAttackDamageAct(input: {
     if (damageValidation !== null) {
       return invalidResult(input.input.state, "invalidFill", damageValidation);
     }
-    const damageAmount = chainedSpellDamageAmountForTarget(
-      target,
+    const damageByType = chainedSpellDamageByType(
       input.invocation,
       selectedDamageType,
       step.damageRoll,
+    );
+    const damageSource = replayState.combatants.get(input.actorId);
+    const sourcePenalty = applyAvailableSourceDamageRollPenalty(
+      damageSource,
+      damageByType,
+      step.damageRoll.holeId,
+      sourceDamageRollPenaltyRollForDamageRoll(
+        fillSet.sourceDamageRollPenaltyRolls,
+        damageSource,
+        damageByType,
+        step.damageRoll.holeId,
+      ),
+    );
+    if (sourcePenalty.tag === "invalid") {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        "Source damage roll penalty does not match an active source-side damage penalty.",
+      );
+    }
+    if (sourcePenalty.tag === "needsHoles") {
+      return needsHolesResult(replayState, input.input.subject, [
+        ...sourcePenalty.holes,
+      ]);
+    }
+    const damageAmount = damageAmountByTypeAfterTargetAdjustments(
+      target,
+      sourcePenalty.damageByType,
     );
     const damageEventKey = [
       "battle:spell:chained-damage-event",
@@ -598,6 +640,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
       input.invocation,
       selectedDamageType,
       step.damageRoll,
+      damageAmount,
       critical,
       concentrationFill,
       damageDispositionForTarget(
@@ -740,6 +783,10 @@ export function chainedSpellFillSet(
     BattleFill,
     { readonly kind: "attackDamageDisposition" }
   >[] = [];
+  const sourceDamageRollPenaltyRolls: Extract<
+    BattleFill,
+    { readonly kind: "rolledDice" }
+  >[] = [];
   let reactionSpellTargetFacts: readonly SpellCastReactionFact[] = [];
   let reactionSpellTargetFactsFilled = false;
 
@@ -760,6 +807,20 @@ export function chainedSpellFillSet(
       }
       reactionSpellTargetFacts = spellCastReactionFacts.facts;
       reactionSpellTargetFactsFilled = true;
+      continue;
+    }
+    if (fill.kind === "rolledDice" && isSourceDamageRollPenaltyRollFill(fill)) {
+      if (
+        sourceDamageRollPenaltyRolls.some(
+          (candidate) => candidate.holeId === fill.holeId,
+        )
+      ) {
+        return {
+          tag: "invalid",
+          message: "Source damage roll penalty was filled twice.",
+        };
+      }
+      sourceDamageRollPenaltyRolls.push(fill);
       continue;
     }
     if (fill.kind === "damageTypeChoice") {
@@ -884,6 +945,7 @@ export function chainedSpellFillSet(
     concentrationSavingThrows,
     hideousLaughterDamageRepeatSaves,
     damageDispositions,
+    sourceDamageRollPenaltyRolls,
     reactionSpellTargetFacts,
   };
 }
@@ -1052,6 +1114,22 @@ export function chainedSpellDamageAmountForTarget(
   );
 }
 
+function chainedSpellDamageByType(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "chainedSpellAttackDamage" }
+  >,
+  damageType: DamageType,
+  damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+): ReadonlyMap<DamageType, number> {
+  const diceTotal = rolledDiceTotal(damageRoll.value);
+  return addDamageAmountForType(
+    new Map(),
+    damageType,
+    diceTotal + (invocation.damage.expr.flat ?? 0),
+  );
+}
+
 export function applyChainedSpellDamage(
   state: BattleState,
   targetId: CombatantId,
@@ -1061,6 +1139,7 @@ export function applyChainedSpellDamage(
   >,
   damageType: DamageType,
   damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+  damageAmount: number,
   critical: boolean,
   concentrationSavingThrow:
     | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
@@ -1080,12 +1159,9 @@ export function applyChainedSpellDamage(
   if (target === undefined) {
     return state;
   }
-  const damageAmount = chainedSpellDamageAmountForTarget(
-    target,
-    invocation,
-    damageType,
-    damageRoll,
-  );
+  void invocation;
+  void damageType;
+  void damageRoll;
   return applyBattleHitPointDamage({
     state,
     target,

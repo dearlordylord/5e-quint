@@ -36,7 +36,15 @@
         "value": {
           "kind": "target",
           "selection": {
-            "mode": "one"
+            "mode": "one",
+            "relativePosition": {
+              "attachmentHoleId": "spiritual_weapon_force",
+              "feet": 5,
+              "kind": "within_feet_of_attachment"
+            },
+            "targetKinds": [
+              "creature"
+            ]
           }
         }
       },
@@ -72,51 +80,68 @@
     "operations": [
       {
         "effect": {
-          "kind": "reposition_attachment",
-          "maxMoveFeet": 20
-        },
-        "trigger": {
-          "cost": {
-            "kind": "bonus_action"
-          },
-          "kind": "on_caster_spends_action"
-        }
-      },
-      {
-        "effect": {
-          "attackKind": "melee_spell_attack",
-          "kind": "attack_roll",
-          "onHit": [
+          "effects": [
             {
-              "amount": {
-                "axis": "slot",
-                "base": {
-                  "dice": 1,
-                  "dieSize": 8,
-                  "spellcastingMod": true
-                },
-                "kind": "linear_per_level",
-                "perLevel": {
-                  "dice": 1,
-                  "dieSize": 8
-                },
-                "startingAtLevel": 2
+              "kind": "reposition_attachment",
+              "maxMoveFeet": 20
+            },
+            {
+              "attachment": {
+                "holeId": "spiritual_weapon_attack_target",
+                "kind": "hole",
+                "label": "creature within 5 feet of the force",
+                "value": {
+                  "kind": "target",
+                  "selection": {
+                    "mode": "one",
+                    "relativePosition": {
+                      "attachmentHoleId": "spiritual_weapon_force",
+                      "feet": 5,
+                      "kind": "within_feet_of_attachment"
+                    },
+                    "targetKinds": [
+                      "creature"
+                    ]
+                  }
+                }
               },
-              "damageType": "force",
-              "kind": "damage"
+              "attackKind": "melee_spell_attack",
+              "kind": "attack_roll",
+              "onHit": [
+                {
+                  "amount": {
+                    "axis": "slot",
+                    "base": {
+                      "dice": 1,
+                      "dieSize": 8,
+                      "spellcastingMod": true
+                    },
+                    "kind": "linear_per_level",
+                    "perLevel": {
+                      "dice": 1,
+                      "dieSize": 8
+                    },
+                    "startingAtLevel": 2
+                  },
+                  "damageType": "force",
+                  "kind": "damage"
+                }
+              ],
+              "onMiss": [
+                {
+                  "kind": "none"
+                }
+              ]
             }
           ],
-          "onMiss": [
-            {
-              "kind": "none"
-            }
-          ]
+          "kind": "composite_ongoing"
         },
         "trigger": {
           "cost": {
             "kind": "bonus_action"
           },
-          "kind": "on_caster_spends_action"
+          "kind": "on_caster_spends_action",
+          "laterTurnsOnly": true
         }
       }
     ],

@@ -11,6 +11,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-weapon-enhancement
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
@@ -3022,6 +3023,10 @@ export type SupportedSpellInvocation =
         BattleActiveEffect,
         { readonly kind: "abilityD20TestRollModeEndTurnSave" }
       >;
+      readonly failedSaveDamagePenaltyEffect: Extract<
+        BattleActiveEffect,
+        { readonly kind: "sourceDamageRollPenalty" }
+      >;
     }
   | {
       readonly access: PreparedSpellAccess;
@@ -4238,6 +4243,12 @@ export type BattleSpellDamageReductionRollHole = Extract<
 > & {
   readonly spellDamageReduction: SpellDamageReductionRoll;
 };
+export type BattleSourceDamageRollPenaltyRollHole = Extract<
+  RuntimeHole,
+  { readonly kind: "rolledDice" }
+> & {
+  readonly sourceDamageRollPenalty: SourceDamageRollPenaltyRoll;
+};
 export type BattleMirrorImageDuplicateRollHole = Extract<
   RuntimeHole,
   { readonly kind: "rolledDice" }
@@ -5077,6 +5088,7 @@ export type BattleHole =
   | BattleDamageRollHole
   | BattleSpellDamageRollHole
   | BattleSpellDamageReductionRollHole
+  | BattleSourceDamageRollPenaltyRollHole
   | BattleMirrorImageDuplicateRollHole
   | BattleSpellTurnStartDamageRollHole
   | BattleFlamingSphereDamageRollHole
@@ -5148,6 +5160,22 @@ export type SpellDamageReductionRoll = Omit<
   readonly amount: {
     readonly dice: 1;
     readonly dieSize: 4;
+  };
+};
+export type SourceDamageRollPenaltyFill = {
+  readonly sourceSpellId: SpellRecord["id"];
+  readonly sourceCombatantId: CombatantId;
+  readonly affectedCombatantId: CombatantId;
+  readonly damageRollHoleId: BattleHoleId;
+  readonly roll: DieRollResult;
+};
+export type SourceDamageRollPenaltyRoll = Omit<
+  SourceDamageRollPenaltyFill,
+  "roll"
+> & {
+  readonly amount: {
+    readonly dice: 1;
+    readonly dieSize: 8;
   };
 };
 export type BattleFill =

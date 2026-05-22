@@ -1,6 +1,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // Spell resolution dispatch (Cluster L). Mechanical extraction from
 // battle-reducer.ts. The largest cluster in the file: master spell-act
 // resolvers (`resolveSpellAct`, `resolveAttackBurstSaveDamageSpellAct`,
@@ -76,8 +77,12 @@ import {
 import {
   activeMarkedDamageRiders,
   applyAvailableSpellDamageReduction,
+  applyAvailableSourceDamageRollPenalty,
   damageAmountByTypeAfterTargetAdjustments,
   spellDamageReductionRollForTarget,
+  sourceDamageRollPenaltyRollHoleForDamageRoll,
+  sourceDamageRollPenaltyRollForDamageRoll,
+  unexpectedSourceDamageRollPenaltyRoll,
 } from "./damage-helpers.ts";
 import { needsHolesResult, revealHidden } from "./hole-helpers.ts";
 import { applyDashToActor } from "./attack-resolution.ts";
@@ -96,7 +101,8 @@ import {
   applySpellActiveEffects,
   applySpellLightEmitterEffects,
   applySpellDamage,
-  spellObjectDamageOutcome,
+  spellObjectDamageByType,
+  spellObjectDamageOutcomeFromDamageByType,
   spellObjectTargetFact,
   spellObjectTargetSightFact,
   spellObjectTargetHole,
@@ -1378,7 +1384,9 @@ export function resolveSpellAct(
     }
     if (
       !hit &&
-      (fillSet.damageRoll != null || fillSet.damageDispositions.length > 0)
+      (fillSet.damageRoll != null ||
+        fillSet.damageDispositions.length > 0 ||
+        fillSet.sourceDamageRollPenaltyRolls.length > 0)
     ) {
       return invalidResult(
         input.state,
@@ -1411,6 +1419,13 @@ export function resolveSpellAct(
   }
   const damageInvocation = invocationForResolution;
   if (fillSet.damageRoll == null) {
+    if (fillSet.sourceDamageRollPenaltyRolls.length > 0) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Source damage roll penalty does not match an active source-side damage penalty.",
+      );
+    }
     return needsHolesResult(castingState, input.subject, [
       spellDamageHole(damageInvocation),
     ]);
@@ -1480,16 +1495,61 @@ export function resolveSpellAct(
     fillSet.spellDamageReductionRolls,
     target,
   );
+  const spellDamageByType = spellDamageByTypeForTarget(
+    target,
+    damageInvocation,
+    fillSet.damageRoll,
+    "full",
+    spellMarkedDamageRiders,
+    critical,
+  );
+  const damageSource = spellResolutionState.combatants.get(subject.actorId);
+  const expectedSourcePenaltyHole =
+    sourceDamageRollPenaltyRollHoleForDamageRoll(
+      damageSource,
+      spellDamageByType,
+      fillSet.damageRoll.holeId,
+    );
+  if (
+    unexpectedSourceDamageRollPenaltyRoll(
+      fillSet.sourceDamageRollPenaltyRolls,
+      expectedSourcePenaltyHole === null ? [] : [expectedSourcePenaltyHole],
+    ) !== undefined
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Source damage roll penalty does not match an active source-side damage penalty.",
+    );
+  }
+  const sourceDamageRollPenaltyRoll =
+    sourceDamageRollPenaltyRollForDamageRoll(
+      fillSet.sourceDamageRollPenaltyRolls,
+      damageSource,
+      spellDamageByType,
+      fillSet.damageRoll.holeId,
+    );
+  const sourcePenalty = applyAvailableSourceDamageRollPenalty(
+    damageSource,
+    spellDamageByType,
+    fillSet.damageRoll.holeId,
+    sourceDamageRollPenaltyRoll,
+  );
+  if (sourcePenalty.tag === "invalid") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Source damage roll penalty does not match an active source-side damage penalty.",
+    );
+  }
+  if (sourcePenalty.tag === "needsHoles") {
+    return needsHolesResult(spellResolutionState, input.subject, [
+      ...sourcePenalty.holes,
+    ]);
+  }
   const spellReduction = applyAvailableSpellDamageReduction(
     target,
-    spellDamageByTypeForTarget(
-      target,
-      damageInvocation,
-      fillSet.damageRoll,
-      "full",
-      spellMarkedDamageRiders,
-      critical,
-    ),
+    sourcePenalty.damageByType,
     spellReductionRoll,
   );
   if (spellReduction.tag === "invalid") {
@@ -1600,6 +1660,7 @@ export function resolveSpellAct(
         target.combatantId,
       ),
       spellMarkedDamageRiders,
+      sourceDamageRollPenaltyRoll,
       spellDamageReductionRoll: spellReductionRoll,
       hideousLaughterDamageRepeatSaves:
         fillSet.hideousLaughterDamageRepeatSaves,
@@ -1883,7 +1944,8 @@ function resolveSpellAttackDamageObjectTarget(input: {
   if (
     !hit &&
     (input.fillSet.damageRoll != null ||
-      input.fillSet.damageDispositions.length > 0)
+      input.fillSet.damageDispositions.length > 0 ||
+      input.fillSet.sourceDamageRollPenaltyRolls.length > 0)
   ) {
     return invalidResult(
       input.input.state,
@@ -1904,6 +1966,13 @@ function resolveSpellAttackDamageObjectTarget(input: {
     });
   }
   if (input.fillSet.damageRoll == null) {
+    if (input.fillSet.sourceDamageRollPenaltyRolls.length > 0) {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        "Source damage roll penalty does not match an active source-side damage penalty.",
+      );
+    }
     return needsHolesResult(attackRolledState, input.input.subject, [
       spellDamageHole(input.invocation, critical),
     ]);
@@ -1927,6 +1996,55 @@ function resolveSpellAttackDamageObjectTarget(input: {
       "Object-target spell damage does not use combatant damage, Concentration, or spell-reduction fills.",
     );
   }
+  const objectDamageByType = spellObjectDamageByType(
+    input.invocation,
+    input.fillSet.damageRoll,
+    critical,
+  );
+  const objectDamageSource = attackRolledState.combatants.get(input.actorId);
+  const expectedSourcePenaltyHole =
+    sourceDamageRollPenaltyRollHoleForDamageRoll(
+      objectDamageSource,
+      objectDamageByType,
+      input.fillSet.damageRoll.holeId,
+    );
+  if (
+    unexpectedSourceDamageRollPenaltyRoll(
+      input.fillSet.sourceDamageRollPenaltyRolls,
+      expectedSourcePenaltyHole === null ? [] : [expectedSourcePenaltyHole],
+    ) !== undefined
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Source damage roll penalty does not match an active source-side damage penalty.",
+    );
+  }
+  const sourceDamageRollPenaltyRoll =
+    sourceDamageRollPenaltyRollForDamageRoll(
+      input.fillSet.sourceDamageRollPenaltyRolls,
+      objectDamageSource,
+      objectDamageByType,
+      input.fillSet.damageRoll.holeId,
+    );
+  const sourcePenalty = applyAvailableSourceDamageRollPenalty(
+    objectDamageSource,
+    objectDamageByType,
+    input.fillSet.damageRoll.holeId,
+    sourceDamageRollPenaltyRoll,
+  );
+  if (sourcePenalty.tag === "invalid") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Source damage roll penalty does not match an active source-side damage penalty.",
+    );
+  }
+  if (sourcePenalty.tag === "needsHoles") {
+    return needsHolesResult(attackRolledState, input.input.subject, [
+      ...sourcePenalty.holes,
+    ]);
+  }
 
   const lit = applySpellLightEmitterEffects(
     attackRolledState,
@@ -1947,11 +2065,10 @@ function resolveSpellAttackDamageObjectTarget(input: {
   if (spentResources.tag !== "resolved") {
     return spentResources;
   }
-  const objectDamage = spellObjectDamageOutcome({
+  const objectDamage = spellObjectDamageOutcomeFromDamageByType({
     objectId: input.fillSet.objectTarget.objectId,
-    invocation: input.invocation,
-    damageRoll: input.fillSet.damageRoll,
-    critical,
+    damageType: input.invocation.damage.damageType,
+    damageByType: sourcePenalty.damageByType,
     disposition: objectFact.damageDisposition,
   });
   const objectIgnitions =

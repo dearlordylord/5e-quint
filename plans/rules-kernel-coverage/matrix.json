@@ -24,13 +24,13 @@
     "obligations[].profiles": "Derived from profileObligations by obligation id; authored obligations.jsonl rows must not contain profiles."
   },
   "battleHoleFrontierSummary": {
-    "total": 103,
+    "total": 104,
     "bySubject": {
-      "battle-hole-family": 64,
+      "battle-hole-family": 65,
       "battle-fill-kind": 39
     },
     "byClassification": {
-      "semantic-frontier": 80,
+      "semantic-frontier": 81,
       "deterministic-boundary-projection": 0,
       "table-owned-fact": 23,
       "unsupported-dead-branch": 0
@@ -2446,6 +2446,18 @@
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "rolledDice",
+      "id": "BattleSourceDamageRollPenaltyRollHole",
+      "reason": "A source-side damage-roll penalty roll changes effective by-type damage before target-side adjustments, spell damage reductions, Concentration saves, and zero-Hit-Point disposition; the spell procedure and damage type/reduction obligations own the executable branch without duplicating damage state.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
         "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION"
       ],
       "followUpTaskIds": [],
@@ -4249,6 +4261,7 @@
     "spell.invocation-object-light",
     "spell.invocation-ongoing-spell-ending",
     "spell.invocation-ray-of-enfeeblement-d20-lifecycle",
+    "spell.invocation-ray-of-enfeeblement-damage-penalty",
     "spell.invocation-roll-modifier",
     "spell.invocation-sanctuary-targeting-interdiction",
     "spell.invocation-save-gated-condition-immunity",

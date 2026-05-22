@@ -360,6 +360,12 @@ export function needsHolesResult(
   };
 }
 
+export function deduplicateBattleHolesById(
+  holes: readonly BattleHole[],
+): readonly BattleHole[] {
+  return [...new Map(holes.map((hole) => [hole.holeId, hole])).values()];
+}
+
 export function attackTargetHole(
   state: BattleState,
   actorId: CombatantId,

@@ -1,5 +1,6 @@
 // Held-light, rider, ready, and release spell resolution extracted from spells-resolve.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object spell.invocation-magic-weapon-enhancement
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 
 import {
   spendAction,
@@ -55,6 +56,11 @@ import {
 import {
   activeMarkedDamageRiderEffect,
   activeMarkedDamageRiders,
+  applyAvailableSourceDamageRollPenalty,
+  damageAmountByTypeAfterTargetAdjustments,
+  sourceDamageRollPenaltyRollHoleForDamageRoll,
+  sourceDamageRollPenaltyRollForDamageRoll,
+  unexpectedSourceDamageRollPenaltyRoll,
 } from "./damage-helpers.ts";
 import { needsHolesResult, revealHidden } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
@@ -76,7 +82,7 @@ import {
   applySpellDamage,
   spellAbilityChoiceHole,
   spellAttackRollHole,
-  spellDamageAmountForTarget,
+  spellDamageByTypeForTarget,
   spellDamageHole,
   spellObjectLightTargetFact,
   spellObjectTargetHole,
@@ -1736,13 +1742,22 @@ export function resolveSpellRelease(
         )
       : [];
     if (hit && fillSet.damageRoll == null) {
+      if (fillSet.sourceDamageRollPenaltyRolls.length > 0) {
+        return invalidResult(
+          input.state,
+          "invalidFill",
+          "Source damage roll penalty does not match an active source-side damage penalty.",
+        );
+      }
       return needsHolesResult(releaseAttackRolledState, input.subject, [
         spellDamageHole(invocation, critical, spellMarkedDamageRiders),
       ]);
     }
     if (
       !hit &&
-      (fillSet.damageRoll != null || fillSet.damageDispositions.length > 0)
+      (fillSet.damageRoll != null ||
+        fillSet.damageDispositions.length > 0 ||
+        fillSet.sourceDamageRollPenaltyRolls.length > 0)
     ) {
       return invalidResult(
         input.state,
@@ -1766,6 +1781,13 @@ export function resolveSpellRelease(
   }
 
   if (fillSet.damageRoll == null) {
+    if (fillSet.sourceDamageRollPenaltyRolls.length > 0) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Source damage roll penalty does not match an active source-side damage penalty.",
+      );
+    }
     return needsHolesResult(input.state, input.subject, [
       spellDamageHole(invocation),
     ]);
@@ -1783,13 +1805,61 @@ export function resolveSpellRelease(
   if (damageValidation !== null) {
     return invalidResult(input.state, "invalidFill", damageValidation);
   }
-  const spellDamageAmount = spellDamageAmountForTarget(
+  const spellDamageByType = spellDamageByTypeForTarget(
     target,
     invocation,
     fillSet.damageRoll,
     "full",
     spellMarkedDamageRiders,
     critical,
+  );
+  const damageSource = input.state.combatants.get(input.subject.actorId);
+  const expectedSourcePenaltyHole =
+    sourceDamageRollPenaltyRollHoleForDamageRoll(
+      damageSource,
+      spellDamageByType,
+      fillSet.damageRoll.holeId,
+    );
+  if (
+    unexpectedSourceDamageRollPenaltyRoll(
+      fillSet.sourceDamageRollPenaltyRolls,
+      expectedSourcePenaltyHole === null ? [] : [expectedSourcePenaltyHole],
+    ) !== undefined
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Source damage roll penalty does not match an active source-side damage penalty.",
+    );
+  }
+  const sourceDamageRollPenaltyRoll =
+    sourceDamageRollPenaltyRollForDamageRoll(
+      fillSet.sourceDamageRollPenaltyRolls,
+      damageSource,
+      spellDamageByType,
+      fillSet.damageRoll.holeId,
+    );
+  const sourcePenalty = applyAvailableSourceDamageRollPenalty(
+    damageSource,
+    spellDamageByType,
+    fillSet.damageRoll.holeId,
+    sourceDamageRollPenaltyRoll,
+  );
+  if (sourcePenalty.tag === "invalid") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Source damage roll penalty does not match an active source-side damage penalty.",
+    );
+  }
+  if (sourcePenalty.tag === "needsHoles") {
+    return needsHolesResult(input.state, input.subject, [
+      ...sourcePenalty.holes,
+    ]);
+  }
+  const spellDamageAmount = damageAmountByTypeAfterTargetAdjustments(
+    target,
+    sourcePenalty.damageByType,
   );
   const concentrationSave = concentrationSavingThrowHole(
     target,
@@ -1930,6 +2000,7 @@ export function resolveSpellRelease(
         target.combatantId,
       ),
       spellMarkedDamageRiders,
+      sourceDamageRollPenaltyRoll,
       hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
       damageSourceId: input.subject.actorId,
     },

@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // Save-gated and attack-damage spell profile projections extracted from spells-profiles.ts.
 
 import {
@@ -354,6 +355,8 @@ export function supportedPreparedAbilityD20TestRollModeSaveGateProfile(
         rangeFeet: d20Lifecycle.rangeFeet,
         successEffect: d20Lifecycle.successEffect,
         failedSaveEffect: d20Lifecycle.failedSaveEffect,
+        failedSaveDamagePenaltyEffect:
+          d20Lifecycle.failedSaveDamagePenaltyEffect,
       },
     ];
   });
@@ -905,6 +908,10 @@ function abilityD20TestRollModeSaveGateSpell(
     SupportedSpellInvocation,
     { readonly procedure: "abilityD20TestRollModeSaveGate" }
   >["failedSaveEffect"];
+  readonly failedSaveDamagePenaltyEffect: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "abilityD20TestRollModeSaveGate" }
+  >["failedSaveDamagePenaltyEffect"];
 } | null {
   if (spell.mechanics.family !== "activation") {
     return null;
@@ -954,13 +961,25 @@ function abilityD20TestRollModeSaveGateSpell(
         durationTicks: durationTicks.right,
       },
     },
+    failedSaveDamagePenaltyEffect: {
+      kind: "sourceDamageRollPenalty",
+      sourceSpellId: spell.id,
+      sourceCombatantId: actorId,
+      amount: { dice: 1, dieSize: 8 },
+      expiresAt: {
+        kind: "concentration",
+        combatantId: actorId,
+        durationTicks: durationTicks.right,
+      },
+    },
   };
 }
 
 function isRayOfEnfeeblementD20LifecyclePhase(
   phase: ActivationPhase | undefined,
 ): phase is RayOfEnfeeblementPhase {
-  const repeatSaves = phase?.kind === "save_gate" ? (phase.repeatSaves ?? []) : [];
+  const repeatSaves =
+    phase?.kind === "save_gate" ? (phase.repeatSaves ?? []) : [];
   const repeatSave = repeatSaves.length === 1 ? repeatSaves[0] : undefined;
   const success = phase?.kind === "save_gate" ? phase.onSuccess : undefined;
   const successDisadvantage =
@@ -1010,7 +1029,11 @@ function isRayStrengthD20DisadvantageEffect(
   return (
     effect.kind === "modify_roll_advantage" &&
     effect.mode === "disadvantage" &&
-    sameStringSet(effect.on, ["attack_roll", "ability_check", "saving_throw"]) &&
+    sameStringSet(effect.on, [
+      "attack_roll",
+      "ability_check",
+      "saving_throw",
+    ]) &&
     sameAbilitySet(effect.abilityFilter, ["str"]) &&
     effect.skillFilter === undefined &&
     effect.conditionFilter === undefined &&

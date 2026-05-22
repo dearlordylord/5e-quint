@@ -2,6 +2,7 @@
 // from ../battle-reducer.ts. This module owns battle hole identifiers, initial
 // turn resources, supported action-resource projections, and small fill-set
 // result types used by resolver modules.
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 
 import type { RuntimeActionResource } from "@dnd/shared-algebras/action-economy-algebra";
 import { resetTurnActionEconomy } from "@dnd/shared-algebras/action-economy-algebra";
@@ -229,6 +230,7 @@ export type AttackFillSet =
       readonly damageRoll: BattleRolledDiceFill | undefined;
       readonly mirrorImageDuplicateRoll: BattleRolledDiceFill | undefined;
       readonly spellDamageReductionRoll: BattleRolledDiceFill | undefined;
+      readonly sourceDamageRollPenaltyRolls: readonly BattleRolledDiceFill[];
       readonly attackDamageReductionRedirectTarget:
         | Extract<BattleFill, { readonly kind: "targetChoice" }>
         | undefined;

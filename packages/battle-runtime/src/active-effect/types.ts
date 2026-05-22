@@ -3,6 +3,7 @@
 // pure type vocabulary with leaf dependencies only; the BattleActiveEffect union
 // and its runtime live in battle-reducer.ts / battle-reducer/ and depend on these
 // types one-directionally. See plans/ACTIVE_EFFECT_DEEP_MODULE.md.
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 import type { ArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -656,6 +657,14 @@ export type BattleActiveEffect =
         readonly dieSize: 4;
       };
       readonly usedThisTurn: boolean;
+      readonly expiresAt: BattleActiveEffectExpiration;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "sourceDamageRollPenalty";
+      readonly amount: {
+        readonly dice: 1;
+        readonly dieSize: 8;
+      };
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleSpellEffectBase & {

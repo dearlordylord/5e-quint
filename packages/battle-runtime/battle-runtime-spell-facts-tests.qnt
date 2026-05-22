@@ -1,6 +1,8 @@
 // -*- mode: Bluespec; -*-
 
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-ray-of-enfeeblement-d20-lifecycle
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-ray-of-enfeeblement-damage-penalty
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-creature-size-change
 
 module battleRuntimeSpellFactsTests {
   import battleRuntime.* from "./battle-runtime"
@@ -63,6 +65,28 @@ module battleRuntimeSpellFactsTests {
       rayOfEnfeeblementD20LifecycleActiveEffectsAfterNextAttack(raySuccess.goblin.activeEffects, Fighter)
     val rayAfterRepeatSaveEffects =
       rayOfEnfeeblementD20LifecycleActiveEffectsAfterRepeatSave(rayFailure.goblin.activeEffects, Fighter, true)
+    val rayDamagePenaltyEffects = Set(RayOfEnfeeblementDamageRollPenalty({ source: Fighter, durationTicks: rayOfEnfeeblementD20LifecycleDurationTicks }))
+    val resistanceReductionEffects = Set(ResistanceDamageReduction({ damageType: Fire, usedThisTurn: false }))
+    val resistantConcentratingTarget = {
+      ...initialState.goblin,
+      concentrating: true,
+      activeEffects: resistanceReductionEffects,
+    }
+    val rayPenaltyResistedReducedTarget =
+      saveGatedDamageTargetAfterRayPenaltyLifecycle(
+        FireballSaveGate,
+        resistantConcentratingTarget,
+        rayDamagePenaltyEffects,
+        Fighter,
+        20,
+        4,
+        true,
+        Set(Fire),
+        Set(),
+        Set(),
+        3,
+        false,
+      )
     val enlarged = resolveCreatureSizeChange(initialState, Fighter, EnlargeCreatureMode, true, false, 2)
     val reduced = resolveCreatureSizeChange(initialState, Fighter, ReduceCreatureMode, true, false, 2)
     val saveSucceeded = resolveCreatureSizeChange(initialState, Goblin, ReduceCreatureMode, false, true, 2)
@@ -404,7 +428,18 @@ module battleRuntimeSpellFactsTests {
       assert(rayOfEnfeeblementD20LifecycleAbilityCheckRollMode(rayFailure.goblin.activeEffects, DexAbility) == NormalAbilityCheck),
       assert(rayOfEnfeeblementD20LifecycleSavingThrowRollMode(rayFailure.goblin.activeEffects, StrAbility) == DisadvantageSavingThrow),
       assert(rayOfEnfeeblementD20LifecycleSavingThrowRollMode(rayFailure.goblin.activeEffects, DexAbility) == NormalSavingThrow),
+      assert(rayFailure.goblin.activeEffects.contains(RayOfEnfeeblementDamageRollPenalty({ source: Fighter, durationTicks: rayOfEnfeeblementD20LifecycleDurationTicks }))),
+      assert(saveGatedDamageFailedSaveActiveEffects(RayOfEnfeeblementSaveGate) == Set(
+        RayOfEnfeeblementD20Lifecycle({ source: Fighter, durationTicks: rayOfEnfeeblementD20LifecycleDurationTicks }),
+        RayOfEnfeeblementDamageRollPenalty({ source: Fighter, durationTicks: rayOfEnfeeblementD20LifecycleDurationTicks }),
+      )),
+      assert(damageAfterRayOfEnfeeblementDamageRollPenalty(rayFailure.goblin.activeEffects, Fighter, 6, 4) == 2),
+      assert(damageAfterRayOfEnfeeblementDamageRollPenalty(rayFailure.goblin.activeEffects, Fighter, 3, 8) == 0),
+      assert(damageAfterRayOfEnfeeblementDamageRollPenalty(rayFailure.goblin.activeEffects, Goblin, 6, 4) == 6),
+      assert(rayPenaltyResistedReducedTarget.hp == 9),
+      assert(not(rayPenaltyResistedReducedTarget.concentrating)),
       assert(not(rayAfterRepeatSaveEffects.contains(RayOfEnfeeblementD20Lifecycle({ source: Fighter, durationTicks: rayOfEnfeeblementD20LifecycleDurationTicks })))),
+      assert(not(rayAfterRepeatSaveEffects.contains(RayOfEnfeeblementDamageRollPenalty({ source: Fighter, durationTicks: rayOfEnfeeblementD20LifecycleDurationTicks })))),
       assert(not(rayOfEnfeeblementD20LifecycleConcentratingAfterEffectsChange(rayAfterRepeatSaveEffects, Fighter, rayFailure.fighter.concentrating))),
       assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(ProtectionFromEvilAndGoodCreatureTypeProtection), true) == DisadvantageSpellAttackRoll),
       assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(GuidingBoltNextAttackAdvantage, ProtectionFromEvilAndGoodCreatureTypeProtection), false) == NormalSpellAttackRoll),

@@ -1,4 +1,5 @@
 // Opportunity attack resolution extracted from turn-end-movement.ts.
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { attackRollResultIsValid } from "@dnd/shared-algebras/attack-roll-algebra";
@@ -34,12 +35,16 @@ import {
   activeMarkedDamageRiders,
   activeSpellWeaponDamageRiders,
   applyAvailableSpellDamageReduction,
+  applyAvailableSourceDamageRollPenalty,
   attackDamageByTypeEntries,
   damageAmountByTypeEntriesToMap,
   damageAmountByTypeMapEntries,
   fixedAttackDamageAmount,
   fixedAttackDamageByTypeEntries,
   ongoingFeatureDamageModifier,
+  sourceDamageRollPenaltyRollHoleForDamageRoll,
+  sourceDamageRollPenaltyRollForDamageRoll,
+  unexpectedSourceDamageRollPenaltyRoll,
 } from "./damage-helpers.ts";
 import {
   attackDamageEventAfterPendingReductions,
@@ -249,7 +254,12 @@ export function resolveOpportunityAttackCommand(
       return reactionWindow;
     }
   }
-  if (!hit && (fillSet.damageRoll != null || fillSet.damageDispositionFilled)) {
+  if (
+    !hit &&
+    (fillSet.damageRoll != null ||
+      fillSet.damageDispositionFilled ||
+      fillSet.sourceDamageRollPenaltyRolls.length > 0)
+  ) {
     return invalidResult(
       input.state,
       "invalidFill",
@@ -472,6 +482,13 @@ export function resolveOpportunityAttackCommand(
     };
   }
   if (fillSet.damageRoll == null) {
+    if (fillSet.sourceDamageRollPenaltyRolls.length > 0) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Source damage roll penalty does not match an active source-side damage penalty.",
+      );
+    }
     return needsHolesResult(attackRolledState, input.subject, [
       attackDamageHole(
         attack,
@@ -509,8 +526,9 @@ export function resolveOpportunityAttackCommand(
   if (damageValidation !== null) {
     return invalidResult(input.state, "invalidFill", damageValidation);
   }
+  const damageSource = attackRolledState.combatants.get(subject.reactorId);
   const damageRollByType = attackDamageByTypeEntries(
-    attackRolledState.combatants.get(subject.reactorId),
+    damageSource,
     attack,
     fillSet.damageRoll,
     critical,
@@ -519,9 +537,50 @@ export function resolveOpportunityAttackCommand(
     spellWeaponDamageRiders,
     spellMarkedDamageRiders,
   );
+  const expectedSourcePenaltyHole =
+    sourceDamageRollPenaltyRollHoleForDamageRoll(
+      damageSource,
+      damageAmountByTypeEntriesToMap(damageRollByType),
+      fillSet.damageRoll.holeId,
+    );
+  if (
+    unexpectedSourceDamageRollPenaltyRoll(
+      fillSet.sourceDamageRollPenaltyRolls,
+      expectedSourcePenaltyHole === null ? [] : [expectedSourcePenaltyHole],
+    ) !== undefined
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Source damage roll penalty does not match an active source-side damage penalty.",
+    );
+  }
+  const sourcePenalty = applyAvailableSourceDamageRollPenalty(
+    damageSource,
+    damageAmountByTypeEntriesToMap(damageRollByType),
+    fillSet.damageRoll.holeId,
+    sourceDamageRollPenaltyRollForDamageRoll(
+      fillSet.sourceDamageRollPenaltyRolls,
+      damageSource,
+      damageAmountByTypeEntriesToMap(damageRollByType),
+      fillSet.damageRoll.holeId,
+    ),
+  );
+  if (sourcePenalty.tag === "invalid") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Source damage roll penalty does not match an active source-side damage penalty.",
+    );
+  }
+  if (sourcePenalty.tag === "needsHoles") {
+    return needsHolesResult(attackRolledState, input.subject, [
+      ...sourcePenalty.holes,
+    ]);
+  }
   const damageEvent = {
     kind: "rolledDamage" as const,
-    damageRollByType,
+    damageRollByType: damageAmountByTypeMapEntries(sourcePenalty.damageByType),
   } satisfies BattleAttackDamageEvent;
   const reducedDamageEvent = attackDamageEventAfterPendingReductions(
     damageEvent,

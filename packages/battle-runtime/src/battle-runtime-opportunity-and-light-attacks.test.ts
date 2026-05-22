@@ -40,6 +40,8 @@ import type {
   BattleSubject,
 } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
+import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
+import { sourceDamageRollPenaltyRollHole } from "./battle-reducer/damage-helpers.ts";
 
 describe("battle runtime: Light property and Opportunity Attacks", () => {
   test("Light Property Bonus Action Attack requires a prior Attack action Light weapon attack and omits a positive damage modifier", () => {
@@ -158,6 +160,148 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
           expect.objectContaining({ combatantId: goblinId, hp: 6 }),
         ]),
       },
+    });
+  });
+
+  test("Light Property Bonus Action Attack rejects stale source damage penalty fills", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-off-hand-stale-source-penalty"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          attack: testShortswordAttack(),
+          offHandAttack: testDaggerAttack(),
+          selectedLoadout: {
+            weapon: {
+              itemId: "main:weapon_shortsword",
+              unitId: "weapon_shortsword",
+              grip: "one_handed",
+            },
+            offHandWeapon: {
+              itemId: "off:weapon_dagger",
+              unitId: "weapon_dagger",
+            },
+          },
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const attackSubject: BattleSubject = {
+      tag: "action",
+      actorId: fighterId,
+      action: "attack",
+      attackName: "Shortsword",
+    };
+    const attackTarget = requireHole(
+      resolveBattleSubject({ state, subject: attackSubject, fills: [] }),
+      "targetChoice",
+    );
+    const attackRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: attackSubject,
+        fills: [targetFill(attackTarget, goblinId)],
+      }),
+      "attackRoll",
+    );
+    const afterQualifyingAttack = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: attackSubject,
+        fills: [
+          targetFill(attackTarget, goblinId),
+          attackRollFill(attackRoll, { total: 1, naturalD20: 1 }),
+        ],
+      }),
+    ).state;
+    const weakenedFighter = combatantWithSourceDamagePenalty(
+      afterQualifyingAttack,
+      fighterId,
+      goblinId,
+    );
+    const subject: BattleSubject = {
+      tag: "bonusAction",
+      actorId: fighterId,
+      action: "offHandAttack",
+      attackName: "Dagger",
+    };
+    const target = requireHole(
+      resolveBattleSubject({ state: weakenedFighter, subject, fills: [] }),
+      "targetChoice",
+    );
+    const attack = requireHole(
+      resolveBattleSubject({
+        state: weakenedFighter,
+        subject,
+        fills: [targetFill(target, goblinId)],
+      }),
+      "attackRoll",
+    );
+    const damage = requireHole(
+      resolveBattleSubject({
+        state: weakenedFighter,
+        subject,
+        fills: [
+          targetFill(target, goblinId),
+          attackRollFill(attack, { total: 15, naturalD20: 10 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    const penaltyRequest = resolveBattleSubject({
+      state: weakenedFighter,
+      subject,
+      fills: [
+        targetFill(target, goblinId),
+        attackRollFill(attack, { total: 15, naturalD20: 10 }),
+        damageRollFill(damage, 4),
+      ],
+    });
+    const penalty = requireHole(
+      penaltyRequest,
+      "rolledDice",
+    );
+    const stalePenalty = sourceDamageRollPenaltyRollHole({
+      sourceSpellId: "ray_of_enfeeblement",
+      sourceCombatantId: goblinId,
+      affectedCombatantId: fighterId,
+      damageRollHoleId: holeId("battle:test:offhand-stale-source-penalty"),
+      amount: { dice: 1, dieSize: 8 },
+    });
+    expect(
+      resolveBattleSubject({
+        state: weakenedFighter,
+        subject,
+        fills: [
+          targetFill(target, goblinId),
+          attackRollFill(attack, { total: 1, naturalD20: 1 }),
+          damageRollFillWithGroups(stalePenalty, [[1]]),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Light Property Bonus Action Attack damage can only be filled after a hit.",
+    });
+
+    expect(
+      resolveBattleSubject({
+        state: weakenedFighter,
+        subject,
+        fills: [
+          targetFill(target, goblinId),
+          attackRollFill(attack, { total: 15, naturalD20: 10 }),
+          damageRollFill(damage, 4),
+          damageRollFillWithGroups(penalty, [[2]]),
+          damageRollFillWithGroups(stalePenalty, [[1]]),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Source damage roll penalty does not match an active source-side damage penalty.",
     });
   });
 
@@ -950,6 +1094,116 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     );
   });
 
+  test("Opportunity Attack rejects stale source damage penalty fills", () => {
+    const state = combatantWithSourceDamagePenalty(
+      fighterVsGoblinBattle(),
+      goblinId,
+      fighterId,
+    );
+    const moveSubject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: fighterId,
+      command: "move",
+    };
+    const moveHole = requireHole(
+      resolveBattleSubject({ state, subject: moveSubject, fills: [] }),
+      "movement",
+    );
+    const awaitingReaction = resolveBattleSubject({
+      state,
+      subject: moveSubject,
+      fills: [
+        movementFill(moveHole, {
+          movementCostFeet: 5,
+          provokedOpportunityAttacks: [
+            { reactorId: goblinId, attackName: "Scimitar" },
+          ],
+        }),
+      ],
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
+    }
+    const choice = reactionChoiceWithSubject(
+      awaitingReaction.snapshot.pendingReaction!.choices,
+    );
+    const startedReaction = resolveBattleReaction({
+      state: awaitingReaction.state,
+      fill: reactionDecisionFill(
+        awaitingReaction.snapshot.pendingReaction!.decisionHole,
+        {
+          kind: "resolve",
+          reactorId: goblinId,
+          choice: {
+            kind: "opportunityAttack",
+            reactorId: goblinId,
+            fills: [],
+          },
+        },
+      ),
+    });
+    if (startedReaction.tag !== "needsHoles") {
+      throw new Error(`Expected needsHoles, got ${startedReaction.tag}.`);
+    }
+    const attackRoll = findHole(startedReaction.holes, "attackRoll");
+    const damage = requireHole(
+      resolveBattleSubject({
+        state: startedReaction.state,
+        subject: choice.subject,
+        fills: [attackRollFill(attackRoll, { total: 20, naturalD20: 18 })],
+      }),
+      "rolledDice",
+    );
+    const penaltyRequest = resolveBattleSubject({
+      state: startedReaction.state,
+      subject: choice.subject,
+      fills: [
+        attackRollFill(attackRoll, { total: 20, naturalD20: 18 }),
+        damageRollFill(damage, 4),
+      ],
+    });
+    const penalty = requireHole(penaltyRequest, "rolledDice");
+    const stalePenalty = sourceDamageRollPenaltyRollHole({
+      sourceSpellId: "ray_of_enfeeblement",
+      sourceCombatantId: fighterId,
+      affectedCombatantId: goblinId,
+      damageRollHoleId: holeId("battle:test:oa-stale-source-penalty"),
+      amount: { dice: 1, dieSize: 8 },
+    });
+    expect(
+      resolveBattleSubject({
+        state: startedReaction.state,
+        subject: choice.subject,
+        fills: [
+          attackRollFill(attackRoll, { total: 1, naturalD20: 1 }),
+          damageRollFillWithGroups(stalePenalty, [[1]]),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: "Opportunity Attack damage can only be filled after a hit.",
+    });
+
+    expect(
+      resolveBattleSubject({
+        state: startedReaction.state,
+        subject: choice.subject,
+        fills: [
+          attackRollFill(attackRoll, { total: 20, naturalD20: 18 }),
+          damageRollFill(damage, 4),
+          damageRollFillWithGroups(penalty, [[2]]),
+          damageRollFillWithGroups(stalePenalty, [[1]]),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Source damage roll penalty does not match an active source-side damage penalty.",
+    });
+  });
+
   test("Opportunity Attack opens attack-damage Reaction windows before movement resumes", () => {
     const cuttingWordsDamageOnly = cuttingWordsDamageOnlyUnit();
     const state = startBattleRight({
@@ -1510,3 +1764,33 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     expect(missed.state.combatants.get(goblinId)?.hidden).toBeNull();
   });
 });
+
+function combatantWithSourceDamagePenalty(
+  state: BattleState,
+  affectedId: typeof fighterId | typeof goblinId,
+  sourceId: typeof fighterId | typeof goblinId,
+): BattleState {
+  const affected = state.combatants.get(affectedId);
+  if (affected === undefined) {
+    throw new Error("Expected affected combatant.");
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(affectedId, {
+      ...affected,
+      activeEffects: [
+        ...affected.activeEffects,
+        {
+          kind: "sourceDamageRollPenalty" as const,
+          sourceSpellId: "ray_of_enfeeblement",
+          sourceCombatantId: sourceId,
+          amount: { dice: 1 as const, dieSize: 8 as const },
+          expiresAt: {
+            kind: "concentration" as const,
+            combatantId: sourceId,
+          },
+        },
+      ],
+    }),
+  };
+}

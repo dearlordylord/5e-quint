@@ -289,6 +289,10 @@ module battleRuntimeTimedEffects {
             rangeFeet: data.rangeFeet,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
+        | RayOfEnfeeblementDamageRollPenalty(data) => RayOfEnfeeblementDamageRollPenalty({
+            source: data.source,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
         | SelfTransformationModeEffect(data) => SelfTransformationModeEffect({
             source: data.source,
             mode: data.mode,
@@ -405,6 +409,7 @@ module battleRuntimeTimedEffects {
         | MindSpikeConcentrationDuration(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | CreatureSizeChange(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | LevitatedCreature(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | RayOfEnfeeblementDamageRollPenalty(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | SelfTransformationModeEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | DragonsBreathEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | HideousLaughterEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)

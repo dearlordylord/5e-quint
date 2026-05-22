@@ -103,6 +103,7 @@ module battleRuntimeArmorClass {
         | RayOfEnfeeblementD20Lifecycle(_) => false
         | CreatureSizeChange(_) => false
         | LevitatedCreature(_) => false
+        | RayOfEnfeeblementDamageRollPenalty(_) => false
         | SleepPendingRepeatSave(_) => false
         | SleepUnconscious(_) => false
         | HideousLaughterEffect(_) => false

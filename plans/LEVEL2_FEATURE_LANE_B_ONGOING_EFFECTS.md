@@ -37,19 +37,19 @@
     {
       "number": 6,
       "id": "L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Ray Of Enfeeblement Damage Roll Penalty Runtime"
     },
     {
       "number": 7,
       "id": "L12G-FOLLOWUP-SPIRITUAL-WEAPON-SURFACE-PROXY-SHAPE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Spiritual Weapon Proxy Surface Shape"
     },
     {
       "number": 8,
       "id": "L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Spiritual Weapon Persistent Attack Runtime"
     },
     {
@@ -211,7 +211,7 @@ Output:
 
 ### Task 6 - L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY - Ray Of Enfeeblement Damage Roll Penalty Runtime
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 - Task B5.
@@ -222,7 +222,7 @@ Output:
 
 ### Task 7 - L12G-FOLLOWUP-SPIRITUAL-WEAPON-SURFACE-PROXY-SHAPE - Spiritual Weapon Proxy Surface Shape
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 - Current Spiritual Weapon Surface content and SRD text.
@@ -233,7 +233,7 @@ Output:
 
 ### Task 8 - L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME - Spiritual Weapon Persistent Attack Runtime
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on:
 - Task B7.

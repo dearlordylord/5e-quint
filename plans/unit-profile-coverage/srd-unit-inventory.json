@@ -200,8 +200,8 @@
         "accepted": 387,
         "accepted-no-battle-effect": 147,
         "owner-evidence-required": 2,
-        "partial-battle-runtime": 18,
-        "battle-runtime-required": 2
+        "partial-battle-runtime": 16,
+        "battle-runtime-required": 4
       }
     },
     "levelOneClassContainers": 12,
@@ -218,15 +218,16 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 406,
       "non-runtime": 24,
-      "catalog-installed-owner-evidence-required": 1,
-      "catalog-only/dead-for-now": 120,
-      "catalog-authored-executable-follow-up": 4,
-      "catalog-installed-needs-owner-evidence": 1
+      "catalog-installed-owner-evidence-required": 2,
+      "catalog-only/dead-for-now": 122,
+      "catalog-installed-needs-owner-evidence": 1,
+      "catalog-authored-executable-follow-up": 1
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 243,
-      "catalog-only/dead-for-now": 120,
-      "catalog-authored-executable-follow-up": 4
+      "catalog-only/dead-for-now": 122,
+      "catalog-installed-owner-evidence-required": 1,
+      "catalog-authored-executable-follow-up": 1
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -9356,13 +9357,24 @@
         "sourceRecordPath": "packages/surface/content/spiritual_weapon.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "spiritual_weapon"
       },
       "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-SPIRITUAL-WEAPON-SURFACE-PROXY-SHAPE, L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME: L12G-FOLLOWUP-SPIRITUAL-WEAPON-SURFACE-PROXY-SHAPE owns Replace or verify the Spiritual Weapon Surface shape so it represents the RAW spectral force as a spell-owned proxy/effect, not a creature companion or ordinary object; preserve Bonus Action casting, Concentration up to 1 minute, 60-foot placement, immediate attack target within 5 feet of the force, slot-scaled Force damage, and a later-turn single Bonus Action operation that may move the force up to 20 feet and repeat the attack. Required output: Spiritual Weapon Dhall and JSON content, plus schema/tracer support where required, make the coupled force placement, later movement, repeat attack, Concentration, and slot scaling executable source facts without representing movement and repeat attack as two separately spendable Bonus Action operations.; L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME owns Promote Spiritual Weapon as a level-2 prepared Spell Invocation that spends the Bonus Action and Spell Slot, starts caster-owned Concentration up to 1 minute, consumes caller-supplied force placement and target-adjacency facts, resolves the immediate melee Spell Attack, applies slot-scaled Force damage, records the spell-owned attack proxy, offers a later-turn Bonus Action to move the proxy up to 20 feet from caller-supplied destination facts and repeat the attack, and cleans up on Concentration or duration end without introducing companion actions, object Hit Points, or duplicated proxy state. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial casting, Spell Slot spend, Concentration ownership, proxy placement, immediate attack, later Bonus Action movement and repeat attack, slot scaling, and cleanup while leaving automatic geometry and adjacency derivation table-owned.",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit spiritual_weapon is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/effect lifecycle plus table/spatial owner",
+          "evidence": "Promote follow-up split L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME: L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME owns Promote Spiritual Weapon as a level-2 prepared Spell Invocation that spends the Bonus Action and Spell Slot, starts caster-owned Concentration up to 1 minute, consumes caller-supplied force placement and target-adjacency facts, resolves the immediate melee Spell Attack, applies slot-scaled Force damage, records the spell-owned attack proxy, offers a later-turn Bonus Action to move the proxy up to 20 feet from caller-supplied destination facts and repeat the attack, and cleans up on Concentration or duration end without introducing companion actions, object Hit Points, or duplicated proxy state. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial casting, Spell Slot spend, Concentration ownership, proxy placement, immediate attack, later Bonus Action movement and repeat attack, slot scaling, and cleanup while leaving automatic geometry and adjacency derivation table-owned.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME: L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME owns Promote Spiritual Weapon as a level-2 prepared Spell Invocation that spends the Bonus Action and Spell Slot, starts caster-owned Concentration up to 1 minute, consumes caller-supplied force placement and target-adjacency facts, resolves the immediate melee Spell Attack, applies slot-scaled Force damage, records the spell-owned attack proxy, offers a later-turn Bonus Action to move the proxy up to 20 feet from caller-supplied destination facts and repeat the attack, and cleans up on Concentration or duration end without introducing companion actions, object Hit Points, or duplicated proxy state. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial casting, Spell Slot spend, Concentration ownership, proxy placement, immediate attack, later Bonus Action movement and repeat attack, slot scaling, and cleanup while leaving automatic geometry and adjacency derivation table-owned.",
       "battleReadinessStatus": "battle-runtime-required"
     },
     {
@@ -23645,11 +23657,11 @@
         "state": "not-installed",
         "unitId": "ray_of_enfeeblement"
       },
-      "unitProfileDisposition": "profile-subset-supported",
-      "finalDisposition": "catalog-authored-executable-follow-up",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY: L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY owns Promote Ray of Enfeeblement's failed-save source-side damage penalty: subtract 1d8 from all damage rolls made by the affected target while the spell effect is active, covering attack, spell, and other battle-owned damage rolls through one generic spell damage-roll penalty hole/fill path that applies before target-side Resistance, damage reductions, Concentration saves, and damage disposition. Required output: Supported-profile or profile-subset-supported Unit claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Ray damage-roll subtraction without duplicating damage state.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_spider_climb",
@@ -27506,11 +27518,11 @@
         "state": "not-installed",
         "unitId": "ray_of_enfeeblement"
       },
-      "unitProfileDisposition": "profile-subset-supported",
-      "finalDisposition": "catalog-authored-executable-follow-up",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY: L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY owns Promote Ray of Enfeeblement's failed-save source-side damage penalty: subtract 1d8 from all damage rolls made by the affected target while the spell effect is active, covering attack, spell, and other battle-owned damage rolls through one generic spell damage-roll penalty hole/fill path that applies before target-side Resistance, damage reductions, Concentration saves, and damage disposition. Required output: Supported-profile or profile-subset-supported Unit claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Ray damage-roll subtraction without duplicating damage state.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_rope_trick",

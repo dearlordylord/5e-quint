@@ -57,28 +57,92 @@ let forceDamage : DamageEffect =
             }
       }
 
-let OngoingEffect : Type =
+let forceHoleId = "spiritual_weapon_force"
+
+let TargetRelativePosition : Type =
+      { kind : Text, attachmentHoleId : Text, feet : Natural }
+
+let targetWithinForceReach : TargetRelativePosition =
+      { kind = "within_feet_of_attachment"
+      , attachmentHoleId = forceHoleId
+      , feet = 5
+      }
+
+let TargetSelection : Type =
+      { mode : Text
+      , targetKinds : Optional (List Text)
+      , relativePosition : Optional TargetRelativePosition
+      }
+
+let AttackTargetAttachmentValue : Type =
+      { kind : Text, selection : TargetSelection }
+
+let AttackTargetAttachment : Type =
+      { kind : Text
+      , holeId : Text
+      , label : Text
+      , value : AttackTargetAttachmentValue
+      }
+
+let forceAttackTarget : AttackTargetAttachment =
+      { kind = "hole"
+      , holeId = "spiritual_weapon_attack_target"
+      , label = "creature within 5 feet of the force"
+      , value =
+          { kind = "target"
+          , selection =
+              { mode = "one"
+              , targetKinds = Some [ "creature" ]
+              , relativePosition = Some targetWithinForceReach
+              }
+          }
+      }
+
+let OngoingChildEffect : Type =
       { kind : Text
       , maxMoveFeet : Optional Natural
+      , attachment : Optional AttackTargetAttachment
       , attackKind : Optional Text
       , onHit : Optional (List DamageEffect)
       , onMiss : Optional (List DamageEffect)
       }
 
-let moveForce : OngoingEffect =
+let moveForce : OngoingChildEffect =
       { kind = "reposition_attachment"
       , maxMoveFeet = Some 20
+      , attachment = None AttackTargetAttachment
       , attackKind = None Text
       , onHit = None (List DamageEffect)
       , onMiss = None (List DamageEffect)
       }
 
-let repeatAttack : OngoingEffect =
+let repeatAttack : OngoingChildEffect =
       { kind = "attack_roll"
       , maxMoveFeet = None Natural
+      , attachment = Some forceAttackTarget
       , attackKind = Some "melee_spell_attack"
       , onHit = Some [ forceDamage ]
       , onMiss = Some [ noEffect ]
+      }
+
+let OngoingEffect : Type =
+      { kind : Text
+      , maxMoveFeet : Optional Natural
+      , attachment : Optional AttackTargetAttachment
+      , attackKind : Optional Text
+      , onHit : Optional (List DamageEffect)
+      , onMiss : Optional (List DamageEffect)
+      , effects : Optional (List OngoingChildEffect)
+      }
+
+let laterTurnMoveAndAttack : OngoingEffect =
+      { kind = "composite_ongoing"
+      , maxMoveFeet = None Natural
+      , attachment = None AttackTargetAttachment
+      , attackKind = None Text
+      , onHit = None (List DamageEffect)
+      , onMiss = None (List DamageEffect)
+      , effects = Some [ moveForce, repeatAttack ]
       }
 
 let spiritualWeapon =
@@ -104,7 +168,7 @@ let spiritualWeapon =
               }
           , attachment =
               { kind = "hole"
-              , holeId = "spiritual_weapon_force"
+              , holeId = forceHoleId
               , label = "spectral force"
               , value =
                   { kind = "location"
@@ -113,15 +177,7 @@ let spiritualWeapon =
               }
           , initialPhase =
               { kind = "attack_roll"
-              , attachment =
-                  { kind = "hole"
-                  , holeId = "spiritual_weapon_attack_target"
-                  , label = "creature within 5 feet of the force"
-                  , value =
-                      { kind = "target"
-                      , selection = { mode = "one" }
-                      }
-                  }
+              , attachment = forceAttackTarget
               , attackKind = "melee_spell_attack"
               , onHit = [ forceDamage ]
               , onMiss = [ noEffect ]
@@ -130,14 +186,9 @@ let spiritualWeapon =
               [ { trigger =
                     { kind = "on_caster_spends_action"
                     , cost = { kind = "bonus_action" }
+                    , laterTurnsOnly = True
                     }
-                , effect = moveForce
-                }
-              , { trigger =
-                    { kind = "on_caster_spends_action"
-                    , cost = { kind = "bonus_action" }
-                    }
-                , effect = repeatAttack
+                , effect = laterTurnMoveAndAttack
                 }
               ]
           }
