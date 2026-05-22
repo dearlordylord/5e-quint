@@ -170,6 +170,13 @@ export function dismissDruidWildShapeForm(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
 }): BattleState {
+  return revertDruidWildShapeForm(input);
+}
+
+export function revertDruidWildShapeForm(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+}): BattleState {
   const actor = input.state.combatants.get(input.actorId);
   if (actor === undefined) return input.state;
   return {

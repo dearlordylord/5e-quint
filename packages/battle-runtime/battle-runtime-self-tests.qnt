@@ -12,4 +12,6 @@ module battleRuntimeSelfTests {
   import battleRuntimeSelfTransformationTests.* from "./battle-runtime-self-transformation-tests"
   import battleRuntimeObjectContactDamageTests.* from "./battle-runtime-object-contact-damage-tests"
   import battleRuntimeMetamagic.* from "./battle-runtime-metamagic"
+  import battleRuntimeShapeShifting.* from "./battle-runtime-shape-shifting"
+  import battleRuntimeDruidWildShape.* from "./battle-runtime-druid-wild-shape"
 }

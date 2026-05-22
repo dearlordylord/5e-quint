@@ -472,5 +472,20 @@ export {
   combatantDruidWildShapeArmorClassState,
   combatantEffectiveSize,
   combatantHasActiveDruidWildShape,
+  revertDruidWildShapeForm,
   removeEndedDruidWildShapeEffects,
 } from "./battle-reducer/druid-wild-shape.ts";
+export {
+  battleShapeShiftedRuntimeState,
+  combatantIsShapeShifted,
+  shapeShiftedRuntimeState,
+  revertShapeShiftedCombatantToTrueForm,
+  revertShapeShiftedRuntimeState,
+  trueFormRuntimeState,
+  type BattleShapeShiftReplacementFormFacts,
+  type BattleShapeShiftReversionOwner,
+  type BattleShapeShiftReversionResult,
+  type BattleShapeShiftSource,
+  type BattleShapeShiftedRuntimeState,
+  type BattleShapeShiftTrueFormFacts,
+} from "./battle-reducer/shape-shifting.ts";

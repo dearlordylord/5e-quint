@@ -1,13 +1,10 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeDruidWildShape {
-  type DruidWildShapeFormFacts = {
-    armorClass: int,
-    creatureSize: str,
-    speedFeet: int,
-    strengthModifier: int,
-  }
-  type DruidWildShapeFormState = NoDruidWildShape | ActiveDruidWildShape({ form: DruidWildShapeFormFacts })
+  import battleRuntimeShapeShifting.* from "./battle-runtime-shape-shifting"
+
+  type DruidWildShapeFormFacts = ShapeShiftedReplacementFormFacts
+  type DruidWildShapeFormState = DruidWildShapeRuntimeState
   type DruidWildShapeProjection = {
     bonusActionAvailable: bool,
     usesRemaining: int,
@@ -18,11 +15,17 @@ module battleRuntimeDruidWildShape {
   pure def initialProjection: DruidWildShapeProjection = {
     bonusActionAvailable: true,
     usesRemaining: 2,
-    activeForm: NoDruidWildShape,
+    activeForm: DruidWildShapeTrueForm,
     tempHp: 0,
   }
 
   pure def proficiencyBonus: int = 2
+
+  pure def druidWildShapeSource: ClassFeatureShapeShiftSource =
+    {
+      sourceCombatantId: "synthetic_druid",
+      sourceUnitId: "synthetic_druid_wild_shape",
+    }
 
   pure def largeFastFormFacts: DruidWildShapeFormFacts = {
     armorClass: 11,
@@ -40,32 +43,32 @@ module battleRuntimeDruidWildShape {
 
   pure def projectedArmorClass(state: DruidWildShapeProjection): int =
     match state.activeForm {
-      | NoDruidWildShape => 16
-      | ActiveDruidWildShape(data) => data.form.armorClass
+      | DruidWildShapeTrueForm => 16
+      | DruidWildShapeShifted(data) => data.replacementForm.armorClass
     }
 
   pure def projectedSize(state: DruidWildShapeProjection): str =
     match state.activeForm {
-      | NoDruidWildShape => "medium"
-      | ActiveDruidWildShape(data) => data.form.creatureSize
+      | DruidWildShapeTrueForm => "medium"
+      | DruidWildShapeShifted(data) => data.replacementForm.creatureSize
     }
 
   pure def projectedSpeedFeet(state: DruidWildShapeProjection): int =
     match state.activeForm {
-      | NoDruidWildShape => 30
-      | ActiveDruidWildShape(data) => data.form.speedFeet
+      | DruidWildShapeTrueForm => 30
+      | DruidWildShapeShifted(data) => data.replacementForm.speedFeet
     }
 
   pure def canCastSpells(state: DruidWildShapeProjection): bool =
     match state.activeForm {
-      | NoDruidWildShape => true
-      | ActiveDruidWildShape(_) => false
+      | DruidWildShapeTrueForm => true
+      | DruidWildShapeShifted(_) => false
     }
 
   pure def projectedShoveSaveDc(state: DruidWildShapeProjection): int =
     match state.activeForm {
-      | NoDruidWildShape => 13
-      | ActiveDruidWildShape(data) => 8 + data.form.strengthModifier + proficiencyBonus
+      | DruidWildShapeTrueForm => 13
+      | DruidWildShapeShifted(data) => 8 + data.replacementForm.strengthModifier + proficiencyBonus
     }
 
   pure def canAssumeForm(state: DruidWildShapeProjection): bool =
@@ -73,8 +76,8 @@ module battleRuntimeDruidWildShape {
 
   pure def canDismissForm(state: DruidWildShapeProjection): bool =
     state.bonusActionAvailable and match state.activeForm {
-      | NoDruidWildShape => false
-      | ActiveDruidWildShape(_) => true
+      | DruidWildShapeTrueForm => false
+      | DruidWildShapeShifted(_) => true
     }
 
   pure def assumeForm(
@@ -84,7 +87,10 @@ module battleRuntimeDruidWildShape {
     if (canAssumeForm(state)) {
       bonusActionAvailable: false,
       usesRemaining: state.usesRemaining - 1,
-      activeForm: ActiveDruidWildShape({ form: form }),
+      activeForm: DruidWildShapeShifted({
+        source: druidWildShapeSource,
+        replacementForm: form,
+      }),
       tempHp: if (state.tempHp > 2) state.tempHp else 2,
     } else state
 
@@ -92,14 +98,14 @@ module battleRuntimeDruidWildShape {
     if (canDismissForm(state)) {
       bonusActionAvailable: false,
       usesRemaining: state.usesRemaining,
-      activeForm: NoDruidWildShape,
+      activeForm: druidWildShapeStateAfterSupportedReversion(state.activeForm),
       tempHp: state.tempHp,
     } else state
 
   pure def revertForm(state: DruidWildShapeProjection): DruidWildShapeProjection = {
     bonusActionAvailable: state.bonusActionAvailable,
     usesRemaining: state.usesRemaining,
-    activeForm: NoDruidWildShape,
+    activeForm: druidWildShapeStateAfterSupportedReversion(state.activeForm),
     tempHp: state.tempHp,
   }
 
@@ -109,6 +115,7 @@ module battleRuntimeDruidWildShape {
       assert(state.bonusActionAvailable == false),
       assert(state.usesRemaining == 1),
       assert(state.tempHp == 2),
+      assert(druidWildShapeIsShapeShifted(state.activeForm)),
       assert(projectedArmorClass(state) == 11),
       assert(projectedSize(state) == "large"),
       assert(projectedSpeedFeet(state) == 60),
@@ -133,7 +140,7 @@ module battleRuntimeDruidWildShape {
     val result = assumeForm(unavailable, largeFastFormFacts)
     all {
       assert(result.usesRemaining == 0),
-      assert(result.activeForm == NoDruidWildShape),
+      assert(result.activeForm == DruidWildShapeTrueForm),
     }
   }
 
@@ -142,11 +149,11 @@ module battleRuntimeDruidWildShape {
     val dismissed = dismissForm({ ...active, bonusActionAvailable: true })
     val reverted = revertForm({ ...active, bonusActionAvailable: true })
     all {
-      assert(dismissed.activeForm == NoDruidWildShape),
+      assert(dismissed.activeForm == DruidWildShapeTrueForm),
       assert(dismissed.usesRemaining == 1),
       assert(projectedSize(dismissed) == "medium"),
       assert(projectedSpeedFeet(dismissed) == 30),
-      assert(reverted.activeForm == NoDruidWildShape),
+      assert(reverted.activeForm == DruidWildShapeTrueForm),
       assert(projectedSize(reverted) == "medium"),
       assert(projectedSpeedFeet(reverted) == 30),
     }
@@ -157,7 +164,7 @@ module battleRuntimeDruidWildShape {
     val active = assumeForm(initialProjection, largeFastFormFacts)
     val noBonusAction = dismissForm(active)
     all {
-      assert(noForm.activeForm == NoDruidWildShape),
+      assert(noForm.activeForm == DruidWildShapeTrueForm),
       assert(noForm.bonusActionAvailable == true),
       assert(noBonusAction.activeForm == active.activeForm),
       assert(noBonusAction.bonusActionAvailable == false),

@@ -121,13 +121,13 @@
     {
       "number": 20,
       "id": "L12G-FOLLOWUP-SHAPESHIFT-TRUE-FORM-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Shared Shape-Shifted True-Form Runtime State"
     },
     {
       "number": 21,
       "id": "L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-AREA-SUPPRESSION",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Moonbeam Shape-Shift Area Suppression Rider"
     },
     {
@@ -195,6 +195,18 @@
       "id": "L3-FOLLOWUP-PROTECTION-FROM-ENERGY-DAMAGE-RESISTANCE",
       "status": "ready-for-research",
       "title": "Protection From Energy Surface Target Shape And Damage Resistance Runtime Support"
+    },
+    {
+      "number": 33,
+      "id": "L12G-FOLLOWUP-SPELL-SHAPESHIFT-TRUE-FORM-REVERSION",
+      "status": "ready-for-research",
+      "title": "Spell Shape-Shift True-Form Reversion Owner"
+    },
+    {
+      "number": 34,
+      "id": "L12G-FOLLOWUP-STATBLOCK-SHAPECHANGER-TRUE-FORM-REVERSION",
+      "status": "ready-for-research",
+      "title": "Stat Block Shapechanger True-Form Reversion Owner"
     }
   ]
 }
@@ -663,7 +675,7 @@ Verification notes:
 
 ### Task 20 - L12G-FOLLOWUP-SHAPESHIFT-TRUE-FORM-RUNTIME - Shared Shape-Shifted True-Form Runtime State
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -684,9 +696,21 @@ Acceptance:
 - No companion AI/autonomous-control behavior is introduced.
 - No authored identity dispatch is introduced in runtime code.
 
+Result:
+
+- Promoted a source-neutral battle-visible shape-shift runtime projection with explicit true-form, replacement-form, source, and reversion-owner variants.
+- Wired the current executable reversion owner to the existing Druid Wild Shape active effect, so shared consumers can test active shape-shift state and revert Wild Shape without branching on authored ids.
+- Kept spell-effect and stat-block shapechanger sources distinct and runtime-visible as unsupported reversion owners for later owners, rather than collapsing them into Wild Shape semantics.
+
+Verification notes:
+
+- RAW/ubiquitous-language check: SRD 5.2.1 `Rules-Glossary.md#Shape-Shifting` defines true-form reversion and source-specific retained/replaced facts; SRD 5.2.1 `Classes/Druid.md#Level 2: Wild Shape` provides the currently executable Druid reversion owner; `UBIQUITOUS_LANGUAGE.md` keeps true form, Stat Block, Character Sheet, and runtime creature facts distinct.
+- Focused verification covered Wild Shape shared projection/reversion, synthetic spell and stat-block source distinction, package-local shape-shift Quint tests, package-local Druid Wild Shape Quint tests, `pnpm unit-profile-coverage:check`, and `git diff --check`.
+- Spell-effect transformation and stat-block shapechanger reversion remain explicit unsupported owners until their runtime owners are promoted by Tasks 33 and 34. Task 21 is now runnable for Moonbeam shape-shift reversion and area suppression against the shared state.
+
 ### Task 21 - L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-AREA-SUPPRESSION - Moonbeam Shape-Shift Area Suppression Rider
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on:
 
@@ -993,3 +1017,57 @@ Acceptance:
 - The Surface record represents RAW target eligibility in typed target-selection data before the runtime profile is admitted.
 - The implementation does not reuse the Resistance cantrip's d4 damage-reduction profile or weaken Protection from Poison's composite condition-removal/protection profile.
 - No companion AI/autonomous-control behavior or authored identity dispatch is introduced.
+
+### Task 33 - L12G-FOLLOWUP-SPELL-SHAPESHIFT-TRUE-FORM-REVERSION - Spell Shape-Shift True-Form Reversion Owner
+
+Status: `ready-for-research`
+
+Depends on:
+
+- Task 20.
+
+Input:
+
+- Shared shape-shift runtime state from Task 20.
+- Local RAW under `.references/srd-5.2.1/` for SRD spell transformations that cause a target to shape-shift, such as Polymorph-style spells.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Existing spell active-effect lifecycle, self-transformation support, Concentration cleanup, and spell invocation/profile admission owners.
+
+Output:
+
+- Identify which current spell-transformation runtime owners are true shape-shift owners under RAW, and do not treat adjacent non-shape-shift transformations as shape-shifted.
+- Promote spell-effect shape-shift projection and true-form reversion through the shared Task 20 state, deriving replacement-form and true-form facts from the spell active effect and target state rather than duplicating them.
+- Keep unsupported spell families explicit with typed unsupported results or split them further; do not branch on spell ids, names, or provenance sections.
+- Update focused spell-transformation runtime tests, package-local promoted Quint/runtime parity for spell-effect reversion, generated coverage artifacts, `git diff --check`, and reviewer-loop convergence.
+
+Acceptance:
+
+- Spell-effect shape-shift reversion lands as `supported-profile`, `profile-subset-supported`, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No authored identity dispatch or PHB+ authored identity is introduced.
+
+### Task 34 - L12G-FOLLOWUP-STATBLOCK-SHAPECHANGER-TRUE-FORM-REVERSION - Stat Block Shapechanger True-Form Reversion Owner
+
+Status: `ready-for-research`
+
+Depends on:
+
+- Task 20.
+
+Input:
+
+- Shared shape-shift runtime state from Task 20.
+- Local RAW under `.references/srd-5.2.1/` for stat-block shapechanger traits/actions present in the redistributable SRD corpus.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Existing stat-block battle controls, active stat-block creature state, and any current shapechanger-form Surface content.
+
+Output:
+
+- Promote or precisely close stat-block shapechanger active-form state as a true shape-shift owner, keeping true-form Stat Block facts and replacement-form facts derived from one canonical runtime state.
+- Provide shared-state projection and true-form reversion for supported stat-block shapechangers without branching on monster ids, names, slugs, or provenance sections.
+- Keep unsupported stat-block form families explicit with typed unsupported results or split them further.
+- Update focused stat-block runtime tests, package-local promoted Quint/runtime parity for stat-block reversion, generated coverage artifacts, `git diff --check`, and reviewer-loop convergence.
+
+Acceptance:
+
+- Stat-block shapechanger reversion lands as `supported-profile`, `profile-subset-supported`, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No authored identity dispatch or PHB+ authored identity is introduced.
