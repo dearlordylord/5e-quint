@@ -115,7 +115,7 @@
     {
       "number": 19,
       "id": "L3-SPELL-PROTECTION-FROM-ENERGY-RUNTIME-SURVEY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Level 3 Protection From Energy Runtime Survey"
     },
     {
@@ -189,6 +189,12 @@
       "id": "L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME",
       "status": "blocked",
       "title": "Slow Turn Restrictions And Somatic Failure Runtime Support"
+    },
+    {
+      "number": 32,
+      "id": "L3-FOLLOWUP-PROTECTION-FROM-ENERGY-DAMAGE-RESISTANCE",
+      "status": "ready-for-research",
+      "title": "Protection From Energy Surface Target Shape And Damage Resistance Runtime Support"
     }
   ]
 }
@@ -584,7 +590,7 @@ Verification notes:
 
 ### Task 19 - L3-SPELL-PROTECTION-FROM-ENERGY-RUNTIME-SURVEY - Level 3 Protection From Energy Runtime Survey
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -603,6 +609,57 @@ Acceptance:
 - The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
 - No companion AI/autonomous-control behavior is introduced.
 - No authored identity dispatch is introduced in runtime code.
+
+Result:
+
+- Rechecked SRD 5.2.1 Protection from Energy RAW and
+  `UBIQUITOUS_LANGUAGE.md`. The spell grants one willing touched creature
+  Concentration-bound Resistance to a caster-chosen Acid, Cold, Fire,
+  Lightning, or Thunder damage type.
+- Confirmed `packages/surface/content/protection_from_energy.json` already
+  carries the action casting, level 3, Touch range, Concentration up to 1 hour,
+  and chosen `grant_resistance` source facts, but its target hole is not yet
+  structurally lossless: it records only `selection.mode: "one"` and omits
+  `targetKinds: ["creature"]` plus `disposition: "willing"`.
+- Confirmed the Unit matrix still reports `protection_from_energy` as an
+  `srd-candidate` with `not-in-unit-catalog` status and no Unit claim,
+  deterministic admission/projection evidence, focused runtime test, or promoted
+  package-local Quint parity witness.
+- Confirmed battle runtime already has source-neutral `damageResistance` active
+  effects and target-side damage adjustment support, including reuse by
+  Protection from Poison. Protection from Poison's composite admission profile
+  is not the correct owner for Protection from Energy because it also requires
+  Poisoned removal and condition-scoped Saving Throw Advantage.
+- Closed Task 19 as a focused follow-up split instead of claiming support.
+  Recorded the detailed survey in
+  `plans/unit-profile-coverage/L3_PROTECTION_FROM_ENERGY_RUNTIME_SURVEY.md`.
+- Split Surface-and-runtime support to
+  `L3-FOLLOWUP-PROTECTION-FROM-ENERGY-DAMAGE-RESISTANCE`: repair the Surface
+  target hole to structurally encode exactly one willing creature target, admit
+  the repaired record into the Unit catalog, and promote Magic Action level-3+
+  Spell Slot casting, caster-owned Concentration, the
+  Acid/Cold/Fire/Lightning/Thunder cast-time damage-type choice, one
+  spell-owned `damageResistance` active effect, target-side halving for matching
+  damage, and cleanup on Concentration or duration end without authored-identity
+  dispatch.
+
+Verification notes:
+
+- RAW/ubiquitous-language check: SRD 5.2.1
+  `Spells/Descriptions-M-P.md#Protection from Energy`,
+  `Playing-the-Game.md#Resistance and Vulnerability`,
+  `Rules-Glossary.md#Resistance`, and `UBIQUITOUS_LANGUAGE.md` terms for Magic
+  Action, Spell Slot, Concentration, Duration, Damage Type, Resistance,
+  Immunity, Vulnerability, and Creature.
+- Coverage verification: Task 19 changed survey/plan artifacts only and did not
+  add Unit claims, Surface catalog admission, runtime reducers, or promoted
+  Quint behavior. `pnpm unit-profile-coverage:check` and `git diff --check` are
+  the relevant checks; MBT is not applicable.
+- Reviewer-loop convergence: survey review found no runtime/code-change issues;
+  architecture and connascence review kept the future owner as a single
+  chosen-damage-type Resistance spell profile that reuses existing
+  `damageResistance` active-effect state and does not weaken Protection from
+  Poison or the Resistance cantrip profiles.
 
 ### Task 20 - L12G-FOLLOWUP-SHAPESHIFT-TRUE-FORM-RUNTIME - Shared Shape-Shifted True-Form Runtime State
 
@@ -906,4 +963,33 @@ Acceptance:
 
 - Slow can claim exact active-effect support only if Task 30 and this task both land.
 - Focused runtime tests and promoted Quint/runtime parity cover action/Bonus Action mutual exclusion, Attack-action cap, Somatic-component failure chance, unaffected spell casts, and cleanup after the Slow effect ends.
+- No companion AI/autonomous-control behavior or authored identity dispatch is introduced.
+
+### Task 32 - L3-FOLLOWUP-PROTECTION-FROM-ENERGY-DAMAGE-RESISTANCE - Protection From Energy Surface Target Shape And Damage Resistance Runtime Support
+
+Status: `ready-for-research`
+
+Input:
+
+- Local RAW under `.references/srd-5.2.1/Spells/Descriptions-M-P.md#Protection from Energy`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Existing authored `protection_from_energy` Surface record.
+- Existing Surface target-selection vocabulary for willing creature targets.
+- Current source-neutral `damageResistance` active effect, damage adjustment pipeline, spell invocation/profile admission owners, and package-local `battle-runtime.qnt`.
+- The Task 19 survey note.
+
+Output:
+
+- Repair `protection_from_energy` Surface target selection before runtime admission: encode exactly one willing creature target structurally with `targetKinds: ["creature"]` and `disposition: "willing"` rather than relying on prose or authored identity.
+- Admit the repaired `protection_from_energy` record into the Unit catalog and claim a spell profile only after deterministic admission/projection and focused runtime evidence exist.
+- Promote Magic Action level-3+ Spell Slot spend, the structurally admitted willing touched creature target, caster-owned Concentration up to 1 hour, a cast-time damage-type choice restricted to Acid, Cold, Fire, Lightning, and Thunder, and one spell-owned `damageResistance` active effect carrying the selected type.
+- Reuse the existing target-side damage adjustment pipeline so matching damage is halved once with normal Immunity/Resistance/Vulnerability ordering.
+- Clean up the spell-owned Resistance on Concentration break, replacement, or duration end without duplicating Resistance state.
+- Update Unit claims/evidence/report artifacts, focused runtime tests, selected-identity evidence if required by the coverage lane, generated coverage artifacts, `git diff --check`, and promoted Quint/runtime parity.
+
+Acceptance:
+
+- Protection from Energy lands as `supported-profile` or `profile-subset-supported` for the chosen damage-type Resistance profile.
+- The Surface record represents RAW target eligibility in typed target-selection data before the runtime profile is admitted.
+- The implementation does not reuse the Resistance cantrip's d4 damage-reduction profile or weaken Protection from Poison's composite condition-removal/protection profile.
 - No companion AI/autonomous-control behavior or authored identity dispatch is introduced.
