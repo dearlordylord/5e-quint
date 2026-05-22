@@ -87,6 +87,42 @@
       "id": "L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL",
       "status": "ready-for-research",
       "title": "Continual Flame Dispel And Suppression Removal"
+    },
+    {
+      "number": 22,
+      "id": "L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION",
+      "status": "ready-for-research",
+      "title": "Acid Arrow RAW Corpus Reconciliation"
+    },
+    {
+      "number": 23,
+      "id": "L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE",
+      "status": "ready-for-research",
+      "title": "Acid Arrow Surface Damage Shape"
+    },
+    {
+      "number": 24,
+      "id": "L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT",
+      "status": "ready-for-research",
+      "title": "Acid Arrow Delayed Runtime Support"
+    },
+    {
+      "number": 25,
+      "id": "L3-SPELL-FIREBALL-RUNTIME-SURVEY",
+      "status": "ready-for-research",
+      "title": "Level 3 Fireball Runtime Survey And Task Split"
+    },
+    {
+      "number": 26,
+      "id": "L3-SPELL-MASS-HEALING-WORD-RUNTIME-SURVEY",
+      "status": "ready-for-research",
+      "title": "Level 3 Mass Healing Word Runtime Survey And Task Split"
+    },
+    {
+      "number": 27,
+      "id": "L3-SPELL-VAMPIRIC-TOUCH-RUNTIME-SURVEY",
+      "status": "ready-for-research",
+      "title": "Level 3 Vampiric Touch Runtime Survey And Task Split"
     }
   ]
 }
@@ -266,7 +302,6 @@ Output:
 - Refresh level-2 ongoing-effect metrics.
 - Add the next concrete, Ralph-sized Lane B tasks only if real frontier remains.
 
-
 ### Task 21 - L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL - Continual Flame Dispel And Suppression Removal
 
 Status: `ready-for-research`
@@ -301,3 +336,137 @@ Acceptance:
 - focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.
 
 <!-- moved-from-lanes: D; observed-statuses: ready-for-research -->
+
+## Level 2 Completion And Level 3 Kickoff Refill
+
+### Task 22 - L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION - Acid Arrow RAW Corpus Reconciliation
+
+Status: `ready-for-research`
+
+Input:
+
+- Local RAW under `.references/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface content, Unit/profile claims, owner evidence, and focused tests.
+
+Output:
+
+- Resolve the local SRD Acid Arrow damage-timing contradiction by producing an owner-ready ASSUMPTIONS/corpus decision patch or by marking the task blocked with exact missing owner input.
+- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Focused verification, `git diff --check`, and reviewer-loop convergence.
+
+Acceptance:
+
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
+
+### Task 23 - L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE - Acid Arrow Surface Damage Shape
+
+Status: `ready-for-research`
+
+Input:
+
+- Local RAW under `.references/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface content, Unit/profile claims, owner evidence, and focused tests.
+
+Output:
+
+- After RAW reconciliation exists, represent Acid Arrow damage timing, miss branch, delayed damage, and scaling as executable Surface facts; otherwise leave blocked on the RAW decision.
+- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Focused verification, `git diff --check`, and reviewer-loop convergence.
+
+Acceptance:
+
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
+
+### Task 24 - L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT - Acid Arrow Delayed Runtime Support
+
+Status: `ready-for-research`
+
+Input:
+
+- Local RAW under `.references/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface content, Unit/profile claims, owner evidence, and focused tests.
+
+Output:
+
+- After RAW and Surface shape are ready, promote Acid Arrow spell attack, approved immediate/miss damage, delayed target-turn Acid damage, scaling, cleanup, and coverage evidence.
+- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Focused verification, `git diff --check`, and reviewer-loop convergence.
+
+Acceptance:
+
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
+
+### Task 25 - L3-SPELL-FIREBALL-RUNTIME-SURVEY - Level 3 Fireball Runtime Survey And Task Split
+
+Status: `ready-for-research`
+
+Input:
+
+- Local RAW under `.references/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface content, Unit/profile claims, owner evidence, and focused tests.
+
+Output:
+
+- Read SRD Fireball and current blast/save damage support; ensure level-3 profile accounting is supportable or split the missing runtime work.
+- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Focused verification, `git diff --check`, and reviewer-loop convergence.
+
+Acceptance:
+
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
+
+### Task 26 - L3-SPELL-MASS-HEALING-WORD-RUNTIME-SURVEY - Level 3 Mass Healing Word Runtime Survey And Task Split
+
+Status: `ready-for-research`
+
+Input:
+
+- Local RAW under `.references/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface content, Unit/profile claims, owner evidence, and focused tests.
+
+Output:
+
+- Read SRD Mass Healing Word and existing healing/target allocation support; close or split runtime work for multi-target bonus-action healing.
+- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Focused verification, `git diff --check`, and reviewer-loop convergence.
+
+Acceptance:
+
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
+
+### Task 27 - L3-SPELL-VAMPIRIC-TOUCH-RUNTIME-SURVEY - Level 3 Vampiric Touch Runtime Survey And Task Split
+
+Status: `ready-for-research`
+
+Input:
+
+- Local RAW under `.references/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface content, Unit/profile claims, owner evidence, and focused tests.
+
+Output:
+
+- Read SRD Vampiric Touch and existing attack/heal/ongoing effect support; close or split runtime work for repeat spell attack plus self healing.
+- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Focused verification, `git diff --check`, and reviewer-loop convergence.
+
+Acceptance:
+
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
