@@ -2601,6 +2601,16 @@ export const BattleHoleSchema = Schema.Union(
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("rolledDice"),
+    dragonsBreath: Schema.Struct({
+      sourceCombatantId: CombatantId,
+      sourceSpellId: Schema.String,
+      damageType: DamageTypeSchema,
+      expr: BattleRuntimeObjectSchema,
+    }),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("rolledDice"),
     spellDamageReduction: Schema.Struct({
       sourceSpellId: Schema.String,
       sourceCombatantId: CombatantId,
@@ -2609,6 +2619,20 @@ export const BattleHoleSchema = Schema.Union(
       amount: Schema.Struct({
         dice: Schema.Literal(1),
         dieSize: Schema.Literal(4),
+      }),
+    }),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("rolledDice"),
+    sourceDamageRollPenalty: Schema.Struct({
+      sourceSpellId: Schema.String,
+      sourceCombatantId: CombatantId,
+      affectedCombatantId: CombatantId,
+      damageRollHoleId: BattleHoleIdSchema,
+      amount: Schema.Struct({
+        dice: Schema.Literal(1),
+        dieSize: Schema.Literal(8),
       }),
     }),
   }),
@@ -2666,6 +2690,13 @@ export const BattleHoleSchema = Schema.Union(
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("abilityChoice"),
+    label: Schema.String,
+    spell: SupportedSpellInvocationSchema,
+    choices: Schema.Array(AbilitySchema),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("targetAbilityChoices"),
     label: Schema.String,
     spell: SupportedSpellInvocationSchema,
     choices: Schema.Array(AbilitySchema),
@@ -2906,6 +2937,21 @@ export const BattleHoleSchema = Schema.Union(
     ability: AbilitySchema,
     dc: DcSourceSchema,
     areaChoices: Schema.Array(BattleRuntimeObjectSchema),
+    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("savingThrowOutcome"),
+    label: Schema.String,
+    dragonsBreath: Schema.Struct({
+      sourceCombatantId: CombatantId,
+      sourceSpellId: Schema.String,
+      lengthFeet: Schema.Literal(15),
+    }),
+    ability: Schema.Literal("dex"),
+    dc: DcSourceSchema,
+    areaChoices: Schema.Array(BattleSpellAreaChoiceSchema),
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
     targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
   }),
@@ -3635,6 +3681,16 @@ type BattleFillEncoded =
       readonly value: Ability;
     }
   | {
+      readonly kind: "targetAbilityChoices";
+      readonly holeId: string;
+      readonly value: {
+        readonly choices: readonly {
+          readonly targetId: string;
+          readonly ability: Ability;
+        }[];
+      };
+    }
+  | {
       readonly kind: "thaumaturgyActiveOneMinuteEffectCount";
       readonly holeId: string;
       readonly value: {
@@ -4352,6 +4408,18 @@ export const BattleFillSchema: Schema.Schema<
       kind: Schema.Literal("abilityChoice"),
       holeId: BattleHoleIdSchema,
       value: AbilitySchema,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("targetAbilityChoices"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Struct({
+        choices: Schema.Array(
+          Schema.Struct({
+            targetId: CombatantId,
+            ability: AbilitySchema,
+          }),
+        ),
+      }),
     }),
     Schema.Struct({
       kind: Schema.Literal("thaumaturgyActiveOneMinuteEffectCount"),
