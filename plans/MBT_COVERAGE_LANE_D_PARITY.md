@@ -157,7 +157,7 @@
     {
       "number": 26,
       "id": "L3-SPELL-DISPEL-MAGIC-ACCOUNTING-AUDIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Level 3 Dispel Magic Accounting Audit"
     },
     {
@@ -486,7 +486,7 @@ Acceptance:
 
 ### Task 26 - L3-SPELL-DISPEL-MAGIC-ACCOUNTING-AUDIT - Level 3 Dispel Magic Accounting Audit
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
