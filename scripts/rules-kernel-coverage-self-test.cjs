@@ -122,6 +122,33 @@ function runSelfTest() {
       dryRun: "plans/rules-kernel-coverage/SAMPLE_DRY_RUN.md",
     }) + "\n",
   );
+  const sampleKernelIrBoundaries = [
+    "command",
+    "fill",
+    "result",
+    "state",
+    "active-effect",
+    "support-profile",
+    "resource",
+    "handoff",
+  ].map((boundary) =>
+    JSON.stringify({
+      boundary,
+      summary: `${boundary} sample boundary`,
+      runtimeBoundaryPaths: ["sample.ts"],
+      obligationIds: ["BATTLE.SAMPLE"],
+      evidence: `${boundary} sample evidence`,
+    }),
+  );
+  writeFile(
+    path.join(
+      root,
+      "plans",
+      "rules-kernel-coverage",
+      "kernel-ir-boundaries.jsonl",
+    ),
+    `${sampleKernelIrBoundaries.join("\n")}\n`,
+  );
   writeFile(
     path.join(root, "plans", "rules-kernel-coverage", "SAMPLE_DRY_RUN.md"),
     "# Sample Dry Run\n",
@@ -158,6 +185,7 @@ function runSelfTest() {
   assert.equal(result.matrix.summary.byStatus["boundary-only"], 1);
   assert.equal(result.matrix.qntOwnerRoles.length, 1);
   assert.equal(result.matrix.generatorReadiness.length, 1);
+  assert.equal(result.matrix.kernelIrBoundaries.length, 8);
 
   const sampleQntOwnerRolesPath = path.join(
     root,
@@ -267,6 +295,43 @@ function runSelfTest() {
     `Expected generator-readiness unknown subset issue, got ${JSON.stringify(unknownGeneratorSubsetResult.issues)}`,
   );
   writeFile(sampleGeneratorReadinessPath, initialGeneratorReadinessText);
+
+  const sampleKernelIrBoundariesPath = path.join(
+    root,
+    "plans",
+    "rules-kernel-coverage",
+    "kernel-ir-boundaries.jsonl",
+  );
+  const initialKernelIrBoundariesText = fs.readFileSync(
+    sampleKernelIrBoundariesPath,
+    "utf8",
+  );
+  writeFile(
+    sampleKernelIrBoundariesPath,
+    JSON.stringify({
+      boundary: "unknown-boundary",
+      summary: "",
+      runtimeBoundaryPaths: ["missing.ts", "missing.ts"],
+      obligationIds: ["BATTLE.MISSING"],
+      evidence: "",
+    }) + "\n",
+  );
+  const invalidKernelIrBoundaryResult = buildKernelCoverage({ root });
+  for (const issue of [
+    "kernel-ir-boundaries row 1.boundary has unknown value unknown-boundary.",
+    "kernel-ir-boundaries row 1.runtimeBoundaryPaths repeats missing.ts.",
+    "kernel-ir-boundaries row 1.summary must be a non-empty string.",
+    "kernel-ir-boundaries row 1.evidence must be a non-empty string.",
+    "kernel-ir-boundaries row 1.runtimeBoundaryPaths path missing.ts does not exist.",
+    "kernel-ir-boundaries row 1.obligationIds references unknown obligation BATTLE.MISSING.",
+    "kernel-ir-boundaries is missing boundary command.",
+  ]) {
+    assert.ok(
+      invalidKernelIrBoundaryResult.issues.includes(issue),
+      `Expected kernel IR boundary issue ${issue}, got ${JSON.stringify(invalidKernelIrBoundaryResult.issues)}`,
+    );
+  }
+  writeFile(sampleKernelIrBoundariesPath, initialKernelIrBoundariesText);
 
   const initialObligationsText = fs.readFileSync(
     path.join(root, "plans", "rules-kernel-coverage", "obligations.jsonl"),

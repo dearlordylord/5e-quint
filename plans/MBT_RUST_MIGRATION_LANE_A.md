@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "MBTRUST-A-KERNEL-IR-BOUNDARY-INVENTORY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Kernel IR Boundary Inventory"
     },
     {
@@ -205,7 +205,7 @@ Output:
 
 ### Task 5 - MBTRUST-A-KERNEL-IR-BOUNDARY-INVENTORY - Kernel IR Boundary Inventory
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 

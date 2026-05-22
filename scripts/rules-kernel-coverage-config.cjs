@@ -122,6 +122,17 @@ const qntOwnerRoles = new Set([
   "legacy-reference",
 ]);
 
+const kernelIrBoundaryKinds = new Set([
+  "command",
+  "fill",
+  "result",
+  "state",
+  "active-effect",
+  "support-profile",
+  "resource",
+  "handoff",
+]);
+
 const markerKinds = new Set([
   "qnt-owner",
   "runtime-owner",
@@ -150,6 +161,7 @@ function coveragePaths(root) {
     profileObligations: path.join(coverageDir, "profile-obligations.jsonl"),
     qntOwnerRoles: path.join(coverageDir, "qnt-owner-roles.jsonl"),
     generatorReadiness: path.join(coverageDir, "generator-readiness.jsonl"),
+    kernelIrBoundaries: path.join(coverageDir, "kernel-ir-boundaries.jsonl"),
     matrix: path.join(coverageDir, "matrix.json"),
     report: path.join(coverageDir, "REPORT.md"),
     stage3Plan: path.join(coverageDir, "STAGE3_CLOSURE_PLAN.md"),
@@ -170,6 +182,7 @@ module.exports = {
   generatorReadinessBlockers,
   generatorReadinessStatuses,
   generatorSubsetConstructs,
+  kernelIrBoundaryKinds,
   markerKinds,
   nonSemanticStatuses,
   obligationKinds,

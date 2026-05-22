@@ -1,6 +1,6 @@
 # Rules Kernel Coverage Report
 
-Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-frontier.jsonl`, `profile-obligations.jsonl`, `qnt-owner-roles.jsonl`, `generator-readiness.jsonl`, and `KERNEL-COVERAGE` source markers.
+Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-frontier.jsonl`, `profile-obligations.jsonl`, `qnt-owner-roles.jsonl`, `generator-readiness.jsonl`, `kernel-ir-boundaries.jsonl`, and `KERNEL-COVERAGE` source markers.
 
 ## Summary
 
@@ -324,6 +324,19 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | Obligation | Status | Subset |
 | --- | --- | --- |
 | `SHARED.HIT_POINTS.POSITIVE_DAMAGE` | fixture-bound | `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `implies`, `all-block` |
+
+## Kernel IR Boundaries
+
+| Boundary | Obligations | Runtime Paths | Summary |
+| --- | --- | --- | --- |
+| command | `BATTLE.COMMAND.OPTION_AND_NEXT_TURN`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | `packages/battle-runtime/src/battle-reducer.ts`, `packages/battle-runtime/src/battle-subjects.ts` | Executable reducer commands are selected Battle subjects and command-option choices, not authored spell names. |
+| fill | `BATTLE.HOLE.SEMANTIC_FRONTIER_CLASSIFICATION`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES`, `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` | `packages/battle-runtime/src/battle-reducer.ts`, `packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts`, `packages/battle-runtime/src/battle-reducer/attack-fill-set.ts` | Caller, table, roll, choice, and result facts enter through typed hole/fill frontiers. |
+| result | `BATTLE.REACTION.OFFER_DECLINE_RESUME`, `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY`, `SHEET.SPELL_REST_BENEFIT.APPLICATION` | `packages/battle-runtime/src/battle-reducer.ts`, `packages/battle-runtime/src/battle-reducer/result-helpers.ts`, `packages/character-creation-runtime/src/index.ts`, `packages/character-sheet-runtime/src/index.ts` | Reducer results distinguish resolved state, requested holes, and typed invalid outcomes. |
+| state | `SHARED.HIT_POINTS.POSITIVE_DAMAGE`, `SHEET.HP_REST_HIT_DICE.TRANSITIONS`, `CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION` | `packages/battle-runtime/src/battle-reducer.ts`, `packages/character-creation-runtime/src/types.ts`, `packages/character-sheet-runtime/src/index.ts`, `packages/character-battle-runtime/src/battle-creature-init.ts` | Mutable reducer state remains runtime-owned and is projected from shared algebras, Surface records, and character-sheet facts. |
+| active-effect | `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE`, `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE`, `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS`, `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` | `packages/battle-runtime/src/active-effect/types.ts`, `packages/battle-runtime/src/active-effect/lifecycle.ts`, `packages/battle-runtime/src/battle-reducer/spells-active-effects.ts`, `packages/battle-runtime/src/battle-reducer/turn-end-movement.ts` | Battle active effects are typed occurrence state with expiration and cleanup semantics. |
+| support-profile | `BATTLE.SURFACE.EXECUTABLE_PROFILE_JOIN`, `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `CREATION.CHOICE_DISCOVERY_CARDINALITY` | `packages/battle-runtime/src/unit-feature-support.ts`, `packages/battle-runtime/src/battle-reducer/spells-profiles.ts`, `packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts`, `packages/character-creation-runtime/src/support-gates.ts`, `packages/character-battle-runtime/src/battle-support-profiles.ts` | Support profiles admit Surface records into executable procedure shapes before reducer execution. |
+| resource | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR`, `SHEET.FEATURE_RESOURCES.TRANSITIONS`, `SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS` | `packages/battle-runtime/src/battle-reducer.ts`, `packages/battle-runtime/src/character-battle-resources.ts`, `packages/battle-runtime/src/battle-reducer/spells-resolve-resources.ts`, `packages/character-sheet-runtime/src/index.ts`, `packages/character-battle-runtime/src/index.ts` | Resources are split by owner: turn economy in battle, spell/feature expenditure on sheet state, and battle-local resource snapshots during combat. |
+| handoff | `CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION`, `CHARACTER.BATTLE.HANDOFF.SETTLEMENT`, `CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS` | `packages/character-battle-runtime/src/index.ts`, `packages/character-battle-runtime/src/battle-creature-init.ts`, `packages/character-battle-runtime/src/battle-character-build-projection.ts`, `packages/character-battle-runtime/src/battle-support-profiles.ts` | Character-battle handoff projects state into battle and settles accepted battle-owned changes back to character sheet state. |
 
 ## Open Work
 

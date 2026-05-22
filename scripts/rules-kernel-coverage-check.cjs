@@ -11,6 +11,7 @@ const {
   generatorReadinessBlockers,
   generatorReadinessStatuses,
   generatorSubsetConstructs,
+  kernelIrBoundaryKinds,
   markerKinds,
   nonSemanticStatuses,
   obligationKinds,
@@ -33,6 +34,10 @@ const generatorReadinessArrayFields = [
   "proofOnly",
   "generatorSubset",
   "blockedBy",
+];
+const kernelIrBoundaryArrayFields = [
+  "runtimeBoundaryPaths",
+  "obligationIds",
 ];
 const generatorReadinessSemanticCoreStatuses = new Set([
   "semantic-core-candidate",
@@ -846,6 +851,46 @@ function validateGeneratorReadiness(
   return issues;
 }
 
+function validateKernelIrBoundary(row, index, rootPath, obligationIds) {
+  const issues = [];
+  const context = `kernel-ir-boundaries row ${index + 1}`;
+  if (!isRecord(row)) return [`${context} must be an object.`];
+  if (!kernelIrBoundaryKinds.has(row.boundary)) {
+    issues.push(`${context}.boundary has unknown value ${row.boundary}.`);
+  }
+  for (const field of kernelIrBoundaryArrayFields) {
+    issues.push(
+      ...validateRequiredStringArray(row[field], `${context}.${field}`),
+    );
+  }
+  for (const field of kernelIrBoundaryArrayFields) {
+    for (const duplicate of duplicateStrings(row[field])) {
+      issues.push(`${context}.${field} repeats ${duplicate}.`);
+    }
+  }
+  if (typeof row.summary !== "string" || row.summary.length === 0) {
+    issues.push(`${context}.summary must be a non-empty string.`);
+  }
+  if (typeof row.evidence !== "string" || row.evidence.length === 0) {
+    issues.push(`${context}.evidence must be a non-empty string.`);
+  }
+  for (const ownerPath of stringArrayOrEmpty(row.runtimeBoundaryPaths)) {
+    if (!fs.existsSync(path.join(rootPath, ownerPath))) {
+      issues.push(
+        `${context}.runtimeBoundaryPaths path ${ownerPath} does not exist.`,
+      );
+    }
+  }
+  for (const obligationId of stringArrayOrEmpty(row.obligationIds)) {
+    if (!obligationIds.has(obligationId)) {
+      issues.push(
+        `${context}.obligationIds references unknown obligation ${obligationId}.`,
+      );
+    }
+  }
+  return issues;
+}
+
 function qntOwnerPaths(obligations) {
   const ownerPaths = new Set();
   for (const obligation of obligations) {
@@ -1156,6 +1201,7 @@ function buildMatrix(rootPath) {
   const profileObligations = readJsonl(rootPath, paths.profileObligations);
   const qntOwnerRoleRows = readJsonl(rootPath, paths.qntOwnerRoles);
   const generatorReadiness = readJsonl(rootPath, paths.generatorReadiness);
+  const kernelIrBoundaries = readJsonl(rootPath, paths.kernelIrBoundaries);
   const profiles = readJsonl(rootPath, paths.unitProfiles);
   const profileIdsByObligation = profilesByObligation(profileObligations);
   const obligationIdsByQntOwner = new Map();
@@ -1193,6 +1239,9 @@ function buildMatrix(rootPath) {
     generatorReadiness: generatorReadiness.map((readiness) =>
       stable(readiness),
     ),
+    kernelIrBoundaries: kernelIrBoundaries.map((boundary) =>
+      stable(boundary),
+    ),
     profileIdsSeenFromUnitProfileCoverage: profiles
       .map((profile) => profile.id)
       .sort(),
@@ -1204,7 +1253,7 @@ function renderReport(matrix, issues) {
   lines.push("# Rules Kernel Coverage Report");
   lines.push("");
   lines.push(
-    "Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-frontier.jsonl`, `profile-obligations.jsonl`, `qnt-owner-roles.jsonl`, `generator-readiness.jsonl`, and `KERNEL-COVERAGE` source markers.",
+    "Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-frontier.jsonl`, `profile-obligations.jsonl`, `qnt-owner-roles.jsonl`, `generator-readiness.jsonl`, `kernel-ir-boundaries.jsonl`, and `KERNEL-COVERAGE` source markers.",
   );
   lines.push("");
   lines.push("## Summary");
@@ -1314,6 +1363,28 @@ function renderReport(matrix, issues) {
     }
   }
   lines.push("");
+  lines.push("## Kernel IR Boundaries");
+  lines.push("");
+  if (matrix.kernelIrBoundaries.length === 0) {
+    lines.push("No kernel-IR boundary rows recorded yet.");
+  } else {
+    lines.push("| Boundary | Obligations | Runtime Paths | Summary |");
+    lines.push("| --- | --- | --- | --- |");
+    for (const boundary of matrix.kernelIrBoundaries) {
+      const obligations =
+        (boundary.obligationIds ?? [])
+          .map((obligationId) => `\`${obligationId}\``)
+          .join(", ") || "_none_";
+      const runtimePaths =
+        (boundary.runtimeBoundaryPaths ?? [])
+          .map((ownerPath) => `\`${ownerPath}\``)
+          .join(", ") || "_none_";
+      lines.push(
+        `| ${boundary.boundary} | ${obligations} | ${runtimePaths} | ${boundary.summary} |`,
+      );
+    }
+  }
+  lines.push("");
   lines.push("## Open Work");
   lines.push("");
   const open = matrix.obligations.filter(
@@ -1376,6 +1447,7 @@ function buildKernelCoverage({ root: rootPath }) {
   const profileObligations = readJsonl(rootPath, paths.profileObligations);
   const qntOwnerRoleRows = readJsonl(rootPath, paths.qntOwnerRoles);
   const generatorReadiness = readJsonl(rootPath, paths.generatorReadiness);
+  const kernelIrBoundaries = readJsonl(rootPath, paths.kernelIrBoundaries);
   const profiles = readJsonl(rootPath, paths.unitProfiles);
   const expectedBattleFrontier = extractBattleFrontierSource(rootPath);
   const scanned = scanClaimFiles(rootPath);
@@ -1520,6 +1592,26 @@ function buildKernelCoverage({ root: rootPath }) {
         qntOwnerRolesByPath,
       ),
     );
+  }
+
+  const seenKernelIrBoundaries = new Set();
+  for (const [index, boundary] of kernelIrBoundaries.entries()) {
+    if (isRecord(boundary) && typeof boundary.boundary === "string") {
+      if (seenKernelIrBoundaries.has(boundary.boundary)) {
+        issues.push(
+          `kernel-ir-boundaries row ${index + 1}: duplicate kernel IR boundary ${boundary.boundary}.`,
+        );
+      }
+      seenKernelIrBoundaries.add(boundary.boundary);
+    }
+    issues.push(
+      ...validateKernelIrBoundary(boundary, index, rootPath, obligationIds),
+    );
+  }
+  for (const boundary of kernelIrBoundaryKinds) {
+    if (!seenKernelIrBoundaries.has(boundary)) {
+      issues.push(`kernel-ir-boundaries is missing boundary ${boundary}.`);
+    }
   }
 
   for (const obligation of obligations) {

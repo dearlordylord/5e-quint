@@ -66,6 +66,13 @@ that boundary coverage never substitutes for reducer-semantic ownership.
 [Generator Readiness Source Of Truth](#generator-readiness-source-of-truth).
 Generated reports summarize those rows but are not the source of truth.
 
+`kernel-ir-boundaries.jsonl` records the future kernel IR boundary inventory.
+It is descriptive C-lane evidence, not a new runtime abstraction. Each row names
+one checked boundary kind, existing runtime boundary paths, related obligation
+ids, and a concise evidence note. The checker requires exactly one row for each
+listed boundary kind: command, fill, result, state, active-effect,
+support-profile, resource, and handoff.
+
 `qnt-owner-roles.jsonl` records the C-lane role classification for every QNT
 owner path cited by a covered obligation. Rows classify only the owner path;
 the obligation list for each owner is derived from `obligations.jsonl` so the
@@ -159,6 +166,9 @@ QNT owner roles are:
   replacement for QNT ownership of reducer semantics.
 - **Generator readiness:** the C-lane assessment defined in
   [Generator Readiness Source Of Truth](#generator-readiness-source-of-truth).
+- **Kernel IR boundary:** a future generator-facing reducer boundary already
+  visible in runtime ownership. The inventory names boundaries and
+  evidence paths only; it does not introduce parallel state or generated Rust.
 
 ## Statuses
 
