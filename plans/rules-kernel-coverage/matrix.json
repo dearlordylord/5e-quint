@@ -5571,6 +5571,39 @@
         "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt"
       ],
       "status": "fixture-bound"
+    },
+    {
+      "blockedBy": [
+        "run-block-coupled",
+        "unsupported-construct"
+      ],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "set-operators",
+        "membership"
+      ],
+      "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration-inductive.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+      ],
+      "status": "fixture-bound"
     }
   ],
   "kernelIrBoundaries": [

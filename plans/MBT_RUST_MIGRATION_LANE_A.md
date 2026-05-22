@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "MBTRUST-A-REACTION-WINDOW-READINESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Reaction Window Generator Readiness Row"
     },
     {
@@ -255,7 +255,7 @@ Output:
 
 ### Task 8 - MBTRUST-A-REACTION-WINDOW-READINESS - Reaction Window Generator Readiness Row
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
