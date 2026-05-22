@@ -151,7 +151,7 @@
     {
       "number": 25,
       "id": "L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Hypnotic Pattern Surface Escape Repair"
     },
     {
@@ -165,6 +165,9 @@
 -->
 
 This is an active Ralph execution plan for level-2 feature/runtime coverage. It replaces the stale A/B/C/Claude level-2 loop files.
+
+
+Planning policy update, 2026-05-22: until the owner explicitly reopens level-3 expansion, recursive tails and deciders must add only level-1/level-2 closure tasks. Park not-yet-started level-3 tasks as `deferred` instead of expanding this lane with more level-3 work.
 
 Every Ralph prompt for this lane must include:
 
@@ -211,7 +214,7 @@ Every task must include:
 | 22 | L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR - Fly Surface Target Repair | done | L3-SPELL-FLY-RUNTIME-SURVEY | L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME | Fly Surface target shape and sibling touched willing creature spell selection vocabulary | Completed by structurally encoding Fly's touched willing creature target eligibility before runtime admission. |
 | 23 | L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME - Fly Special Speed Runtime | ready-for-research | L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR | L3-FOLLOWUP-FLY-END-FALL-WITNESS | Fly fixed special Speed, hover, movement kind vocabulary, active-effect cleanup, and promoted Quint parity | Promote the active Fly Speed grant after the Surface target repair lands. |
 | 24 | L3-FOLLOWUP-FLY-END-FALL-WITNESS - Fly End Fall Witness | blocked | L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME | none | Fly spell-end falling clause, caller-supplied aloft/can-stop-fall witnesses, and existing falling reaction/landing pipeline | Promote the spell-end fall handoff after the active Fly effect exists. |
-| 25 | L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR - Hypnotic Pattern Surface Escape Repair | ready-for-research | L3-SPELL-HYPNOTIC-PATTERN-RUNTIME-SURVEY | L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME | Hypnotic Pattern sight-gated area targeting and target-specific escape facts | Repair typed Surface facts before runtime admission. |
+| 25 | L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR - Hypnotic Pattern Surface Escape Repair | deferred | L3-SPELL-HYPNOTIC-PATTERN-RUNTIME-SURVEY | L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME | Hypnotic Pattern sight-gated area targeting and target-specific escape facts | Repair typed Surface facts before runtime admission. |
 | 26 | L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME - Hypnotic Pattern Control Runtime | blocked | L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR | none | Hypnotic Pattern linked Charmed/Incapacitated/Speed 0 target effect, damage cleanup, shake-awake action, and promoted Quint parity | Promote the battle control lifecycle after the Surface escape repair lands. |
 
 ## Tasks
@@ -833,7 +836,9 @@ Completed:
 
 ### Task 25 - L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR - Hypnotic Pattern Surface Escape Repair
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred Detail: Owner instruction on 2026-05-22: park not-yet-started level-3 work while the level-1/level-2 closure frontier remains active.
 
 Depends on: L3-SPELL-HYPNOTIC-PATTERN-RUNTIME-SURVEY
 
