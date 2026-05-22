@@ -151,7 +151,7 @@
     {
       "number": 25,
       "id": "L3-SPELL-COUNTERSPELL-ACCOUNTING-AUDIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Level 3 Counterspell Accounting Audit"
     },
     {
@@ -464,7 +464,7 @@ Acceptance:
 
 ### Task 25 - L3-SPELL-COUNTERSPELL-ACCOUNTING-AUDIT - Level 3 Counterspell Accounting Audit
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
