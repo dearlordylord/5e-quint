@@ -139,7 +139,7 @@
     {
       "number": 23,
       "id": "L3-SPELL-UNIT-INVENTORY-SEED",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Level 3 Spell Unit Inventory Seed"
     },
     {
@@ -415,7 +415,7 @@ Acceptance:
 
 ### Task 23 - L3-SPELL-UNIT-INVENTORY-SEED - Level 3 Spell Unit Inventory Seed
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 

@@ -67,6 +67,8 @@ const characterCreationOwnerEvidenceKinds = [
   "buildProjection",
 ];
 const characterSheetOwnerEvidenceKinds = ["runtimeProjection", "tests"];
+const catalogAuthoredReviewRequiredDisposition =
+  "catalog-authored-review-required";
 
 const ownerEvidenceRequired = new Map([
   [
@@ -151,13 +153,32 @@ const levelOneTwoBattleReadinessLevelBands = new Set([
   "spell-level-1",
   "spell-level-2",
 ]);
-const levelOneSpellPressureLevelBands = new Set([
-  "spell-level-0",
-  "spell-level-1",
+const spellLevelBand = (spellLevel) => `spell-level-${spellLevel}`;
+const levelOneSpellPressureLevels = [0, 1];
+const spellPressureLevels = [...levelOneSpellPressureLevels, 2];
+const levelThreeSpellPressureLevels = [3];
+const inventoriedSpellPressureLevels = [
+  ...spellPressureLevels,
+  ...levelThreeSpellPressureLevels,
+];
+const levelOneSpellPressureLevelBands = new Set(
+  levelOneSpellPressureLevels.map(spellLevelBand),
+);
+const spellPressureLevelBands = new Set(spellPressureLevels.map(spellLevelBand));
+const levelThreeSpellPressureLevelBands = new Set(
+  levelThreeSpellPressureLevels.map(spellLevelBand),
+);
+const inventoriedSpellPressureLevelBands = new Set([
+  ...spellPressureLevelBands,
+  ...levelThreeSpellPressureLevelBands,
 ]);
-const spellPressureLevelBands = new Set([
+const rowBattleReadinessLevelBands = new Set([
+  ...levelOneTwoBattleReadinessLevelBands,
+  ...levelThreeSpellPressureLevelBands,
+]);
+const authoredNotInstalledSpellReviewRequiredLevelBands = new Set([
   ...levelOneSpellPressureLevelBands,
-  "spell-level-2",
+  ...levelThreeSpellPressureLevelBands,
 ]);
 
 const battleRuntimeRelevantFeatureUnitIds = new Set([
@@ -366,11 +387,30 @@ function followUpTaskRequirement(tasks) {
 function isAuthoredSpellUnitCatalogOnlyClosure(row) {
   return (
     row.rowKind === "spell-unit-pressure" &&
-    spellPressureLevelBands.has(row.levelBand) &&
+    inventoriedSpellPressureLevelBands.has(row.levelBand) &&
     row.authoredContent?.state === "authored-record-present" &&
     row.catalogAdmission?.state === "not-installed" &&
     row.unitProfileDisposition === "unsupported-profile" &&
     row.battleReadinessClosure?.source === "unit-claim"
+  );
+}
+
+function isAuthoredNotInstalledSpellReviewRow(row) {
+  return (
+    row.rowKind === "spell-unit-pressure" &&
+    authoredNotInstalledSpellReviewRequiredLevelBands.has(row.levelBand) &&
+    row.authoredContent?.state === "authored-record-present" &&
+    row.catalogAdmission?.state === "not-installed"
+  );
+}
+
+function hasAuthoredNotInstalledSpellReview(row) {
+  return (
+    row.battleReadinessClosure !== undefined ||
+    isAuthoredSpellUnitCatalogOnlyClosure(row) ||
+    spellUnitExecutableFollowUps.has(row.candidateUnitId) ||
+    row.finalDisposition === "catalog-authored-executable-follow-up" ||
+    row.finalDisposition === "needs-surface-widening"
   );
 }
 
@@ -668,6 +708,18 @@ function finalDisposition(row, authored, installedIds, ownerEvidenceSources) {
     ) {
       return "catalog-authored-executable-follow-up";
     }
+    if (
+      row.rowKind === "spell-unit-pressure" &&
+      battleReadinessClosureFromUnitClaim(claim) !== undefined
+    ) {
+      return "catalog-only/dead-for-now";
+    }
+    if (
+      row.rowKind === "spell-unit-pressure" &&
+      levelThreeSpellPressureLevelBands.has(row.levelBand)
+    ) {
+      return catalogAuthoredReviewRequiredDisposition;
+    }
     return "catalog-only/dead-for-now";
   }
   const installedClassification = installedOwnerClassification(
@@ -721,6 +773,9 @@ function nextAction(
       return followUpTaskRequirement(followUpTasks);
     }
     return "Promote the executable follow-up split named by the Unit claim.";
+  }
+  if (disposition === catalogAuthoredReviewRequiredDisposition) {
+    return "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.";
   }
   if (
     disposition === "catalog-only/dead-for-now" &&
@@ -901,7 +956,7 @@ function installedSpellUnitOwnerClassification(
 ) {
   if (
     row.rowKind !== "spell-unit-pressure" ||
-    !spellPressureLevelBands.has(row.levelBand) ||
+    !inventoriedSpellPressureLevelBands.has(row.levelBand) ||
     !row.candidateUnitId
   ) {
     return undefined;
@@ -1195,11 +1250,9 @@ function classRows(root, className) {
     }
   }
 
-  for (const spell of [
-    ...spellListEntries(lines, className, 0),
-    ...spellListEntries(lines, className, 1),
-    ...spellListEntries(lines, className, 2),
-  ]) {
+  for (const spell of inventoriedSpellPressureLevels.flatMap((spellLevel) =>
+    spellListEntries(lines, className, spellLevel),
+  )) {
     rows.push(
       makeRow({
         sourcePath,
@@ -1834,7 +1887,7 @@ function withState(rows, authored, installedIds, ownerEvidenceSources) {
       ...rowWithState,
       battleReadinessStatus: battleReadinessStatus(
         rowWithState,
-        levelOneTwoBattleReadinessLevelBands,
+        rowBattleReadinessLevelBands,
       ),
     };
   });
@@ -2004,6 +2057,9 @@ function battleReadinessStatus(
     }
     if (row.finalDisposition === "needs-surface-widening") {
       return "surface-widening-required";
+    }
+    if (row.finalDisposition === catalogAuthoredReviewRequiredDisposition) {
+      return "owner-evidence-required";
     }
     return "battle-runtime-required";
   }
@@ -3429,11 +3485,18 @@ function buildSrdUnitInventory({
   const spellPressureRows = rows.filter((row) =>
     spellPressureLevelBands.has(row.levelBand),
   );
+  const levelThreeSpellPressureRows = rows.filter((row) =>
+    levelThreeSpellPressureLevelBands.has(row.levelBand),
+  );
+  const levelThreeInstalledSpellPressureRows =
+    levelThreeSpellPressureRows.filter(
+      (row) => row.catalogAdmission.state === "installed",
+    );
   return {
     generatedBy: "scripts/unit-profile-coverage-check.cjs",
     sourceCorpus: ".references/srd-5.2.1/Classes",
     scope:
-      "SRD 5.2.1 class-derived Unit/catalog backlog rows, prioritized around level 1, level 2, and cantrip/level-1/level-2 spell-list pressure.",
+      "SRD 5.2.1 class-derived Unit/catalog backlog rows, prioritized around level 1, level 2, cantrip/level-1/level-2 spell-list pressure, and a separately reported level-3 spell-list pressure seed.",
     evidenceArtifacts: {
       characterCreationOwnerEvidence: summarizeCharacterCreationOwnerEvidence(
         root,
@@ -3453,6 +3516,9 @@ function buildSrdUnitInventory({
       levelOneRows: levelOneRows.length,
       levelTwoRows: levelTwoRows.length,
       spellPressureRows: spellPressureRows.length,
+      levelThreeSpellPressureRows: levelThreeSpellPressureRows.length,
+      levelThreeInstalledSpellPressureRows:
+        levelThreeInstalledSpellPressureRows.length,
       levelOneBattleReadiness: countBattleReadiness(
         rows,
         levelOneBattleReadinessLevelBands,
@@ -3460,6 +3526,10 @@ function buildSrdUnitInventory({
       levelOneTwoBattleReadiness: countBattleReadiness(
         rows,
         levelOneTwoBattleReadinessLevelBands,
+      ),
+      levelThreeSpellBattleReadiness: countBattleReadiness(
+        rows,
+        levelThreeSpellPressureLevelBands,
       ),
       levelOneClassContainers: levelOneRows.filter(
         (row) => row.rowKind === "class-container",
@@ -3469,6 +3539,14 @@ function buildSrdUnitInventory({
       allRowsByDisposition: countBy(rows, "finalDisposition"),
       spellPressureRowsByDisposition: countBy(
         spellPressureRows,
+        "finalDisposition",
+      ),
+      levelThreeSpellPressureRowsByDisposition: countBy(
+        levelThreeSpellPressureRows,
+        "finalDisposition",
+      ),
+      levelThreeInstalledSpellPressureRowsByDisposition: countBy(
+        levelThreeInstalledSpellPressureRows,
         "finalDisposition",
       ),
       levelOneRowsByCategory: countBy(levelOneRows, "category"),
@@ -3541,18 +3619,23 @@ function validateSrdUnitInventory(report) {
     }
     if (
       row.rowKind === "spell-unit-pressure" &&
-      (row.levelBand === "spell-level-0" ||
-        row.levelBand === "spell-level-1") &&
-      row.authoredContent.state === "authored-record-present" &&
-      row.catalogAdmission.state === "not-installed"
+      isAuthoredNotInstalledSpellReviewRow(row)
     ) {
-      const reviewed =
-        isAuthoredSpellUnitCatalogOnlyClosure(row) ||
-        spellUnitExecutableFollowUps.has(row.candidateUnitId);
+      const reviewed = hasAuthoredNotInstalledSpellReview(row);
       if (!reviewed) {
-        issues.push(
-          `${row.id} is an authored, not-installed Spell Unit row without SRDINV5D review classification.`,
-        );
+        if (levelThreeSpellPressureLevelBands.has(row.levelBand)) {
+          if (
+            row.finalDisposition !== catalogAuthoredReviewRequiredDisposition
+          ) {
+            issues.push(
+              `${row.id} is an unreviewed level-3 authored not-installed Spell Unit row but is not classified ${catalogAuthoredReviewRequiredDisposition}.`,
+            );
+          }
+        } else {
+          issues.push(
+            `${row.id} is an authored, not-installed Spell Unit row without SRDINV5D review classification.`,
+          );
+        }
       }
       if (
         isAuthoredSpellUnitCatalogOnlyClosure(row) &&
@@ -3571,6 +3654,19 @@ function validateSrdUnitInventory(report) {
           `${row.id} is an authored Spell Unit executable follow-up but is not classified catalog-authored-executable-follow-up or needs-surface-widening.`,
         );
       }
+    }
+    if (
+      row.finalDisposition === catalogAuthoredReviewRequiredDisposition &&
+      !(
+        row.rowKind === "spell-unit-pressure" &&
+        levelThreeSpellPressureLevelBands.has(row.levelBand) &&
+        isAuthoredNotInstalledSpellReviewRow(row) &&
+        !hasAuthoredNotInstalledSpellReview(row)
+      )
+    ) {
+      issues.push(
+        `${row.id} uses ${catalogAuthoredReviewRequiredDisposition} outside an unreviewed level-3 authored not-installed Spell Unit row.`,
+      );
     }
   }
   for (const batch of spellUnitExecutableFollowUpBatches) {
@@ -3742,6 +3838,9 @@ function validateSrdUnitInventory(report) {
 function renderSrdUnitInventory(report) {
   const levelOne = report.rows.filter((row) => row.levelBand === "level-1");
   const levelTwo = report.rows.filter((row) => row.levelBand === "level-2");
+  const levelThreeSpellPressure = report.rows.filter(
+    (row) => row.levelBand === "spell-level-3",
+  );
   const missingClassContainers = levelOne
     .filter(
       (row) =>
@@ -3766,6 +3865,8 @@ function renderSrdUnitInventory(report) {
     `- Level-1 rows: ${report.metrics.levelOneRows}`,
     `- Level-2 rows: ${report.metrics.levelTwoRows}`,
     `- Spell-list pressure rows for cantrips and level 1-2 spells: ${report.metrics.spellPressureRows}`,
+    `- Level-3 spell-list pressure rows: ${report.metrics.levelThreeSpellPressureRows}`,
+    `- Level-3 installed SRD Surface spell-list pressure rows: ${report.metrics.levelThreeInstalledSpellPressureRows}`,
     `- Missing level-1 class containers: ${report.metrics.missingClassContainers}${missingClassContainerDetail}`,
     "",
     "### Default Progress Metric: Level-1 Battle Readiness",
@@ -3789,6 +3890,18 @@ function renderSrdUnitInventory(report) {
     "#### Level 1-2 Battle Readiness by Status",
     "",
     ...Object.entries(report.metrics.levelOneTwoBattleReadiness.rowsByStatus)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, count]) => `- ${key}: ${count}`),
+    "",
+    "### Level-3 Spell Battle Readiness",
+    "",
+    "This metric is a separate seed for level-3 spell-list pressure only. It does not affect the Level 1-2 readiness denominator.",
+    "",
+    `- Accepted: ${report.metrics.levelThreeSpellBattleReadiness.numerator}/${report.metrics.levelThreeSpellBattleReadiness.denominator} (${report.metrics.levelThreeSpellBattleReadiness.percent})`,
+    "",
+    "#### Level-3 Spell Battle Readiness by Status",
+    "",
+    ...Object.entries(report.metrics.levelThreeSpellBattleReadiness.rowsByStatus)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, count]) => `- ${key}: ${count}`),
     "",
@@ -3816,9 +3929,23 @@ function renderSrdUnitInventory(report) {
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, count]) => `- ${key}: ${count}`),
     "",
-    "### Spell Unit Pressure by Disposition",
+    "### Spell Unit Pressure by Disposition (Cantrips and Level 1-2 Spells)",
     "",
     ...Object.entries(report.metrics.spellPressureRowsByDisposition)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, count]) => `- ${key}: ${count}`),
+    "",
+    "### Level-3 Spell Unit Pressure by Disposition",
+    "",
+    ...Object.entries(report.metrics.levelThreeSpellPressureRowsByDisposition)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, count]) => `- ${key}: ${count}`),
+    "",
+    "### Level-3 Installed Spell Unit Pressure by Disposition",
+    "",
+    ...Object.entries(
+      report.metrics.levelThreeInstalledSpellPressureRowsByDisposition,
+    )
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, count]) => `- ${key}: ${count}`),
     "",
@@ -3882,6 +4009,35 @@ function renderSrdUnitInventory(report) {
         row.concept,
         row.category,
         row.characterCreationOwnership?.state ?? "",
+        row.surface.state,
+        row.authoredContent.state,
+        row.catalogAdmission.state,
+        row.unitProfileDisposition ?? "",
+        row.finalDisposition,
+        row.battleReadinessStatus ?? "",
+        row.battleReadinessClosure === undefined
+          ? ""
+          : `${row.battleReadinessClosure.kind}: ${row.battleReadinessClosure.owner}`,
+        row.ownerEvidence
+          .map((evidence) => `${evidence.owner}: ${evidence.status}`)
+          .join("; "),
+        row.nextAction,
+        `${row.source.path}:${row.source.lineStart}`,
+      ]
+        .map((cell) => String(cell).replace(/\|/g, "\\|"))
+        .join("|")
+        .replace(/^/, "|")
+        .replace(/$/, "|"),
+    ),
+    "",
+    "## Level-3 Spell-List Pressure Rows",
+    "",
+    "| Row | Category | Surface | Authored | Catalog | Unit profile | Disposition | Battle readiness | Readiness closure | Owner evidence | Next action | Source |",
+    "|---|---|---|---|---|---|---|---|---|---|---|---|",
+    ...levelThreeSpellPressure.map((row) =>
+      [
+        row.concept,
+        row.category,
         row.surface.state,
         row.authoredContent.state,
         row.catalogAdmission.state,
