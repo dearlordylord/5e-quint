@@ -193,7 +193,7 @@
     {
       "number": 32,
       "id": "L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Level 3 Subclass Spell Access Progression Split"
     },
     {
@@ -207,6 +207,12 @@
       "id": "L3-REMAINING-SUBCLASS-SELECTION-FINALIZATION",
       "status": "ready-for-research",
       "title": "Remaining Level 3 Selected Subclass Finalization"
+    },
+    {
+      "number": 35,
+      "id": "L12G-FOLLOWUP-DRUID-CIRCLE-LAND-SPELL-ACCESS",
+      "status": "ready-for-research",
+      "title": "Druid Circle of the Land Spell Access"
     }
   ]
 }
@@ -671,7 +677,7 @@ Acceptance:
 
 ### Task 32 - L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT - Level 3 Subclass Spell Access Progression Split
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -783,5 +789,43 @@ Acceptance:
 - Finalized builds retain the selected subclass Unit ref for each newly promoted
   class-specific level-3 progression without claiming subclass Spell Access or
   subclass feature execution from the subclass container record.
+- No PHB+ authored identity, companion AI/autonomous-control behavior, or runtime
+  authored-identity dispatch is introduced.
+
+### Task 35 - L12G-FOLLOWUP-DRUID-CIRCLE-LAND-SPELL-ACCESS - Druid Circle of the Land Spell Access
+
+Status: `ready-for-research`
+
+Depends on:
+
+- Task 32.
+
+Input:
+
+- `druid_circle_of_the_land_spells` Surface Unit and its `unsupported-profile`
+  Unit claim.
+- Local RAW under `.references/srd-5.2.1/Classes/Druid.md`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Character Sheet runtime state/projection code for durable character facts,
+  Long Rest workflows, and prepared Spell Access.
+
+Output:
+
+- Add checker-visible Character Sheet owner evidence for Circle of the Land
+  Spell Access that preserves the Long Rest land-type choice before deriving
+  prepared spells for the character's Druid level and lower.
+- Keep choice-derived prepared Spell Access separate from individual Spell
+  Definition invocation support and from fixed always-prepared subclass grants.
+- Update generated inventory/report artifacts and Unit/profile claims only where
+  this selected-land Spell Access task is the correct owner.
+
+Acceptance:
+
+- Circle of the Land prepared Spell Access has focused runtime/projection tests
+  and checker-visible owner evidence, or is split again into a smaller executable
+  task with precise owner and required output.
+- The selected land choice is represented as character-owned state or a typed
+  workflow fact, not as authored-identity dispatch or duplicated prepared-spell
+  state.
 - No PHB+ authored identity, companion AI/autonomous-control behavior, or runtime
   authored-identity dispatch is introduced.

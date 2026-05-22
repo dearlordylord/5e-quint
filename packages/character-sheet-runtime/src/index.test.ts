@@ -100,6 +100,7 @@ import {
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.metamagic-battle-resource-bridge
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.monk-uncanny-metabolism-initiative-recovery
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.spell-rest-benefit-application
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-prepared-spell-access
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B barbarian_unarmored_defense monk_unarmored_defense paladin_lay_on_hands wizard_arcane_recovery wizard_ritual_adept
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-04 fighter_weapon_mastery barbarian_weapon_mastery paladin_weapon_mastery ranger_weapon_mastery rogue_weapon_mastery
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-CLASS-BARD-JACK-OF-ALL-TRADES bard_jack_of_all_trades
@@ -178,6 +179,8 @@ const prayerOfHealingRestBenefitAdmissionGateTestName =
   "Prayer of Healing rest benefit rejects unsupported Surface spell shapes";
 const prayerOfHealingStoredLockoutGateTestName =
   "rejects stored Prayer of Healing recipient lockouts for unknown or unsupported spell ids";
+const subclassPreparedSpellAccessBlocksBookOfShadowsDuplicateTestName =
+  "subclass always-prepared Spell Access blocks duplicate Book of Shadows selections";
 const druidWildShapeFixtureKnownFormStatBlockIds = [
   "stat_block_rat",
   "stat_block_riding_horse",
@@ -986,6 +989,68 @@ describe("Character Sheet runtime", () => {
       bookOfShadows,
     );
     expect(sheet.right.bookOfShadowsPresence).toEqual({ tag: "notOnPerson" });
+  });
+
+  test(subclassPreparedSpellAccessBlocksBookOfShadowsDuplicateTestName, () => {
+    const sheet = parseCharacterSheet(
+      storedAvailableSheetInput({
+        characterId: "character:fiend-duplicate-book-spell",
+        build: {
+          ...armorClassBuild({
+            startingClass: "class_warlock",
+            advancements: ["class_warlock", "class_warlock"],
+          }),
+          features: [
+            {
+              kind: "selectedClassChoice",
+              selectedFromUnitId: "class_warlock",
+              unitId: "subclass_warlock_fiend_patron",
+            },
+            {
+              kind: "selectedEldritchInvocation",
+              selectedFromUnitId: "warlock_eldritch_invocations",
+              selection: {
+                kind: "nonRepeatable",
+                invocationId: "pact_of_the_tome",
+              },
+            },
+          ],
+          spellcasting: {
+            sources: [
+              {
+                sourceUnitId: "class_warlock",
+                spellcastingAbility: "cha",
+                cantrips: [],
+                spellbook: [],
+                preparedSpells: [],
+                spellcastingFocuses: ["arcane_focus"],
+                bookOfShadows: {
+                  tag: "bookOfShadows",
+                  cantrips: ["fire_bolt", "minor_illusion", "spare_the_dying"],
+                  ritualSpells: ["burning_hands", "detect_magic"],
+                  spellcastingFocus: "book_of_shadows",
+                },
+              },
+            ],
+            slotPools: {
+              pactMagic: {
+                kind: "pactMagic",
+                slotLevel: 2,
+                count: 2,
+              },
+            },
+          },
+        },
+      }),
+      unitLibrary,
+    );
+
+    expect(Either.isLeft(sheet)).toBe(true);
+    if (Either.isLeft(sheet)) {
+      expect(sheet.left.message).toBe(
+        "Character Build Book of Shadows Spell Access cannot select spells the character already has prepared or known.",
+      );
+    }
   });
 
   test("timePassed accumulates Stable recovery time before one hour can pass", () => {

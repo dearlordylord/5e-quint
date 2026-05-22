@@ -979,6 +979,30 @@ function levelThreeClassOwnerClassification(row, ownerEvidenceSources) {
     const claim = row.candidateUnitId
       ? ownerEvidenceSources.unitClaims.get(row.candidateUnitId)?.claim
       : undefined;
+    const characterSheetEvidence = ownerEvidenceSources.characterSheet.get(
+      row.id,
+    );
+    const profileOwnerClassification =
+      claimedLevelTwoClassFeatureProfileOwnerClassification(claim, [
+        {
+          profileIdPrefix: characterSheetProfileIdPrefix,
+          owner: "character-sheet-runtime",
+          evidence: characterSheetEvidence,
+          requirement:
+            "Add checker-readable character-sheet owner evidence before treating this subclass Spell Access row as operationally supported.",
+        },
+      ]);
+    if (profileOwnerClassification !== undefined) {
+      return profileOwnerClassification;
+    }
+    const followUpTasks = claimFollowUpTasks(claim);
+    if (claim?.tag === "unsupported-profile" && followUpTasks.length > 0) {
+      return {
+        kind: "evidence-required",
+        owner: followUpTaskOwners(followUpTasks),
+        requirement: followUpTaskRequirement(followUpTasks),
+      };
+    }
     if (
       claim?.tag === "unsupported-profile" &&
       isBattleReadinessClosure(claim.battleReadinessClosure)
@@ -1920,12 +1944,21 @@ function characterSheetOwnerEvidenceReferenceIssue(
   }
   const relativePath = reference.slice(0, separator);
   const symbolName = reference.slice(separator + 1);
+  const isCharacterSheetRuntimePath = relativePath.startsWith(
+    "packages/character-sheet-runtime/src/",
+  );
+  const isCharacterCreationRuntimePath = relativePath.startsWith(
+    "packages/character-creation-runtime/src/",
+  );
+  const isAllowedCharacterSheetEvidencePath =
+    isCharacterSheetRuntimePath ||
+    (kind === "runtimeProjection" && isCharacterCreationRuntimePath);
   if (
-    !relativePath.startsWith("packages/character-sheet-runtime/src/") ||
+    !isAllowedCharacterSheetEvidencePath ||
     !relativePath.endsWith(".ts")
   ) {
     return [
-      `${rowId} ${kind} evidence reference must point under packages/character-sheet-runtime/src: ${reference}`,
+      `${rowId} ${kind} evidence reference must point under packages/character-sheet-runtime/src, with packages/character-creation-runtime/src allowed only for runtimeProjection evidence: ${reference}`,
     ];
   }
   if (!/^[A-Za-z_$][\w$]*$/.test(symbolName)) {

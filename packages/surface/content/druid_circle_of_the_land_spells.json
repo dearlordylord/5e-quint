@@ -1,0 +1,16 @@
+{
+  "acquiredAtLevel": 3,
+  "className": "druid",
+  "description": "Whenever you finish a Long Rest, choose one type of land: Arid, Polar, Temperate, or Tropical. You always have the spells prepared that are listed in the Circle Spells table for your Druid level and lower.",
+  "id": "druid_circle_of_the_land_spells",
+  "kind": "class_feature",
+  "mechanics": {
+    "family": "passive",
+    "grants": []
+  },
+  "name": "Circle Spells",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Druid#Circle Spells"
+  }
+}

@@ -45,6 +45,7 @@ import chillTouchInput from "../../content/chill_touch.json";
 import chromaticOrbInput from "../../content/chromatic_orb.json";
 import clericChannelDivinityInput from "../../content/cleric_channel_divinity.json";
 import clericDivineOrderInput from "../../content/cleric_divine_order.json";
+import clericLifeDomainSpellsInput from "../../content/cleric_life_domain_spells.json";
 import colorSprayInput from "../../content/color_spray.json";
 import commandInput from "../../content/command.json";
 import continualFlameInput from "../../content/continual_flame.json";
@@ -56,6 +57,7 @@ import darkvisionInput from "../../content/darkvision.json";
 import dispelMagicInput from "../../content/dispel_magic.json";
 import divineFavorInput from "../../content/divine_favor.json";
 import divineSmiteInput from "../../content/divine_smite.json";
+import druidCircleOfTheLandSpellsInput from "../../content/druid_circle_of_the_land_spells.json";
 import druidDruidicInput from "../../content/druid_druidic.json";
 import druidPrimalOrderInput from "../../content/druid_primal_order.json";
 import druidWildCompanionInput from "../../content/druid_wild_companion.json";
@@ -145,6 +147,7 @@ import elfDarkvisionInput from "../../content/darkvision_elf.json";
 import paladinExtraAttackInput from "../../content/paladin_extra_attack.json";
 import paladinFightingStyleInput from "../../content/paladin_fighting_style.json";
 import paladinLayOnHandsInput from "../../content/paladin_lay_on_hands.json";
+import paladinOathOfDevotionSpellsInput from "../../content/paladin_oath_of_devotion_spells.json";
 import paladinPaladinsSmiteInput from "../../content/paladin_paladins_smite.json";
 import paladinWeaponMasteryInput from "../../content/paladin_weapon_mastery.json";
 import passWithoutTraceInput from "../../content/pass_without_trace.json";
@@ -211,6 +214,7 @@ import scorchingRayInput from "../../content/scorching_ray.json";
 import seeInvisibilityInput from "../../content/see_invisibility.json";
 import searingSmiteInput from "../../content/searing_smite.json";
 import suggestionInput from "../../content/suggestion.json";
+import sorcererDraconicSpellsInput from "../../content/sorcerer_draconic_spells.json";
 import sorcererFontOfMagicInput from "../../content/sorcerer_font_of_magic.json";
 import sorcererInnateSorceryInput from "../../content/sorcerer_innate_sorcery.json";
 import sorcererMetamagicInput from "../../content/sorcerer_metamagic.json";
@@ -221,6 +225,7 @@ import thaumaturgyInput from "../../content/thaumaturgy.json";
 import thunderwaveInput from "../../content/thunderwave.json";
 import trueStrikeInput from "../../content/true_strike.json";
 import warlockEldritchInvocationsInput from "../../content/warlock_eldritch_invocations.json";
+import warlockFiendSpellsInput from "../../content/warlock_fiend_spells.json";
 import warlockMagicalCunningInput from "../../content/warlock_magical_cunning.json";
 import viciousMockeryInput from "../../content/vicious_mockery.json";
 import wardingBondInput from "../../content/warding_bond.json";
@@ -401,6 +406,8 @@ export const srdUnitCollection = defineSrdUnitCollection({
     bardJackOfAllTradesInput,
     clericChannelDivinityInput,
     clericDivineOrderInput,
+    clericLifeDomainSpellsInput,
+    druidCircleOfTheLandSpellsInput,
     druidDruidicInput,
     druidPrimalOrderInput,
     druidWildShapeInput,
@@ -423,8 +430,10 @@ export const srdUnitCollection = defineSrdUnitCollection({
     sorcererInnateSorceryInput,
     sorcererFontOfMagicInput,
     sorcererMetamagicInput,
+    sorcererDraconicSpellsInput,
     warlockEldritchInvocationsInput,
     warlockMagicalCunningInput,
+    warlockFiendSpellsInput,
     wizardRitualAdeptInput,
     wizardArcaneRecoveryInput,
     wizardScholarInput,
@@ -436,6 +445,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     paladinLayOnHandsInput,
     paladinFightingStyleInput,
     paladinPaladinsSmiteInput,
+    paladinOathOfDevotionSpellsInput,
     paladinExtraAttackInput,
     paladinWeaponMasteryInput,
     rangerExtraAttackInput,

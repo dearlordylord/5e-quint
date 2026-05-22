@@ -2,7 +2,8 @@ let lifeDomain =
       { className = "cleric"
       , description =
           "The Life Domain Cleric subclass choice. Subclass feature Units are modeled separately from the choice boundary."
-      , featureGrants = [] : List { level : Natural, unitId : Text }
+      , featureGrants =
+          [ { level = 3, unitId = "cleric_life_domain_spells" } ]
       , id = "subclass_cleric_life_domain"
       , kind = "subclass"
       , name = "Life Domain"

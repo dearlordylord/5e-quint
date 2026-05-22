@@ -1,8 +1,8 @@
 {
   "acquiredAtLevel": 3,
-  "className": "warlock",
-  "description": "The magic of your patron ensures you always have certain spells ready. When you reach Warlock level 3, you thereafter always have Burning Hands, Command, Scorching Ray, and Suggestion prepared.",
-  "id": "warlock_fiend_spells",
+  "className": "cleric",
+  "description": "Your connection to this divine domain ensures you always have certain spells ready. When you reach Cleric level 3, you thereafter always have Aid, Bless, Cure Wounds, and Lesser Restoration prepared.",
+  "id": "cleric_life_domain_spells",
   "kind": "class_feature",
   "mechanics": {
     "family": "passive",
@@ -10,28 +10,28 @@
       {
         "kind": "grant_spell_access",
         "mode": "prepared",
-        "spellId": "burning_hands"
+        "spellId": "aid"
       },
       {
         "kind": "grant_spell_access",
         "mode": "prepared",
-        "spellId": "command"
+        "spellId": "bless"
       },
       {
         "kind": "grant_spell_access",
         "mode": "prepared",
-        "spellId": "scorching_ray"
+        "spellId": "cure_wounds"
       },
       {
         "kind": "grant_spell_access",
         "mode": "prepared",
-        "spellId": "suggestion"
+        "spellId": "lesser_restoration"
       }
     ]
   },
-  "name": "Fiend Spells",
+  "name": "Life Domain Spells",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Warlock#Fiend Spells"
+    "section": "Classes/Cleric#Life Domain Spells"
   }
 }

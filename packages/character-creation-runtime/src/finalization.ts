@@ -2,6 +2,7 @@
 // KERNEL-COVERAGE: runtime-owner CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner CREATION.CLASS_FEATURE_OPTION.PROJECTION CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION
 // KERNEL-COVERAGE: runtime-owner CREATION.CLASS_FEATURE_RESOURCE.PROJECTION
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-prepared-spell-access
 import { Either, Match, Option } from "effect";
 import { isValidAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
 import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
@@ -1035,6 +1036,9 @@ export function characterBuildFeatureUnitIds(
   build: Pick<CharacterBuild, "progression" | "features">,
   unitLibrary: UnitCatalog,
 ): readonly UnitRecord["id"][] {
+  const selectedClassChoiceUnitIds = build.features.flatMap((feature) =>
+    feature.kind === "selectedClassChoice" ? [feature.unitId] : [],
+  );
   return uniqueValues([
     ...progressionClassUnitIds(build.progression).flatMap((classUnitId) => {
       const unit = unitLibrary.getUnit(classUnitId);
@@ -1048,10 +1052,55 @@ export function characterBuildFeatureUnitIds(
         )
         .map((grant) => grant.unitId);
     }),
-    ...build.features.flatMap((feature) =>
-      feature.kind === "selectedClassChoice" ? [feature.unitId] : [],
-    ),
+    ...selectedClassChoiceUnitIds,
+    ...selectedSubclassFeatureGrantUnitIds({
+      build,
+      selectedClassChoiceUnitIds,
+      unitLibrary,
+    }),
   ]);
+}
+
+function selectedSubclassFeatureGrantUnitIds(input: {
+  readonly build: Pick<CharacterBuild, "progression">;
+  readonly selectedClassChoiceUnitIds: readonly UnitRecord["id"][];
+  readonly unitLibrary: UnitCatalog;
+}): readonly UnitRecord["id"][] {
+  return input.selectedClassChoiceUnitIds.flatMap((unitId) => {
+    const unit = input.unitLibrary.getUnit(unitId);
+    if (Option.isNone(unit) || unit.value.kind !== "subclass") {
+      return [];
+    }
+    const classUnitId = classUnitIdForSubclass({
+      build: input.build,
+      subclass: unit.value,
+      unitLibrary: input.unitLibrary,
+    });
+    if (classUnitId === undefined) {
+      return [];
+    }
+    const classLevel = classLevelForUnit(input.build.progression, classUnitId);
+    return unit.value.featureGrants
+      .filter((grant) => grant.level <= classLevel)
+      .map((grant) => grant.unitId);
+  });
+}
+
+function classUnitIdForSubclass(input: {
+  readonly build: Pick<CharacterBuild, "progression">;
+  readonly subclass: Extract<UnitRecord, { readonly kind: "subclass" }>;
+  readonly unitLibrary: UnitCatalog;
+}): UnitRecord["id"] | undefined {
+  return progressionClassUnitIds(input.build.progression).find(
+    (classUnitId) => {
+      const unit = input.unitLibrary.getUnit(classUnitId);
+      return (
+        Option.isSome(unit) &&
+        unit.value.kind === "class" &&
+        unit.value.className === input.subclass.className
+      );
+    },
+  );
 }
 
 function finalizedClassFeatureLanguages(

@@ -1,0 +1,27 @@
+{
+  "acquiredAtLevel": 3,
+  "className": "paladin",
+  "description": "The magic of your oath ensures you always have certain spells ready. When you reach Paladin level 3, you thereafter always have Protection from Evil and Good and Shield of Faith prepared.",
+  "id": "paladin_oath_of_devotion_spells",
+  "kind": "class_feature",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "kind": "grant_spell_access",
+        "mode": "prepared",
+        "spellId": "protection_from_evil_and_good"
+      },
+      {
+        "kind": "grant_spell_access",
+        "mode": "prepared",
+        "spellId": "shield_of_faith"
+      }
+    ]
+  },
+  "name": "Oath of Devotion Spells",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Paladin#Oath of Devotion Spells"
+  }
+}

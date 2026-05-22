@@ -155,6 +155,7 @@
         "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense",
         "srd521:classes/barbarian:level-1:mastery-pressure:barbarian_weapon_mastery",
         "srd521:classes/bard:level-2:class-feature-grant:bard_jack_of_all_trades",
+        "srd521:classes/cleric:level-3:subclass-spell-access:cleric_life_domain_spells",
         "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_prayer_of_healing",
         "srd521:classes/druid:level-2:class-feature-grant:druid_wild_shape",
         "srd521:classes/fighter:level-1:mastery-pressure:fighter_weapon_mastery",
@@ -163,12 +164,15 @@
         "srd521:classes/monk:level-2:class-feature-grant:monk_uncanny_metabolism",
         "srd521:classes/paladin:level-1:class-feature-grant:paladin_lay_on_hands",
         "srd521:classes/paladin:level-1:mastery-pressure:paladin_weapon_mastery",
+        "srd521:classes/paladin:level-3:subclass-spell-access:paladin_oath_of_devotion_spells",
         "srd521:classes/paladin:spell-level-2:spell-unit-pressure:paladin_spell_list_prayer_of_healing",
         "srd521:classes/ranger:level-1:mastery-pressure:ranger_weapon_mastery",
         "srd521:classes/rogue:level-1:mastery-pressure:rogue_weapon_mastery",
         "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_font_of_magic",
         "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_metamagic",
+        "srd521:classes/sorcerer:level-3:subclass-spell-access:sorcerer_draconic_spells",
         "srd521:classes/warlock:level-2:class-feature-grant:warlock_magical_cunning",
+        "srd521:classes/warlock:level-3:subclass-spell-access:warlock_fiend_spells",
         "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery",
         "srd521:classes/wizard:level-1:class-feature-grant:wizard_ritual_adept"
       ],
@@ -213,12 +217,12 @@
     },
     "levelThreeClassBattleReadiness": {
       "denominator": 51,
-      "numerator": 21,
-      "percent": "41.2%",
+      "numerator": 24,
+      "percent": "47.1%",
       "rowsByStatus": {
-        "owner-evidence-required": 30,
-        "accepted-no-battle-effect": 14,
-        "accepted": 7
+        "owner-evidence-required": 27,
+        "accepted-no-battle-effect": 13,
+        "accepted": 11
       }
     },
     "levelThreeSpellBattleReadiness": {
@@ -245,11 +249,11 @@
       "catalog-installed-needs-owner-evidence": 1
     },
     "levelThreeClassRowsByDisposition": {
-      "level-3-follow-up-required": 22,
+      "level-3-follow-up-required": 18,
       "non-runtime": 12,
-      "catalog-installed-owner-evidence-present": 7,
-      "catalog-only/dead-for-now": 2,
-      "catalog-installed-owner-evidence-required": 8
+      "catalog-installed-owner-evidence-present": 11,
+      "catalog-only/dead-for-now": 1,
+      "catalog-installed-owner-evidence-required": 9
     },
     "levelThreeClassRowsByCategory": {
       "class feature": 22,
@@ -258,11 +262,11 @@
       "spell access/list pressure": 5
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 420,
+      "catalog-installed-owner-evidence-present": 424,
       "non-runtime": 36,
-      "level-3-follow-up-required": 22,
-      "catalog-installed-owner-evidence-required": 17,
-      "catalog-only/dead-for-now": 135,
+      "level-3-follow-up-required": 18,
+      "catalog-installed-owner-evidence-required": 18,
+      "catalog-only/dead-for-now": 134,
       "missing-authored-record": 58,
       "catalog-authored-review-required": 42,
       "catalog-authored-executable-follow-up": 4,
@@ -8835,16 +8839,36 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "cleric_life_domain_spells",
+        "sourceRecordPath": "packages/surface/content/cleric_life_domain_spells.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "cleric_life_domain_spells"
       },
-      "finalDisposition": "level-3-follow-up-required",
-      "ownerEvidence": [],
-      "nextAction": "Promote a subclass Spell Access progression split that models level-gated always-prepared subclass spells as character-owned Spell Access, separate from individual Spell Definition spell-list pressure and spell invocation runtime support.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "future subclass Spell Access progression owner",
+        "reason": "Task 32 promotes the level-3 inventory row only; later Life Domain Spells table rows occur after level 3 and should be added as their own level-gated authored feature grants."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit cleric_life_domain_spells is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-sheet-runtime",
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT Character Sheet class-feature prepared Spell Access runtime; Cleric Life Domain Spells is retained from the selected subclass feature grants in CharacterBuild and projected by Character Sheet as prepared spell access from installed Surface grant_spell_access facts. The runtime derives ownership from the selected Cleric subclass and Cleric level, stores no duplicate prepared-spell state, and rejects Book of Shadows selections that duplicate the retained subclass spell access.",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_guidance",
@@ -12074,15 +12098,29 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "druid_circle_of_the_land_spells",
+        "sourceRecordPath": "packages/surface/content/druid_circle_of_the_land_spells.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "druid_circle_of_the_land_spells"
       },
-      "finalDisposition": "level-3-follow-up-required",
-      "ownerEvidence": [],
-      "nextAction": "Promote a Druid Circle of the Land Spell Access progression split that preserves the Long Rest land-type choice before deriving the prepared spells for the character's Druid level and lower; keep this character-owned Spell Access separate from individual Spell Definition spell-list pressure and spell invocation runtime support.",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit druid_circle_of_the_land_spells is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-sheet-runtime selected-land Spell Access owner",
+          "evidence": "Promote follow-up split L12G-FOLLOWUP-DRUID-CIRCLE-LAND-SPELL-ACCESS: L12G-FOLLOWUP-DRUID-CIRCLE-LAND-SPELL-ACCESS owns Long Rest land-type choice for Circle of the Land Spells and Druid-level-gated prepared spell derivation Required output: Character Sheet runtime evidence, focused tests, and checker-readable unit claims that preserve the Long Rest land-type choice before deriving Druid Circle of the Land prepared Spell Access, while keeping individual Spell Definition invocation support in spell profiles.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-DRUID-CIRCLE-LAND-SPELL-ACCESS: L12G-FOLLOWUP-DRUID-CIRCLE-LAND-SPELL-ACCESS owns Long Rest land-type choice for Circle of the Land Spells and Druid-level-gated prepared spell derivation Required output: Character Sheet runtime evidence, focused tests, and checker-readable unit claims that preserve the Long Rest land-type choice before deriving Druid Circle of the Land prepared Spell Access, while keeping individual Spell Definition invocation support in spell profiles.",
       "battleReadinessStatus": "owner-evidence-required"
     },
     {
@@ -17380,16 +17418,36 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "paladin_oath_of_devotion_spells",
+        "sourceRecordPath": "packages/surface/content/paladin_oath_of_devotion_spells.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "paladin_oath_of_devotion_spells"
       },
-      "finalDisposition": "level-3-follow-up-required",
-      "ownerEvidence": [],
-      "nextAction": "Promote a subclass Spell Access progression split that models level-gated always-prepared subclass spells as character-owned Spell Access, separate from individual Spell Definition spell-list pressure and spell invocation runtime support.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "future subclass Spell Access progression owner",
+        "reason": "Task 32 promotes the level-3 inventory row only; later Oath of Devotion Spells table rows occur after level 3 and should be added as their own level-gated authored feature grants."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit paladin_oath_of_devotion_spells is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-sheet-runtime",
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT Character Sheet class-feature prepared Spell Access runtime; Paladin Oath of Devotion Spells is retained from the selected subclass feature grants in CharacterBuild and projected by Character Sheet as prepared spell access from installed Surface grant_spell_access facts. The runtime derives ownership from the selected Paladin subclass and Paladin level, stores no duplicate prepared-spell state, and rejects Book of Shadows selections that duplicate the retained subclass spell access.",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_bless",
@@ -22925,16 +22983,36 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "sorcerer_draconic_spells",
+        "sourceRecordPath": "packages/surface/content/sorcerer_draconic_spells.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "sorcerer_draconic_spells"
       },
-      "finalDisposition": "level-3-follow-up-required",
-      "ownerEvidence": [],
-      "nextAction": "Promote a subclass Spell Access progression split that models level-gated always-prepared subclass spells as character-owned Spell Access, separate from individual Spell Definition spell-list pressure and spell invocation runtime support.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "future subclass Spell Access progression owner",
+        "reason": "Task 32 promotes the level-3 inventory row only; later Draconic Spells table rows occur after level 3 and should be added as their own level-gated authored feature grants."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit sorcerer_draconic_spells is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-sheet-runtime",
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT Character Sheet class-feature prepared Spell Access runtime; Sorcerer Draconic Spells is retained from the selected subclass feature grants in CharacterBuild and projected by Character Sheet as prepared spell access from installed Surface grant_spell_access facts. The runtime derives ownership from the selected Sorcerer subclass and Sorcerer level, stores no duplicate prepared-spell state, and rejects Book of Shadows selections that duplicate the retained subclass spell access.",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_acid_splash",
@@ -27101,20 +27179,31 @@
         "sourceRecordPath": "packages/surface/content/warlock_fiend_spells.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "warlock_fiend_spells"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "unit-claim",
-        "kind": "later-level-only",
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
         "owner": "future subclass Spell Access progression owner",
-        "reason": "The feature is acquired after level 1 and grants progressively level-gated prepared Spell Access. The authored Surface record contains the level-3 grants but lacks the level-5, level-7, and level-9 threshold grants, so promoting the record now would overstate RAW support for the full Fiend Spells table."
+        "reason": "Task 32 promotes the level-3 inventory row only; later Fiend Spells table rows occur after level 3 and should be added as their own level-gated authored feature grants."
       },
-      "ownerEvidence": [],
-      "nextAction": "The feature is acquired after level 1 and grants progressively level-gated prepared Spell Access. The authored Surface record contains the level-3 grants but lacks the level-5, level-7, and level-9 threshold grants, so promoting the record now would overstate RAW support for the full Fiend Spells table.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit warlock_fiend_spells is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-sheet-runtime",
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT Character Sheet class-feature prepared Spell Access runtime; Warlock Fiend Spells is retained from the selected subclass feature grants in CharacterBuild and projected by Character Sheet as prepared spell access from installed Surface grant_spell_access facts. The runtime derives ownership from the selected Warlock subclass and Warlock level, stores no duplicate prepared-spell state, and rejects Book of Shadows selections that duplicate the retained subclass spell access.",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_chill_touch",
