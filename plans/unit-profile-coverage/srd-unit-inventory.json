@@ -220,8 +220,8 @@
         "accepted": 391,
         "accepted-no-battle-effect": 147,
         "owner-evidence-required": 2,
-        "partial-battle-runtime": 13,
-        "battle-runtime-required": 3
+        "partial-battle-runtime": 11,
+        "battle-runtime-required": 5
       }
     },
     "levelThreeClassBattleReadiness": {
@@ -24912,17 +24912,17 @@
         "state": "not-installed",
         "unitId": "dragons_breath"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "battle-runtime target-granted action lifecycle plus promoted Quint parity",
-        "reason": "Task 8 promotes only the initial cast and retained effect state; the target-side breath action still needs target-granted action lifecycle support plus caller/table-owned Cone placement and affected-creature membership witnesses."
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial witness owner",
+        "reason": "Promoted battle runtime owns the Dragon's Breath initial cast, target-attached granted-action state, Magic action discovery and spending, save-for-half damage, slot scaling, and cleanup. Automatic Cone geometry and affected-creature membership derivation remain caller/table spatial witnesses consumed by the runtime."
       },
       "ownerEvidence": [],
       "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_enhance_ability",
@@ -32101,17 +32101,17 @@
         "state": "not-installed",
         "unitId": "dragons_breath"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "battle-runtime target-granted action lifecycle plus promoted Quint parity",
-        "reason": "Task 8 promotes only the initial cast and retained effect state; the target-side breath action still needs target-granted action lifecycle support plus caller/table-owned Cone placement and affected-creature membership witnesses."
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial witness owner",
+        "reason": "Promoted battle runtime owns the Dragon's Breath initial cast, target-attached granted-action state, Magic action discovery and spending, save-for-half damage, slot scaling, and cleanup. Automatic Cone geometry and affected-creature membership derivation remain caller/table spatial witnesses consumed by the runtime."
       },
       "ownerEvidence": [],
       "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_enhance_ability",

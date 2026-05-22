@@ -36,9 +36,9 @@ This is the default `%` for level-1 plus level-2 readiness questions. It uses th
 
 - accepted: 391
 - accepted-no-battle-effect: 147
-- battle-runtime-required: 3
+- battle-runtime-required: 5
 - owner-evidence-required: 2
-- partial-battle-runtime: 13
+- partial-battle-runtime: 11
 
 ### Level-3 Class/Subclass Battle Readiness
 
