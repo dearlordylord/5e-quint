@@ -2,6 +2,7 @@
 // resolution modules. Extracted from spells-resolve.ts to keep procedure
 // resolver modules from depending on the monolithic spell dispatcher.
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 
 import {
   spendAction,

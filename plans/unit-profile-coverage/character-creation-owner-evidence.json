@@ -3,6 +3,258 @@
   "owner": "character-creation-runtime",
   "notes": "Row-level owner evidence for SRD inventory rows whose installed Surface class records are exercised by the current character-creation support profile. This manifest records durable runtime evidence; it is not authored provenance and does not claim complete SRD option breadth outside the support profile.",
   "rows": {
+    "srd521:classes/barbarian:level-3:subclass-selection:barbarian_subclass": {
+      "taskId": "Task 31",
+      "profile": "level-3 Barbarian subclass-selection support profile",
+      "summary": "Barbarian level 3 progression discovers the Surface subclass choice, admits the SRD Path of the Berserker option, finalizes the selected subclass Unit ref, and projects that selected identity into CharacterBuild features without claiming subclass feature execution.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverSubclassHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildUnitRefs"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:retains each supported SRD subclass Unit ref in finalized builds"
+      ]
+    },
+    "srd521:classes/fighter:level-3:subclass-selection:fighter_subclass": {
+      "taskId": "Task 31",
+      "profile": "level-3 Fighter subclass-selection support profile",
+      "summary": "Fighter level 3 progression discovers the Surface subclass choice, admits the SRD Champion option, finalizes the selected subclass Unit ref, and projects that selected identity into CharacterBuild features without claiming subclass feature execution.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverSubclassHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildUnitRefs"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:retains each supported SRD subclass Unit ref in finalized builds"
+      ]
+    },
+    "srd521:classes/monk:level-3:subclass-selection:monk_subclass": {
+      "taskId": "Task 31",
+      "profile": "level-3 Monk subclass-selection support profile",
+      "summary": "Monk level 3 progression discovers the Surface subclass choice, admits the SRD Warrior of the Open Hand option, finalizes the selected subclass Unit ref, and projects that selected identity into CharacterBuild features without claiming subclass feature execution.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverSubclassHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildUnitRefs"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:retains each supported SRD subclass Unit ref in finalized builds"
+      ]
+    },
+    "srd521:classes/rogue:level-3:subclass-selection:rogue_subclass": {
+      "taskId": "Task 31",
+      "profile": "level-3 Rogue subclass-selection support profile",
+      "summary": "Rogue level 3 progression discovers the Surface subclass choice, admits the SRD Thief option, finalizes the selected subclass Unit ref, and projects that selected identity into CharacterBuild features without claiming subclass feature execution.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverSubclassHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildUnitRefs"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:retains each supported SRD subclass Unit ref in finalized builds"
+      ]
+    },
+    "srd521:classes/bard:level-3:subclass-selection:bard_subclass": {
+      "taskId": "Task 34",
+      "profile": "level-3 Bard subclass-selection support profile",
+      "summary": "Bard level 3 progression discovers the Surface subclass choice, admits the SRD College of Lore option, finalizes the selected subclass Unit ref, and projects that selected identity into CharacterBuild features without claiming subclass Spell Access or subclass feature execution.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverSubclassHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildUnitRefs"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:retains each supported SRD subclass Unit ref in finalized builds"
+      ]
+    },
+    "srd521:classes/cleric:level-3:subclass-selection:cleric_subclass": {
+      "taskId": "Task 34",
+      "profile": "level-3 Cleric subclass-selection support profile",
+      "summary": "Cleric level 3 progression discovers the Surface subclass choice, admits the SRD Life Domain option, finalizes the selected subclass Unit ref, and projects that selected identity into CharacterBuild features without claiming subclass Spell Access or subclass feature execution.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverSubclassHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildUnitRefs"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:retains each supported SRD subclass Unit ref in finalized builds"
+      ]
+    },
+    "srd521:classes/druid:level-3:subclass-selection:druid_subclass": {
+      "taskId": "Task 34",
+      "profile": "level-3 Druid subclass-selection support profile",
+      "summary": "Druid level 3 progression discovers the Surface subclass choice, admits the SRD Circle of the Land option, finalizes the selected subclass Unit ref, and projects that selected identity into CharacterBuild features without claiming subclass Spell Access or subclass feature execution.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverSubclassHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildUnitRefs"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:retains each supported SRD subclass Unit ref in finalized builds"
+      ]
+    },
+    "srd521:classes/paladin:level-3:subclass-selection:paladin_subclass": {
+      "taskId": "Task 34",
+      "profile": "level-3 Paladin subclass-selection support profile",
+      "summary": "Paladin level 3 progression discovers the Surface subclass choice, admits the SRD Oath of Devotion option, finalizes the selected subclass Unit ref, and projects that selected identity into CharacterBuild features without claiming subclass Spell Access or subclass feature execution.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverSubclassHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildUnitRefs"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:retains each supported SRD subclass Unit ref in finalized builds"
+      ]
+    },
+    "srd521:classes/ranger:level-3:subclass-selection:ranger_subclass": {
+      "taskId": "Task 34",
+      "profile": "level-3 Ranger subclass-selection support profile",
+      "summary": "Ranger level 3 progression discovers the Surface subclass choice, admits the SRD Hunter option, finalizes the selected subclass Unit ref, and projects that selected identity into CharacterBuild features without claiming subclass Spell Access or subclass feature execution.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverSubclassHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildUnitRefs"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:retains each supported SRD subclass Unit ref in finalized builds"
+      ]
+    },
+    "srd521:classes/sorcerer:level-3:subclass-selection:sorcerer_subclass": {
+      "taskId": "Task 34",
+      "profile": "level-3 Sorcerer subclass-selection support profile",
+      "summary": "Sorcerer level 3 progression discovers the Surface subclass choice, admits the SRD Draconic Sorcery option, finalizes the selected subclass Unit ref, and projects that selected identity into CharacterBuild features without claiming subclass Spell Access or subclass feature execution.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverSubclassHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildUnitRefs"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:retains each supported SRD subclass Unit ref in finalized builds"
+      ]
+    },
+    "srd521:classes/warlock:level-3:subclass-selection:warlock_subclass": {
+      "taskId": "Task 34",
+      "profile": "level-3 Warlock subclass-selection support profile",
+      "summary": "Warlock level 3 progression discovers the Surface subclass choice, admits the SRD Fiend Patron option, finalizes the selected subclass Unit ref, and projects that selected identity into CharacterBuild features without claiming subclass Spell Access or subclass feature execution.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverSubclassHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildUnitRefs"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:retains each supported SRD subclass Unit ref in finalized builds"
+      ]
+    },
+    "srd521:classes/wizard:level-3:subclass-selection:wizard_subclass": {
+      "taskId": "Task 34",
+      "profile": "level-3 Wizard subclass-selection support profile",
+      "summary": "Wizard level 3 progression discovers the Surface subclass choice, admits the SRD Evoker option, finalizes the selected subclass Unit ref, and projects that selected identity into CharacterBuild features without claiming subclass Spell Access or subclass feature execution.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverSubclassHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildUnitRefs"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:retains each supported SRD subclass Unit ref in finalized builds"
+      ]
+    },
     "srd521:classes/barbarian:level-1:class-container:barbarian_class_container": {
       "taskId": "SRDINV17",
       "profile": "level-1 Barbarian class-container support profile",

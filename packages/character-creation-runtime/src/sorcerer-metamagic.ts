@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: runtime-owner CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION
 import { Either, Option } from "effect";
 import { resourceCount, type ResourceCount } from "@dnd/shared/types";
 import type {

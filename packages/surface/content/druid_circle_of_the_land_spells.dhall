@@ -1,0 +1,71 @@
+-- Circle of the Land Spells (Druid L3) — SRD 5.2.1 Druid subclass feature.
+--
+-- RAW (Classes / Druid / Circle of the Land / Level 3: Circle Spells):
+--   After a Long Rest, choose Arid, Polar, Temperate, or Tropical.
+--   You always have the spells prepared in the Circle Spells table for
+--   your Druid level and lower.
+--
+-- This record preserves the Long Rest land choice and the SRD spell table as
+-- source facts. Character Sheet stores the selected land and derives prepared
+-- Spell Access from these facts instead of copying the resulting spell list.
+
+let circleOfTheLandSpells =
+      { kind = "class_feature"
+      , id = "druid_circle_of_the_land_spells"
+      , name = "Circle Spells"
+      , className = "druid"
+      , acquiredAtLevel = 3
+      , provenance =
+          { kind = "srd-5.2.1"
+          , section = "Classes/Druid#Circle Spells"
+          }
+      , description =
+          "Whenever you finish a Long Rest, choose one type of land: Arid, Polar, Temperate, or Tropical. You always have the spells prepared that are listed in the Circle Spells table for your Druid level and lower."
+      , mechanics =
+          { family = "passive"
+          , grants =
+            [ { kind = "grant_land_choice_prepared_spell_access"
+              , choice =
+                { kind = "druid_circle_land", trigger = "long_rest" }
+              , spellsByLand =
+                { arid =
+                  [ { minimumClassLevel = 3
+                    , spellIds = [ "blur", "burning_hands", "fire_bolt" ]
+                    }
+                  , { minimumClassLevel = 5, spellIds = [ "fireball" ] }
+                  , { minimumClassLevel = 7, spellIds = [ "blight" ] }
+                  , { minimumClassLevel = 9, spellIds = [ "wall_of_stone" ] }
+                  ]
+                , polar =
+                  [ { minimumClassLevel = 3
+                    , spellIds = [ "fog_cloud", "hold_person", "ray_of_frost" ]
+                    }
+                  , { minimumClassLevel = 5, spellIds = [ "sleet_storm" ] }
+                  , { minimumClassLevel = 7, spellIds = [ "ice_storm" ] }
+                  , { minimumClassLevel = 9, spellIds = [ "cone_of_cold" ] }
+                  ]
+                , temperate =
+                  [ { minimumClassLevel = 3
+                    , spellIds = [ "misty_step", "shocking_grasp", "sleep" ]
+                    }
+                  , { minimumClassLevel = 5, spellIds = [ "lightning_bolt" ] }
+                  , { minimumClassLevel = 7
+                    , spellIds = [ "freedom_of_movement" ]
+                    }
+                  , { minimumClassLevel = 9, spellIds = [ "tree_stride" ] }
+                  ]
+                , tropical =
+                  [ { minimumClassLevel = 3
+                    , spellIds = [ "acid_splash", "ray_of_sickness", "web" ]
+                    }
+                  , { minimumClassLevel = 5, spellIds = [ "stinking_cloud" ] }
+                  , { minimumClassLevel = 7, spellIds = [ "polymorph" ] }
+                  , { minimumClassLevel = 9, spellIds = [ "insect_plague" ] }
+                  ]
+                }
+              }
+            ]
+          }
+      }
+
+in  circleOfTheLandSpells

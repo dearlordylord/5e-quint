@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION
 
 module characterCreationRogueExpertiseSelectedIdentityMbt {
   var qLastResult: str

@@ -1,0 +1,13 @@
+let hunter =
+      { className = "ranger"
+      , description =
+          "The Hunter Ranger subclass choice. Subclass feature Units are modeled separately from the choice boundary."
+      , featureGrants = [] : List { level : Natural, unitId : Text }
+      , id = "subclass_ranger_hunter"
+      , kind = "subclass"
+      , name = "Hunter"
+      , provenance =
+          { kind = "srd-5.2.1", section = "Classes/Ranger.md:102-104,233-263" }
+      }
+
+in  hunter

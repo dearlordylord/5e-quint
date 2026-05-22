@@ -2,6 +2,7 @@
 import type {
   ClassSpellcastingCreation,
   ListPreparedSpellcastingProgressionCreation,
+  PactMagicSpellcastingCreation,
   WizardSpellcastingCreation,
 } from "@dnd/surface/surface/types";
 
@@ -16,6 +17,16 @@ export type ListPreparedReadableSpellcasting = Extract<
   }
 >;
 
+export function availableSpellSlotLevels(
+  slots: readonly { readonly count: number; readonly spellLevel: number }[],
+): ReadonlySet<number> {
+  return new Set(
+    slots
+      .filter((slot) => slot.count > 0)
+      .map((slot) => slot.spellLevel),
+  );
+}
+
 export function classSpellcastingCreationAtLevel(
   spellcasting: ReadableClassSpellcasting | undefined,
   classLevel: number,
@@ -28,6 +39,9 @@ export function classSpellcastingCreationAtLevel(
   }
   if (isProgressionListPreparedSpellcastingCreation(spellcasting)) {
     return listPreparedSpellcastingCreationAtLevel(spellcasting, classLevel);
+  }
+  if (isPactMagicSpellcastingCreation(spellcasting)) {
+    return pactMagicSpellcastingCreationAtLevel(spellcasting, classLevel);
   }
 
   return spellcasting;
@@ -134,6 +148,36 @@ function listPreparedSpellcastingCreationAtLevel(
     cantripAccess: {
       ...spellcasting.cantripAccess,
       choose: progression.cantripCount,
+    },
+  };
+}
+
+export function pactMagicSpellcastingCreationAtLevel(
+  spellcasting: PactMagicSpellcastingCreation,
+  classLevel: number,
+): PactMagicSpellcastingCreation | undefined {
+  const progression = spellcastingProgressionAtLevel(
+    spellcasting.pactMagicProgression,
+    classLevel,
+  );
+  if (progression === undefined) {
+    return undefined;
+  }
+
+  return {
+    ...spellcasting,
+    cantripAccess: {
+      ...spellcasting.cantripAccess,
+      choose: progression.cantripTotal,
+    },
+    preparedAccess: {
+      ...spellcasting.preparedAccess,
+      choose: progression.preparedSpellTotal,
+    },
+    pactSlotProjection: {
+      ...spellcasting.pactSlotProjection,
+      count: progression.pactSlotCount,
+      spellLevel: progression.pactSlotLevel,
     },
   };
 }

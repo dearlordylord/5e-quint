@@ -28,7 +28,11 @@ let monk =
       , savingThrowProficiencies = [ "str", "dex" ]
       , skillProficiencyChoice =
         { choose = 2, options = [ "acrobatics", "athletics", "history", "insight", "religion", "stealth" ] }
-      , subclassChoices = [] : List { level : Natural, options : List Text }
+      , subclassChoices =
+        [ { level = 3
+          , options = [ "subclass_monk_warrior_of_the_open_hand" ]
+          }
+        ]
       , startingEquipment =
         [ { coinsGp = 11
           , id = "option_a"

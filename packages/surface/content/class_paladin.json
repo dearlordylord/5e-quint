@@ -9,7 +9,7 @@
     "kind": "trained"
   },
   "className": "paladin",
-  "description": "SRD Paladin class creation facts for level-1 characters plus the level-2 Fighting Style and Paladin's Smite class-feature grants, including class-list prepared Spell Access, Spell Slots, and spellcasting focus facts.",
+  "description": "SRD Paladin class creation and early progression facts through level 3, including class-list prepared Spell Access, Spell Slots, and spellcasting focus facts.",
   "featureGrants": [
     {
       "level": 1,
@@ -62,7 +62,7 @@
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Paladin.md:3-24,33-35,66-99"
+    "section": "Classes/Paladin.md:3-24,33-37,66-99,118-120"
   },
   "savingThrowProficiencies": [
     "wis",
@@ -81,7 +81,7 @@
   },
   "spellcasting": {
     "featureLevel": 1,
-    "kind": "list_prepared_spellcasting_creation",
+    "kind": "list_prepared_spellcasting_progression_creation",
     "preparedAccess": {
       "changeOn": {
         "kind": "long_rest",
@@ -96,6 +96,14 @@
         },
         {
           "spellId": "searing_smite",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "bless",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "command",
           "spellLevel": 1
         }
       ]
@@ -113,7 +121,42 @@
       ]
     },
     "spellcastingAbility": "cha",
-    "spellcastingFocus": "holy_symbol"
+    "spellcastingFocus": "holy_symbol",
+    "spellcastingProgression": [
+      {
+        "atLevel": 1,
+        "cantripCount": 0,
+        "preparedSpellCount": 2,
+        "spellSlots": [
+          {
+            "count": 2,
+            "spellLevel": 1
+          }
+        ]
+      },
+      {
+        "atLevel": 2,
+        "cantripCount": 0,
+        "preparedSpellCount": 3,
+        "spellSlots": [
+          {
+            "count": 2,
+            "spellLevel": 1
+          }
+        ]
+      },
+      {
+        "atLevel": 3,
+        "cantripCount": 0,
+        "preparedSpellCount": 4,
+        "spellSlots": [
+          {
+            "count": 3,
+            "spellLevel": 1
+          }
+        ]
+      }
+    ]
   },
   "startingEquipment": [
     {
@@ -154,7 +197,14 @@
       "kind": "coin_grant"
     }
   ],
-  "subclassChoices": [],
+  "subclassChoices": [
+    {
+      "level": 3,
+      "options": [
+        "subclass_paladin_oath_of_devotion"
+      ]
+    }
+  ],
   "toolProficiencies": {
     "kind": "none"
   },

@@ -19,6 +19,7 @@ const {
   validateCoverageInputs,
   validateOwnerClaims,
 } = require("./unit-profile-coverage-validation.cjs");
+const { validateSrdUnitInventory } = require("./srd-unit-inventory.cjs");
 
 function runSelfTest(root) {
   const tempDir = fs.mkdtempSync(
@@ -326,6 +327,30 @@ function runSelfTest(root) {
           `Self-test failed: expected copied rules-kernel join field issue ${JSON.stringify(expectedIssue)}, got ${JSON.stringify(copiedJoinFieldIssues)}`,
         );
       }
+    }
+    const unreviewedLevelThreeSpellIssues = validateSrdUnitInventory({
+      rows: [
+        {
+          id: "fixture:l3-authored-not-installed",
+          category: "spell Unit pressure",
+          rowKind: "spell-unit-pressure",
+          levelBand: "spell-level-3",
+          candidateUnitId: "fixture_level_three_spell",
+          surface: { state: "current-surface-can-express-source-facts" },
+          authoredContent: { state: "authored-record-present" },
+          catalogAdmission: { state: "not-installed" },
+          finalDisposition: "catalog-only/dead-for-now",
+          ownerEvidence: [],
+        },
+      ],
+      recommendedBatches: [],
+    });
+    const levelThreeReviewExpected =
+      "fixture:l3-authored-not-installed is an unreviewed level-3 authored not-installed Spell Unit row but is not classified catalog-authored-review-required.";
+    if (!unreviewedLevelThreeSpellIssues.includes(levelThreeReviewExpected)) {
+      fail(
+        `Self-test failed: expected unreviewed level-3 spell issue ${JSON.stringify(levelThreeReviewExpected)}, got ${JSON.stringify(unreviewedLevelThreeSpellIssues)}`,
+      );
     }
     if (
       !hasVariantMagicMechanics({

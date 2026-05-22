@@ -203,6 +203,10 @@
         {
           "spellId": "thunderwave",
           "spellLevel": 1
+        },
+        {
+          "spellId": "aid",
+          "spellLevel": 2
         }
       ]
     },
@@ -242,6 +246,21 @@
             "spellLevel": 1
           }
         ]
+      },
+      {
+        "atLevel": 3,
+        "cantripCount": 2,
+        "preparedSpellCount": 6,
+        "spellSlots": [
+          {
+            "count": 4,
+            "spellLevel": 1
+          },
+          {
+            "count": 2,
+            "spellLevel": 2
+          }
+        ]
       }
     ]
   },
@@ -276,7 +295,14 @@
       "kind": "coin_grant"
     }
   ],
-  "subclassChoices": [],
+  "subclassChoices": [
+    {
+      "level": 3,
+      "options": [
+        "subclass_bard_college_of_lore"
+      ]
+    }
+  ],
   "toolProficiencies": {
     "count": 3,
     "kind": "choice",

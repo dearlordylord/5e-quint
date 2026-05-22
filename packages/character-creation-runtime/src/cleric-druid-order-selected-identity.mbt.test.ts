@@ -1,6 +1,7 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1D2-CLERIC-DRUID-ORDER cleric_divine_order druid_primal_order
 // UNIT-IDENTITY-MBT-REPLAY: L1D2-CLERIC-DRUID-ORDER cleric_divine_order doSelectClericProtectorOrder doSelectClericThaumaturgeOrder
 // UNIT-IDENTITY-MBT-REPLAY: L1D2-CLERIC-DRUID-ORDER druid_primal_order doSelectDruidMagicianOrder doSelectDruidWardenOrder
+// KERNEL-COVERAGE: parity-witness CREATION.CLASS_FEATURE_OPTION.PROJECTION
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";

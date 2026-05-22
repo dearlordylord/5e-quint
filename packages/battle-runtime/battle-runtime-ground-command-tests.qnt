@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-spike-growth-movement-hazard
 
 module battleRuntimeGroundCommandTests {

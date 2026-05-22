@@ -1,0 +1,17 @@
+{
+  "className": "sorcerer",
+  "description": "The Draconic Sorcery Sorcerer subclass choice. Subclass feature Units are modeled separately from the choice boundary.",
+  "featureGrants": [
+    {
+      "level": 3,
+      "unitId": "sorcerer_draconic_spells"
+    }
+  ],
+  "id": "subclass_sorcerer_draconic_sorcery",
+  "kind": "subclass",
+  "name": "Draconic Sorcery",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Sorcerer.md:119-121,407-444"
+  }
+}

@@ -68,6 +68,7 @@ let cleric =
                 , { spellId = "guiding_bolt", spellLevel = 1 }
                 , { spellId = "shield_of_faith", spellLevel = 1 }
                 , { spellId = "healing_word", spellLevel = 1 }
+                , { spellId = "aid", spellLevel = 2 }
                 ]
               : List ClassSpellAccess
           , changeOn = { kind = "long_rest", replacementCount = "any" }
@@ -88,10 +89,19 @@ let cleric =
             , preparedSpellCount = 5
             , spellSlots = [ { spellLevel = 1, count = 3 } ]
             }
+          , { atLevel = 3
+            , cantripCount = 3
+            , preparedSpellCount = 6
+            , spellSlots =
+              [ { spellLevel = 1, count = 4 }
+              , { spellLevel = 2, count = 2 }
+              ]
+            }
           ]
         , spellcastingFocus = "holy_symbol"
         }
-      , subclassChoices = [] : List { level : Natural, options : List Text }
+      , subclassChoices =
+        [ { level = 3, options = [ "subclass_cleric_life_domain" ] } ]
       , startingEquipment =
             [ { coinsGp = 7
               , id = "option_a"

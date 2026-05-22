@@ -306,6 +306,75 @@
         "packages/character-sheet-runtime/src/index.test.ts:prayerOfHealingRestBenefitApplicationTestName"
       ]
     },
+    "srd521:classes/druid:level-3:subclass-spell-access:druid_circle_of_the_land_spells": {
+      "taskId": "L12G-FOLLOWUP-DRUID-CIRCLE-LAND-SPELL-ACCESS",
+      "profile": "Character Sheet selected-land prepared Spell Access runtime",
+      "summary": "Druid Circle of the Land Spells is retained from the selected subclass feature grants in CharacterBuild, stores the current Long Rest land choice as Character Sheet state, and derives prepared Spell Access from the installed Surface land-choice table for the character's Druid level and lower. The runtime preserves the selected land before deriving spell ids, changes that state only through explicit Long Rest choice input, stores no duplicate prepared-spell list, and rejects Book of Shadows selections that duplicate the current land-derived Spell Access.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/index.ts:characterSheetDruidCircleLandPreparedSpellAccess",
+        "packages/character-sheet-runtime/src/index.ts:druidCircleLandAfterLongRest",
+        "packages/character-sheet-runtime/src/index.ts:druidCircleLandPreparedSpellAccessForBuild",
+        "packages/character-sheet-runtime/src/index.ts:storedBookOfShadowsDruidCircleLandSelectionIssue"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/index.test.ts:druidCircleLandSpellAccessProjectionTestName",
+        "packages/character-sheet-runtime/src/index.test.ts:druidCircleLandSpellAccessSelectedLandGateTestName",
+        "packages/character-sheet-runtime/src/index.test.ts:druidCircleLandSpellcastingSourceGateTestName",
+        "packages/character-sheet-runtime/src/index.test.ts:druidCircleLandSpellAccessBookOfShadowsDuplicateTestName"
+      ]
+    },
+    "srd521:classes/cleric:level-3:subclass-spell-access:cleric_life_domain_spells": {
+      "taskId": "L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT",
+      "profile": "Character Sheet class-feature prepared Spell Access runtime",
+      "summary": "Cleric Life Domain Spells is retained from the selected subclass feature grants in CharacterBuild and projected by Character Sheet as prepared spell access from installed Surface grant_spell_access facts. The runtime derives ownership from the selected Cleric subclass and Cleric level, stores no duplicate prepared-spell state, and rejects Book of Shadows selections that duplicate the retained subclass spell access.",
+      "runtimeProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds",
+        "packages/character-sheet-runtime/src/index.ts:featurePreparedSpellIdsForBuild",
+        "packages/character-sheet-runtime/src/index.ts:storedBookOfShadowsSelectionIssue"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/index.test.ts:subclassPreparedSpellAccessBlocksBookOfShadowsDuplicateTestName"
+      ]
+    },
+    "srd521:classes/paladin:level-3:subclass-spell-access:paladin_oath_of_devotion_spells": {
+      "taskId": "L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT",
+      "profile": "Character Sheet class-feature prepared Spell Access runtime",
+      "summary": "Paladin Oath of Devotion Spells is retained from the selected subclass feature grants in CharacterBuild and projected by Character Sheet as prepared spell access from installed Surface grant_spell_access facts. The runtime derives ownership from the selected Paladin subclass and Paladin level, stores no duplicate prepared-spell state, and rejects Book of Shadows selections that duplicate the retained subclass spell access.",
+      "runtimeProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds",
+        "packages/character-sheet-runtime/src/index.ts:featurePreparedSpellIdsForBuild",
+        "packages/character-sheet-runtime/src/index.ts:storedBookOfShadowsSelectionIssue"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/index.test.ts:subclassPreparedSpellAccessBlocksBookOfShadowsDuplicateTestName"
+      ]
+    },
+    "srd521:classes/sorcerer:level-3:subclass-spell-access:sorcerer_draconic_spells": {
+      "taskId": "L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT",
+      "profile": "Character Sheet class-feature prepared Spell Access runtime",
+      "summary": "Sorcerer Draconic Spells is retained from the selected subclass feature grants in CharacterBuild and projected by Character Sheet as prepared spell access from installed Surface grant_spell_access facts. The runtime derives ownership from the selected Sorcerer subclass and Sorcerer level, stores no duplicate prepared-spell state, and rejects Book of Shadows selections that duplicate the retained subclass spell access.",
+      "runtimeProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds",
+        "packages/character-sheet-runtime/src/index.ts:featurePreparedSpellIdsForBuild",
+        "packages/character-sheet-runtime/src/index.ts:storedBookOfShadowsSelectionIssue"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/index.test.ts:subclassPreparedSpellAccessBlocksBookOfShadowsDuplicateTestName"
+      ]
+    },
+    "srd521:classes/warlock:level-3:subclass-spell-access:warlock_fiend_spells": {
+      "taskId": "L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT",
+      "profile": "Character Sheet class-feature prepared Spell Access runtime",
+      "summary": "Warlock Fiend Spells is retained from the selected subclass feature grants in CharacterBuild and projected by Character Sheet as prepared spell access from installed Surface grant_spell_access facts. The runtime derives ownership from the selected Warlock subclass and Warlock level, stores no duplicate prepared-spell state, and rejects Book of Shadows selections that duplicate the retained subclass spell access.",
+      "runtimeProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds",
+        "packages/character-sheet-runtime/src/index.ts:featurePreparedSpellIdsForBuild",
+        "packages/character-sheet-runtime/src/index.ts:storedBookOfShadowsSelectionIssue"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/index.test.ts:subclassPreparedSpellAccessBlocksBookOfShadowsDuplicateTestName"
+      ]
+    },
     "srd521:classes/warlock:level-2:class-feature-grant:warlock_magical_cunning": {
       "taskId": "L12G-AUTHOR-WARLOCK-MAGICAL-CUNNING",
       "profile": "Character Sheet Pact Slot recovery runtime",

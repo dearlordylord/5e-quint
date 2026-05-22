@@ -1,7 +1,7 @@
 {
   "acquiredAtLevel": 3,
   "className": "warlock",
-  "description": "The magic of your patron ensures you always have certain spells ready; when you reach a Warlock level specified in the Fiend Spells table, you thereafter always have the listed spells prepared. Level 3: Burning Hands, Command, Scorching Ray, Suggestion. Level 5: Fireball, Stinking Cloud. Level 7: Fire Shield, Wall of Fire. Level 9: Geas, Insect Plague.",
+  "description": "The magic of your patron ensures you always have certain spells ready. When you reach Warlock level 3, you thereafter always have Burning Hands, Command, Scorching Ray, and Suggestion prepared.",
   "id": "warlock_fiend_spells",
   "kind": "class_feature",
   "mechanics": {

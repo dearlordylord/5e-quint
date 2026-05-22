@@ -1,5 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1D2-ROGUE-EXPERTISE rogue_expertise
 // UNIT-IDENTITY-MBT-REPLAY: L1D2-ROGUE-EXPERTISE rogue_expertise doSelectLevelOneOwnedSkillExpertise doSelectLevelSixAdditionalOwnedSkillExpertise
+// KERNEL-COVERAGE: parity-witness CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";

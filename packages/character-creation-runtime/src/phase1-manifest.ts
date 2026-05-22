@@ -68,6 +68,20 @@ export const SRD_LEVEL_ONE_CLASS_UNIT_IDS = [
   "class_warlock",
   WIDTH_CLASS_WIZARD_UNIT_ID,
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
+export const SRD_LEVEL_THREE_SUBCLASS_UNIT_IDS = [
+  "subclass_barbarian_path_of_the_berserker",
+  "subclass_bard_college_of_lore",
+  "subclass_cleric_life_domain",
+  "subclass_druid_circle_of_the_land",
+  "subclass_fighter_champion",
+  "subclass_monk_warrior_of_the_open_hand",
+  "subclass_paladin_oath_of_devotion",
+  "subclass_ranger_hunter",
+  "subclass_rogue_thief",
+  "subclass_sorcerer_draconic_sorcery",
+  "subclass_warlock_fiend_patron",
+  "subclass_wizard_evoker",
+] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 export const PHASE1_BACKGROUND_SOLDIER_UNIT_ID = "background_soldier";
 export const PHASE1_SPECIES_ORC_UNIT_ID = "species_orc";
 export const SRD_CHARACTER_ADMISSION_SPECIES_UNIT_IDS = [

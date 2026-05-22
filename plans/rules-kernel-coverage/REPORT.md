@@ -4,26 +4,26 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Summary
 
-- Total obligations: 74
-- Covered obligations: 68
-- Open transitional obligations: 1
-- Boundary or unsupported obligations: 5
+- Total obligations: 91
+- Covered obligations: 85
+- Open transitional obligations: 0
+- Boundary or unsupported obligations: 6
 
 | Status | Count |
 | --- | ---: |
-| covered | 68 |
+| covered | 85 |
 | needs-qnt-owner | 0 |
 | needs-parity-witness | 0 |
-| needs-surface-evidence | 1 |
-| boundary-only | 4 |
+| needs-surface-evidence | 0 |
+| boundary-only | 5 |
 | unsupported-by-admission | 1 |
 
 | Runtime | Count |
 | --- | ---: |
 | shared-algebras | 1 |
-| battle | 56 |
-| character-creation | 8 |
-| character-sheet | 6 |
+| battle | 67 |
+| character-creation | 12 |
+| character-sheet | 8 |
 | character-battle | 3 |
 
 ## Obligations
@@ -34,11 +34,23 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY` | battle | covered | _direct reducer entrypoint_ |
 | `BATTLE.REACTION.OFFER_DECLINE_RESUME` | battle | covered | `spell.invocation-feather-fall-mitigation`, `spell.invocation-forced-reaction-movement`, `spell.reaction-counterspell`, `spell.reaction-hellish-rebuke`, `spell.reaction-shield`, `spell.readied-action-time-spell`, `unit-feature.attack-damage-reduction-zero-damage-redirect`, `unit-feature.reaction-roll-or-damage-reduction` |
 | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` | battle | covered | `unit-feature.action-surge-resource`, `unit-feature.alternate-action-cost`, `unit-feature.attack-action-attack-count-scaling`, `unit-feature.attack-damage-reduction-zero-damage-redirect`, `unit-feature.attack-damage-rider`, `unit-feature.attack-roll-miss-to-hit-replacement`, `unit-feature.bardic-inspiration-failed-d20-test`, `unit-feature.bardic-inspiration-grant`, `unit-feature.bonus-action-dash-temporary-hit-points`, `unit-feature.bonus-action-ongoing-rage`, `unit-feature.failed-ability-check-resource-boost`, `unit-feature.first-attack-roll-reckless-advantage`, `unit-feature.innate-sorcery-activation`, `unit-feature.martial-arts-attack-projection`, `unit-feature.monk-focus-battle-options`, `unit-feature.passive-armor-class-bonus`, `unit-feature.passive-ranged-attack-roll-bonus`, `unit-feature.passive-saving-throw-roll-mode`, `unit-feature.passive-speed-bonus`, `unit-feature.passive-speed-kind-grants`, `unit-feature.reaction-roll-or-damage-reduction`, `unit-feature.save-damage-replacement`, `unit-feature.self-bonus-action-healing`, `unit-feature.weapon-critical-range-19`, `unit-feature.weapon-damage-dice-roll-choice`, `unit-feature.weapon-mastery-cleave`, `unit-feature.weapon-mastery-sap`, `unit-feature.weapon-mastery-topple`, `unit-feature.zero-hit-point-replacement` |
-| `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | battle | covered | `spell.invocation-damage-save-or-attack`, `spell.invocation-web-restraint-hazard`, `spell.reaction-shield`, `spell.readied-action-time-spell` |
+| `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | battle | covered | `spell.invocation-damage-save-or-attack`, `spell.invocation-see-invisible-observer-sight`, `spell.reaction-shield`, `spell.readied-action-time-spell` |
 | `BATTLE.SPELL.HIT_POINT_RESTORATION` | battle | covered | `spell.hit-point-restoration` |
 | `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE` | battle | covered | `spell.invocation-direct-condition` |
-| `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` | battle | covered | `spell.invocation-condition-save`, `spell.invocation-hideous-laughter-repeat-save-lifecycle` |
+| `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` | battle | covered | `spell.invocation-condition-save`, `spell.invocation-hideous-laughter-repeat-save-lifecycle`, `spell.invocation-save-gated-condition-immunity` |
 | `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE` | battle | covered | `spell.invocation-attack-roll-advantage-save` |
+| `BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT` | battle | covered | `spell.invocation-see-invisible-observer-sight` |
+| `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE` | battle | covered | `spell.invocation-ray-of-enfeeblement-d20-lifecycle` |
+| `BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE` | battle | covered | `spell.find-familiar-lifecycle` |
+| `BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE` | battle | covered | `spell.invocation-web-restraint-hazard` |
+| `BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE` | battle | covered | `unit-feature.druid-wild-shape-known-form` |
+| `BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE` | battle | covered | `spell.invocation-object-contact-damage` |
+| `BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE` | battle | covered | `spell.invocation-gust-of-wind-line` |
+| `BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING` | battle | covered | `spell.invocation-ongoing-spell-ending` |
+| `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` | battle | covered | `unit-feature.metamagic-cast-governor-quickened` |
+| `SHEET.SPELL_REST_BENEFIT.APPLICATION` | character-sheet | covered | `character-sheet.spell-rest-benefit-application` |
+| `BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION` | battle | covered | `spell.invocation-antimagic-field-ongoing-spell-suppression` |
+| `BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD` | battle | covered | `spell.invocation-spike-growth-movement-hazard` |
 | `BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE` | battle | covered | `spell.invocation-sleep-repeat-save-lifecycle`, `spell.invocation-sleep-target-admission` |
 | `BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE` | battle | covered | `spell.invocation-grease-ground-hazard` |
 | `BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE` | battle | covered | `spell.invocation-fog-cloud-obscurement` |
@@ -58,7 +70,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.SPELL.MAKE_STABLE_LIFECYCLE` | battle | covered | `spell.invocation-make-stable` |
 | `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS` | battle | covered | `spell.invocation-roll-modifier`, `spell.invocation-self-ability-check-advantage` |
 | `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` | battle | covered | `spell.scalar-buff` |
-| `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION` | battle | covered | `spell.creature-type-protection-and-charm` |
+| `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION` | battle | covered | `spell.creature-type-protection-and-charm`, `spell.invocation-save-gated-condition-immunity` |
 | `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS` | battle | covered | `spell.invocation-condition-immunity-turn-start-temporary-hit-points` |
 | `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` | battle | covered | `spell.invocation-condition-removal-protection`, `spell.invocation-direct-condition-removal` |
 | `BATTLE.SPELL.SELF_TRANSFORMATION_MODE` | battle | covered | `spell.invocation-self-transformation-mode` |
@@ -81,15 +93,20 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE` | battle | covered | _direct reducer entrypoint_ |
 | `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY` | character-creation | covered | _direct reducer entrypoint_ |
 | `CREATION.CHOICE_DISCOVERY_CARDINALITY` | character-creation | covered | _direct reducer entrypoint_ |
-| `CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT` | character-creation | covered | `character-creation.fighter-fighting-style-advancement-replacement` |
+| `CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT` | character-creation | covered | `character-creation.class-feature-advancement-replacement`, `character-creation.fighter-fighting-style-advancement-replacement` |
 | `CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION` | character-creation | covered | `character-creation.warlock-pact-magic-advancement` |
 | `CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE` | character-creation | covered | `character-creation.eldritch-invocation-choice` |
 | `SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE` | character-sheet | covered | `character-sheet.armor-class-base-formula` |
 | `BATTLE.HOLE.SEMANTIC_FRONTIER_CLASSIFICATION` | battle | boundary-only | _outside reducer semantics_ |
-| `BATTLE.SURFACE.EXECUTABLE_PROFILE_JOIN` | battle | needs-surface-evidence | _surface join pending_ |
+| `BATTLE.SURFACE.EXECUTABLE_PROFILE_JOIN` | battle | boundary-only | _outside reducer semantics_ |
 | `CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION` | character-creation | covered | `character-creation.class-feature-feat-choice` |
 | `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION` | character-creation | covered | `character-creation.weapon-mastery-choice` |
+| `CREATION.CLASS_FEATURE_OPTION.PROJECTION` | character-creation | covered | `character-creation.class-feature-option-projection` |
+| `CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION` | character-creation | covered | `character-creation.skill-expertise-choice` |
+| `CREATION.CLASS_FEATURE_RESOURCE.PROJECTION` | character-creation | covered | `character-creation.class-feature-resource-projection` |
+| `CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION` | character-creation | covered | `character-creation.class-feature-source-fact-projection` |
 | `SHEET.FEATURE_RESOURCES.TRANSITIONS` | character-sheet | covered | `character-sheet.class-feature-long-rest-use-state`, `character-sheet.class-feature-point-pool-resource`, `character-sheet.class-feature-use-count-resource`, `character-sheet.font-of-magic-slot-to-sorcery-points`, `character-sheet.font-of-magic-sorcery-points-to-spell-slot`, `character-sheet.healing-resource-action`, `character-sheet.metamagic-battle-resource-bridge`, `character-sheet.monk-uncanny-metabolism-initiative-recovery` |
+| `SHEET.ABILITY_CHECK.PROFICIENCY_BONUS` | character-sheet | covered | `character-sheet.ability-check-proficiency-bonus` |
 | `CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION` | character-battle | covered | _direct reducer entrypoint_ |
 | `CHARACTER.BATTLE.HANDOFF.SETTLEMENT` | character-battle | covered | _direct reducer entrypoint_ |
 | `CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS` | character-battle | covered | _direct reducer entrypoint_ |
@@ -240,7 +257,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Open Work
 
-- `BATTLE.SURFACE.EXECUTABLE_PROFILE_JOIN` (needs-surface-evidence; follow-up: `RKBC-NONFEATURE-SURFACE-PROFILE-JOIN-EVIDENCE`): Prove each currently admitted executable battle Surface profile points to a covered semantic obligation
+No open transitional obligations.
 
 ## Checker Issues
 

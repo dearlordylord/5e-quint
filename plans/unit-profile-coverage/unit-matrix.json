@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 399,
-      "numerator": 196,
-      "percent": "49.1%"
+      "denominator": 403,
+      "numerator": 201,
+      "percent": "49.9%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 471,
-      "numerator": 228,
-      "percent": "48.4%"
+      "denominator": 485,
+      "numerator": 243,
+      "percent": "50.1%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 229
+      "value": 244
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 136,
-      "numerator": 136,
+      "denominator": 137,
+      "numerator": 137,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 229,
-      "numerator": 229,
+      "denominator": 244,
+      "numerator": 244,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -82,19 +82,19 @@
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 127,
-      "numerator": 106,
-      "percent": "83.5%"
+      "denominator": 129,
+      "numerator": 124,
+      "percent": "96.1%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 127,
-      "numerator": 106,
-      "percent": "83.5%"
+      "denominator": 129,
+      "numerator": 124,
+      "percent": "96.1%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 137,
-      "numerator": 126,
-      "percent": "92%"
+      "denominator": 138,
+      "numerator": 136,
+      "percent": "98.6%"
     },
     "runtimeMappingCoverage": {
       "denominator": 94,
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 136,
+      "denominator": 137,
       "numerator": 108,
-      "percent": "79.4%"
+      "percent": "78.8%"
     },
     "supportedProfileCoverage": {
-      "denominator": 197,
-      "numerator": 136,
-      "percent": "69%"
+      "denominator": 202,
+      "numerator": 137,
+      "percent": "67.8%"
     }
   },
   "metricSemantics": [
@@ -3475,7 +3475,9 @@
     {
       "id": "character-sheet.spell-rest-benefit-application",
       "profileKind": "character-sheet",
-      "qntOwners": [],
+      "qntOwners": [
+        "packages/character-sheet-runtime/character-sheet-spell-rest-benefit-application.mbt.qnt"
+      ],
       "runtimeOwners": [
         "packages/character-sheet-runtime/src/index.ts"
       ],
@@ -3485,6 +3487,10 @@
       ],
       "title": "Character Sheet applies a spell-granted Short Rest benefit with slot-scaled healing and Long Rest recipient lockout",
       "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/character-sheet-runtime/character-sheet-spell-rest-benefit-application.mbt.qnt"
+        },
         {
           "kind": "runtime-test",
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
@@ -3716,20 +3722,59 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dragons-breath.test.ts"
         }
       ]
+    },
+    {
+      "id": "character-sheet.class-feature-prepared-spell-access",
+      "profileKind": "character-sheet",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/finalization.ts",
+        "packages/character-sheet-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "Character Creation retains selected subclass feature grants in CharacterBuild feature refs from the selected subclass and class level. Character Sheet consumes those retained feature refs and installed Surface passive grant_spell_access facts to derive prepared spell access, including duplicate-selection rejection for Book of Shadows, without storing a parallel prepared-spell list. Individual Spell Definition legality, spell-list membership, and invocation behavior remain owned by spell profiles.",
+      "taskRefs": [
+        "L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT"
+      ],
+      "title": "Character Sheet derives prepared Spell Access from retained class-feature grants",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-sheet.druid-circle-land-spell-access",
+      "profileKind": "character-sheet",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "Character Sheet consumes the retained Circle of the Land feature ref from CharacterBuild, the installed Surface Long Rest land-choice spell table, current selected land sheet state, and the Druid spellcasting source and class level. It requires explicit selected-land state, changes that state only through Long Rest choice input, derives prepared Spell Access without storing the resulting spell list, and leaves individual Spell Definition invocation support to spell profiles.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-DRUID-CIRCLE-LAND-SPELL-ACCESS"
+      ],
+      "title": "Character Sheet derives Circle of the Land prepared Spell Access from selected land state",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 127,
-        "numerator": 106,
-        "percent": "83.5%"
+        "denominator": 129,
+        "numerator": 124,
+        "percent": "96.1%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 127,
-        "numerator": 106,
-        "percent": "83.5%"
+        "denominator": 129,
+        "numerator": 124,
+        "percent": "96.1%"
       }
     },
     "profileKinds": [
@@ -4830,8 +4875,21 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle creature-type protection, Charmed/Frightened/possession prevention, and relevant-effect Saving Throw Advantage"
+          },
+          {
+            "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup"
+          }
+        ],
         "profileId": "spell.invocation-save-gated-condition-immunity",
         "profileKind": "spell-invocation"
       },
@@ -4901,8 +4959,15 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Find Familiar companion lifecycle, replacement, form and type choice, telepathy, touch delivery, and Pact reaction-attack state"
+          }
+        ],
         "profileId": "spell.find-familiar-lifecycle",
         "profileKind": "spell-invocation"
       },
@@ -4920,8 +4985,15 @@
         "profileKind": "character-creation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT",
+            "runtime": "character-creation",
+            "status": "covered",
+            "title": "Character Creation Fighter class-level gain replacement rewrites durable CharacterBuild progression and selected Fighting Style ownership without draft state"
+          }
+        ],
         "profileId": "character-creation.class-feature-advancement-replacement",
         "profileKind": "character-creation"
       },
@@ -4978,26 +5050,54 @@
         "profileKind": "character-creation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
+            "runtime": "character-creation",
+            "status": "covered",
+            "title": "Character Creation finalizes class-feature option choices as selected CharacterBuild option, Unit ref, proficiency, cantrip, and Ability Check bonus facts without owning downstream option behavior"
+          }
+        ],
         "profileId": "character-creation.class-feature-option-projection",
         "profileKind": "character-creation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
+            "runtime": "character-creation",
+            "status": "covered",
+            "title": "Character Creation finalizes skill Expertise choices over owned skill proficiencies as CharacterBuild Expertise proficiency levels without duplicating skill proficiency state"
+          }
+        ],
         "profileId": "character-creation.skill-expertise-choice",
         "profileKind": "character-creation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "CREATION.CLASS_FEATURE_RESOURCE.PROJECTION",
+            "runtime": "character-creation",
+            "status": "covered",
+            "title": "Character Creation projects retained class-feature resources from Surface class progression into CharacterBuild resource facts without duplicating resource capacity state"
+          }
+        ],
         "profileId": "character-creation.class-feature-resource-projection",
         "profileKind": "character-creation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION",
+            "runtime": "character-creation",
+            "status": "covered",
+            "title": "Character Creation projects retained class-feature source facts such as shared-resource links, Martial Arts die source, Metamagic option facts, and spell-use limits without duplicating source state"
+          }
+        ],
         "profileId": "character-creation.class-feature-source-fact-projection",
         "profileKind": "character-creation"
       },
@@ -5015,8 +5115,15 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "SHEET.ABILITY_CHECK.PROFICIENCY_BONUS",
+            "runtime": "character-sheet",
+            "status": "covered",
+            "title": "Character Sheet projects Ability Check Proficiency Bonus from skill proficiency, Expertise, Jack of All Trades, and the no-other-Proficiency-Bonus gate"
+          }
+        ],
         "profileId": "character-sheet.ability-check-proficiency-bonus",
         "profileKind": "character-sheet"
       },
@@ -5203,8 +5310,15 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Druid Wild Shape spends a use to assume a known Beast Stat Block form, projects form statistics and Temporary Hit Points, blocks spellcasting, and reverts on supported end conditions"
+          }
+        ],
         "profileId": "unit-feature.druid-wild-shape-known-form",
         "profileKind": "stat-block-control"
       },
@@ -5266,14 +5380,28 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Heat Metal object-contact occurrence state, immediate and repeat Fire damage, held-or-worn save/drop outcome, fallback penalty, and cleanup"
+          }
+        ],
         "profileId": "spell.invocation-object-contact-damage",
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Gust of Wind directional Line state, initial and end-turn Strength saves, failed-save push disposition, closer-to-caster movement cost, direction replacement, and cleanup"
+          }
+        ],
         "profileId": "spell.invocation-gust-of-wind-line",
         "profileKind": "spell-invocation"
       },
@@ -5294,10 +5422,10 @@
         "joinStatus": "covered",
         "obligations": [
           {
-            "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+            "obligationId": "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE",
             "runtime": "battle",
             "status": "covered",
-            "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+            "title": "Battle Web area hazard state, entry/start-turn restraint saves, escape cleanup, difficult-terrain projection, obscurement, and duration cleanup"
           }
         ],
         "profileId": "spell.invocation-web-restraint-hazard",
@@ -5310,44 +5438,99 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Dispel Magic target-scoped ongoing spell ending for tracked spell light emitters and object-contact occurrences, including higher-level ability-check gating"
+          }
+        ],
         "profileId": "spell.invocation-ongoing-spell-ending",
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Quickened Spell Metamagic admits known selections, enforces Sorcery Point affordability and one-option-per-spell gates, rewrites supported action spells to Bonus Action, and applies the same-turn leveled-spell limit"
+          }
+        ],
         "profileId": "unit-feature.metamagic-cast-governor-quickened",
         "profileKind": "bonus-action"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "SHEET.SPELL_REST_BENEFIT.APPLICATION",
+            "runtime": "character-sheet",
+            "status": "covered",
+            "title": "Character Sheet Prayer of Healing spends the completed Spell Slot, grants caller-supplied Short Rest benefits, applies slot-scaled healing, and stores recipient Long Rest lockout state"
+          }
+        ],
         "profileId": "character-sheet.spell-rest-benefit-application",
         "profileKind": "character-sheet"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Antimagic Field creates a self-origin Emanation and suppresses tracked ongoing spell effects inside it without deleting their occurrence state"
+          }
+        ],
         "profileId": "spell.invocation-antimagic-field-ongoing-spell-suppression",
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Spike Growth active area hazard projects Difficult Terrain and movement-metered Piercing damage from caller-supplied travel distance, then cleans up on Concentration or duration end"
+          }
+        ],
         "profileId": "spell.invocation-spike-growth-movement-hazard",
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+          },
+          {
+            "obligationId": "BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle See Invisibility self observer-sight effect reveals visible Invisible creatures, caller-witnessed Invisible objects, and caller-witnessed Ethereal targets without mutating target state"
+          }
+        ],
         "profileId": "spell.invocation-see-invisible-observer-sight",
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Ray of Enfeeblement D20 Test lifecycle applies save-gated next-attack Disadvantage, failed-save Strength D20 Test Disadvantage, repeat-save cleanup, and Concentration cleanup"
+          }
+        ],
         "profileId": "spell.invocation-ray-of-enfeeblement-d20-lifecycle",
         "profileKind": "spell-invocation"
       },
@@ -5382,6 +5565,18 @@
         ],
         "profileId": "spell.invocation-dragons-breath-granted-action",
         "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "character-sheet.class-feature-prepared-spell-access",
+        "profileKind": "character-sheet"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "character-sheet.druid-circle-land-spell-access",
+        "profileKind": "character-sheet"
       }
     ],
     "sourceArtifacts": {
@@ -5392,9 +5587,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 137,
-          "numerator": 126,
-          "percent": "92%"
+          "denominator": 138,
+          "numerator": 136,
+          "percent": "98.6%"
         }
       },
       "units": [
@@ -5671,11 +5866,18 @@
           "unitId": "bard_cutting_words"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "SHEET.ABILITY_CHECK.PROFICIENCY_BONUS",
+                  "runtime": "character-sheet",
+                  "status": "covered",
+                  "title": "Character Sheet projects Ability Check Proficiency Bonus from skill proficiency, Expertise, Jack of All Trades, and the no-other-Proficiency-Bonus gate"
+                }
+              ],
               "profileId": "character-sheet.ability-check-proficiency-bonus",
               "profileKind": "character-sheet"
             }
@@ -5885,11 +6087,18 @@
           "unitId": "chromatic_orb"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.CLASS_FEATURE_RESOURCE.PROJECTION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation projects retained class-feature resources from Surface class progression into CharacterBuild resource facts without duplicating resource capacity state"
+                }
+              ],
               "profileId": "character-creation.class-feature-resource-projection",
               "profileKind": "character-creation"
             }
@@ -5897,11 +6106,18 @@
           "unitId": "cleric_channel_divinity"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation finalizes class-feature option choices as selected CharacterBuild option, Unit ref, proficiency, cantrip, and Ability Check bonus facts without owning downstream option behavior"
+                }
+              ],
               "profileId": "character-creation.class-feature-option-projection",
               "profileKind": "character-creation"
             }
@@ -6161,6 +6377,25 @@
             {
               "joinStatus": "unmapped",
               "obligations": [],
+              "profileId": "character-sheet.druid-circle-land-spell-access",
+              "profileKind": "character-sheet"
+            }
+          ],
+          "unitId": "druid_circle_of_the_land_spells"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation finalizes class-feature option choices as selected CharacterBuild option, Unit ref, proficiency, cantrip, and Ability Check bonus facts without owning downstream option behavior"
+                }
+              ],
               "profileId": "character-creation.class-feature-option-projection",
               "profileKind": "character-creation"
             }
@@ -6722,11 +6957,18 @@
           "unitId": "healing_word"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Heat Metal object-contact occurrence state, immediate and repeat Fire damage, held-or-worn save/drop outcome, fallback penalty, and cleanup"
+                }
+              ],
               "profileId": "spell.invocation-object-contact-damage",
               "profileKind": "spell-invocation"
             }
@@ -7365,11 +7607,18 @@
           "unitId": "monk_unarmored_movement"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation projects retained class-feature source facts such as shared-resource links, Martial Arts die source, Metamagic option facts, and spell-use limits without duplicating source state"
+                }
+              ],
               "profileId": "character-creation.class-feature-source-fact-projection",
               "profileKind": "character-creation"
             },
@@ -7669,11 +7918,18 @@
           "unitId": "protection_from_poison"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation finalizes skill Expertise choices over owned skill proficiencies as CharacterBuild Expertise proficiency levels without duplicating skill proficiency state"
+                }
+              ],
               "profileId": "character-creation.skill-expertise-choice",
               "profileKind": "character-creation"
             }
@@ -7754,8 +8010,15 @@
           "joinStatus": "unmapped",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Ray of Enfeeblement D20 Test lifecycle applies save-gated next-attack Disadvantage, failed-save Strength D20 Test Disadvantage, repeat-save cleanup, and Concentration cleanup"
+                }
+              ],
               "profileId": "spell.invocation-ray-of-enfeeblement-d20-lifecycle",
               "profileKind": "spell-invocation"
             },
@@ -7914,11 +8177,18 @@
           "unitId": "rogue_evasion"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation finalizes skill Expertise choices over owned skill proficiencies as CharacterBuild Expertise proficiency levels without duplicating skill proficiency state"
+                }
+              ],
               "profileId": "character-creation.skill-expertise-choice",
               "profileKind": "character-creation"
             }
@@ -8103,11 +8373,24 @@
           "unitId": "searing_smite"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle See Invisibility self observer-sight effect reveals visible Invisible creatures, caller-witnessed Invisible objects, and caller-witnessed Ethereal targets without mutating target state"
+                }
+              ],
               "profileId": "spell.invocation-see-invisible-observer-sight",
               "profileKind": "spell-invocation"
             }
@@ -8569,10 +8852,10 @@
               "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle Web area hazard state, entry/start-turn restraint saves, escape cleanup, difficult-terrain projection, obscurement, and duration cleanup"
                 }
               ],
               "profileId": "spell.invocation-web-restraint-hazard",
@@ -8620,11 +8903,18 @@
           "unitId": "wizard_ritual_adept"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation finalizes skill Expertise choices over owned skill proficiencies as CharacterBuild Expertise proficiency levels without duplicating skill proficiency state"
+                }
+              ],
               "profileId": "character-creation.skill-expertise-choice",
               "profileKind": "character-creation"
             }
@@ -10846,6 +11136,14 @@
     },
     {
       "claimKind": "qnt-proof",
+      "note": "Deterministic Character Sheet projection witness records Prayer of Healing Spell Slot spend, Short Rest benefit application, slot-scaled healing, and Long Rest recipient lockout as the profile-specific rules-kernel obligation owner.",
+      "profileIds": [
+        "character-sheet.spell-rest-benefit-application"
+      ],
+      "taskId": "L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST"
+    },
+    {
+      "claimKind": "qnt-proof",
       "note": "Package-local See Invisibility Quint ownership covers the promoted observer-sight procedure lane: Magic Action and Spell Slot spend, one-hour self effect, observer-scoped Invisible visibility without target-state mutation, witness-gated Invisible object and Ethereal visibility, and duration cleanup.",
       "profileIds": [
         "spell.invocation-see-invisible-observer-sight"
@@ -11068,6 +11366,22 @@
       "note": "Task 13 rechecked SRD Wild Shape retained statistics and merged runtime support. The merged subset already covers resource spend, known-form admission, Druid-level Temporary Hit Points, form Armor Class/Size/Speed, Beast Dexterity for Mage Armor, Beast Strength Shove DC, no-spellcasting before Beast Spells, and active-form handoff blocking. Active-form persistence across Character Sheet handoff is accepted-runtime-detached by ASSUMPTIONS.md A27. Remaining battle-owned retained-statistic work is narrowed to L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION for effective ability-score and proficiency reconciliation; equipment/anatomy/sense/communication and broader Stat Block action gaps remain under the shape-shifting runtime split.",
       "profileIds": [],
       "taskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-RETAINED-STATISTICS"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Character Creation and Character Sheet changes retain selected level-3 subclass spell-access feature grants for Cleric Life Domain, Paladin Oath of Devotion, Sorcerer Draconic Sorcery, and Warlock Fiend Patron, then derive prepared spell access from installed Surface grant_spell_access facts without storing duplicate prepared-spell state. Druid Circle of the Land remains split to a selected-land follow-up.",
+      "profileIds": [
+        "character-sheet.class-feature-prepared-spell-access"
+      ],
+      "taskId": "L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Character Sheet stores the selected Circle of the Land land choice as character-owned sheet state, updates that state from explicit Long Rest choice input, and derives prepared Spell Access from the installed Surface land-choice table and Druid level without storing a duplicate prepared-spell list. Individual Spell Definition invocation behavior remains owned by spell profiles.",
+      "profileIds": [
+        "character-sheet.druid-circle-land-spell-access"
+      ],
+      "taskId": "L12G-FOLLOWUP-DRUID-CIRCLE-LAND-SPELL-ACCESS"
     }
   ],
   "units": [
@@ -11420,6 +11734,78 @@
         "status": "installed"
       },
       "claim": {
+        "reason": "Subclass container record; selected subclass identity is owned by class subclassChoices and character creation where supported, while executable pressure lives on granted feature Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "subclass",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/subclass_barbarian_path_of_the_berserker.json",
+      "unitId": "subclass_barbarian_path_of_the_berserker"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Subclass container record; selected subclass identity is owned by class subclassChoices and character creation where supported, while executable pressure lives on granted feature Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "subclass",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/subclass_bard_college_of_lore.json",
+      "unitId": "subclass_bard_college_of_lore"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Subclass container record; selected subclass identity is owned by class subclassChoices and character creation where supported, while executable pressure lives on granted feature Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "subclass",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/subclass_cleric_life_domain.json",
+      "unitId": "subclass_cleric_life_domain"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Subclass container record; selected subclass identity is owned by class subclassChoices and character creation where supported, while executable pressure lives on granted feature Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "subclass",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/subclass_druid_circle_of_the_land.json",
+      "unitId": "subclass_druid_circle_of_the_land"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "reason": "Subclass container record; executable pressure lives on granted feature Units.",
         "tag": "unsupported-profile"
       },
@@ -11430,6 +11816,114 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/subclass_fighter_champion.json",
       "unitId": "subclass_fighter_champion"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Subclass container record; selected subclass identity is owned by class subclassChoices and character creation where supported, while executable pressure lives on granted feature Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "subclass",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/subclass_monk_warrior_of_the_open_hand.json",
+      "unitId": "subclass_monk_warrior_of_the_open_hand"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Subclass container record; selected subclass identity is owned by class subclassChoices and character creation where supported, while executable pressure lives on granted feature Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "subclass",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/subclass_paladin_oath_of_devotion.json",
+      "unitId": "subclass_paladin_oath_of_devotion"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Subclass container record; selected subclass identity is owned by class subclassChoices and character creation where supported, while executable pressure lives on granted feature Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "subclass",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/subclass_ranger_hunter.json",
+      "unitId": "subclass_ranger_hunter"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Subclass container record; selected subclass identity is owned by class subclassChoices and character creation where supported, while executable pressure lives on granted feature Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "subclass",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/subclass_rogue_thief.json",
+      "unitId": "subclass_rogue_thief"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Subclass container record; selected subclass identity is owned by class subclassChoices and character creation where supported, while executable pressure lives on granted feature Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "subclass",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/subclass_sorcerer_draconic_sorcery.json",
+      "unitId": "subclass_sorcerer_draconic_sorcery"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Subclass container record; selected subclass identity is owned by class subclassChoices and character creation where supported, while executable pressure lives on granted feature Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "subclass",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/subclass_warlock_fiend_patron.json",
+      "unitId": "subclass_warlock_fiend_patron"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -12720,6 +13214,125 @@
       ],
       "sourceRecordPath": "packages/surface/content/cleric_divine_order.json",
       "unitId": "cleric_divine_order"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "character-sheet-runtime plus spell invocation profiles",
+          "reason": "The subclass feature owns Character Sheet prepared spell access; individual spell invocation behavior remains owned by each Spell Definition profile."
+        },
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "later-level-only",
+              "owner": "future subclass Spell Access progression owner",
+              "reason": "Task 32 promotes the level-3 inventory row only; later Life Domain Spells table rows occur after level 3 and should be added as their own level-gated authored feature grants."
+            },
+            "mechanic": "later Life Domain Spells table rows gained at Cleric levels 5, 7, and 9"
+          }
+        ],
+        "profileIds": [
+          "character-sheet.class-feature-prepared-spell-access"
+        ],
+        "supportedMechanics": [
+          "Selected Cleric Life Domain subclass ownership retains the level-3 Life Domain Spells class-feature Unit in CharacterBuild feature refs when the Cleric class level is 3 or higher",
+          "Character Sheet projects the level-3 Life Domain Spells prepared spell access from installed Surface passive grant_spell_access facts",
+          "Book of Shadows selections are rejected when they duplicate spell access already granted by the retained subclass feature Unit"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "character-sheet.class-feature-prepared-spell-access",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/finalization.ts",
+            "packages/character-sheet-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Character Creation retains selected subclass feature grants in CharacterBuild feature refs from the selected subclass and class level. Character Sheet consumes those retained feature refs and installed Surface passive grant_spell_access facts to derive prepared spell access, including duplicate-selection rejection for Book of Shadows, without storing a parallel prepared-spell list. Individual Spell Definition legality, spell-list membership, and invocation behavior remain owned by spell profiles.",
+          "taskRefs": [
+            "L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT"
+          ],
+          "title": "Character Sheet derives prepared Spell Access from retained class-feature grants",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/cleric_life_domain_spells.json",
+      "unitId": "cleric_life_domain_spells"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "character-sheet-runtime selected-land Spell Access owner plus spell invocation profiles",
+          "reason": "The subclass feature owns Character Sheet selected-land prepared Spell Access; individual Spell Definition invocation behavior remains owned by each Spell Definition profile."
+        },
+        "profileIds": [
+          "character-sheet.druid-circle-land-spell-access"
+        ],
+        "supportedMechanics": [
+          "Selected Druid Circle of the Land subclass ownership retains the level-3 Circle Spells class-feature Unit in CharacterBuild feature refs when the Druid class level is 3 or higher",
+          "The Surface class-feature record carries the Long Rest land-choice prepared Spell Access table as structured source facts instead of fixed grants",
+          "Character Sheet stores the current selected land as character-owned state and requires an explicit Long Rest land choice before changing that state",
+          "Character Sheet derives Circle of the Land prepared Spell Access from the selected land, Druid spellcasting source, Druid level, and installed Surface table without storing a duplicate prepared-spell list",
+          "Book of Shadows selections are rejected when they duplicate spell access already granted by the selected Circle of the Land land table"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-DRUID-CIRCLE-LAND-SPELL-ACCESS"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "character-sheet.druid-circle-land-spell-access",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Character Sheet consumes the retained Circle of the Land feature ref from CharacterBuild, the installed Surface Long Rest land-choice spell table, current selected land sheet state, and the Druid spellcasting source and class level. It requires explicit selected-land state, changes that state only through Long Rest choice input, derives prepared Spell Access without storing the resulting spell list, and leaves individual Spell Definition invocation support to spell profiles.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-DRUID-CIRCLE-LAND-SPELL-ACCESS"
+          ],
+          "title": "Character Sheet derives Circle of the Land prepared Spell Access from selected land state",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/druid_circle_of_the_land_spells.json",
+      "unitId": "druid_circle_of_the_land_spells"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -14605,6 +15218,67 @@
       },
       "claim": {
         "battleReadinessClosure": {
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "character-sheet-runtime plus spell invocation profiles",
+          "reason": "The subclass feature owns Character Sheet prepared spell access; individual spell invocation behavior remains owned by each Spell Definition profile."
+        },
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "later-level-only",
+              "owner": "future subclass Spell Access progression owner",
+              "reason": "Task 32 promotes the level-3 inventory row only; later Draconic Spells table rows occur after level 3 and should be added as their own level-gated authored feature grants."
+            },
+            "mechanic": "later Draconic Spells table rows gained at Sorcerer levels 5, 7, and 9"
+          }
+        ],
+        "profileIds": [
+          "character-sheet.class-feature-prepared-spell-access"
+        ],
+        "supportedMechanics": [
+          "Selected Sorcerer Draconic Sorcery subclass ownership retains the level-3 Draconic Spells class-feature Unit in CharacterBuild feature refs when the Sorcerer class level is 3 or higher",
+          "Character Sheet projects the level-3 Draconic Spells prepared spell access from installed Surface passive grant_spell_access facts",
+          "Book of Shadows selections are rejected when they duplicate spell access already granted by the retained subclass feature Unit"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "character-sheet.class-feature-prepared-spell-access",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/finalization.ts",
+            "packages/character-sheet-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Character Creation retains selected subclass feature grants in CharacterBuild feature refs from the selected subclass and class level. Character Sheet consumes those retained feature refs and installed Surface passive grant_spell_access facts to derive prepared spell access, including duplicate-selection rejection for Book of Shadows, without storing a parallel prepared-spell list. Individual Spell Definition legality, spell-list membership, and invocation behavior remain owned by spell profiles.",
+          "taskRefs": [
+            "L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT"
+          ],
+          "title": "Character Sheet derives prepared Spell Access from retained class-feature grants",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/sorcerer_draconic_spells.json",
+      "unitId": "sorcerer_draconic_spells"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
           "kind": "selection-grant-container",
           "owner": "selected Eldritch Invocation option profiles",
           "reason": "The class feature owns selection and Warlock-level lifecycle, including Pact Magic prerequisite facts; selected invocation option profiles own executable battle behavior."
@@ -14739,6 +15413,67 @@
       ],
       "sourceRecordPath": "packages/surface/content/warlock_magical_cunning.json",
       "unitId": "warlock_magical_cunning"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "character-sheet-runtime plus spell invocation profiles",
+          "reason": "The subclass feature owns Character Sheet prepared spell access; individual spell invocation behavior remains owned by each Spell Definition profile."
+        },
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "later-level-only",
+              "owner": "future subclass Spell Access progression owner",
+              "reason": "Task 32 promotes the level-3 inventory row only; later Fiend Spells table rows occur after level 3 and should be added as their own level-gated authored feature grants."
+            },
+            "mechanic": "later Fiend Spells table rows gained at Warlock levels 5, 7, and 9"
+          }
+        ],
+        "profileIds": [
+          "character-sheet.class-feature-prepared-spell-access"
+        ],
+        "supportedMechanics": [
+          "Selected Warlock Fiend Patron subclass ownership retains the level-3 Fiend Spells class-feature Unit in CharacterBuild feature refs when the Warlock class level is 3 or higher",
+          "Character Sheet projects the level-3 Fiend Spells prepared spell access from installed Surface passive grant_spell_access facts",
+          "Book of Shadows selections are rejected when they duplicate spell access already granted by the retained subclass feature Unit"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "character-sheet.class-feature-prepared-spell-access",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/finalization.ts",
+            "packages/character-sheet-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Character Creation retains selected subclass feature grants in CharacterBuild feature refs from the selected subclass and class level. Character Sheet consumes those retained feature refs and installed Surface passive grant_spell_access facts to derive prepared spell access, including duplicate-selection rejection for Book of Shadows, without storing a parallel prepared-spell list. Individual Spell Definition legality, spell-list membership, and invocation behavior remain owned by spell profiles.",
+          "taskRefs": [
+            "L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT"
+          ],
+          "title": "Character Sheet derives prepared Spell Access from retained class-feature grants",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/warlock_fiend_spells.json",
+      "unitId": "warlock_fiend_spells"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -15356,6 +16091,67 @@
       ],
       "sourceRecordPath": "packages/surface/content/paladin_paladins_smite.json",
       "unitId": "paladin_paladins_smite"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "character-sheet-runtime plus spell invocation profiles",
+          "reason": "The subclass feature owns Character Sheet prepared spell access; individual spell invocation behavior remains owned by each Spell Definition profile."
+        },
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "later-level-only",
+              "owner": "future subclass Spell Access progression owner",
+              "reason": "Task 32 promotes the level-3 inventory row only; later Oath of Devotion Spells table rows occur after level 3 and should be added as their own level-gated authored feature grants."
+            },
+            "mechanic": "later Oath of Devotion Spells table rows gained at Paladin levels 5, 9, 13, and 17"
+          }
+        ],
+        "profileIds": [
+          "character-sheet.class-feature-prepared-spell-access"
+        ],
+        "supportedMechanics": [
+          "Selected Paladin Oath of Devotion subclass ownership retains the level-3 Oath of Devotion Spells class-feature Unit in CharacterBuild feature refs when the Paladin class level is 3 or higher",
+          "Character Sheet projects the level-3 Oath of Devotion Spells prepared spell access from installed Surface passive grant_spell_access facts",
+          "Book of Shadows selections are rejected when they duplicate spell access already granted by the retained subclass feature Unit"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "character-sheet.class-feature-prepared-spell-access",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/finalization.ts",
+            "packages/character-sheet-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Character Creation retains selected subclass feature grants in CharacterBuild feature refs from the selected subclass and class level. Character Sheet consumes those retained feature refs and installed Surface passive grant_spell_access facts to derive prepared spell access, including duplicate-selection rejection for Book of Shadows, without storing a parallel prepared-spell list. Individual Spell Definition legality, spell-list membership, and invocation behavior remain owned by spell profiles.",
+          "taskRefs": [
+            "L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT"
+          ],
+          "title": "Character Sheet derives prepared Spell Access from retained class-feature grants",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/paladin_oath_of_devotion_spells.json",
+      "unitId": "paladin_oath_of_devotion_spells"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -21278,7 +22074,9 @@
         {
           "id": "character-sheet.spell-rest-benefit-application",
           "profileKind": "character-sheet",
-          "qntOwners": [],
+          "qntOwners": [
+            "packages/character-sheet-runtime/character-sheet-spell-rest-benefit-application.mbt.qnt"
+          ],
           "runtimeOwners": [
             "packages/character-sheet-runtime/src/index.ts"
           ],
@@ -21288,6 +22086,10 @@
           ],
           "title": "Character Sheet applies a spell-granted Short Rest benefit with slot-scaled healing and Long Rest recipient lockout",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/character-sheet-runtime/character-sheet-spell-rest-benefit-application.mbt.qnt"
+            },
             {
               "kind": "runtime-test",
               "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
@@ -26141,6 +26943,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table/perception and remote-sensor owner",
+          "reason": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy."
+        },
+        "reason": "Clairvoyance is an SRD level-3 Spell Definition whose current Surface record models 10-minute Spell Slot casting, 1-mile range, V/S/M 100+ GP focus, Concentration up to 10 minutes, a familiar-or-obvious location sensor hole, an Invisible invulnerable sensor, remote seeing-or-hearing perception, and Bonus Action sense switching. RAW also includes the sensor's intangible nature and luminous-orb observer presentation for creatures that can see the sensor. Task 27 claims no promoted battle-runtime profile because location familiarity or obviousness, remote seeing or hearing information, active chosen-sense state, Bonus Action switching between remote senses, sensor visibility to See Invisibility or Truesight observers, and luminous-orb presentation are table/perception/exploration facts outside promoted battle Unit profiles; the sensor must not become ordinary caster sight, target, attack visibility, companion, or autonomous actor state.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -29404,6 +30216,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached language/communication owner",
+          "reason": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell."
+        },
+        "reason": "Tongues is an SRD level-3 Spell Definition whose current Surface record models Action casting, Touch range, V/M miniature-ziggurat components, 1-hour duration, one touched creature target, spoken-or-signed language understanding, and outward intelligibility to any creature that knows at least one language and can hear the speech or see the signing. Task 28 claims no promoted battle-runtime profile because hearing or seeing communication, knowing at least one language, language comprehension, and conversation outcomes are runtime-detached table/social communication facts outside promoted battle Unit profiles; the spell must not introduce autonomous behavior, commanded-action execution, or authored-identity dispatch in runtime code.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -29605,34 +30427,6 @@
       "authoredSurfaceDuplicateIdCount": 1,
       "catalogAdmission": {
         "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "battleReadinessClosure": {
-          "kind": "later-level-only",
-          "owner": "future subclass Spell Access progression owner",
-          "reason": "The feature is acquired after level 1 and grants progressively level-gated prepared Spell Access. The authored Surface record contains the level-3 grants but lacks the level-5, level-7, and level-9 threshold grants, so promoting the record now would overstate RAW support for the full Fiend Spells table."
-        },
-        "reason": "Fiend Spells is a level-3 subclass always-prepared Spell Access progression across Warlock levels 3, 5, 7, and 9; no standalone promoted battle Unit profile is claimed for the partial authored class-feature record.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/warlock_fiend_spells.json",
-      "unitId": "warlock_fiend_spells"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
           "category": "srd-candidate",
           "planningLane": "QMBT14-QMBT16",
           "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
@@ -29640,6 +30434,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table/environment suffocation and underwater-breathing owner",
+          "reason": "Water Breathing supplies a table-facing breathing capability for willing targets, but promoted battle runtime does not own underwater environment membership, breath availability, hold-breath clocks, suffocation turn progression, or restoration cleanup for this spell. Those facts belong to a table/environment hazard owner rather than duplicate spell-local state."
+        },
+        "reason": "Water Breathing is an SRD level-3 Spell Definition whose current Surface record models Action or Ritual casting, 30-foot range, V/S/M short-reed components, 24-hour duration, up to ten willing creature targets, water-breathing grant, and retained normal respiration. Task 29 claims no promoted battle-runtime profile because underwater environment presence, breath-holding timing, suffocation progression, suffocation-caused Exhaustion cleanup when breathing resumes, and any table determination that a creature needs underwater breathing are runtime-detached table/environment hazard facts outside promoted battle Unit profiles. The existing Alter Self Aquatic Adaptation projection is source-specific self-transformation state and is not a generic Water Breathing spell owner.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",

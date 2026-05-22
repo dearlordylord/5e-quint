@@ -1,0 +1,37 @@
+{
+  "acquiredAtLevel": 3,
+  "className": "cleric",
+  "description": "Your connection to this divine domain ensures you always have certain spells ready. When you reach Cleric level 3, you thereafter always have Aid, Bless, Cure Wounds, and Lesser Restoration prepared.",
+  "id": "cleric_life_domain_spells",
+  "kind": "class_feature",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "kind": "grant_spell_access",
+        "mode": "prepared",
+        "spellId": "aid"
+      },
+      {
+        "kind": "grant_spell_access",
+        "mode": "prepared",
+        "spellId": "bless"
+      },
+      {
+        "kind": "grant_spell_access",
+        "mode": "prepared",
+        "spellId": "cure_wounds"
+      },
+      {
+        "kind": "grant_spell_access",
+        "mode": "prepared",
+        "spellId": "lesser_restoration"
+      }
+    ]
+  },
+  "name": "Life Domain Spells",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Cleric#Life Domain Spells"
+  }
+}

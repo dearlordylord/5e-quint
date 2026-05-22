@@ -18,7 +18,7 @@ let rangerSkills =
 let ranger =
       { armorTraining = { categories = [ "light", "medium", "shield" ], kind = "trained" }
       , className = "ranger"
-      , description = "SRD Ranger class creation facts for level-1 characters plus the level-2 Deft Explorer and Fighting Style class-feature grants, including class-list prepared Spell Access, Spell Slots, and spellcasting focus facts."
+      , description = "SRD Ranger class creation and early progression facts through level 3, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, level-2 class-feature grants, and level-3 subclass selection."
       , featureGrants =
         [ { level = 1, unitId = "ranger_favored_enemy" }
         , { level = 1, unitId = "ranger_weapon_mastery" }
@@ -67,6 +67,7 @@ let ranger =
                 [ { spellId = "cure_wounds", spellLevel = 1 }
                 , { spellId = "ensnaring_strike", spellLevel = 1 }
                 , { spellId = "longstrider", spellLevel = 1 }
+                , { spellId = "hunters_mark", spellLevel = 1 }
                 ] : List ClassSpellAccess
               , changeOn = { kind = "long_rest", replacementCount = 1 }
               }
@@ -86,10 +87,16 @@ let ranger =
                 , preparedSpellCount = 3
                 , spellSlots = [ { spellLevel = 1, count = 2 } ]
                 }
+              , { atLevel = 3
+                , cantripCount = 0
+                , preparedSpellCount = 4
+                , spellSlots = [ { spellLevel = 1, count = 3 } ]
+                }
               ] : List SpellcastingProgressionRow
           , spellcastingFocus = "druidic_focus"
           }
-      , subclassChoices = [] : List { level : Natural, options : List Text }
+      , subclassChoices =
+        [ { level = 3, options = [ "subclass_ranger_hunter" ] } ]
       , startingEquipment =
         [ { coinsGp = 7
           , id = "option_a"

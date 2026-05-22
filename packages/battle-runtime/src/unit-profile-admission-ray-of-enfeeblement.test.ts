@@ -1,6 +1,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE ray_of_enfeeblement
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-ray-of-enfeeblement-damage-penalty
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE
 import { describe, expect, test } from "vitest";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord } from "@dnd/surface/surface/types";

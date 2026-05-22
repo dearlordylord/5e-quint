@@ -34,14 +34,20 @@
   },
   "name": "Monk",
   "primaryAbilities": {
-    "abilities": ["dex", "wis"],
+    "abilities": [
+      "dex",
+      "wis"
+    ],
     "kind": "all_of"
   },
   "provenance": {
     "kind": "srd-5.2.1",
     "section": "Classes/Monk.md:3-25,28-33"
   },
-  "savingThrowProficiencies": ["str", "dex"],
+  "savingThrowProficiencies": [
+    "str",
+    "dex"
+  ],
   "skillProficiencyChoice": {
     "choose": 2,
     "options": [
@@ -84,7 +90,14 @@
       "kind": "coin_grant"
     }
   ],
-  "subclassChoices": [],
+  "subclassChoices": [
+    {
+      "level": 3,
+      "options": [
+        "subclass_monk_warrior_of_the_open_hand"
+      ]
+    }
+  ],
   "toolProficiencies": {
     "count": 1,
     "kind": "choice",
@@ -105,7 +118,9 @@
       "kind": "weapon_category"
     },
     {
-      "anyOfProperties": ["light"],
+      "anyOfProperties": [
+        "light"
+      ],
       "category": "martial",
       "kind": "weapon_category_with_properties"
     }

@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.druid-wild-shape-known-form
+// KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME druid_wild_shape
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { ClassLevel } from "@dnd/shared/types";

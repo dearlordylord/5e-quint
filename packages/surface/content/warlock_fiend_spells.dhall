@@ -10,15 +10,8 @@
 --    Level 7: Fire Shield, Wall of Fire
 --    Level 9: Geas, Insect Plague"
 --
--- This encoding covers only the L3 row (acquired at level 3).
--- The L5/7/9 rows each unlock additional spells as the warlock gains
--- levels, but the current PassiveMechanics surface has no per-grant
--- level-threshold mechanism — grants are unconditional (or gated by
--- EquipmentPredicate, which covers equipment state only).
---
--- The L3 spells are encoded cleanly as `prepared` grants.
--- See proposal-warlock_fiend_spells.md for the surface widening
--- required to represent the full progression table.
+-- This record covers the level-3 row. Later table rows are separate
+-- class-level Spell Access progression work.
 
 let fiendSpells =
       { kind = "class_feature"
@@ -31,7 +24,7 @@ let fiendSpells =
           , section = "Classes/Warlock#Fiend Spells"
           }
       , description =
-          "The magic of your patron ensures you always have certain spells ready; when you reach a Warlock level specified in the Fiend Spells table, you thereafter always have the listed spells prepared. Level 3: Burning Hands, Command, Scorching Ray, Suggestion. Level 5: Fireball, Stinking Cloud. Level 7: Fire Shield, Wall of Fire. Level 9: Geas, Insect Plague."
+          "The magic of your patron ensures you always have certain spells ready. When you reach Warlock level 3, you thereafter always have Burning Hands, Command, Scorching Ray, and Suggestion prepared."
       , mechanics =
           { family = "passive"
           , grants =

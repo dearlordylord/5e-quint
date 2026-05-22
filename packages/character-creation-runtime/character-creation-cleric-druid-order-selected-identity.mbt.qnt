@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner CREATION.CLASS_FEATURE_OPTION.PROJECTION
 
 module characterCreationClericDruidOrderSelectedIdentityMbt {
   var qLastResult: str

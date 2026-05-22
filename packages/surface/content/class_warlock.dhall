@@ -7,7 +7,7 @@ let StartingEquipmentOption : Type =
 let warlock =
       { armorTraining = { categories = [ "light" ], kind = "trained" }
       , className = "warlock"
-      , description = "SRD Warlock class creation and early progression facts for level-1 and level-2 characters, including Pact Magic and the level-2 Magical Cunning feature grant."
+      , description = "SRD Warlock class creation and early progression facts through level 3, including Pact Magic progression, the level-2 Magical Cunning feature grant, and level-3 subclass selection."
       , featureGrants =
         [ { level = 1, unitId = "warlock_eldritch_invocations" }
         , { level = 1, unitId = "warlock_pact_magic" }
@@ -36,7 +36,12 @@ let warlock =
               { changeOn = { count = 1, kind = "class_level" }
               , choose = 2
               , kind = "known_cantrips_from_class_spell_list"
-              , spellIds = [ "eldritch_blast", "minor_illusion" ]
+              , spellIds =
+                [ "eldritch_blast"
+                , "minor_illusion"
+                , "poison_spray"
+                , "prestidigitation"
+                ]
               }
           , kind = "pact_magic_spellcasting_creation"
           , featureLevel = 1
@@ -175,12 +180,26 @@ let warlock =
               , spells =
                 [ { spellId = "charm_person", spellLevel = 1 }
                 , { spellId = "hellish_rebuke", spellLevel = 1 }
+                , { spellId = "hex", spellLevel = 1 }
+                , { spellId = "mirror_image", spellLevel = 2 }
+                , { spellId = "bane", spellLevel = 1 }
+                , { spellId = "comprehend_languages", spellLevel = 1 }
+                , { spellId = "detect_magic", spellLevel = 1 }
+                , { spellId = "expeditious_retreat", spellLevel = 1 }
+                , { spellId = "protection_from_evil_and_good", spellLevel = 1 }
+                , { spellId = "unseen_servant", spellLevel = 1 }
+                , { spellId = "darkness", spellLevel = 2 }
+                , { spellId = "hold_person", spellLevel = 2 }
+                , { spellId = "invisibility", spellLevel = 2 }
+                , { spellId = "misty_step", spellLevel = 2 }
+                , { spellId = "suggestion", spellLevel = 2 }
                 ]
               }
           , spellcastingAbility = "cha"
           , spellcastingFocus = "arcane_focus"
           }
-      , subclassChoices = [] : List { level : Natural, options : List Text }
+      , subclassChoices =
+        [ { level = 3, options = [ "subclass_warlock_fiend_patron" ] } ]
       , startingEquipment =
         [ { coinsGp = 15
           , id = "option_a"

@@ -10,7 +10,7 @@ let ClassSpellAccess : Type = { spellId : Text, spellLevel : Natural }
 let paladin =
       { armorTraining = { categories = [ "light", "medium", "heavy", "shield" ], kind = "trained" }
       , className = "paladin"
-      , description = "SRD Paladin class creation facts for level-1 characters plus the level-2 Fighting Style and Paladin's Smite class-feature grants, including class-list prepared Spell Access, Spell Slots, and spellcasting focus facts."
+      , description = "SRD Paladin class creation and early progression facts through level 3, including class-list prepared Spell Access, Spell Slots, and spellcasting focus facts."
       , featureGrants =
         [ { level = 1, unitId = "paladin_lay_on_hands" }
         , { level = 1, unitId = "paladin_weapon_mastery" }
@@ -31,12 +31,12 @@ let paladin =
           }
       , name = "Paladin"
       , primaryAbilities = { abilities = [ "str", "cha" ], kind = "all_of" }
-      , provenance = { kind = "srd-5.2.1", section = "Classes/Paladin.md:3-24,33-35,66-99" }
+      , provenance = { kind = "srd-5.2.1", section = "Classes/Paladin.md:3-24,33-37,66-99,118-120" }
       , savingThrowProficiencies = [ "wis", "cha" ]
       , skillProficiencyChoice =
         { choose = 2, options = [ "athletics", "insight", "intimidation", "medicine", "persuasion", "religion" ] }
       , spellcasting =
-          { kind = "list_prepared_spellcasting_creation"
+          { kind = "list_prepared_spellcasting_progression_creation"
           , featureLevel = 1
           , spellcastingAbility = "cha"
           , preparedAccess =
@@ -45,6 +45,8 @@ let paladin =
               , spells =
                 [ { spellId = "heroism", spellLevel = 1 }
                 , { spellId = "searing_smite", spellLevel = 1 }
+                , { spellId = "bless", spellLevel = 1 }
+                , { spellId = "command", spellLevel = 1 }
                 ] : List ClassSpellAccess
               , changeOn = { kind = "long_rest", replacementCount = 1 }
               }
@@ -53,9 +55,27 @@ let paladin =
               , slots = [ { spellLevel = 1, count = 2 } ]
               , resetCadence = { kind = "long_rest" }
               }
+          , spellcastingProgression =
+            [ { atLevel = 1
+              , cantripCount = 0
+              , preparedSpellCount = 2
+              , spellSlots = [ { spellLevel = 1, count = 2 } ]
+              }
+            , { atLevel = 2
+              , cantripCount = 0
+              , preparedSpellCount = 3
+              , spellSlots = [ { spellLevel = 1, count = 2 } ]
+              }
+            , { atLevel = 3
+              , cantripCount = 0
+              , preparedSpellCount = 4
+              , spellSlots = [ { spellLevel = 1, count = 3 } ]
+              }
+            ]
           , spellcastingFocus = "holy_symbol"
           }
-      , subclassChoices = [] : List { level : Natural, options : List Text }
+      , subclassChoices =
+        [ { level = 3, options = [ "subclass_paladin_oath_of_devotion" ] } ]
       , startingEquipment =
         [ { coinsGp = 9
           , id = "option_a"

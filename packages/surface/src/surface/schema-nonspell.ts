@@ -1655,6 +1655,30 @@ export const CLASS_SPELL_LISTS = {
         "thunderwave",
         "unseen_servant",
       ],
+      2: [
+        "aid",
+        "animal_messenger",
+        "blindness_deafness",
+        "calm_emotions",
+        "detect_thoughts",
+        "enhance_ability",
+        "enlarge_reduce",
+        "enthrall",
+        "heat_metal",
+        "hold_person",
+        "invisibility",
+        "knock",
+        "lesser_restoration",
+        "locate_animals_or_plants",
+        "locate_object",
+        "magic_mouth",
+        "mirror_image",
+        "see_invisibility",
+        "shatter",
+        "silence",
+        "suggestion",
+        "zone_of_truth",
+      ],
     },
   },
   cleric: {
@@ -1684,6 +1708,25 @@ export const CLASS_SPELL_LISTS = {
         "purify_food_and_drink",
         "sanctuary",
         "shield_of_faith",
+      ],
+      2: [
+        "aid",
+        "augury",
+        "blindness_deafness",
+        "calm_emotions",
+        "continual_flame",
+        "enhance_ability",
+        "find_traps",
+        "gentle_repose",
+        "hold_person",
+        "lesser_restoration",
+        "locate_object",
+        "prayer_of_healing",
+        "protection_from_poison",
+        "silence",
+        "spiritual_weapon",
+        "warding_bond",
+        "zone_of_truth",
       ],
     },
   },
@@ -1721,6 +1764,29 @@ export const CLASS_SPELL_LISTS = {
         "purify_food_and_drink",
         "speak_with_animals",
         "thunderwave",
+      ],
+      2: [
+        "aid",
+        "animal_messenger",
+        "augury",
+        "barkskin",
+        "continual_flame",
+        "darkvision",
+        "enhance_ability",
+        "enlarge_reduce",
+        "find_traps",
+        "flame_blade",
+        "flaming_sphere",
+        "gust_of_wind",
+        "heat_metal",
+        "hold_person",
+        "lesser_restoration",
+        "locate_animals_or_plants",
+        "locate_object",
+        "moonbeam",
+        "pass_without_trace",
+        "protection_from_poison",
+        "spike_growth",
       ],
     },
   },
@@ -1761,6 +1827,23 @@ export const CLASS_SPELL_LISTS = {
         "jump",
         "longstrider",
         "speak_with_animals",
+      ],
+      2: [
+        "aid",
+        "animal_messenger",
+        "barkskin",
+        "darkvision",
+        "enhance_ability",
+        "find_traps",
+        "gust_of_wind",
+        "lesser_restoration",
+        "locate_animals_or_plants",
+        "locate_object",
+        "magic_weapon",
+        "pass_without_trace",
+        "protection_from_poison",
+        "silence",
+        "spike_growth",
       ],
     },
   },
@@ -1806,6 +1889,33 @@ export const CLASS_SPELL_LISTS = {
         "silent_image",
         "sleep",
         "thunderwave",
+      ],
+      2: [
+        "alter_self",
+        "blindness_deafness",
+        "blur",
+        "darkness",
+        "darkvision",
+        "detect_thoughts",
+        "dragons_breath",
+        "enhance_ability",
+        "enlarge_reduce",
+        "flame_blade",
+        "flaming_sphere",
+        "gust_of_wind",
+        "hold_person",
+        "invisibility",
+        "knock",
+        "levitate",
+        "magic_weapon",
+        "mirror_image",
+        "misty_step",
+        "scorching_ray",
+        "see_invisibility",
+        "shatter",
+        "spider_climb",
+        "suggestion",
+        "web",
       ],
     },
   },
@@ -2189,24 +2299,12 @@ export const PactMagicSpellcastingCreationSchema = Schema.Struct({
 }).pipe(
   Schema.filter(
     (spellcasting) => {
-      if (
-        spellcasting.cantripAccess.choose !==
-          spellcasting.cantripAccess.spellIds.length ||
-        spellcasting.preparedAccess.choose !==
-          spellcasting.preparedAccess.spells.length
-      ) {
-        return false;
-      }
-
       return (
         distinctStrings(spellcasting.cantripAccess.spellIds) &&
         allSpellIdsDistinct(spellcasting.preparedAccess.spells) &&
         distinctPactMagicProgressionLevels(spellcasting.pactMagicProgression) &&
         pactMagicProgressionMatchesLevelOneFacts(spellcasting) &&
-        allSpellLevelsAtOrBelow(
-          spellcasting.preparedAccess.spells,
-          spellcasting.pactSlotProjection.spellLevel,
-        ) &&
+        pactMagicOptionsCoverProgression(spellcasting) &&
         allCantripsFromClassSpellList(
           "warlock",
           spellcasting.cantripAccess.spellIds,
@@ -2506,6 +2604,42 @@ function pactMagicProgressionMatchesLevelOneFacts(spellcasting: {
   );
 }
 
+function pactMagicOptionsCoverProgression(spellcasting: {
+  readonly cantripAccess: {
+    readonly spellIds: readonly string[];
+  };
+  readonly preparedAccess: {
+    readonly spells: readonly {
+      readonly spellId: string;
+      readonly spellLevel: number;
+    }[];
+  };
+  readonly pactMagicProgression: readonly {
+    readonly cantripTotal: number;
+    readonly preparedSpellTotal: number;
+    readonly pactSlotLevel: number;
+  }[];
+}): boolean {
+  const maxCantripCount = Math.max(
+    ...spellcasting.pactMagicProgression.map((row) => row.cantripTotal),
+  );
+  const maxPreparedSpellCount = Math.max(
+    ...spellcasting.pactMagicProgression.map((row) => row.preparedSpellTotal),
+  );
+  const maxPactSlotLevel = Math.max(
+    ...spellcasting.pactMagicProgression.map((row) => row.pactSlotLevel),
+  );
+
+  return (
+    spellcasting.cantripAccess.spellIds.length >= maxCantripCount &&
+    spellcasting.preparedAccess.spells.length >= maxPreparedSpellCount &&
+    allSpellLevelsAtOrBelow(
+      spellcasting.preparedAccess.spells,
+      maxPactSlotLevel,
+    )
+  );
+}
+
 export const ClassSpellcastingCreationSchema = Schema.Union(
   ListPreparedSpellcastingCreationSchema,
   ListPreparedSpellcastingProgressionCreationSchema,
@@ -2664,15 +2798,14 @@ export const PactMagicClassRecordSchema = Schema.Struct({
       );
       return (
         unit.spellcasting.cantripAccess.choose === 2 &&
-        unit.spellcasting.cantripAccess.spellIds.length === 2 &&
         unit.spellcasting.preparedAccess.choose === 2 &&
-        unit.spellcasting.preparedAccess.spells.length === 2 &&
         unit.spellcasting.pactSlotProjection.count === 1 &&
         unit.spellcasting.pactSlotProjection.spellLevel === 1 &&
         levelOne?.cantripTotal === 2 &&
         levelOne.preparedSpellTotal === 2 &&
         levelOne.pactSlotCount === 1 &&
         levelOne.pactSlotLevel === 1 &&
+        pactMagicOptionsCoverProgression(unit.spellcasting) &&
         allCantripsFromClassSpellList(
           unit.className,
           unit.spellcasting.cantripAccess.spellIds,

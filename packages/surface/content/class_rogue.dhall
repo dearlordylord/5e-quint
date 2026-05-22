@@ -58,7 +58,8 @@ let rogue =
       , provenance = { kind = "srd-5.2.1", section = "Classes/Rogue.md:3-25,33-36" }
       , savingThrowProficiencies = [ "dex", "int" ]
       , skillProficiencyChoice = { choose = 4, options = rogueSkills }
-      , subclassChoices = [] : List { level : Natural, options : List Text }
+      , subclassChoices =
+        [ { level = 3, options = [ "subclass_rogue_thief" ] } ]
       , startingEquipment =
         [ { coinsGp = 8
           , id = "option_a"

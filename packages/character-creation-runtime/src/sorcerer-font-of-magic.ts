@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: runtime-owner CREATION.CLASS_FEATURE_RESOURCE.PROJECTION
 import { Either, Option } from "effect";
 import {
   resourceCount,

@@ -49,6 +49,21 @@ const task184WeaponMasteryUnitIds = [
   "rogue_weapon_mastery",
 ] as const;
 
+const levelThreeSubclassChoiceUnitIds = [
+  "subclass_barbarian_path_of_the_berserker",
+  "subclass_bard_college_of_lore",
+  "subclass_cleric_life_domain",
+  "subclass_druid_circle_of_the_land",
+  "subclass_fighter_champion",
+  "subclass_monk_warrior_of_the_open_hand",
+  "subclass_paladin_oath_of_devotion",
+  "subclass_ranger_hunter",
+  "subclass_rogue_thief",
+  "subclass_sorcerer_draconic_sorcery",
+  "subclass_warlock_fiend_patron",
+  "subclass_wizard_evoker",
+] as const;
+
 const alterSelfNaturalWeaponGrowthDamageType = {
   kind: "choice_table",
   holeId: "alter_self_natural_weapon_growth",
@@ -96,8 +111,7 @@ const requiredFirstVerticalUnitIds = [
   "paladin_fighting_style",
   "paladin_paladins_smite",
   "ranger_fighting_style",
-  "subclass_fighter_champion",
-  "subclass_wizard_evoker",
+  ...levelThreeSubclassChoiceUnitIds,
   "rogue_evasion",
   "wizard_ritual_adept",
   "wizard_arcane_recovery",

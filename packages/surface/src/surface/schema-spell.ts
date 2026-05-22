@@ -511,6 +511,10 @@ type AreaPushUnsecuredObjects = Schema.Schema.Type<
 type DamageSourceFilter = Schema.Schema.Type<typeof DamageSourceFilterSchema>;
 type AreaScopedEffectAtom = AreaPushUnsecuredObjects;
 type AreaDirectEffectAtom = EffectAtom | AreaScopedEffectAtom;
+type LandChoiceSpellAccessTier = {
+  readonly minimumClassLevel: number;
+  readonly spellIds: ReadonlyNonEmptyArray<string>;
+};
 type ShapeShiftRevertTrigger = Schema.Schema.Type<
   typeof ShapeShiftRevertTriggerSchema
 >;
@@ -1260,6 +1264,19 @@ type EffectAtom =
       readonly spellLevel: Schema.Schema.Type<typeof SpellLevelSchema>;
       readonly mode: Schema.Schema.Type<typeof SpellAccessModeSchema>;
       readonly count: number;
+    }
+  | {
+      readonly kind: "grant_land_choice_prepared_spell_access";
+      readonly choice: {
+        readonly kind: "druid_circle_land";
+        readonly trigger: "long_rest";
+      };
+      readonly spellsByLand: {
+        readonly arid: ReadonlyNonEmptyArray<LandChoiceSpellAccessTier>;
+        readonly polar: ReadonlyNonEmptyArray<LandChoiceSpellAccessTier>;
+        readonly temperate: ReadonlyNonEmptyArray<LandChoiceSpellAccessTier>;
+        readonly tropical: ReadonlyNonEmptyArray<LandChoiceSpellAccessTier>;
+      };
     }
   | {
       readonly kind: "grant_spell_free_casts";
@@ -3070,6 +3087,39 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         spellLevel: SpellLevelSchema,
         mode: SpellAccessModeSchema,
         count: PositiveIntegerSchema,
+      }),
+      strictStruct({
+        kind: Schema.Literal("grant_land_choice_prepared_spell_access"),
+        choice: Schema.Struct({
+          kind: Schema.Literal("druid_circle_land"),
+          trigger: Schema.Literal("long_rest"),
+        }),
+        spellsByLand: Schema.Struct({
+          arid: nonEmpty(
+            Schema.Struct({
+              minimumClassLevel: PositiveIntegerSchema,
+              spellIds: nonEmpty(Schema.NonEmptyTrimmedString),
+            }),
+          ),
+          polar: nonEmpty(
+            Schema.Struct({
+              minimumClassLevel: PositiveIntegerSchema,
+              spellIds: nonEmpty(Schema.NonEmptyTrimmedString),
+            }),
+          ),
+          temperate: nonEmpty(
+            Schema.Struct({
+              minimumClassLevel: PositiveIntegerSchema,
+              spellIds: nonEmpty(Schema.NonEmptyTrimmedString),
+            }),
+          ),
+          tropical: nonEmpty(
+            Schema.Struct({
+              minimumClassLevel: PositiveIntegerSchema,
+              spellIds: nonEmpty(Schema.NonEmptyTrimmedString),
+            }),
+          ),
+        }),
       }),
       Schema.Struct({
         kind: Schema.Literal("grant_spell_free_casts"),

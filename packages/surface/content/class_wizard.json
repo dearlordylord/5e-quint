@@ -81,7 +81,9 @@
         "shield",
         "sleep",
         "thunderwave",
-        "chromatic_orb"
+        "chromatic_orb",
+        "mirror_image",
+        "misty_step"
       ]
     },
     "spellSlotProjection": {
@@ -131,6 +133,14 @@
         {
           "spellId": "chromatic_orb",
           "spellLevel": 1
+        },
+        {
+          "spellId": "mirror_image",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "misty_step",
+          "spellLevel": 2
         }
       ]
     },
@@ -163,6 +173,22 @@
           }
         ],
         "spellbookSpellCount": 8
+      },
+      {
+        "atLevel": 3,
+        "cantripCount": 3,
+        "preparedSpellCount": 6,
+        "spellSlots": [
+          {
+            "count": 4,
+            "spellLevel": 1
+          },
+          {
+            "count": 2,
+            "spellLevel": 2
+          }
+        ],
+        "spellbookSpellCount": 10
       }
     ]
   },

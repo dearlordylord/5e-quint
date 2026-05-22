@@ -1,5 +1,6 @@
 // Creature state init/snapshot/lifecycle helpers extracted from
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form spell.invocation-warding-bond-linked-effect character-sheet.metamagic-battle-resource-bridge
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
 // battle-reducer.ts. Cluster G (creature_state). Mechanical extraction —
 // no behavior change. Pass 8 also absorbed:
 //   - `assertCurrentHpWithinMaxHp` (cycle #9)

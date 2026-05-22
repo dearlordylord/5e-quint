@@ -2,6 +2,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-weapon-enhancement
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 // Spell discovery (Cluster K). Mechanical extraction from battle-reducer.ts.
 // Discovers per-actor SupportedSpellInvocation acts, computes cast-summary
 // strings, classifies invocations, and synthesises the optional readied-spell

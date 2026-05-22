@@ -11,9 +11,9 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | Strict runtime/profile support | 114/171 (66.7%) |
 | Strict target closure | 169/171 (98.8%) |
 | Product readiness | 534/556 (96%) |
-| Rules-kernel profile join | 78/87 (89.7%) |
-| Rules-kernel covered profile join | 78/87 (89.7%) |
-| Supported Unit rules-kernel chain | 103/114 (90.4%) |
+| Rules-kernel profile join | 86/87 (98.9%) |
+| Rules-kernel covered profile join | 86/87 (98.9%) |
+| Supported Unit rules-kernel chain | 113/114 (99.1%) |
 
 ## Scope
 
@@ -53,17 +53,7 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 
 | Unit | Status | Profiles Needing Attention |
 | --- | --- | --- |
-| `bard_jack_of_all_trades` | unmapped | `character-sheet.ability-check-proficiency-bonus` (unmapped: no obligation mapping) |
-| `cleric_channel_divinity` | unmapped | `character-creation.class-feature-resource-projection` (unmapped: no obligation mapping) |
-| `cleric_divine_order` | unmapped | `character-creation.class-feature-option-projection` (unmapped: no obligation mapping) |
-| `druid_primal_order` | unmapped | `character-creation.class-feature-option-projection` (unmapped: no obligation mapping) |
-| `heat_metal` | unmapped | `spell.invocation-object-contact-damage` (unmapped: no obligation mapping) |
-| `monk_uncanny_metabolism` | unmapped | `character-creation.class-feature-source-fact-projection` (unmapped: no obligation mapping) |
-| `ranger_deft_explorer` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
-| `ray_of_enfeeblement` | unmapped | `spell.invocation-ray-of-enfeeblement-d20-lifecycle` (unmapped: no obligation mapping); `spell.invocation-ray-of-enfeeblement-damage-penalty` (unmapped: no obligation mapping) |
-| `rogue_expertise` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
-| `see_invisibility` | unmapped | `spell.invocation-see-invisible-observer-sight` (unmapped: no obligation mapping) |
-| `wizard_scholar` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
+| `ray_of_enfeeblement` | unmapped | `spell.invocation-ray-of-enfeeblement-damage-penalty` (unmapped: no obligation mapping) |
 
 ## Non-Supported Frontier Detail
 

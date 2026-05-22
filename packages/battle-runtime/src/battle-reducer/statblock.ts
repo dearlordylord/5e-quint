@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
 // StatBlock action-option and resource helpers extracted from battle-reducer.ts.
 // Cluster V (statblock). Mechanical extraction — no behavior change.
 // V depends on W (statblock-attacks.ts) for supportedStatBlockAttack* and

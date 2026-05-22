@@ -21,7 +21,7 @@ let fighter =
           }
       , className = "fighter"
       , description =
-          "Minimum SRD Fighter class creation facts through level 2."
+          "Minimum SRD Fighter class creation facts plus the level 3 subclass choice."
       , featureGrants =
         [ { level = 1, unitId = "fighter_fighting_style" }
         , { level = 1, unitId = "fighter_second_wind" }

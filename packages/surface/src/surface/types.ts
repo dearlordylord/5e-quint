@@ -941,6 +941,18 @@ export type PreparedSpellAccessGrant = Extract<
   EffectAtom,
   { readonly kind: "grant_spell_access"; readonly mode: "prepared" }
 >;
+export type LandChoicePreparedSpellAccessGrant = Extract<
+  EffectAtom,
+  { readonly kind: "grant_land_choice_prepared_spell_access" }
+>;
+export const DRUID_CIRCLE_LAND_CHOICES = [
+  "arid",
+  "polar",
+  "temperate",
+  "tropical",
+] as const;
+export type DruidCircleLandChoice =
+  (typeof DRUID_CIRCLE_LAND_CHOICES)[number];
 type ClassFeatureUnitRecord = Extract<
   UnitRecord,
   { readonly kind: "class_feature" }

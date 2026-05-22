@@ -8,7 +8,7 @@
     "kind": "trained"
   },
   "className": "ranger",
-  "description": "SRD Ranger class creation facts for level-1 characters plus the level-2 Deft Explorer and Fighting Style class-feature grants, including class-list prepared Spell Access, Spell Slots, and spellcasting focus facts.",
+  "description": "SRD Ranger class creation and early progression facts through level 3, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, level-2 class-feature grants, and level-3 subclass selection.",
   "featureGrants": [
     {
       "level": 1,
@@ -119,8 +119,8 @@
     ]
   },
   "spellcasting": {
-    "kind": "list_prepared_spellcasting_progression_creation",
     "featureLevel": 1,
+    "kind": "list_prepared_spellcasting_progression_creation",
     "preparedAccess": {
       "changeOn": {
         "kind": "long_rest",
@@ -140,6 +140,10 @@
         {
           "spellId": "longstrider",
           "spellLevel": 1
+        },
+        {
+          "spellId": "hunters_mark",
+          "spellLevel": 1
         }
       ]
     },
@@ -156,6 +160,7 @@
       ]
     },
     "spellcastingAbility": "wis",
+    "spellcastingFocus": "druidic_focus",
     "spellcastingProgression": [
       {
         "atLevel": 1,
@@ -178,11 +183,20 @@
             "spellLevel": 1
           }
         ]
+      },
+      {
+        "atLevel": 3,
+        "cantripCount": 0,
+        "preparedSpellCount": 4,
+        "spellSlots": [
+          {
+            "count": 3,
+            "spellLevel": 1
+          }
+        ]
       }
-    ],
-    "spellcastingFocus": "druidic_focus"
+    ]
   },
-  "subclassChoices": [],
   "startingEquipment": [
     {
       "coinsGp": 7,
@@ -228,6 +242,14 @@
       "coinsGp": 150,
       "id": "option_b",
       "kind": "coin_grant"
+    }
+  ],
+  "subclassChoices": [
+    {
+      "level": 3,
+      "options": [
+        "subclass_ranger_hunter"
+      ]
     }
   ],
   "toolProficiencies": {

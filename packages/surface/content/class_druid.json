@@ -112,6 +112,10 @@
         {
           "spellId": "thunderwave",
           "spellLevel": 1
+        },
+        {
+          "spellId": "aid",
+          "spellLevel": 2
         }
       ]
     },
@@ -149,6 +153,21 @@
           {
             "count": 3,
             "spellLevel": 1
+          }
+        ]
+      },
+      {
+        "atLevel": 3,
+        "cantripCount": 2,
+        "preparedSpellCount": 6,
+        "spellSlots": [
+          {
+            "count": 4,
+            "spellLevel": 1
+          },
+          {
+            "count": 2,
+            "spellLevel": 2
           }
         ]
       }
@@ -192,7 +211,14 @@
       "kind": "coin_grant"
     }
   ],
-  "subclassChoices": [],
+  "subclassChoices": [
+    {
+      "level": 3,
+      "options": [
+        "subclass_druid_circle_of_the_land"
+      ]
+    }
+  ],
   "toolProficiencies": {
     "kind": "fixed",
     "proficiencies": [

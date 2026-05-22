@@ -48,7 +48,11 @@ let barbarian =
           , "survival"
           ]
         }
-      , subclassChoices = [] : List { level : Natural, options : List Text }
+      , subclassChoices =
+        [ { level = 3
+          , options = [ "subclass_barbarian_path_of_the_berserker" ]
+          }
+        ]
       , toolProficiencies = { kind = "none" }
       , startingEquipment =
         [ { coinsGp = 15

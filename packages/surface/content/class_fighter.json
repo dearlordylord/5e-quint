@@ -9,7 +9,7 @@
     "kind": "trained"
   },
   "className": "fighter",
-  "description": "Minimum SRD Fighter class creation facts through level 2.",
+  "description": "Minimum SRD Fighter class creation facts plus the level 3 subclass choice.",
   "featureGrants": [
     {
       "level": 1,

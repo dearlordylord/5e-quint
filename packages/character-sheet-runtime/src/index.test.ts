@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: parity-witness SHEET.SPELL_REST_BENEFIT.APPLICATION
 import type { CharacterBuild } from "@dnd/character-creation-runtime";
 import {
   abilityScoreAssignment,
@@ -7,6 +8,7 @@ import {
   characterEquipmentItemUnitId,
   classUnitId,
   DRUID_WILD_SHAPE_UNIT_ID,
+  eldritchInvocationId,
   MONK_MARTIAL_ARTS_UNIT_ID,
   MONK_MONKS_FOCUS_UNIT_ID,
   MONK_UNCANNY_METABOLISM_UNIT_ID,
@@ -46,6 +48,7 @@ import {
   characterSheetAbilityCheckProficiencyBonus,
   characterSheetArmorClassState,
   characterSheetCurrentHp,
+  characterSheetDruidCircleLandPreparedSpellAccess,
   characterSheetDruidWildShapeKnownForms,
   characterSheetHitDice,
   characterSheetHitPointMaximum,
@@ -99,6 +102,8 @@ import {
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.metamagic-battle-resource-bridge
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.monk-uncanny-metabolism-initiative-recovery
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.spell-rest-benefit-application
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-prepared-spell-access
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.druid-circle-land-spell-access
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B barbarian_unarmored_defense monk_unarmored_defense paladin_lay_on_hands wizard_arcane_recovery wizard_ritual_adept
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-04 fighter_weapon_mastery barbarian_weapon_mastery paladin_weapon_mastery ranger_weapon_mastery rogue_weapon_mastery
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-CLASS-BARD-JACK-OF-ALL-TRADES bard_jack_of_all_trades
@@ -109,6 +114,7 @@ import {
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS sorcerer_font_of_magic
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS sorcerer_metamagic
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST prayer_of_healing
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-CIRCLE-LAND-SPELL-ACCESS druid_circle_of_the_land_spells
 
 const build = armorClassBuild({ startingClass: "class_fighter" });
 
@@ -177,6 +183,16 @@ const prayerOfHealingRestBenefitAdmissionGateTestName =
   "Prayer of Healing rest benefit rejects unsupported Surface spell shapes";
 const prayerOfHealingStoredLockoutGateTestName =
   "rejects stored Prayer of Healing recipient lockouts for unknown or unsupported spell ids";
+const subclassPreparedSpellAccessBlocksBookOfShadowsDuplicateTestName =
+  "subclass always-prepared Spell Access blocks duplicate Book of Shadows selections";
+const druidCircleLandSpellAccessProjectionTestName =
+  "projects Circle of the Land prepared Spell Access from selected land state and Druid level";
+const druidCircleLandSpellAccessSelectedLandGateTestName =
+  "requires Circle of the Land selected land state before projecting prepared Spell Access";
+const druidCircleLandSpellcastingSourceGateTestName =
+  "rejects Circle of the Land selected land without Druid spellcasting source";
+const druidCircleLandSpellAccessBookOfShadowsDuplicateTestName =
+  "Circle of the Land prepared Spell Access blocks duplicate Book of Shadows selections";
 const druidWildShapeFixtureKnownFormStatBlockIds = [
   "stat_block_rat",
   "stat_block_riding_horse",
@@ -985,6 +1001,238 @@ describe("Character Sheet runtime", () => {
       bookOfShadows,
     );
     expect(sheet.right.bookOfShadowsPresence).toEqual({ tag: "notOnPerson" });
+  });
+
+  test(subclassPreparedSpellAccessBlocksBookOfShadowsDuplicateTestName, () => {
+    const sheet = parseCharacterSheet(
+      storedAvailableSheetInput({
+        characterId: "character:fiend-duplicate-book-spell",
+        build: {
+          ...armorClassBuild({
+            startingClass: "class_warlock",
+            advancements: ["class_warlock", "class_warlock"],
+          }),
+          features: [
+            {
+              kind: "selectedClassChoice",
+              selectedFromUnitId: "class_warlock",
+              unitId: "subclass_warlock_fiend_patron",
+            },
+            {
+              kind: "selectedEldritchInvocation",
+              selectedFromUnitId: "warlock_eldritch_invocations",
+              selection: {
+                kind: "nonRepeatable",
+                invocationId: "pact_of_the_tome",
+              },
+            },
+          ],
+          spellcasting: {
+            sources: [
+              {
+                sourceUnitId: "class_warlock",
+                spellcastingAbility: "cha",
+                cantrips: [],
+                spellbook: [],
+                preparedSpells: [],
+                spellcastingFocuses: ["arcane_focus"],
+                bookOfShadows: {
+                  tag: "bookOfShadows",
+                  cantrips: ["fire_bolt", "minor_illusion", "spare_the_dying"],
+                  ritualSpells: ["burning_hands", "detect_magic"],
+                  spellcastingFocus: "book_of_shadows",
+                },
+              },
+            ],
+            slotPools: {
+              pactMagic: {
+                kind: "pactMagic",
+                slotLevel: 2,
+                count: 2,
+              },
+            },
+          },
+        },
+      }),
+      unitLibrary,
+    );
+
+    expect(Either.isLeft(sheet)).toBe(true);
+    if (Either.isLeft(sheet)) {
+      expect(sheet.left.message).toBe(
+        "Character Build Book of Shadows Spell Access cannot select spells the character already has prepared or known.",
+      );
+    }
+  });
+
+  test(druidCircleLandSpellAccessProjectionTestName, () => {
+    const sheet = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:druid-land-temperate"),
+        build: druidCircleLandBuild({ druidLevel: 5 }),
+        maximumHp: Hp(24),
+        currentHp: Hp(24),
+        tempHp: Hp(0),
+        unitLibrary,
+        druidWildShapeKnownFormStatBlockIds: [
+          ...druidWildShapeFixtureKnownFormStatBlockIds,
+          "stat_block_cat",
+          "stat_block_frog",
+        ],
+        druidCircleLand: { land: "temperate" },
+      }),
+    );
+
+    expect(
+      characterSheetDruidCircleLandPreparedSpellAccess({
+        sheet,
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      _tag: "Right",
+      right: {
+        land: "temperate",
+        druidLevel: 5,
+        spellcastingSourceUnitId: "class_druid",
+        spellIds: ["misty_step", "shocking_grasp", "sleep", "lightning_bolt"],
+      },
+    });
+
+    const rested = requireRight(
+      completeLongRest({
+        sheet,
+        unitLibrary,
+        druidCircleLandChoice: "arid",
+      }),
+    );
+
+    expect(rested.druidCircleLand).toEqual({ land: "arid" });
+    expect(
+      characterSheetDruidCircleLandPreparedSpellAccess({
+        sheet: rested,
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      _tag: "Right",
+      right: {
+        land: "arid",
+        spellIds: ["blur", "burning_hands", "fire_bolt", "fireball"],
+      },
+    });
+  });
+
+  test(druidCircleLandSpellAccessSelectedLandGateTestName, () => {
+    const sheet = createFreshCharacterSheet({
+      characterId: characterSheetId("character:druid-land-missing"),
+      build: druidCircleLandBuild({ druidLevel: 3 }),
+      maximumHp: Hp(18),
+      currentHp: Hp(18),
+      tempHp: Hp(0),
+      unitLibrary,
+      druidWildShapeKnownFormStatBlockIds:
+        druidWildShapeFixtureKnownFormStatBlockIds,
+    });
+
+    expect(sheet).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: "Circle of the Land requires selected land state.",
+      },
+    });
+  });
+
+  test(druidCircleLandSpellcastingSourceGateTestName, () => {
+    const sheet = createFreshCharacterSheet({
+      characterId: characterSheetId("character:druid-land-no-spellcasting"),
+      build: {
+        ...armorClassBuild({
+          startingClass: "class_druid",
+          advancements: ["class_druid", "class_druid"],
+        }),
+        features: [
+          {
+            kind: "selectedClassChoice",
+            selectedFromUnitId: "class_druid",
+            unitId: "subclass_druid_circle_of_the_land",
+          },
+        ],
+      },
+      maximumHp: Hp(18),
+      currentHp: Hp(18),
+      tempHp: Hp(0),
+      unitLibrary,
+      druidWildShapeKnownFormStatBlockIds:
+        druidWildShapeFixtureKnownFormStatBlockIds,
+      druidCircleLand: { land: "arid" },
+    });
+
+    expect(sheet).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Circle of the Land selected land requires Druid spellcasting source.",
+      },
+    });
+  });
+
+  test(druidCircleLandSpellAccessBookOfShadowsDuplicateTestName, () => {
+    const polarSheet = requireRight(
+      parseCharacterSheet(
+        {
+          ...storedAvailableSheetInput({
+            characterId: "character:druid-land-book-spell-long-rest",
+            build: druidWarlockCircleLandBookBuild(),
+          }),
+          druidWildShapeKnownForms: {
+            statBlockIds: druidWildShapeFixtureKnownFormStatBlockIds,
+          },
+          druidCircleLand: { land: "polar" },
+          spellSlotExpenditures: [{ spellLevel: 1, expended: 0 }],
+          pactSlotExpenditure: { expended: 0 },
+          bookOfShadowsPresence: { tag: "onPerson" },
+        },
+        unitLibrary,
+      ),
+    );
+
+    expect(
+      completeLongRest({
+        sheet: polarSheet,
+        unitLibrary,
+        druidCircleLandChoice: "arid",
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Character Build Book of Shadows Spell Access cannot select spells the character already has prepared or known.",
+      },
+    });
+
+    const sheet = parseCharacterSheet(
+      {
+        ...storedAvailableSheetInput({
+          characterId: "character:druid-land-duplicate-book-spell",
+          build: druidWarlockCircleLandBookBuild(),
+        }),
+        druidWildShapeKnownForms: {
+          statBlockIds: druidWildShapeFixtureKnownFormStatBlockIds,
+        },
+        druidCircleLand: { land: "arid" },
+        spellSlotExpenditures: [{ spellLevel: 1, expended: 0 }],
+        pactSlotExpenditure: { expended: 0 },
+        bookOfShadowsPresence: { tag: "onPerson" },
+      },
+      unitLibrary,
+    );
+
+    expect(sheet).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Character Build Book of Shadows Spell Access cannot select spells the character already has prepared or known.",
+      },
+    });
   });
 
   test("timePassed accumulates Stable recovery time before one hour can pass", () => {
@@ -4039,6 +4287,106 @@ function druidLanguageBuild(): CharacterBuild {
         language: "Druidic",
       },
     ],
+  };
+}
+
+function druidCircleLandBuild(input: {
+  readonly druidLevel: number;
+}): CharacterBuild {
+  return {
+    ...armorClassBuild({
+      startingClass: "class_druid",
+      advancements: Array.from(
+        { length: input.druidLevel - 1 },
+        () => "class_druid",
+      ),
+    }),
+    classFeatureLanguages: [
+      {
+        kind: "classFeatureLanguageGrant",
+        sourceUnitId: "druid_druidic",
+        language: "Druidic",
+      },
+    ],
+    features: [
+      {
+        kind: "selectedClassChoice",
+        selectedFromUnitId: "class_druid",
+        unitId: "subclass_druid_circle_of_the_land",
+      },
+    ],
+    spellcasting: {
+      sources: [
+        {
+          sourceUnitId: "class_druid",
+          spellcastingAbility: "wis",
+          cantrips: [],
+          spellbook: [],
+          preparedSpells: [],
+          spellcastingFocuses: ["druidic_focus"],
+        },
+      ],
+      slotPools: {
+        spellcasting: {
+          kind: "spellcasting",
+          slots: [{ spellLevel: 1, count: 4 }],
+        },
+      },
+    },
+  };
+}
+
+function druidWarlockCircleLandBookBuild(): CharacterBuild {
+  return {
+    ...druidCircleLandBuild({ druidLevel: 3 }),
+    features: [
+      ...druidCircleLandBuild({ druidLevel: 3 }).features,
+      {
+        kind: "selectedEldritchInvocation",
+        selectedFromUnitId: "warlock_eldritch_invocations",
+        selection: {
+          kind: "nonRepeatable",
+          invocationId: eldritchInvocationId("pact_of_the_tome"),
+        },
+      },
+    ],
+    spellcasting: {
+      sources: [
+        {
+          sourceUnitId: "class_druid",
+          spellcastingAbility: "wis",
+          cantrips: [],
+          spellbook: [],
+          preparedSpells: [],
+          spellcastingFocuses: ["druidic_focus"],
+        },
+        {
+          sourceUnitId: "class_warlock",
+          spellcastingAbility: "cha",
+          cantrips: [],
+          spellbook: [],
+          preparedSpells: [],
+          spellcastingFocuses: ["arcane_focus"],
+          bookOfShadows: {
+            tag: "bookOfShadows",
+            cantrips: ["fire_bolt", "minor_illusion", "spare_the_dying"],
+            ritualSpells: ["detect_magic", "detect_poison_and_disease"],
+            spellcastingFocus: "book_of_shadows",
+          },
+        },
+      ],
+      slotPools: {
+        spellcasting: {
+          kind: "spellcasting",
+          slots: [{ spellLevel: 1, count: 4 }],
+        },
+        pactMagic: {
+          kind: "pactMagic",
+          slotLevel: 1,
+          count: 1,
+        },
+      },
+    },
   };
 }
 

@@ -82,6 +82,8 @@ let wizard =
                 , { spellId = "sleep", spellLevel = 1 }
                 , { spellId = "thunderwave", spellLevel = 1 }
                 , { spellId = "chromatic_orb", spellLevel = 1 }
+                , { spellId = "mirror_image", spellLevel = 2 }
+                , { spellId = "misty_step", spellLevel = 2 }
                 ] : List SpellbookSpell
               }
           , preparedAccess =
@@ -96,6 +98,8 @@ let wizard =
                 , "sleep"
                 , "thunderwave"
                 , "chromatic_orb"
+                , "mirror_image"
+                , "misty_step"
                 ]
               , changeOn = { kind = "long_rest" }
               }
@@ -116,6 +120,15 @@ let wizard =
                 , spellbookSpellCount = 8
                 , preparedSpellCount = 5
                 , spellSlots = [ { spellLevel = 1, count = 3 } ]
+                }
+              , { atLevel = 3
+                , cantripCount = 3
+                , spellbookSpellCount = 10
+                , preparedSpellCount = 6
+                , spellSlots =
+                  [ { spellLevel = 1, count = 4 }
+                  , { spellLevel = 2, count = 2 }
+                  ]
                 }
               ] : List WizardSpellcastingProgressionRow
           , spellcastingFocuses = [ "arcane_focus", "spellbook" ]
