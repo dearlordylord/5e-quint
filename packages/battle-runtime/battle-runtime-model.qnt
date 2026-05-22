@@ -23,7 +23,7 @@ module battleRuntimeModel {
   type ChainedSpellAttackDamageInvocation =
     | ChromaticOrbChainedSpellAttack
   type ChromaticOrbDamageTypeChoice = ChromaticOrbAcid | ChromaticOrbCold | ChromaticOrbFire | ChromaticOrbLightning | ChromaticOrbPoison | ChromaticOrbThunder
-  type SaveGatedDamageInvocation = AcidSplashSaveGate | SacredFlameSaveGate | InflictWoundsSaveGate | BurningHandsSaveGate | FireballSaveGate | ViciousMockerySaveGate | DissonantWhispersSaveGate | HellishRebukeSaveGate | MindSpikeSaveGate
+  type SaveGatedDamageInvocation = AcidSplashSaveGate | SacredFlameSaveGate | InflictWoundsSaveGate | BurningHandsSaveGate | FireballSaveGate | LightningBoltSaveGate | ViciousMockerySaveGate | DissonantWhispersSaveGate | HellishRebukeSaveGate | MindSpikeSaveGate
   type AttackBurstSaveDamageInvocation =
     | IceKnifeAttackBurstSaveDamage
   type SaveGatedConditionInvocation =

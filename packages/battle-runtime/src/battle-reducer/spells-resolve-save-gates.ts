@@ -1410,7 +1410,6 @@ export function resolveSaveGateDamageSpellAct(input: {
       "Source damage roll penalty does not match an active source-side damage penalty.",
     );
   }
-
   const sourcePenaltyChecks = [
     ...damageTargets.map((targetId) => {
       const target = stateAfterCastConcentrationBreak.combatants.get(targetId);
@@ -1721,24 +1720,20 @@ export function resolveSaveGateDamageSpellAct(input: {
     if (target === undefined) {
       return state;
     }
+    const damageByType = spellDamageByTypeForTarget(
+      target,
+      input.invocation,
+      damageRoll,
+      "full",
+    );
     const sourcePenalty = applyAvailableSourceDamageRollPenalty(
       state.combatants.get(input.actorId),
-      spellDamageByTypeForTarget(
-        target,
-        input.invocation,
-        damageRoll,
-        "full",
-      ),
+      damageByType,
       damageRoll.holeId,
       sourceDamageRollPenaltyRollForDamageRoll(
         input.fillSet.sourceDamageRollPenaltyRolls,
         state.combatants.get(input.actorId),
-        spellDamageByTypeForTarget(
-          target,
-          input.invocation,
-          damageRoll,
-          "full",
-        ),
+        damageByType,
         damageRoll.holeId,
       ),
     );
@@ -1803,12 +1798,7 @@ export function resolveSaveGateDamageSpellAct(input: {
         sourceDamageRollPenaltyRoll: sourceDamageRollPenaltyRollForDamageRoll(
           input.fillSet.sourceDamageRollPenaltyRolls,
           state.combatants.get(input.actorId),
-          spellDamageByTypeForTarget(
-            target,
-            input.invocation,
-            damageRoll,
-            "full",
-          ),
+          damageByType,
           damageRoll.holeId,
         ),
         damageDisposition: damageDispositionForTarget(

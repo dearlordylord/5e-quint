@@ -44,6 +44,7 @@ import {
 import {
   addDamageAmountForType,
   applyAvailableSpellDamageReduction,
+  applyAvailableSourceDamageRollPenalty,
   damageAmountAfterTargetAdjustments,
   damageAmountByTypeAfterTargetAdjustments,
 } from "./damage-helpers.ts";
@@ -1626,6 +1627,12 @@ type SpellDamageContext = {
   readonly spellDamageReductionRollHoleForReduction?:
     | Parameters<typeof applyAvailableSpellDamageReduction>[3]
     | undefined;
+  readonly sourceDamageRollPenaltyRoll?:
+    | Extract<BattleFill, { readonly kind: "rolledDice" }>
+    | undefined;
+  readonly sourcePenaltyDamageByType?:
+    | ReadonlyMap<DamageType, number>
+    | undefined;
   readonly damageSourceId?: CombatantId | undefined;
 };
 
@@ -1651,17 +1658,40 @@ export function applySpellDamage(
     spellMarkedDamageRiders = [],
     spellDamageReductionRoll,
     spellDamageReductionRollHoleForReduction,
+    sourceDamageRollPenaltyRoll,
+    sourcePenaltyDamageByType,
     damageSourceId,
   } = context;
+  const baseDamageByType = spellDamageByTypeForTarget(
+    target,
+    invocation,
+    damageRoll,
+    "full",
+    spellMarkedDamageRiders,
+    critical,
+  );
+  const sourcePenalty =
+    sourcePenaltyDamageByType === undefined
+      ? applyAvailableSourceDamageRollPenalty(
+          damageSourceId === undefined
+            ? undefined
+            : state.combatants.get(damageSourceId),
+          baseDamageByType,
+          damageRoll.holeId,
+          sourceDamageRollPenaltyRoll,
+        )
+      : {
+          tag: "ok" as const,
+          damageByType: sourcePenaltyDamageByType,
+        };
+  if (sourcePenalty.tag !== "ok") {
+    return state;
+  }
   const reduction = applyAvailableSpellDamageReduction(
     target,
-    spellDamageByTypeForTarget(
-      target,
-      invocation,
-      damageRoll,
+    damageAmountByTypeAfterSaveDamageResult(
+      sourcePenalty.damageByType,
       saveDamageResult,
-      spellMarkedDamageRiders,
-      critical,
     ),
     spellDamageReductionRoll,
     spellDamageReductionRollHoleForReduction,
@@ -2051,5 +2081,17 @@ export function applySaveDamageResult(
     Match.when("half", () => Math.floor(amount / 2)),
     Match.when("full", () => amount),
     Match.exhaustive,
+  );
+}
+
+export function damageAmountByTypeAfterSaveDamageResult(
+  damageByType: ReadonlyMap<DamageType, number>,
+  saveDamageResult: SaveDamageResult,
+): ReadonlyMap<DamageType, number> {
+  return new Map(
+    [...damageByType].map(([damageType, amount]) => [
+      damageType,
+      applySaveDamageResult(amount, saveDamageResult),
+    ]),
   );
 }

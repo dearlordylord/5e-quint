@@ -127,6 +127,8 @@ export const jumpUnitId = "jump";
 
 export const levitateUnitId = "levitate";
 
+export const lightningBoltUnitId = "lightning_bolt";
+
 export const mistyStepUnitId = "misty_step";
 
 export const mirrorImageUnitId = "mirror_image";

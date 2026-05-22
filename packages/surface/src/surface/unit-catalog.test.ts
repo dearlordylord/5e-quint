@@ -182,6 +182,7 @@ const requiredFirstVerticalUnitIds = [
   "jump",
   "knock",
   "levitate",
+  "lightning_bolt",
   "locate_animals_or_plants",
   "locate_object",
   "hellish_rebuke",
@@ -721,6 +722,49 @@ describe("SRD Unit catalog boundary", () => {
               base: { dice: 3, dieSize: 8 },
               perLevel: { dice: 1 },
               startingAtLevel: 2,
+            },
+          },
+          onSuccess: { kind: "half_damage" },
+        },
+      ]);
+    }
+  });
+
+  test("keeps Lightning Bolt's SRD Line save-damage clause in the catalog projection", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const lightningBolt = result.catalog.requireUnit("lightning_bolt");
+
+      expect(lightningBolt.kind).toBe("spell");
+      if (
+        lightningBolt.kind !== "spell" ||
+        lightningBolt.mechanics.family !== "activation"
+      ) {
+        throw new Error("Expected Lightning Bolt to be an activation spell.");
+      }
+      expect(lightningBolt.description).toContain(
+        "100-foot-long, 5-foot-wide Line",
+      );
+      expect(lightningBolt.mechanics.phases).toMatchObject([
+        {
+          kind: "save_gate",
+          attachment: {
+            kind: "area",
+            origin: { kind: "self" },
+            shape: { kind: "line", lengthFeet: 100, widthFeet: 5 },
+          },
+          ability: "dex",
+          onFail: {
+            kind: "damage",
+            damageType: "lightning",
+            amount: {
+              kind: "linear_per_level",
+              axis: "slot",
+              base: { dice: 8, dieSize: 6 },
+              perLevel: { dice: 1 },
+              startingAtLevel: 3,
             },
           },
           onSuccess: { kind: "half_damage" },

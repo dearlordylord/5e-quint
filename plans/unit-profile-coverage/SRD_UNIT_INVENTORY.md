@@ -12,7 +12,7 @@ This is a Unit/catalog backlog denominator, not RAW span coverage and not an MBT
 - Level-3 class/subclass rows: 51
 - Spell-list pressure rows for cantrips and level 1-2 spells: 367
 - Level-3 spell-list pressure rows: 128
-- Level-3 installed SRD Surface spell-list pressure rows: 15
+- Level-3 installed SRD Surface spell-list pressure rows: 17
 - Missing level-1 class containers: 0
 
 ### Default Progress Metric: Level-1 Battle Readiness
@@ -56,14 +56,14 @@ This metric is a separate seed for level-3 class feature, subclass selection, su
 
 This metric is a separate seed for level-3 spell-list pressure only. It does not affect the Level 1-2 readiness denominator.
 
-- Accepted: 20/128 (15.6%)
+- Accepted: 22/128 (17.2%)
 
 #### Level-3 Spell Battle Readiness by Status
 
-- accepted: 7
+- accepted: 9
 - accepted-no-battle-effect: 13
 - battle-runtime-required: 61
-- owner-evidence-required: 39
+- owner-evidence-required: 37
 - partial-battle-runtime: 8
 
 ### Level-1 Rows by Disposition
@@ -116,14 +116,14 @@ This metric is a separate seed for level-3 spell-list pressure only. It does not
 ### Level-3 Spell Unit Pressure by Disposition
 
 - catalog-authored-executable-follow-up: 3
-- catalog-authored-review-required: 39
-- catalog-installed-owner-evidence-present: 15
+- catalog-authored-review-required: 37
+- catalog-installed-owner-evidence-present: 17
 - catalog-only/dead-for-now: 13
 - missing-authored-record: 58
 
 ### Level-3 Installed Spell Unit Pressure by Disposition
 
-- catalog-installed-owner-evidence-present: 15
+- catalog-installed-owner-evidence-present: 17
 
 ## Recommended Ralph Batches
 
@@ -547,7 +547,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Sorcerer spell list Gaseous Form|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Sorcerer.md:308|
 |Sorcerer spell list Haste|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Sorcerer.md:309|
 |Sorcerer spell list Hypnotic Pattern|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|not-installed||catalog-authored-review-required|owner-evidence-required|||Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.|.references/srd-5.2.1/Classes/Sorcerer.md:310|
-|Sorcerer spell list Lightning Bolt|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|not-installed||catalog-authored-review-required|owner-evidence-required|||Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.|.references/srd-5.2.1/Classes/Sorcerer.md:311|
+|Sorcerer spell list Lightning Bolt|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted|table-spatial-derivation: table/spatial owner|Unit catalog/admission: catalog evidence; battle-runtime spell invocation/projection: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Sorcerer.md:311|
 |Sorcerer spell list Major Image|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|not-installed||catalog-authored-review-required|owner-evidence-required|||Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.|.references/srd-5.2.1/Classes/Sorcerer.md:312|
 |Sorcerer spell list Protection from Energy|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|not-installed||catalog-authored-review-required|owner-evidence-required|||Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.|.references/srd-5.2.1/Classes/Sorcerer.md:313|
 |Sorcerer spell list Sleet Storm|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Sorcerer.md:314|
@@ -581,7 +581,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Wizard spell list Glyph of Warding|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Wizard.md:247|
 |Wizard spell list Haste|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Wizard.md:248|
 |Wizard spell list Hypnotic Pattern|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|not-installed||catalog-authored-review-required|owner-evidence-required|||Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.|.references/srd-5.2.1/Classes/Wizard.md:249|
-|Wizard spell list Lightning Bolt|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|not-installed||catalog-authored-review-required|owner-evidence-required|||Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.|.references/srd-5.2.1/Classes/Wizard.md:250|
+|Wizard spell list Lightning Bolt|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted|table-spatial-derivation: table/spatial owner|Unit catalog/admission: catalog evidence; battle-runtime spell invocation/projection: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Wizard.md:250|
 |Wizard spell list Magic Circle|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Wizard.md:251|
 |Wizard spell list Major Image|spell Unit pressure|current-surface-can-express-source-facts|authored-record-present|not-installed||catalog-authored-review-required|owner-evidence-required|||Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.|.references/srd-5.2.1/Classes/Wizard.md:252|
 |Wizard spell list Nondetection|spell Unit pressure|current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|battle-runtime-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Wizard.md:253|

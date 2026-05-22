@@ -121,7 +121,7 @@
     {
       "number": 20,
       "id": "L3-SPELL-LIGHTNING-BOLT-RUNTIME-SURVEY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Level 3 Lightning Bolt Runtime Survey And Task Split"
     },
     {
@@ -194,7 +194,7 @@ Every task must include:
 | 17 | L12G-FOLLOWUP-PRAYER-OF-HEALING-PROFILE-ACCOUNTING - Prayer Of Healing Profile Accounting Closure | done | L12G-RECURSIVE-TAIL-LANE-A-2 | none | Current Prayer of Healing Surface content, Character Sheet rest profile claim, owner evidence, and focused tests | Completed by confirming existing profile artifacts already classify Prayer of Healing as `profile-subset-supported` with Character Sheet owner evidence and outside-battle-runtime closure for automatic casting progress, range maintenance, and interruption tracking. |
 | 18 | L12G-FOLLOWUP-FIND-STEED-COMPANION-BOUNDARY - Find Steed Companion Boundary Closure | done | L12G-RECURSIVE-TAIL-LANE-A-2 | none | Find Steed Surface content, mounted-combat text, Unit/profile claims, owner evidence, and focused tests | Completed by recording `find_steed` as an `unsupported-profile` closed at the companion-control boundary, without Unit catalog admission, companion AI, autonomous control behavior, or authored-identity dispatch. |
 | 19 | L3-SPELL-FLY-RUNTIME-SURVEY - Level 3 Fly Runtime Survey And Task Split | done | L12G-RECURSIVE-TAIL-LANE-A-2 | L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR | Fly Surface content, Speed and Movement language, current Unit/profile claims, and falling witness boundaries | Completed by recording Fly as an unsupported-profile follow-up split; no runtime support, companion behavior, or authored-identity dispatch is claimed. |
-| 20 | L3-SPELL-LIGHTNING-BOLT-RUNTIME-SURVEY - Level 3 Lightning Bolt Runtime Survey And Task Split | ready-for-research | L12G-RECURSIVE-TAIL-LANE-A-2 | none | Lightning Bolt Surface content, line/area damage support, Unit/profile claims, and focused tests | Next level-3 spell runtime survey. |
+| 20 | L3-SPELL-LIGHTNING-BOLT-RUNTIME-SURVEY - Level 3 Lightning Bolt Runtime Survey And Task Split | done | L12G-RECURSIVE-TAIL-LANE-A-2 | none | Lightning Bolt Surface content, line/area damage support, Unit/profile claims, and focused tests | Completed by admitting Lightning Bolt as a supported self-origin Line save-gated damage profile while leaving Line direction, Total Cover blocking, point-of-origin inclusion choice, affected-creature derivation, and map geometry table-owned. |
 | 21 | L3-SPELL-HYPNOTIC-PATTERN-RUNTIME-SURVEY - Level 3 Hypnotic Pattern Runtime Survey And Task Split | ready-for-research | L12G-RECURSIVE-TAIL-LANE-A-2 | none | Hypnotic Pattern Surface content, condition-save/incapacitation support, Unit/profile claims, and focused tests | Next level-3 spell runtime survey. |
 | 22 | L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR - Fly Surface Target Repair | ready-for-research | L3-SPELL-FLY-RUNTIME-SURVEY | L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME | Fly Surface target shape and sibling touched willing creature spell selection vocabulary | Repair target eligibility shape before runtime admission. |
 | 23 | L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME - Fly Special Speed Runtime | blocked | L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR | L3-FOLLOWUP-FLY-END-FALL-WITNESS | Fly fixed special Speed, hover, movement kind vocabulary, active-effect cleanup, and promoted Quint parity | Promote the active Fly Speed grant after the Surface target repair lands. |
@@ -747,7 +747,7 @@ Acceptance:
 
 ### Task 20 - L3-SPELL-LIGHTNING-BOLT-RUNTIME-SURVEY - Level 3 Lightning Bolt Runtime Survey And Task Split
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -766,6 +766,12 @@ Acceptance:
 - The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
 - No companion AI/autonomous-control behavior is introduced.
 - No authored identity dispatch is introduced in runtime code.
+
+Completed:
+
+- Lightning Bolt is supported through `spell.invocation-damage-save-or-attack`: Magic Action level-3-or-higher Spell Slot casting, caller-supplied self-origin 100-foot-long, 5-foot-wide Line affected-creature boundary, Dexterity save-gated Lightning damage with half damage on success, and slot-scaled damage dice.
+- Line direction, Total Cover blocking, point-of-origin inclusion choice, affected-creature derivation, and map geometry remain table/spatial owner facts outside the promoted runtime profile.
+- Survey and generated coverage artifacts are recorded in `plans/unit-profile-coverage/L3_LIGHTNING_BOLT_RUNTIME_SURVEY.md`, `unit-claims.jsonl`, `unit-evidence.jsonl`, `SRD_UNIT_INVENTORY.md`, `UNIT_REPORT.md`, `srd-unit-inventory.json`, and `unit-matrix.json`.
 
 ### Task 21 - L3-SPELL-HYPNOTIC-PATTERN-RUNTIME-SURVEY - Level 3 Hypnotic Pattern Runtime Survey And Task Split
 

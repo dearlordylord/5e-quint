@@ -29,6 +29,7 @@ module battleRuntimeSaveGatedSpell {
       | InflictWoundsSaveGate => BattleRuntimeInflictWoundsSaveDamage
       | BurningHandsSaveGate => BattleRuntimeBurningHandsSaveDamage
       | FireballSaveGate => BattleRuntimeFireballSaveDamage
+      | LightningBoltSaveGate => BattleRuntimeLightningBoltSaveDamage
       | ViciousMockerySaveGate => BattleRuntimeViciousMockerySaveDamage
       | DissonantWhispersSaveGate => BattleRuntimeDissonantWhispersSaveDamage
       | HellishRebukeSaveGate => BattleRuntimeHellishRebukeSaveDamage
@@ -76,6 +77,7 @@ module battleRuntimeSaveGatedSpell {
       | InflictWoundsSaveGate => Set()
       | BurningHandsSaveGate => Set()
       | FireballSaveGate => Set()
+      | LightningBoltSaveGate => Set()
       | DissonantWhispersSaveGate => Set()
       | HellishRebukeSaveGate => Set()
       | MindSpikeSaveGate => Set()
@@ -387,6 +389,7 @@ module battleRuntimeSaveGatedSpell {
       | InflictWoundsSaveGate => Set()
       | BurningHandsSaveGate => Set()
       | FireballSaveGate => Set()
+      | LightningBoltSaveGate => Set()
       | ViciousMockerySaveGate => Set()
       | DissonantWhispersSaveGate => Set()
       | HellishRebukeSaveGate => Set()

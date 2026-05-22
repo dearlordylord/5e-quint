@@ -6,6 +6,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV54 fireball
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV55 shatter
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-MIND-SPIKE mind_spike
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-SPELL-LIGHTNING-BOLT-RUNTIME-SURVEY lightning_bolt
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-damage-save-or-attack
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { describe, expect, test } from "vitest";
@@ -16,6 +17,7 @@ import {
   fireballUnitId,
   guidingBoltUnitId,
   inflictWoundsUnitId,
+  lightningBoltUnitId,
   magicMissileUnitId,
   mindSpikeDurationTicks,
   mindSpikeUnitId,
@@ -1112,6 +1114,124 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
         areaChoices: [],
       }),
     ]);
+  });
+  test("lightning_bolt is admitted as a self-origin Line save-gated slot damage spell", () => {
+    const spell = spellRecord(lightningBoltUnitId);
+    const act = spellAct({
+      state: spellBattle({
+        preparedSpells: [spell],
+        spellSlots: [{ spellLevel: 4, count: 1 }],
+      }),
+      spellId: lightningBoltUnitId,
+      slotLevel: 4,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(
+        lightningBoltUnitId,
+        4,
+        "saveGatedDamage",
+      ),
+      mode: { tag: "cast" },
+    });
+    const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+    expect(savingThrow).toEqual(
+      expect.objectContaining({
+        label: "Lightning Bolt self-origin Line Saving Throw outcomes",
+        ability: "dex",
+        dc: { kind: "caster_spell_save_dc" },
+      }),
+    );
+    expect(spellHoleInvocation([savingThrow])).toEqual(
+      expect.objectContaining({
+        procedure: "saveGatedDamage",
+        spell,
+        resource: { tag: "spellSlot", slotLevel: 4 },
+        ability: "dex",
+        targeting: { kind: "selfOriginLine", lengthFeet: 100, widthFeet: 5 },
+        damage: {
+          expr: { dice: 9, dieSize: 6 },
+          damageType: "lightning",
+        },
+        successDamage: "half",
+        rangeFeet: 0,
+        failedSavePostDamageRiders: [],
+      }),
+    );
+    expect(act.initialHoles).toEqual([
+      expect.objectContaining({
+        kind: "savingThrowOutcome",
+        areaChoices: [],
+      }),
+    ]);
+  });
+  test("lightning_bolt resolves caller-supplied Line targets with full and half damage", () => {
+    const secondTargetId = combatantId("unit-profile-lightning-bolt-target-2");
+    const spell = spellRecord(lightningBoltUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+      targetHp: 30,
+      targetMaxHp: 30,
+      extraTargetIds: [secondTargetId],
+    });
+    const act = spellAct({
+      state,
+      spellId: lightningBoltUnitId,
+      slotLevel: 3,
+    });
+    const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+    const saveFill = savingThrowOutcomeFill(savingThrow, [
+      { targetId: spellTargetId, succeeded: false },
+      { targetId: secondTargetId, succeeded: true },
+    ]);
+    expect(saveFill).toMatchObject({
+      value: {
+        area: {
+          originAnchorId: spellCasterId,
+          affectedTargetIds: [spellTargetId, secondTargetId],
+        },
+      },
+    });
+    const damageRoll = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [saveFill],
+      }),
+      "rolledDice",
+    );
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        saveFill,
+        damageRollFillWithGroups(damageRoll, [[1, 1, 1, 1, 1, 1, 1, 1]]),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Lightning Bolt to resolve.");
+    }
+    expect(Number(requireCombatant(resolved.state, spellTargetId).hp)).toBe(22);
+    expect(Number(requireCombatant(resolved.state, secondTargetId).hp)).toBe(8);
+    expect(
+      snapshotBattle(resolved.state).combatants.find(
+        (combatant) => combatant.combatantId === spellCasterId,
+      )?.origin,
+    ).toEqual(
+      expect.objectContaining({
+        spellcasting: expect.objectContaining({
+          spellSlots: expect.arrayContaining([
+            expect.objectContaining({ spellLevel: 3, expended: 1 }),
+          ]),
+        }),
+      }),
+    );
   });
   test("fireball is admitted as point-origin Sphere save damage with object ignition facts", () => {
     const spell = spellRecord(fireballUnitId);

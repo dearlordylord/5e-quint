@@ -34,6 +34,7 @@ module battleRuntimeSpellBridge {
     | BattleRuntimeInflictWoundsSaveDamage
     | BattleRuntimeBurningHandsSaveDamage
     | BattleRuntimeFireballSaveDamage
+    | BattleRuntimeLightningBoltSaveDamage
     | BattleRuntimeViciousMockerySaveDamage
     | BattleRuntimeThunderwaveSaveDamage
     | BattleRuntimeDissonantWhispersSaveDamage
@@ -235,6 +236,7 @@ module battleRuntimeSpellBridge {
       | BattleRuntimeInflictWoundsSaveDamage => InflictWoundsSaveDamageProfile
       | BattleRuntimeBurningHandsSaveDamage => BurningHandsSaveDamageProfile
       | BattleRuntimeFireballSaveDamage => FireballSaveDamageProfile
+      | BattleRuntimeLightningBoltSaveDamage => LightningBoltSaveDamageProfile
       | BattleRuntimeViciousMockerySaveDamage => ViciousMockerySaveDamageProfile
       | BattleRuntimeThunderwaveSaveDamage => ThunderwaveSaveDamageProfile
       | BattleRuntimeDissonantWhispersSaveDamage => DissonantWhispersSaveDamageProfile
@@ -824,21 +826,25 @@ module battleRuntimeSpellBridge {
       assert(battleRuntimeSaveGatedDamageTargeting(BattleRuntimeSacredFlameSaveDamage) == BattleRuntimeSingleSaveTarget),
       assert(battleRuntimeSaveGatedDamageTargeting(BattleRuntimeBurningHandsSaveDamage) == BattleRuntimeAreaSaveTargets),
       assert(battleRuntimeSaveGatedDamageTargeting(BattleRuntimeFireballSaveDamage) == BattleRuntimeAreaSaveTargets),
+      assert(battleRuntimeSaveGatedDamageTargeting(BattleRuntimeLightningBoltSaveDamage) == BattleRuntimeAreaSaveTargets),
       assert(battleRuntimeSaveGatedDamageTargeting(BattleRuntimeMindSpikeSaveDamage) == BattleRuntimeSingleSaveTarget),
       assert(battleRuntimeSaveGatedDamageSuccess(BattleRuntimeInflictWoundsSaveDamage) == BattleRuntimeHalfDamageOnSaveSuccess),
       assert(battleRuntimeSaveGatedDamageSuccess(BattleRuntimeFireballSaveDamage) == BattleRuntimeHalfDamageOnSaveSuccess),
+      assert(battleRuntimeSaveGatedDamageSuccess(BattleRuntimeLightningBoltSaveDamage) == BattleRuntimeHalfDamageOnSaveSuccess),
       assert(battleRuntimeSaveGatedDamageSuccess(BattleRuntimeThunderwaveSaveDamage) == BattleRuntimeHalfDamageOnSaveSuccess),
       assert(battleRuntimeSaveGatedDamageSuccess(BattleRuntimeDissonantWhispersSaveDamage) == BattleRuntimeHalfDamageOnSaveSuccess),
       assert(battleRuntimeSaveGatedDamageSuccess(BattleRuntimeHellishRebukeSaveDamage) == BattleRuntimeHalfDamageOnSaveSuccess),
       assert(battleRuntimeSaveGatedDamageSuccess(BattleRuntimeMindSpikeSaveDamage) == BattleRuntimeHalfDamageOnSaveSuccess),
       assert(battleRuntimeSaveGatedDamageType(BattleRuntimeViciousMockerySaveDamage) == PsychicDamage),
       assert(battleRuntimeSaveGatedDamageType(BattleRuntimeFireballSaveDamage) == FireDamage),
+      assert(battleRuntimeSaveGatedDamageType(BattleRuntimeLightningBoltSaveDamage) == LightningDamage),
       assert(battleRuntimeSaveGatedDamageType(BattleRuntimeThunderwaveSaveDamage) == ThunderDamage),
       assert(battleRuntimeSaveGatedDamageType(BattleRuntimeDissonantWhispersSaveDamage) == PsychicDamage),
       assert(battleRuntimeSaveGatedDamageType(BattleRuntimeHellishRebukeSaveDamage) == FireDamage),
       assert(battleRuntimeSaveGatedDamageType(BattleRuntimeMindSpikeSaveDamage) == PsychicDamage),
       assert(battleRuntimeSaveGatedDamageRequiresSlot(BattleRuntimeBurningHandsSaveDamage)),
       assert(battleRuntimeSaveGatedDamageRequiresSlot(BattleRuntimeFireballSaveDamage)),
+      assert(battleRuntimeSaveGatedDamageRequiresSlot(BattleRuntimeLightningBoltSaveDamage)),
       assert(battleRuntimeSaveGatedDamageRequiresSlot(BattleRuntimeThunderwaveSaveDamage)),
       assert(battleRuntimeSaveGatedDamageRequiresSlot(BattleRuntimeDissonantWhispersSaveDamage)),
       assert(battleRuntimeSaveGatedDamageRequiresSlot(BattleRuntimeHellishRebukeSaveDamage)),

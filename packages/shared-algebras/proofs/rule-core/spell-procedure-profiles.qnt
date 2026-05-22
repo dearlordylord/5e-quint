@@ -86,6 +86,7 @@ module spellProcedureProfiles {
     | InflictWoundsSaveDamageProfile
     | BurningHandsSaveDamageProfile
     | FireballSaveDamageProfile
+    | LightningBoltSaveDamageProfile
     | ViciousMockerySaveDamageProfile
     | ThunderwaveSaveDamageProfile
     | DissonantWhispersSaveDamageProfile
@@ -417,6 +418,7 @@ module spellProcedureProfiles {
       | InflictWoundsSaveDamageProfile => SpellSingleSaveTarget
       | BurningHandsSaveDamageProfile => SpellAreaSaveTargets
       | FireballSaveDamageProfile => SpellAreaSaveTargets
+      | LightningBoltSaveDamageProfile => SpellAreaSaveTargets
       | ViciousMockerySaveDamageProfile => SpellSingleSaveTarget
       | ThunderwaveSaveDamageProfile => SpellAreaSaveTargets
       | DissonantWhispersSaveDamageProfile => SpellSingleSaveTarget
@@ -431,6 +433,7 @@ module spellProcedureProfiles {
       | InflictWoundsSaveDamageProfile => SpellHalfDamageOnSaveSuccess
       | BurningHandsSaveDamageProfile => SpellHalfDamageOnSaveSuccess
       | FireballSaveDamageProfile => SpellHalfDamageOnSaveSuccess
+      | LightningBoltSaveDamageProfile => SpellHalfDamageOnSaveSuccess
       | ViciousMockerySaveDamageProfile => SpellNoDamageOnSaveSuccess
       | ThunderwaveSaveDamageProfile => SpellHalfDamageOnSaveSuccess
       | DissonantWhispersSaveDamageProfile => SpellHalfDamageOnSaveSuccess
@@ -445,6 +448,7 @@ module spellProcedureProfiles {
       | InflictWoundsSaveDamageProfile => NecroticDamage
       | BurningHandsSaveDamageProfile => FireDamage
       | FireballSaveDamageProfile => FireDamage
+      | LightningBoltSaveDamageProfile => LightningDamage
       | ViciousMockerySaveDamageProfile => PsychicDamage
       | ThunderwaveSaveDamageProfile => ThunderDamage
       | DissonantWhispersSaveDamageProfile => PsychicDamage
@@ -459,6 +463,7 @@ module spellProcedureProfiles {
       | InflictWoundsSaveDamageProfile => true
       | BurningHandsSaveDamageProfile => true
       | FireballSaveDamageProfile => true
+      | LightningBoltSaveDamageProfile => true
       | ViciousMockerySaveDamageProfile => false
       | ThunderwaveSaveDamageProfile => true
       | DissonantWhispersSaveDamageProfile => true
@@ -473,6 +478,7 @@ module spellProcedureProfiles {
       | InflictWoundsSaveDamageProfile => false
       | BurningHandsSaveDamageProfile => false
       | FireballSaveDamageProfile => false
+      | LightningBoltSaveDamageProfile => false
       | ViciousMockerySaveDamageProfile => false
       | ThunderwaveSaveDamageProfile => false
       | DissonantWhispersSaveDamageProfile => false
@@ -1309,9 +1315,11 @@ module spellProcedureProfiles {
       assert(spellSaveGatedDamageTargeting(SacredFlameSaveDamageProfile) == SpellSingleSaveTarget),
       assert(spellSaveGatedDamageTargeting(BurningHandsSaveDamageProfile) == SpellAreaSaveTargets),
       assert(spellSaveGatedDamageTargeting(FireballSaveDamageProfile) == SpellAreaSaveTargets),
+      assert(spellSaveGatedDamageTargeting(LightningBoltSaveDamageProfile) == SpellAreaSaveTargets),
       assert(spellSaveGatedDamageTargeting(MindSpikeSaveDamageProfile) == SpellSingleSaveTarget),
       assert(spellSaveGatedDamageSuccess(InflictWoundsSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
       assert(spellSaveGatedDamageSuccess(FireballSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
+      assert(spellSaveGatedDamageSuccess(LightningBoltSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
       assert(spellSaveGatedDamageSuccess(ViciousMockerySaveDamageProfile) == SpellNoDamageOnSaveSuccess),
       assert(spellSaveGatedDamageSuccess(ThunderwaveSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
       assert(spellSaveGatedDamageSuccess(DissonantWhispersSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
@@ -1319,12 +1327,14 @@ module spellProcedureProfiles {
       assert(spellSaveGatedDamageSuccess(MindSpikeSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
       assert(spellSaveGatedDamageType(ViciousMockerySaveDamageProfile) == PsychicDamage),
       assert(spellSaveGatedDamageType(FireballSaveDamageProfile) == FireDamage),
+      assert(spellSaveGatedDamageType(LightningBoltSaveDamageProfile) == LightningDamage),
       assert(spellSaveGatedDamageType(ThunderwaveSaveDamageProfile) == ThunderDamage),
       assert(spellSaveGatedDamageType(DissonantWhispersSaveDamageProfile) == PsychicDamage),
       assert(spellSaveGatedDamageType(HellishRebukeSaveDamageProfile) == FireDamage),
       assert(spellSaveGatedDamageType(MindSpikeSaveDamageProfile) == PsychicDamage),
       assert(spellSaveGatedDamageRequiresSlot(BurningHandsSaveDamageProfile)),
       assert(spellSaveGatedDamageRequiresSlot(FireballSaveDamageProfile)),
+      assert(spellSaveGatedDamageRequiresSlot(LightningBoltSaveDamageProfile)),
       assert(spellSaveGatedDamageRequiresSlot(ThunderwaveSaveDamageProfile)),
       assert(spellSaveGatedDamageRequiresSlot(DissonantWhispersSaveDamageProfile)),
       assert(spellSaveGatedDamageRequiresSlot(HellishRebukeSaveDamageProfile)),

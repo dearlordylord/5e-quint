@@ -116,6 +116,7 @@ import jumpInput from "../../content/jump.json";
 import knockInput from "../../content/knock.json";
 import levitateInput from "../../content/levitate.json";
 import lesserRestorationInput from "../../content/lesser_restoration.json";
+import lightningBoltInput from "../../content/lightning_bolt.json";
 import lightInput from "../../content/light.json";
 import locateAnimalsOrPlantsInput from "../../content/locate_animals_or_plants.json";
 import locateObjectInput from "../../content/locate_object.json";
@@ -527,6 +528,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     knockInput,
     levitateInput,
     lesserRestorationInput,
+    lightningBoltInput,
     locateAnimalsOrPlantsInput,
     locateObjectInput,
     lightInput,

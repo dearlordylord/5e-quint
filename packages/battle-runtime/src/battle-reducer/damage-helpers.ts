@@ -32,10 +32,13 @@ import {
   type BattleCreatureState,
   type BattleFill,
   type BattleHole,
+  type BattleHoleId,
   type BattleRolledDiceFill,
+  type BattleSourceDamageRollPenaltyRollHole,
   type BattleSpellDamageReductionRollHole,
   type SpellDamageReductionFill,
   type SpellDamageReductionRoll,
+  type SourceDamageRollPenaltyRoll,
   type SpellMarkedDamageRider,
   type SpellAttackDamageComponent,
   type SpellWeaponDamageRider,
@@ -236,10 +239,7 @@ function subtractDamageAmountForType(input: {
     (sum, amount) => sum + Math.max(0, amount),
     0,
   );
-  const maximumReduction = Math.max(
-    0,
-    currentTotal - input.minimumDamageTotal,
-  );
+  const maximumReduction = Math.max(0, currentTotal - input.minimumDamageTotal);
   const remainingReduction = Math.min(
     Math.max(0, input.amount),
     maximumReduction,
@@ -268,13 +268,17 @@ const SPELL_DAMAGE_REDUCTION_ROLL_HOLE_PREFIX =
   "battle:spell-damage-reduction-roll";
 const SPELL_ATTACK_SEQUENCE_PART_DAMAGE_REDUCTION_ROLL_HOLE_PREFIX =
   "battle:spell:attack-sequence-part-damage-reduction-roll";
+const SOURCE_DAMAGE_ROLL_PENALTY_ROLL_HOLE_PREFIX =
+  "battle:source-damage-roll-penalty";
 
 export function isSpellDamageReductionRollFill(
   fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
 ): boolean {
   return (
     fill.holeId.startsWith(SPELL_DAMAGE_REDUCTION_ROLL_HOLE_PREFIX) ||
-    fill.holeId.startsWith(SPELL_ATTACK_SEQUENCE_PART_DAMAGE_REDUCTION_ROLL_HOLE_PREFIX)
+    fill.holeId.startsWith(
+      SPELL_ATTACK_SEQUENCE_PART_DAMAGE_REDUCTION_ROLL_HOLE_PREFIX,
+    )
   );
 }
 
@@ -303,6 +307,37 @@ export function spellDamageReductionRollHole(
   };
 }
 
+export function isSourceDamageRollPenaltyRollFill(
+  fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+): boolean {
+  return fill.holeId.startsWith(SOURCE_DAMAGE_ROLL_PENALTY_ROLL_HOLE_PREFIX);
+}
+
+export function sourceDamageRollPenaltyRollProtocolId(
+  penalty: Omit<SourceDamageRollPenaltyRoll, "amount">,
+): string {
+  return [
+    SOURCE_DAMAGE_ROLL_PENALTY_ROLL_HOLE_PREFIX,
+    penalty.sourceSpellId,
+    penalty.sourceCombatantId,
+    penalty.affectedCombatantId,
+    penalty.damageRollHoleId,
+  ].join(":");
+}
+
+export function sourceDamageRollPenaltyRollHole(
+  penalty: SourceDamageRollPenaltyRoll,
+): BattleSourceDamageRollPenaltyRollHole {
+  const protocolId = sourceDamageRollPenaltyRollProtocolId(penalty);
+  return {
+    kind: "rolledDice",
+    holeId: holeId(protocolId),
+    holeInstanceKey: holeInstanceKey(protocolId),
+    label: "Source damage roll penalty (1d8)",
+    sourceDamageRollPenalty: penalty,
+  };
+}
+
 export function availableSpellDamageReduction(
   target: BattleCreatureState,
   damageByType: ReadonlyMap<DamageType, number>,
@@ -322,6 +357,119 @@ export function availableSpellDamageReduction(
         amount: effect.amount,
       }
     : null;
+}
+
+export function availableSourceDamageRollPenalty(
+  source: BattleCreatureState | undefined,
+  damageByType: ReadonlyMap<DamageType, number>,
+  damageRollHoleId: BattleHoleId,
+): SourceDamageRollPenaltyRoll | null {
+  if (
+    source === undefined ||
+    [...damageByType.values()].every((amount) => amount <= 0)
+  ) {
+    return null;
+  }
+  const effect = source.activeEffects.find(
+    (candidate) => candidate.kind === "sourceDamageRollPenalty",
+  );
+  return effect?.kind === "sourceDamageRollPenalty"
+    ? {
+        sourceSpellId: effect.sourceSpellId,
+        sourceCombatantId: effect.sourceCombatantId,
+        affectedCombatantId: source.combatantId,
+        damageRollHoleId,
+        amount: effect.amount,
+      }
+    : null;
+}
+
+export function sourceDamageRollPenaltyRollHoleForDamageRoll(
+  source: BattleCreatureState | undefined,
+  damageByType: ReadonlyMap<DamageType, number>,
+  damageRollHoleId: BattleHoleId,
+): BattleSourceDamageRollPenaltyRollHole | null {
+  const penalty = availableSourceDamageRollPenalty(
+    source,
+    damageByType,
+    damageRollHoleId,
+  );
+  return penalty === null ? null : sourceDamageRollPenaltyRollHole(penalty);
+}
+
+export function sourceDamageRollPenaltyRollForDamageRoll(
+  rolls: readonly Extract<BattleFill, { readonly kind: "rolledDice" }>[],
+  source: BattleCreatureState | undefined,
+  damageByType: ReadonlyMap<DamageType, number>,
+  damageRollHoleId: BattleHoleId,
+): Extract<BattleFill, { readonly kind: "rolledDice" }> | undefined {
+  const hole = sourceDamageRollPenaltyRollHoleForDamageRoll(
+    source,
+    damageByType,
+    damageRollHoleId,
+  );
+  return hole === null
+    ? undefined
+    : rolls.find((roll) => roll.holeId === hole.holeId);
+}
+
+export function unexpectedSourceDamageRollPenaltyRoll(
+  rolls: readonly Extract<BattleFill, { readonly kind: "rolledDice" }>[],
+  expectedHoles: readonly BattleSourceDamageRollPenaltyRollHole[],
+): Extract<BattleFill, { readonly kind: "rolledDice" }> | undefined {
+  const expectedHoleIds = new Set(expectedHoles.map((hole) => hole.holeId));
+  return rolls.find((roll) => !expectedHoleIds.has(roll.holeId));
+}
+
+export function applyAvailableSourceDamageRollPenalty(
+  source: BattleCreatureState | undefined,
+  damageByType: ReadonlyMap<DamageType, number>,
+  damageRollHoleId: BattleHoleId,
+  roll: Extract<BattleFill, { readonly kind: "rolledDice" }> | undefined,
+):
+  | {
+      readonly tag: "ok";
+      readonly damageByType: ReadonlyMap<DamageType, number>;
+    }
+  | { readonly tag: "needsHoles"; readonly holes: readonly BattleHole[] }
+  | { readonly tag: "invalid" } {
+  const penalty = availableSourceDamageRollPenalty(
+    source,
+    damageByType,
+    damageRollHoleId,
+  );
+  const penaltyHole =
+    penalty === null ? null : sourceDamageRollPenaltyRollHole(penalty);
+  if (roll === undefined) {
+    return penalty === null
+      ? { tag: "ok", damageByType }
+      : {
+          tag: "needsHoles",
+          holes: [sourceDamageRollPenaltyRollHole(penalty)],
+        };
+  }
+  if (
+    penalty === null ||
+    penaltyHole === null ||
+    roll.holeId !== penaltyHole.holeId
+  ) {
+    return { tag: "invalid" };
+  }
+  const validation = validateRolledDiceForDiceExpr(roll.value, {
+    dice: penalty.amount.dice,
+    dieSize: penalty.amount.dieSize,
+  });
+  if (validation !== null) {
+    return { tag: "invalid" };
+  }
+  return {
+    tag: "ok",
+    damageByType: subtractDamageAmountForType({
+      totals: damageByType,
+      amount: rolledDiceTotal(roll.value),
+      minimumDamageTotal: 0,
+    }),
+  };
 }
 
 export function spellDamageReductionRollForTarget(
@@ -354,7 +502,11 @@ export function applyAvailableSpellDamageReduction(
       ? { tag: "ok", target, damageByType }
       : { tag: "needsHoles", holes: [rollHoleForReduction(reduction)] };
   }
-  if (reduction === null || reductionHole === null || roll.holeId !== reductionHole.holeId) {
+  if (
+    reduction === null ||
+    reductionHole === null ||
+    roll.holeId !== reductionHole.holeId
+  ) {
     return { tag: "invalid" };
   }
   const validation = validateRolledDiceForDiceExpr(roll.value, {
@@ -615,8 +767,7 @@ function targetHasRuntimeDamageResistance(
   return (
     target.activeEffects.some(
       (effect) =>
-        effect.kind === "damageResistance" &&
-        effect.damageType === damageType,
+        effect.kind === "damageResistance" && effect.damageType === damageType,
     ) ||
     combatantHasWardingBondResistance(target) ||
     [...activeOngoingFeatureOccurrencesForCombatant(target)].some(

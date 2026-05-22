@@ -202,7 +202,7 @@
     "levelThreeClassRows": 51,
     "spellPressureRows": 367,
     "levelThreeSpellPressureRows": 128,
-    "levelThreeInstalledSpellPressureRows": 15,
+    "levelThreeInstalledSpellPressureRows": 17,
     "levelOneBattleReadiness": {
       "denominator": 367,
       "numerator": 367,
@@ -236,14 +236,14 @@
     },
     "levelThreeSpellBattleReadiness": {
       "denominator": 128,
-      "numerator": 20,
-      "percent": "15.6%",
+      "numerator": 22,
+      "percent": "17.2%",
       "rowsByStatus": {
         "battle-runtime-required": 61,
         "accepted-no-battle-effect": 13,
         "partial-battle-runtime": 8,
-        "owner-evidence-required": 39,
-        "accepted": 7
+        "owner-evidence-required": 37,
+        "accepted": 9
       }
     },
     "levelOneClassContainers": 12,
@@ -270,13 +270,13 @@
       "spell access/list pressure": 5
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 441,
+      "catalog-installed-owner-evidence-present": 443,
       "non-runtime": 36,
       "level-3-follow-up-required": 17,
       "catalog-installed-owner-evidence-required": 2,
       "catalog-only/dead-for-now": 137,
       "missing-authored-record": 58,
-      "catalog-authored-review-required": 39,
+      "catalog-authored-review-required": 37,
       "catalog-installed-needs-owner-evidence": 1,
       "catalog-authored-executable-follow-up": 4
     },
@@ -289,12 +289,12 @@
     "levelThreeSpellPressureRowsByDisposition": {
       "missing-authored-record": 58,
       "catalog-only/dead-for-now": 13,
-      "catalog-installed-owner-evidence-present": 15,
-      "catalog-authored-review-required": 39,
+      "catalog-installed-owner-evidence-present": 17,
+      "catalog-authored-review-required": 37,
       "catalog-authored-executable-follow-up": 3
     },
     "levelThreeInstalledSpellPressureRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 15
+      "catalog-installed-owner-evidence-present": 17
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -26166,13 +26166,31 @@
         "sourceRecordPath": "packages/surface/content/lightning_bolt.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "lightning_bolt"
       },
-      "finalDisposition": "catalog-authored-review-required",
-      "ownerEvidence": [],
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial owner",
+        "reason": "Automatic Line direction, Total Cover blocking, point-of-origin inclusion choice, affected-creature derivation, and map geometry remain caller-supplied table/spatial facts outside the Lightning Bolt runtime profile."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit lightning_bolt is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-SPELL-LIGHTNING-BOLT-RUNTIME-SURVEY at packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_major_image",
@@ -33570,13 +33588,31 @@
         "sourceRecordPath": "packages/surface/content/lightning_bolt.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "lightning_bolt"
       },
-      "finalDisposition": "catalog-authored-review-required",
-      "ownerEvidence": [],
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial owner",
+        "reason": "Automatic Line direction, Total Cover blocking, point-of-origin inclusion choice, affected-creature derivation, and map geometry remain caller-supplied table/spatial facts outside the Lightning Bolt runtime profile."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit lightning_bolt is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L3-SPELL-LIGHTNING-BOLT-RUNTIME-SURVEY at packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_magic_circle",
