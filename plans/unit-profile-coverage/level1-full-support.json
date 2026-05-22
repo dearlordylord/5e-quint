@@ -963,8 +963,8 @@
     },
     "rulesKernelCoveredProfileJoin": {
       "denominator": 58,
-      "numerator": 53,
-      "percent": "91.4%"
+      "numerator": 54,
+      "percent": "93.1%"
     },
     "rulesKernelProfileJoin": {
       "denominator": 58,
@@ -973,8 +973,8 @@
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 78,
-      "numerator": 71,
-      "percent": "91%"
+      "numerator": 72,
+      "percent": "92.3%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 94,
@@ -3246,8 +3246,8 @@
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
         "denominator": 78,
-        "numerator": 71,
-        "percent": "91%"
+        "numerator": 72,
+        "percent": "92.3%"
       }
     },
     "units": [
@@ -3858,16 +3858,16 @@
         "unitId": "expeditious_retreat"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
                 "obligationId": "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
                 "runtime": "battle",
-                "status": "needs-parity-witness",
-                "title": "Battle failed-save spell attack-roll Advantage effects from saving throw holes through active-effect application"
+                "status": "covered",
+                "title": "Battle failed-save spell attack-roll Advantage effects from Saving Throw holes through active-effect application and Attack Roll projection"
               }
             ],
             "profileId": "spell.invocation-attack-roll-advantage-save",

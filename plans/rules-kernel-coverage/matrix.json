@@ -1,8 +1,8 @@
 {
   "summary": {
     "total": 72,
-    "covered": 61,
-    "open": 6,
+    "covered": 62,
+    "open": 5,
     "nonSemantic": 5,
     "byRuntime": {
       "shared-algebras": 1,
@@ -12,9 +12,9 @@
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 61,
+      "covered": 62,
       "needs-qnt-owner": 0,
-      "needs-parity-witness": 5,
+      "needs-parity-witness": 4,
       "needs-surface-evidence": 1,
       "boundary-only": 4,
       "unsupported-by-admission": 1
@@ -298,26 +298,36 @@
       "title": "Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup"
     },
     {
-      "followUpTaskIds": [
-        "RKBC-NONFEATURE-SAVE-GATED-ATTACK-ADVANTAGE-WITNESS"
-      ],
       "id": "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
       "kind": "active-effect-lifecycle",
-      "parityWitnesses": [],
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
       "profiles": [
         "spell.invocation-attack-roll-advantage-save"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+        "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
+        "packages/battle-runtime/battle-runtime-spell-attack.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
         "packages/battle-runtime/src/battle-reducer/attack-roll.ts"
       ],
-      "status": "needs-parity-witness",
-      "surfaceEvidence": [],
-      "title": "Battle failed-save spell attack-roll Advantage effects from saving throw holes through active-effect application"
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Faerie Fire",
+        ".references/srd-5.2.1/Playing-the-Game.md#Advantage/Disadvantage",
+        ".references/srd-5.2.1/Playing-the-Game.md#Making an Attack"
+      ],
+      "title": "Battle failed-save spell attack-roll Advantage effects from Saving Throw holes through active-effect application and Attack Roll projection"
     },
     {
       "id": "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
@@ -2485,14 +2495,13 @@
         "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
         "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
         "BATTLE.SPELL.REACTION_CASTING_TIME",
-        "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS"
+        "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
+        "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE"
       ],
-      "followUpTaskIds": [
-        "RKBC-NONFEATURE-SAVE-GATED-ATTACK-ADVANTAGE-WITNESS"
-      ],
+      "followUpTaskIds": [],
       "holeKind": "savingThrowOutcome",
       "id": "BattleSpellSavingThrowOutcomeHole",
-      "reason": "Spell Saving Throw outcomes determine damage, conditions, Command consequences, Counterspell, timed after-hit continuations, area results, and failed-save attack-roll Advantage effects. Covered branches point to their semantic obligations; the attack-roll Advantage branch remains a nonfeature parity-witness follow-up.",
+      "reason": "Spell Saving Throw outcomes determine damage, conditions, Command consequences, Counterspell, timed after-hit continuations, area results, and failed-save Attack Roll Advantage effects. Covered branches point to their semantic obligations.",
       "subject": "battle-hole-family"
     },
     {
@@ -2803,16 +2812,16 @@
         "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
         "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
         "BATTLE.SPELL.REACTION_CASTING_TIME",
-        "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS"
+        "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
+        "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE"
       ],
       "fillKind": "savingThrowOutcome",
       "followUpTaskIds": [
-        "RKBC-NONFEATURE-SAVE-GATED-ATTACK-ADVANTAGE-WITNESS",
         "RKBC-NONFEATURE-CREATURE-TYPE-PROTECTION-WITNESS",
         "RKBC-NONFEATURE-CONDITION-REMOVAL-PROTECTION-WITNESS"
       ],
       "id": "savingThrowOutcome",
-      "reason": "Saving Throw outcomes drive damage, condition, Command, protection, feature, reaction-casting, and active-effect lifecycle branches. Covered branches point to semantic obligations; the remaining protection and failed-save attack-roll Advantage branches stay explicit nonfeature parity-witness follow-ups.",
+      "reason": "Saving Throw outcomes drive damage, condition, Command, protection, feature, reaction-casting, and active-effect lifecycle branches. Covered branches point to semantic obligations; the remaining protection branches stay explicit nonfeature parity-witness follow-ups.",
       "subject": "battle-fill-kind"
     },
     {

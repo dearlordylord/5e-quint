@@ -97,7 +97,7 @@
     {
       "number": 16,
       "id": "RKBC-NONFEATURE-SAVE-GATED-ATTACK-ADVANTAGE-WITNESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Save-Gated Attack Advantage Coverage Witness"
     },
     {
@@ -275,7 +275,7 @@ Output:
 
 ### Task 16 - RKBC-NONFEATURE-SAVE-GATED-ATTACK-ADVANTAGE-WITNESS - Save-Gated Attack Advantage Coverage Witness
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 - Task 14.

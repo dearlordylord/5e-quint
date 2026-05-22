@@ -3,7 +3,7 @@
 // behavior change. Cycle #20 resolved by importing the shared ongoing-feature
 // helpers from ./ongoing-feature-helpers.ts instead of cycling through J.
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.invocation-object-contact-damage
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE
 
 import {
   applyCondition,
