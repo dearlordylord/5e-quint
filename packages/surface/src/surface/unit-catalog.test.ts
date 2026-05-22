@@ -146,6 +146,7 @@ const requiredFirstVerticalUnitIds = [
   "see_invisibility",
   "sleep",
   "spider_climb",
+  "suggestion",
   "thunderwave",
   "eldritch_blast",
   "minor_illusion",
@@ -300,6 +301,59 @@ describe("SRD Unit catalog boundary", () => {
               imposesCondition: "deafened",
               preventsSpellComponent: "verbal",
             },
+          },
+        ],
+      });
+    }
+  });
+
+  test("keeps Suggestion's table-choice Surface facts in the catalog projection", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const suggestion = result.catalog.requireUnit("suggestion");
+
+      expect(suggestion.kind).toBe("spell");
+      if (
+        suggestion.kind !== "spell" ||
+        suggestion.mechanics.family !== "activation"
+      ) {
+        throw new Error("Expected Suggestion to be an activation spell.");
+      }
+      expect(suggestion.mechanics).toMatchObject({
+        level: 2,
+        school: "enchantment",
+        castingTime: { kind: "action" },
+        range: { kind: "point", feet: 30 },
+        components: { v: true, s: false, m: "a drop of honey" },
+        duration: {
+          kind: "concentration",
+          upTo: { unit: "hour", amount: 8 },
+          earlyEnd: [{ kind: "target_damaged_by_caster_or_ally" }],
+        },
+        phases: [
+          {
+            kind: "save_gate",
+            attachment: {
+              holeId: "suggestion_target",
+              label: "target",
+              value: {
+                kind: "target",
+                selection: {
+                  mode: "one",
+                  targetKinds: ["creature"],
+                },
+              },
+            },
+            ability: "wis",
+            dc: { kind: "caster_spell_save_dc" },
+            onFail: {
+              kind: "apply_condition",
+              condition: "charmed",
+              duration: "spell_duration",
+            },
+            onSuccess: { kind: "none" },
           },
         ],
       });

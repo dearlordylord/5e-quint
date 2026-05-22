@@ -9,7 +9,7 @@
     {"number":3,"id":"L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME","status":"done","title":"Spike Growth Movement Hazard Runtime"},
     {"number":4,"id":"L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION","status":"done","title":"Spike Growth Hazard Recognition Boundary"},
     {"number":5,"id":"L12G-MISSING-SILENCE","status":"done","title":"Silence Definition And Support Or Closure"},
-    {"number":6,"id":"L12G-MISSING-SUGGESTION","status":"ready-for-research","title":"Suggestion Definition And Closure"},
+    {"number":6,"id":"L12G-MISSING-SUGGESTION","status":"done","title":"Suggestion Definition And Closure"},
     {"number":7,"id":"L12G-MISSING-ZONE-OF-TRUTH","status":"ready-for-research","title":"Zone Of Truth Definition And Closure"},
     {"number":8,"id":"L12G-RECURSIVE-TAIL-LANE-A","status":"blocked","title":"Lane A Recursive Planning Tail"}
   ]
@@ -101,14 +101,14 @@ Output:
 
 ### Task 6 - L12G-MISSING-SUGGESTION - Suggestion Definition And Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 - SRD Suggestion text and existing table-owned/player-choice terminology.
 
 Output:
-- Authored Surface definition plus coverage disposition.
-- Prefer runtime-detached/table-choice closure unless a precise battle-owned executable subset exists.
+- Authored SRD Surface definition plus accepted runtime-detached closure for Suggestion's hearing/understanding gate, player-authored suggested activity, achievable and obvious-damage judgment, Charmed-target pursuit, and activity-completion ending.
+- Runtime records no commanded-behavior state and does not infer or enforce suggested activity compliance from authored spell identity; table/social adjudication remains the boundary.
 
 ### Task 7 - L12G-MISSING-ZONE-OF-TRUTH - Zone Of Truth Definition And Closure
 

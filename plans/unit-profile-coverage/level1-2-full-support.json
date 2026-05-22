@@ -2578,6 +2578,71 @@
     },
     {
       "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "social-knowledge-effect"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "Suggestion's hearing/understanding gate, suggested course of activity, achievable and obvious-damage judgment, Charmed target pursuit, and activity-completion ending require table/player choice and social adjudication facts; promoted battle runtime must not infer or enforce commanded behavior from authored spell identity.",
+      "sourceRecordPath": "packages/surface/content/suggestion.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Bard spell list Suggestion",
+          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_suggestion",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 210,
+            "lineStart": 210,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Sorcerer spell list Suggestion",
+          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_suggestion",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 293,
+            "lineStart": 293,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Warlock spell list Suggestion",
+          "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_suggestion",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 374,
+            "lineStart": 374,
+            "path": ".references/srd-5.2.1/Classes/Warlock.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Suggestion",
+          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_suggestion",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 230,
+            "lineStart": 230,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
+      "unitId": "suggestion"
+    },
+    {
+      "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
         "outside-runtime-presentation-exploration"
@@ -2729,7 +2794,7 @@
       ]
     },
     {
-      "count": 31,
+      "count": 32,
       "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
@@ -2763,6 +2828,7 @@
         "silent_image",
         "speak_with_animals",
         "spike_growth",
+        "suggestion",
         "thaumaturgy"
       ]
     },
@@ -2837,12 +2903,12 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 519,
-      "percent": "93.3%",
+      "numerator": 523,
+      "percent": "94.1%",
       "rowsByStatus": {
         "accepted": 379,
-        "accepted-no-battle-effect": 140,
-        "battle-runtime-required": 21,
+        "accepted-no-battle-effect": 144,
+        "battle-runtime-required": 17,
         "owner-evidence-required": 2,
         "partial-battle-runtime": 14
       }
@@ -2863,13 +2929,13 @@
       "percent": "88.5%"
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 169,
+      "denominator": 170,
       "numerator": 113,
-      "percent": "66.9%"
+      "percent": "66.5%"
     },
     "strictTargetClosure": {
-      "denominator": 169,
-      "numerator": 167,
+      "denominator": 170,
+      "numerator": 168,
       "percent": "98.8%"
     }
   },
@@ -3416,60 +3482,6 @@
           }
         ],
         "unitId": "purify_food_and_drink"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "spell Unit pressure",
-            "concept": "Bard spell list Suggestion",
-            "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_suggestion",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 210,
-              "lineStart": 210,
-              "path": ".references/srd-5.2.1/Classes/Bard.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Sorcerer spell list Suggestion",
-            "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_suggestion",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 293,
-              "lineStart": 293,
-              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Warlock spell list Suggestion",
-            "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_suggestion",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 374,
-              "lineStart": 374,
-              "path": ".references/srd-5.2.1/Classes/Warlock.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Wizard spell list Suggestion",
-            "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_suggestion",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 230,
-              "lineStart": 230,
-              "path": ".references/srd-5.2.1/Classes/Wizard.md"
-            }
-          }
-        ],
-        "unitId": "suggestion"
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/unseen_servant.md",
@@ -8174,19 +8186,19 @@
       "missing": 1,
       "profile-subset-supported": 23,
       "supported-profile": 113,
-      "unsupported-profile": 32
+      "unsupported-profile": 33
     },
     "groupsByStatus": {
       "blocked-follow-up-split": 13,
       "closed-character-fact-and-runtime-detached-split": 3,
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
-      "closed-runtime-detached-table-adjudication": 31,
+      "closed-runtime-detached-table-adjudication": 32,
       "open-profile-accounting": 1,
       "open-runtime-behavior": 1,
       "supported-profile": 113
     },
-    "nonSupportedFrontier": 56,
-    "strictDenominator": 169
+    "nonSupportedFrontier": 57,
+    "strictDenominator": 170
   }
 }
