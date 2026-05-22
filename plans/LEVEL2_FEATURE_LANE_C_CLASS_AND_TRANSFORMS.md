@@ -79,7 +79,7 @@
     {
       "number": 13,
       "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-RETAINED-STATISTICS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Druid Wild Shape Retained Statistics Recheck"
     },
     {
@@ -123,6 +123,18 @@
       "id": "L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-AREA-SUPPRESSION",
       "status": "blocked",
       "title": "Moonbeam Shape-Shift Area Suppression Rider"
+    },
+    {
+      "number": 21,
+      "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION",
+      "status": "ready-for-research",
+      "title": "Druid Wild Shape D20 Statistic Projection"
+    },
+    {
+      "number": 22,
+      "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME",
+      "status": "blocked",
+      "title": "Druid Wild Shape Shape-Shifting Runtime And Promoted Parity"
     }
   ]
 }
@@ -305,7 +317,7 @@ Verification notes:
 
 ### Task 13 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-RETAINED-STATISTICS - Druid Wild Shape Retained Statistics Recheck
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -324,6 +336,19 @@ Acceptance:
 - The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
 - No companion AI/autonomous-control behavior is introduced.
 - No authored identity dispatch is introduced in runtime code.
+
+Result:
+
+- Rechecked SRD Wild Shape retained statistics and Shape-Shifting RAW against the merged Wild Shape runtime subset.
+- Accepted active-form cross-boundary persistence as runtime-detached under `ASSUMPTIONS.md` A27: Character Battle settlement rejects active Wild Shape forms until dismissal or reversion.
+- Split the remaining battle-owned retained-statistic work to `L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION`: effective Ability Check and Saving Throw ability-score selection plus Skill and Saving Throw proficiency reconciliation.
+- Left equipment disposition, Beast Spells, form anatomy, battle-owned sense/communication projection, unsupported Stat Block actions, attack prose riders, multi-component damage, and Stat Block non-Attack actions under `L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME`.
+
+Verification notes:
+
+- RAW/ubiquitous-language check: SRD 5.2.1 `Classes/Druid.md#Level 2: Wild Shape` defines retained and replaced game statistics, no spellcasting, Temporary Hit Points, equipment behavior, and reversion triggers; SRD 5.2.1 `Rules-Glossary.md#Shape-Shifting` says shape-shift descriptions control retained facts and ongoing effects carry over unless stated otherwise; `UBIQUITOUS_LANGUAGE.md` keeps Stat Block, Character Sheet, Ability Check, Saving Throw, Skill, Temporary Hit Points, and Companion Control terms distinct.
+- Coverage verification: `pnpm unit-profile-coverage:check -- --write`, `pnpm unit-profile-coverage:check`, and `git diff --check` passed in the implementation worktree. No runtime or Quint behavior changed, so MBT is not applicable.
+- Reviewer-loop convergence: the implementation review found the split only in coverage artifacts; this revision synchronized the Ralph plan index/task details and mirrored in-repo lane plan with the new follow-up ID.
 
 ### Task 14 - L3-FIGHTER-CHAMPION-SUBCLASS-SURVEY - Level 3 Fighter Champion Survey
 
@@ -479,6 +504,61 @@ Output:
 - Suppress shape-shifting only while the target remains in that Moonbeam Cylinder.
 - Clear suppression on explicit caller/table-supplied Cylinder exit and when the Moonbeam spell ends.
 - Focused runtime tests for failed save, successful save, once-per-turn duplicate behavior, exit cleanup, and spell cleanup; package-local promoted Quint/runtime parity; generated coverage artifacts; `git diff --check`; and reviewer-loop convergence.
+
+Acceptance:
+
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
+
+### Task 21 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION - Druid Wild Shape D20 Statistic Projection
+
+Status: `ready-for-research`
+
+Depends on:
+
+- Task 13.
+
+Input:
+
+- Local RAW under `.references/srd-5.2.1/Classes/Druid.md#Level 2: Wild Shape` and `.references/srd-5.2.1/Rules-Glossary.md#Shape-Shifting`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- `druid_wild_shape` Unit claim and `unit-feature.druid-wild-shape-known-form` support profile.
+- Existing battle-runtime Wild Shape active-form state, stat-block readers, character statistic readers, and D20 Ability Check/Saving Throw/Skill hole projection code.
+
+Output:
+
+- Owner: battle-runtime D20 statistic projection for active Wild Shape forms; Character Sheet and Stat Block records remain the source facts.
+- Project the Wild Shape battle-owned D20 statistic matrix: Beast Strength, Dexterity, and Constitution; retained character Intelligence, Wisdom, and Charisma; retained Skill and Saving Throw proficiencies using the character Proficiency Bonus; gained Beast proficiencies; and higher Beast stat-block modifiers where RAW provides one.
+- Keep true-form Character Sheet facts and replacement Beast Stat Block facts as the source state; do not duplicate them into parallel retained-statistic state.
+- Focused Ability Check, Skill, and Saving Throw runtime tests; package-local promoted Quint/runtime parity if battle behavior is promoted; generated coverage artifacts; `git diff --check`; and reviewer-loop convergence.
+
+Acceptance:
+
+- The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
+- No companion AI/autonomous-control behavior is introduced.
+- No authored identity dispatch is introduced in runtime code.
+
+### Task 22 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME - Druid Wild Shape Shape-Shifting Runtime And Promoted Parity
+
+Status: `blocked`
+
+Blocked by:
+
+- Plan-wide Wild Shape ownership boundary: this lane must not implement Wild Shape; this task mirrors the existing wrapup backlog follow-up so Task 13's excluded shape-shifting work remains visible in this plan.
+
+Input:
+
+- Local RAW under `.references/srd-5.2.1/Classes/Druid.md#Level 2: Wild Shape` and `.references/srd-5.2.1/Rules-Glossary.md#Shape-Shifting`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Existing Druid Wild Shape runtime subset and `unit-feature.druid-wild-shape-known-form` support profile.
+- `L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION` for battle-owned D20 statistic projection.
+
+Output:
+
+- Promote the remaining Wild Shape battle execution beyond the merged-equipment subset: equipment disposition choices for falling or worn equipment, Beast Spells casting exceptions, Beast-form Grapple/free-hand and object-handling anatomy, battle-owned sense or communication projection, unsupported Stat Block action sections, attack prose riders, multi-component damage, and Stat Block non-Attack actions.
+- Keep D20 Ability Check, Saving Throw, Skill, and proficiency reconciliation in `L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION`; do not duplicate those source facts here.
+- Owner: battle-runtime, character-battle-runtime, and package-local `battle-runtime.qnt` parity.
 
 Acceptance:
 
