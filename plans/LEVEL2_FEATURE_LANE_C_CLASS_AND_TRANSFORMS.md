@@ -97,7 +97,7 @@
     {
       "number": 16,
       "id": "L3-WIZARD-EVOKER-SUBCLASS-SURVEY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Level 3 Wizard Evoker Survey"
     },
     {
@@ -141,6 +141,18 @@
       "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME",
       "status": "blocked",
       "title": "Druid Wild Shape Shape-Shifting Runtime And Promoted Parity"
+    },
+    {
+      "number": 24,
+      "id": "L12G-FOLLOWUP-WIZARD-EVOKER-EVOCATION-SAVANT",
+      "status": "ready-for-research",
+      "title": "Wizard Evoker Evocation Savant Spellbook Projection"
+    },
+    {
+      "number": 25,
+      "id": "L12G-FOLLOWUP-WIZARD-EVOKER-POTENT-CANTRIP",
+      "status": "ready-for-research",
+      "title": "Wizard Evoker Potent Cantrip Runtime Support"
     }
   ]
 }
@@ -426,7 +438,7 @@ Acceptance:
 
 ### Task 16 - L3-WIZARD-EVOKER-SUBCLASS-SURVEY - Level 3 Wizard Evoker Survey
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -445,6 +457,19 @@ Acceptance:
 - The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
 - No companion AI/autonomous-control behavior is introduced.
 - No authored identity dispatch is introduced in runtime code.
+
+Result:
+
+- Rechecked SRD Wizard level-3 subclass and Evoker RAW. Wizard level 3 grants a Wizard subclass; Evoker level 3 grants Evocation Savant and Potent Cantrip.
+- Kept `subclass_wizard_evoker` as an unsupported-profile subclass container because it currently owns selection identity only: the Surface Wizard class names the level-3 option and the character-creation support gate knows the option id, but the supported progression set does not admit same-class Wizard 3 and the subclass Unit has no level-3 feature grants.
+- Split Evocation Savant to `L12G-FOLLOWUP-WIZARD-EVOKER-EVOCATION-SAVANT`: author/link the feature Unit, admit Wizard 3 if still absent, and project spellbook grants from Wizard Spell Access, spell school, spell level, and spell slot level facts without duplicating an Evoker spell roster.
+- Split Potent Cantrip to `L12G-FOLLOWUP-WIZARD-EVOKER-POTENT-CANTRIP`: author/link the feature Unit and promote cantrip half-damage/no-additional-effect runtime support from cantrip procedure shape and selected feature facts without authored-identity dispatch.
+
+Verification notes:
+
+- RAW/ubiquitous-language check: SRD 5.2.1 `Classes/Wizard.md#Level 3: Wizard Subclass`, `#Level 3: Evocation Savant`, and `#Level 3: Potent Cantrip`; `UBIQUITOUS_LANGUAGE.md` terms for Attack Roll, Saving Throw, Resolve, Apply, Spend, Grant, Damage Type, and damage halving.
+- Coverage verification: `pnpm unit-profile-coverage:check` and `git diff --check` passed in the decider worktree. No runtime or Quint behavior changed, so MBT is not applicable.
+- Reviewer-loop convergence: implementation review found no issues; decider review added the required executable plan tasks for the two split mechanics.
 
 ### Task 17 - L3-SPELL-HASTE-RUNTIME-SURVEY - Level 3 Haste Runtime Survey
 
@@ -617,3 +642,60 @@ Acceptance:
 - The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
 - No companion AI/autonomous-control behavior is introduced.
 - No authored identity dispatch is introduced in runtime code.
+
+### Task 24 - L12G-FOLLOWUP-WIZARD-EVOKER-EVOCATION-SAVANT - Wizard Evoker Evocation Savant Spellbook Projection
+
+Status: `ready-for-research`
+
+Depends on:
+
+- Task 16.
+
+Input:
+
+- Local RAW under `.references/srd-5.2.1/Classes/Wizard.md#Level 3: Evocation Savant`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Wizard spell access, spell school/level facts, spellbook projection owners, subclass feature-grant projection, and character-creation support gates.
+
+Output:
+
+- Author and link the Evocation Savant class-feature Unit from `subclass_wizard_evoker`.
+- Admit same-class Wizard 3 if still absent.
+- Discover and finalize the two initial Wizard Evocation spellbook choices of level 2 or lower.
+- Project the later one-spell Wizard Evocation spellbook grant whenever Wizard spell slot level access increases, deriving eligibility from existing Wizard Spell Access, spell school, spell level, and spell slot level facts rather than duplicating an Evoker spell roster.
+- Update Unit claims/evidence/report artifacts and focused character-creation or Character Sheet tests for any supported subset.
+
+Acceptance:
+
+- Evocation Savant lands as supported, accepted-closed/runtime-detached, or further split into smaller executable tasks with concrete owners.
+- No duplicate Evoker spell roster or parallel spellbook state is introduced.
+- No authored identity runtime dispatch is introduced.
+- Focused verification includes RAW/ubiquitous-language check, relevant Surface/character-creation tests, `pnpm unit-profile-coverage:check`, and promoted battle-runtime parity only if battle behavior changes.
+
+### Task 25 - L12G-FOLLOWUP-WIZARD-EVOKER-POTENT-CANTRIP - Wizard Evoker Potent Cantrip Runtime Support
+
+Status: `ready-for-research`
+
+Depends on:
+
+- Task 16.
+
+Input:
+
+- Local RAW under `.references/srd-5.2.1/Classes/Wizard.md#Level 3: Potent Cantrip`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current cantrip damage profiles, spell procedure facts, selected class-feature facts, miss/save-success result handling, and promoted Quint/runtime parity owners.
+
+Output:
+
+- Author and link the Potent Cantrip class-feature Unit from `subclass_wizard_evoker`.
+- Promote a cantrip damage profile where a damaging cantrip cast at a creature deals half cantrip damage on a missed Attack Roll or successful Saving Throw and suppresses additional cantrip effects.
+- Admit the profile by spell procedure shape and selected class-feature facts rather than cantrip id, subclass id, name, or provenance section.
+- Update Unit claims/evidence/report artifacts, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for any supported subset.
+
+Acceptance:
+
+- Potent Cantrip lands as supported, accepted-closed/runtime-detached, or further split into smaller executable tasks with concrete owners.
+- No authored identity runtime dispatch is introduced.
+- The half-damage and no-additional-effect clauses stay colocated in one runtime owner.
+- Focused verification includes RAW/ubiquitous-language check, relevant Surface/runtime tests, `pnpm unit-profile-coverage:check`, and promoted battle-runtime parity if battle behavior changes.
