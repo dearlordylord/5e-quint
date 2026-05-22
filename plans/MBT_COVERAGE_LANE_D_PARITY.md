@@ -181,8 +181,26 @@
     {
       "number": 30,
       "id": "L3-CLASS-SUBCLASS-INVENTORY-SEED",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Level 3 Class And Subclass Inventory Seed"
+    },
+    {
+      "number": 31,
+      "id": "L3-SUBCLASS-SELECTION-PROGRESSION-SPLIT",
+      "status": "ready-for-research",
+      "title": "Level 3 Subclass Selection Progression Split"
+    },
+    {
+      "number": 32,
+      "id": "L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT",
+      "status": "ready-for-research",
+      "title": "Level 3 Subclass Spell Access Progression Split"
+    },
+    {
+      "number": 33,
+      "id": "L3-CLASS-SUBCLASS-FEATURE-OWNER-SPLIT",
+      "status": "ready-for-research",
+      "title": "Level 3 Class And Subclass Feature Owner Split"
     }
   ]
 }
@@ -574,7 +592,7 @@ Acceptance:
 
 ### Task 30 - L3-CLASS-SUBCLASS-INVENTORY-SEED - Level 3 Class And Subclass Inventory Seed
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -608,3 +626,114 @@ Acceptance:
   admission alone.
 - No companion AI/autonomous-control behavior and no authored identity dispatch
   are introduced.
+
+### Task 31 - L3-SUBCLASS-SELECTION-PROGRESSION-SPLIT - Level 3 Subclass Selection Progression Split
+
+Status: `ready-for-research`
+
+Depends on:
+
+- Task 30.
+
+Input:
+
+- Level-3 `subclass-selection` rows in `plans/unit-profile-coverage/srd-unit-inventory.json`.
+- Local RAW under `.references/srd-5.2.1/Classes/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface class/subclass records, Character Creation subclass/progression
+  owner code, Unit claims, and owner-evidence artifacts.
+
+Output:
+
+- Promote or precisely split the 12 level-3 subclass selection rows so class
+  level-3 subclass choices and SRD subclass option records are checker-visible.
+- Connect selected subclass identity to the Character Creation/progression owner
+  when executable, without treating class catalog admission alone as runtime
+  support.
+- Update generated inventory/report artifacts and Unit/profile claims only where
+  this task is the correct owner; otherwise record smaller executable follow-up
+  rows.
+
+Acceptance:
+
+- Every level-3 `subclass-selection` row has checker-visible owner evidence,
+  accepted runtime-detached closure, or a smaller executable follow-up split.
+- Catalog admission for class records and subclass option records remains
+  distinct from runtime support and selected-subclass progression ownership.
+- No PHB+ authored identity, companion AI/autonomous-control behavior, or runtime
+  authored-identity dispatch is introduced.
+
+### Task 32 - L3-SUBCLASS-SPELL-ACCESS-PROGRESSION-SPLIT - Level 3 Subclass Spell Access Progression Split
+
+Status: `ready-for-research`
+
+Depends on:
+
+- Task 30.
+- Task 31.
+
+Input:
+
+- Level-3 `subclass-spell-access` rows in `plans/unit-profile-coverage/srd-unit-inventory.json`.
+- Local RAW under `.references/srd-5.2.1/Classes/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface Spell Access shapes, Character Creation spell-access
+  projection code, Unit claims, and owner-evidence artifacts.
+
+Output:
+
+- Promote or precisely split subclass Spell Access rows for level-gated
+  always-prepared grants, keeping character-owned Spell Access separate from
+  individual Spell Definition spell-list pressure and invocation runtime support.
+- Preserve the Druid Circle of the Land Long Rest land-type choice as its own
+  choice-derived prepared-spell progression concern before deriving prepared
+  spells.
+- Update generated inventory/report artifacts and Unit/profile claims only where
+  this task is the correct owner; otherwise record smaller executable follow-up
+  rows.
+
+Acceptance:
+
+- Every level-3 `subclass-spell-access` row has checker-visible owner evidence,
+  accepted runtime-detached closure, or a smaller executable follow-up split.
+- Choice-derived prepared spells and always-prepared subclass grants are not
+  collapsed into spell-list pressure or catalog admission support.
+- No PHB+ authored identity, companion AI/autonomous-control behavior, or runtime
+  authored-identity dispatch is introduced.
+
+### Task 33 - L3-CLASS-SUBCLASS-FEATURE-OWNER-SPLIT - Level 3 Class And Subclass Feature Owner Split
+
+Status: `ready-for-research`
+
+Depends on:
+
+- Task 30.
+
+Input:
+
+- Level-3 `class-feature-grant` rows in `plans/unit-profile-coverage/srd-unit-inventory.json`.
+- Local RAW under `.references/srd-5.2.1/Classes/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Current Surface class-feature records, Unit/profile claims, battle-runtime and
+  character-creation owner-evidence artifacts.
+
+Output:
+
+- Promote or precisely split level-3 class and subclass feature grants that lack
+  authored records, catalog admission, or owner evidence.
+- Route each feature to the correct owner boundary: battle runtime for supported
+  encounter behavior, Character Creation/Sheet for durable character facts, or
+  explicit runtime-detached closure.
+- Update generated inventory/report artifacts and Unit/profile claims only where
+  this task is the correct owner; otherwise record smaller executable follow-up
+  rows.
+
+Acceptance:
+
+- Every level-3 `class-feature-grant` row has checker-visible owner evidence,
+  accepted runtime-detached or character-fact closure, or a smaller executable
+  follow-up split.
+- Feature support is based on Surface shape, typed profile facts, and owner
+  evidence rather than authored identity dispatch.
+- No PHB+ authored identity or companion AI/autonomous-control behavior is
+  introduced.

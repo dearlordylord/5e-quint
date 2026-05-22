@@ -1,7 +1,7 @@
 {
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "sourceCorpus": ".references/srd-5.2.1/Classes",
-  "scope": "SRD 5.2.1 class-derived Unit/catalog backlog rows, prioritized around level 1, level 2, cantrip/level-1/level-2 spell-list pressure, and a separately reported level-3 spell-list pressure seed.",
+  "scope": "SRD 5.2.1 class-derived Unit/catalog backlog rows, prioritized around level 1, level 2, cantrip/level-1/level-2 spell-list pressure, with separately reported level-3 class/subclass and spell-list pressure seeds.",
   "evidenceArtifacts": {
     "characterCreationOwnerEvidence": {
       "schema": "dnd.srd-character-creation-owner-evidence.v1",
@@ -179,9 +179,10 @@
     }
   },
   "metrics": {
-    "totalRows": 684,
+    "totalRows": 735,
     "levelOneRows": 156,
     "levelTwoRows": 33,
+    "levelThreeClassRows": 51,
     "spellPressureRows": 367,
     "levelThreeSpellPressureRows": 128,
     "levelThreeInstalledSpellPressureRows": 15,
@@ -204,6 +205,16 @@
         "owner-evidence-required": 2,
         "partial-battle-runtime": 18,
         "battle-runtime-required": 10
+      }
+    },
+    "levelThreeClassBattleReadiness": {
+      "denominator": 51,
+      "numerator": 17,
+      "percent": "33.3%",
+      "rowsByStatus": {
+        "owner-evidence-required": 34,
+        "accepted-no-battle-effect": 14,
+        "accepted": 3
       }
     },
     "levelThreeSpellBattleReadiness": {
@@ -229,11 +240,25 @@
       "catalog-installed-owner-evidence-required": 1,
       "catalog-installed-needs-owner-evidence": 1
     },
+    "levelThreeClassRowsByDisposition": {
+      "level-3-follow-up-required": 32,
+      "non-runtime": 12,
+      "catalog-only/dead-for-now": 2,
+      "catalog-installed-owner-evidence-present": 3,
+      "catalog-installed-owner-evidence-required": 2
+    },
+    "levelThreeClassRowsByCategory": {
+      "class feature": 22,
+      "character-creation or progression mechanic": 12,
+      "subclass selection": 12,
+      "spell access/list pressure": 5
+    },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 413,
-      "non-runtime": 24,
-      "catalog-installed-owner-evidence-required": 9,
-      "catalog-only/dead-for-now": 133,
+      "catalog-installed-owner-evidence-present": 416,
+      "non-runtime": 36,
+      "level-3-follow-up-required": 32,
+      "catalog-installed-owner-evidence-required": 11,
+      "catalog-only/dead-for-now": 135,
       "missing-authored-record": 58,
       "catalog-authored-review-required": 42,
       "catalog-authored-executable-follow-up": 4,
@@ -4064,6 +4089,134 @@
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
+      "id": "srd521:classes/barbarian:level-3:class-feature-grant:barbarian_frenzy",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Barbarian.md",
+        "lineStart": 178,
+        "lineEnd": 181
+      },
+      "className": "Barbarian",
+      "levelBand": "level-3",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Barbarian Frenzy",
+      "detail": "Level 3 class feature.",
+      "candidateUnitId": "barbarian_frenzy",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "barbarian_frenzy"
+      },
+      "finalDisposition": "level-3-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote a focused level-3 class or subclass feature split that authors the SRD feature record when missing, identifies the character-creation or battle-runtime owner, and adds checker-readable owner evidence before treating this row as supported.",
+      "battleReadinessStatus": "owner-evidence-required"
+    },
+    {
+      "id": "srd521:classes/barbarian:level-3:class-feature-grant:barbarian_primal_knowledge",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Barbarian.md",
+        "lineStart": 102,
+        "lineEnd": 107
+      },
+      "className": "Barbarian",
+      "levelBand": "level-3",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Barbarian Primal Knowledge",
+      "detail": "Level 3 class feature.",
+      "candidateUnitId": "barbarian_primal_knowledge",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "barbarian_primal_knowledge"
+      },
+      "finalDisposition": "level-3-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote a focused level-3 class or subclass feature split that authors the SRD feature record when missing, identifies the character-creation or battle-runtime owner, and adds checker-readable owner evidence before treating this row as supported.",
+      "battleReadinessStatus": "owner-evidence-required"
+    },
+    {
+      "id": "srd521:classes/barbarian:level-3:class-table-summary:barbarian_level_3_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Barbarian.md",
+        "lineStart": 37,
+        "lineEnd": 37
+      },
+      "className": "Barbarian",
+      "levelBand": "level-3",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Barbarian level 3 feature table row",
+      "detail": "3 | +2 | Barbarian Subclass, Primal Knowledge | 3 | +2 | 2",
+      "candidateUnitId": "class_barbarian",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_barbarian",
+        "sourceRecordPath": "packages/surface/content/class_barbarian.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_barbarian"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
+      "id": "srd521:classes/barbarian:level-3:subclass-selection:barbarian_subclass",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Barbarian.md",
+        "lineStart": 98,
+        "lineEnd": 101
+      },
+      "className": "Barbarian",
+      "levelBand": "level-3",
+      "rowKind": "subclass-selection",
+      "category": "subclass selection",
+      "concept": "Barbarian Subclass",
+      "detail": "Level 3 subclass selection.",
+      "candidateUnitId": "class_barbarian",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "class_barbarian"
+      },
+      "subclassSelection": {
+        "state": "missing-level-3-choice"
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "level-3-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote a subclass selection and progression split that authors the SRD subclass option records, connects the class level-3 subclass choice to Character Creation, and retains selected subclass identity without treating the class catalog record as executable support.",
+      "battleReadinessStatus": "owner-evidence-required"
+    },
+    {
       "id": "srd521:classes/bard:level-1:class-container:bard_class_container",
       "source": {
         "path": ".references/srd-5.2.1/Classes/Bard.md",
@@ -4798,6 +4951,157 @@
       "ownerEvidence": [],
       "nextAction": "No runtime work; keep classification as explicit closure.",
       "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
+      "id": "srd521:classes/bard:level-3:class-feature-grant:bard_bonus_proficiencies",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Bard.md",
+        "lineStart": 328,
+        "lineEnd": 331
+      },
+      "className": "Bard",
+      "levelBand": "level-3",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Bard Bonus Proficiencies",
+      "detail": "Level 3 class feature.",
+      "candidateUnitId": "bard_bonus_proficiencies",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "bard_bonus_proficiencies",
+        "sourceRecordPath": "packages/surface/content/bard_bonus_proficiencies.json"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "bard_bonus_proficiencies"
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-battle-runtime",
+        "owner": "character-creation-runtime proficiency-choice projection and future subclass progression admission",
+        "reason": "The feature grants durable skill proficiency choices on the Character Sheet. Character creation already owns generic class-feature proficiency-choice discovery and finalization, while this absent subclass feature is not a promoted battle-runtime Unit profile."
+      },
+      "ownerEvidence": [],
+      "nextAction": "The feature grants durable skill proficiency choices on the Character Sheet. Character creation already owns generic class-feature proficiency-choice discovery and finalization, while this absent subclass feature is not a promoted battle-runtime Unit profile.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
+      "id": "srd521:classes/bard:level-3:class-feature-grant:bard_cutting_words",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Bard.md",
+        "lineStart": 332,
+        "lineEnd": 335
+      },
+      "className": "Bard",
+      "levelBand": "level-3",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Bard Cutting Words",
+      "detail": "Level 3 class feature.",
+      "candidateUnitId": "bard_cutting_words",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "bard_cutting_words",
+        "sourceRecordPath": "packages/surface/content/bard_cutting_words.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "bard_cutting_words"
+      },
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit bard_cutting_words is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT65 at packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
+    },
+    {
+      "id": "srd521:classes/bard:level-3:class-table-summary:bard_level_3_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Bard.md",
+        "lineStart": 38,
+        "lineEnd": 38
+      },
+      "className": "Bard",
+      "levelBand": "level-3",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Bard level 3 feature table row",
+      "detail": "3 | +2 | Bard Subclass | D6 | 2 | 6 | 4 | 2 | — | — | — | — | — | — | —",
+      "candidateUnitId": "class_bard",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_bard",
+        "sourceRecordPath": "packages/surface/content/class_bard.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_bard"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
+      "id": "srd521:classes/bard:level-3:subclass-selection:bard_subclass",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Bard.md",
+        "lineStart": 105,
+        "lineEnd": 108
+      },
+      "className": "Bard",
+      "levelBand": "level-3",
+      "rowKind": "subclass-selection",
+      "category": "subclass selection",
+      "concept": "Bard Subclass",
+      "detail": "Level 3 subclass selection.",
+      "candidateUnitId": "class_bard",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "class_bard"
+      },
+      "subclassSelection": {
+        "state": "missing-level-3-choice"
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "level-3-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote a subclass selection and progression split that authors the SRD subclass option records, connects the class level-3 subclass choice to Character Creation, and retains selected subclass identity without treating the class catalog record as executable support.",
+      "battleReadinessStatus": "owner-evidence-required"
     },
     {
       "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_dancing_lights",
@@ -8334,6 +8638,163 @@
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
+      "id": "srd521:classes/cleric:level-3:class-feature-grant:cleric_disciple_of_life",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Cleric.md",
+        "lineStart": 313,
+        "lineEnd": 316
+      },
+      "className": "Cleric",
+      "levelBand": "level-3",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Cleric Disciple of Life",
+      "detail": "Level 3 class feature.",
+      "candidateUnitId": "cleric_disciple_of_life",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "cleric_disciple_of_life"
+      },
+      "finalDisposition": "level-3-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote a focused level-3 class or subclass feature split that authors the SRD feature record when missing, identifies the character-creation or battle-runtime owner, and adds checker-readable owner evidence before treating this row as supported.",
+      "battleReadinessStatus": "owner-evidence-required"
+    },
+    {
+      "id": "srd521:classes/cleric:level-3:class-feature-grant:cleric_preserve_life",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Cleric.md",
+        "lineStart": 330,
+        "lineEnd": 333
+      },
+      "className": "Cleric",
+      "levelBand": "level-3",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Cleric Preserve Life",
+      "detail": "Level 3 class feature.",
+      "candidateUnitId": "cleric_preserve_life",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "cleric_preserve_life"
+      },
+      "finalDisposition": "level-3-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote a focused level-3 class or subclass feature split that authors the SRD feature record when missing, identifies the character-creation or battle-runtime owner, and adds checker-readable owner evidence before treating this row as supported.",
+      "battleReadinessStatus": "owner-evidence-required"
+    },
+    {
+      "id": "srd521:classes/cleric:level-3:class-table-summary:cleric_level_3_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Cleric.md",
+        "lineStart": 37,
+        "lineEnd": 37
+      },
+      "className": "Cleric",
+      "levelBand": "level-3",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Cleric level 3 feature table row",
+      "detail": "3 | +2 | Cleric Subclass | 2 | 3 | 6 | 4 | 2 | — | — | — | — | — | — | —",
+      "candidateUnitId": "class_cleric",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_cleric",
+        "sourceRecordPath": "packages/surface/content/class_cleric.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_cleric"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
+      "id": "srd521:classes/cleric:level-3:subclass-selection:cleric_subclass",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Cleric.md",
+        "lineStart": 102,
+        "lineEnd": 105
+      },
+      "className": "Cleric",
+      "levelBand": "level-3",
+      "rowKind": "subclass-selection",
+      "category": "subclass selection",
+      "concept": "Cleric Subclass",
+      "detail": "Level 3 subclass selection.",
+      "candidateUnitId": "class_cleric",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "class_cleric"
+      },
+      "subclassSelection": {
+        "state": "missing-level-3-choice"
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "level-3-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote a subclass selection and progression split that authors the SRD subclass option records, connects the class level-3 subclass choice to Character Creation, and retains selected subclass identity without treating the class catalog record as executable support.",
+      "battleReadinessStatus": "owner-evidence-required"
+    },
+    {
+      "id": "srd521:classes/cleric:level-3:subclass-spell-access:cleric_life_domain_spells",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Cleric.md",
+        "lineStart": 317,
+        "lineEnd": 329
+      },
+      "className": "Cleric",
+      "levelBand": "level-3",
+      "rowKind": "subclass-spell-access",
+      "category": "spell access/list pressure",
+      "concept": "Cleric Life Domain Spells",
+      "detail": "Level 3 subclass Spell Access.",
+      "candidateUnitId": "cleric_life_domain_spells",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "cleric_life_domain_spells"
+      },
+      "finalDisposition": "level-3-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote a subclass Spell Access progression split that models level-gated always-prepared subclass spells as character-owned Spell Access, separate from individual Spell Definition spell-list pressure and spell invocation runtime support.",
+      "battleReadinessStatus": "owner-evidence-required"
+    },
+    {
       "id": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_guidance",
       "source": {
         "path": ".references/srd-5.2.1/Classes/Cleric.md",
@@ -11427,6 +11888,134 @@
       "ownerEvidence": [],
       "nextAction": "No runtime work; keep classification as explicit closure.",
       "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
+      "id": "srd521:classes/druid:level-3:class-feature-grant:druid_lands_aid",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Druid.md",
+        "lineStart": 406,
+        "lineEnd": 411
+      },
+      "className": "Druid",
+      "levelBand": "level-3",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Druid Land's Aid",
+      "detail": "Level 3 class feature.",
+      "candidateUnitId": "druid_lands_aid",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "druid_lands_aid"
+      },
+      "finalDisposition": "level-3-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote a focused level-3 class or subclass feature split that authors the SRD feature record when missing, identifies the character-creation or battle-runtime owner, and adds checker-readable owner evidence before treating this row as supported.",
+      "battleReadinessStatus": "owner-evidence-required"
+    },
+    {
+      "id": "srd521:classes/druid:level-3:class-table-summary:druid_level_3_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Druid.md",
+        "lineStart": 34,
+        "lineEnd": 34
+      },
+      "className": "Druid",
+      "levelBand": "level-3",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Druid level 3 feature table row",
+      "detail": "3 | +2 | Druid Subclass | 2 | 2 | 6 | 4 | 2 | — | — | — | — | — | — | —",
+      "candidateUnitId": "class_druid",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_druid",
+        "sourceRecordPath": "packages/surface/content/class_druid.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_druid"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
+      "id": "srd521:classes/druid:level-3:subclass-selection:druid_subclass",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Druid.md",
+        "lineStart": 130,
+        "lineEnd": 133
+      },
+      "className": "Druid",
+      "levelBand": "level-3",
+      "rowKind": "subclass-selection",
+      "category": "subclass selection",
+      "concept": "Druid Subclass",
+      "detail": "Level 3 subclass selection.",
+      "candidateUnitId": "class_druid",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "class_druid"
+      },
+      "subclassSelection": {
+        "state": "missing-level-3-choice"
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "level-3-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote a subclass selection and progression split that authors the SRD subclass option records, connects the class level-3 subclass choice to Character Creation, and retains selected subclass identity without treating the class catalog record as executable support.",
+      "battleReadinessStatus": "owner-evidence-required"
+    },
+    {
+      "id": "srd521:classes/druid:level-3:subclass-spell-access:druid_circle_of_the_land_spells",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Druid.md",
+        "lineStart": 366,
+        "lineEnd": 405
+      },
+      "className": "Druid",
+      "levelBand": "level-3",
+      "rowKind": "subclass-spell-access",
+      "category": "spell access/list pressure",
+      "concept": "Druid Circle of the Land Spells",
+      "detail": "Level 3 subclass Spell Access.",
+      "candidateUnitId": "druid_circle_of_the_land_spells",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "druid_circle_of_the_land_spells"
+      },
+      "finalDisposition": "level-3-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote a Druid Circle of the Land Spell Access progression split that preserves the Long Rest land-type choice before deriving the prepared spells for the character's Druid level and lower; keep this character-owned Spell Access separate from individual Spell Definition spell-list pressure and spell invocation runtime support.",
+      "battleReadinessStatus": "owner-evidence-required"
     },
     {
       "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_druidcraft",
@@ -14716,6 +15305,164 @@
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
+      "id": "srd521:classes/fighter:level-3:class-feature-grant:fighter_improved_critical",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Fighter.md",
+        "lineStart": 136,
+        "lineEnd": 139
+      },
+      "className": "Fighter",
+      "levelBand": "level-3",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Fighter Improved Critical",
+      "detail": "Level 3 class feature.",
+      "candidateUnitId": "fighter_improved_critical",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "fighter_improved_critical",
+        "sourceRecordPath": "packages/surface/content/fighter_improved_critical.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "fighter_improved_critical"
+      },
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit fighter_improved_critical is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT8 at packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
+    },
+    {
+      "id": "srd521:classes/fighter:level-3:class-feature-grant:fighter_remarkable_athlete",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Fighter.md",
+        "lineStart": 140,
+        "lineEnd": 145
+      },
+      "className": "Fighter",
+      "levelBand": "level-3",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Fighter Remarkable Athlete",
+      "detail": "Level 3 class feature.",
+      "candidateUnitId": "fighter_remarkable_athlete",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "fighter_remarkable_athlete"
+      },
+      "finalDisposition": "level-3-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote a focused level-3 class or subclass feature split that authors the SRD feature record when missing, identifies the character-creation or battle-runtime owner, and adds checker-readable owner evidence before treating this row as supported.",
+      "battleReadinessStatus": "owner-evidence-required"
+    },
+    {
+      "id": "srd521:classes/fighter:level-3:class-table-summary:fighter_level_3_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Fighter.md",
+        "lineStart": 33,
+        "lineEnd": 33
+      },
+      "className": "Fighter",
+      "levelBand": "level-3",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Fighter level 3 feature table row",
+      "detail": "3 | +2 | Fighter Subclass | 2 | 3",
+      "candidateUnitId": "class_fighter",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_fighter",
+        "sourceRecordPath": "packages/surface/content/class_fighter.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_fighter"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
+      "id": "srd521:classes/fighter:level-3:subclass-selection:fighter_subclass",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Fighter.md",
+        "lineStart": 86,
+        "lineEnd": 89
+      },
+      "className": "Fighter",
+      "levelBand": "level-3",
+      "rowKind": "subclass-selection",
+      "category": "subclass selection",
+      "concept": "Fighter Subclass",
+      "detail": "Level 3 subclass selection.",
+      "candidateUnitId": "class_fighter",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_fighter",
+        "sourceRecordPath": "packages/surface/content/class_fighter.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_fighter"
+      },
+      "subclassSelection": {
+        "state": "choice-and-options-installed",
+        "optionUnitIds": [
+          "subclass_fighter_champion"
+        ]
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_fighter is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "future subclass selection/progression owner",
+          "evidence": "Promote a subclass selection and progression split that authors the SRD subclass option records, connects the class level-3 subclass choice to Character Creation, and retains selected subclass identity without treating the class catalog record as executable support.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote a subclass selection and progression split that authors the SRD subclass option records, connects the class level-3 subclass choice to Character Creation, and retains selected subclass identity without treating the class catalog record as executable support.",
+      "battleReadinessStatus": "owner-evidence-required"
+    },
+    {
       "id": "srd521:classes/monk:level-1:class-container:monk_class_container",
       "source": {
         "path": ".references/srd-5.2.1/Classes/Monk.md",
@@ -15510,6 +16257,148 @@
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
+      "id": "srd521:classes/monk:level-3:class-feature-grant:monk_deflect_attacks",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Monk.md",
+        "lineStart": 102,
+        "lineEnd": 107
+      },
+      "className": "Monk",
+      "levelBand": "level-3",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Monk Deflect Attacks",
+      "detail": "Level 3 class feature.",
+      "candidateUnitId": "monk_deflect_attacks",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "monk_deflect_attacks",
+        "sourceRecordPath": "packages/surface/content/monk_deflect_attacks.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "monk_deflect_attacks"
+      },
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit monk_deflect_attacks is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT59 at packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
+    },
+    {
+      "id": "srd521:classes/monk:level-3:class-feature-grant:monk_open_hand_technique",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Monk.md",
+        "lineStart": 192,
+        "lineEnd": 201
+      },
+      "className": "Monk",
+      "levelBand": "level-3",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Monk Open Hand Technique",
+      "detail": "Level 3 class feature.",
+      "candidateUnitId": "monk_open_hand_technique",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "monk_open_hand_technique"
+      },
+      "finalDisposition": "level-3-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote a focused level-3 class or subclass feature split that authors the SRD feature record when missing, identifies the character-creation or battle-runtime owner, and adds checker-readable owner evidence before treating this row as supported.",
+      "battleReadinessStatus": "owner-evidence-required"
+    },
+    {
+      "id": "srd521:classes/monk:level-3:class-table-summary:monk_level_3_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Monk.md",
+        "lineStart": 34,
+        "lineEnd": 34
+      },
+      "className": "Monk",
+      "levelBand": "level-3",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Monk level 3 feature table row",
+      "detail": "3 | +2 | Deflect Attacks, Monk Subclass | 1d6 | 3 | +10 ft.",
+      "candidateUnitId": "class_monk",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_monk",
+        "sourceRecordPath": "packages/surface/content/class_monk.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_monk"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
+      "id": "srd521:classes/monk:level-3:subclass-selection:monk_subclass",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Monk.md",
+        "lineStart": 108,
+        "lineEnd": 111
+      },
+      "className": "Monk",
+      "levelBand": "level-3",
+      "rowKind": "subclass-selection",
+      "category": "subclass selection",
+      "concept": "Monk Subclass",
+      "detail": "Level 3 subclass selection.",
+      "candidateUnitId": "class_monk",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "class_monk"
+      },
+      "subclassSelection": {
+        "state": "missing-level-3-choice"
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "level-3-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote a subclass selection and progression split that authors the SRD subclass option records, connects the class level-3 subclass choice to Character Creation, and retains selected subclass identity without treating the class catalog record as executable support.",
+      "battleReadinessStatus": "owner-evidence-required"
+    },
+    {
       "id": "srd521:classes/paladin:level-1:class-container:paladin_class_container",
       "source": {
         "path": ".references/srd-5.2.1/Classes/Paladin.md",
@@ -16244,6 +17133,163 @@
       "ownerEvidence": [],
       "nextAction": "No runtime work; keep classification as explicit closure.",
       "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
+      "id": "srd521:classes/paladin:level-3:class-feature-grant:paladin_channel_divinity",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Paladin.md",
+        "lineStart": 100,
+        "lineEnd": 117
+      },
+      "className": "Paladin",
+      "levelBand": "level-3",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Paladin Channel Divinity",
+      "detail": "Level 3 class feature.",
+      "candidateUnitId": "paladin_channel_divinity",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "paladin_channel_divinity"
+      },
+      "finalDisposition": "level-3-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote a focused level-3 class or subclass feature split that authors the SRD feature record when missing, identifies the character-creation or battle-runtime owner, and adds checker-readable owner evidence before treating this row as supported.",
+      "battleReadinessStatus": "owner-evidence-required"
+    },
+    {
+      "id": "srd521:classes/paladin:level-3:class-feature-grant:paladin_sacred_weapon",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Paladin.md",
+        "lineStart": 263,
+        "lineEnd": 270
+      },
+      "className": "Paladin",
+      "levelBand": "level-3",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Paladin Sacred Weapon",
+      "detail": "Level 3 class feature.",
+      "candidateUnitId": "paladin_sacred_weapon",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "paladin_sacred_weapon"
+      },
+      "finalDisposition": "level-3-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote a focused level-3 class or subclass feature split that authors the SRD feature record when missing, identifies the character-creation or battle-runtime owner, and adds checker-readable owner evidence before treating this row as supported.",
+      "battleReadinessStatus": "owner-evidence-required"
+    },
+    {
+      "id": "srd521:classes/paladin:level-3:class-table-summary:paladin_level_3_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Paladin.md",
+        "lineStart": 37,
+        "lineEnd": 37
+      },
+      "className": "Paladin",
+      "levelBand": "level-3",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Paladin level 3 feature table row",
+      "detail": "3 | +2 | Channel Divinity, Paladin Subclass | 2 | 4 | 3 | — | — | — | —",
+      "candidateUnitId": "class_paladin",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_paladin",
+        "sourceRecordPath": "packages/surface/content/class_paladin.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_paladin"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
+      "id": "srd521:classes/paladin:level-3:subclass-selection:paladin_subclass",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Paladin.md",
+        "lineStart": 118,
+        "lineEnd": 121
+      },
+      "className": "Paladin",
+      "levelBand": "level-3",
+      "rowKind": "subclass-selection",
+      "category": "subclass selection",
+      "concept": "Paladin Subclass",
+      "detail": "Level 3 subclass selection.",
+      "candidateUnitId": "class_paladin",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "class_paladin"
+      },
+      "subclassSelection": {
+        "state": "missing-level-3-choice"
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "level-3-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote a subclass selection and progression split that authors the SRD subclass option records, connects the class level-3 subclass choice to Character Creation, and retains selected subclass identity without treating the class catalog record as executable support.",
+      "battleReadinessStatus": "owner-evidence-required"
+    },
+    {
+      "id": "srd521:classes/paladin:level-3:subclass-spell-access:paladin_oath_of_devotion_spells",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Paladin.md",
+        "lineStart": 249,
+        "lineEnd": 262
+      },
+      "className": "Paladin",
+      "levelBand": "level-3",
+      "rowKind": "subclass-spell-access",
+      "category": "spell access/list pressure",
+      "concept": "Paladin Oath of Devotion Spells",
+      "detail": "Level 3 subclass Spell Access.",
+      "candidateUnitId": "paladin_oath_of_devotion_spells",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "paladin_oath_of_devotion_spells"
+      },
+      "finalDisposition": "level-3-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote a subclass Spell Access progression split that models level-gated always-prepared subclass spells as character-owned Spell Access, separate from individual Spell Definition spell-list pressure and spell invocation runtime support.",
+      "battleReadinessStatus": "owner-evidence-required"
     },
     {
       "id": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_bless",
@@ -18227,6 +19273,134 @@
       "ownerEvidence": [],
       "nextAction": "No runtime work; keep classification as explicit closure.",
       "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
+      "id": "srd521:classes/ranger:level-3:class-feature-grant:ranger_hunters_lore",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Ranger.md",
+        "lineStart": 239,
+        "lineEnd": 242
+      },
+      "className": "Ranger",
+      "levelBand": "level-3",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Ranger Hunter's Lore",
+      "detail": "Level 3 class feature.",
+      "candidateUnitId": "ranger_hunters_lore",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "ranger_hunters_lore"
+      },
+      "finalDisposition": "level-3-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote a focused level-3 class or subclass feature split that authors the SRD feature record when missing, identifies the character-creation or battle-runtime owner, and adds checker-readable owner evidence before treating this row as supported.",
+      "battleReadinessStatus": "owner-evidence-required"
+    },
+    {
+      "id": "srd521:classes/ranger:level-3:class-feature-grant:ranger_hunters_prey",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Ranger.md",
+        "lineStart": 243,
+        "lineEnd": 250
+      },
+      "className": "Ranger",
+      "levelBand": "level-3",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Ranger Hunter's Prey",
+      "detail": "Level 3 class feature.",
+      "candidateUnitId": "ranger_hunters_prey",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "ranger_hunters_prey"
+      },
+      "finalDisposition": "level-3-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote a focused level-3 class or subclass feature split that authors the SRD feature record when missing, identifies the character-creation or battle-runtime owner, and adds checker-readable owner evidence before treating this row as supported.",
+      "battleReadinessStatus": "owner-evidence-required"
+    },
+    {
+      "id": "srd521:classes/ranger:level-3:class-table-summary:ranger_level_3_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Ranger.md",
+        "lineStart": 37,
+        "lineEnd": 37
+      },
+      "className": "Ranger",
+      "levelBand": "level-3",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Ranger level 3 feature table row",
+      "detail": "3 | +2 | Ranger Subclass | 2 | 4 | 3 | — | — | — | —",
+      "candidateUnitId": "class_ranger",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_ranger",
+        "sourceRecordPath": "packages/surface/content/class_ranger.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_ranger"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
+      "id": "srd521:classes/ranger:level-3:subclass-selection:ranger_subclass",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Ranger.md",
+        "lineStart": 102,
+        "lineEnd": 105
+      },
+      "className": "Ranger",
+      "levelBand": "level-3",
+      "rowKind": "subclass-selection",
+      "category": "subclass selection",
+      "concept": "Ranger Subclass",
+      "detail": "Level 3 subclass selection.",
+      "candidateUnitId": "class_ranger",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "class_ranger"
+      },
+      "subclassSelection": {
+        "state": "missing-level-3-choice"
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "level-3-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote a subclass selection and progression split that authors the SRD subclass option records, connects the class level-3 subclass choice to Character Creation, and retains selected subclass identity without treating the class catalog record as executable support.",
+      "battleReadinessStatus": "owner-evidence-required"
     },
     {
       "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_alarm",
@@ -20643,6 +21817,163 @@
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
+      "id": "srd521:classes/rogue:level-3:class-feature-grant:rogue_fast_hands",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Rogue.md",
+        "lineStart": 159,
+        "lineEnd": 166
+      },
+      "className": "Rogue",
+      "levelBand": "level-3",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Rogue Fast Hands",
+      "detail": "Level 3 class feature.",
+      "candidateUnitId": "rogue_fast_hands",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "rogue_fast_hands"
+      },
+      "finalDisposition": "level-3-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote a focused level-3 class or subclass feature split that authors the SRD feature record when missing, identifies the character-creation or battle-runtime owner, and adds checker-readable owner evidence before treating this row as supported.",
+      "battleReadinessStatus": "owner-evidence-required"
+    },
+    {
+      "id": "srd521:classes/rogue:level-3:class-feature-grant:rogue_second_story_work",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Rogue.md",
+        "lineStart": 167,
+        "lineEnd": 174
+      },
+      "className": "Rogue",
+      "levelBand": "level-3",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Rogue Second-Story Work",
+      "detail": "Level 3 class feature.",
+      "candidateUnitId": "rogue_second_story_work",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "rogue_second_story_work"
+      },
+      "finalDisposition": "level-3-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote a focused level-3 class or subclass feature split that authors the SRD feature record when missing, identifies the character-creation or battle-runtime owner, and adds checker-readable owner evidence before treating this row as supported.",
+      "battleReadinessStatus": "owner-evidence-required"
+    },
+    {
+      "id": "srd521:classes/rogue:level-3:class-feature-grant:rogue_steady_aim",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Rogue.md",
+        "lineStart": 89,
+        "lineEnd": 92
+      },
+      "className": "Rogue",
+      "levelBand": "level-3",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Rogue Steady Aim",
+      "detail": "Level 3 class feature.",
+      "candidateUnitId": "rogue_steady_aim",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "rogue_steady_aim"
+      },
+      "finalDisposition": "level-3-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote a focused level-3 class or subclass feature split that authors the SRD feature record when missing, identifies the character-creation or battle-runtime owner, and adds checker-readable owner evidence before treating this row as supported.",
+      "battleReadinessStatus": "owner-evidence-required"
+    },
+    {
+      "id": "srd521:classes/rogue:level-3:class-table-summary:rogue_level_3_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Rogue.md",
+        "lineStart": 38,
+        "lineEnd": 38
+      },
+      "className": "Rogue",
+      "levelBand": "level-3",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Rogue level 3 feature table row",
+      "detail": "3 | +2 | Rogue Subclass, Steady Aim | 2d6",
+      "candidateUnitId": "class_rogue",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_rogue",
+        "sourceRecordPath": "packages/surface/content/class_rogue.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_rogue"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
+      "id": "srd521:classes/rogue:level-3:subclass-selection:rogue_subclass",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Rogue.md",
+        "lineStart": 85,
+        "lineEnd": 88
+      },
+      "className": "Rogue",
+      "levelBand": "level-3",
+      "rowKind": "subclass-selection",
+      "category": "subclass selection",
+      "concept": "Rogue Subclass",
+      "detail": "Level 3 subclass selection.",
+      "candidateUnitId": "class_rogue",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "class_rogue"
+      },
+      "subclassSelection": {
+        "state": "missing-level-3-choice"
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "level-3-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote a subclass selection and progression split that authors the SRD subclass option records, connects the class level-3 subclass choice to Character Creation, and retains selected subclass identity without treating the class catalog record as executable support.",
+      "battleReadinessStatus": "owner-evidence-required"
+    },
+    {
       "id": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container",
       "source": {
         "path": ".references/srd-5.2.1/Classes/Sorcerer.md",
@@ -21328,6 +22659,134 @@
       "ownerEvidence": [],
       "nextAction": "No runtime work; keep classification as explicit closure.",
       "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
+      "id": "srd521:classes/sorcerer:level-3:class-feature-grant:sorcerer_draconic_resilience",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Sorcerer.md",
+        "lineStart": 413,
+        "lineEnd": 418
+      },
+      "className": "Sorcerer",
+      "levelBand": "level-3",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Sorcerer Draconic Resilience",
+      "detail": "Level 3 class feature.",
+      "candidateUnitId": "sorcerer_draconic_resilience",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "sorcerer_draconic_resilience"
+      },
+      "finalDisposition": "level-3-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote a focused level-3 class or subclass feature split that authors the SRD feature record when missing, identifies the character-creation or battle-runtime owner, and adds checker-readable owner evidence before treating this row as supported.",
+      "battleReadinessStatus": "owner-evidence-required"
+    },
+    {
+      "id": "srd521:classes/sorcerer:level-3:class-table-summary:sorcerer_level_3_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Sorcerer.md",
+        "lineStart": 37,
+        "lineEnd": 37
+      },
+      "className": "Sorcerer",
+      "levelBand": "level-3",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Sorcerer level 3 feature table row",
+      "detail": "3 | +2 | Sorcerer Subclass | 3 | 4 | 6 | 4 | 2 | — | — | — | — | — | — | —",
+      "candidateUnitId": "class_sorcerer",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_sorcerer",
+        "sourceRecordPath": "packages/surface/content/class_sorcerer.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_sorcerer"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
+      "id": "srd521:classes/sorcerer:level-3:subclass-selection:sorcerer_subclass",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Sorcerer.md",
+        "lineStart": 119,
+        "lineEnd": 122
+      },
+      "className": "Sorcerer",
+      "levelBand": "level-3",
+      "rowKind": "subclass-selection",
+      "category": "subclass selection",
+      "concept": "Sorcerer Subclass",
+      "detail": "Level 3 subclass selection.",
+      "candidateUnitId": "class_sorcerer",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "class_sorcerer"
+      },
+      "subclassSelection": {
+        "state": "missing-level-3-choice"
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "level-3-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote a subclass selection and progression split that authors the SRD subclass option records, connects the class level-3 subclass choice to Character Creation, and retains selected subclass identity without treating the class catalog record as executable support.",
+      "battleReadinessStatus": "owner-evidence-required"
+    },
+    {
+      "id": "srd521:classes/sorcerer:level-3:subclass-spell-access:sorcerer_draconic_spells",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Sorcerer.md",
+        "lineStart": 419,
+        "lineEnd": 431
+      },
+      "className": "Sorcerer",
+      "levelBand": "level-3",
+      "rowKind": "subclass-spell-access",
+      "category": "spell access/list pressure",
+      "concept": "Sorcerer Draconic Spells",
+      "detail": "Level 3 subclass Spell Access.",
+      "candidateUnitId": "sorcerer_draconic_spells",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "sorcerer_draconic_spells"
+      },
+      "finalDisposition": "level-3-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote a subclass Spell Access progression split that models level-gated always-prepared subclass spells as character-owned Spell Access, separate from individual Spell Definition spell-list pressure and spell invocation runtime support.",
+      "battleReadinessStatus": "owner-evidence-required"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_acid_splash",
@@ -25357,6 +26816,143 @@
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
+      "id": "srd521:classes/warlock:level-3:class-feature-grant:warlock_dark_ones_blessing",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Warlock.md",
+        "lineStart": 460,
+        "lineEnd": 463
+      },
+      "className": "Warlock",
+      "levelBand": "level-3",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Warlock Dark One's Blessing",
+      "detail": "Level 3 class feature.",
+      "candidateUnitId": "warlock_dark_ones_blessing",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "warlock_dark_ones_blessing"
+      },
+      "finalDisposition": "level-3-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote a focused level-3 class or subclass feature split that authors the SRD feature record when missing, identifies the character-creation or battle-runtime owner, and adds checker-readable owner evidence before treating this row as supported.",
+      "battleReadinessStatus": "owner-evidence-required"
+    },
+    {
+      "id": "srd521:classes/warlock:level-3:class-table-summary:warlock_level_3_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Warlock.md",
+        "lineStart": 37,
+        "lineEnd": 37
+      },
+      "className": "Warlock",
+      "levelBand": "level-3",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Warlock level 3 feature table row",
+      "detail": "3 | +2 | Warlock Subclass | 3 | 2 | 4 | 2 | 2",
+      "candidateUnitId": "class_warlock",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_warlock",
+        "sourceRecordPath": "packages/surface/content/class_warlock.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_warlock"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
+      "id": "srd521:classes/warlock:level-3:subclass-selection:warlock_subclass",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Warlock.md",
+        "lineStart": 96,
+        "lineEnd": 99
+      },
+      "className": "Warlock",
+      "levelBand": "level-3",
+      "rowKind": "subclass-selection",
+      "category": "subclass selection",
+      "concept": "Warlock Subclass",
+      "detail": "Level 3 subclass selection.",
+      "candidateUnitId": "class_warlock",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "class_warlock"
+      },
+      "subclassSelection": {
+        "state": "missing-level-3-choice"
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "level-3-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote a subclass selection and progression split that authors the SRD subclass option records, connects the class level-3 subclass choice to Character Creation, and retains selected subclass identity without treating the class catalog record as executable support.",
+      "battleReadinessStatus": "owner-evidence-required"
+    },
+    {
+      "id": "srd521:classes/warlock:level-3:subclass-spell-access:warlock_fiend_spells",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Warlock.md",
+        "lineStart": 464,
+        "lineEnd": 476
+      },
+      "className": "Warlock",
+      "levelBand": "level-3",
+      "rowKind": "subclass-spell-access",
+      "category": "spell access/list pressure",
+      "concept": "Warlock Fiend Spells",
+      "detail": "Level 3 subclass Spell Access.",
+      "candidateUnitId": "warlock_fiend_spells",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "warlock_fiend_spells",
+        "sourceRecordPath": "packages/surface/content/warlock_fiend_spells.json"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "warlock_fiend_spells"
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "later-level-only",
+        "owner": "future subclass Spell Access progression owner",
+        "reason": "The feature is acquired after level 1 and grants progressively level-gated prepared Spell Access. The authored Surface record contains the level-3 grants but lacks the level-5, level-7, and level-9 threshold grants, so promoting the record now would overstate RAW support for the full Fiend Spells table."
+      },
+      "ownerEvidence": [],
+      "nextAction": "The feature is acquired after level 1 and grants progressively level-gated prepared Spell Access. The authored Surface record contains the level-3 grants but lacks the level-5, level-7, and level-9 threshold grants, so promoting the record now would overstate RAW support for the full Fiend Spells table.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
       "id": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_chill_touch",
       "source": {
         "path": ".references/srd-5.2.1/Classes/Warlock.md",
@@ -27620,6 +29216,150 @@
       "ownerEvidence": [],
       "nextAction": "No runtime work; keep classification as explicit closure.",
       "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
+      "id": "srd521:classes/wizard:level-3:class-feature-grant:wizard_evocation_savant",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Wizard.md",
+        "lineStart": 411,
+        "lineEnd": 416
+      },
+      "className": "Wizard",
+      "levelBand": "level-3",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Wizard Evocation Savant",
+      "detail": "Level 3 class feature.",
+      "candidateUnitId": "wizard_evocation_savant",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "wizard_evocation_savant"
+      },
+      "finalDisposition": "level-3-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote a focused level-3 class or subclass feature split that authors the SRD feature record when missing, identifies the character-creation or battle-runtime owner, and adds checker-readable owner evidence before treating this row as supported.",
+      "battleReadinessStatus": "owner-evidence-required"
+    },
+    {
+      "id": "srd521:classes/wizard:level-3:class-feature-grant:wizard_potent_cantrip",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Wizard.md",
+        "lineStart": 417,
+        "lineEnd": 420
+      },
+      "className": "Wizard",
+      "levelBand": "level-3",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Wizard Potent Cantrip",
+      "detail": "Level 3 class feature.",
+      "candidateUnitId": "wizard_potent_cantrip",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "missing-authored-record"
+      },
+      "catalogAdmission": {
+        "state": "not-installed",
+        "unitId": "wizard_potent_cantrip"
+      },
+      "finalDisposition": "level-3-follow-up-required",
+      "ownerEvidence": [],
+      "nextAction": "Promote a focused level-3 class or subclass feature split that authors the SRD feature record when missing, identifies the character-creation or battle-runtime owner, and adds checker-readable owner evidence before treating this row as supported.",
+      "battleReadinessStatus": "owner-evidence-required"
+    },
+    {
+      "id": "srd521:classes/wizard:level-3:class-table-summary:wizard_level_3_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Wizard.md",
+        "lineStart": 37,
+        "lineEnd": 37
+      },
+      "className": "Wizard",
+      "levelBand": "level-3",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Wizard level 3 feature table row",
+      "detail": "3 | +2 | Wizard Subclass | 3 | 6 | 4 | 2 | — | — | — | — | — | — | —",
+      "candidateUnitId": "class_wizard",
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_wizard",
+        "sourceRecordPath": "packages/surface/content/class_wizard.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_wizard"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
+      "id": "srd521:classes/wizard:level-3:subclass-selection:wizard_subclass",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Wizard.md",
+        "lineStart": 108,
+        "lineEnd": 111
+      },
+      "className": "Wizard",
+      "levelBand": "level-3",
+      "rowKind": "subclass-selection",
+      "category": "subclass selection",
+      "concept": "Wizard Subclass",
+      "detail": "Level 3 subclass selection.",
+      "candidateUnitId": "class_wizard",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_wizard",
+        "sourceRecordPath": "packages/surface/content/class_wizard.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_wizard"
+      },
+      "subclassSelection": {
+        "state": "choice-and-options-installed",
+        "optionUnitIds": [
+          "subclass_wizard_evoker"
+        ]
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit class_wizard is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "future subclass selection/progression owner",
+          "evidence": "Promote a subclass selection and progression split that authors the SRD subclass option records, connects the class level-3 subclass choice to Character Creation, and retains selected subclass identity without treating the class catalog record as executable support.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote a subclass selection and progression split that authors the SRD subclass option records, connects the class level-3 subclass choice to Character Creation, and retains selected subclass identity without treating the class catalog record as executable support.",
+      "battleReadinessStatus": "owner-evidence-required"
     },
     {
       "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_acid_splash",
