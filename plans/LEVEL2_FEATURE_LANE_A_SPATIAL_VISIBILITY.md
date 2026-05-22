@@ -133,7 +133,7 @@
     {
       "number": 22,
       "id": "L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Fly Surface Target Repair"
     },
     {
