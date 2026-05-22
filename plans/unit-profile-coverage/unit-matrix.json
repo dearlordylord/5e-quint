@@ -376,9 +376,10 @@
         "packages/character-battle-runtime/src/index.ts",
         "packages/character-battle-runtime/src/battle-creature-init.ts"
       ],
-      "sourceBoundary": "Surface Monk's Focus resource-container option facts and Character battle resource state project into Bonus Action Flurry of Blows, Patient Defense, and the executable Step of the Wind action-economy subset. The runtime spends the shared Focus Point resource, grants two Flurry Unarmed Strike action resources, and applies Disengage/Dodge/Dash through the existing turn procedures without duplicating Monk level, Martial Arts, movement state, or a synthetic option-local resource pool. Step of the Wind's doubled jump distance remains split to the shared jump movement witness boundary.",
+      "sourceBoundary": "Surface Monk's Focus resource-container option facts and Character battle resource state project into Bonus Action Flurry of Blows, Patient Defense, and Step of the Wind battle options. The runtime spends the shared Focus Point resource, grants two Flurry Unarmed Strike action resources, applies Disengage/Dodge/Dash through the existing turn procedures, and records the paid Step of the Wind turn-scoped jump-distance multiplier consumed by promoted Jump spell movement replacement witnesses without duplicating Monk level, Martial Arts, movement state, or a synthetic option-local resource pool. Ordinary Long Jump and High Jump distance derivation, route, obstacle, destination, and landing adjudication remain table-owned movement facts outside this profile.",
       "taskRefs": [
-        "L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS"
+        "L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS",
+        "L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME"
       ],
       "title": "Unit feature executes Monk's Focus battle options against the shared Focus Point resource",
       "verificationOwners": [
@@ -1811,9 +1812,10 @@
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
       ],
-      "sourceBoundary": "The runtime owns touched willing target admission, one-minute active effect duration, per-target-turn use reset, and the 10-foot Movement spend for up to 30 feet of jump movement. It consumes typed table-supplied jump distance and landing witnesses; legal-destination and Difficult Terrain landing Acrobatics outcomes arrive as landing witness variants, illegal landings are rejected, and failed Difficult Terrain landing applies Prone. Path, jump arc, collision, final-position, legal-destination derivation, and Difficult Terrain landing Dexterity (Acrobatics) check derivation remain runtime-detached table adjudication outside this profile.",
+      "sourceBoundary": "The runtime owns touched willing target admission, one-minute active effect duration, per-target-turn use reset, and the 10-foot Movement spend for a base maximum 30 feet of jump movement, with active turn-scoped jump-distance multipliers consumed when present. It consumes typed table-supplied jump distance and landing witnesses; legal-destination and Difficult Terrain landing Acrobatics outcomes arrive as landing witness variants, illegal landings are rejected, and failed Difficult Terrain landing applies Prone. Path, jump arc, collision, final-position, legal-destination derivation, and Difficult Terrain landing Dexterity (Acrobatics) check derivation remain runtime-detached table adjudication outside this profile.",
       "taskRefs": [
-        "SRDINV53"
+        "SRDINV53",
+        "L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME"
       ],
       "title": "Spell invocation grants once-per-target-turn jump movement replacement",
       "verificationOwners": [
@@ -10055,7 +10057,7 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Promoted battle-runtime Quint facts cover Monk's Focus Points equaling Monk level, Flurry of Blows spending one shared Focus Point and Bonus Action to grant two Unarmed Strike slots, Patient Defense Bonus Action Disengage with optional Focus Point Dodge, Step of the Wind Bonus Action Dash with optional Focus Point Disengage, and the shared Focus Point resource boundary. The Step of the Wind doubled jump-distance clause remains split to L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME.",
+      "note": "Promoted battle-runtime Quint facts cover Monk's Focus Points equaling Monk level, Flurry of Blows spending one shared Focus Point and Bonus Action to grant two Unarmed Strike slots, Patient Defense Bonus Action Disengage with optional Focus Point Dodge, Step of the Wind Bonus Action Dash with optional Focus Point Disengage, and the shared Focus Point resource boundary. This older task did not claim Step of the Wind's doubled jump-distance runtime consumption; that later slice is claimed by L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME.",
       "profileIds": [
         "unit-feature.monk-focus-battle-options"
       ],
@@ -10063,7 +10065,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused Surface, battle-runtime, and character-battle-runtime tests cover Monk's Focus Surface admission, shared Focus Point battle resource projection, Flurry of Blows activation and granted Unarmed Strike resources, Patient Defense Focus Disengage plus Dodge, Step of the Wind Focus Disengage plus Dash, Deflect Attacks spending the same Focus resource, and Character Sheet battle handoff of use-count expenditures. The doubled jump-distance clause remains split to L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME.",
+      "note": "Focused Surface, battle-runtime, and character-battle-runtime tests cover Monk's Focus Surface admission, shared Focus Point battle resource projection, Flurry of Blows activation and granted Unarmed Strike resources, Patient Defense Focus Disengage plus Dodge, Step of the Wind Focus Disengage plus Dash, Deflect Attacks spending the same Focus resource, and Character Sheet battle handoff of use-count expenditures. This older task did not claim Step of the Wind's doubled jump-distance runtime consumption; that later slice is claimed by L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME.",
       "profileIds": [
         "unit-feature.monk-focus-battle-options"
       ],
@@ -10424,6 +10426,24 @@
       "note": "Focused battle-runtime tests cover Empowered Spell and Seeking Spell as typed Metamagic selections that are rejected before Sorcery Point spending. The closure records the missing typed post-roll fill owners for spell damage dice rerolls and missed spell attack d20 rerolls; no runtime profile is claimed, no reroll opportunity state is stored, and production dispatch remains on typed effectKind facts rather than authored identity.",
       "profileIds": [],
       "taskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-REROLL-OPTIONS"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover the paid Step of the Wind turn-scoped jump-distance multiplier consumed by Jump spell movement replacement witnesses, including focused 60-foot accepted and 61-foot rejected coverage. Ordinary Long Jump and High Jump movement witnesses remain table-owned movement adjudication outside the promoted runtime surface.",
+      "profileIds": [
+        "unit-feature.monk-focus-battle-options",
+        "spell.invocation-jump-movement-replacement"
+      ],
+      "taskId": "L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover paid Step of the Wind recording the jump-distance multiplier, projecting the doubled Jump spell movement replacement maximum in act discovery, accepting a 60-foot Jump spell movement replacement witness, rejecting a 61-foot witness, and resetting the multiplier at turn handoff.",
+      "profileIds": [
+        "unit-feature.monk-focus-battle-options",
+        "spell.invocation-jump-movement-replacement"
+      ],
+      "taskId": "L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME"
     }
   ],
   "units": [
@@ -12475,21 +12495,11 @@
         "deferredMechanics": [
           {
             "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "battle-runtime shared jump movement witness boundary plus promoted Quint parity",
-              "reason": "Doubled jump distance depends on a shared ordinary jump movement witness boundary for Long Jump and High Jump distance, movement spend, and legal landing/table-spatial facts; Task 2 promotes only the action-economy and resource-spend subset."
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "table movement adjudication and any future ordinary jump movement witness owner",
+              "reason": "Task 5 promotes the paid Step of the Wind jump-distance multiplier where promoted runtime can consume it today: Jump spell movement replacement witnesses. Ordinary Long Jump and High Jump require separate Strength-derived distance, route, obstacle, destination, and landing witnesses that are not part of the promoted battle-runtime movement command surface in this lane."
             },
-            "followUpTaskId": "L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME",
-            "mechanic": "Step of the Wind's Focus-point jump-distance doubling is authored and parsed but not promoted as executable runtime state until ordinary Long Jump and High Jump movement witnesses consume it."
-          }
-        ],
-        "followUpTasks": [
-          {
-            "id": "L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME",
-            "mechanic": "Execute Step of the Wind's doubled jump distance through an ordinary Long Jump and High Jump movement witness boundary, using the existing movement budget and caller-supplied legal landing/table-spatial facts rather than storing an inert Monk-only active effect.",
-            "owner": "battle-runtime shared jump movement witness boundary plus promoted Quint parity",
-            "requiredOutput": "Supported runtime owner evidence, focused tests, and promoted Quint/runtime parity for doubled Long Jump and High Jump distance under Step of the Wind without duplicating Strength, Speed, or table-spatial landing state.",
-            "title": "Monk Step of the Wind Jump Distance Runtime"
+            "mechanic": "Ordinary Long Jump and High Jump movement witnesses are not promoted as standalone runtime commands; their distance derivation, route, obstacle, destination, and landing adjudication remain table-owned movement facts outside this Monk Focus battle profile."
           }
         ],
         "profileIds": [
@@ -12505,7 +12515,7 @@
           "Surface Monk's Focus represents the shared Focus Point use-count resource with Monk-level linear cap, Short or Long Rest full reset, initial Flurry of Blows, Patient Defense, and Step of the Wind option metadata, the authored Step of the Wind jump-distance multiplier fact, and Wisdom-based class-feature save DC source facts",
           "Character Creation admits same-class Monk level-2 progression and projects the Focus Point resource plus Focus option names and save DC source facts without duplicating class progression or option execution state",
           "Character Sheet tracks expended Focus Point uses, derives the Focus Point cap and Short or Long Rest recovery from CharacterBuild resources and the installed Surface feature, and derives the Monk's Focus save DC from the authored ability source, ability scores, and Proficiency Bonus",
-          "Battle runtime admits the Monk's Focus option facts, spends the shared Focus Point resource, executes Flurry of Blows as two granted Unarmed Strike resources, executes Patient Defense free Disengage and Focus-point Disengage plus Dodge modes, executes Step of the Wind free Dash and Focus-point Disengage plus Dash modes, and Character Sheet battle handoff persists shared Focus Point use-count expenditures without adding a synthetic option-local resource pool"
+          "Battle runtime admits the Monk's Focus option facts, spends the shared Focus Point resource, executes Flurry of Blows as two granted Unarmed Strike resources, executes Patient Defense free Disengage and Focus-point Disengage plus Dodge modes, executes Step of the Wind free Dash and Focus-point Disengage plus Dash modes, records the paid Step of the Wind turn-scoped jump-distance multiplier, consumes that multiplier through promoted Jump spell movement replacement witnesses, and Character Sheet battle handoff persists shared Focus Point use-count expenditures without adding a synthetic option-local resource pool"
         ],
         "tag": "profile-subset-supported"
       },
@@ -12609,9 +12619,10 @@
             "packages/character-battle-runtime/src/index.ts",
             "packages/character-battle-runtime/src/battle-creature-init.ts"
           ],
-          "sourceBoundary": "Surface Monk's Focus resource-container option facts and Character battle resource state project into Bonus Action Flurry of Blows, Patient Defense, and the executable Step of the Wind action-economy subset. The runtime spends the shared Focus Point resource, grants two Flurry Unarmed Strike action resources, and applies Disengage/Dodge/Dash through the existing turn procedures without duplicating Monk level, Martial Arts, movement state, or a synthetic option-local resource pool. Step of the Wind's doubled jump distance remains split to the shared jump movement witness boundary.",
+          "sourceBoundary": "Surface Monk's Focus resource-container option facts and Character battle resource state project into Bonus Action Flurry of Blows, Patient Defense, and Step of the Wind battle options. The runtime spends the shared Focus Point resource, grants two Flurry Unarmed Strike action resources, applies Disengage/Dodge/Dash through the existing turn procedures, and records the paid Step of the Wind turn-scoped jump-distance multiplier consumed by promoted Jump spell movement replacement witnesses without duplicating Monk level, Martial Arts, movement state, or a synthetic option-local resource pool. Ordinary Long Jump and High Jump distance derivation, route, obstacle, destination, and landing adjudication remain table-owned movement facts outside this profile.",
           "taskRefs": [
-            "L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS"
+            "L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS",
+            "L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME"
           ],
           "title": "Unit feature executes Monk's Focus battle options against the shared Focus Point resource",
           "verificationOwners": [
@@ -19856,9 +19867,10 @@
             "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
             "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
           ],
-          "sourceBoundary": "The runtime owns touched willing target admission, one-minute active effect duration, per-target-turn use reset, and the 10-foot Movement spend for up to 30 feet of jump movement. It consumes typed table-supplied jump distance and landing witnesses; legal-destination and Difficult Terrain landing Acrobatics outcomes arrive as landing witness variants, illegal landings are rejected, and failed Difficult Terrain landing applies Prone. Path, jump arc, collision, final-position, legal-destination derivation, and Difficult Terrain landing Dexterity (Acrobatics) check derivation remain runtime-detached table adjudication outside this profile.",
+          "sourceBoundary": "The runtime owns touched willing target admission, one-minute active effect duration, per-target-turn use reset, and the 10-foot Movement spend for a base maximum 30 feet of jump movement, with active turn-scoped jump-distance multipliers consumed when present. It consumes typed table-supplied jump distance and landing witnesses; legal-destination and Difficult Terrain landing Acrobatics outcomes arrive as landing witness variants, illegal landings are rejected, and failed Difficult Terrain landing applies Prone. Path, jump arc, collision, final-position, legal-destination derivation, and Difficult Terrain landing Dexterity (Acrobatics) check derivation remain runtime-detached table adjudication outside this profile.",
           "taskRefs": [
-            "SRDINV53"
+            "SRDINV53",
+            "L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME"
           ],
           "title": "Spell invocation grants once-per-target-turn jump movement replacement",
           "verificationOwners": [

@@ -102,6 +102,7 @@ import { maybeOpenReactionWindow, snapshotBattle } from "./dispatcher.ts";
 import { hideousLaughterRepeatSavingThrowOutcomeHole } from "./hideous-laughter-repeat-save.ts";
 
 import { needsHolesResult } from "./hole-helpers.ts";
+import { maxJumpMovementReplacementDistanceFeet } from "./jump-movement-replacement.ts";
 export { resolveOpportunityAttackCommand } from "./opportunity-attacks.ts";
 export {
   applyBattleMovement,
@@ -4456,6 +4457,7 @@ export function resetBattleTurnResources(
   return {
     ...base,
     commandHalt: null,
+    jumpDistanceMultiplier: null,
     spellSlotUsesThisTurn: [],
     levelOnePlusSpellCastsThisTurn: [],
     quickenedLevelOnePlusSpellCastsThisTurn: [],
@@ -5511,6 +5513,8 @@ export function parseBattleMovement(
     };
   }
   const jumpMovementValidation = validateJumpMovementReplacementFact(
+    state,
+    moverId,
     fill.value.jumpMovementReplacement,
     options.jumpMovementReplacement,
     fill.value.movementCostFeet,
@@ -5858,6 +5862,8 @@ function validateAreaMovementCostFacts(
 }
 
 function validateJumpMovementReplacementFact(
+  state: BattleState,
+  moverId: CombatantId,
   fact: BattleJumpMovementReplacementFact | undefined,
   effect: JumpMovementReplacementEffect | undefined,
   movementCostFeet: MovementFeet,
@@ -5879,8 +5885,11 @@ function validateJumpMovementReplacementFact(
   if (!Number.isInteger(fact.distanceFeet) || fact.distanceFeet <= 0) {
     return "Jump movement replacement distance must be a positive integer.";
   }
-  if (Number(fact.distanceFeet) > Number(effect.maxJumpDistanceFeet)) {
-    return "Jump movement replacement distance exceeds the spell's maximum.";
+  if (
+    Number(fact.distanceFeet) >
+    Number(maxJumpMovementReplacementDistanceFeet(state, moverId, effect))
+  ) {
+    return "Jump movement replacement distance exceeds the active maximum.";
   }
   if (
     fact.landing.kind !== "legalLanding" ||

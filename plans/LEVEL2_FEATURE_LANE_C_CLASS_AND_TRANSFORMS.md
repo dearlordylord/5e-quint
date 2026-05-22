@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Monk Step Of The Wind Jump Distance Runtime"
     },
     {
@@ -143,7 +143,7 @@ Output:
 
 ### Task 5 - L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME - Monk Step Of The Wind Jump Distance Runtime
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 - Current Monk Focus battle options, movement witness boundary, and Jump spell support.

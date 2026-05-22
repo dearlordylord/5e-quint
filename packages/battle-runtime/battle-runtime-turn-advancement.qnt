@@ -36,6 +36,7 @@ module battleRuntimeTurnAdvancement {
       quickenedLevelOnePlusSpellCastsThisTurn: Set(),
       attackRollMadeThisTurn: false,
       dashMovementBonus: nextActorStep.dashMovementBonus,
+      jumpDistanceMultiplier: 1,
       disengaged: nextActorStep.disengaged,
       lightWeaponAttackMade: false,
       fighterReadiedSpellHeld: if (spellDurationAdvanced.fighterReadiedSpellHeld and nextActor == Fighter) false else spellDurationAdvanced.fighterReadiedSpellHeld,

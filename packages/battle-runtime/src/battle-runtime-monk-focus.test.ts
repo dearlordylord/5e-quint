@@ -7,6 +7,8 @@ import {
   battleId,
   characterSeed,
   discoverBattleActs,
+  elapsedTimeTicks,
+  endTurn,
   fighterId,
   goblinId,
   grappleOutcomeFill,
@@ -20,6 +22,8 @@ import {
   statBlockCreatureInit,
   targetFill,
   testBattleCreatureStateWithConditions,
+  type BattleFill,
+  type BattleHole,
   type BattleState,
   type BattleSubject,
 } from "./battle-runtime-test-support.ts";
@@ -131,8 +135,149 @@ describe("battle runtime: Monk's Focus battle options", () => {
     expect(resolved.state.currentTurnResources.dashMovementBonusFeet).toBe(
       movementFeet(30),
     );
+    expect(resolved.snapshot.turn.jumpDistanceMultiplier).toEqual({
+      multiplier: 2,
+    });
     expect(monk.origin.resources[0]?.usesRemaining).toBe(1);
     expect(monk.activeEffects).toEqual([]);
+  });
+
+  test("Step of the Wind Focus jump distance multiplier resets at turn handoff", () => {
+    const state = monkFocusBattle({ usesRemaining: 2 });
+    const subject = monkFocusSubject(
+      state,
+      (candidate) =>
+        candidate.tag === "monkFocusOption" &&
+        candidate.option === "stepOfTheWind" &&
+        candidate.mode === "focusDisengageDash" &&
+        candidate.speedKind === "walk",
+    );
+
+    const stepped = requireResolved(
+      resolveBattleSubject({ state, subject, fills: [] }),
+    );
+    const nextTurn = requireResolved(
+      endTurn({ state: stepped.state, actorId: fighterId }),
+    );
+
+    expect(nextTurn.state.currentTurnResources.jumpDistanceMultiplier).toBe(
+      null,
+    );
+    expect(nextTurn.snapshot.turn.jumpDistanceMultiplier).toBe(null);
+  });
+
+  test("Step of the Wind Focus doubles caller-witnessed Jump spell distance for the turn", () => {
+    const state = withJumpMovementReplacementEffect(
+      monkFocusBattle({ usesRemaining: 2 }),
+    );
+    const subject = monkFocusSubject(
+      state,
+      (candidate) =>
+        candidate.tag === "monkFocusOption" &&
+        candidate.option === "stepOfTheWind" &&
+        candidate.mode === "focusDisengageDash" &&
+        candidate.speedKind === "walk",
+    );
+    const stepped = requireResolved(
+      resolveBattleSubject({ state, subject, fills: [] }),
+    );
+    const jumpAct = monkFocusSubject(
+      stepped.state,
+      (candidate) =>
+        candidate.tag === "runtimeCommand" &&
+        candidate.command === "jumpMovementReplacement",
+    );
+    const movement = requireHole(
+      resolveBattleSubject({
+        state: stepped.state,
+        subject: jumpAct,
+        fills: [],
+      }),
+      "movement",
+    );
+
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state: stepped.state,
+        subject: jumpAct,
+        fills: [jumpMovementReplacementFill(movement, 60)],
+      }),
+    );
+
+    expect(
+      resolved.state.combatants
+        .get(fighterId)
+        ?.activeEffects.find(
+          (effect) => effect.kind === "jumpMovementReplacement",
+        )?.usedThisTurn,
+    ).toBe(true);
+  });
+
+  test("Step of the Wind Focus projects doubled Jump spell distance in act discovery", () => {
+    const state = withJumpMovementReplacementEffect(
+      monkFocusBattle({ usesRemaining: 2 }),
+    );
+    const subject = monkFocusSubject(
+      state,
+      (candidate) =>
+        candidate.tag === "monkFocusOption" &&
+        candidate.option === "stepOfTheWind" &&
+        candidate.mode === "focusDisengageDash" &&
+        candidate.speedKind === "walk",
+    );
+    const stepped = requireResolved(
+      resolveBattleSubject({ state, subject, fills: [] }),
+    );
+
+    const jumpAct = discoverBattleActs(stepped.state).find(
+      (candidate) =>
+        candidate.subject.tag === "runtimeCommand" &&
+        candidate.subject.command === "jumpMovementReplacement",
+    );
+
+    expect(jumpAct?.summary).toContain("up to 60 feet");
+  });
+
+  test("Step of the Wind Focus rejects jump-route witnesses past the doubled distance", () => {
+    const state = withJumpMovementReplacementEffect(
+      monkFocusBattle({ usesRemaining: 2 }),
+    );
+    const subject = monkFocusSubject(
+      state,
+      (candidate) =>
+        candidate.tag === "monkFocusOption" &&
+        candidate.option === "stepOfTheWind" &&
+        candidate.mode === "focusDisengageDash" &&
+        candidate.speedKind === "walk",
+    );
+    const stepped = requireResolved(
+      resolveBattleSubject({ state, subject, fills: [] }),
+    );
+    const jumpAct = monkFocusSubject(
+      stepped.state,
+      (candidate) =>
+        candidate.tag === "runtimeCommand" &&
+        candidate.command === "jumpMovementReplacement",
+    );
+    const movement = requireHole(
+      resolveBattleSubject({
+        state: stepped.state,
+        subject: jumpAct,
+        fills: [],
+      }),
+      "movement",
+    );
+
+    const result = resolveBattleSubject({
+      state: stepped.state,
+      subject: jumpAct,
+      fills: [jumpMovementReplacementFill(movement, 61)],
+    });
+
+    expect(result).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
   });
 
   test("Flurry of Blows spends one shared Focus Point and executes granted Unarmed Strikes", () => {
@@ -566,6 +711,57 @@ function monkFocusSubject(
     throw new Error("Expected Monk Focus battle act.");
   }
   return act.subject;
+}
+
+function withJumpMovementReplacementEffect(state: BattleState): BattleState {
+  const monk = state.combatants.get(fighterId);
+  if (monk === undefined) {
+    throw new Error("Expected Monk combatant.");
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(fighterId, {
+      ...monk,
+      activeEffects: [
+        ...monk.activeEffects,
+        {
+          kind: "jumpMovementReplacement",
+          sourceCombatantId: fighterId,
+          sourceSpellId: "jump",
+          movementCostFeet: movementFeet(10),
+          maxJumpDistanceFeet: movementFeet(30),
+          usedThisTurn: false,
+          expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },
+        },
+      ],
+    }),
+  };
+}
+
+function jumpMovementReplacementFill(
+  hole: BattleHole,
+  distanceFeet: number,
+): Extract<BattleFill, { readonly kind: "movement" }> {
+  if (hole.kind !== "movement") {
+    throw new Error("Expected movement hole.");
+  }
+  return {
+    kind: "movement",
+    holeId: hole.holeId,
+    value: {
+      speedKind: "walk",
+      movementCostFeet: movementFeet(10),
+      provokedOpportunityAttacks: [],
+      jumpMovementReplacement: {
+        kind: "jumpMovementReplacement",
+        distanceFeet: movementFeet(distanceFeet),
+        landing: {
+          kind: "legalLanding",
+          difficultTerrainAcrobatics: "notRequired",
+        },
+      },
+    },
+  };
 }
 
 function activateFlurryOfBlows(state: BattleState) {

@@ -45,6 +45,7 @@ module battleRuntimeHpArmorBuffSpatialTests {
   import battleRuntimeGroundCommand.* from "./battle-runtime-ground-command"
   import battleRuntimeWeaponAttacks.* from "./battle-runtime-weapon-attacks"
   import battleRuntimeMirrorImage.* from "./battle-runtime-mirror-image"
+  import battleRuntimeMonkFocus.* from "./battle-runtime-monk-focus"
 
   run test_evasion_style_save_damage_replacement = {
     all {
@@ -782,6 +783,25 @@ module battleRuntimeHpArmorBuffSpatialTests {
       assert(tooFar == cast),
       assert(illegalLanding == cast),
       assert(failedLanding.fighter.prone),
+    }
+  }
+
+  run test_step_of_the_wind_focus_doubles_jump_movement_replacement_distance = {
+    val jumpReady = {
+      ...initialState,
+      fighter: {
+        ...initialState.fighter,
+        activeEffects: initialState.fighter.activeEffects.union(Set(jumpMovementReplacementActiveEffect)),
+      },
+    }
+    val stepped = monkFocusStepOfTheWindFocusFighter(jumpReady, 2, WalkSpeedKind).state
+    val accepted = jumpMovementReplacementFighter(stepped, 10, 60, JumpLegalLandingNoCheck)
+    val rejected = jumpMovementReplacementFighter(stepped, 10, 61, JumpLegalLandingNoCheck)
+    all {
+      assert(stepped.jumpDistanceMultiplier == 2),
+      assert(accepted.fighter.movementSpent == 10),
+      assert(accepted.fighter.activeEffects.contains(JumpMovementReplacement({ durationTicks: 10, usedThisTurn: true }))),
+      assert(rejected == stepped),
     }
   }
 

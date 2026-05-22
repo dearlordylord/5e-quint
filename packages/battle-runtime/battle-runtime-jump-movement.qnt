@@ -9,6 +9,9 @@ module battleRuntimeJumpMovement {
   pure def jumpMovementReplacementActiveEffect(): ActiveEffect =
     JumpMovementReplacement({ durationTicks: 10, usedThisTurn: false })
 
+  pure def jumpMovementReplacementMaxDistanceFeet(state: BattleState): int =
+    30 * state.jumpDistanceMultiplier
+
   pure def jumpMovementReplacementLandingIsLegal(landing: JumpMovementLandingFact): bool =
     landing != JumpIllegalLanding
 

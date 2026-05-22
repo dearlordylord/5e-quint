@@ -242,6 +242,7 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
         freeAction: "dash",
         focusPointCost: 1,
         focusActions: ["disengage", "dash"],
+        jumpDistanceMultiplier: { multiplier: 2 },
       },
     } as const;
 

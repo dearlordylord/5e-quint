@@ -3882,11 +3882,15 @@ type PendingAttackRollMissToHitReplacementSelection = {
 export type BattleCommandHaltTurnSuppression = {
   readonly kind: "commandHalt";
 };
+export type BattleJumpDistanceMultiplier = {
+  readonly multiplier: 2;
+};
 
 export type BattleTurnResources = ActionEconomyState & {
   readonly actionResources: readonly RuntimeActionResource[];
   readonly currentHasBonusAction: boolean;
   readonly commandHalt: BattleCommandHaltTurnSuppression | null;
+  readonly jumpDistanceMultiplier: BattleJumpDistanceMultiplier | null;
   readonly spellSlotUsesThisTurn: readonly BattleTurnSpellSlotUse[];
   readonly levelOnePlusSpellCastsThisTurn: readonly CombatantId[];
   readonly quickenedLevelOnePlusSpellCastsThisTurn: readonly CombatantId[];
@@ -6007,6 +6011,7 @@ export type BattleCreatureSnapshot = {
 export type BattleTurnSnapshot = {
   readonly actionResources: readonly RuntimeActionResource[];
   readonly bonusActionAvailable: boolean;
+  readonly jumpDistanceMultiplier: BattleJumpDistanceMultiplier | null;
   readonly spellSlotUsesThisTurn: readonly BattleTurnSpellSlotUse[];
   readonly levelOnePlusSpellCastsThisTurn: readonly CombatantId[];
   readonly quickenedLevelOnePlusSpellCastsThisTurn: readonly CombatantId[];

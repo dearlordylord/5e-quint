@@ -210,9 +210,10 @@ module battleRuntime {
   //   Flurry spends a Focus Point and a Bonus Action to grant two Unarmed
   //   Strike slots; Patient Defense spends a Bonus Action for Disengage and
   //   can spend a Focus Point to add Dodge; Step of the Wind spends a Bonus
-  //   Action for Dash and can spend a Focus Point to add Disengage. Step of
-  //   the Wind's doubled jump distance is deferred until ordinary Long Jump
-  //   and High Jump movement witnesses are promoted.
+  //   Action for Dash and can spend a Focus Point to add Disengage. The paid
+  //   Step of the Wind jump distance multiplier is consumed by Jump spell
+  //   movement replacement witnesses; ordinary Long Jump and High Jump
+  //   movement witnesses remain deferred.
   // - Classes/Monk.md lines 56-74 and Rules-Glossary.md lines 1066-1076:
   //   Martial Arts applies while unarmored, unshielded, and unarmed or wielding
   //   only Monk weapons. This battle projection covers the Bonus Action
@@ -955,7 +956,7 @@ module battleRuntime {
       currentActor(state) == Fighter and
       movementCost == 10 and
       jumpDistance > 0 and
-      jumpDistance <= 30 and
+      jumpDistance <= jumpMovementReplacementMaxDistanceFeet(state) and
       jumpMovementReplacementLandingIsLegal(landing) and
       activeEffectsContainAvailableJumpMovementReplacement(state.fighter.activeEffects) and
       fighterCanMoveWithSpeedKind(state, WalkSpeedKind, movementCost)
