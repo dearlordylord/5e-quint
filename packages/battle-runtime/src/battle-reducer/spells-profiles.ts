@@ -156,6 +156,7 @@ import {
   supportedPreparedAfterHitTimedDamageAndSaveSpellProfile,
   supportedPreparedBlurAttackRollDefenseSpellProfile,
   supportedPreparedConditionRemovalProtectionSpellProfile,
+  supportedPreparedCreatureSizeChangeSpellProfile,
   supportedPreparedCreatureTypeProtectionSpellProfile,
   supportedPreparedDragonsBreathInitialSpellProfile,
   supportedPreparedExpeditiousRetreatDashSpellProfile,
@@ -420,6 +421,13 @@ export function supportedSpellActs(
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedRollModifierSpellProfile(
+        actor.combatantId,
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      supportedPreparedCreatureSizeChangeSpellProfile(
         actor.combatantId,
         spell,
         spellcasting.spellSlots,

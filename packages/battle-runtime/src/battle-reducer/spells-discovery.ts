@@ -516,6 +516,29 @@ export function discoverSupportedSpellInvocations(
               ];
         return castActs;
       }
+      if (
+        invocation.procedure === "creatureSizeIncrease" ||
+        invocation.procedure === "creatureSizeDecrease"
+      ) {
+        const targetHole = spellTargetHole(state, actorId, invocation);
+        const castActs =
+          targetHole.choices.length === 0
+            ? []
+            : [
+                {
+                  subject: {
+                    tag: "actionSpell" as const,
+                    actorId,
+                    invocation: supportedSpellInvocationRef(invocation),
+                    mode: { tag: "cast" as const },
+                  },
+                  label: `${invocation.spell.name} (${creatureSizeChangeLabel(invocation)})`,
+                  summary: spellInvocationCastSummary(invocation),
+                  initialHoles: [targetHole],
+                },
+              ];
+        return castActs;
+      }
       if (invocation.procedure === "thaumaturgyBoomingVoice") {
         return [
           {
@@ -1359,6 +1382,17 @@ function spellCastInitialHoles(
     : holes;
 }
 
+function creatureSizeChangeLabel(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "creatureSizeIncrease" | "creatureSizeDecrease" }
+  >,
+): string {
+  return invocation.procedure === "creatureSizeIncrease"
+    ? "increase size"
+    : "decrease size";
+}
+
 export function spellInvocationCastSummary(
   invocation: SupportedSpellInvocation,
 ): string {
@@ -1416,6 +1450,12 @@ export function spellInvocationCastSummary(
     return invocation.resource.tag === "spellSlot"
       ? `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`
       : `Cast ${invocation.spell.name} as a cantrip.`;
+  }
+  if (
+    invocation.procedure === "creatureSizeIncrease" ||
+    invocation.procedure === "creatureSizeDecrease"
+  ) {
+    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot to ${creatureSizeChangeLabel(invocation)}.`;
   }
   if (invocation.procedure === "thaumaturgyBoomingVoice") {
     return `Cast ${invocation.spell.name} as a cantrip, using the Booming Voice effect.`;
@@ -1543,6 +1583,8 @@ export function spellActivationInvocationCastSummary(
         | "wardingBond"
         | "thaumaturgyBoomingVoice"
         | "creatureTypeProtection"
+        | "creatureSizeIncrease"
+        | "creatureSizeDecrease"
         | "blurAttackRollDefense"
         | "seeInvisibleObserverSight"
         | "mirrorImageHitInterception"

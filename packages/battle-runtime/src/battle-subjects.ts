@@ -153,6 +153,8 @@ export const SPELL_SLOT_PROCEDURES = [
   "repeatedDamageAllocation",
   "directHitPointRestoration",
   "rollModifier",
+  "creatureSizeIncrease",
+  "creatureSizeDecrease",
   "wardingBond",
   "scalarBuff",
   "selfTransformationMode",

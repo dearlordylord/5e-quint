@@ -4,6 +4,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.passive-saving-throw-roll-mode
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
@@ -95,6 +96,10 @@ import {
 } from "./domain-constants.ts";
 import { spellAttackSequencePartName } from "./spells-profile-shared.ts";
 import { wardingBondSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
+import {
+  activeCreatureSizeChangeEffect,
+  creatureSizeChangeStrengthRollMode,
+} from "./creature-size-change-effects.ts";
 
 const OBJECT_DAMAGE_IMMUNITIES = [
   "poison",
@@ -803,6 +808,8 @@ export function spellSavingThrowOutcomeHole(
         | "abilityD20TestRollModeSaveGate"
         | "afterHitSaveGatedCondition"
         | "rollModifier"
+        | "creatureSizeIncrease"
+        | "creatureSizeDecrease"
         | "saveGatedDamage"
         | "saveGatedCondition"
         | "saveGatedConditionImmunity"
@@ -955,6 +962,8 @@ export function spellSavingThrowAbility(
         | "afterHitSaveGatedCondition"
         | "rollModifier"
         | "saveGatedDamage"
+        | "creatureSizeIncrease"
+        | "creatureSizeDecrease"
         | "saveGatedCondition"
         | "saveGatedConditionImmunity"
         | "saveGatedAttackRollAdvantage"
@@ -985,6 +994,8 @@ export function spellSavingThrowTargeting(
         | "abilityD20TestRollModeSaveGate"
         | "afterHitSaveGatedCondition"
         | "saveGatedDamage"
+        | "creatureSizeIncrease"
+        | "creatureSizeDecrease"
         | "saveGatedCondition"
         | "saveGatedConditionImmunity"
         | "saveGatedAttackRollAdvantage"
@@ -1058,6 +1069,7 @@ export function savingThrowRollModeProjections(
     ...dodgeProjections,
     ...passiveRollModeProjections,
     ...activeAbilityD20TestSavingThrowRollModeProjections(state, ability),
+    ...creatureSizeChangeSavingThrowRollModeProjections(state, ability),
     ...conditionSavingThrowRollModeProjections(
       state,
       rollModeContext?.condition,
@@ -1139,6 +1151,21 @@ type SavingThrowRollModeContext =
       >;
       readonly condition?: Condition;
     };
+
+function creatureSizeChangeSavingThrowRollModeProjections(
+  state: BattleState,
+  ability: Ability,
+): readonly BattleSavingThrowRollModeProjection[] {
+  if (ability !== "str") {
+    return [];
+  }
+  return [...state.combatants].flatMap(([targetId, target]) => {
+    const effect = activeCreatureSizeChangeEffect(target);
+    return effect === null
+      ? []
+      : [{ targetId, rollMode: creatureSizeChangeStrengthRollMode(effect) }];
+  });
+}
 
 function conditionSavingThrowRollModeProjections(
   state: BattleState,

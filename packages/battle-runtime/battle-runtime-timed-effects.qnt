@@ -277,6 +277,11 @@ module battleRuntimeTimedEffects {
         | MindSpikeConcentrationDuration(data) => MindSpikeConcentrationDuration({
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
+        | CreatureSizeChange(data) => CreatureSizeChange({
+            source: data.source,
+            mode: data.mode,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
         | SelfTransformationModeEffect(data) => SelfTransformationModeEffect({
             source: data.source,
             mode: data.mode,
@@ -391,6 +396,7 @@ module battleRuntimeTimedEffects {
         | InvisibilityCondition(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | SeeInvisibleAndEthereal(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | MindSpikeConcentrationDuration(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | CreatureSizeChange(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | SelfTransformationModeEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | DragonsBreathEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | HideousLaughterEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)

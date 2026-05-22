@@ -5,6 +5,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
 
 // KERNEL-COVERAGE: runtime-owner BATTLE.COMMAND.OPTION_AND_NEXT_TURN
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
@@ -44,6 +45,7 @@ import {
   currentActorId,
 } from "./creature-state-leaves.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state.ts";
+import { activeEffectsWithCreatureSizeChangeReplaced } from "./creature-size-change-effects.ts";
 import {
   applyHitPointMaximumIncrease,
   applyTemporaryHitPoints,
@@ -3220,6 +3222,52 @@ export function applyCreatureTypeProtectionSpellEffect(
         activeEffects,
       }),
     };
+  }, state);
+}
+
+export function applyCreatureSizeChangeSpellEffect(
+  state: BattleState,
+  actorId: CombatantId,
+  targetIds: readonly CombatantId[],
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "creatureSizeIncrease" | "creatureSizeDecrease" }
+  >,
+): BattleState {
+  return targetIds.reduce<BattleState>((nextState, targetId) => {
+    const target = nextState.combatants.get(targetId);
+    if (target === undefined) {
+      return nextState;
+    }
+    const nextEffect = {
+      ...invocation.activeEffect,
+      sourceCombatantId: actorId,
+    };
+    const replacement = activeEffectsWithCreatureSizeChangeReplaced(
+      target.activeEffects,
+      nextEffect,
+    );
+    const withReplacement = {
+      ...nextState,
+      combatants: new Map(nextState.combatants).set(targetId, {
+        ...target,
+        activeEffects: replacement.activeEffects,
+      }),
+    };
+    const combatants = replacement.displacedEffects.reduce<
+      ReadonlyMap<CombatantId, BattleCreatureState>
+    >(
+      (nextCombatants, effect) =>
+        combatantsAfterConcentrationSpellEffectsEndedIfNoEffects(
+          nextCombatants,
+          {
+            sourceCombatantId: effect.sourceCombatantId,
+            sourceSpellId: effect.sourceSpellId,
+          },
+        ),
+      withReplacement.combatants,
+    );
+    return { ...withReplacement, combatants };
   }, state);
 }
 

@@ -46,6 +46,7 @@ module battleRuntimeSpellFactsTests {
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
   import battleRuntimeGroundCommand.* from "./battle-runtime-ground-command"
   import battleRuntimeWeaponAttacks.* from "./battle-runtime-weapon-attacks"
+  import battleRuntimeCreatureSizeChange.* from "./battle-runtime-creature-size-change"
 
   run test_spell_invocation_executable_spell_facts = {
     val animalFriendshipCharmed = AnimalFriendshipCharmed({ source: Fighter, durationTicks: 24 * 60 })
@@ -62,6 +63,31 @@ module battleRuntimeSpellFactsTests {
       rayOfEnfeeblementD20LifecycleActiveEffectsAfterNextAttack(raySuccess.goblin.activeEffects, Fighter)
     val rayAfterRepeatSaveEffects =
       rayOfEnfeeblementD20LifecycleActiveEffectsAfterRepeatSave(rayFailure.goblin.activeEffects, Fighter, true)
+    val enlarged = resolveCreatureSizeChange(initialState, Fighter, EnlargeCreatureMode, true, false, 2)
+    val reduced = resolveCreatureSizeChange(initialState, Fighter, ReduceCreatureMode, true, false, 2)
+    val saveSucceeded = resolveCreatureSizeChange(initialState, Goblin, ReduceCreatureMode, false, true, 2)
+    val priorSizeChangeConcentration = {
+      ...initialState,
+      fighter: {
+        ...initialState.fighter,
+        concentrating: true,
+        activeEffects: Set(creatureSizeChangeActiveEffect(Fighter, EnlargeCreatureMode)),
+      },
+    }
+    val oppositeModeRecast = resolveCreatureSizeChange(priorSizeChangeConcentration, Fighter, ReduceCreatureMode, true, false, 2)
+    val savedAfterPriorConcentration = resolveCreatureSizeChange(priorSizeChangeConcentration, Goblin, ReduceCreatureMode, false, true, 2)
+    val expiringEnlarge = {
+      ...enlarged,
+      fighter: {
+        ...enlarged.fighter,
+        activeEffects: Set(CreatureSizeChange({
+          source: Fighter,
+          mode: EnlargeCreatureMode,
+          durationTicks: 1,
+        })),
+      },
+    }
+    val expiredEnlarge = tickRoundDurationSpellEffects(expiringEnlarge)
     all {
       assert(rollModifierMaximumTargets(BlessRollModifier, 2) == 4),
       assert(rollModifierMaximumTargets(BaneRollModifier, 3) == 5),
@@ -75,6 +101,36 @@ module battleRuntimeSpellFactsTests {
       assert(rollModifierActiveEffect(GuidanceRollModifier, StrAbility, StealthSkill) == GuidanceAbilityCheckBonus({ skill: StealthSkill })),
       assert(rollModifierActiveEffect(PassWithoutTraceRollModifier, StrAbility, StealthSkill) == PassWithoutTraceStealthBonus),
       assert(rollModifierActiveEffect(EnhanceAbilityRollModifier, DexAbility, StealthSkill) == EnhanceAbilityCheckAdvantage({ ability: DexAbility })),
+      assert(creatureSizeChangeActiveEffect(Fighter, EnlargeCreatureMode) == CreatureSizeChange({
+        source: Fighter,
+        mode: EnlargeCreatureMode,
+        durationTicks: creatureSizeChangeDurationTicks,
+      })),
+      assert(enlarged.actionAvailable == false),
+      assert(enlarged.fighter.concentrating),
+      assert(enlarged.fighter.activeEffects.contains(creatureSizeChangeActiveEffect(Fighter, EnlargeCreatureMode))),
+      assert(effectiveCreatureSize(Medium, enlarged.fighter.activeEffects) == Large),
+      assert(effectiveCreatureSize(Tiny, reduced.fighter.activeEffects) == Tiny),
+      assert(creatureSizeChangeStrengthAbilityCheckRollMode(enlarged.fighter.activeEffects, StrAbility) == AdvantageAbilityCheck),
+      assert(creatureSizeChangeStrengthAbilityCheckRollMode(enlarged.fighter.activeEffects, DexAbility) == NormalAbilityCheck),
+      assert(creatureSizeChangeStrengthSavingThrowRollMode(reduced.fighter.activeEffects, StrAbility) == DisadvantageSavingThrow),
+      assert(creatureSizeChangeStrengthSavingThrowRollMode(reduced.fighter.activeEffects, ConAbility) == NormalSavingThrow),
+      assert(creatureSizeChangeAttackDamageTotal(4, enlarged.fighter.activeEffects, SizeChangeWeaponAttack, 3) == 7),
+      assert(creatureSizeChangeAttackDamageTotal(4, enlarged.fighter.activeEffects, SizeChangeUnarmedStrike, 3) == 7),
+      assert(creatureSizeChangeAttackDamageTotal(4, enlarged.fighter.activeEffects, SizeChangeOtherAttack, 3) == 4),
+      assert(creatureSizeChangeAttackDamageTotal(1, reduced.fighter.activeEffects, SizeChangeUnarmedStrike, 4) == 1),
+      assert(saveSucceeded.actionAvailable == false),
+      assert(saveSucceeded.fighter.concentrating == false),
+      assert(not(saveSucceeded.goblin.activeEffects.contains(creatureSizeChangeActiveEffect(Fighter, ReduceCreatureMode)))),
+      assert(oppositeModeRecast.fighter.activeEffects.contains(creatureSizeChangeActiveEffect(Fighter, ReduceCreatureMode))),
+      assert(not(oppositeModeRecast.fighter.activeEffects.contains(creatureSizeChangeActiveEffect(Fighter, EnlargeCreatureMode)))),
+      assert(effectiveCreatureSize(Medium, oppositeModeRecast.fighter.activeEffects) == Small),
+      assert(savedAfterPriorConcentration.fighter.concentrating == false),
+      assert(not(savedAfterPriorConcentration.fighter.activeEffects.contains(creatureSizeChangeActiveEffect(Fighter, EnlargeCreatureMode)))),
+      assert(not(savedAfterPriorConcentration.goblin.activeEffects.contains(creatureSizeChangeActiveEffect(Fighter, ReduceCreatureMode)))),
+      assert(not(breakConcentration(enlarged.fighter).activeEffects.contains(creatureSizeChangeActiveEffect(Fighter, EnlargeCreatureMode)))),
+      assert(expiredEnlarge.fighter.concentrating == false),
+      assert(not(expiredEnlarge.fighter.activeEffects.contains(creatureSizeChangeActiveEffect(Fighter, EnlargeCreatureMode)))),
       assert(spellAttackModifier(3, 2) == 5),
       assert(sorcererSpellSaveDcWithInnateSorcery(13, true, SorcererSpellSource) == 14),
       assert(sorcererSpellSaveDcWithInnateSorcery(13, false, SorcererSpellSource) == 13),

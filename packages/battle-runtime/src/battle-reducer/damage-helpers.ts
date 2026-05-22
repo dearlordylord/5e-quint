@@ -1,5 +1,6 @@
 // By-type damage math helpers extracted from battle-reducer.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
@@ -48,6 +49,10 @@ import {
   attackDamageModifier,
 } from "./statblock-attacks.ts";
 import { attackAbilityMatchesModifier } from "./attack-roll.ts";
+import {
+  activeCreatureSizeChangeEffect,
+  creatureSizeChangeAttackDamageComponent,
+} from "./creature-size-change-effects.ts";
 
 export type DamageAmountByTypeEntry = {
   readonly damageType: DamageType;
@@ -155,12 +160,32 @@ export function attackDamageByType(
           ? attackDamageModifier(attack) +
             ongoingFeatureDamageModifier(attacker, attack)
           : 0;
+      if (component.operation === "subtract") {
+        return totals;
+      }
       const unadjusted = diceTotal + modifier;
       return addDamageAmountForType(totals, component.damageType, unadjusted);
     },
     damageAmountByTypeEntriesToMap(fixedBaseDamageEntries ?? []),
   );
-  return damageByType;
+  const reducedDamageByType = damageRoll.value.reduce<
+    ReadonlyMap<DamageType, number>
+  >((totals, group, index) => {
+    const component = components[index];
+    if (component === undefined || component.operation !== "subtract") {
+      return totals;
+    }
+    const diceTotal = group.results.reduce(
+      (groupTotal, dieResult) => groupTotal + Number(dieResult),
+      0,
+    );
+    return subtractDamageAmountForType({
+      totals,
+      amount: diceTotal,
+      minimumDamageTotal: component.minimumDamageTotal ?? 0,
+    });
+  }, damageByType);
+  return clampMinimumDamageTotal(reducedDamageByType, components);
 }
 
 export function damageAmountByTypeEntriesToMap(
@@ -170,6 +195,62 @@ export function damageAmountByTypeEntriesToMap(
     (totals, entry) =>
       addDamageAmountForType(totals, entry.damageType, entry.amount),
     new Map(),
+  );
+}
+
+function clampMinimumDamageTotal(
+  damageByType: ReadonlyMap<DamageType, number>,
+  components: readonly {
+    readonly damageType: DamageType;
+    readonly minimumDamageTotal?: 1;
+  }[],
+): ReadonlyMap<DamageType, number> {
+  const minimumComponent = components.find(
+    (component) => component.minimumDamageTotal !== undefined,
+  );
+  const minimumTotal = minimumComponent?.minimumDamageTotal;
+  if (minimumComponent === undefined || minimumTotal === undefined) {
+    return damageByType;
+  }
+  const total = [...damageByType.values()].reduce(
+    (sum, amount) => sum + amount,
+    0,
+  );
+  if (total >= minimumTotal) {
+    return damageByType;
+  }
+  return addDamageAmountForType(
+    damageByType,
+    minimumComponent.damageType,
+    minimumTotal - total,
+  );
+}
+
+function subtractDamageAmountForType(input: {
+  readonly totals: ReadonlyMap<DamageType, number>;
+  readonly amount: number;
+  readonly minimumDamageTotal: number;
+}): ReadonlyMap<DamageType, number> {
+  const currentTotal = [...input.totals.values()].reduce(
+    (sum, amount) => sum + Math.max(0, amount),
+    0,
+  );
+  const maximumReduction = Math.max(
+    0,
+    currentTotal - input.minimumDamageTotal,
+  );
+  const remainingReduction = Math.min(
+    Math.max(0, input.amount),
+    maximumReduction,
+  );
+  if (remainingReduction === 0) {
+    return input.totals;
+  }
+  return damageAmountByTypeEntriesToMap(
+    entriesAfterProportionalDamageReduction(
+      damageAmountByTypeMapEntries(input.totals),
+      remainingReduction,
+    ),
   );
 }
 
@@ -417,14 +498,26 @@ export function ongoingFeatureDamageModifier(
 export function activeSpellWeaponDamageRiders(
   attacker: BattleCreatureState | undefined,
   attack: SupportedAttackActionOption,
-): readonly SpellWeaponDamageRider[] {
-  if (attacker === undefined || attack.kind !== "weapon") {
+): readonly SpellAttackDamageComponent[] {
+  if (attacker === undefined) {
     return [];
   }
-  return attacker.activeEffects.filter(
-    (effect): effect is SpellWeaponDamageRider =>
-      effect.kind === "spellWeaponDamageRider",
-  );
+  const spellWeaponDamageRiders =
+    attack.kind === "weapon"
+      ? attacker.activeEffects.filter(
+          (effect): effect is SpellWeaponDamageRider =>
+            effect.kind === "spellWeaponDamageRider",
+        )
+      : [];
+  const sizeChangeEffect =
+    attack.kind === "weapon" || attack.kind === "unarmedStrike"
+      ? activeCreatureSizeChangeEffect(attacker)
+      : null;
+  const sizeChangeDamage: readonly SpellAttackDamageComponent[] =
+    sizeChangeEffect === null
+      ? []
+      : [creatureSizeChangeAttackDamageComponent(sizeChangeEffect, attack)];
+  return [...spellWeaponDamageRiders, ...sizeChangeDamage];
 }
 
 export function activeMarkedDamageRiderEffect(

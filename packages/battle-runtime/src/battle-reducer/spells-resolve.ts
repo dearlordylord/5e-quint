@@ -210,6 +210,7 @@ export {
   resolveSeeInvisibleObserverSightSpellAct,
   resolveConditionRemovalProtectionSpellAct,
   resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,
+  resolveCreatureSizeChangeSpellAct,
   resolveCreatureTypeProtectionSpellAct,
   resolveDamageReductionSpellAct,
   resolveDragonsBreathInitialSpellAct,
@@ -252,6 +253,7 @@ import {
   resolveSeeInvisibleObserverSightSpellAct,
   resolveConditionRemovalProtectionSpellAct,
   resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,
+  resolveCreatureSizeChangeSpellAct,
   resolveCreatureTypeProtectionSpellAct,
   resolveDamageReductionSpellAct,
   resolveDragonsBreathInitialSpellAct,
@@ -471,6 +473,8 @@ export function resolveSpellAct(
       invocation.procedure === "damageReduction" ||
       invocation.procedure === "scalarBuff" ||
       invocation.procedure === "rollModifier" ||
+      invocation.procedure === "creatureSizeIncrease" ||
+      invocation.procedure === "creatureSizeDecrease" ||
       invocation.procedure === "wardingBond" ||
       invocation.procedure === "thaumaturgyBoomingVoice" ||
       invocation.procedure === "creatureTypeProtection" ||
@@ -830,6 +834,17 @@ export function resolveSpellAct(
   }
   if (invocation.procedure === "rollModifier") {
     return resolveRollModifierSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (
+    invocation.procedure === "creatureSizeIncrease" ||
+    invocation.procedure === "creatureSizeDecrease"
+  ) {
+    return resolveCreatureSizeChangeSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

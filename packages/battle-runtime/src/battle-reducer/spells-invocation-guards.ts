@@ -63,6 +63,8 @@ export function isTargetListSpellInvocation(
     invocation.procedure === "hideousLaughter" ||
     invocation.procedure === "command" ||
     invocation.procedure === "creatureTypeProtection" ||
+    invocation.procedure === "creatureSizeIncrease" ||
+    invocation.procedure === "creatureSizeDecrease" ||
     invocation.procedure === "conditionRemovalProtection" ||
     invocation.procedure === "directConditionRemoval" ||
     invocation.procedure ===

@@ -411,3 +411,13 @@ When explicit prepared-spell input is absent, the TypeScript machine and `creatu
 **Rules basis (SRD 5.2.1 Moonbeam):** "When the Cylinder appears, each creature in it makes a Constitution saving throw. A creature also makes this save when the spell's area moves into its space and when it enters the spell's area or ends its turn there. A creature makes this save only once per turn." The initial-appearance save (cast time) and the area-moves / creature-enters triggers are spatial membership events that require position and movement facts the promoted battle runtime delegates to the table.
 
 **Changes:** `packages/battle-runtime`: battle discovery auto-generates the end-turn Moonbeam save subject each turn. The other three trigger variants are accepted by the runtime command schema and dispatcher when supplied by the table.
+
+## A48: Enlarge/Reduce creature size-change effects are target-exclusive
+
+**Assumption:** In the promoted creature branch of Enlarge/Reduce, a creature can have at most one active spell-owned creature size-change effect. A successful new creature-branch Enlarge or Reduce effect on a target replaces any existing Enlarge/Reduce creature size-change effect on that target, regardless of caster or mode. If the displaced effect's source has no remaining active effects from that spell, the runtime clears that source's stale Concentration state.
+
+**Rules basis:** SRD 5.2.1 Enlarge/Reduce says one target is enlarged or reduced for the duration, describes the target's Size as increasing or decreasing by one category, and gives mutually opposed Strength and attack-damage consequences for the two modes. The SRD passage does not define a stacking or simultaneous-conflicting-effect rule for multiple overlapping Enlarge/Reduce castings on the same creature.
+
+**Rationale:** The promoted battle runtime exposes one effective creature Size, one Strength roll-mode projection, and one attack-hit damage adjustment for this profile. Allowing overlapping increase and decrease effects would create contradictory executable state that the SRD does not resolve. Target-exclusive replacement keeps the promoted state deterministic while preserving caster-owned Concentration cleanup.
+
+**Changes:** `packages/battle-runtime/src/battle-reducer/creature-size-change-effects.ts` replaces existing creature size-change effects when applying a new one, and `packages/battle-runtime/src/battle-reducer/spells-active-effects.ts` clears displaced-source Concentration when no matching spell effects remain.

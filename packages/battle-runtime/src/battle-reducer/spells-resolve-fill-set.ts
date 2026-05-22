@@ -894,6 +894,8 @@ export function spellFillSet(
         invocation.procedure !== "sleepTargetAdmission" &&
         invocation.procedure !== "hideousLaughter" &&
         invocation.procedure !== "command" &&
+        invocation.procedure !== "creatureSizeIncrease" &&
+        invocation.procedure !== "creatureSizeDecrease" &&
         invocation.procedure !== "greaseGroundHazard" &&
         invocation.procedure !== "gustOfWindLine" &&
         !(
@@ -1562,6 +1564,8 @@ export function spellFillSetSavingThrowTargeting(
         invocation.procedure === "sleepTargetAdmission" ||
         invocation.procedure === "hideousLaughter" ||
         invocation.procedure === "command" ||
+        invocation.procedure === "creatureSizeIncrease" ||
+        invocation.procedure === "creatureSizeDecrease" ||
         invocation.procedure === "greaseGroundHazard" ||
         invocation.procedure === "gustOfWindLine"
       ? invocation.targeting

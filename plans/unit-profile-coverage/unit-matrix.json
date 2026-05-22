@@ -72,24 +72,24 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 90,
-      "numerator": 90,
+      "denominator": 91,
+      "numerator": 91,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 90,
-      "numerator": 90,
+      "denominator": 91,
+      "numerator": 91,
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 123,
+      "denominator": 124,
       "numerator": 105,
-      "percent": "85.4%"
+      "percent": "84.7%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 123,
+      "denominator": 124,
       "numerator": 105,
-      "percent": "85.4%"
+      "percent": "84.7%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 136,
@@ -97,13 +97,13 @@
       "percent": "92.6%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 90,
-      "numerator": 90,
+      "denominator": 91,
+      "numerator": 91,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 90,
-      "numerator": 90,
+      "denominator": 91,
+      "numerator": 91,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -2243,6 +2243,37 @@
       ]
     },
     {
+      "id": "spell.invocation-creature-size-change",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/creature-size-change-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/druid-wild-shape.ts",
+        "packages/battle-runtime/src/battle-reducer/hole-helpers.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-helpers.ts"
+      ],
+      "sourceBoundary": "The runtime consumes the authored creature-target Enlarge/Reduce branch, caller-selected creature target and mode, table-supplied range and willingness facts, and Saving Throw outcomes for unwilling targets. It owns Magic Action and level-2-or-higher Spell Slot spending, prior Concentration loss when casting this Concentration spell, new caster-owned Concentration only when the creature effect applies, active one-step creature Size projection, Strength Ability Check and Strength Saving Throw roll modes with normal Advantage/Disadvantage cancellation, weapon or Unarmed Strike attack-hit 1d4 damage addition or subtraction with the Reduce minimum-damage floor, a single active creature size-change effect per target under ASSUMPTIONS.md A48, and cleanup on Concentration or duration end. Object targets, worn or carried item size changes, dropped-item normalization, and thrown weapon or ammunition normalization remain outside this creature-branch profile subset.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME"
+      ],
+      "title": "Spell invocation applies a creature size change with Strength roll modes and attack-hit damage adjustment",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-enlarge-reduce.test.ts"
+        }
+      ]
+    },
+    {
       "id": "spell.creature-type-protection-and-charm",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -3577,14 +3608,14 @@
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 123,
+        "denominator": 124,
         "numerator": 105,
-        "percent": "85.4%"
+        "percent": "84.7%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 123,
+        "denominator": 124,
         "numerator": 105,
-        "percent": "85.4%"
+        "percent": "84.7%"
       }
     },
     "profileKinds": [
@@ -4637,6 +4668,12 @@
           }
         ],
         "profileId": "spell.invocation-roll-modifier",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-creature-size-change",
         "profileKind": "spell-invocation"
       },
       {
@@ -10782,6 +10819,22 @@
         "spell.invocation-dragons-breath-initial"
       ],
       "taskId": "L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover Enlarge/Reduce creature size-change resolution for willing targets and unwilling successful-save no-effect, Magic Action and level-2 Spell Slot spending, prior Concentration loss when casting this Concentration spell, caster-owned Concentration only when the effect applies, single active size-change replacement on recast or opposite-mode cast under ASSUMPTIONS.md A48, active Size projection, Strength Ability Check and Strength Saving Throw roll modes, weapon and Unarmed Strike hit damage adjustment with Reduce's minimum-damage floor, and Concentration or duration cleanup.",
+      "profileIds": [
+        "spell.invocation-creature-size-change"
+      ],
+      "taskId": "L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Enlarge/Reduce Surface-profile admission by shape, paired creature size-change invocations for increase and decrease modes, Magic Action level-2 Spell Slot casting, willing-target effect application, unwilling-target Constitution save gating, prior Concentration loss on successful-save no-effect recast, single active size-change replacement on recast or opposite-mode cast under ASSUMPTIONS.md A48, active Size projection, Strength Ability Check and Strength Saving Throw roll-mode projection, weapon and Unarmed Strike damage adjustment including Reduce's minimum-damage floor, and Concentration/duration cleanup through shared active-effect expiration.",
+      "profileIds": [
+        "spell.invocation-creature-size-change"
+      ],
+      "taskId": "L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME"
     }
   ],
   "units": [
@@ -18267,31 +18320,70 @@
         "status": "installed"
       },
       "claim": {
-        "followUpTasks": [
+        "deferredMechanics": [
           {
-            "id": "L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME",
-            "mechanic": "Promote the Enlarge/Reduce creature branch: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, willing target application, unwilling target Constitution save gate, cast-time Enlarge/Reduce mode choice, active size-category projection used by size-dependent runtime rules, Strength Ability Check and Strength Saving Throw Advantage/Disadvantage with normal cancellation, Enlarge +1d4 and Reduce -1d4 minimum 1 damage for attacks with affected weapons or Unarmed Strikes, and cleanup when Concentration or duration ends.",
-            "owner": "battle-runtime spell invocation/effect lifecycle plus promoted Quint parity",
-            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without object-target behavior.",
-            "title": "Enlarge Reduce Creature Runtime Support"
-          },
-          {
-            "id": "L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH",
-            "mechanic": "Represent and promote the object branch: a target object that is neither worn nor carried, object size-category change and cleanup, carried/worn item size changes while the creature branch is active, dropped item normalization, and thrown weapon/ammunition normalization immediately after hit or miss if those item lifecycle facts belong to promoted runtime.",
-            "owner": "surface target selection plus battle-runtime object and item lifecycle",
-            "requiredOutput": "Surface schema/content support for the object target constraint, runtime object/item lifecycle owner decision, focused tests, and coverage disposition that either supports the object branch or closes it with an accepted runtime-boundary reason.",
-            "title": "Enlarge Reduce Object Branch"
+            "followUpTaskId": "L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH",
+            "mechanic": "object target branch, object size-category lifecycle, worn or carried item size changes, dropped-item normalization, and thrown weapon or ammunition normalization"
           }
         ],
-        "futureProfileOwner": "surface object target widening plus battle-runtime spell invocation/effect lifecycle and promoted Quint parity",
-        "reason": "Enlarge/Reduce is authored as an SRD Surface Spell Definition for the creature branch, including Magic Action Spell Slot casting, Concentration up to 1 minute, Constitution save only for unwilling creature targets, an Enlarge/Reduce mode choice, one-step size category changes, Strength Ability Check and Strength Saving Throw Advantage/Disadvantage, and weapon-or-Unarmed-Strike attack-hit damage adjustment with the Reduce minimum-damage floor. Task 61 claims no promoted battle-runtime profile yet because runtime has no active size projection owner, no active Strength Saving Throw roll-mode projection from spell effects, no same-source weapon/Unarmed-Strike damage adjustment with subtract-and-floor semantics, and no object target or worn/carried item lifecycle owner.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "spell.invocation-creature-size-change"
+        ],
+        "supportedMechanics": [
+          "Magic Action casting with level-2-or-higher Spell Slot spending from the SRD Enlarge/Reduce creature branch",
+          "caster-owned Concentration up to 1 minute and cleanup through the active-effect expiration lifecycle",
+          "willing creature target application from table-supplied willingness facts",
+          "unwilling creature Constitution Saving Throw gate with no effect on a successful save",
+          "cast-time size-increase or size-decrease mode selection represented by distinct supported runtime procedures derived from the authored mode-effect shape",
+          "active one-step creature Size category projection used by promoted size-dependent runtime readers",
+          "Strength Ability Check and Strength Saving Throw Advantage or Disadvantage projections with normal cancellation",
+          "weapon or Unarmed Strike attack-hit 1d4 damage addition for size increase and 1d4 subtraction with minimum total damage 1 for size decrease"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-enlarge-reduce.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-creature-size-change",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/creature-size-change-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/druid-wild-shape.ts",
+            "packages/battle-runtime/src/battle-reducer/hole-helpers.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+            "packages/battle-runtime/src/battle-reducer/damage-helpers.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the authored creature-target Enlarge/Reduce branch, caller-selected creature target and mode, table-supplied range and willingness facts, and Saving Throw outcomes for unwilling targets. It owns Magic Action and level-2-or-higher Spell Slot spending, prior Concentration loss when casting this Concentration spell, new caster-owned Concentration only when the creature effect applies, active one-step creature Size projection, Strength Ability Check and Strength Saving Throw roll modes with normal Advantage/Disadvantage cancellation, weapon or Unarmed Strike attack-hit 1d4 damage addition or subtraction with the Reduce minimum-damage floor, a single active creature size-change effect per target under ASSUMPTIONS.md A48, and cleanup on Concentration or duration end. Object targets, worn or carried item size changes, dropped-item normalization, and thrown weapon or ammunition normalization remain outside this creature-branch profile subset.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME"
+          ],
+          "title": "Spell invocation applies a creature size change with Strength roll modes and attack-hit damage adjustment",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-enlarge-reduce.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/enlarge_reduce.json",
       "unitId": "enlarge_reduce"
     },
