@@ -276,7 +276,14 @@
       "kind": "coin_grant"
     }
   ],
-  "subclassChoices": [],
+  "subclassChoices": [
+    {
+      "level": 3,
+      "options": [
+        "subclass_bard_college_of_lore"
+      ]
+    }
+  ],
   "toolProficiencies": {
     "count": 3,
     "kind": "choice",

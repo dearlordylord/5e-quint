@@ -89,7 +89,8 @@ let ranger =
               ] : List SpellcastingProgressionRow
           , spellcastingFocus = "druidic_focus"
           }
-      , subclassChoices = [] : List { level : Natural, options : List Text }
+      , subclassChoices =
+        [ { level = 3, options = [ "subclass_ranger_hunter" ] } ]
       , startingEquipment =
         [ { coinsGp = 7
           , id = "option_a"

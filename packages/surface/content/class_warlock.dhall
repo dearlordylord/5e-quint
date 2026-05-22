@@ -180,7 +180,8 @@ let warlock =
           , spellcastingAbility = "cha"
           , spellcastingFocus = "arcane_focus"
           }
-      , subclassChoices = [] : List { level : Natural, options : List Text }
+      , subclassChoices =
+        [ { level = 3, options = [ "subclass_warlock_fiend_patron" ] } ]
       , startingEquipment =
         [ { coinsGp = 15
           , id = "option_a"

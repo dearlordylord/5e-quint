@@ -165,7 +165,14 @@
       "kind": "coin_grant"
     }
   ],
-  "subclassChoices": [],
+  "subclassChoices": [
+    {
+      "level": 3,
+      "options": [
+        "subclass_rogue_thief"
+      ]
+    }
+  ],
   "toolProficiencies": {
     "kind": "fixed",
     "proficiencies": [

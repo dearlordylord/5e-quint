@@ -114,7 +114,8 @@ let bard =
             ]
           , spellcastingFocus = "musical_instrument"
           }
-      , subclassChoices = [] : List { level : Natural, options : List Text }
+      , subclassChoices =
+        [ { level = 3, options = [ "subclass_bard_college_of_lore" ] } ]
       , startingEquipment =
         [ { coinsGp = 19
           , id = "option_a"

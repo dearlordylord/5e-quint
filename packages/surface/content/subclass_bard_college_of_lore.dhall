@@ -1,0 +1,13 @@
+let collegeOfLore =
+      { className = "bard"
+      , description =
+          "The College of Lore Bard subclass choice. Subclass feature Units are modeled separately from the choice boundary."
+      , featureGrants = [] : List { level : Natural, unitId : Text }
+      , id = "subclass_bard_college_of_lore"
+      , kind = "subclass"
+      , name = "College of Lore"
+      , provenance =
+          { kind = "srd-5.2.1", section = "Classes/Bard.md:105-107,322-342" }
+      }
+
+in  collegeOfLore

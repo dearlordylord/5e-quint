@@ -55,7 +55,8 @@ let paladin =
               }
           , spellcastingFocus = "holy_symbol"
           }
-      , subclassChoices = [] : List { level : Natural, options : List Text }
+      , subclassChoices =
+        [ { level = 3, options = [ "subclass_paladin_oath_of_devotion" ] } ]
       , startingEquipment =
         [ { coinsGp = 9
           , id = "option_a"

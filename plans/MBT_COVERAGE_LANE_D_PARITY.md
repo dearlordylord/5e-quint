@@ -187,7 +187,7 @@
     {
       "number": 31,
       "id": "L3-SUBCLASS-SELECTION-PROGRESSION-SPLIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Level 3 Subclass Selection Progression Split"
     },
     {
@@ -201,6 +201,12 @@
       "id": "L3-CLASS-SUBCLASS-FEATURE-OWNER-SPLIT",
       "status": "ready-for-research",
       "title": "Level 3 Class And Subclass Feature Owner Split"
+    },
+    {
+      "number": 34,
+      "id": "L3-REMAINING-SUBCLASS-SELECTION-FINALIZATION",
+      "status": "ready-for-research",
+      "title": "Remaining Level 3 Selected Subclass Finalization"
     }
   ]
 }
@@ -629,7 +635,7 @@ Acceptance:
 
 ### Task 31 - L3-SUBCLASS-SELECTION-PROGRESSION-SPLIT - Level 3 Subclass Selection Progression Split
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -737,3 +743,45 @@ Acceptance:
   evidence rather than authored identity dispatch.
 - No PHB+ authored identity or companion AI/autonomous-control behavior is
   introduced.
+
+### Task 34 - L3-REMAINING-SUBCLASS-SELECTION-FINALIZATION - Remaining Level 3 Selected Subclass Finalization
+
+Status: `ready-for-research`
+
+Depends on:
+
+- Task 31.
+- Task 32.
+- Task 33.
+
+Input:
+
+- Remaining level-3 `subclass-selection` rows in `plans/unit-profile-coverage/srd-unit-inventory.json`
+  whose owner evidence still points to the future selected-subclass
+  progression/finalization owner.
+- Local RAW under `.references/srd-5.2.1/Classes/`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Character Creation subclass/progression owner code, subclass Spell Access
+  progression work, subclass feature owner work, Unit claims, and
+  owner-evidence artifacts.
+
+Output:
+
+- Promote the remaining Bard, Cleric, Druid, Paladin, Ranger, Sorcerer,
+  Warlock, and Wizard level-3 selected-subclass progression/finalization rows
+  when their level-3 Spell Access and feature holes have checker-visible owner
+  treatment.
+- Keep selected subclass identity projection separate from subclass Spell Access,
+  subclass feature execution, and catalog admission support.
+- Update generated inventory/report artifacts and Unit/profile claims only where
+  this task is the correct selected-subclass finalization owner.
+
+Acceptance:
+
+- No remaining level-3 `subclass-selection` row points to an unspecified future
+  selected-subclass progression/finalization owner.
+- Finalized builds retain the selected subclass Unit ref for each newly promoted
+  class-specific level-3 progression without claiming subclass Spell Access or
+  subclass feature execution from the subclass container record.
+- No PHB+ authored identity, companion AI/autonomous-control behavior, or runtime
+  authored-identity dispatch is introduced.

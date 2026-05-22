@@ -119,8 +119,8 @@
     ]
   },
   "spellcasting": {
-    "kind": "list_prepared_spellcasting_progression_creation",
     "featureLevel": 1,
+    "kind": "list_prepared_spellcasting_progression_creation",
     "preparedAccess": {
       "changeOn": {
         "kind": "long_rest",
@@ -156,6 +156,7 @@
       ]
     },
     "spellcastingAbility": "wis",
+    "spellcastingFocus": "druidic_focus",
     "spellcastingProgression": [
       {
         "atLevel": 1,
@@ -179,10 +180,8 @@
           }
         ]
       }
-    ],
-    "spellcastingFocus": "druidic_focus"
+    ]
   },
-  "subclassChoices": [],
   "startingEquipment": [
     {
       "coinsGp": 7,
@@ -228,6 +227,14 @@
       "coinsGp": 150,
       "id": "option_b",
       "kind": "coin_grant"
+    }
+  ],
+  "subclassChoices": [
+    {
+      "level": 3,
+      "options": [
+        "subclass_ranger_hunter"
+      ]
     }
   ],
   "toolProficiencies": {

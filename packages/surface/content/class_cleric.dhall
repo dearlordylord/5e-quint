@@ -91,7 +91,8 @@ let cleric =
           ]
         , spellcastingFocus = "holy_symbol"
         }
-      , subclassChoices = [] : List { level : Natural, options : List Text }
+      , subclassChoices =
+        [ { level = 3, options = [ "subclass_cleric_life_domain" ] } ]
       , startingEquipment =
             [ { coinsGp = 7
               , id = "option_a"

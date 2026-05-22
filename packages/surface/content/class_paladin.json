@@ -154,7 +154,14 @@
       "kind": "coin_grant"
     }
   ],
-  "subclassChoices": [],
+  "subclassChoices": [
+    {
+      "level": 3,
+      "options": [
+        "subclass_paladin_oath_of_devotion"
+      ]
+    }
+  ],
   "toolProficiencies": {
     "kind": "none"
   },

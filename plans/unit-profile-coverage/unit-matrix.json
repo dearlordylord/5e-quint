@@ -48,9 +48,9 @@
       "percent": "48.9%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 471,
-      "numerator": 227,
-      "percent": "48.2%"
+      "denominator": 481,
+      "numerator": 237,
+      "percent": "49.3%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 228
+      "value": 238
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 136,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 228,
-      "numerator": 228,
+      "denominator": 238,
+      "numerator": 238,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -11362,6 +11362,78 @@
         "status": "installed"
       },
       "claim": {
+        "reason": "Subclass container record; selected subclass identity is owned by class subclassChoices and character creation where supported, while executable pressure lives on granted feature Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "subclass",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/subclass_barbarian_path_of_the_berserker.json",
+      "unitId": "subclass_barbarian_path_of_the_berserker"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Subclass container record; selected subclass identity is owned by class subclassChoices and character creation where supported, while executable pressure lives on granted feature Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "subclass",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/subclass_bard_college_of_lore.json",
+      "unitId": "subclass_bard_college_of_lore"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Subclass container record; selected subclass identity is owned by class subclassChoices and character creation where supported, while executable pressure lives on granted feature Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "subclass",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/subclass_cleric_life_domain.json",
+      "unitId": "subclass_cleric_life_domain"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Subclass container record; selected subclass identity is owned by class subclassChoices and character creation where supported, while executable pressure lives on granted feature Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "subclass",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/subclass_druid_circle_of_the_land.json",
+      "unitId": "subclass_druid_circle_of_the_land"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "reason": "Subclass container record; executable pressure lives on granted feature Units.",
         "tag": "unsupported-profile"
       },
@@ -11372,6 +11444,114 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/subclass_fighter_champion.json",
       "unitId": "subclass_fighter_champion"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Subclass container record; selected subclass identity is owned by class subclassChoices and character creation where supported, while executable pressure lives on granted feature Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "subclass",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/subclass_monk_warrior_of_the_open_hand.json",
+      "unitId": "subclass_monk_warrior_of_the_open_hand"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Subclass container record; selected subclass identity is owned by class subclassChoices and character creation where supported, while executable pressure lives on granted feature Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "subclass",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/subclass_paladin_oath_of_devotion.json",
+      "unitId": "subclass_paladin_oath_of_devotion"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Subclass container record; selected subclass identity is owned by class subclassChoices and character creation where supported, while executable pressure lives on granted feature Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "subclass",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/subclass_ranger_hunter.json",
+      "unitId": "subclass_ranger_hunter"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Subclass container record; selected subclass identity is owned by class subclassChoices and character creation where supported, while executable pressure lives on granted feature Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "subclass",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/subclass_rogue_thief.json",
+      "unitId": "subclass_rogue_thief"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Subclass container record; selected subclass identity is owned by class subclassChoices and character creation where supported, while executable pressure lives on granted feature Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "subclass",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/subclass_sorcerer_draconic_sorcery.json",
+      "unitId": "subclass_sorcerer_draconic_sorcery"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Subclass container record; selected subclass identity is owned by class subclassChoices and character creation where supported, while executable pressure lives on granted feature Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "subclass",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/subclass_warlock_fiend_patron.json",
+      "unitId": "subclass_warlock_fiend_patron"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

@@ -79,7 +79,8 @@ let druid =
               ] : List SpellcastingProgressionRow
           , spellcastingFocus = "druidic_focus"
           }
-      , subclassChoices = [] : List { level : Natural, options : List Text }
+      , subclassChoices =
+        [ { level = 3, options = [ "subclass_druid_circle_of_the_land" ] } ]
       , startingEquipment =
         [ { coinsGp = 9
           , id = "option_a"

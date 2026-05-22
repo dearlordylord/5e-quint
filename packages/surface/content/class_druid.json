@@ -192,7 +192,14 @@
       "kind": "coin_grant"
     }
   ],
-  "subclassChoices": [],
+  "subclassChoices": [
+    {
+      "level": 3,
+      "options": [
+        "subclass_druid_circle_of_the_land"
+      ]
+    }
+  ],
   "toolProficiencies": {
     "kind": "fixed",
     "proficiencies": [

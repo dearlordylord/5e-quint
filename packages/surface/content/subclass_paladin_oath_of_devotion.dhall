@@ -1,0 +1,15 @@
+let oathOfDevotion =
+      { className = "paladin"
+      , description =
+          "The Oath of Devotion Paladin subclass choice. Subclass feature Units are modeled separately from the choice boundary."
+      , featureGrants = [] : List { level : Natural, unitId : Text }
+      , id = "subclass_paladin_oath_of_devotion"
+      , kind = "subclass"
+      , name = "Oath of Devotion"
+      , provenance =
+          { kind = "srd-5.2.1"
+          , section = "Classes/Paladin.md:118-120,235-279"
+          }
+      }
+
+in  oathOfDevotion

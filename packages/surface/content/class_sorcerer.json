@@ -26,14 +26,19 @@
   },
   "name": "Sorcerer",
   "primaryAbilities": {
-    "abilities": ["cha"],
+    "abilities": [
+      "cha"
+    ],
     "kind": "all_of"
   },
   "provenance": {
     "kind": "srd-5.2.1",
     "section": "Classes/Sorcerer.md:3-24,33-76"
   },
-  "savingThrowProficiencies": ["con", "cha"],
+  "savingThrowProficiencies": [
+    "con",
+    "cha"
+  ],
   "skillProficiencyChoice": {
     "choose": 2,
     "options": [
@@ -60,8 +65,8 @@
         "sorcerous_burst"
       ]
     },
-    "kind": "list_prepared_spellcasting_progression_creation",
     "featureLevel": 1,
+    "kind": "list_prepared_spellcasting_progression_creation",
     "preparedAccess": {
       "changeOn": {
         "kind": "class_level",
@@ -101,6 +106,7 @@
       ]
     },
     "spellcastingAbility": "cha",
+    "spellcastingFocus": "arcane_focus",
     "spellcastingProgression": [
       {
         "atLevel": 1,
@@ -124,10 +130,8 @@
           }
         ]
       }
-    ],
-    "spellcastingFocus": "arcane_focus"
+    ]
   },
-  "subclassChoices": [],
   "startingEquipment": [
     {
       "coinsGp": 28,
@@ -157,6 +161,14 @@
       "coinsGp": 50,
       "id": "option_b",
       "kind": "coin_grant"
+    }
+  ],
+  "subclassChoices": [
+    {
+      "level": 3,
+      "options": [
+        "subclass_sorcerer_draconic_sorcery"
+      ]
     }
   ],
   "toolProficiencies": {

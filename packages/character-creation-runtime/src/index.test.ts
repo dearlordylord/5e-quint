@@ -133,7 +133,9 @@ import {
   abilityScoreIncreaseChoiceOptions,
   ELDRITCH_INVOCATIONS_CHOICE_KEY,
   progressionOptionId,
+  CLASS_SUBCLASS_CHOICE_KEY,
   SRD_LEVEL_ONE_CLASS_UNIT_IDS,
+  SRD_LEVEL_THREE_SUBCLASS_UNIT_IDS,
   SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY,
   WEAPON_MASTERY_OPTIONS_CHOICE_KEY,
 } from "./phase1-manifest.ts";
@@ -778,6 +780,7 @@ describe("character creation hole discovery", () => {
         "cc:draft:draft.progression.initial",
         [
           "15:class_barbarian:level_1:maximum_hit_die",
+          "15:class_barbarian|15:class_barbarian|15:class_barbarian:level_3:fixed_hp_gain",
           "10:class_bard:level_1:maximum_hit_die",
           "10:class_bard|10:class_bard:level_2:fixed_hp_gain",
           "12:class_cleric:level_1:maximum_hit_die",
@@ -785,6 +788,7 @@ describe("character creation hole discovery", () => {
           "11:class_druid:level_1:maximum_hit_die",
           "11:class_druid|11:class_druid:level_2:fixed_hp_gain",
           "13:class_fighter:level_1:maximum_hit_die",
+          "13:class_fighter|13:class_fighter|13:class_fighter:level_3:fixed_hp_gain",
           "13:class_fighter|13:class_fighter:level_2:fixed_hp_gain",
           "13:class_fighter|15:class_barbarian:level_2:fixed_hp_gain",
           "13:class_fighter|10:class_bard:level_2:fixed_hp_gain",
@@ -798,12 +802,14 @@ describe("character creation hole discovery", () => {
           "13:class_fighter|13:class_warlock:level_2:fixed_hp_gain",
           "13:class_fighter|12:class_wizard:level_2:fixed_hp_gain",
           "10:class_monk:level_1:maximum_hit_die",
+          "10:class_monk|10:class_monk|10:class_monk:level_3:fixed_hp_gain",
           "10:class_monk|10:class_monk:level_2:fixed_hp_gain",
           "13:class_paladin:level_1:maximum_hit_die",
           "13:class_paladin|13:class_paladin:level_2:fixed_hp_gain",
           "12:class_ranger:level_1:maximum_hit_die",
           "12:class_ranger|12:class_ranger:level_2:fixed_hp_gain",
           "11:class_rogue:level_1:maximum_hit_die",
+          "11:class_rogue|11:class_rogue|11:class_rogue:level_3:fixed_hp_gain",
           "11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue:level_6:fixed_hp_gain",
           "14:class_sorcerer:level_1:maximum_hit_die",
           "14:class_sorcerer|14:class_sorcerer:level_2:fixed_hp_gain",
@@ -4770,30 +4776,31 @@ describe("character creation finalization", () => {
     });
   });
 
-  test("retains selected subclass Unit refs in finalized builds", () => {
-    const profile = CHARACTER_CREATION_SUPPORT_PROFILE as unknown as {
-      supportedProgressions: CharacterProgression[];
-    };
-    const originalProgressions = profile.supportedProgressions;
-    const fighterThree = testProgression("class_fighter", 3);
-    profile.supportedProgressions = [...originalProgressions, fighterThree];
-    try {
-      const complete = completeManifestDraft();
-      const draft: CharacterDraft = {
-        ...complete,
-        selections: {
-          ...complete.selections,
-          progression: fighterThree,
-          choices: [
-            ...complete.selections.choices,
-            selectedUnitChoice(
-              "class_fighter",
-              "class_subclass_choice",
-              "subclass_fighter_champion",
-            ),
+  test("retains each supported SRD subclass Unit ref in finalized builds", () => {
+    for (const subclassUnitId of SRD_LEVEL_THREE_SUBCLASS_UNIT_IDS) {
+      const subclassUnit = unitLibrary.requireUnit(subclassUnitId);
+      if (subclassUnit.kind !== "subclass") {
+        throw new Error(`Expected subclass Unit: ${subclassUnitId}`);
+      }
+      const classUnitId = `class_${subclassUnit.className}`;
+      const classThree = testProgression(classUnitId, 3);
+      const isSupportedLevelThreeProgression =
+        CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions.some(
+          (progression) =>
+            progressionOptionId(progression) === progressionOptionId(classThree),
+        );
+      if (!isSupportedLevelThreeProgression) {
+        continue;
+      }
+      const draft = completeSupportedProgressionDraft({
+        draftId: `draft:subclass-${subclassUnitId}`,
+        progression: classThree,
+        preferredOptionIdsBySource: {
+          [testUnitHoleId(classUnitId, CLASS_SUBCLASS_CHOICE_KEY)]: [
+            creationChoiceOptionId(subclassUnitId),
           ],
         },
-      };
+      });
 
       const result = finalizeCharacterDraft({ draft, unitLibrary });
 
@@ -4803,14 +4810,12 @@ describe("character creation finalization", () => {
           features: expect.arrayContaining([
             {
               kind: "selectedClassChoice",
-              selectedFromUnitId: "class_fighter",
-              unitId: "subclass_fighter_champion",
+              selectedFromUnitId: classUnitId,
+              unitId: subclassUnitId,
             },
           ]),
         },
       });
-    } finally {
-      profile.supportedProgressions = originalProgressions;
     }
   });
 
@@ -6119,12 +6124,7 @@ describe("character creation finalization", () => {
         unitLibrary,
       }),
     ).toMatchObject({
-      tag: "incomplete",
-      holes: [
-        {
-          holeId: testUnitHoleId("class_fighter", "class_equipment_choice"),
-        },
-      ],
+      tag: "invalid",
     });
   });
 
@@ -6471,7 +6471,15 @@ describe("character creation finalization", () => {
       ...complete,
       selections: {
         ...complete.selections,
-        progression: testProgression("class_fighter", 3),
+        progression: testProgression("class_fighter", 4),
+        choices: [
+          ...complete.selections.choices,
+          selectedUnitChoice(
+            "class_fighter",
+            CLASS_SUBCLASS_CHOICE_KEY,
+            "subclass_fighter_champion",
+          ),
+        ],
       },
     };
     const illegal = finalizeCharacterDraft({
@@ -6579,7 +6587,7 @@ describe("character creation finalization", () => {
     });
   });
 
-  test("keeps drafts whose Unit-backed selected options lost Unit refs incomplete", () => {
+  test("rejects drafts whose Unit-backed selected options lost Unit refs", () => {
     const complete = completeManifestDraft();
     const missingUnitRefDraft: CharacterDraft = {
       ...complete,
@@ -6606,15 +6614,7 @@ describe("character creation finalization", () => {
     });
 
     expect(finalization).toMatchObject({
-      tag: "incomplete",
-      holes: [
-        {
-          holeId: testUnitHoleId(
-            "fighter_fighting_style",
-            "class_feature_feat_choice",
-          ),
-        },
-      ],
+      tag: "invalid",
     });
   });
 

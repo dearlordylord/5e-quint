@@ -92,7 +92,14 @@
       "kind": "coin_grant"
     }
   ],
-  "subclassChoices": [],
+  "subclassChoices": [
+    {
+      "level": 3,
+      "options": [
+        "subclass_barbarian_path_of_the_berserker"
+      ]
+    }
+  ],
   "toolProficiencies": {
     "kind": "none"
   },

@@ -174,7 +174,17 @@ import speciesGoliathPowerfulBuildInput from "../../content/species_goliath_powe
 import speciesOrcInput from "../../content/species_orc.json";
 import speciesTieflingInput from "../../content/species_tiefling.json";
 import speciesTieflingDarkvisionInput from "../../content/species_tiefling_darkvision.json";
+import subclassBarbarianPathOfTheBerserkerInput from "../../content/subclass_barbarian_path_of_the_berserker.json";
+import subclassBardCollegeOfLoreInput from "../../content/subclass_bard_college_of_lore.json";
+import subclassClericLifeDomainInput from "../../content/subclass_cleric_life_domain.json";
+import subclassDruidCircleOfTheLandInput from "../../content/subclass_druid_circle_of_the_land.json";
 import subclassFighterChampionInput from "../../content/subclass_fighter_champion.json";
+import subclassMonkWarriorOfTheOpenHandInput from "../../content/subclass_monk_warrior_of_the_open_hand.json";
+import subclassPaladinOathOfDevotionInput from "../../content/subclass_paladin_oath_of_devotion.json";
+import subclassRangerHunterInput from "../../content/subclass_ranger_hunter.json";
+import subclassRogueThiefInput from "../../content/subclass_rogue_thief.json";
+import subclassSorcererDraconicSorceryInput from "../../content/subclass_sorcerer_draconic_sorcery.json";
+import subclassWarlockFiendPatronInput from "../../content/subclass_warlock_fiend_patron.json";
 import subclassWizardEvokerInput from "../../content/subclass_wizard_evoker.json";
 import rayOfFrostInput from "../../content/ray_of_frost.json";
 import rayOfSicknessInput from "../../content/ray_of_sickness.json";
@@ -360,7 +370,17 @@ export const srdUnitCollection = defineSrdUnitCollection({
     speciesGoliathInput,
     speciesOrcInput,
     speciesTieflingInput,
+    subclassBarbarianPathOfTheBerserkerInput,
+    subclassBardCollegeOfLoreInput,
+    subclassClericLifeDomainInput,
+    subclassDruidCircleOfTheLandInput,
     subclassFighterChampionInput,
+    subclassMonkWarriorOfTheOpenHandInput,
+    subclassPaladinOathOfDevotionInput,
+    subclassRangerHunterInput,
+    subclassRogueThiefInput,
+    subclassSorcererDraconicSorceryInput,
+    subclassWarlockFiendPatronInput,
     subclassWizardEvokerInput,
     fighterFightingStyleInput,
     fighterSecondWindInput,

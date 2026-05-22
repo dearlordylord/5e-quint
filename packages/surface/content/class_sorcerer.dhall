@@ -71,7 +71,11 @@ let sorcerer =
             ]
           , spellcastingFocus = "arcane_focus"
           }
-      , subclassChoices = [] : List { level : Natural, options : List Text }
+      , subclassChoices =
+        [ { level = 3
+          , options = [ "subclass_sorcerer_draconic_sorcery" ]
+          }
+        ]
       , startingEquipment =
         [ { coinsGp = 28
           , id = "option_a"

@@ -285,7 +285,14 @@
       "kind": "coin_grant"
     }
   ],
-  "subclassChoices": [],
+  "subclassChoices": [
+    {
+      "level": 3,
+      "options": [
+        "subclass_warlock_fiend_patron"
+      ]
+    }
+  ],
   "toolProficiencies": {
     "kind": "none"
   },

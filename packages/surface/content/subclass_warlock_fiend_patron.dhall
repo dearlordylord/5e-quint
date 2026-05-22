@@ -1,0 +1,13 @@
+let fiendPatron =
+      { className = "warlock"
+      , description =
+          "The Fiend Patron Warlock subclass choice. Subclass feature Units are modeled separately from the choice boundary."
+      , featureGrants = [] : List { level : Natural, unitId : Text }
+      , id = "subclass_warlock_fiend_patron"
+      , kind = "subclass"
+      , name = "Fiend Patron"
+      , provenance =
+          { kind = "srd-5.2.1", section = "Classes/Warlock.md:96-98,454-487" }
+      }
+
+in  fiendPatron

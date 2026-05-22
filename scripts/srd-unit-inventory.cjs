@@ -958,11 +958,21 @@ function levelThreeClassOwnerClassification(row, ownerEvidenceSources) {
     return undefined;
   }
   if (row.rowKind === "subclass-selection") {
+    const characterCreationEvidence = ownerEvidenceSources.characterCreation.get(
+      row.id,
+    );
+    if (characterCreationEvidence) {
+      return {
+        kind: "evidence-present",
+        owner: "character-creation-runtime",
+        evidence: characterCreationEvidence,
+      };
+    }
     return {
       kind: "evidence-required",
-      owner: "future subclass selection/progression owner",
+      owner: "future selected-subclass progression/finalization owner",
       requirement:
-        "Promote a subclass selection and progression split that authors the SRD subclass option records, connects the class level-3 subclass choice to Character Creation, and retains selected subclass identity without treating the class catalog record as executable support.",
+        "Promote class-specific level-3 selected-subclass progression and finalization support that retains the selected subclass identity in Character Creation without treating catalog admission as runtime support; split any subclass Spell Access or subclass feature ownership into its own executable row before projecting those mechanics.",
     };
   }
   if (row.rowKind === "subclass-spell-access") {
