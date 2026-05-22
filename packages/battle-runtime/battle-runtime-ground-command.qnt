@@ -17,6 +17,9 @@ module battleRuntimeGroundCommand {
 
   pure val greaseDurationTicks = 10
   pure val greaseAreaId = 1
+  pure val spikeGrowthDurationTicks = 100
+  pure val spikeGrowthAreaId = 7
+  pure val spikeGrowthDamagePerFeet = 5
   pure val fogCloudDurationTicks = 600
   pure val fogCloudAreaId = 2
   pure val fogCloudBaseRadiusFeet = 20
@@ -43,6 +46,12 @@ module battleRuntimeGroundCommand {
   pure def activeEffectsWithoutGreaseGroundHazard(effects: Set[ActiveEffect], areaId: int): Set[ActiveEffect] =
     effects.filter(effect => match effect {
       | GreaseGroundHazard(data) => data.areaId != areaId
+      | _ => true
+    })
+
+  pure def activeEffectsWithoutSpikeGrowthMovementHazard(effects: Set[ActiveEffect], areaId: int): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | SpikeGrowthMovementHazard(data) => data.areaId != areaId
       | _ => true
     })
 
@@ -77,6 +86,12 @@ module battleRuntimeGroundCommand {
       | _ => false
     })
 
+  pure def spikeGrowthMovementHazardActive(state: BattleState, areaId: int): bool =
+    state.fighter.activeEffects.exists(effect => match effect {
+      | SpikeGrowthMovementHazard(data) => data.areaId == areaId
+      | _ => false
+    })
+
   pure def webAreaHazardActiveForTerrain(state: BattleState, areaId: int): bool =
     state.fighter.activeEffects.exists(effect => match effect {
       | WebRestraintHazard(data) => data.areaId == areaId
@@ -84,13 +99,86 @@ module battleRuntimeGroundCommand {
     })
 
   pure def areaDifficultTerrainActive(state: BattleState, areaId: int): bool =
-    greaseGroundHazardActive(state, areaId) or webAreaHazardActiveForTerrain(state, areaId)
+    greaseGroundHazardActive(state, areaId) or spikeGrowthMovementHazardActive(state, areaId) or webAreaHazardActiveForTerrain(state, areaId)
 
   pure def areaDifficultTerrainMovementCost(state: BattleState, areaId: int, totalDistanceFeet: int, difficultTerrainDistanceFeet: int): int =
     if (areaDifficultTerrainActive(state, areaId) and totalDistanceFeet > 0 and difficultTerrainDistanceFeet > 0 and difficultTerrainDistanceFeet <= totalDistanceFeet)
       totalDistanceFeet + difficultTerrainDistanceFeet
     else
       0
+
+  pure def moveFighterThroughSpikeGrowthDifficultTerrain(state: BattleState, areaId: int, totalDistanceFeet: int, difficultTerrainDistanceFeet: int, provokedByTable: bool): BattleState = {
+    val movementCost = areaDifficultTerrainMovementCost(state, areaId, totalDistanceFeet, difficultTerrainDistanceFeet)
+    if (movementCost == 0)
+      state
+    else
+      moveFighter(state, movementCost, provokedByTable)
+  }
+
+  pure def resolveSpikeGrowth(
+    state: BattleState,
+    areaId: int,
+    slotLevel: int,
+  ): BattleState =
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)) or slotLevel < 2)
+      state
+    else {
+      val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
+      commitActorSpellSlotUse({
+        ...withoutPrior,
+        fighter: {
+          ...withoutPrior.fighter,
+          concentrating: true,
+          activeEffects: activeEffectsWithoutSpikeGrowthMovementHazard(withoutPrior.fighter.activeEffects, areaId)
+            .union(Set(SpikeGrowthMovementHazard({
+              areaId: areaId,
+              damageDice: 2,
+              damagePerFeet: spikeGrowthDamagePerFeet,
+              durationTicks: spikeGrowthDurationTicks,
+            }))),
+        },
+        actionAvailable: false,
+      }, Fighter)
+    }
+
+  pure def spikeGrowthMovementDamageAmount(rolledDamage: int, movementFeet: int): int =
+    rolledDamage * (movementFeet / spikeGrowthDamagePerFeet)
+
+  pure def combatantWithSpikeGrowthDamage(
+    target: Combatant,
+    rolledDamage: int,
+    movementFeet: int,
+  ): Combatant =
+    applyDamageFromSource(
+      target,
+      damageAfterAdjustments(
+        spikeGrowthMovementDamageAmount(rolledDamage, movementFeet),
+        Piercing,
+        Set(),
+        Set(),
+        Set(),
+      ),
+      1,
+      true,
+      OrdinaryDamage,
+      Fighter,
+    )
+
+  pure def resolveSpikeGrowthMovementDamage(
+    state: BattleState,
+    targetActor: Actor,
+    areaId: int,
+    rolledDamage: int,
+    movementFeet: int,
+  ): BattleState =
+    if (not(spikeGrowthMovementHazardActive(state, areaId)) or movementFeet <= 0)
+      state
+    else {
+      match targetActor {
+        | Fighter => { ...state, fighter: combatantWithSpikeGrowthDamage(state.fighter, rolledDamage, movementFeet) }
+        | Goblin => { ...state, goblin: combatantWithSpikeGrowthDamage(state.goblin, rolledDamage, movementFeet) }
+      }
+    }
 
   pure def moveFighterThroughGreaseGroundDifficultTerrain(state: BattleState, areaId: int, totalDistanceFeet: int, greaseDistanceFeet: int, provokedByTable: bool): BattleState = {
     val movementCost = areaDifficultTerrainMovementCost(state, areaId, totalDistanceFeet, greaseDistanceFeet)

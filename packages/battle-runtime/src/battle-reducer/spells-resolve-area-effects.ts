@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-fog-cloud-obscurement spell.invocation-flaming-sphere-hazard-ram spell.invocation-moonbeam-movable-zone
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
@@ -19,6 +20,7 @@ import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import {
   applyFlamingSphereCastEffect,
+  applySpikeGrowthMovementHazardCastEffect,
   applyFogCloudObscurementCastEffect,
   applyGustOfWindLineCastEffect,
   applyAntimagicFieldOngoingSpellSuppressionCastEffect,
@@ -395,6 +397,78 @@ export function resolveFlamingSphereSpellAct(input: {
     return resourced;
   }
   const nextState = applyFlamingSphereCastEffect({
+    state: resourced.state,
+    actorId: input.actorId,
+    areaId: input.fillSet.areaChoice.areaId,
+    invocation: input.invocation,
+  });
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+export function resolveSpikeGrowthMovementHazardSpellAct(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "spikeGrowthMovementHazard" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  if (
+    input.fillSet.targetId !== undefined ||
+    input.fillSet.objectTarget !== undefined ||
+    input.fillSet.targetAllocation !== undefined ||
+    input.fillSet.targetList !== undefined ||
+    input.fillSet.attackRoll !== undefined ||
+    input.fillSet.savingThrowOutcomes !== undefined ||
+    input.fillSet.skillChoice !== undefined ||
+    input.fillSet.abilityChoice !== undefined ||
+    input.fillSet.commandOptionChoice !== undefined ||
+    input.fillSet.damageTypeChoice !== undefined ||
+    input.fillSet.concentrationSavingThrows.length > 0 ||
+    input.fillSet.damageDispositions.length > 0 ||
+    input.fillSet.damageRoll !== undefined ||
+    input.fillSet.movement !== undefined ||
+    input.fillSet.spellDamageReductionRolls.length > 0 ||
+    input.fillSet.attackBurstDamageRoll !== undefined ||
+    input.fillSet.healingRoll !== undefined
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Spike Growth uses one table-supplied sphere area fill.",
+    );
+  }
+  if (input.fillSet.areaChoice === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      spellAreaChoiceHole(input.invocation),
+    ]);
+  }
+  if (
+    input.fillSet.areaChoice.kind !== "spikeGrowthArea" ||
+    input.fillSet.areaChoice.areaId.length === 0
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Spike Growth area id must be a non-empty sphere area.",
+    );
+  }
+
+  const resourced = spendSpellCastResources({
+    state: input.input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+  });
+  if (resourced.tag === "invalid") {
+    return resourced;
+  }
+  const nextState = applySpikeGrowthMovementHazardCastEffect({
     state: resourced.state,
     actorId: input.actorId,
     areaId: input.fillSet.areaChoice.areaId,

@@ -136,6 +136,7 @@ module battleRuntimeSpellInvocation {
       | Darkness => true
       | AntimagicField => true
       | Web => true
+      | SpikeGrowth => true
       | Command => true
       | DissonantWhispers => true
       | FeatherFall => true
@@ -145,6 +146,7 @@ module battleRuntimeSpellInvocation {
       | HideousLaughter => true
       | MistyStep => true
       | Blur => true
+      | SeeInvisibility => true
       | MirrorImage => true
       | MindSpike => true
       | AlterSelf => true

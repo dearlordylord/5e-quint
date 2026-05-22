@@ -1723,6 +1723,23 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("spikeGrowthMovementHazard"),
+      spell: BattleRuntimeObjectSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("pointOriginSphere"),
+        radiusFeet: MovementFeet,
+      }),
+      durationTicks: BattleRuntimeObjectSchema,
+      rangeFeet: MovementFeet,
+      damage: Schema.Struct({
+        expr: BattleRuntimeObjectSchema,
+        damageType: Schema.Literal("piercing"),
+      }),
+      damagePerFeet: MovementFeet,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("objectContactDamage"),
       spell: BattleRuntimeObjectSchema,
       actionCost: Schema.Literal("magicAction"),
@@ -1932,6 +1949,14 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("blurAttackRollDefense"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      activeEffect: BattleRuntimeObjectSchema,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("seeInvisibleObserverSight"),
       spell: BattleRuntimeObjectSchema,
       actionCost: Schema.Literal("magicAction"),
       activeEffect: BattleRuntimeObjectSchema,
@@ -2510,6 +2535,22 @@ export const BattleHoleSchema = Schema.Union(
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("rolledDice"),
     movableZone: BattleRuntimeObjectSchema,
+    critical: Schema.Literal(false),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("rolledDice"),
+    spikeGrowthMovement: Schema.Struct({
+      targetId: CombatantId,
+      sourceSpellId: Schema.String,
+      sourceCombatantId: CombatantId,
+      areaId: BattleAreaId,
+      distanceFeet: MovementFeet,
+      damage: Schema.Struct({
+        expr: BattleRuntimeObjectSchema,
+        damageType: Schema.Literal("piercing"),
+      }),
+    }),
     critical: Schema.Literal(false),
   }),
   Schema.Struct({
@@ -3300,6 +3341,10 @@ type BattleFillEncoded =
             readonly areaId: string;
           }
         | {
+            readonly kind: "spikeGrowthArea";
+            readonly areaId: string;
+          }
+        | {
             readonly kind: "moonbeamCylinderArea";
             readonly areaId: string;
           }
@@ -3530,6 +3575,29 @@ type BattleFillEncoded =
       ];
     }
   | {
+      readonly kind: "rolledDice";
+      readonly holeId: string;
+      readonly spikeGrowthMovement: {
+        readonly targetId: string;
+        readonly sourceSpellId: string;
+        readonly sourceCombatantId: string;
+        readonly areaId: string;
+        readonly distanceFeet: number;
+        readonly damage: {
+          readonly expr: typeof BattleRuntimeObjectSchema;
+          readonly damageType: "piercing";
+        };
+      };
+      readonly value: readonly [
+        {
+          readonly results: readonly [number, ...number[]];
+        },
+        ...{
+          readonly results: readonly [number, ...number[]];
+        }[],
+      ];
+    }
+  | {
       readonly kind: "deathSavingThrow";
       readonly holeId: string;
       readonly value: number;
@@ -3640,12 +3708,27 @@ type BattleFillEncoded =
         }[];
         readonly areaDifficultTerrain?: {
           readonly kind: "areaDifficultTerrain";
-          readonly sources: readonly {
-            readonly kind: "greaseGroundHazard" | "webAreaHazard";
-            readonly sourceCombatantId: string;
-            readonly sourceSpellId: string;
-            readonly areaId: string;
-          }[];
+          readonly sources: readonly (
+            | {
+                readonly kind: "greaseGroundHazard";
+                readonly sourceCombatantId: string;
+                readonly sourceSpellId: string;
+                readonly areaId: string;
+              }
+            | {
+                readonly kind: "webAreaHazard";
+                readonly sourceCombatantId: string;
+                readonly sourceSpellId: string;
+                readonly areaId: string;
+              }
+            | {
+                readonly kind: "spikeGrowthHazard";
+                readonly sourceCombatantId: string;
+                readonly sourceSpellId: string;
+                readonly areaId: string;
+                readonly damageDistanceFeet: number;
+              }
+          )[];
           readonly totalDistanceFeet: number;
           readonly difficultTerrainDistanceFeet: number;
         };
@@ -4016,6 +4099,10 @@ export const BattleFillSchema: Schema.Schema<
           areaId: BattleAreaId,
         }),
         Schema.Struct({
+          kind: Schema.Literal("spikeGrowthArea"),
+          areaId: BattleAreaId,
+        }),
+        Schema.Struct({
           kind: Schema.Literal("moonbeamCylinderArea"),
           areaId: BattleAreaId,
         }),
@@ -4259,12 +4346,27 @@ export const BattleFillSchema: Schema.Schema<
           Schema.Struct({
             kind: Schema.Literal("areaDifficultTerrain"),
             sources: Schema.Array(
-              Schema.Struct({
-                kind: Schema.Literal("greaseGroundHazard", "webAreaHazard"),
-                sourceCombatantId: CombatantId,
-                sourceSpellId: Schema.String,
-                areaId: BattleAreaId,
-              }),
+              Schema.Union(
+                Schema.Struct({
+                  kind: Schema.Literal("greaseGroundHazard"),
+                  sourceCombatantId: CombatantId,
+                  sourceSpellId: Schema.String,
+                  areaId: BattleAreaId,
+                }),
+                Schema.Struct({
+                  kind: Schema.Literal("webAreaHazard"),
+                  sourceCombatantId: CombatantId,
+                  sourceSpellId: Schema.String,
+                  areaId: BattleAreaId,
+                }),
+                Schema.Struct({
+                  kind: Schema.Literal("spikeGrowthHazard"),
+                  sourceCombatantId: CombatantId,
+                  sourceSpellId: Schema.String,
+                  areaId: BattleAreaId,
+                  damageDistanceFeet: MovementFeet,
+                }),
+              ),
             ),
             totalDistanceFeet: MovementFeet,
             difficultTerrainDistanceFeet: MovementFeet,

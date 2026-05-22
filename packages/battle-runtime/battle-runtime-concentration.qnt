@@ -22,13 +22,21 @@ module battleRuntimeConcentration {
     else
       NormalSavingThrow
 
-  pure def spellEffectConcentrationActiveEffects(): Set[ActiveEffect] =
-    Set(ShieldOfFaithArmorClassBonus, HeroismFrightenedImmunity, CalmEmotionsCharmedImmunity, CalmEmotionsFrightenedImmunity, BaneD20RollPenalty, BlessD20RollBonus, PassWithoutTraceStealthBonus, EntangleRestrained, FaerieFireOutline, ProtectionFromEvilAndGoodCreatureTypeProtection, Blurred, ExpeditiousRetreatDashBonusAction)
-
   pure def activeEffectsWithoutSpellEffectConcentration(effects: Set[ActiveEffect]): Set[ActiveEffect] =
     effects
-      .exclude(spellEffectConcentrationActiveEffects)
       .filter(effect => match effect {
+        | ShieldOfFaithArmorClassBonus => false
+        | HeroismFrightenedImmunity => false
+        | CalmEmotionsCharmedImmunity => false
+        | CalmEmotionsFrightenedImmunity => false
+        | BaneD20RollPenalty => false
+        | BlessD20RollBonus => false
+        | PassWithoutTraceStealthBonus => false
+        | EntangleRestrained => false
+        | FaerieFireOutline => false
+        | ProtectionFromEvilAndGoodCreatureTypeProtection => false
+        | Blurred => false
+        | ExpeditiousRetreatDashBonusAction => false
         | HeroismTurnStartTemporaryHitPoints(_) => false
         | SpiderClimbClimbSpeedGrant(_) => false
         | GuidanceAbilityCheckBonus(_) => false
@@ -40,6 +48,7 @@ module battleRuntimeConcentration {
         | MagicalDarknessPointOrigin(_) => false
         | AntimagicFieldOngoingSpellSuppression(_) => false
         | FlamingSphere(_) => false
+        | SpikeGrowthMovementHazard(_) => false
         | MoonbeamMovableZone(_) => false
         | WebRestraintHazard(_) => false
         | WebRestrained(_) => false
@@ -53,6 +62,7 @@ module battleRuntimeConcentration {
         | DancingLightsEffect(_) => false
         | FlameBladeEffect(_) => false
         | InvisibilityCondition(_) => false
+        | SeeInvisibleAndEthereal(_) => true
         | MindSpikeConcentrationDuration(_) => false
         | SelfTransformationModeEffect(_) => false
         | _ => true

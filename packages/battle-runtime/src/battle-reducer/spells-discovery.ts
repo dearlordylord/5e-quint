@@ -238,6 +238,21 @@ export function discoverSupportedSpellInvocations(
           },
         ];
       }
+      if (invocation.procedure === "spikeGrowthMovementHazard") {
+        return [
+          {
+            subject: {
+              tag: "actionSpell" as const,
+              actorId,
+              invocation: supportedSpellInvocationRef(invocation),
+              mode: { tag: "cast" as const },
+            },
+            label: invocation.spell.name,
+            summary: `${spellActivationInvocationCastSummary(invocation)} The table supplies the Spike Growth area identity.`,
+            initialHoles: [spellAreaChoiceHole(invocation)],
+          },
+        ];
+      }
       if (invocation.procedure === "moonbeam") {
         return [
           {
@@ -457,6 +472,21 @@ export function discoverSupportedSpellInvocations(
         return castActs;
       }
       if (invocation.procedure === "blurAttackRollDefense") {
+        return [
+          {
+            subject: {
+              tag: "actionSpell" as const,
+              actorId,
+              invocation: supportedSpellInvocationRef(invocation),
+              mode: { tag: "cast" as const },
+            },
+            label: invocation.spell.name,
+            summary: spellInvocationCastSummary(invocation),
+            initialHoles: [],
+          },
+        ];
+      }
+      if (invocation.procedure === "seeInvisibleObserverSight") {
         return [
           {
             subject: {
@@ -1152,6 +1182,9 @@ export function spellInvocationCastSummary(
   if (invocation.procedure === "blurAttackRollDefense") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
+  if (invocation.procedure === "seeInvisibleObserverSight") {
+    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+  }
   if (invocation.procedure === "mirrorImageHitInterception") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
@@ -1264,6 +1297,7 @@ export function spellActivationInvocationCastSummary(
         | "thaumaturgyBoomingVoice"
         | "creatureTypeProtection"
         | "blurAttackRollDefense"
+        | "seeInvisibleObserverSight"
         | "mirrorImageHitInterception"
         | "saveGatedDamage"
         | "saveGatedCondition"
@@ -1279,6 +1313,7 @@ export function spellActivationInvocationCastSummary(
         | "magicalDarknessPointOrigin"
         | "antimagicFieldOngoingSpellSuppression"
         | "flamingSphere"
+        | "spikeGrowthMovementHazard"
         | "moonbeam"
         | "objectContactDamage"
         | "dancingLightsSeparateCast"
@@ -1451,6 +1486,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "wardingBond" &&
     invocation.procedure !== "creatureTypeProtection" &&
     invocation.procedure !== "blurAttackRollDefense" &&
+    invocation.procedure !== "seeInvisibleObserverSight" &&
     invocation.procedure !== "mirrorImageHitInterception" &&
     invocation.procedure !== "conditionRemovalProtection" &&
     invocation.procedure !== "directConditionRemoval" &&
@@ -1524,6 +1560,7 @@ export function readiedSpellAct(
     invocation.procedure === "rollModifier" ||
     invocation.procedure === "creatureTypeProtection" ||
     invocation.procedure === "blurAttackRollDefense" ||
+    invocation.procedure === "seeInvisibleObserverSight" ||
     invocation.procedure === "mirrorImageHitInterception" ||
     invocation.procedure === "conditionRemovalProtection" ||
     invocation.procedure === "directConditionRemoval" ||

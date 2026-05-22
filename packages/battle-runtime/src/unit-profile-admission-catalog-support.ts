@@ -147,6 +147,10 @@ export const invisibilityUnitId = "invisibility";
 
 export const invisibilityDurationTicks = elapsedTimeTicks(600);
 
+export const seeInvisibilityUnitId = "see_invisibility";
+
+export const seeInvisibilityDurationTicks = elapsedTimeTicks(600);
+
 export const lesserRestorationUnitId = "lesser_restoration";
 
 export const thunderwaveUnitId = "thunderwave";
@@ -204,6 +208,8 @@ export const faerieFireUnitId = "faerie_fire";
 export const flameBladeUnitId = "flame_blade";
 
 export const flamingSphereUnitId = "flaming_sphere";
+
+export const spikeGrowthUnitId = "spike_growth";
 
 export const moonbeamUnitId = "moonbeam";
 
@@ -335,6 +341,8 @@ export const greaseAreaId = battleAreaId("unit-profile-grease-ground-area");
 export const flamingSphereAreaId = battleAreaId(
   "unit-profile-flaming-sphere-area",
 );
+
+export const spikeGrowthAreaId = battleAreaId("unit-profile-spike-growth-area");
 
 export const moonbeamAreaId = battleAreaId("unit-profile-moonbeam-area");
 

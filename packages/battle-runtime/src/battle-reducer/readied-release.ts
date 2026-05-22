@@ -25,6 +25,7 @@ import {
   parseBattleMovement,
   readiedMovementHole,
   readiedMovementBudgetForActor,
+  resolveMovementEffectsAfterMovement,
 } from "./turn-end-movement.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state.ts";
 import { normalizeBattleGrapples } from "./creature-state-leaves.ts";
@@ -239,7 +240,17 @@ export function resolveReleaseReadiedMovementCommand(
       readiedMovementHole(input.state, readiedMovementActorId),
     ]);
   }
-  if (input.fills.length > 1 || input.fills[0]?.kind !== "movement") {
+  if (input.fills[0]?.kind !== "movement") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Release Readied Movement requires a Movement fill first.",
+    );
+  }
+  if (
+    input.fills.filter((candidate) => candidate.kind === "movement").length !==
+    1
+  ) {
     return invalidResult(
       input.state,
       "invalidFill",
@@ -270,14 +281,14 @@ export function resolveReleaseReadiedMovementCommand(
   if (movement.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", movement.message);
   }
-  const readiedMovements = new Map(input.state.readiedMovements);
-  readiedMovements.delete(readiedMovementActorId);
-  const stateWithoutReadied = { ...input.state, readiedMovements };
   const threats = opportunityAttackThreatsForMovement(
-    stateWithoutReadied,
+    input.state,
     movement.movement,
   );
   if (threats.length > 0) {
+    const readiedMovements = new Map(input.state.readiedMovements);
+    readiedMovements.delete(readiedMovementActorId);
+    const stateWithoutReadied = { ...input.state, readiedMovements };
     const reactionWindow = maybeOpenReactionWindow(
       stateWithoutReadied,
       {
@@ -294,10 +305,28 @@ export function resolveReleaseReadiedMovementCommand(
     );
     if (reactionWindow !== null) return reactionWindow;
   }
-  const nextState = applyBattleMovement(stateWithoutReadied, movement.movement);
+  const movementEffects = resolveMovementEffectsAfterMovement({
+    state: input.state,
+    subject: input.subject,
+    movement: movement.movement,
+    extraFills: input.fills.slice(1),
+  });
+  if (movementEffects.tag !== "resolved") {
+    return movementEffects;
+  }
+  if (movementEffects.remainingFills.length > 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Release Readied Movement only accepts Movement, Spike Growth damage, Concentration, and damage disposition fills.",
+    );
+  }
+  const readiedMovements = new Map(movementEffects.state.readiedMovements);
+  readiedMovements.delete(readiedMovementActorId);
+  const stateWithoutReadied = { ...movementEffects.state, readiedMovements };
   return {
     tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
+    state: stateWithoutReadied,
+    snapshot: snapshotBattle(stateWithoutReadied),
   };
 }

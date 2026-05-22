@@ -266,6 +266,10 @@ module battleRuntimeTimedEffects {
             source: data.source,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
+        | SeeInvisibleAndEthereal(data) => SeeInvisibleAndEthereal({
+            source: data.source,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
         | MindSpikeConcentrationDuration(data) => MindSpikeConcentrationDuration({
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
@@ -283,6 +287,12 @@ module battleRuntimeTimedEffects {
           })
         | GreaseGroundHazard(data) => GreaseGroundHazard({
             areaId: data.areaId,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
+        | SpikeGrowthMovementHazard(data) => SpikeGrowthMovementHazard({
+            areaId: data.areaId,
+            damageDice: data.damageDice,
+            damagePerFeet: data.damagePerFeet,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
         | FogCloudObscurement(data) => FogCloudObscurement({
@@ -366,10 +376,12 @@ module battleRuntimeTimedEffects {
         | SanctuaryWard(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | MirrorImageDuplicates(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | InvisibilityCondition(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | SeeInvisibleAndEthereal(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | MindSpikeConcentrationDuration(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | SelfTransformationModeEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | HideousLaughterEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | GreaseGroundHazard(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | SpikeGrowthMovementHazard(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | FogCloudObscurement(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | MagicalDarknessPointOrigin(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | AntimagicFieldOngoingSpellSuppression(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)

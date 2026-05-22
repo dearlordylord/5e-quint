@@ -10,6 +10,8 @@ import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
 import type { ArmorCategory, HandUse } from "@dnd/shared/types";
 import { Match } from "effect";
 import {
+  type BattleSeeInvisibleEtherealWitness,
+  type BattleSeeInvisibleObjectWitness,
   type BattleCreatureState,
   type BattleGrappleLink,
   type BattleState,
@@ -21,7 +23,8 @@ export function combatantCanSee(
   viewerId: CombatantId,
   seenId: CombatantId,
 ): boolean {
-  if (!state.combatants.has(viewerId)) {
+  const viewer = state.combatants.get(viewerId);
+  if (viewer === undefined) {
     return false;
   }
   const seen = state.combatants.get(seenId);
@@ -29,7 +32,47 @@ export function combatantCanSee(
   return (
     seen !== undefined &&
     (seen.hidden === null || invisibleBenefitDenied) &&
-    (!hasCondition(seen.conditions, "invisible") || invisibleBenefitDenied)
+    (!hasCondition(seen.conditions, "invisible") ||
+      invisibleBenefitDenied ||
+      combatantHasSeeInvisibleAndEtherealEffect(viewer))
+  );
+}
+
+export function combatantHasSeeInvisibleAndEtherealEffect(
+  combatant: BattleCreatureState | undefined,
+): boolean {
+  return (
+    combatant?.activeEffects.some(
+      (effect) => effect.kind === "seeInvisibleAndEthereal",
+    ) === true
+  );
+}
+
+export function seeInvisibleRevealsInvisibleObject(
+  state: BattleState,
+  witness: BattleSeeInvisibleObjectWitness,
+): boolean {
+  return (
+    combatantHasSeeInvisibleAndEtherealEffect(
+      state.combatants.get(witness.observerId),
+    ) &&
+    witness.objectHasInvisibleCondition &&
+    witness.hasSightLine &&
+    !witness.blockedByOpaqueCover
+  );
+}
+
+export function seeInvisibleRevealsEtherealWitness(
+  state: BattleState,
+  witness: BattleSeeInvisibleEtherealWitness,
+): boolean {
+  return (
+    combatantHasSeeInvisibleAndEtherealEffect(
+      state.combatants.get(witness.observerId),
+    ) &&
+    witness.targetPlane === "ethereal" &&
+    witness.hasSightLine &&
+    !witness.blockedByOpaqueCover
   );
 }
 

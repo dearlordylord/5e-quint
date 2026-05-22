@@ -1,5 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form spell.invocation-flaming-sphere-hazard-ram spell.invocation-self-transformation-mode spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE
 
@@ -144,6 +145,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "magicalDarknessPointOrigin",
   "antimagicFieldOngoingSpellSuppression",
   "flamingSphere",
+  "spikeGrowthMovementHazard",
   "moonbeam",
   "objectContactDamage",
   "spellCreatedHeldObject",
@@ -157,6 +159,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "conditionImmunityAndTurnStartTemporaryHitPoints",
   "creatureTypeProtection",
   "blurAttackRollDefense",
+  "seeInvisibleObserverSight",
   "mirrorImageHitInterception",
   "conditionRemovalProtection",
   "directConditionRemoval",

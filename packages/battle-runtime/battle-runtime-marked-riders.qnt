@@ -45,9 +45,11 @@ module battleRuntimeMarkedRiders {
       | MagicalDarknessPointOrigin(_) => true
       | WebRestraintHazard(_) => true
       | HeatMetalObjectContactDamage(_) => true
+      | SpikeGrowthMovementHazard(_) => true
       | DancingLightsEffect(_) => true
       | FlameBladeEffect(_) => true
       | InvisibilityCondition(_) => true
+      | SeeInvisibleAndEthereal(_) => false
       | MindSpikeConcentrationDuration(_) => true
       | SelfTransformationModeEffect(_) => true
       | _ => false

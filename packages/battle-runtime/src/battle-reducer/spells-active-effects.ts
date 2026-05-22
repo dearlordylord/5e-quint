@@ -1,6 +1,7 @@
 // Spell active-effect application extracted from spells-holes-fills.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-tracked-light-suppression
 
@@ -195,6 +196,11 @@ export type ThaumaturgyBoomingVoiceInvocation = Extract<
 export type BlurAttackRollDefenseInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "blurAttackRollDefense" }
+>;
+
+export type SeeInvisibleObserverSightInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "seeInvisibleObserverSight" }
 >;
 
 export type MirrorImageHitInterceptionInvocation = Extract<
@@ -1943,6 +1949,47 @@ export function applyFlamingSphereCastEffect(input: {
   return { ...input.state, combatants };
 }
 
+export function applySpikeGrowthMovementHazardCastEffect(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly areaId: BattleAreaId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "spikeGrowthMovementHazard" }
+  >;
+}): BattleState {
+  const combatants = new Map(input.state.combatants);
+  const caster = combatants.get(input.actorId);
+  if (caster === undefined) {
+    return input.state;
+  }
+  const replacing = caster.activeEffects.filter(
+    (effect) =>
+      effect.kind === "spikeGrowthHazard" &&
+      effect.sourceSpellId === input.invocation.spell.id &&
+      effect.sourceCombatantId === input.actorId &&
+      effect.areaId === input.areaId,
+  );
+  const activeEffects = [
+    ...caster.activeEffects.filter((effect) => !replacing.includes(effect)),
+    {
+      kind: "spikeGrowthHazard" as const,
+      sourceSpellId: input.invocation.spell.id,
+      sourceCombatantId: input.actorId,
+      areaId: input.areaId,
+      damage: input.invocation.damage,
+      damagePerFeet: input.invocation.damagePerFeet,
+      expiresAt: {
+        kind: "concentration" as const,
+        combatantId: input.actorId,
+        durationTicks: input.invocation.durationTicks,
+      },
+    },
+  ];
+  combatants.set(input.actorId, { ...caster, activeEffects });
+  return { ...input.state, combatants };
+}
+
 export function applyMoonbeamCastEffect(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
@@ -3373,6 +3420,39 @@ export function applyBlurAttackRollDefenseSpellEffect(
       (effect) =>
         !(
           effect.kind === "blurred" &&
+          effect.sourceSpellId === invocation.spell.id &&
+          effect.sourceCombatantId === actorId
+        ),
+    ),
+    nextEffect,
+  ];
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(
+      actorId,
+      battleCreatureWithSpellActiveEffects(actor, activeEffects),
+    ),
+  };
+}
+
+export function applySeeInvisibleObserverSightSpellEffect(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: SeeInvisibleObserverSightInvocation,
+): BattleState {
+  const actor = state.combatants.get(actorId);
+  if (actor === undefined) {
+    return state;
+  }
+  const nextEffect = {
+    ...invocation.activeEffect,
+    sourceCombatantId: actorId,
+  };
+  const activeEffects = [
+    ...actor.activeEffects.filter(
+      (effect) =>
+        !(
+          effect.kind === "seeInvisibleAndEthereal" &&
           effect.sourceSpellId === invocation.spell.id &&
           effect.sourceCombatantId === actorId
         ),

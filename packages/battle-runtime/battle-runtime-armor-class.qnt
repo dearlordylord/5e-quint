@@ -93,11 +93,13 @@ module battleRuntimeArmorClass {
         | FeatherFallMitigation(_) => false
         | SanctuaryWard(_) => false
         | InvisibilityCondition(_) => false
+        | SeeInvisibleAndEthereal(_) => false
         | MindSpikeConcentrationDuration(_) => false
         | SleepPendingRepeatSave(_) => false
         | SleepUnconscious(_) => false
         | HideousLaughterEffect(_) => false
         | GreaseGroundHazard(_) => false
+        | SpikeGrowthMovementHazard(_) => false
         | FogCloudObscurement(_) => false
         | MagicalDarknessPointOrigin(_) => false
         | AntimagicFieldOngoingSpellSuppression(_) => false

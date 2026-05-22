@@ -192,14 +192,14 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 509,
-      "percent": "91.5%",
+      "numerator": 512,
+      "percent": "92.1%",
       "rowsByStatus": {
-        "accepted": 372,
+        "accepted": 375,
         "accepted-no-battle-effect": 137,
         "owner-evidence-required": 2,
-        "partial-battle-runtime": 14,
-        "battle-runtime-required": 31
+        "partial-battle-runtime": 16,
+        "battle-runtime-required": 26
       }
     },
     "levelOneClassContainers": 12,
@@ -214,20 +214,20 @@
       "catalog-installed-needs-owner-evidence": 1
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 391,
+      "catalog-installed-owner-evidence-present": 396,
       "non-runtime": 24,
-      "catalog-installed-owner-evidence-required": 14,
+      "catalog-installed-owner-evidence-required": 11,
       "catalog-only/dead-for-now": 108,
       "missing-authored-record": 10,
-      "catalog-authored-executable-follow-up": 8,
+      "catalog-authored-executable-follow-up": 6,
       "catalog-installed-needs-owner-evidence": 1
     },
     "spellPressureRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 228,
+      "catalog-installed-owner-evidence-present": 233,
       "catalog-only/dead-for-now": 108,
-      "catalog-installed-owner-evidence-required": 13,
+      "catalog-installed-owner-evidence-required": 10,
       "missing-authored-record": 10,
-      "catalog-authored-executable-follow-up": 8
+      "catalog-authored-executable-follow-up": 6
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -6904,8 +6904,14 @@
         "state": "installed",
         "unitId": "see_invisibility"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table sight and plane witness provider",
+        "reason": "The battle runtime owns the spell invocation and self effect lifecycle, but object visibility, Ethereal targeting, cover, sight-line, and plane membership remain caller-supplied observer witnesses rather than stored battle geometry or duplicated target state."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -6913,13 +6919,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/effect lifecycle plus observer-sight witness boundary",
-          "evidence": "Promote follow-up split L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT: L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT owns Promote See Invisibility as a level-2 self spell that spends the Magic Action and Spell Slot, applies a one-hour self effect, and exposes observer-scoped sight facts that let only the caster see creatures and objects with the Invisible condition as visible and see Ethereal Plane facts through table-supplied plane, distance, cover, and sight-line witnesses, without granting full Truesight, Darkness, visual-illusion, or transformation behavior. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused battle-runtime tests, and promoted Quint/runtime parity for the self effect, duration cleanup, observer-scoped Invisible benefit denial, and Ethereal visibility witness facts without full Truesight behavior.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT at packages/battle-runtime/src/unit-profile-admission-see-invisibility.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT: L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT owns Promote See Invisibility as a level-2 self spell that spends the Magic Action and Spell Slot, applies a one-hour self effect, and exposes observer-scoped sight facts that let only the caster see creatures and objects with the Invisible condition as visible and see Ethereal Plane facts through table-supplied plane, distance, cover, and sight-line witnesses, without granting full Truesight, Darkness, visual-illusion, or transformation behavior. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused battle-runtime tests, and promoted Quint/runtime parity for the self effect, duration cleanup, observer-scoped Invisible benefit denial, and Ethereal visibility witness facts without full Truesight behavior.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_shatter",
@@ -12252,14 +12258,25 @@
         "sourceRecordPath": "packages/surface/content/spike_growth.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "spike_growth"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME, L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION: L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME owns Promote Spike Growth's battle-visible hazard: Magic Action and level-2-or-higher Spell Slot spend, caster-owned Concentration up to 10 minutes, caller-supplied point-origin ground-area identity, active Difficult Terrain movement-cost facts for movement through the area, Movement-triggered 2d4 Piercing damage per 5-foot increment traveled into or within the area from caller-supplied path-distance facts, damage disposition and Concentration interactions, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Spike Growth movement damage, Difficult Terrain movement cost, resource spending, Concentration ownership, and cleanup without automatic geometry or pathfinding derivation.; L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION owns Represent and close the camouflaged terrain recognition rule: whether a creature could see the area when the spell was cast, Search action spend before entering for creatures that did not see it, Wisdom (Perception or Survival) check against the caster's spell save DC, recognition state or explicit table-owned witness used before movement into the area, and cleanup with the hazard. Required output: Surface schema/content support or accepted runtime-detached closure for Spike Growth hazard recognition, with focused tests and coverage disposition that either promotes the Search recognition boundary or closes it with an explicit table-owned reason.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit spike_growth is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME at packages/battle-runtime/src/unit-profile-admission-spike-growth-movement-hazard.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "partial-battle-runtime"
     },
     {
       "id": "srd521:classes/fighter:level-1:class-container:fighter_class_container",
@@ -17498,14 +17515,25 @@
         "sourceRecordPath": "packages/surface/content/spike_growth.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "spike_growth"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-authored-executable-follow-up",
-      "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME, L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION: L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME owns Promote Spike Growth's battle-visible hazard: Magic Action and level-2-or-higher Spell Slot spend, caster-owned Concentration up to 10 minutes, caller-supplied point-origin ground-area identity, active Difficult Terrain movement-cost facts for movement through the area, Movement-triggered 2d4 Piercing damage per 5-foot increment traveled into or within the area from caller-supplied path-distance facts, damage disposition and Concentration interactions, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Spike Growth movement damage, Difficult Terrain movement cost, resource spending, Concentration ownership, and cleanup without automatic geometry or pathfinding derivation.; L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION owns Represent and close the camouflaged terrain recognition rule: whether a creature could see the area when the spell was cast, Search action spend before entering for creatures that did not see it, Wisdom (Perception or Survival) check against the caster's spell save DC, recognition state or explicit table-owned witness used before movement into the area, and cleanup with the hazard. Required output: Surface schema/content support or accepted runtime-detached closure for Spike Growth hazard recognition, with focused tests and coverage disposition that either promotes the Search recognition boundary or closes it with an explicit table-owned reason.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit spike_growth is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME at packages/battle-runtime/src/unit-profile-admission-spike-growth-movement-hazard.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "partial-battle-runtime"
     },
     {
       "id": "srd521:classes/rogue:level-1:class-container:rogue_class_container",
@@ -21429,8 +21457,14 @@
         "state": "installed",
         "unitId": "see_invisibility"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table sight and plane witness provider",
+        "reason": "The battle runtime owns the spell invocation and self effect lifecycle, but object visibility, Ethereal targeting, cover, sight-line, and plane membership remain caller-supplied observer witnesses rather than stored battle geometry or duplicated target state."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -21438,13 +21472,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/effect lifecycle plus observer-sight witness boundary",
-          "evidence": "Promote follow-up split L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT: L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT owns Promote See Invisibility as a level-2 self spell that spends the Magic Action and Spell Slot, applies a one-hour self effect, and exposes observer-scoped sight facts that let only the caster see creatures and objects with the Invisible condition as visible and see Ethereal Plane facts through table-supplied plane, distance, cover, and sight-line witnesses, without granting full Truesight, Darkness, visual-illusion, or transformation behavior. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused battle-runtime tests, and promoted Quint/runtime parity for the self effect, duration cleanup, observer-scoped Invisible benefit denial, and Ethereal visibility witness facts without full Truesight behavior.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT at packages/battle-runtime/src/unit-profile-admission-see-invisibility.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT: L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT owns Promote See Invisibility as a level-2 self spell that spends the Magic Action and Spell Slot, applies a one-hour self effect, and exposes observer-scoped sight facts that let only the caster see creatures and objects with the Invisible condition as visible and see Ethereal Plane facts through table-supplied plane, distance, cover, and sight-line witnesses, without granting full Truesight, Darkness, visual-illusion, or transformation behavior. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused battle-runtime tests, and promoted Quint/runtime parity for the self effect, duration cleanup, observer-scoped Invisible benefit denial, and Ethereal visibility witness facts without full Truesight behavior.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_shatter",
@@ -27327,8 +27361,14 @@
         "state": "installed",
         "unitId": "see_invisibility"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table sight and plane witness provider",
+        "reason": "The battle runtime owns the spell invocation and self effect lifecycle, but object visibility, Ethereal targeting, cover, sight-line, and plane membership remain caller-supplied observer witnesses rather than stored battle geometry or duplicated target state."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -27336,13 +27376,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/effect lifecycle plus observer-sight witness boundary",
-          "evidence": "Promote follow-up split L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT: L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT owns Promote See Invisibility as a level-2 self spell that spends the Magic Action and Spell Slot, applies a one-hour self effect, and exposes observer-scoped sight facts that let only the caster see creatures and objects with the Invisible condition as visible and see Ethereal Plane facts through table-supplied plane, distance, cover, and sight-line witnesses, without granting full Truesight, Darkness, visual-illusion, or transformation behavior. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused battle-runtime tests, and promoted Quint/runtime parity for the self effect, duration cleanup, observer-scoped Invisible benefit denial, and Ethereal visibility witness facts without full Truesight behavior.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT at packages/battle-runtime/src/unit-profile-admission-see-invisibility.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT: L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT owns Promote See Invisibility as a level-2 self spell that spends the Magic Action and Spell Slot, applies a one-hour self effect, and exposes observer-scoped sight facts that let only the caster see creatures and objects with the Invisible condition as visible and see Ethereal Plane facts through table-supplied plane, distance, cover, and sight-line witnesses, without granting full Truesight, Darkness, visual-illusion, or transformation behavior. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused battle-runtime tests, and promoted Quint/runtime parity for the self effect, duration cleanup, observer-scoped Invisible benefit denial, and Ethereal visibility witness facts without full Truesight behavior.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_shatter",

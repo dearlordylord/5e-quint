@@ -1,7 +1,10 @@
 // Support, defensive, and rider spell profile projections extracted from spells-profiles.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode spell.invocation-spell-created-held-object spell.invocation-magic-weapon-enhancement
 
-import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
+import {
+  elapsedTimeTicksFromHours,
+  elapsedTimeTicksFromTimeSpanDuration,
+} from "@dnd/shared-algebras/elapsed-time-algebra";
 import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import type { CreatureType } from "@dnd/shared/game-facts";
 import {
@@ -35,6 +38,7 @@ import {
   BATTLE_D20_ROLL_MODIFIER_KINDS,
   BATTLE_SPECIAL_SPEED_KINDS,
   type BlurAttackRollDefenseSpellInvocation,
+  type SeeInvisibleObserverSightSpellInvocation,
   type MirrorImageHitInterceptionSpellInvocation,
   type BattleActiveEffectExpiration,
   type BattleCreatureState,
@@ -1120,6 +1124,31 @@ export function supportedPreparedBlurAttackRollDefenseSpellProfile(
   );
 }
 
+export function supportedPreparedSeeInvisibleObserverSightSpellProfile(
+  actorId: CombatantId,
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  const projection = seeInvisibleObserverSightSpellProjection(actorId, spell);
+  if (projection === null) {
+    return [];
+  }
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] =>
+    Number(slot.spellLevel) < spell.mechanics.level
+      ? []
+      : [
+          {
+            access: { tag: "prepared" },
+            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+            procedure: "seeInvisibleObserverSight",
+            spell,
+            actionCost: "magicAction",
+            ...projection,
+          },
+        ],
+  );
+}
+
 export function supportedPreparedMirrorImageHitInterceptionSpellProfile(
   actorId: CombatantId,
   spell: SpellRecord,
@@ -1212,6 +1241,50 @@ function blurAttackRollDefenseSpellProjection(
       sourceSpellId: spell.id,
       sourceCombatantId: actorId,
       expiresAt,
+    },
+  };
+}
+
+function seeInvisibleObserverSightSpellProjection(
+  actorId: CombatantId,
+  spell: SpellRecord,
+): Pick<SeeInvisibleObserverSightSpellInvocation, "activeEffect"> | null {
+  if (
+    spell.mechanics.family !== "activation" ||
+    spell.mechanics.level !== 2 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "self" ||
+    spell.mechanics.duration.kind !== "timed" ||
+    spell.mechanics.duration.value.unit !== "hour" ||
+    spell.mechanics.duration.value.amount !== 1 ||
+    spell.mechanics.phases.length !== 1
+  ) {
+    return null;
+  }
+  const phase = spell.mechanics.phases[0];
+  const effects = phase?.kind === "direct" ? (phase.effects ?? []) : [];
+  const effect = effects[0];
+  const durationTicks = elapsedTimeTicksFromHours(
+    spell.mechanics.duration.value.amount,
+  );
+  if (
+    phase?.kind !== "direct" ||
+    phase.attachment.kind !== "self" ||
+    effects.length !== 1 ||
+    effect?.kind !== "see_invisible_and_ethereal" ||
+    Either.isLeft(durationTicks)
+  ) {
+    return null;
+  }
+  return {
+    activeEffect: {
+      kind: "seeInvisibleAndEthereal",
+      sourceSpellId: spell.id,
+      sourceCombatantId: actorId,
+      expiresAt: {
+        kind: "duration",
+        durationTicks: durationTicks.right,
+      },
     },
   };
 }

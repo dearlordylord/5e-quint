@@ -4,7 +4,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard spell.invocation-spike-growth-movement-hazard
 // Owns subject resolution, reaction windows, interrupted-procedure replay,
 // turn snapshots, and reaction-choice orchestration.
 
@@ -284,6 +284,7 @@ import {
   resolveHelpAttack,
   resolveHide,
   resolveJumpMovementReplacementCommand,
+  resolveMoveAfterMovement,
   resolveMoveCommand,
   resolveMultiattack,
   resolveMartialArtsBonusUnarmedStrike,
@@ -3656,12 +3657,12 @@ export function resumeInterruptedProcedure(
     });
   }
   if (continuation.kind === "movement") {
-    const nextState = applyBattleMovement(state, continuation.movement);
-    return {
-      tag: "resolved",
-      state: nextState,
-      snapshot: snapshotBattle(nextState),
-    };
+    return resolveMoveAfterMovement({
+      state,
+      subject: continuation.subject,
+      movement: continuation.movement,
+      fills: [],
+    });
   }
   if (continuation.kind === "movementThenAfterDamageSequence") {
     return openAfterDamageSequenceReactionWindow({

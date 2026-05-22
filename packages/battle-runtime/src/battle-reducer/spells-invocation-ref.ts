@@ -150,6 +150,14 @@ export function supportedSpellInvocationRef(
       procedure: "flamingSphere",
     };
   }
+  if (invocation.procedure === "spikeGrowthMovementHazard") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "spikeGrowthMovementHazard",
+    };
+  }
   if (invocation.procedure === "moonbeam") {
     return {
       tag: "spellSlot",
@@ -354,6 +362,14 @@ export function supportedSpellInvocationRef(
       spellId: spellId(invocation.spell.id),
       slotLevel: invocation.resource.slotLevel,
       procedure: "blurAttackRollDefense",
+    };
+  }
+  if (invocation.procedure === "seeInvisibleObserverSight") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "seeInvisibleObserverSight",
     };
   }
   if (invocation.procedure === "mirrorImageHitInterception") {

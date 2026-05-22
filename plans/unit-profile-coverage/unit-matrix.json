@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 396,
-      "numerator": 191,
-      "percent": "48.2%"
+      "numerator": 192,
+      "percent": "48.5%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 468,
-      "numerator": 223,
-      "percent": "47.6%"
+      "numerator": 224,
+      "percent": "47.9%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,62 +59,62 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 224
+      "value": 225
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 135,
-      "numerator": 135,
+      "denominator": 136,
+      "numerator": 136,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 224,
-      "numerator": 224,
+      "denominator": 225,
+      "numerator": 225,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 86,
-      "numerator": 86,
+      "denominator": 88,
+      "numerator": 88,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 86,
-      "numerator": 86,
+      "denominator": 88,
+      "numerator": 88,
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 118,
+      "denominator": 120,
       "numerator": 75,
-      "percent": "63.6%"
+      "percent": "62.5%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 118,
+      "denominator": 120,
       "numerator": 104,
-      "percent": "88.1%"
+      "percent": "86.7%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 135,
+      "denominator": 136,
       "numerator": 85,
-      "percent": "63%"
+      "percent": "62.5%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 86,
-      "numerator": 86,
+      "denominator": 88,
+      "numerator": 88,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 86,
-      "numerator": 86,
+      "denominator": 88,
+      "numerator": 88,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 135,
+      "denominator": 136,
       "numerator": 105,
-      "percent": "77.8%"
+      "percent": "77.2%"
     },
     "supportedProfileCoverage": {
-      "denominator": 192,
-      "numerator": 135,
-      "percent": "70.3%"
+      "denominator": 193,
+      "numerator": 136,
+      "percent": "70.5%"
     }
   },
   "metricSemantics": [
@@ -3423,20 +3423,77 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-antimagic-field.test.ts"
         }
       ]
+    },
+    {
+      "id": "spell.invocation-spike-growth-movement-hazard",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-subjects.ts"
+      ],
+      "sourceBoundary": "The runtime consumes a caller-supplied point-origin 20-foot-radius Sphere area identity, caster-owned Concentration up to 10 minutes, active Difficult Terrain movement-cost facts derived from caller-supplied movement distance through the area, and 2d4 Piercing damage per 5 feet traveled into or within the area. It owns Magic Action and level-2-or-higher Spell Slot spending, the active hazard identity, movement-cost projection, movement-triggered damage scaling, and cleanup on Concentration or duration end. Automatic geometry, pathfinding, and camouflaged-terrain recognition remain table/spatial facts deferred to the separate Search-boundary task.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME"
+      ],
+      "title": "Spell invocation creates a Spike Growth area hazard with movement-metered piercing damage",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-spike-growth-movement-hazard.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.invocation-see-invisible-observer-sight",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-see-invisibility.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "sourceBoundary": "The runtime consumes the authored See Invisibility spell and owns Magic Action and Spell Slot spend, the one-hour self effect, observer-scoped creature visibility over the Invisible condition, and duration cleanup. Object visibility and Ethereal visibility remain caller-witnessed observer facts rather than stored geometry, plane, cover, or duplicated condition state.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT"
+      ],
+      "title": "Spell invocation applies a timed self observer-sight effect that reveals Invisible creatures and caller-witnessed Invisible or Ethereal targets without mutating target state",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-see-invisibility.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-see-invisibility.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 118,
+        "denominator": 120,
         "numerator": 75,
-        "percent": "63.6%"
+        "percent": "62.5%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 118,
+        "denominator": 120,
         "numerator": 104,
-        "percent": "88.1%"
+        "percent": "86.7%"
       }
     },
     "profileKinds": [
@@ -5021,6 +5078,18 @@
         "obligations": [],
         "profileId": "spell.invocation-antimagic-field-tracked-light-suppression",
         "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-spike-growth-movement-hazard",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-see-invisible-observer-sight",
+        "profileKind": "spell-invocation"
       }
     ],
     "sourceArtifacts": {
@@ -5031,9 +5100,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 135,
+          "denominator": 136,
           "numerator": 85,
-          "percent": "63%"
+          "percent": "62.5%"
         }
       },
       "units": [
@@ -7724,6 +7793,18 @@
           "unitId": "searing_smite"
         },
         {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-see-invisible-observer-sight",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "see_invisibility"
+        },
+        {
           "joinStatus": "covered",
           "profiles": [
             {
@@ -10412,6 +10493,38 @@
         "spell.invocation-antimagic-field-tracked-light-suppression"
       ],
       "taskId": "L12G-ANTIMAGIC-FIELD-TRACKED-LIGHT-SUPPRESSION"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Package-local See Invisibility Quint ownership covers the promoted observer-sight procedure lane: Magic Action and Spell Slot spend, one-hour self effect, observer-scoped Invisible visibility without target-state mutation, witness-gated Invisible object and Ethereal visibility, and duration cleanup.",
+      "profileIds": [
+        "spell.invocation-see-invisible-observer-sight"
+      ],
+      "taskId": "L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission tests and package-local QNT self-tests cover See Invisibility Magic Action level-2 Spell Slot casting, one-hour self effect projection, observer-scoped Invisible creature visibility, hidden-state non-bypass, caller-witnessed Invisible object and Ethereal visibility helpers, and duration cleanup.",
+      "profileIds": [
+        "spell.invocation-see-invisible-observer-sight"
+      ],
+      "taskId": "L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Package-local promoted Quint facts cover Spike Growth's Magic Action and level-2-or-higher Spell Slot spend, caller-supplied point-origin area identity, caster-owned Concentration, active Difficult Terrain movement-cost projection from caller-supplied movement distance through the area, movement-triggered Piercing damage scaling at 2d4 per 5 feet traveled, and Concentration/duration cleanup.",
+      "profileIds": [
+        "spell.invocation-spike-growth-movement-hazard"
+      ],
+      "taskId": "L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests and package-local Quint checks cover Spike Growth area admission, Magic Action and Spell Slot spending, concentration-owned active area recording, caller-supplied Difficult Terrain movement-cost projection, per-5-foot Piercing damage scaling, Concentration break cleanup, and duration-expiry cleanup, while automatic geometry and Search recognition remain table-owned follow-up work.",
+      "profileIds": [
+        "spell.invocation-spike-growth-movement-hazard"
+      ],
+      "taskId": "L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME"
     }
   ],
   "units": [
@@ -17390,8 +17503,12 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH",
-            "mechanic": "Object-origin branch: target object not worn or carried, 15-foot Emanation originating from that object, movement with the object, and opaque-cover blocking remain blocked on the object-origin spell-area and opaque-cover witness owner."
+            "battleReadinessClosure": {
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "runtime-detached object-area identity and object-cover adjudication owner",
+              "reason": "The promoted Darkness profile owns point-origin area identity plus sight/light witness consequences. It does not yet own a durable object-attached magical Darkness zone, object-motion updates for that zone, or opaque-cover suppression for Darkness rather than a light emitter, so the alternative object-origin branch remains table/spatial/object adjudication outside the current runtime boundary."
+            },
+            "mechanic": "Object-origin branch: target object not worn or carried, 15-foot Emanation originating from that object, movement with the object, and opaque-cover blocking stay outside promoted runtime because the current owner consumes point-origin area ids and area witnesses, not a moving object-attached Darkness zone."
           },
           {
             "followUpTaskId": "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL",
@@ -17400,13 +17517,6 @@
         ],
         "followUpTasks": [
           {
-            "id": "L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH",
-            "mechanic": "Represent and promote or close Darkness's object branch: target object not worn or carried, 15-foot Emanation originating from that object, object-origin area identity, and opaque-cover blocking, consuming existing object and opaque-cover witness facts without adding duplicate map or cover state.",
-            "owner": "Surface Spell Definition authoring plus battle-runtime object-origin spell-area and opaque-cover witness boundary",
-            "requiredOutput": "Darkness Surface content and runtime owner decision with focused tests for the object-origin branch, or accepted closure if object attachment, movement, and opaque-cover blocking stay outside promoted runtime.",
-            "title": "Darkness Object-Origin Branch"
-          },
-          {
             "id": "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL",
             "mechanic": "Promote or close the overlap rule that dispels another level-2-or-lower spell when Darkness overlaps Bright Light or Dim Light created by that spell, consuming generic spell-created light facts such as Continual Flame rather than spell identity.",
             "owner": "Darkness Surface definition plus battle-runtime Darkness area and spell-created light overlap owner",
@@ -17414,7 +17524,7 @@
             "title": "Darkness Spell-Created Light Dispel"
           }
         ],
-        "futureProfileOwner": "battle-runtime object-origin spell-area and opaque-cover witness boundary plus spell-created light overlap owner",
+        "futureProfileOwner": "battle-runtime Darkness spell-created light overlap owner plus runtime-detached object-area identity and object-cover adjudication owner",
         "profileIds": [
           "spell.invocation-magical-darkness-point-origin"
         ],
@@ -21292,24 +21402,65 @@
         "status": "installed"
       },
       "claim": {
-        "followUpTasks": [
-          {
-            "id": "L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT",
-            "mechanic": "Promote See Invisibility as a level-2 self spell that spends the Magic Action and Spell Slot, applies a one-hour self effect, and exposes observer-scoped sight facts that let only the caster see creatures and objects with the Invisible condition as visible and see Ethereal Plane facts through table-supplied plane, distance, cover, and sight-line witnesses, without granting full Truesight, Darkness, visual-illusion, or transformation behavior.",
-            "owner": "battle-runtime spell invocation/effect lifecycle plus observer-sight witness boundary",
-            "requiredOutput": "Supported-profile Unit claim, deterministic admission/projection evidence, focused battle-runtime tests, and promoted Quint/runtime parity for the self effect, duration cleanup, observer-scoped Invisible benefit denial, and Ethereal visibility witness facts without full Truesight behavior.",
-            "title": "See Invisibility Observer Sight Runtime Support"
-          }
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "table sight and plane witness provider",
+          "reason": "The battle runtime owns the spell invocation and self effect lifecycle, but object visibility, Ethereal targeting, cover, sight-line, and plane membership remain caller-supplied observer witnesses rather than stored battle geometry or duplicated target state."
+        },
+        "profileIds": [
+          "spell.invocation-see-invisible-observer-sight"
         ],
-        "futureProfileOwner": "battle-runtime spell invocation/effect lifecycle plus observer-sight witness boundary",
-        "reason": "See Invisibility is authored and installed as an SRD Surface Spell Definition with catalog-level self sight-override metadata only. Runtime support remains blocked on an observer-scoped sight witness; Task 44 claims no battle-runtime profile, Invisible interaction support, or Ethereal Plane visibility execution.",
-        "tag": "unsupported-profile"
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action level-2 Spell Slot casting",
+          "self timed Spell Effect for 1 hour without Concentration",
+          "observer-scoped creature visibility over the Invisible condition without removing or rewriting the target's condition state",
+          "Hidden state remains independently authoritative and is not duplicated as visibility state",
+          "caller-witnessed Invisible object visibility remains observer-scoped and requires Invisible, sight-line, and opaque-cover witness facts",
+          "caller-witnessed Ethereal visibility remains observer-scoped and requires plane, sight-line, and cover witness facts without granting Truesight behavior",
+          "duration cleanup removes the spell-owned observer effect"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-see-invisibility.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-see-invisible-observer-sight",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-see-invisibility.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the authored See Invisibility spell and owns Magic Action and Spell Slot spend, the one-hour self effect, observer-scoped creature visibility over the Invisible condition, and duration cleanup. Object visibility and Ethereal visibility remain caller-witnessed observer facts rather than stored geometry, plane, cover, or duplicated condition state.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT"
+          ],
+          "title": "Spell invocation applies a timed self observer-sight effect that reveals Invisible creatures and caller-witnessed Invisible or Ethereal targets without mutating target state",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-see-invisibility.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-see-invisibility.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/see_invisibility.json",
       "unitId": "see_invisibility"
     },
@@ -23293,6 +23444,87 @@
       ],
       "sourceRecordPath": "packages/surface/content/spider_climb.json",
       "unitId": "spider_climb"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "table/spatial movement owner",
+          "reason": "Automatic geometry, pathfinding, and camouflaged-terrain recognition remain caller-supplied table/spatial facts outside promoted battle runtime."
+        },
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION",
+            "mechanic": "camouflaged terrain recognition and Search-boundary support"
+          }
+        ],
+        "profileIds": [
+          "spell.invocation-spike-growth-movement-hazard"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action and level-2-or-higher Spell Slot casting",
+          "caller-supplied point-origin 20-foot-radius Sphere area identity via the Spike Growth area fill",
+          "caster-owned Concentration up to 10 minutes",
+          "active Difficult Terrain movement-cost facts projected from caller-supplied movement distance through the area",
+          "Movement-triggered Piercing damage scaling as 2d4 per 5 feet traveled into or within the area",
+          "Concentration and duration cleanup remove the active area effect"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-spike-growth-movement-hazard.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-spike-growth-movement-hazard",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+            "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+            "packages/battle-runtime/src/battle-subjects.ts"
+          ],
+          "sourceBoundary": "The runtime consumes a caller-supplied point-origin 20-foot-radius Sphere area identity, caster-owned Concentration up to 10 minutes, active Difficult Terrain movement-cost facts derived from caller-supplied movement distance through the area, and 2d4 Piercing damage per 5 feet traveled into or within the area. It owns Magic Action and level-2-or-higher Spell Slot spending, the active hazard identity, movement-cost projection, movement-triggered damage scaling, and cleanup on Concentration or duration end. Automatic geometry, pathfinding, and camouflaged-terrain recognition remain table/spatial facts deferred to the separate Search-boundary task.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME"
+          ],
+          "title": "Spell invocation creates a Spike Growth area hazard with movement-metered piercing damage",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-spike-growth-movement-hazard.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/spike_growth.json",
+      "unitId": "spike_growth"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -28061,46 +28293,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/speak_with_animals.json",
       "unitId": "speak_with_animals"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "followUpTasks": [
-          {
-            "id": "L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME",
-            "mechanic": "Promote Spike Growth's battle-visible hazard: Magic Action and level-2-or-higher Spell Slot spend, caster-owned Concentration up to 10 minutes, caller-supplied point-origin ground-area identity, active Difficult Terrain movement-cost facts for movement through the area, Movement-triggered 2d4 Piercing damage per 5-foot increment traveled into or within the area from caller-supplied path-distance facts, damage disposition and Concentration interactions, and cleanup when Concentration or duration ends.",
-            "owner": "battle-runtime spell invocation/effect lifecycle plus table/spatial movement owner",
-            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Spike Growth movement damage, Difficult Terrain movement cost, resource spending, Concentration ownership, and cleanup without automatic geometry or pathfinding derivation.",
-            "title": "Spike Growth Movement Hazard Runtime"
-          },
-          {
-            "id": "L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION",
-            "mechanic": "Represent and close the camouflaged terrain recognition rule: whether a creature could see the area when the spell was cast, Search action spend before entering for creatures that did not see it, Wisdom (Perception or Survival) check against the caster's spell save DC, recognition state or explicit table-owned witness used before movement into the area, and cleanup with the hazard.",
-            "owner": "surface Spell Definition authoring plus table/Search action owner",
-            "requiredOutput": "Surface schema/content support or accepted runtime-detached closure for Spike Growth hazard recognition, with focused tests and coverage disposition that either promotes the Search recognition boundary or closes it with an explicit table-owned reason.",
-            "title": "Spike Growth Hazard Recognition Boundary"
-          }
-        ],
-        "futureProfileOwner": "battle-runtime spell invocation/effect lifecycle plus table/spatial movement and Search recognition boundary",
-        "reason": "Spike Growth is authored as an SRD Surface Spell Definition with Magic Action Spell Slot casting, Concentration up to 10 minutes, a point-origin 20-foot-radius Sphere, Difficult Terrain, and 2d4 Piercing damage per 5 feet a creature moves into or within the area. Task 48 claims no promoted battle-runtime profile yet because the runtime has Grease-specific ground-hazard Difficult Terrain movement facts but no spell-neutral ground hazard identity, no Movement-triggered damage procedure proportional to table-supplied distance, and no Search action recognition boundary for camouflaged terrain that distinguishes creatures that could see the area when the spell was cast.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/spike_growth.json",
-      "unitId": "spike_growth"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

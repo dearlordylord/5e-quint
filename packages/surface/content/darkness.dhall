@@ -19,9 +19,11 @@
 --   2. passive → end_overlapping_spell_created_bright_or_dim_light
 --      (max spell level 2).
 --
--- OMITTED (separate owner/follow-up work):
---   1. Object-attachment mode and opaque-cover blocking require a cast-time
---      attachment choice plus an object-origin Emanation/cover witness.
+-- CLOSED (runtime boundary):
+--   1. The alternative object-origin branch stays outside promoted runtime.
+--      It needs a moving object-attached Darkness-zone owner plus opaque-cover
+--      suppression for that zone, not just the current point-origin area-id
+--      witness model.
 --   2. Nonmagical-light denial is a light/visibility witness consequence,
 --      not a Darkness-local duplicate light state.
 

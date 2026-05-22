@@ -474,6 +474,7 @@ export function spellAreaChoiceHole(
         | "magicalDarknessPointOrigin"
         | "antimagicFieldOngoingSpellSuppression"
         | "flamingSphere"
+        | "spikeGrowthMovementHazard"
         | "moonbeam"
         | "webRestraintHazard";
     }
@@ -499,6 +500,7 @@ export function spellAreaChoiceHoleId(
         | "magicalDarknessPointOrigin"
         | "antimagicFieldOngoingSpellSuppression"
         | "flamingSphere"
+        | "spikeGrowthMovementHazard"
         | "moonbeam"
         | "webRestraintHazard";
     }

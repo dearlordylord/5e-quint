@@ -557,7 +557,7 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH: Represent and promote or close Darkness's object branch: target object not worn or carried, 15-foot Emanation originating from that object, object-origin area identity, and opaque-cover blocking, consuming existing object and opaque-cover witness facts without adding duplicate map or cover state. Owner: Surface Spell Definition authoring plus battle-runtime object-origin spell-area and opaque-cover witness boundary. Required output: Darkness Surface content and runtime owner decision with focused tests for the object-origin branch, or accepted closure if object attachment, movement, and opaque-cover blocking stay outside promoted runtime.; L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL: Promote or close the overlap rule that dispels another level-2-or-lower spell when Darkness overlaps Bright Light or Dim Light created by that spell, consuming generic spell-created light facts such as Continual Flame rather than spell identity. Owner: Darkness Surface definition plus battle-runtime Darkness area and spell-created light overlap owner. Required output: Focused tests and promoted Quint/runtime parity or accepted closure for overlap-triggered dispel of spell-created light; Continual Flame cleanup must remain represented through generic spell-created light facts.",
+      "reason": "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL: Promote or close the overlap rule that dispels another level-2-or-lower spell when Darkness overlaps Bright Light or Dim Light created by that spell, consuming generic spell-created light facts such as Continual Flame rather than spell identity. Owner: Darkness Surface definition plus battle-runtime Darkness area and spell-created light overlap owner. Required output: Focused tests and promoted Quint/runtime parity or accepted closure for overlap-triggered dispel of spell-created light; Continual Flame cleanup must remain represented through generic spell-created light facts.",
       "sourceRecordPath": "packages/surface/content/darkness.json",
       "sourceRows": [
         {
@@ -2263,59 +2263,6 @@
       "unitId": "rope_trick"
     },
     {
-      "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "follow-up-split"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT: Promote See Invisibility as a level-2 self spell that spends the Magic Action and Spell Slot, applies a one-hour self effect, and exposes observer-scoped sight facts that let only the caster see creatures and objects with the Invisible condition as visible and see Ethereal Plane facts through table-supplied plane, distance, cover, and sight-line witnesses, without granting full Truesight, Darkness, visual-illusion, or transformation behavior. Owner: battle-runtime spell invocation/effect lifecycle plus observer-sight witness boundary. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused battle-runtime tests, and promoted Quint/runtime parity for the self effect, duration cleanup, observer-scoped Invisible benefit denial, and Ethereal visibility witness facts without full Truesight behavior.",
-      "sourceRecordPath": "packages/surface/content/see_invisibility.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Bard spell list See Invisibility",
-          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_see_invisibility",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 207,
-            "lineStart": 207,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list See Invisibility",
-          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_see_invisibility",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 290,
-            "lineStart": 290,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list See Invisibility",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_see_invisibility",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 227,
-            "lineStart": 227,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "blocked-follow-up-split",
-      "strictTargetClosed": true,
-      "unitId": "see_invisibility"
-    },
-    {
       "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
@@ -2502,20 +2449,13 @@
       "unitId": "speak_with_animals"
     },
     {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "follow-up-split"
-      ],
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME: Promote Spike Growth's battle-visible hazard: Magic Action and level-2-or-higher Spell Slot spend, caster-owned Concentration up to 10 minutes, caller-supplied point-origin ground-area identity, active Difficult Terrain movement-cost facts for movement through the area, Movement-triggered 2d4 Piercing damage per 5-foot increment traveled into or within the area from caller-supplied path-distance facts, damage disposition and Concentration interactions, and cleanup when Concentration or duration ends. Owner: battle-runtime spell invocation/effect lifecycle plus table/spatial movement owner. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Spike Growth movement damage, Difficult Terrain movement cost, resource spending, Concentration ownership, and cleanup without automatic geometry or pathfinding derivation.; L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION: Represent and close the camouflaged terrain recognition rule: whether a creature could see the area when the spell was cast, Search action spend before entering for creatures that did not see it, Wisdom (Perception or Survival) check against the caster's spell save DC, recognition state or explicit table-owned witness used before movement into the area, and cleanup with the hazard. Owner: surface Spell Definition authoring plus table/Search action owner. Required output: Surface schema/content support or accepted runtime-detached closure for Spike Growth hazard recognition, with focused tests and coverage disposition that either promotes the Search recognition boundary or closes it with an explicit table-owned reason.",
+      "reason": "camouflaged terrain recognition and Search-boundary support",
       "sourceRecordPath": "packages/surface/content/spike_growth.json",
       "sourceRows": [
         {
@@ -2543,8 +2483,8 @@
           }
         }
       ],
-      "status": "blocked-follow-up-split",
-      "strictTargetClosed": true,
+      "status": "open-profile-accounting",
+      "strictTargetClosed": false,
       "unitId": "spike_growth"
     },
     {
@@ -2614,7 +2554,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 112,
+      "count": 113,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -2708,6 +2648,7 @@
         "sanctuary",
         "scorching_ray",
         "searing_smite",
+        "see_invisibility",
         "shatter",
         "shield",
         "shield_of_faith",
@@ -2768,7 +2709,7 @@
       ]
     },
     {
-      "count": 18,
+      "count": 16,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
@@ -2785,10 +2726,8 @@
         "moonbeam",
         "prayer_of_healing",
         "ray_of_enfeeblement",
-        "see_invisibility",
         "sorcerer_font_of_magic",
         "sorcerer_metamagic",
-        "spike_growth",
         "spiritual_weapon"
       ]
     },
@@ -2824,6 +2763,14 @@
     },
     {
       "count": 1,
+      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
+      "status": "open-profile-accounting",
+      "unitIds": [
+        "spike_growth"
+      ]
+    },
+    {
+      "count": 1,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
@@ -2834,43 +2781,51 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 509,
-      "percent": "91.5%",
+      "numerator": 512,
+      "percent": "92.1%",
       "rowsByStatus": {
-        "accepted": 372,
+        "accepted": 375,
         "accepted-no-battle-effect": 137,
-        "battle-runtime-required": 31,
+        "battle-runtime-required": 26,
         "owner-evidence-required": 2,
-        "partial-battle-runtime": 14
+        "partial-battle-runtime": 16
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 84,
+      "denominator": 85,
       "numerator": 52,
-      "percent": "61.9%"
+      "percent": "61.2%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 84,
+      "denominator": 85,
       "numerator": 78,
-      "percent": "92.9%"
+      "percent": "91.8%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 112,
+      "denominator": 113,
       "numerator": 63,
-      "percent": "56.3%"
+      "percent": "55.8%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 168,
-      "numerator": 112,
-      "percent": "66.7%"
+      "numerator": 113,
+      "percent": "67.3%"
     },
     "strictTargetClosure": {
       "denominator": 168,
-      "numerator": 167,
-      "percent": "99.4%"
+      "numerator": 166,
+      "percent": "98.8%"
     }
   },
   "openFrontier": [
+    {
+      "count": 1,
+      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
+      "status": "open-profile-accounting",
+      "unitIds": [
+        "spike_growth"
+      ]
+    },
     {
       "count": 1,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
@@ -5419,9 +5374,9 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 112,
+        "denominator": 113,
         "numerator": 63,
-        "percent": "56.3%"
+        "percent": "55.8%"
       }
     },
     "units": [
@@ -7651,6 +7606,18 @@
         "unitId": "searing_smite"
       },
       {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-see-invisible-observer-sight",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "see_invisibility"
+      },
+      {
         "joinStatus": "covered",
         "profiles": [
           {
@@ -8191,20 +8158,21 @@
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
       "missing": 1,
-      "profile-subset-supported": 21,
-      "supported-profile": 112,
-      "unsupported-profile": 34
+      "profile-subset-supported": 22,
+      "supported-profile": 113,
+      "unsupported-profile": 32
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 18,
+      "blocked-follow-up-split": 16,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 28,
+      "open-profile-accounting": 1,
       "open-runtime-behavior": 1,
-      "supported-profile": 112
+      "supported-profile": 113
     },
-    "nonSupportedFrontier": 56,
+    "nonSupportedFrontier": 55,
     "strictDenominator": 168
   }
 }

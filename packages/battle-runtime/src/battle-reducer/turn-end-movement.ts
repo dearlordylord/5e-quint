@@ -3,6 +3,7 @@
 // intended.
 
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram spell.invocation-moonbeam-movable-zone
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
@@ -198,6 +199,7 @@ import type {
   BattleMovableZoneRepositionMovementHole,
   BattleGrappleLink,
   BattleGreaseGroundHazardSavingThrowOutcomeHole,
+  BattleSpikeGrowthMovementDamageRollHole,
   BattleWebRestraintSavingThrowOutcomeHole,
   BattleWebRestraintTrigger,
   BattleHideousLaughterRepeatSavingThrowOutcomeHole,
@@ -1280,13 +1282,16 @@ export function resolveCommandApproachCommand(
     );
   }
   const unsupportedFill = input.fills.find(
-    (fill) => fill.kind !== "movement" && !endTurnFillKind(fill.kind),
+    (fill) =>
+      fill.kind !== "movement" &&
+      !endTurnFillKind(fill.kind) &&
+      !spikeGrowthMovementEffectFillKind(fill.kind),
   );
   if (unsupportedFill !== undefined) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Command Approach only accepts Movement and End Turn fills.",
+      "Command Approach only accepts Movement, Spike Growth damage, and End Turn fills.",
     );
   }
   const movementFill = movementFills[0]!;
@@ -1316,7 +1321,7 @@ export function resolveCommandApproachCommand(
   if (movement.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", movement.message);
   }
-  const endTurnFills = input.fills.filter((fill) => fill.kind !== "movement");
+  const extraFills = input.fills.filter((fill) => fill.kind !== "movement");
   const threats = opportunityAttackThreatsForMovement(
     input.state,
     movement.movement,
@@ -1333,7 +1338,7 @@ export function resolveCommandApproachCommand(
           subject: input.subject,
           movement: movement.movement,
           movedWithinFiveFeetOfCaster: approachFact.movedWithinFiveFeetOfCaster,
-          endTurnFills,
+          endTurnFills: extraFills,
         },
       },
       undefined,
@@ -1345,7 +1350,7 @@ export function resolveCommandApproachCommand(
     subject: input.subject,
     movement: movement.movement,
     movedWithinFiveFeetOfCaster: approachFact.movedWithinFiveFeetOfCaster,
-    endTurnFills,
+    endTurnFills: extraFills,
   });
 }
 
@@ -1371,14 +1376,22 @@ export function resolveCommandApproachAfterMovement(input: {
       "Command Approach is no longer pending for this actor.",
     );
   }
+  const movementEffects = resolveMovementEffectsAfterMovement({
+    state: input.state,
+    subject: input.subject,
+    movement: input.movement,
+    extraFills: input.endTurnFills,
+  });
+  if (movementEffects.tag !== "resolved") {
+    return movementEffects;
+  }
   const withoutPending = stateWithoutCommandPendingEffect(
-    input.state,
+    movementEffects.state,
     input.subject.actorId,
     effect,
   );
-  const moved = applyBattleMovement(withoutPending, input.movement);
   if (!input.movedWithinFiveFeetOfCaster) {
-    if (input.endTurnFills.length > 0) {
+    if (movementEffects.remainingFills.length > 0) {
       return invalidResult(
         input.state,
         "invalidFill",
@@ -1387,18 +1400,18 @@ export function resolveCommandApproachAfterMovement(input: {
     }
     return {
       tag: "resolved",
-      state: moved,
-      snapshot: snapshotBattle(moved),
+      state: withoutPending,
+      snapshot: snapshotBattle(withoutPending),
     };
   }
   const endTurnResult = resolveEndTurnCommand({
-    state: moved,
+    state: withoutPending,
     subject: {
       tag: "runtimeCommand",
       actorId: input.subject.actorId,
       command: "endTurn",
     },
-    fills: input.endTurnFills,
+    fills: movementEffects.remainingFills,
   });
   return endTurnResult.tag === "needsHoles"
     ? { ...endTurnResult, state: input.state, subject: input.subject }
@@ -1433,13 +1446,16 @@ export function resolveCommandFleeCommand(
       fill.kind === "movement",
   );
   const unsupportedFill = input.fills.find(
-    (fill) => fill.kind !== "movement" && !endTurnFillKind(fill.kind),
+    (fill) =>
+      fill.kind !== "movement" &&
+      !endTurnFillKind(fill.kind) &&
+      !spikeGrowthMovementEffectFillKind(fill.kind),
   );
   if (unsupportedFill !== undefined) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Command Flee only accepts Movement and End Turn fills.",
+      "Command Flee only accepts Movement, Spike Growth damage, and End Turn fills.",
     );
   }
   if (movementFills.length === 0) {
@@ -1512,7 +1528,7 @@ export function resolveCommandFleeCommand(
   if (movement.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", movement.message);
   }
-  const endTurnFills = input.fills.filter((fill) => fill.kind !== "movement");
+  const extraFills = input.fills.filter((fill) => fill.kind !== "movement");
   const threats = opportunityAttackThreatsForMovement(
     input.state,
     movement.movement,
@@ -1528,7 +1544,7 @@ export function resolveCommandFleeCommand(
           kind: "commandFleeMovement",
           subject: input.subject,
           movement: movement.movement,
-          endTurnFills,
+          endTurnFills: extraFills,
         },
       },
       undefined,
@@ -1539,7 +1555,7 @@ export function resolveCommandFleeCommand(
     state: input.state,
     subject: input.subject,
     movement: movement.movement,
-    endTurnFills,
+    endTurnFills: extraFills,
   });
 }
 
@@ -1564,20 +1580,28 @@ export function resolveCommandFleeAfterMovement(input: {
       "Command Flee is no longer pending for this actor.",
     );
   }
+  const movementEffects = resolveMovementEffectsAfterMovement({
+    state: input.state,
+    subject: input.subject,
+    movement: input.movement,
+    extraFills: input.endTurnFills,
+  });
+  if (movementEffects.tag !== "resolved") {
+    return movementEffects;
+  }
   const withoutPending = stateWithoutCommandPendingEffect(
-    input.state,
+    movementEffects.state,
     input.subject.actorId,
     effect,
   );
-  const moved = applyBattleMovement(withoutPending, input.movement);
   const endTurnResult = resolveEndTurnCommand({
-    state: moved,
+    state: withoutPending,
     subject: {
       tag: "runtimeCommand",
       actorId: input.subject.actorId,
       command: "endTurn",
     },
-    fills: input.endTurnFills,
+    fills: movementEffects.remainingFills,
   });
   return endTurnResult.tag === "needsHoles"
     ? { ...endTurnResult, state: input.state, subject: input.subject }
@@ -5135,7 +5159,17 @@ export function resolveMoveCommand(
       movementHole(input.state, input.subject.actorId),
     ]);
   }
-  if (input.fills.length > 1 || input.fills[0]?.kind !== "movement") {
+  if (input.fills[0]?.kind !== "movement") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Move requires a Movement fill first.",
+    );
+  }
+  if (
+    input.fills.filter((candidate) => candidate.kind === "movement").length !==
+    1
+  ) {
     return invalidResult(
       input.state,
       "invalidFill",
@@ -5179,12 +5213,12 @@ export function resolveMoveCommand(
     );
     if (reactionWindow !== null) return reactionWindow;
   }
-  const nextState = applyBattleMovement(input.state, movement.movement);
-  return {
-    tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
-  };
+  return resolveMoveAfterMovement({
+    state: input.state,
+    subject: input.subject,
+    movement: movement.movement,
+    fills: input.fills,
+  });
 }
 
 type JumpMovementReplacementEffect = Extract<
@@ -5219,7 +5253,17 @@ export function resolveJumpMovementReplacementCommand(
       movementHole(input.state, input.subject.actorId),
     ]);
   }
-  if (input.fills.length > 1 || input.fills[0]?.kind !== "movement") {
+  if (input.fills[0]?.kind !== "movement") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Jump movement replacement requires a Movement fill first.",
+    );
+  }
+  if (
+    input.fills.filter((candidate) => candidate.kind === "movement").length !==
+    1
+  ) {
     return invalidResult(
       input.state,
       "invalidFill",
@@ -5244,16 +5288,16 @@ export function resolveJumpMovementReplacementCommand(
     return invalidResult(input.state, "invalidFill", movement.message);
   }
 
-  const consumedState = markJumpMovementReplacementUsed(
-    input.state,
-    input.subject.actorId,
-    effect,
-  );
   const threats = opportunityAttackThreatsForMovement(
-    consumedState,
+    input.state,
     movement.movement,
   );
   if (threats.length > 0) {
+    const consumedState = markJumpMovementReplacementUsed(
+      input.state,
+      input.subject.actorId,
+      effect,
+    );
     const reactionWindow = maybeOpenReactionWindow(
       consumedState,
       {
@@ -5270,11 +5314,31 @@ export function resolveJumpMovementReplacementCommand(
     );
     if (reactionWindow !== null) return reactionWindow;
   }
-  const nextState = applyBattleMovement(consumedState, movement.movement);
+  const movementEffects = resolveMovementEffectsAfterMovement({
+    state: input.state,
+    subject: input.subject,
+    movement: movement.movement,
+    extraFills: input.fills.slice(1),
+  });
+  if (movementEffects.tag !== "resolved") {
+    return movementEffects;
+  }
+  if (movementEffects.remainingFills.length > 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Jump movement replacement only accepts Movement, Spike Growth damage, Concentration, and damage disposition fills.",
+    );
+  }
+  const consumedState = markJumpMovementReplacementUsed(
+    movementEffects.state,
+    input.subject.actorId,
+    effect,
+  );
   return {
     tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
+    state: consumedState,
+    snapshot: snapshotBattle(consumedState),
   };
 }
 
@@ -5514,6 +5578,7 @@ export function parseBattleMovement(
     fill.value.jumpMovementReplacement,
     options.jumpMovementReplacement,
     fill.value.movementCostFeet,
+    areaMovementExtraCostFeet(state, fill.value),
   );
   if (jumpMovementValidation !== null) {
     return {
@@ -5604,10 +5669,392 @@ export function parseBattleMovement(
       movementCostFeet: movementCost.costFeet,
       provokedOpportunityAttacks,
       spendsTurnMovement: options.spendsTurnMovement ?? true,
+      ...(fill.value.areaDifficultTerrain === undefined
+        ? {}
+        : { areaDifficultTerrain: fill.value.areaDifficultTerrain }),
       ...(fill.value.jumpMovementReplacement === undefined
         ? {}
         : { jumpMovementReplacement: fill.value.jumpMovementReplacement }),
     },
+  };
+}
+
+type SpikeGrowthHazardEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "spikeGrowthHazard" }
+>;
+
+type SpikeGrowthMovementDamageRequest = {
+  readonly effect: SpikeGrowthHazardEffect;
+  readonly distanceFeet: MovementFeet;
+  readonly damage: SpikeGrowthHazardEffect["damage"];
+};
+
+function spikeGrowthHazardEffectFor(
+  state: BattleState,
+  source: Extract<
+    BattleAreaDifficultTerrainSource,
+    { readonly kind: "spikeGrowthHazard" }
+  >,
+): SpikeGrowthHazardEffect | undefined {
+  const combatant = state.combatants.get(source.sourceCombatantId);
+  return combatant?.activeEffects.find(
+    (effect): effect is SpikeGrowthHazardEffect =>
+      effect.kind === "spikeGrowthHazard" &&
+      effect.sourceCombatantId === source.sourceCombatantId &&
+      effect.sourceSpellId === source.sourceSpellId &&
+      effect.areaId === source.areaId,
+  );
+}
+
+function scaledSpikeGrowthDamage(
+  effect: SpikeGrowthHazardEffect,
+  distanceFeet: MovementFeet,
+): SpikeGrowthHazardEffect["damage"] | null {
+  const increments = Math.floor(
+    Number(distanceFeet) / Number(effect.damagePerFeet),
+  );
+  if (increments <= 0) {
+    return null;
+  }
+  return {
+    expr: {
+      dice: effect.damage.expr.dice * increments,
+      dieSize: effect.damage.expr.dieSize,
+      ...(effect.damage.expr.flat === undefined
+        ? {}
+        : { flat: effect.damage.expr.flat * increments }),
+    },
+    damageType: effect.damage.damageType,
+  };
+}
+
+function spikeGrowthMovementDamageRequests(
+  state: BattleState,
+  movement: BattleResolvedMovement,
+): readonly SpikeGrowthMovementDamageRequest[] {
+  const areaDifficultTerrain = movement.areaDifficultTerrain;
+  if (areaDifficultTerrain === undefined) {
+    return [];
+  }
+  return areaDifficultTerrain.sources.flatMap((source) => {
+    if (source.kind !== "spikeGrowthHazard") {
+      return [];
+    }
+    const effect = spikeGrowthHazardEffectFor(state, source);
+    if (effect === undefined) {
+      return [];
+    }
+    const damage = scaledSpikeGrowthDamage(effect, source.damageDistanceFeet);
+    return damage === null
+      ? []
+      : [
+          {
+            effect,
+            distanceFeet: source.damageDistanceFeet,
+            damage,
+          },
+        ];
+  });
+}
+
+function spikeGrowthMovementDamageRollHole(
+  targetId: CombatantId,
+  request: SpikeGrowthMovementDamageRequest,
+): BattleSpikeGrowthMovementDamageRollHole {
+  const key = `battle:spike-growth-movement-damage:${targetId}:${request.effect.sourceCombatantId}:${request.effect.sourceSpellId}:${request.effect.areaId}:${request.distanceFeet}`;
+  return {
+    kind: "rolledDice",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: `${request.effect.sourceSpellId} movement damage`,
+    spikeGrowthMovement: {
+      targetId,
+      sourceSpellId: request.effect.sourceSpellId,
+      sourceCombatantId: request.effect.sourceCombatantId,
+      areaId: request.effect.areaId,
+      distanceFeet: request.distanceFeet,
+      damage: request.damage,
+    },
+    critical: false,
+  };
+}
+
+function validateSpikeGrowthMovementDamageRoll(
+  fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+  hole: BattleSpikeGrowthMovementDamageRollHole,
+): string | null {
+  if (fill.holeId !== hole.holeId) {
+    return "Spike Growth movement damage must use the selected damage hole.";
+  }
+  const validation = validateRolledDiceForDiceExpr(
+    fill.value,
+    hole.spikeGrowthMovement.damage.expr,
+  );
+  return validation === null ? null : validation.reason;
+}
+
+function spikeGrowthMovementDamageAmount(
+  target: BattleCreatureState,
+  request: SpikeGrowthMovementDamageRequest,
+  fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+): number {
+  return damageAmountAfterTargetAdjustments(
+    target,
+    rolledDiceTotal(fill.value) + (request.damage.expr.flat ?? 0),
+    request.damage.damageType,
+  );
+}
+
+function spikeGrowthMovementEffectFillKind(kind: BattleFill["kind"]): boolean {
+  return (
+    kind === "rolledDice" ||
+    kind === "concentrationSavingThrow" ||
+    kind === "attackDamageDisposition"
+  );
+}
+
+type MovementEffectsAfterMovementResult =
+  | {
+      readonly tag: "resolved";
+      readonly state: BattleState;
+      readonly remainingFills: readonly BattleFill[];
+    }
+  | Extract<BattleResolutionResult, { readonly tag: "invalid" | "needsHoles" }>;
+
+export function resolveMovementEffectsAfterMovement(input: {
+  readonly state: BattleState;
+  readonly subject: BattleSubject;
+  readonly movement: BattleResolvedMovement;
+  readonly extraFills: readonly BattleFill[];
+}): MovementEffectsAfterMovementResult {
+  const rolledDiceFills = input.extraFills.filter(
+    (fill): fill is Extract<BattleFill, { readonly kind: "rolledDice" }> =>
+      fill.kind === "rolledDice",
+  );
+  const concentrationSavingThrowFills = input.extraFills.filter(
+    (
+      fill,
+    ): fill is Extract<
+      BattleFill,
+      { readonly kind: "concentrationSavingThrow" }
+    > => fill.kind === "concentrationSavingThrow",
+  );
+  const damageDispositionFills = input.extraFills.filter(
+    (
+      fill,
+    ): fill is Extract<
+      BattleFill,
+      { readonly kind: "attackDamageDisposition" }
+    > => fill.kind === "attackDamageDisposition",
+  );
+  const consumedFills = new Set<BattleFill>();
+
+  const movedState = applyBattleMovement(input.state, input.movement);
+  const requests = spikeGrowthMovementDamageRequests(
+    movedState,
+    input.movement,
+  );
+  if (requests.length === 0) {
+    return {
+      tag: "resolved",
+      state: movedState,
+      remainingFills: input.extraFills,
+    };
+  }
+
+  let nextState = movedState;
+  for (const request of requests) {
+    const target = nextState.combatants.get(input.movement.moverId);
+    if (target === undefined) {
+      return {
+        tag: "resolved",
+        state: nextState,
+        remainingFills: input.extraFills.filter(
+          (fill) => !consumedFills.has(fill),
+        ),
+      };
+    }
+    const damageHole = spikeGrowthMovementDamageRollHole(
+      input.movement.moverId,
+      request,
+    );
+    const unconsumedRolledDiceFills = rolledDiceFills.filter(
+      (fill) => !consumedFills.has(fill),
+    );
+    const damageFill = rolledDiceFillForHole(
+      unconsumedRolledDiceFills,
+      damageHole,
+    );
+    if (damageFill === undefined) {
+      if (unconsumedRolledDiceFills.length > 0) {
+        return invalidResult(
+          input.state,
+          "invalidFill",
+          "Spike Growth movement damage fill does not match the pending damage hole.",
+        );
+      }
+      return needsHolesResult(input.state, input.subject, [damageHole]);
+    }
+    consumedFills.add(damageFill);
+    const damageValidation = validateSpikeGrowthMovementDamageRoll(
+      damageFill,
+      damageHole,
+    );
+    if (damageValidation !== null) {
+      return invalidResult(input.state, "invalidFill", damageValidation);
+    }
+
+    const damageAmount = spikeGrowthMovementDamageAmount(
+      target,
+      request,
+      damageFill,
+    );
+    const concentrationHole = concentrationSavingThrowHole(
+      target,
+      damageAmount,
+    );
+    const concentrationFill =
+      concentrationHole === null
+        ? undefined
+        : concentrationSavingThrowFillFor(
+            concentrationSavingThrowFills.filter(
+              (fill) =>
+                fill.holeId === concentrationHole.holeId &&
+                !consumedFills.has(fill),
+            ),
+            concentrationHole,
+          );
+    if (concentrationHole !== null && concentrationFill === undefined) {
+      if (
+        concentrationSavingThrowFills.some((fill) => !consumedFills.has(fill))
+      ) {
+        return invalidResult(
+          input.state,
+          "invalidFill",
+          "Concentration saving throw fill does not match the pending movement damage hole.",
+        );
+      }
+      return needsHolesResult(input.state, input.subject, [concentrationHole]);
+    }
+    if (concentrationFill !== undefined) {
+      consumedFills.add(concentrationFill);
+    }
+
+    const damageDispositionHole = zeroHitPointReplacementDispositionHole({
+      damageSourceId: request.effect.sourceCombatantId,
+      target,
+      damageAmount,
+    });
+    const damageDispositionHoles =
+      damageDispositionHole === null ? [] : [damageDispositionHole];
+    const damageDispositionValidation = damageDispositionFillsValidation({
+      holes: damageDispositionHoles,
+      fills: damageDispositionFills.filter(
+        (fill) =>
+          !consumedFills.has(fill) &&
+          damageDispositionHoles.some((hole) => hole.holeId === fill.holeId),
+      ),
+    });
+    if (damageDispositionValidation !== null) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        damageDispositionValidation,
+      );
+    }
+    const missingDispositionHole = damageDispositionHoles.find(
+      (hole) =>
+        damageDispositionFillFor(
+          damageDispositionFills.filter((fill) => !consumedFills.has(fill)),
+          hole,
+        ) === undefined,
+    );
+    if (missingDispositionHole !== undefined) {
+      if (damageDispositionFills.some((fill) => !consumedFills.has(fill))) {
+        return invalidResult(
+          input.state,
+          "invalidFill",
+          "Damage disposition fill does not match the pending movement damage hole.",
+        );
+      }
+      return needsHolesResult(input.state, input.subject, [
+        missingDispositionHole,
+      ]);
+    }
+    for (const hole of damageDispositionHoles) {
+      const dispositionFill = damageDispositionFillFor(
+        damageDispositionFills.filter((fill) => !consumedFills.has(fill)),
+        hole,
+      );
+      if (dispositionFill !== undefined) {
+        consumedFills.add(dispositionFill);
+      }
+    }
+
+    nextState = applyPreparedSlotSpellDamage(
+      nextState,
+      input.movement.moverId,
+      damageAmount,
+      {
+        damageSourceId: request.effect.sourceCombatantId,
+        concentrationSavingThrow: concentrationFill,
+        damageDisposition: damageDispositionForTarget(
+          damageDispositionHoles,
+          damageDispositionFills,
+          input.movement.moverId,
+        ),
+        wardingBondDamageShareConcentrationSavingThrows: [],
+        hideousLaughterDamageRepeatSaves: [],
+      },
+    );
+  }
+  const remainingFills = input.extraFills.filter(
+    (fill) => !consumedFills.has(fill),
+  );
+  if (
+    remainingFills.some((fill) => spikeGrowthMovementEffectFillKind(fill.kind))
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Move received a fill that does not match a pending Spike Growth movement damage hole.",
+    );
+  }
+
+  return {
+    tag: "resolved",
+    state: nextState,
+    remainingFills,
+  };
+}
+
+export function resolveMoveAfterMovement(input: {
+  readonly state: BattleState;
+  readonly subject: BattleSubject;
+  readonly movement: BattleResolvedMovement;
+  readonly fills: readonly BattleFill[];
+}): BattleResolutionResult {
+  const movementEffects = resolveMovementEffectsAfterMovement({
+    state: input.state,
+    subject: input.subject,
+    movement: input.movement,
+    extraFills: input.fills.slice(1),
+  });
+  if (movementEffects.tag !== "resolved") {
+    return movementEffects;
+  }
+  if (movementEffects.remainingFills.length > 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Move only accepts Movement, Spike Growth damage, Concentration, and damage disposition fills.",
+    );
+  }
+  return {
+    tag: "resolved",
+    state: movementEffects.state,
+    snapshot: snapshotBattle(movementEffects.state),
   };
 }
 
@@ -5636,6 +6083,17 @@ function activeAreaDifficultTerrainSourceMatches(
         sourceCombatant?.activeEffects.some(
           (effect) =>
             effect.kind === "webRestraintHazard" &&
+            effect.sourceCombatantId === terrainSource.sourceCombatantId &&
+            effect.sourceSpellId === terrainSource.sourceSpellId &&
+            effect.areaId === terrainSource.areaId,
+        ) === true,
+    ),
+    byAreaDifficultTerrainSourceKind(
+      "spikeGrowthHazard",
+      (terrainSource) =>
+        sourceCombatant?.activeEffects.some(
+          (effect) =>
+            effect.kind === "spikeGrowthHazard" &&
             effect.sourceCombatantId === terrainSource.sourceCombatantId &&
             effect.sourceSpellId === terrainSource.sourceSpellId &&
             effect.areaId === terrainSource.areaId,
@@ -5699,6 +6157,7 @@ function validateAreaDifficultTerrainMovementFact(
     };
   }
   const sourceKeys = new Set<string>();
+  let spikeGrowthDamageDistanceFeet = 0;
   for (const source of fact.sources) {
     const key = areaDifficultTerrainSourceKey(source);
     if (sourceKeys.has(key)) {
@@ -5708,6 +6167,36 @@ function validateAreaDifficultTerrainMovementFact(
       };
     }
     sourceKeys.add(key);
+    if (source.kind === "spikeGrowthHazard") {
+      if (
+        !Number.isInteger(source.damageDistanceFeet) ||
+        source.damageDistanceFeet <= 0
+      ) {
+        return {
+          tag: "invalid",
+          message:
+            "Spike Growth movement damage distance must be a positive integer.",
+        };
+      }
+      if (Number(source.damageDistanceFeet) > Number(fact.totalDistanceFeet)) {
+        return {
+          tag: "invalid",
+          message:
+            "Spike Growth movement damage distance cannot exceed total Movement distance.",
+        };
+      }
+      if (
+        Number(source.damageDistanceFeet) >
+        Number(fact.difficultTerrainDistanceFeet)
+      ) {
+        return {
+          tag: "invalid",
+          message:
+            "Spike Growth movement damage distance cannot exceed Difficult Terrain distance.",
+        };
+      }
+      spikeGrowthDamageDistanceFeet += Number(source.damageDistanceFeet);
+    }
     if (!activeAreaDifficultTerrainSourceMatches(state, source)) {
       return {
         tag: "invalid",
@@ -5715,6 +6204,15 @@ function validateAreaDifficultTerrainMovementFact(
           "Area Difficult Terrain movement fact does not match an active Difficult Terrain area.",
       };
     }
+  }
+  if (
+    spikeGrowthDamageDistanceFeet > Number(fact.difficultTerrainDistanceFeet)
+  ) {
+    return {
+      tag: "invalid",
+      message:
+        "Spike Growth movement damage distances cannot exceed Difficult Terrain distance.",
+    };
   }
   return {
     tag: "ok",
@@ -5822,9 +6320,6 @@ function validateAreaMovementCostFacts(
   if (areaCosts.length === 0) {
     return null;
   }
-  if (value.jumpMovementReplacement !== undefined) {
-    return "Area movement-cost facts cannot be combined with Jump movement replacement.";
-  }
   const firstAreaCost = areaCosts[0];
   if (firstAreaCost === undefined) {
     return null;
@@ -5838,6 +6333,9 @@ function validateAreaMovementCostFacts(
     )
   ) {
     return "Area movement-cost facts must agree on total Movement distance.";
+  }
+  if (value.jumpMovementReplacement !== undefined) {
+    return null;
   }
   const expectedCostFeet = movementFeet(
     Number(firstAreaCost.totalDistanceFeet) +
@@ -5857,10 +6355,32 @@ function validateAreaMovementCostFacts(
     : "Gust of Wind Line movement must spend total distance plus 1 extra foot for every foot moved closer to the caster through the Line.";
 }
 
+function areaMovementExtraCostFeet(
+  state: BattleState,
+  value: BattleMovementFillValue,
+): MovementFeet {
+  const difficultTerrain = validateAreaDifficultTerrainMovementFact(
+    state,
+    value.areaDifficultTerrain,
+  );
+  const gust = validateGustOfWindLineMovementFact(
+    state,
+    value.gustOfWindLineMovement,
+  );
+  return movementFeet(
+    [difficultTerrain, gust].reduce(
+      (total, result) =>
+        result.tag === "ok" ? total + Number(result.extraCostFeet) : total,
+      0,
+    ),
+  );
+}
+
 function validateJumpMovementReplacementFact(
   fact: BattleJumpMovementReplacementFact | undefined,
   effect: JumpMovementReplacementEffect | undefined,
   movementCostFeet: MovementFeet,
+  areaExtraCostFeet: MovementFeet,
 ): string | null {
   if (effect === undefined) {
     return fact === undefined
@@ -5873,8 +6393,11 @@ function validateJumpMovementReplacementFact(
   if (fact.kind !== "jumpMovementReplacement") {
     return "Jump movement replacement fact has the wrong kind.";
   }
-  if (movementCostFeet !== effect.movementCostFeet) {
-    return "Jump movement replacement must spend exactly the spell's Movement cost.";
+  const expectedMovementCostFeet = movementFeet(
+    Number(effect.movementCostFeet) + Number(areaExtraCostFeet),
+  );
+  if (movementCostFeet !== expectedMovementCostFeet) {
+    return "Jump movement replacement must spend the spell's Movement cost plus any area movement costs.";
   }
   if (!Number.isInteger(fact.distanceFeet) || fact.distanceFeet <= 0) {
     return "Jump movement replacement distance must be a positive integer.";

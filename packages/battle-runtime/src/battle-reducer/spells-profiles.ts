@@ -13,6 +13,7 @@
 // (resolve), and F (turn).
 
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-tracked-light-suppression
@@ -160,6 +161,7 @@ import {
   supportedPreparedMirrorImageHitInterceptionSpellProfile,
   supportedPreparedRollModifierSpellProfile,
   supportedPreparedScalarBuffSpellProfile,
+  supportedPreparedSeeInvisibleObserverSightSpellProfile,
   supportedPreparedSelfTransformationModeSpellProfile,
   supportedPreparedSelfTeleportSpellProfile,
   supportedPreparedSpellCreatedHeldObjectProfile,
@@ -361,6 +363,12 @@ export function supportedSpellActs(
       supportedPreparedFlamingSphereProfile(spell, spellcasting.spellSlots),
     ),
     ...preparedSpells.flatMap((spell) =>
+      supportedPreparedSpikeGrowthMovementHazardProfile(
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
+    ...preparedSpells.flatMap((spell) =>
       supportedPreparedMoonbeamProfile(spell, spellcasting.spellSlots),
     ),
     ...preparedSpells.flatMap((spell) =>
@@ -420,6 +428,13 @@ export function supportedSpellActs(
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedBlurAttackRollDefenseSpellProfile(
+        actor.combatantId,
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      supportedPreparedSeeInvisibleObserverSightSpellProfile(
         actor.combatantId,
         spell,
         spellcasting.spellSlots,
@@ -1563,6 +1578,111 @@ function flamingSphereSpell(spell: SpellRecord) {
     diameterFeet: 5,
     ramMaxMoveFeet: repositionOperation.effect.maxMoveFeet,
     damageAmount: endTurnOperation.effect.onFail.amount,
+  };
+}
+
+export function supportedPreparedSpikeGrowthMovementHazardProfile(
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  const spikeGrowth = spikeGrowthMovementHazardSpell(spell);
+  if (spikeGrowth === null) {
+    return [];
+  }
+
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+    if (Number(slot.spellLevel) < spell.mechanics.level) {
+      return [];
+    }
+    return [
+      {
+        access: { tag: "prepared" },
+        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+        procedure: "spikeGrowthMovementHazard",
+        spell,
+        targeting: {
+          kind: "pointOriginSphere",
+          radiusFeet: movementFeet(spikeGrowth.radiusFeet),
+        },
+        durationTicks: spikeGrowth.durationTicks,
+        rangeFeet: movementFeet(spikeGrowth.rangeFeet),
+        damage: {
+          expr: spikeGrowth.damage.expr,
+          damageType: spikeGrowth.damage.damageType,
+        },
+        damagePerFeet: movementFeet(spikeGrowth.damagePerFeet),
+      },
+    ];
+  });
+}
+
+function spikeGrowthMovementHazardSpell(spell: SpellRecord): {
+  readonly durationTicks: ElapsedTimeTicks;
+  readonly radiusFeet: number;
+  readonly rangeFeet: number;
+  readonly damage: {
+    readonly expr: DiceExpr;
+    readonly damageType: Extract<DamageType, "piercing">;
+  };
+  readonly damagePerFeet: number;
+} | null {
+  if (spell.mechanics.family !== "ongoing_effect") {
+    return null;
+  }
+  const durationTicks =
+    spell.mechanics.duration.kind === "concentration"
+      ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.upTo)
+      : null;
+  const attachment = spell.mechanics.attachment;
+  const area =
+    attachment.kind === "hole" && attachment.value.kind === "area"
+      ? attachment.value
+      : null;
+  const difficultTerrainOperation = spell.mechanics.operations.find(
+    (operation) =>
+      operation.trigger.kind === "passive" &&
+      operation.effect.kind === "area_is_difficult_terrain",
+  );
+  const movementDamageOperation = spell.mechanics.operations.find(
+    (operation) => operation.trigger.kind === "on_creature_moves",
+  );
+
+  if (
+    spell.mechanics.level !== 2 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "point" ||
+    spell.mechanics.range.feet !== 150 ||
+    spell.mechanics.duration.kind !== "concentration" ||
+    spell.mechanics.duration.upTo.unit !== "minute" ||
+    spell.mechanics.duration.upTo.amount !== 10 ||
+    durationTicks === null ||
+    Either.isLeft(durationTicks) ||
+    attachment.kind !== "hole" ||
+    area?.kind !== "area" ||
+    area.origin.kind !== "point_within_range" ||
+    area.shape.kind !== "sphere" ||
+    area.shape.radiusFeet !== 20 ||
+    difficultTerrainOperation?.effect.kind !== "area_is_difficult_terrain" ||
+    movementDamageOperation?.trigger.kind !== "on_creature_moves" ||
+    movementDamageOperation.trigger.perFeet !== 5 ||
+    movementDamageOperation.effect.kind !== "damage" ||
+    movementDamageOperation.effect.damageType !== "piercing" ||
+    movementDamageOperation.effect.amount.kind !== "fixed" ||
+    movementDamageOperation.effect.amount.expr.dice !== 2 ||
+    movementDamageOperation.effect.amount.expr.dieSize !== 4
+  ) {
+    return null;
+  }
+
+  return {
+    durationTicks: durationTicks.right,
+    radiusFeet: area.shape.radiusFeet,
+    rangeFeet: spell.mechanics.range.feet,
+    damage: {
+      expr: movementDamageOperation.effect.amount.expr,
+      damageType: movementDamageOperation.effect.damageType,
+    },
+    damagePerFeet: movementDamageOperation.trigger.perFeet,
   };
 }
 
