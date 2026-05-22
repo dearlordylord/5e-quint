@@ -145,7 +145,7 @@
     {
       "number": 24,
       "id": "L3-FOLLOWUP-FLY-END-FALL-WITNESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Fly End Fall Witness"
     },
     {
@@ -213,7 +213,7 @@ Every task must include:
 | 21 | L3-SPELL-HYPNOTIC-PATTERN-RUNTIME-SURVEY - Level 3 Hypnotic Pattern Runtime Survey And Task Split | done | L12G-RECURSIVE-TAIL-LANE-A-2 | L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR | Hypnotic Pattern Surface content, condition-save/incapacitation support, Unit/profile claims, and focused tests | Completed by recording Hypnotic Pattern as an unsupported-profile follow-up split for Surface sight/escape repair and battle control runtime support; no companion behavior or authored-identity dispatch is claimed. |
 | 22 | L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR - Fly Surface Target Repair | done | L3-SPELL-FLY-RUNTIME-SURVEY | L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME | Fly Surface target shape and sibling touched willing creature spell selection vocabulary | Completed by structurally encoding Fly's touched willing creature target eligibility before runtime admission. |
 | 23 | L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME - Fly Special Speed Runtime | done | L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR | L3-FOLLOWUP-FLY-END-FALL-WITNESS | Fly fixed special Speed, hover, movement kind vocabulary, active-effect cleanup, and promoted Quint parity | Completed by admitting Fly through the scalar-buff runtime profile with fixed Fly Speed, hover retention, slot-scaled willing targets, movement/Dash projection, cleanup, and promoted Quint parity while leaving spell-end falling to Task 24. |
-| 24 | L3-FOLLOWUP-FLY-END-FALL-WITNESS - Fly End Fall Witness | ready-for-research | L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME | none | Fly spell-end falling clause, caller-supplied aloft/can-stop-fall witnesses, and existing falling reaction/landing pipeline | Promote the spell-end fall handoff now that the active Fly effect exists. |
+| 24 | L3-FOLLOWUP-FLY-END-FALL-WITNESS - Fly End Fall Witness | done | L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME | none | Fly spell-end falling clause, caller-supplied aloft/can-stop-fall witnesses, and existing falling reaction/landing pipeline | Completed by adding the Fly Speed grant cleanup witness boundary and handoff to the existing falling Reaction/Feather Fall landing pipeline while leaving elevation and can-stop-fall derivation table-owned. |
 | 25 | L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR - Hypnotic Pattern Surface Escape Repair | deferred | L3-SPELL-HYPNOTIC-PATTERN-RUNTIME-SURVEY | L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME | Hypnotic Pattern sight-gated area targeting and target-specific escape facts | Repair typed Surface facts before runtime admission. |
 | 26 | L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME - Hypnotic Pattern Control Runtime | blocked | L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR | none | Hypnotic Pattern linked Charmed/Incapacitated/Speed 0 target effect, damage cleanup, shake-awake action, and promoted Quint parity | Promote the battle control lifecycle after the Surface escape repair lands. |
 
@@ -591,7 +591,7 @@ Completed by admitting Fly through the scalar-buff runtime profile with fixed Fl
 
 ### Task 24 - L3-FOLLOWUP-FLY-END-FALL-WITNESS - Fly End Fall Witness
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME
 
@@ -605,10 +605,10 @@ Input:
 
 Output:
 
-- Connect Fly effect cleanup to caller-supplied still-aloft and can-stop-fall witnesses.
-- Either open the existing `creatureFalls` reaction window for affected targets or record why the target can stop the fall.
-- Preserve Feather Fall's existing falling-trigger and landing owner; do not add battle-owned elevation simulation or treat hover as a generic immunity to every fall source.
-- Add focused tests for Concentration break, duration expiration, recast or replacement cleanup, hover-relevant fall prevention, and handoff to the existing falling reaction/landing pipeline, plus promoted Quint/runtime parity.
+- Completed by connecting Fly effect cleanup to caller-supplied not-aloft, can-stop-fall, and cannot-stop-fall witnesses.
+- Cannot-stop-fall opens the existing `creatureFalls` reaction window and reuses Feather Fall's landing pipeline; not-aloft and can-stop-fall record no-fall outcomes without battle-owned elevation simulation.
+- Hover remains a witness reason for a specific Fly-end cleanup outcome, not a generic immunity to every fall source.
+- Focused runtime tests and promoted Quint/runtime parity cover Concentration break, duration expiration, recast replacement cleanup, hover-relevant fall prevention, and handoff to the falling reaction/landing pipeline.
 
 Acceptance:
 

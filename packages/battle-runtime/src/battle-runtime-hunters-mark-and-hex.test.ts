@@ -1089,7 +1089,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       ],
     });
 
-    const expiredCombatants = tickDurationEffects(nearlyExpired.combatants);
+    const expiredCombatants = tickDurationEffects(nearlyExpired.combatants).value;
     expect(expiredCombatants.get(fighterId)?.concentration).toBeNull();
     expect(expiredCombatants.get(fighterId)?.activeEffects).toEqual([]);
   });

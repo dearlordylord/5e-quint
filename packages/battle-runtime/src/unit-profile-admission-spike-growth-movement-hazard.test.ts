@@ -984,7 +984,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
     };
     const expired = {
       ...expiring,
-      combatants: tickDurationEffects(expiring.combatants),
+      combatants: tickDurationEffects(expiring.combatants).value,
     };
 
     expect(requireCombatant(expired, spellCasterId).activeEffects).toEqual([]);

@@ -218,7 +218,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
         ),
       },
     );
-    const expiredCombatants = tickDurationEffects(nearlyExpiredCombatants);
+    const expiredCombatants = tickDurationEffects(nearlyExpiredCombatants).value;
     expect(expiredCombatants.get(spellCasterId)?.concentration).toBeNull();
     expect(expiredCombatants.get(spellTargetId)).toMatchObject({
       conditions: expect.not.objectContaining({ paralyzed: true }),

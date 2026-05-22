@@ -262,6 +262,7 @@ import type {
   AttackSpellDamageAddition,
   BattleTurnResources,
   BattleTurnSnapshot,
+  EndedFlySpeedGrant,
   SpellSlotInvocationResource,
   SupportedSpellInvocation,
 } from "../battle-reducer.ts";
@@ -388,6 +389,13 @@ export function resolveBattleSubjectInternal(
           subject: input.subject,
           fills: input.fills,
         });
+      }
+      if (activeFrame.kind === "flySpeedGrantEndFallCleanup") {
+        return invalidResult(
+          input.state,
+          "staleSubject",
+          "Fly Speed end-fall witness must be resolved before other battle subjects.",
+        );
       }
       const activeReaction = activeFrame.frame.activeReaction;
       if (
@@ -1704,6 +1712,173 @@ export function openCreatureFallsReactionWindow(input: {
   );
 }
 
+const FLY_END_CAN_STOP_FALL_REASONS = ["hovering", "otherMeans"] as const;
+export type FlyEndCanStopFallReason =
+  (typeof FLY_END_CAN_STOP_FALL_REASONS)[number];
+
+export type FlySpeedGrantEndFallWitness =
+  | { readonly kind: "notAloft" }
+  | {
+      readonly kind: "canStopFall";
+      readonly reason: FlyEndCanStopFallReason;
+    }
+  | {
+      readonly kind: "cannotStopFall";
+      readonly reactionSpellTargetFacts: readonly BattleTargetSpatialFact[];
+    };
+
+export type FlySpeedGrantEndFallWitnessResult =
+  | {
+      readonly tag: "notAloft";
+      readonly state: BattleState;
+      readonly snapshot: BattleSnapshot;
+      readonly targetId: CombatantId;
+      readonly endedEffect: EndedFlySpeedGrant;
+    }
+  | {
+      readonly tag: "canStopFall";
+      readonly state: BattleState;
+      readonly snapshot: BattleSnapshot;
+      readonly targetId: CombatantId;
+      readonly endedEffect: EndedFlySpeedGrant;
+      readonly reason: FlyEndCanStopFallReason;
+    }
+  | {
+      readonly tag: "falls";
+      readonly state: BattleState;
+      readonly snapshot: BattleSnapshot;
+      readonly targetId: CombatantId;
+      readonly endedEffect: EndedFlySpeedGrant;
+      readonly reaction: BattleResolutionResult;
+    }
+  | {
+      readonly tag: "invalid";
+      readonly state: BattleState;
+      readonly snapshot: BattleSnapshot;
+      readonly reason:
+        | "missingCombatant"
+        | "cleanupFrameMissing"
+        | "effectStillActive";
+      readonly message: string;
+    };
+
+export function resolveFlySpeedGrantEndFallCleanup(input: {
+  readonly state: BattleState;
+  readonly targetId: CombatantId;
+  readonly witness: FlySpeedGrantEndFallWitness;
+}): FlySpeedGrantEndFallWitnessResult {
+  const target = input.state.combatants.get(input.targetId);
+  if (target === undefined) {
+    return {
+      tag: "invalid",
+      state: input.state,
+      snapshot: snapshotBattle(input.state),
+      reason: "missingCombatant",
+      message: "Fly Speed end-fall witness target is not in this battle.",
+    };
+  }
+  const cleanupFrameIndex = flySpeedGrantEndFallCleanupFrameIndex(
+    input.state,
+    input.targetId,
+  );
+  if (cleanupFrameIndex === null) {
+    return {
+      tag: "invalid",
+      state: input.state,
+      snapshot: snapshotBattle(input.state),
+      reason: "cleanupFrameMissing",
+      message:
+        "Fly Speed end-fall witness requires a pending cleanup frame emitted by Fly effect cleanup.",
+    };
+  }
+  const cleanupFrame = input.state.interruptStack[cleanupFrameIndex];
+  if (cleanupFrame?.kind !== "flySpeedGrantEndFallCleanup") {
+    return {
+      tag: "invalid",
+      state: input.state,
+      snapshot: snapshotBattle(input.state),
+      reason: "cleanupFrameMissing",
+      message:
+        "Fly Speed end-fall cleanup frame was not available for this target.",
+    };
+  }
+  if (target.activeEffects.includes(cleanupFrame.endedEffect)) {
+    return {
+      tag: "invalid",
+      state: input.state,
+      snapshot: snapshotBattle(input.state),
+      reason: "effectStillActive",
+      message:
+        "Fly Speed end-fall witness can only resolve after the emitted Fly effect cleanup removed the ended grant.",
+    };
+  }
+  const cleanedState = battleStateWithoutFlySpeedGrantEndFallCleanupFrame(
+    input.state,
+    cleanupFrameIndex,
+  );
+  if (input.witness.kind === "notAloft") {
+    return {
+      tag: "notAloft",
+      state: cleanedState,
+      snapshot: snapshotBattle(cleanedState),
+      targetId: input.targetId,
+      endedEffect: cleanupFrame.endedEffect,
+    };
+  }
+  if (input.witness.kind === "canStopFall") {
+    return {
+      tag: "canStopFall",
+      state: cleanedState,
+      snapshot: snapshotBattle(cleanedState),
+      targetId: input.targetId,
+      endedEffect: cleanupFrame.endedEffect,
+      reason: input.witness.reason,
+    };
+  }
+  const reaction = openCreatureFallsReactionWindow({
+    state: cleanedState,
+    fallingCreatureId: input.targetId,
+    reactionSpellTargetFacts: input.witness.reactionSpellTargetFacts,
+  });
+  return {
+    tag: "falls",
+    state: reaction.tag === "invalid" ? cleanedState : reaction.state,
+    snapshot: reaction.snapshot,
+    targetId: input.targetId,
+    endedEffect: cleanupFrame.endedEffect,
+    reaction,
+  };
+}
+
+function flySpeedGrantEndFallCleanupFrameIndex(
+  state: BattleState,
+  targetId: CombatantId,
+): number | null {
+  for (let index = state.interruptStack.length - 1; index >= 0; index -= 1) {
+    const frame = state.interruptStack[index];
+    if (
+      frame?.kind === "flySpeedGrantEndFallCleanup" &&
+      frame.targetId === targetId
+    ) {
+      return index;
+    }
+  }
+  return null;
+}
+
+function battleStateWithoutFlySpeedGrantEndFallCleanupFrame(
+  state: BattleState,
+  frameIndex: number,
+): BattleState {
+  return {
+    ...state,
+    interruptStack: [
+      ...state.interruptStack.slice(0, frameIndex),
+      ...state.interruptStack.slice(frameIndex + 1),
+    ],
+  };
+}
+
 export function resolveFeatherFallLanding(input: {
   readonly state: BattleState;
   readonly targetId: CombatantId;
@@ -2802,13 +2977,12 @@ function resolveHellishRebukeReactionSpellCommand(
       "Source damage roll penalty does not match an active source-side damage penalty.",
     );
   }
-  const sourceDamageRollPenaltyRoll =
-    sourceDamageRollPenaltyRollForDamageRoll(
-      fillSet.sourceDamageRollPenaltyRolls,
-      damageSource,
-      spellDamageByType,
-      fillSet.damageRoll.holeId,
-    );
+  const sourceDamageRollPenaltyRoll = sourceDamageRollPenaltyRollForDamageRoll(
+    fillSet.sourceDamageRollPenaltyRolls,
+    damageSource,
+    spellDamageByType,
+    fillSet.damageRoll.holeId,
+  );
   const sourcePenalty = applyAvailableSourceDamageRollPenalty(
     damageSource,
     spellDamageByType,

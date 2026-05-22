@@ -3,7 +3,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-AID aid
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-BARKSKIN barkskin
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-SPIDER-CLIMB spider_climb
-// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME fly
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-FLY-END-FALL-WITNESS fly
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.scalar-buff spell.invocation-condition-immunity-turn-start-temporary-hit-points
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
@@ -46,11 +46,24 @@ import {
   holeId,
   movementDeltaFeet,
   movementFeet,
+  resolveBattleReaction,
   resolveBattleSubject,
+  resolveFeatherFallLanding,
+  resolveFlySpeedGrantEndFallCleanup,
   snapshotBattle,
   spellSlotInvocationRef,
 } from "./unit-profile-admission-test-support.ts";
-import type { BattleState } from "./unit-profile-admission-test-support.ts";
+import type {
+  BattleFill,
+  BattleFlySpeedGrantEndFallCleanupFrame,
+  BattleHole,
+  BattleState,
+  BattleTargetSpatialFact,
+  CombatantId,
+  EndedFlySpeedGrant,
+} from "./unit-profile-admission-test-support.ts";
+
+const featherFallUnitId = "feather_fall";
 
 describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
   test("false_life is admitted as self Temporary Hit Points with slot scaling", () => {
@@ -1000,6 +1013,248 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     });
   });
 
+  test("fly Concentration cleanup opens the existing falling Reaction and landing pipeline when the target cannot stop the fall", () => {
+    const cast = castFlyOnCaster({
+      preparedSpells: [spellRecord(flyUnitId), spellRecord(featherFallUnitId)],
+      spellSlots: [
+        { spellLevel: 1, count: 1 },
+        { spellLevel: 3, count: 1 },
+      ],
+    });
+    const laterCasterTurn = advanceToNextCasterTurn(cast.state);
+    const broken = breakBattleConcentration(
+      laterCasterTurn.state,
+      spellCasterId,
+    );
+    const endedEffect = requirePendingFlySpeedGrantCleanup(
+      broken,
+      spellCasterId,
+    );
+    const fallWitness = resolveFlySpeedGrantEndFallCleanup({
+      state: broken,
+      targetId: spellCasterId,
+      witness: {
+        kind: "cannotStopFall",
+        reactionSpellTargetFacts: featherFallTriggerFacts(spellCasterId),
+      },
+    });
+
+    expect(fallWitness).toMatchObject({
+      tag: "falls",
+      endedEffect,
+      reaction: {
+        tag: "needsHoles",
+        snapshot: { pendingReaction: { trigger: "creatureFalls" } },
+      },
+    });
+    if (fallWitness.tag !== "falls") {
+      throw new Error("Expected Fly cleanup to hand off to Falling.");
+    }
+    expect(
+      fallWitness.state.combatants.get(spellCasterId)?.activeEffects,
+    ).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "specialSpeedGrant",
+          sourceSpellId: flyUnitId,
+        }),
+      ]),
+    );
+    if (fallWitness.reaction.tag !== "needsHoles") {
+      throw new Error("Expected Feather Fall Reaction window.");
+    }
+
+    const featherFallChoice =
+      fallWitness.reaction.snapshot.pendingReaction?.choices.find(
+        (candidate) =>
+          candidate.kind === "castTriggeredReactionSpell" &&
+          candidate.invocation.tag === "spellSlot" &&
+          candidate.invocation.spellId === featherFallUnitId &&
+          candidate.invocation.procedure === "featherFallMitigation",
+      );
+    if (
+      featherFallChoice === undefined ||
+      featherFallChoice.kind !== "castTriggeredReactionSpell"
+    ) {
+      throw new Error("Expected Feather Fall Reaction choice.");
+    }
+    const targetList = requireHole(
+      featherFallChoice.initialHoles,
+      "spellTargetList",
+    );
+    const mitigated = resolveBattleReaction({
+      state: fallWitness.reaction.state,
+      fill: reactionDecisionFill(
+        requireHole(fallWitness.reaction.holes, "reactionDecision"),
+        {
+          kind: "resolve",
+          reactorId: spellCasterId,
+          choice: {
+            kind: "castTriggeredReactionSpell",
+            invocation: featherFallChoice.invocation,
+            fills: [
+              featherFallTargetListFill(targetList, spellCasterId, [
+                spellCasterId,
+              ]),
+            ],
+          },
+        },
+      ),
+    });
+    expect(mitigated).toMatchObject({ tag: "resolved" });
+    if (mitigated.tag !== "resolved") {
+      throw new Error("Expected Feather Fall to resolve.");
+    }
+    const landing = resolveFeatherFallLanding({
+      state: mitigated.state,
+      targetId: spellCasterId,
+    });
+    expect(landing).toMatchObject({
+      tag: "mitigated",
+      targetId: spellCasterId,
+      fallDamagePrevented: true,
+      fallingPronePrevented: true,
+    });
+  });
+
+  test("fly duration expiration uses the same caller-supplied fall witness boundary", () => {
+    const cast = castFlyOnCaster({
+      preparedSpells: [spellRecord(flyUnitId)],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+    });
+    const caster = cast.state.combatants.get(spellCasterId);
+    if (caster === undefined) {
+      throw new Error("Expected Fly caster.");
+    }
+    const endedEffect = {
+      ...requireFlySpeedGrant(cast.state, spellCasterId),
+      expiresAt: {
+        kind: "concentration" as const,
+        combatantId: spellCasterId,
+        durationTicks: elapsedTimeTicks(1),
+      },
+    };
+    const nearlyExpiredState: BattleState = {
+      ...cast.state,
+      combatants: new Map(cast.state.combatants).set(spellCasterId, {
+        ...caster,
+        activeEffects: caster.activeEffects.map((effect) =>
+          effect.kind === "specialSpeedGrant" &&
+          effect.sourceSpellId === flyUnitId
+            ? endedEffect
+            : effect,
+        ),
+      }),
+    };
+    const expired = advanceToNextCasterTurn(nearlyExpiredState);
+    const pendingEndedEffect = requirePendingFlySpeedGrantCleanup(
+      expired.state,
+      spellCasterId,
+    );
+    const fallWitness = resolveFlySpeedGrantEndFallCleanup({
+      state: expired.state,
+      targetId: spellCasterId,
+      witness: {
+        kind: "cannotStopFall",
+        reactionSpellTargetFacts: [],
+      },
+    });
+
+    expect(fallWitness).toMatchObject({
+      tag: "falls",
+      endedEffect: pendingEndedEffect,
+      reaction: { tag: "resolved" },
+    });
+    expect(fallWitness.snapshot.pendingReaction).toBeNull();
+  });
+
+  test("fly recast replacement can record a hover-relevant reason instead of opening a fall", () => {
+    const spell = spellRecord(flyUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [
+        { spellLevel: 3, count: 1 },
+        { spellLevel: 4, count: 1 },
+      ],
+    });
+    const firstCast = castFlyFromState(state, 3);
+    const laterCasterTurn = advanceToNextCasterTurn(firstCast.state);
+    const secondCast = castFlyFromState(laterCasterTurn.state, 4);
+    const endedEffect = requirePendingFlySpeedGrantCleanup(
+      secondCast.state,
+      spellCasterId,
+    );
+    const witness = resolveFlySpeedGrantEndFallCleanup({
+      state: secondCast.state,
+      targetId: spellCasterId,
+      witness: { kind: "canStopFall", reason: "hovering" },
+    });
+
+    expect(witness).toMatchObject({
+      tag: "canStopFall",
+      targetId: spellCasterId,
+      endedEffect,
+      reason: "hovering",
+      snapshot: { pendingReaction: null },
+    });
+    expect(
+      witness.state.combatants.get(spellCasterId)?.activeEffects,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "specialSpeedGrant",
+        sourceSpellId: flyUnitId,
+        speedKind: "fly",
+        hover: true,
+      }),
+    );
+  });
+
+  test("fly cleanup records a grounded witness without treating hover as generic fall immunity", () => {
+    const cast = castFlyOnCaster({
+      preparedSpells: [spellRecord(flyUnitId)],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+    });
+    const endedEffect = requireFlySpeedGrant(cast.state, spellCasterId);
+
+    expect(
+      resolveFlySpeedGrantEndFallCleanup({
+        state: cast.state,
+        targetId: spellCasterId,
+        witness: { kind: "notAloft" },
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "cleanupFrameMissing",
+    });
+    const groundedState = breakBattleConcentration(cast.state, spellCasterId);
+    expect(requirePendingFlySpeedGrantCleanup(groundedState, spellCasterId)).toBe(
+      endedEffect,
+    );
+    const grounded = resolveFlySpeedGrantEndFallCleanup({
+      state: groundedState,
+      targetId: spellCasterId,
+      witness: { kind: "notAloft" },
+    });
+    const fallingState = breakBattleConcentration(cast.state, spellCasterId);
+    const cannotStop = resolveFlySpeedGrantEndFallCleanup({
+      state: fallingState,
+      targetId: spellCasterId,
+      witness: {
+        kind: "cannotStopFall",
+        reactionSpellTargetFacts: [],
+      },
+    });
+
+    expect(grounded).toMatchObject({
+      tag: "notAloft",
+      snapshot: { pendingReaction: null },
+    });
+    expect(cannotStop).toMatchObject({
+      tag: "falls",
+      reaction: { tag: "resolved" },
+    });
+  });
+
   test("aid is admitted as timed maximum and current Hit Point increases for up to three targets", () => {
     const spell = spellRecord(aidUnitId);
     const secondTargetId = combatantId("unit-profile-aid-target-2");
@@ -1287,6 +1542,148 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     ]);
   });
 });
+
+function castFlyOnCaster(
+  input: Parameters<typeof spellBattle>[0],
+): Extract<
+  ReturnType<typeof resolveBattleSubject>,
+  { readonly tag: "resolved" }
+> {
+  return castFlyFromState(spellBattle(input), 3);
+}
+
+function castFlyFromState(
+  state: BattleState,
+  slotLevel: 3 | 4,
+): Extract<
+  ReturnType<typeof resolveBattleSubject>,
+  { readonly tag: "resolved" }
+> {
+  const act = spellAct({ state, spellId: flyUnitId, slotLevel });
+  const targetChoice = act.initialHoles.find(
+    (hole): hole is Extract<BattleHole, { readonly kind: "targetChoice" }> =>
+      hole.kind === "targetChoice",
+  );
+  const targetList = act.initialHoles.find(
+    (hole): hole is Extract<BattleHole, { readonly kind: "spellTargetList" }> =>
+      hole.kind === "spellTargetList",
+  );
+  const resolved = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [
+      targetChoice !== undefined
+        ? knownWillingSpellTargetFill(
+            targetChoice,
+            flyUnitId,
+            spellCasterId,
+            spellCasterId,
+          )
+        : knownWillingSpellTargetListFill(
+            targetList ?? requireHole(act.initialHoles, "spellTargetList"),
+            spellCasterId,
+            flyUnitId,
+            [spellCasterId],
+          ),
+    ],
+  });
+  if (resolved.tag !== "resolved") {
+    throw new Error("Expected Fly to resolve.");
+  }
+  return resolved;
+}
+
+function advanceToNextCasterTurn(
+  state: BattleState,
+): Extract<ReturnType<typeof endTurn>, { readonly tag: "resolved" }> {
+  const targetTurn = endTurn({ state, actorId: spellCasterId });
+  if (targetTurn.tag !== "resolved") {
+    throw new Error("Expected target turn.");
+  }
+  const casterTurn = endTurn({
+    state: targetTurn.state,
+    actorId: spellTargetId,
+  });
+  if (casterTurn.tag !== "resolved") {
+    throw new Error("Expected next caster turn.");
+  }
+  return casterTurn;
+}
+
+function requireFlySpeedGrant(
+  state: BattleState,
+  targetId: CombatantId,
+): EndedFlySpeedGrant {
+  const effect = state.combatants
+    .get(targetId)
+    ?.activeEffects.find(
+      (candidate): candidate is EndedFlySpeedGrant =>
+        candidate.kind === "specialSpeedGrant" &&
+        candidate.speedKind === "fly" &&
+        candidate.sourceSpellId === flyUnitId,
+    );
+  if (effect === undefined) {
+    throw new Error("Expected active Fly Speed grant.");
+  }
+  return effect;
+}
+
+function requirePendingFlySpeedGrantCleanup(
+  state: BattleState,
+  targetId: CombatantId,
+): EndedFlySpeedGrant {
+  const frame = state.interruptStack.find(
+    (
+      candidate,
+    ): candidate is BattleFlySpeedGrantEndFallCleanupFrame =>
+      candidate.kind === "flySpeedGrantEndFallCleanup" &&
+      candidate.targetId === targetId,
+  );
+  if (frame === undefined) {
+    throw new Error("Expected pending Fly Speed grant cleanup.");
+  }
+  return frame.endedEffect;
+}
+
+function featherFallTriggerFacts(
+  fallingCreatureId: CombatantId,
+): readonly BattleTargetSpatialFact[] {
+  return [
+    {
+      kind: "featherFallTriggerSelfOrVisibleCreatureWithinRange",
+      reactorId: spellCasterId,
+      fallingCreatureId,
+      spellId: featherFallUnitId,
+      rangeFeet: movementFeet(60),
+    },
+  ];
+}
+
+function featherFallTargetListFill(
+  hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
+  casterIdValue: CombatantId,
+  targetIds: readonly CombatantId[],
+): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
+  return {
+    kind: "spellTargetList",
+    holeId: hole.holeId,
+    value: { targetIds },
+    spatialFacts: targetIds.map((targetId) => ({
+      kind: "featherFallTargetFallingWithinRange",
+      casterId: casterIdValue,
+      targetId,
+      spellId: featherFallUnitId,
+      rangeFeet: movementFeet(60),
+    })),
+  };
+}
+
+function reactionDecisionFill(
+  hole: Extract<BattleHole, { readonly kind: "reactionDecision" }>,
+  value: Extract<BattleFill, { readonly kind: "reactionDecision" }>["value"],
+): Extract<BattleFill, { readonly kind: "reactionDecision" }> {
+  return { kind: "reactionDecision", holeId: hole.holeId, value };
+}
 
 describe("SRDINV30D deterministic Heroism Spell Unit admission", () => {
   test("heroism stores Frightened immunity separately from turn-start Temporary Hit Points", () => {

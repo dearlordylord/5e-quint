@@ -571,8 +571,26 @@ module battleRuntimeHpArmorBuffSpatialTests {
     val result = resolveScalarBuffSpell(initialState, FlyScalarBuff, Set(Fighter), Set(Fighter), 3, 0)
     val upcast = resolveScalarBuffSpell(initialState, FlyScalarBuff, Set(Fighter, Goblin), Set(Fighter, Goblin), 4, 0)
     val rejected = resolveScalarBuffSpell(initialState, FlyScalarBuff, Set(Goblin), Set(Fighter), 3, 0)
-    val broken = breakConcentration(result.fighter)
-    val expired = { ...result.fighter, activeEffects: tickDurationActiveEffects(Set(FlySpeedHoverGrant({ durationTicks: 1 }))) }
+    val laterCasterTurn = endTurn(endTurn(result))
+    val expiringState = { ...result, fighter: { ...result.fighter, activeEffects: Set(FlySpeedHoverGrant({ durationTicks: 1 })) } }
+    val cleanedLaterCasterTurn = stateWithoutEndedFlySpeedGrant(laterCasterTurn, Fighter, Fighter)
+    val pendingCleanup = breakFlySpeedGrantForEndFall(laterCasterTurn, Fighter, Fighter)
+    val pendingExpireCleanup = breakFlySpeedGrantForEndFall(expiringState, Fighter, Fighter)
+    val stopped = resolveFlySpeedGrantEndFallCleanup(pendingCleanup, Fighter, Fighter, FlyEndTargetCanStopFall)
+    val grounded = resolveFlySpeedGrantEndFallCleanup(pendingCleanup, Fighter, Fighter, FlyEndTargetNotAloft)
+    val invalidWithoutCleanup = resolveFlySpeedGrantEndFallCleanup(laterCasterTurn, Fighter, Fighter, FlyEndTargetNotAloft)
+    val fallsAfterBreak = resolveFlySpeedGrantEndFallCleanup(
+      pendingCleanup,
+      Fighter,
+      Fighter,
+      FlyEndTargetCannotStopFall({ featherFallReactor: Fighter, featherFallTargets: Set(Fighter) })
+    )
+    val fallsAfterExpire = resolveFlySpeedGrantEndFallCleanup(
+      pendingExpireCleanup,
+      Fighter,
+      Fighter,
+      FlyEndTargetCannotStopFall({ featherFallReactor: Fighter, featherFallTargets: Set() })
+    )
     val longstriderAndFly = {
       ...initialState.fighter,
       activeEffects: Set(LongstriderSpeedDelta, FlySpeedHoverGrant({ durationTicks: flyDurationTicks })),
@@ -586,10 +604,16 @@ module battleRuntimeHpArmorBuffSpatialTests {
       assert(upcast.fighter.activeEffects.contains(FlySpeedHoverGrant({ durationTicks: flyDurationTicks }))),
       assert(upcast.goblin.activeEffects.contains(FlySpeedHoverGrant({ durationTicks: flyDurationTicks }))),
       assert(rejected == initialState),
-      assert(not(broken.activeEffects.contains(FlySpeedHoverGrant({ durationTicks: flyDurationTicks })))),
-      assert(movementSpeed(broken, FlySpeedKind) == 0),
-      assert(not(expired.activeEffects.contains(FlySpeedHoverGrant({ durationTicks: 1 })))),
-      assert(movementSpeed(expired, FlySpeedKind) == 0),
+      assert(not(activeEffectsWithoutFlySpeedHoverGrant(result.fighter.activeEffects).contains(FlySpeedHoverGrant({ durationTicks: flyDurationTicks })))),
+      assert(stopped == FlyEndNoFall({ state: cleanedLaterCasterTurn, target: Fighter })),
+      assert(grounded == FlyEndNoFall({ state: cleanedLaterCasterTurn, target: Fighter })),
+      assert(invalidWithoutCleanup == FlyEndInvalid({ state: laterCasterTurn, target: Fighter })),
+      assert(pendingCleanup.interruptStack.contains(PendingFlySpeedGrantEndFallCleanup({ target: Fighter }))),
+      assert(fallsAfterBreak == FlyEndFalls({
+        state: resolveFeatherFallSpell(cleanedLaterCasterTurn, Fighter, Set(Fighter), Set(Fighter), 1),
+        target: Fighter,
+      })),
+      assert(fallsAfterExpire == FlyEndFalls({ state: stateWithoutEndedFlySpeedGrant(expiringState, Fighter, Fighter), target: Fighter })),
     }
   }
 

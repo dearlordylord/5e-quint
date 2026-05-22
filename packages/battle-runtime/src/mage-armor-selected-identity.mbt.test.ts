@@ -329,7 +329,7 @@ function projectExpiredDurationBattle(): MageArmorSelectedIdentityProjection {
   const nearlyExpired = mageArmorNearlyExpiredState(resolveMageArmorSelf());
   const expired = {
     ...nearlyExpired,
-    combatants: tickDurationEffects(nearlyExpired.combatants),
+    combatants: tickDurationEffects(nearlyExpired.combatants).value,
   };
   return {
     ...projectBattleState(expired),

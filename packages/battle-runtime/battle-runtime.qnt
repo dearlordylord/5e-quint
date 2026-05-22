@@ -767,6 +767,7 @@ module battleRuntime {
   pure def pendingReactionFrame(frame: InterruptFrame): PendingReactionFrameOption =
     match frame {
       | PendingReaction(pending) => HasPendingReactionFrame(pending)
+      | PendingFlySpeedGrantEndFallCleanup(_) => NoPendingReactionFrame
       | PendingAttackDamageConcentration(_) => NoPendingReactionFrame
     }
 
