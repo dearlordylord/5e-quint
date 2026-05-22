@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
 import type { DamageType } from "@dnd/surface/surface/types";
 import {
   type ActionSpellBattleResolutionInput,

@@ -4,6 +4,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-BARKSKIN barkskin
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-SPIDER-CLIMB spider_climb
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.scalar-buff spell.invocation-condition-immunity-turn-start-temporary-hit-points
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { describe, expect, test } from "vitest";
 import {

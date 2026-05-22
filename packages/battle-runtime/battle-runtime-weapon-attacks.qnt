@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
 
 module battleRuntimeWeaponAttacks {
   import battleRuntimeMovementBridge.* from "./battle-runtime-movement-bridge"

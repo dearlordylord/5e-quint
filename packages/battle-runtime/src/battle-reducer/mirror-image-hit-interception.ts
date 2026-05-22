@@ -1,5 +1,6 @@
 // Mirror Image hit interception. Owns the d6-per-remaining-duplicate hole,
 // duplicate pool state transition, and RAW bypass conditions.
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION
 
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { validateRolledDiceForDiceExpr } from "@dnd/shared-algebras/runtime-dice-algebra";

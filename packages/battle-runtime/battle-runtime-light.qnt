@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
 
 module battleRuntimeLight {
   import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"

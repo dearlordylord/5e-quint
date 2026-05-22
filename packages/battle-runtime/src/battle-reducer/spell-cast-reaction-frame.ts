@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.REACTION_CASTING_TIME
 import type {
   BattleSpellCastReactionFactsHole,
   BattleSpellCastReactionFact,

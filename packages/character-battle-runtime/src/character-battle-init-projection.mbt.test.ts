@@ -1,4 +1,4 @@
-// KERNEL-COVERAGE: parity-witness CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION
+// KERNEL-COVERAGE: parity-witness CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS
 import * as path from "node:path";
 
 import {
@@ -27,6 +27,7 @@ import {
   type CharacterSheet,
   type CharacterSheetInput,
 } from "@dnd/character-sheet-runtime";
+import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { Hp, resourceCount, spellSlotLevel } from "@dnd/shared/types";
@@ -52,6 +53,7 @@ const battleInitProjectionScenarios = [
   "sheet-hit-points-armor-class-conditions-and-profiles",
   "sheet-spellcasting-and-metamagic",
   "build-maximum-above-build-maximum-rejected",
+  "stable-recovery-progress-during-init-rejected",
 ] as const;
 type BattleInitProjectionScenario =
   (typeof battleInitProjectionScenarios)[number];
@@ -90,6 +92,7 @@ const driverSchema = {
   doProjectSheetHitPointsArmorClassConditionsAndProfiles: {},
   doProjectSheetSpellcastingAndMetamagic: {},
   doRejectBuildMaximumAboveBuildMaximum: {},
+  doRejectStableRecoveryProgressDuringInit: {},
   step: {},
 } as const;
 
@@ -145,6 +148,9 @@ function createBattleInitProjectionDriver() {
       },
       doRejectBuildMaximumAboveBuildMaximum: () => {
         projection = rejectBuildMaximumAboveBuildMaximumProjection();
+      },
+      doRejectStableRecoveryProgressDuringInit: () => {
+        projection = rejectStableRecoveryProgressDuringInitProjection();
       },
       step: () => {},
       getState: () => projection,
@@ -242,6 +248,41 @@ function rejectBuildMaximumAboveBuildMaximumProjection(): BattleInitProjection {
     accepted: Either.isRight(result),
     message: Either.isLeft(result) ? result.left.message : "none",
     replayIndex: 3,
+  });
+}
+
+function rejectStableRecoveryProgressDuringInitProjection(): BattleInitProjection {
+  const result = characterSheetBattleInit({
+    sheet: expectRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:stable-recovery-init"),
+        build: defenseBuild({ wearingArmor: true }),
+        maximumHp: Hp(10),
+        currentHp: Hp(0),
+        tempHp: Hp(0),
+        unitLibrary,
+        zeroHpLifecycle: {
+          tag: "stable",
+          recovery: {
+            kind: "regains1HpAfter1d4Hours",
+            elapsedBeforeRecoveryRoll: elapsedTimeTicks(1),
+          },
+        },
+      }),
+    ),
+    unitLibrary,
+    statBlockCatalog,
+    combatantId: combatantId("combatant:stable-recovery-init"),
+    displayName: "Character",
+    initiative: initiativeScore(20),
+    side: battleCombatantSide("party"),
+  });
+
+  return projectFromParts({
+    lastResult: "stable-recovery-progress-during-init-rejected",
+    accepted: Either.isRight(result),
+    message: Either.isLeft(result) ? result.left.message : "none",
+    replayIndex: 4,
   });
 }
 
@@ -351,7 +392,10 @@ function supportProfileKind(profile: BattleUnitSupportProfile): string {
 function createFreshCharacterSheet(
   input: Omit<CharacterSheetInput, "conditions" | "hitPointMaximumReduction"> &
     Partial<
-      Pick<CharacterSheetInput, "conditions" | "hitPointMaximumReduction">
+      Pick<
+        CharacterSheetInput,
+        "conditions" | "hitPointMaximumReduction" | "zeroHpLifecycle"
+      >
     >,
 ) {
   return createFreshCharacterSheetCore({

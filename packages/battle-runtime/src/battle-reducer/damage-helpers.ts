@@ -1,6 +1,8 @@
 // By-type damage math helpers extracted from battle-reducer.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
 // Cluster N (damage_helpers). Mechanical extraction — no behavior change.
 // Consumes only G (creature_state) and W (statblock_attacks).
 

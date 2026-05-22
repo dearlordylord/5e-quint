@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-chained-attack-damage spell.invocation-warding-bond-linked-effect
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 

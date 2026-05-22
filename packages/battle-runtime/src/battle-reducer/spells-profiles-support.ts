@@ -1,5 +1,6 @@
 // Support, defensive, and rider spell profile projections extracted from spells-profiles.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode spell.invocation-spell-created-held-object spell.invocation-magic-weapon-enhancement
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SELF_TRANSFORMATION_MODE BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
 
 import {
   elapsedTimeTicksFromHours,

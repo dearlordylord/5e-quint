@@ -1,5 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt healing-stabilization spare_the_dying
 // UNIT-IDENTITY-MBT-REPLAY: healing-stabilization spare_the_dying doResolveSpareTheDyingStable
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MAKE_STABLE_LIFECYCLE
 import * as path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 

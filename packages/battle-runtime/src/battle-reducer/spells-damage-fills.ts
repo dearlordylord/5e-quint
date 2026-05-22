@@ -3,6 +3,8 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.passive-saving-throw-roll-mode
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
 
 import { Match } from "effect";
 import {

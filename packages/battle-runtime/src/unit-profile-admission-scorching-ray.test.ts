@@ -1,5 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-SCORCHING-RAY scorching_ray
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-independent-attack-sequence
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
 import type { TargetSelection } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
 import {

@@ -1,5 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME alter_self
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-self-transformation-mode
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SELF_TRANSFORMATION_MODE
 import { describe, expect, test } from "vitest";
 import {
   alterSelfUnitId,

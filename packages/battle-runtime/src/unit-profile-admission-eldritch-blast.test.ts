@@ -1,5 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV39 eldritch_blast
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-independent-attack-sequence
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
 import { describe, expect, test } from "vitest";
 import {
   eldritchBlastUnitId,

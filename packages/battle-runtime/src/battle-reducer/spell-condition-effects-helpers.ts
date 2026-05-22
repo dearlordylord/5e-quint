@@ -2,6 +2,7 @@
 // P (spells_holes_fills). Cycle #19 in REFACTOR_MAP.md — both clusters need
 // these small helpers; hoisting them here keeps M↔P unidirectional. Mechanical
 // extraction — no behavior change.
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
 
 import {
   applyCondition,

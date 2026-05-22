@@ -2,6 +2,8 @@
 // Movement-budget and speed helpers extracted from battle-reducer.ts.
 // Cluster S (movement_speed). Mechanical extraction — no behavior change.
 // Reads creature-state-leaves.ts to avoid cycling back into G.
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SELF_TRANSFORMATION_MODE
 
 import { Match } from "effect";
 import {

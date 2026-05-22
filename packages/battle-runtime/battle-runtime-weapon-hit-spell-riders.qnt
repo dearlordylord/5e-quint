@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
 
 module battleRuntimeWeaponHitSpellRiders {
   import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"

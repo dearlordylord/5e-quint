@@ -83,8 +83,8 @@
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 121,
-      "numerator": 75,
-      "percent": "62%"
+      "numerator": 101,
+      "percent": "83.5%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 121,
@@ -93,8 +93,8 @@
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 136,
-      "numerator": 85,
-      "percent": "62.5%"
+      "numerator": 123,
+      "percent": "90.4%"
     },
     "runtimeMappingCoverage": {
       "denominator": 88,
@@ -108,8 +108,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 136,
-      "numerator": 105,
-      "percent": "77.2%"
+      "numerator": 108,
+      "percent": "79.4%"
     },
     "supportedProfileCoverage": {
       "denominator": 193,
@@ -2121,6 +2121,10 @@
         },
         {
           "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-hunters-mark-and-hex.test.ts"
+        },
+        {
+          "kind": "runtime-test",
           "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
         }
       ]
@@ -3510,8 +3514,8 @@
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 121,
-        "numerator": 75,
-        "percent": "62%"
+        "numerator": 101,
+        "percent": "83.5%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 121,
@@ -3976,12 +3980,12 @@
         "profileKind": "passive"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup"
           }
         ],
@@ -4008,12 +4012,12 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle chained spell attack sequence for damage-type choice, duplicate-die leap admission, target history, per-step attack and damage rolls, and slot-level leap limits"
           }
         ],
@@ -4021,12 +4025,12 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup"
           }
         ],
@@ -4296,7 +4300,7 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
@@ -4307,7 +4311,7 @@
           {
             "obligationId": "BATTLE.SPELL.REACTION_CASTING_TIME",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle reaction-casting-time spells for spell-cast and after-damage triggers, Reaction spend, Spell Slot ledger, interruption, and continuation resume"
           }
         ],
@@ -4315,7 +4319,7 @@
         "profileKind": "reaction"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
@@ -4326,7 +4330,7 @@
           {
             "obligationId": "BATTLE.SPELL.REACTION_CASTING_TIME",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle reaction-casting-time spells for spell-cast and after-damage triggers, Reaction spend, Spell Slot ledger, interruption, and continuation resume"
           }
         ],
@@ -4391,12 +4395,12 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.MAKE_STABLE_LIFECYCLE",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle Spare the Dying target admission and zero-Hit-Point non-dead Stable lifecycle mutation"
           }
         ],
@@ -4404,12 +4408,12 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders"
           }
         ],
@@ -4417,12 +4421,12 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup"
           }
         ],
@@ -4430,12 +4434,12 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup"
           }
         ],
@@ -4443,12 +4447,12 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup"
           }
         ],
@@ -4456,12 +4460,12 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders"
           }
         ],
@@ -4469,12 +4473,12 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders"
           }
         ],
@@ -4482,12 +4486,12 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle independent spell attack sequences for beam and ray count, per-attack target choice, attack rolls, hit-gated damage rolls, object targets, and action or slot spend"
           }
         ],
@@ -4495,12 +4499,12 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle marked-damage spell riders for attack-roll damage, Ability Check roll-mode projection, Concentration duration, and zero-Hit-Point transfer timing"
           }
         ],
@@ -4559,12 +4563,12 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle spell d20 roll modifiers for attack rolls, Saving Throws, Ability Checks, skill checks, and selected witness projections"
           }
         ],
@@ -4572,12 +4576,12 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle creature-type protection, Charmed/Frightened/possession prevention, and relevant-effect Saving Throw Advantage"
           }
         ],
@@ -4585,13 +4589,13 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
             "runtime": "battle",
-            "status": "needs-parity-witness",
-            "title": "Battle failed-save spell attack-roll Advantage effects from saving throw holes through active-effect application"
+            "status": "covered",
+            "title": "Battle failed-save spell attack-roll Advantage effects from Saving Throw holes through active-effect application and Attack Roll projection"
           }
         ],
         "profileId": "spell.invocation-attack-roll-advantage-save",
@@ -4617,12 +4621,12 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle spell scalar buffs for Armor Class, Speed, special speeds, Hit Point maximum, and Temporary Hit Point effects"
           }
         ],
@@ -4656,12 +4660,12 @@
         "profileKind": "character-sheet"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup"
           }
         ],
@@ -4783,12 +4787,12 @@
         "profileKind": "character-creation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle spell d20 roll modifiers for attack rolls, Saving Throws, Ability Checks, skill checks, and selected witness projections"
           }
         ],
@@ -4932,12 +4936,12 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle Mirror Image duplicate pool, attack-hit interception roll, duplicate destruction, bypass witnesses, and normal damage continuation"
           }
         ],
@@ -4958,12 +4962,12 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle linked spell effects for Warding Bond defenses, all-damage Resistance, same-amount damage sharing, and source-zero, separation, recast, or duration cleanup"
           }
         ],
@@ -4971,12 +4975,12 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle direct spell-owned condition application, concentration cleanup, duration cleanup, and target-action early end"
           }
         ],
@@ -5003,12 +5007,12 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.SELF_TRANSFORMATION_MODE",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle self-transformation mode choice, Magic Action mode replacement, natural-weapon override, and Aquatic projections"
           }
         ],
@@ -5016,7 +5020,7 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
@@ -5033,7 +5037,7 @@
           {
             "obligationId": "BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle Moonbeam movable Cylinder lifecycle, once-per-turn save limiting, reposition, damage, and cleanup"
           },
           {
@@ -5059,12 +5063,12 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders"
           }
         ],
@@ -5130,8 +5134,8 @@
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
           "denominator": 136,
-          "numerator": 85,
-          "percent": "62.5%"
+          "numerator": 123,
+          "percent": "90.4%"
         }
       },
       "units": [
@@ -5180,15 +5184,15 @@
           "unitId": "acid_splash"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle spell scalar buffs for Armor Class, Speed, special speeds, Hit Point maximum, and Temporary Hit Point effects"
                 }
               ],
@@ -5199,15 +5203,15 @@
           "unitId": "aid"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.SELF_TRANSFORMATION_MODE",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle self-transformation mode choice, Magic Action mode replacement, natural-weapon override, and Aquatic projections"
                 }
               ],
@@ -5218,15 +5222,15 @@
           "unitId": "alter_self"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle creature-type protection, Charmed/Frightened/possession prevention, and relevant-effect Saving Throw Advantage"
                 }
               ],
@@ -5237,15 +5241,15 @@
           "unitId": "animal_friendship"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle spell d20 roll modifiers for attack rolls, Saving Throws, Ability Checks, skill checks, and selected witness projections"
                 }
               ],
@@ -5420,15 +5424,15 @@
           "unitId": "bard_jack_of_all_trades"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle spell scalar buffs for Armor Class, Speed, special speeds, Hit Point maximum, and Temporary Hit Point effects"
                 }
               ],
@@ -5439,15 +5443,15 @@
           "unitId": "barkskin"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle spell d20 roll modifiers for attack rolls, Saving Throws, Ability Checks, skill checks, and selected witness projections"
                 }
               ],
@@ -5458,15 +5462,15 @@
           "unitId": "bless"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup"
                 }
               ],
@@ -5584,15 +5588,15 @@
           "unitId": "chill_touch"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle chained spell attack sequence for damage-type choice, duplicate-die leap admission, target history, per-step attack and damage rolls, and slot-level leap limits"
                 }
               ],
@@ -5646,15 +5650,15 @@
           "unitId": "cleric_divine_order"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup"
                 }
               ],
@@ -5723,10 +5727,10 @@
           "unitId": "command"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
@@ -5737,7 +5741,7 @@
                 {
                   "obligationId": "BATTLE.SPELL.REACTION_CASTING_TIME",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle reaction-casting-time spells for spell-cast and after-damage triggers, Reaction spend, Spell Slot ledger, interruption, and continuation resume"
                 }
               ],
@@ -5855,15 +5859,15 @@
           "unitId": "dissonant_whispers"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders"
                 }
               ],
@@ -5874,15 +5878,15 @@
           "unitId": "divine_favor"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup"
                 }
               ],
@@ -5905,15 +5909,15 @@
           "unitId": "druid_primal_order"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle independent spell attack sequences for beam and ray count, per-attack target choice, attack rolls, hit-gated damage rolls, object targets, and action or slot spend"
                 }
               ],
@@ -5924,15 +5928,15 @@
           "unitId": "eldritch_blast"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup"
                 }
               ],
@@ -5943,15 +5947,15 @@
           "unitId": "ensnaring_strike"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup"
                 }
               ],
@@ -5987,16 +5991,16 @@
           "unitId": "expeditious_retreat"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
-                  "title": "Battle failed-save spell attack-roll Advantage effects from saving throw holes through active-effect application"
+                  "status": "covered",
+                  "title": "Battle failed-save spell attack-roll Advantage effects from Saving Throw holes through active-effect application and Attack Roll projection"
                 }
               ],
               "profileId": "spell.invocation-attack-roll-advantage-save",
@@ -6006,15 +6010,15 @@
           "unitId": "faerie_fire"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle spell scalar buffs for Armor Class, Speed, special speeds, Hit Point maximum, and Temporary Hit Point effects"
                 }
               ],
@@ -6377,15 +6381,15 @@
           "unitId": "grease"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle spell d20 roll modifiers for attack rolls, Saving Throws, Ability Checks, skill checks, and selected witness projections"
                 }
               ],
@@ -6471,10 +6475,10 @@
           "unitId": "heat_metal"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
@@ -6485,7 +6489,7 @@
                 {
                   "obligationId": "BATTLE.SPELL.REACTION_CASTING_TIME",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle reaction-casting-time spells for spell-cast and after-damage triggers, Reaction spend, Spell Slot ledger, interruption, and continuation resume"
                 }
               ],
@@ -6534,15 +6538,15 @@
           "unitId": "heroism"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle marked-damage spell riders for attack-roll damage, Ability Check roll-mode projection, Concentration duration, and zero-Hit-Point transfer timing"
                 }
               ],
@@ -6553,15 +6557,15 @@
           "unitId": "hex"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup"
                 }
               ],
@@ -6572,15 +6576,15 @@
           "unitId": "hideous_laughter"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup"
                 }
               ],
@@ -6591,15 +6595,15 @@
           "unitId": "hold_person"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle marked-damage spell riders for attack-roll damage, Ability Check roll-mode projection, Concentration duration, and zero-Hit-Point transfer timing"
                 }
               ],
@@ -6679,15 +6683,15 @@
           "unitId": "inflict_wounds"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle direct spell-owned condition application, concentration cleanup, duration cleanup, and target-action early end"
                 }
               ],
@@ -6761,15 +6765,15 @@
           "unitId": "light"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle spell scalar buffs for Armor Class, Speed, special speeds, Hit Point maximum, and Temporary Hit Point effects"
                 }
               ],
@@ -6868,15 +6872,15 @@
           "unitId": "magic_missile"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders"
                 }
               ],
@@ -6982,15 +6986,15 @@
           "unitId": "mastery_topple"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle Mirror Image duplicate pool, attack-hit interception roll, duplicate destruction, bypass witnesses, and normal damage continuation"
                 }
               ],
@@ -7235,15 +7239,15 @@
           "unitId": "paladin_lay_on_hands"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup"
                 }
               ],
@@ -7368,15 +7372,15 @@
           "unitId": "produce_flame"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle creature-type protection, Charmed/Frightened/possession prevention, and relevant-effect Saving Throw Advantage"
                 }
               ],
@@ -7784,15 +7788,15 @@
           "unitId": "sanctuary"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle independent spell attack sequences for beam and ray count, per-attack target choice, attack rolls, hit-gated damage rolls, object targets, and action or slot spend"
                 }
               ],
@@ -7803,15 +7807,15 @@
           "unitId": "scorching_ray"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup"
                 }
               ],
@@ -7884,15 +7888,15 @@
           "unitId": "shield"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle spell scalar buffs for Armor Class, Speed, special speeds, Hit Point maximum, and Temporary Hit Point effects"
                 }
               ],
@@ -7903,15 +7907,15 @@
           "unitId": "shield_of_faith"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders"
                 }
               ],
@@ -7922,15 +7926,15 @@
           "unitId": "shillelagh"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup"
                 }
               ],
@@ -8061,15 +8065,15 @@
           "unitId": "sorcerous_burst"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.MAKE_STABLE_LIFECYCLE",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle Spare the Dying target admission and zero-Hit-Point non-dead Stable lifecycle mutation"
                 }
               ],
@@ -8080,15 +8084,15 @@
           "unitId": "spare_the_dying"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle spell scalar buffs for Armor Class, Speed, special speeds, Hit Point maximum, and Temporary Hit Point effects"
                 }
               ],
@@ -8149,15 +8153,15 @@
           "unitId": "thunderwave"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders"
                 }
               ],
@@ -8212,15 +8216,15 @@
           "unitId": "vicious_mockery"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle linked spell effects for Warding Bond defenses, all-damage Resistance, same-amount damage sharing, and source-zero, separation, recast, or duration cleanup"
                 }
               ],
@@ -13279,6 +13283,10 @@
             },
             {
               "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-hunters-mark-and-hex.test.ts"
+            },
+            {
+              "kind": "runtime-test",
               "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
             }
           ]
@@ -16464,6 +16472,11 @@
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "condition-saving-throw-lifecycle"
+        },
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts",
           "tag": "deterministic-admission-projection",
@@ -19669,6 +19682,10 @@
             },
             {
               "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-hunters-mark-and-hex.test.ts"
+            },
+            {
+              "kind": "runtime-test",
               "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
             }
           ]
@@ -19746,6 +19763,10 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-candidate-narrowing-spells.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-hunters-mark-and-hex.test.ts"
             },
             {
               "kind": "runtime-test",
@@ -20183,6 +20204,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-SPELL-LESSER-RESTORATION"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/condition-removal-protection-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY"
         }
       ],
       "executableMechanics": true,
@@ -20818,6 +20844,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-SPELL-PROTECTION-FROM-POISON"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/condition-removal-protection-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY"
         }
       ],
       "executableMechanics": true,

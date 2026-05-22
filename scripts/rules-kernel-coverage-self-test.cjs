@@ -145,6 +145,120 @@ function runSelfTest() {
   assert.equal(result.matrix.summary.byStatus["boundary-only"], 1);
   assert.equal(result.matrix.generatorReadiness.length, 1);
 
+  const initialObligationsText = fs.readFileSync(
+    path.join(root, "plans", "rules-kernel-coverage", "obligations.jsonl"),
+    "utf8",
+  );
+  const initialProfileObligationsText = fs.readFileSync(
+    path.join(
+      root,
+      "plans",
+      "rules-kernel-coverage",
+      "profile-obligations.jsonl",
+    ),
+    "utf8",
+  );
+  const initialProfilesText = fs.readFileSync(
+    path.join(root, "plans", "unit-profile-coverage", "profiles.jsonl"),
+    "utf8",
+  );
+  writeFile(
+    path.join(root, "plans", "unit-profile-coverage", "profiles.jsonl"),
+    [
+      '{"id":"spell.sample","profileKind":"spell-invocation"}',
+      JSON.stringify({
+        id: "spell.multi-a",
+        profileKind: "spell-invocation",
+        verificationOwners: [
+          { kind: "qnt-proof", ownerPath: "multi.qnt" },
+          { kind: "runtime-test", ownerPath: "multi-a.test.ts" },
+        ],
+      }),
+      JSON.stringify({
+        id: "spell.multi-b",
+        profileKind: "spell-invocation",
+        verificationOwners: [
+          { kind: "qnt-proof", ownerPath: "multi.qnt" },
+          { kind: "runtime-test", ownerPath: "multi-b.test.ts" },
+        ],
+      }),
+    ].join("\n") + "\n",
+  );
+  writeFile(
+    path.join(
+      root,
+      "plans",
+      "rules-kernel-coverage",
+      "profile-obligations.jsonl",
+    ),
+    [
+      '{"profileId":"spell.sample","obligationIds":["BATTLE.SAMPLE"]}',
+      '{"profileId":"spell.multi-a","obligationIds":["BATTLE.MULTI"]}',
+      '{"profileId":"spell.multi-b","obligationIds":["BATTLE.MULTI"]}',
+    ].join("\n") + "\n",
+  );
+  writeFile(
+    path.join(root, "plans", "rules-kernel-coverage", "obligations.jsonl"),
+    initialObligationsText +
+      JSON.stringify({
+        id: "BATTLE.MULTI",
+        title: "sample multi-profile runtime-test obligation",
+        runtime: "battle",
+        kind: "state-transition",
+        status: "covered",
+        qntOwners: ["multi.qnt"],
+        runtimeOwners: ["multi.ts"],
+        parityWitnesses: [
+          { kind: "runtime-test", ownerPath: "multi-a.test.ts" },
+          { kind: "runtime-test", ownerPath: "multi-b.test.ts" },
+        ],
+      }) +
+      "\n",
+  );
+  writeFile(
+    path.join(root, "multi.qnt"),
+    "// KERNEL-COVERAGE: qnt-owner BATTLE.MULTI\nmodule multi {}\n",
+  );
+  writeFile(
+    path.join(root, "multi.ts"),
+    "// KERNEL-COVERAGE: runtime-owner BATTLE.MULTI\nexport const multi = true;\n",
+  );
+  writeFile(
+    path.join(root, "multi-a.test.ts"),
+    "// KERNEL-COVERAGE: parity-witness BATTLE.MULTI\n",
+  );
+  writeFile(
+    path.join(root, "multi-b.test.ts"),
+    "// KERNEL-COVERAGE: parity-witness BATTLE.MULTI\n",
+  );
+  const multiRuntimeWitnessResult = buildKernelCoverage({ root });
+  assert.deepEqual(multiRuntimeWitnessResult.issues, []);
+  writeFile(
+    path.join(root, "plans", "rules-kernel-coverage", "obligations.jsonl"),
+    initialObligationsText,
+  );
+  writeFile(
+    path.join(
+      root,
+      "plans",
+      "rules-kernel-coverage",
+      "profile-obligations.jsonl",
+    ),
+    initialProfileObligationsText,
+  );
+  writeFile(
+    path.join(root, "plans", "unit-profile-coverage", "profiles.jsonl"),
+    initialProfilesText,
+  );
+  for (const fileName of [
+    "multi.qnt",
+    "multi.ts",
+    "multi-a.test.ts",
+    "multi-b.test.ts",
+  ]) {
+    fs.rmSync(path.join(root, fileName), { force: true });
+  }
+
   const sampleObligationsPath = path.join(
     root,
     "plans",

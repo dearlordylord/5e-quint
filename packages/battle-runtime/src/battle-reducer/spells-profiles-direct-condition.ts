@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
 import type { SpellRecord, TargetSelection } from "@dnd/surface/surface/types";

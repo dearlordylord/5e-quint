@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31D ensnaring_strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31E searing_smite
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save

@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// KERNEL-COVERAGE: qnt-owner CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION
+// KERNEL-COVERAGE: qnt-owner CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS
 
 module characterBattleInitProjectionMbt {
   var qLastResult: str
@@ -135,9 +135,21 @@ module characterBattleInitProjectionMbt {
     ),
   }
 
+  action doRejectStableRecoveryProgressDuringInit = all {
+    qReplayIndex == 3,
+    recordProjection(
+      "stable-recovery-progress-during-init-rejected",
+      false,
+      "Battle handoff cannot preserve in-progress Stable recovery timers.",
+      emptyProjectionFacts,
+      4,
+    ),
+  }
+
   action step = any {
     doProjectSheetHitPointsArmorClassConditionsAndProfiles,
     doProjectSheetSpellcastingAndMetamagic,
     doRejectBuildMaximumAboveBuildMaximum,
+    doRejectStableRecoveryProgressDuringInit,
   }
 }

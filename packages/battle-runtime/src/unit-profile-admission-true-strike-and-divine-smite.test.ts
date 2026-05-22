@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31F true_strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31C divine_smite
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-damage spell.invocation-spell-hosted-weapon-attack

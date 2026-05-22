@@ -1,5 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-INVISIBILITY invisibility
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-direct-condition
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
 import {
@@ -38,6 +39,7 @@ import {
   battleId,
   combatantId,
   Either,
+  elapsedTimeTicks,
   endTurn,
   hasCondition,
   movementFeet,
@@ -58,6 +60,7 @@ import {
   type BattleState,
   type CombatantId,
 } from "./index.ts";
+import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
 
 describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
   test("invisibility admits as a touch target-list condition spell with slot-scaled targets", () => {
@@ -138,6 +141,24 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
     expectNoInvisibilityEffect(damaged, spellTargetId);
     expectNoInvisibilityEffect(damaged, extraTargetId);
     expect(requireCombatant(damaged, spellCasterId).concentration).toBeNull();
+  });
+
+  test("invisibility duration expiry removes the spell-owned condition and caster concentration", () => {
+    const cast = castInvisibilityOnTargets(
+      spellBattle({
+        preparedSpells: [spellRecord(invisibilityUnitId)],
+        spellSlots: [{ spellLevel: 2, count: 1 }],
+      }),
+      [spellTargetId],
+    );
+
+    const expiredCombatants = tickDurationEffects(
+      combatantsWithInvisibilityDurationTicks(cast.state, [spellTargetId]),
+    );
+
+    const expiredState = { ...cast.state, combatants: expiredCombatants };
+    expectNoInvisibilityEffect(expiredState, spellTargetId);
+    expect(expiredCombatants.get(spellCasterId)?.concentration).toBeNull();
   });
 
   test("invisibility ends immediately after the target makes an attack roll", () => {
@@ -771,6 +792,30 @@ function invisibilityEffects(
       effect.kind === "targetActionEndedSpellCondition" &&
       effect.sourceSpellId === invisibilityUnitId,
   );
+}
+
+function combatantsWithInvisibilityDurationTicks(
+  state: BattleState,
+  targetIds: readonly CombatantId[],
+): BattleState["combatants"] {
+  return targetIds.reduce((combatants, targetId) => {
+    const target = requireCombatant({ ...state, combatants }, targetId);
+    return new Map(combatants).set(targetId, {
+      ...target,
+      activeEffects: target.activeEffects.map((effect) =>
+        effect.kind === "targetActionEndedSpellCondition" &&
+        effect.sourceSpellId === invisibilityUnitId
+          ? {
+              ...effect,
+              expiresAt: {
+                ...effect.expiresAt,
+                durationTicks: elapsedTimeTicks(1),
+              },
+            }
+          : effect,
+      ),
+    });
+  }, state.combatants);
 }
 
 function requireResolved(

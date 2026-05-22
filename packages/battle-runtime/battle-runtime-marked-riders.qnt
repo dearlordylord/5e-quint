@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
 
 module battleRuntimeMarkedRiders {
   import battleRuntimeModel.* from "./battle-runtime-model"

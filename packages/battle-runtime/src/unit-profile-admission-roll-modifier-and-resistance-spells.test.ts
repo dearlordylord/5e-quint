@@ -4,6 +4,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-PROTECTION-FROM-POISON protection_from_poison
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30F resistance
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-roll-modifier spell.invocation-damage-reduction spell.invocation-condition-removal-protection
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS
 import { describe, expect, test } from "vitest";
 import {
   baneUnitId,

@@ -1,6 +1,7 @@
 // -*- mode: Bluespec; -*-
 
 // KERNEL-COVERAGE: qnt-owner BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS
 module battleRuntimeRollModifierChoice {
   import battleRuntimeModel.* from "./battle-runtime-model"
 

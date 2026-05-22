@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.reaction-counterspell spell.reaction-shield spell.invocation-damage-save-or-attack
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.REACTION_CASTING_TIME
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
