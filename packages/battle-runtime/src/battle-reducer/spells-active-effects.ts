@@ -2025,6 +2025,7 @@ export function applyMoonbeamCastEffect(input: {
       damage: input.invocation.damage,
       repositionMaxMoveFeet: input.invocation.repositionMaxMoveFeet,
       savedThisTurn: [],
+      shapeShiftSuppressed: [],
       expiresAt: {
         kind: "concentration" as const,
         combatantId: input.actorId,
@@ -2224,10 +2225,76 @@ export function markMoonbeamSavedThisTurn(
     return state;
   }
   const activeEffects = caster.activeEffects.map((current) =>
-    current === effect
+    moonbeamEffectMatches(current, effect)
       ? {
           ...current,
           savedThisTurn: [...current.savedThisTurn, targetId],
+        }
+      : current,
+  );
+  const combatants = new Map(state.combatants);
+  combatants.set(effect.sourceCombatantId, {
+    ...caster,
+    activeEffects,
+  });
+  return { ...state, combatants };
+}
+
+function moonbeamEffectMatches(
+  current: BattleActiveEffect,
+  effect: Extract<BattleActiveEffect, { readonly kind: "moonbeam" }>,
+): current is Extract<BattleActiveEffect, { readonly kind: "moonbeam" }> {
+  return (
+    current.kind === "moonbeam" &&
+    current.sourceCombatantId === effect.sourceCombatantId &&
+    current.sourceSpellId === effect.sourceSpellId &&
+    current.areaId === effect.areaId
+  );
+}
+
+export function addMoonbeamShapeShiftSuppression(
+  state: BattleState,
+  targetId: CombatantId,
+  effect: Extract<BattleActiveEffect, { readonly kind: "moonbeam" }>,
+): BattleState {
+  const caster = state.combatants.get(effect.sourceCombatantId);
+  if (caster === undefined) {
+    return state;
+  }
+  const activeEffects = caster.activeEffects.map((current) =>
+    moonbeamEffectMatches(current, effect)
+      ? current.shapeShiftSuppressed.includes(targetId)
+        ? current
+        : {
+            ...current,
+            shapeShiftSuppressed: [...current.shapeShiftSuppressed, targetId],
+          }
+      : current,
+  );
+  const combatants = new Map(state.combatants);
+  combatants.set(effect.sourceCombatantId, {
+    ...caster,
+    activeEffects,
+  });
+  return { ...state, combatants };
+}
+
+export function removeMoonbeamShapeShiftSuppression(
+  state: BattleState,
+  targetId: CombatantId,
+  effect: Extract<BattleActiveEffect, { readonly kind: "moonbeam" }>,
+): BattleState {
+  const caster = state.combatants.get(effect.sourceCombatantId);
+  if (caster === undefined) {
+    return state;
+  }
+  const activeEffects = caster.activeEffects.map((current) =>
+    moonbeamEffectMatches(current, effect)
+      ? {
+          ...current,
+          shapeShiftSuppressed: current.shapeShiftSuppressed.filter(
+            (combatantId) => combatantId !== targetId,
+          ),
         }
       : current,
   );

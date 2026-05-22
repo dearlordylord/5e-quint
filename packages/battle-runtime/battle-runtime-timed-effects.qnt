@@ -350,6 +350,7 @@ module battleRuntimeTimedEffects {
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
             repositionMaxMoveFeet: data.repositionMaxMoveFeet,
             savedThisTurn: data.savedThisTurn,
+            shapeShiftSuppressed: data.shapeShiftSuppressed,
           })
         | WebRestraintHazard(data) => WebRestraintHazard({
             areaId: data.areaId,

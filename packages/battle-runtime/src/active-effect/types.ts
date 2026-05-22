@@ -473,6 +473,7 @@ export type BattleActiveEffect =
       };
       readonly repositionMaxMoveFeet: MovementFeet;
       readonly savedThisTurn: readonly CombatantId[];
+      readonly shapeShiftSuppressed: readonly CombatantId[];
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,
         { readonly kind: "concentration" }

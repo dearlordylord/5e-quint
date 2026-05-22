@@ -3235,9 +3235,10 @@
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
         "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
       ],
-      "sourceBoundary": "The runtime consumes the authored Moonbeam spell, caller-supplied Cylinder area identity, movement trigger witnesses, and saving throw and damage fills. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration, active movable area effect state, once-per-creature-per-turn save limiting across Moonbeam area triggers, slot-scaled Radiant damage with half damage on a successful Constitution save, Magic-action beam reposition, and cleanup on Concentration or duration end. Automatic geometry, area membership, Dim Light projection, and the shape-shifting rider remain outside this profile subset.",
+      "sourceBoundary": "The runtime consumes the authored Moonbeam spell, caller-supplied Cylinder area identity, movement trigger witnesses, saving throw and damage fills, and the shared shape-shift runtime state. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration, active movable area effect state, once-per-creature-per-turn save limiting across Moonbeam area triggers, slot-scaled Radiant damage with half damage on a successful Constitution save, Magic-action beam reposition, failed-save true-form reversion for supported shape-shift owners, Moonbeam-owned shape-shift suppression while the target remains in that Cylinder, explicit Cylinder-exit cleanup, and cleanup on Concentration or duration end. Automatic geometry, area membership, and Dim Light projection remain outside this profile subset.",
       "taskRefs": [
-        "L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME"
+        "L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME",
+        "L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-AREA-SUPPRESSION"
       ],
       "title": "Spell invocation creates and moves a Moonbeam Cylinder with table-supplied area witnesses",
       "verificationOwners": [
@@ -11382,6 +11383,22 @@
         "character-sheet.druid-circle-land-spell-access"
       ],
       "taskId": "L12G-FOLLOWUP-DRUID-CIRCLE-LAND-SPELL-ACCESS"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Moonbeam battle-runtime tests cover failed-save true-form reversion through the shared shape-shift owner, no reversion on successful saves, rider behavior across all Moonbeam save triggers, once-per-turn duplicate behavior, explicit Cylinder-exit suppression cleanup, and spell cleanup.",
+      "profileIds": [
+        "spell.invocation-moonbeam-movable-zone"
+      ],
+      "taskId": "L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-AREA-SUPPRESSION"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted package-local Moonbeam Quint facts consume the shared ShapeShiftedRuntimeState, project supported failed-save shape-shift reversion to TrueForm, suppress shape-shifting only after supported reversion, preserve shape-shift state on successful saves, and clear suppression on Cylinder exit or spell cleanup.",
+      "profileIds": [
+        "spell.invocation-moonbeam-movable-zone"
+      ],
+      "taskId": "L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-AREA-SUPPRESSION"
     }
   ],
   "units": [
@@ -24193,17 +24210,28 @@
         },
         "deferredMechanics": [
           {
-            "followUpTaskId": "L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER",
-            "mechanic": "failed-save shape-shift reversion and shape-shifting suppression while in the Cylinder"
+            "followUpTaskId": "L12G-FOLLOWUP-SPELL-SHAPESHIFT-TRUE-FORM-REVERSION",
+            "mechanic": "Spell-effect shape-shift sources remain unsupported by the shared reversion owner until their source owners are promoted; Moonbeam consumes supported shared reversion results and does not dispatch on spell authored identity."
+          },
+          {
+            "followUpTaskId": "L12G-FOLLOWUP-STATBLOCK-SHAPECHANGER-TRUE-FORM-REVERSION",
+            "mechanic": "Stat-block shapechanger sources remain unsupported by the shared reversion owner until their source owners are promoted; Moonbeam consumes supported shared reversion results and does not dispatch on stat-block authored identity."
           }
         ],
         "followUpTasks": [
           {
-            "id": "L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER",
-            "mechanic": "Execute the failed-save shape-shift rider by consuming a battle-visible shape-shifted and true-form state, reverting a shape-shifted target to its true form when it fails the Moonbeam Constitution Saving Throw, preventing that creature from shape-shifting again while it remains in the Moonbeam Cylinder, and clearing the prevention when it leaves the Cylinder or the spell ends without duplicating the shape-shifting source state.",
-            "owner": "stat-block-control shape-shifting runtime plus battle-runtime spell effect lifecycle",
-            "requiredOutput": "Supported runtime profile or profile-subset evidence for Moonbeam's shape-shift reversion and suppression rider integrated with the promoted shape-shifting owner, including focused tests and Quint/runtime parity for failed save, successful save, exit cleanup, and spell cleanup.",
-            "title": "Moonbeam Shape-Shifting Rider Runtime"
+            "id": "L12G-FOLLOWUP-SPELL-SHAPESHIFT-TRUE-FORM-REVERSION",
+            "mechanic": "Promote spell-effect shape-shift projection and true-form reversion through the shared Task 20 state, deriving replacement-form and true-form facts from the spell active effect and target state rather than duplicating them.",
+            "owner": "shared shape-shifting runtime plus spell active-effect lifecycle owners",
+            "requiredOutput": "Focused spell-transformation runtime tests, package-local promoted Quint/runtime parity for spell-effect reversion, generated coverage artifacts, git diff --check, and reviewer-loop convergence.",
+            "title": "Spell Shape-Shift True-Form Reversion Owner"
+          },
+          {
+            "id": "L12G-FOLLOWUP-STATBLOCK-SHAPECHANGER-TRUE-FORM-REVERSION",
+            "mechanic": "Promote or precisely close stat-block shapechanger active-form state as a true shape-shift owner, keeping true-form Stat Block facts and replacement-form facts derived from one canonical runtime state.",
+            "owner": "shared shape-shifting runtime plus stat-block battle controls",
+            "requiredOutput": "Focused stat-block runtime tests, package-local promoted Quint/runtime parity for stat-block reversion, generated coverage artifacts, git diff --check, and reviewer-loop convergence.",
+            "title": "Stat Block Shapechanger True-Form Reversion Owner"
           }
         ],
         "profileIds": [
@@ -24220,6 +24248,9 @@
           "BattleMoonbeamSaveTrigger discriminant for appearsInArea, areaMovesIntoSpace, entersArea, and endsTurnInArea triggers callable by the table/spatial owner when area membership changes",
           "slot-scaled Radiant damage (2d10 base, +1d10 per slot level above 2)",
           "Magic-action beam reposition up to 60 feet via moonbeamReposition command with caller-supplied movement fill",
+          "failed-save shape-shift rider through the shared shape-shift runtime state: supported shape-shifted targets revert to true form across all Moonbeam save triggers, and successful saves do not revert",
+          "Moonbeam-owned shape-shift suppression prevents supported shape-shifting while the target remains in that Cylinder",
+          "explicit moonbeamCylinderExit cleanup and spell cleanup clear Moonbeam shape-shift suppression",
           "Concentration and duration cleanup removing the moonbeam effect and its area"
         ],
         "tag": "profile-subset-supported"
@@ -24246,9 +24277,10 @@
             "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
             "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
           ],
-          "sourceBoundary": "The runtime consumes the authored Moonbeam spell, caller-supplied Cylinder area identity, movement trigger witnesses, and saving throw and damage fills. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration, active movable area effect state, once-per-creature-per-turn save limiting across Moonbeam area triggers, slot-scaled Radiant damage with half damage on a successful Constitution save, Magic-action beam reposition, and cleanup on Concentration or duration end. Automatic geometry, area membership, Dim Light projection, and the shape-shifting rider remain outside this profile subset.",
+          "sourceBoundary": "The runtime consumes the authored Moonbeam spell, caller-supplied Cylinder area identity, movement trigger witnesses, saving throw and damage fills, and the shared shape-shift runtime state. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration, active movable area effect state, once-per-creature-per-turn save limiting across Moonbeam area triggers, slot-scaled Radiant damage with half damage on a successful Constitution save, Magic-action beam reposition, failed-save true-form reversion for supported shape-shift owners, Moonbeam-owned shape-shift suppression while the target remains in that Cylinder, explicit Cylinder-exit cleanup, and cleanup on Concentration or duration end. Automatic geometry, area membership, and Dim Light projection remain outside this profile subset.",
           "taskRefs": [
-            "L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME"
+            "L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME",
+            "L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-AREA-SUPPRESSION"
           ],
           "title": "Spell invocation creates and moves a Moonbeam Cylinder with table-supplied area witnesses",
           "verificationOwners": [

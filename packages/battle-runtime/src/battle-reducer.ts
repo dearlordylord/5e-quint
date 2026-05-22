@@ -278,6 +278,7 @@ export {
   resolveFlamingSphereRepositionCommand,
   resolveFlamingSphereRamCommand,
   resolveFlamingSphereSaveCommand,
+  resolveMoonbeamCylinderExitCommand,
   resolveMoonbeamRepositionCommand,
   resolveMoonbeamSaveCommand,
   resolveCommandApproachAfterMovement,

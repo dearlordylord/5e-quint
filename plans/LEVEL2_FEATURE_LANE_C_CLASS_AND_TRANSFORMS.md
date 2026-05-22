@@ -127,7 +127,7 @@
     {
       "number": 21,
       "id": "L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-AREA-SUPPRESSION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Moonbeam Shape-Shift Area Suppression Rider"
     },
     {
@@ -710,7 +710,7 @@ Verification notes:
 
 ### Task 21 - L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-AREA-SUPPRESSION - Moonbeam Shape-Shift Area Suppression Rider
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -735,6 +735,17 @@ Acceptance:
 - The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
 - No companion AI/autonomous-control behavior is introduced.
 - No authored identity dispatch is introduced in runtime code.
+
+Result:
+
+- Implemented Moonbeam failed-save shape-shift reversion through the shared Task 20 shape-shift runtime state, with successful saves preserving the active shape-shift.
+- Added Moonbeam-owned shape-shift suppression scoped to the active Cylinder, explicit table-supplied Cylinder-exit cleanup, and spell-effect cleanup through the existing concentration/duration lifecycle.
+- Kept spell-effect and stat-block shape-shift reversion outside Task 21; Tasks 33 and 34 remain the dependency-ordered owners for those unsupported reversion sources.
+
+Verification notes:
+
+- RAW/ubiquitous-language check: SRD 5.2.1 `Spells/Descriptions-M-P.md#Moonbeam` defines failed-save true-form reversion and shape-shifting suppression until the creature leaves the Cylinder; `UBIQUITOUS_LANGUAGE.md` keeps Cylinder/Area of Effect terminology distinct from runtime creature state and table/spatial witnesses.
+- Focused verification covered failed save, successful save, all Moonbeam save triggers, once-per-turn duplicate behavior, explicit Cylinder-exit cleanup, spell cleanup, package-local Quint parity artifacts, generated unit-profile coverage artifacts, and `git diff --check`.
 
 ### Task 22 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION - Druid Wild Shape D20 Statistic Projection
 

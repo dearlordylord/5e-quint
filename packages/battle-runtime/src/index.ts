@@ -478,6 +478,7 @@ export {
 export {
   battleShapeShiftedRuntimeState,
   combatantIsShapeShifted,
+  combatantShapeShiftingSuppressed,
   shapeShiftedRuntimeState,
   revertShapeShiftedCombatantToTrueForm,
   revertShapeShiftedRuntimeState,

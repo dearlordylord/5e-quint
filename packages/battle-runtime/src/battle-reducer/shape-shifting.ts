@@ -122,12 +122,11 @@ export function trueFormRuntimeState(): Extract<
   };
 }
 
-export function shapeShiftedRuntimeState(input: {
-  readonly replacementForm: BattleShapeShiftReplacementFormFacts;
-} & BattleShapeShiftRuntimeOwner): Extract<
-  BattleShapeShiftedRuntimeState,
-  { readonly kind: "shapeShifted" }
-> {
+export function shapeShiftedRuntimeState(
+  input: {
+    readonly replacementForm: BattleShapeShiftReplacementFormFacts;
+  } & BattleShapeShiftRuntimeOwner,
+): Extract<BattleShapeShiftedRuntimeState, { readonly kind: "shapeShifted" }> {
   return {
     kind: "shapeShifted",
     trueForm: TRUE_FORM_FACTS,
@@ -162,6 +161,19 @@ export function combatantIsShapeShifted(
   combatant: BattleCreatureState,
 ): boolean {
   return battleShapeShiftedRuntimeState(combatant).kind === "shapeShifted";
+}
+
+export function combatantShapeShiftingSuppressed(
+  state: BattleState,
+  combatantId: CombatantId,
+): boolean {
+  return [...state.combatants.values()].some((combatant) =>
+    combatant.activeEffects.some(
+      (effect) =>
+        effect.kind === "moonbeam" &&
+        effect.shapeShiftSuppressed.includes(combatantId),
+    ),
+  );
 }
 
 export function revertShapeShiftedRuntimeState(input: {

@@ -14,6 +14,7 @@ module battleRuntimeGroundCommand {
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
   import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
+  import battleRuntimeShapeShifting.* from "./battle-runtime-shape-shifting"
 
   pure val greaseDurationTicks = 10
   pure val greaseAreaId = 1
@@ -523,6 +524,7 @@ module battleRuntimeGroundCommand {
               durationTicks: moonbeamDurationTicks,
               repositionMaxMoveFeet: moonbeamRepositionMaxMoveFeet,
               savedThisTurn: Set(),
+              shapeShiftSuppressed: Set(),
             }))),
         },
         actionAvailable: false,
@@ -557,6 +559,12 @@ module battleRuntimeGroundCommand {
       | _ => false
     })
 
+  pure def moonbeamShapeShiftSuppressed(state: BattleState, targetActor: Actor, areaId: int): bool =
+    state.fighter.activeEffects.exists(effect => match effect {
+      | MoonbeamMovableZone(data) => data.areaId == areaId and data.shapeShiftSuppressed.contains(targetActor)
+      | _ => false
+    })
+
   pure def markMoonbeamSavedThisTurn(state: BattleState, targetActor: Actor, areaId: int): BattleState =
     {
       ...state,
@@ -566,6 +574,38 @@ module battleRuntimeGroundCommand {
           | MoonbeamMovableZone(data) =>
               if (data.areaId == areaId)
                 MoonbeamMovableZone({ ...data, savedThisTurn: data.savedThisTurn.union(Set(targetActor)) })
+              else
+                effect
+          | _ => effect
+        }),
+      },
+    }
+
+  pure def markMoonbeamShapeShiftSuppressed(state: BattleState, targetActor: Actor, areaId: int): BattleState =
+    {
+      ...state,
+      fighter: {
+        ...state.fighter,
+        activeEffects: state.fighter.activeEffects.map(effect => match effect {
+          | MoonbeamMovableZone(data) =>
+              if (data.areaId == areaId)
+                MoonbeamMovableZone({ ...data, shapeShiftSuppressed: data.shapeShiftSuppressed.union(Set(targetActor)) })
+              else
+                effect
+          | _ => effect
+        }),
+      },
+    }
+
+  pure def clearMoonbeamShapeShiftSuppressed(state: BattleState, targetActor: Actor, areaId: int): BattleState =
+    {
+      ...state,
+      fighter: {
+        ...state.fighter,
+        activeEffects: state.fighter.activeEffects.map(effect => match effect {
+          | MoonbeamMovableZone(data) =>
+              if (data.areaId == areaId)
+                MoonbeamMovableZone({ ...data, shapeShiftSuppressed: data.shapeShiftSuppressed.exclude(Set(targetActor)) })
               else
                 effect
           | _ => effect
@@ -584,6 +624,33 @@ module battleRuntimeGroundCommand {
         }),
       },
     }
+
+  type MoonbeamShapeShiftRiderResult = {
+    state: BattleState,
+    targetShapeShiftState: ShapeShiftedRuntimeState,
+  }
+
+  pure def resolveMoonbeamShapeShiftRider(
+    state: BattleState,
+    targetActor: Actor,
+    areaId: int,
+    savingThrowSucceeded: bool,
+    targetShapeShiftState: ShapeShiftedRuntimeState,
+  ): MoonbeamShapeShiftRiderResult =
+    if (savingThrowSucceeded)
+      { state: state, targetShapeShiftState: targetShapeShiftState }
+    else
+      match revertShapeShiftedRuntimeState(targetShapeShiftState) {
+        | ShapeShiftAlreadyTrueForm =>
+            { state: state, targetShapeShiftState: TrueForm }
+        | ShapeShiftReverted(data) =>
+            {
+              state: markMoonbeamShapeShiftSuppressed(state, targetActor, areaId),
+              targetShapeShiftState: data.state,
+            }
+        | UnsupportedShapeShiftSource(_) =>
+            { state: state, targetShapeShiftState: targetShapeShiftState }
+      }
 
   pure def moonbeamDamageAfterSave(rolledDamage: int, savingThrowSucceeded: bool): int =
     if (savingThrowSucceeded)
@@ -621,14 +688,26 @@ module battleRuntimeGroundCommand {
     savingThrowSucceeded: bool,
     rolledDamage: int,
   ): BattleState =
+    resolveMoonbeamSaveWithShapeShift(state, targetActor, areaId, savingThrowSucceeded, rolledDamage, TrueForm).state
+
+  pure def resolveMoonbeamSaveWithShapeShift(
+    state: BattleState,
+    targetActor: Actor,
+    areaId: int,
+    savingThrowSucceeded: bool,
+    rolledDamage: int,
+    targetShapeShiftState: ShapeShiftedRuntimeState,
+  ): MoonbeamShapeShiftRiderResult =
     if (not(moonbeamActive(state, areaId)) or moonbeamSavedThisTurn(state, targetActor, areaId))
-      state
+      { state: state, targetShapeShiftState: targetShapeShiftState }
     else {
       val marked = markMoonbeamSavedThisTurn(state, targetActor, areaId)
-      match targetActor {
+      val damaged = match targetActor {
         | Fighter => { ...marked, fighter: combatantWithMoonbeamDamage(marked.fighter, rolledDamage, savingThrowSucceeded) }
         | Goblin => { ...marked, goblin: combatantWithMoonbeamDamage(marked.goblin, rolledDamage, savingThrowSucceeded) }
       }
+      val reverted = resolveMoonbeamShapeShiftRider(damaged, targetActor, areaId, savingThrowSucceeded, targetShapeShiftState)
+      reverted
     }
 
   pure def endTurnWithMoonbeamSave(

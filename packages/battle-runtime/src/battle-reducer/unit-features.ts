@@ -89,6 +89,7 @@ import {
 } from "./ongoing-feature-helpers.ts";
 
 import { invalidResult } from "./result-helpers.ts";
+import { combatantShapeShiftingSuppressed } from "./shape-shifting.ts";
 
 import { attackActionOptionName } from "./statblock-attacks.ts";
 
@@ -200,7 +201,7 @@ export function supportedUnitFeatureActs(
       unitFeature?.kind === "druidWildShapeKnownForm" &&
       state.currentTurnResources.currentHasBonusAction
     ) {
-      return druidWildShapeActsForResource(actor, resource, unitFeature);
+      return druidWildShapeActsForResource(state, actor, resource, unitFeature);
     }
 
     return unitFeature?.kind === "selfBonusActionHealing" &&
@@ -223,26 +224,29 @@ export function supportedUnitFeatureActs(
 }
 
 export function druidWildShapeActsForResource(
+  state: BattleState,
   actor: CharacterBattleCreatureState,
   resource: CharacterBattleResourceState,
   unitFeature: SupportedDruidWildShapeKnownFormProfile,
 ): readonly AvailableBattleAct[] {
-  const assumeActs = resourceHasUsesRemaining(resource)
-    ? (actor.origin.druidWildShapeKnownForms ?? []).map((form) => ({
-        subject: {
-          tag: "druidWildShape" as const,
-          actorId: actor.combatantId,
-          unitId: unitFeature.unit.id,
-          action: "assumeForm" as const,
-          formStatBlockId: form.id,
-          equipmentDisposition: "merged" as const,
-        },
-        label: `${unitFeature.unit.name}: ${form.statBlock.displayName}`,
-        summary:
-          "Spend a Bonus Action and one use to assume this known Beast form with equipment merged.",
-        initialHoles: [],
-      }))
-    : [];
+  const assumeActs =
+    resourceHasUsesRemaining(resource) &&
+    !combatantShapeShiftingSuppressed(state, actor.combatantId)
+      ? (actor.origin.druidWildShapeKnownForms ?? []).map((form) => ({
+          subject: {
+            tag: "druidWildShape" as const,
+            actorId: actor.combatantId,
+            unitId: unitFeature.unit.id,
+            action: "assumeForm" as const,
+            formStatBlockId: form.id,
+            equipmentDisposition: "merged" as const,
+          },
+          label: `${unitFeature.unit.name}: ${form.statBlock.displayName}`,
+          summary:
+            "Spend a Bonus Action and one use to assume this known Beast form with equipment merged.",
+          initialHoles: [],
+        }))
+      : [];
   const dismissAct =
     activeDruidWildShapeEffect(actor) === null
       ? []
@@ -411,6 +415,16 @@ export function resolveDruidWildShapeUnitFeature(
   }
 
   const subject = input.subject;
+  if (
+    subject.action === "assumeForm" &&
+    combatantShapeShiftingSuppressed(input.state, actor.combatantId)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Druid Wild Shape is suppressed while the creature remains in the Moonbeam Cylinder.",
+    );
+  }
   if (!resourceHasUsesRemaining(resource)) {
     return invalidResult(
       input.state,

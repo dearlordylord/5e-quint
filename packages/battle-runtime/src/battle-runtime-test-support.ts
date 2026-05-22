@@ -413,6 +413,7 @@ export function subjectName(
   | "gustOfWindLineSave"
   | "gustOfWindLineDirectionChange"
   | "movableZoneSave"
+  | "moonbeamCylinderExit"
   | "movableZoneReposition"
   | "movableZoneRam"
   | "jumpMovementReplacement"
