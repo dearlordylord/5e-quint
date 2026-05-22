@@ -190,6 +190,7 @@ import shieldInput from "../../content/shield.json";
 import shieldOfFaithInput from "../../content/shield_of_faith.json";
 import shatterInput from "../../content/shatter.json";
 import shillelaghInput from "../../content/shillelagh.json";
+import silenceInput from "../../content/silence.json";
 import shiningSmiteInput from "../../content/shining_smite.json";
 import shockingGraspInput from "../../content/shocking_grasp.json";
 import sleepInput from "../../content/sleep.json";
@@ -199,6 +200,7 @@ import sacredFlameInput from "../../content/sacred_flame.json";
 import scorchingRayInput from "../../content/scorching_ray.json";
 import seeInvisibilityInput from "../../content/see_invisibility.json";
 import searingSmiteInput from "../../content/searing_smite.json";
+import suggestionInput from "../../content/suggestion.json";
 import sorcererFontOfMagicInput from "../../content/sorcerer_font_of_magic.json";
 import sorcererInnateSorceryInput from "../../content/sorcerer_innate_sorcery.json";
 import sorcererMetamagicInput from "../../content/sorcerer_metamagic.json";
@@ -213,6 +215,7 @@ import warlockMagicalCunningInput from "../../content/warlock_magical_cunning.js
 import viciousMockeryInput from "../../content/vicious_mockery.json";
 import wardingBondInput from "../../content/warding_bond.json";
 import webInput from "../../content/web.json";
+import zoneOfTruthInput from "../../content/zone_of_truth.json";
 import weaponClubInput from "../../content/weapon_club.json";
 import weaponDaggerInput from "../../content/weapon_dagger.json";
 import weaponFlailInput from "../../content/weapon_flail.json";
@@ -537,10 +540,13 @@ export const srdUnitCollection = defineSrdUnitCollection({
     shieldOfFaithInput,
     shatterInput,
     shillelaghInput,
+    silenceInput,
     shiningSmiteInput,
     sleepInput,
     spiderClimbInput,
     spikeGrowthInput,
+    suggestionInput,
+    zoneOfTruthInput,
     thunderwaveInput,
     trueStrikeInput,
     eldritchBlastInput,

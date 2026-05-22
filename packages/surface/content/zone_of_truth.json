@@ -1,0 +1,119 @@
+{
+  "description": "You create a magical zone that guards against deception in a 15-foot-radius Sphere centered on a point within range. Until the spell ends, a creature that enters the spell's area for the first time on a turn or starts its turn there makes a Charisma saving throw. On a failed save, a creature can't speak a deliberate lie while in the radius. You know whether a creature succeeds or fails on this save. An affected creature is aware of the spell and can avoid answering questions to which it would normally respond with a lie. Such a creature can be evasive yet must be truthful.",
+  "id": "zone_of_truth",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "holeId": "zone_of_truth_sphere",
+      "kind": "hole",
+      "label": "Zone of Truth sphere",
+      "value": {
+        "kind": "area",
+        "origin": {
+          "kind": "point_within_range"
+        },
+        "shape": {
+          "kind": "sphere",
+          "radiusFeet": 15
+        }
+      }
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 10,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "level": 2,
+    "operations": [
+      {
+        "effect": {
+          "ability": "cha",
+          "dc": {
+            "kind": "caster_spell_save_dc"
+          },
+          "kind": "save_gate",
+          "onFail": {
+            "effects": [
+              {
+                "allowedResponse": "evasive_or_silent_truthful",
+                "appliesWhile": "in_spell_area",
+                "kind": "truthfulness_constraint",
+                "prohibitedCommunication": "deliberate_lie",
+                "targetAwareness": "aware_of_spell"
+              },
+              {
+                "kind": "reveal_save_outcome_to_caster"
+              }
+            ],
+            "kind": "composite"
+          },
+          "onSuccess": {
+            "kind": "reveal_save_outcome_to_caster"
+          }
+        },
+        "trigger": {
+          "kind": "on_creature_starts_turn_in_area"
+        },
+        "usageLimit": {
+          "kind": "once_per_turn",
+          "limitGroup": "zone_of_truth_save_per_turn"
+        }
+      },
+      {
+        "effect": {
+          "ability": "cha",
+          "dc": {
+            "kind": "caster_spell_save_dc"
+          },
+          "kind": "save_gate",
+          "onFail": {
+            "effects": [
+              {
+                "allowedResponse": "evasive_or_silent_truthful",
+                "appliesWhile": "in_spell_area",
+                "kind": "truthfulness_constraint",
+                "prohibitedCommunication": "deliberate_lie",
+                "targetAwareness": "aware_of_spell"
+              },
+              {
+                "kind": "reveal_save_outcome_to_caster"
+              }
+            ],
+            "kind": "composite"
+          },
+          "onSuccess": {
+            "kind": "reveal_save_outcome_to_caster"
+          }
+        },
+        "trigger": {
+          "kind": "on_creature_enters_area"
+        },
+        "usageLimit": {
+          "kind": "once_per_turn",
+          "limitGroup": "zone_of_truth_save_per_turn"
+        }
+      }
+    ],
+    "range": {
+      "feet": 60,
+      "kind": "point"
+    },
+    "school": "enchantment"
+  },
+  "name": "Zone of Truth",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#Zone of Truth"
+  }
+}

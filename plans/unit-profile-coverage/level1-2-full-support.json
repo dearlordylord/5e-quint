@@ -2263,6 +2263,59 @@
       "unitId": "rope_trick"
     },
     {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-runtime-presentation-exploration"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "Silence's audio boundary, entirely-inside area membership, Thunder-immunity projection, Deafened projection, and Verbal-component casting block require table-supplied area/membership facts; promoted battle runtime must not infer audio geometry automatically.",
+      "sourceRecordPath": "packages/surface/content/silence.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Bard spell list Silence",
+          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_silence",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 209,
+            "lineStart": 209,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Cleric spell list Silence",
+          "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_silence",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 195,
+            "lineStart": 195,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Ranger spell list Silence",
+          "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_silence",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 195,
+            "lineStart": 195,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
+          }
+        }
+      ],
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
+      "unitId": "silence"
+    },
+    {
       "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
@@ -2451,11 +2504,13 @@
     {
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
-      "closureKinds": [],
+      "closureKinds": [
+        "outside-runtime-presentation-exploration"
+      ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "camouflaged terrain recognition and Search-boundary support",
+      "reason": "The SRD recognition clause depends on table-owned visibility at cast time, the creature's declared Search Action before entering, skill applicability, and the resulting terrain-recognition witness. Promoted battle runtime already consumes movement-area facts for Spike Growth and does not store parallel per-observer terrain knowledge or perception state.",
       "sourceRecordPath": "packages/surface/content/spike_growth.json",
       "sourceRows": [
         {
@@ -2483,8 +2538,8 @@
           }
         }
       ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
       "unitId": "spike_growth"
     },
     {
@@ -2523,6 +2578,71 @@
     },
     {
       "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "social-knowledge-effect"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "Suggestion's hearing/understanding gate, suggested course of activity, achievable and obvious-damage judgment, Charmed target pursuit, and activity-completion ending require table/player choice and social adjudication facts; promoted battle runtime must not infer or enforce commanded behavior from authored spell identity.",
+      "sourceRecordPath": "packages/surface/content/suggestion.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Bard spell list Suggestion",
+          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_suggestion",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 210,
+            "lineStart": 210,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Sorcerer spell list Suggestion",
+          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_suggestion",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 293,
+            "lineStart": 293,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Warlock spell list Suggestion",
+          "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_suggestion",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 374,
+            "lineStart": 374,
+            "path": ".references/srd-5.2.1/Classes/Warlock.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Suggestion",
+          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_suggestion",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 230,
+            "lineStart": 230,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
+      "unitId": "suggestion"
+    },
+    {
+      "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
         "outside-runtime-presentation-exploration"
@@ -2549,6 +2669,59 @@
       "status": "closed-runtime-detached-table-adjudication",
       "strictTargetClosed": true,
       "unitId": "thaumaturgy"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "social-knowledge-effect"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "Zone of Truth's truthfulness constraint, conversation answers, deliberate-lie judgment, evasive response handling, and caster save-outcome knowledge require table/social adjudication facts; promoted battle runtime must not add conversation-state or lie-detection state without a clear executable battle owner.",
+      "sourceRecordPath": "packages/surface/content/zone_of_truth.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Bard spell list Zone of Truth",
+          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_zone_of_truth",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 211,
+            "lineStart": 211,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Cleric spell list Zone of Truth",
+          "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_zone_of_truth",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 198,
+            "lineStart": 198,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Paladin spell list Zone of Truth",
+          "id": "srd521:classes/paladin:spell-level-2:spell-unit-pressure:paladin_spell_list_zone_of_truth",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 204,
+            "lineStart": 204,
+            "path": ".references/srd-5.2.1/Classes/Paladin.md"
+          }
+        }
+      ],
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
+      "unitId": "zone_of_truth"
     }
   ],
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
@@ -2674,7 +2847,7 @@
       ]
     },
     {
-      "count": 29,
+      "count": 33,
       "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
@@ -2704,9 +2877,13 @@
         "monk_monks_focus",
         "pass_without_trace",
         "rope_trick",
+        "silence",
         "silent_image",
         "speak_with_animals",
-        "thaumaturgy"
+        "spike_growth",
+        "suggestion",
+        "thaumaturgy",
+        "zone_of_truth"
       ]
     },
     {
@@ -2753,20 +2930,19 @@
       ]
     },
     {
-      "count": 2,
-      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
-      "status": "open-profile-accounting",
-      "unitIds": [
-        "prayer_of_healing",
-        "spike_growth"
-      ]
-    },
-    {
       "count": 1,
       "description": "Companion lifecycle and control residuals are closed at the companion control boundary.",
       "status": "closed-companion-control-boundary",
       "unitIds": [
         "druid_wild_companion"
+      ]
+    },
+    {
+      "count": 1,
+      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
+      "status": "open-profile-accounting",
+      "unitIds": [
+        "prayer_of_healing"
       ]
     },
     {
@@ -2781,14 +2957,14 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 514,
-      "percent": "92.4%",
+      "numerator": 526,
+      "percent": "94.6%",
       "rowsByStatus": {
-        "accepted": 377,
-        "accepted-no-battle-effect": 137,
-        "battle-runtime-required": 24,
+        "accepted": 379,
+        "accepted-no-battle-effect": 147,
+        "battle-runtime-required": 14,
         "owner-evidence-required": 2,
-        "partial-battle-runtime": 16
+        "partial-battle-runtime": 14
       }
     },
     "rulesKernelCoveredProfileJoin": {
@@ -2807,24 +2983,23 @@
       "percent": "88.5%"
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 168,
+      "denominator": 171,
       "numerator": 113,
-      "percent": "67.3%"
+      "percent": "66.1%"
     },
     "strictTargetClosure": {
-      "denominator": 168,
-      "numerator": 165,
-      "percent": "98.2%"
+      "denominator": 171,
+      "numerator": 169,
+      "percent": "98.8%"
     }
   },
   "openFrontier": [
     {
-      "count": 2,
+      "count": 1,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
-        "prayer_of_healing",
-        "spike_growth"
+        "prayer_of_healing"
       ]
     },
     {
@@ -3363,102 +3538,6 @@
         "unitId": "purify_food_and_drink"
       },
       {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "spell Unit pressure",
-            "concept": "Bard spell list Silence",
-            "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_silence",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 209,
-              "lineStart": 209,
-              "path": ".references/srd-5.2.1/Classes/Bard.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Cleric spell list Silence",
-            "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_silence",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 195,
-              "lineStart": 195,
-              "path": ".references/srd-5.2.1/Classes/Cleric.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Ranger spell list Silence",
-            "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_silence",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 195,
-              "lineStart": 195,
-              "path": ".references/srd-5.2.1/Classes/Ranger.md"
-            }
-          }
-        ],
-        "unitId": "silence"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "spell Unit pressure",
-            "concept": "Bard spell list Suggestion",
-            "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_suggestion",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 210,
-              "lineStart": 210,
-              "path": ".references/srd-5.2.1/Classes/Bard.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Sorcerer spell list Suggestion",
-            "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_suggestion",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 293,
-              "lineStart": 293,
-              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Warlock spell list Suggestion",
-            "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_suggestion",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 374,
-              "lineStart": 374,
-              "path": ".references/srd-5.2.1/Classes/Warlock.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Wizard spell list Suggestion",
-            "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_suggestion",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 230,
-              "lineStart": 230,
-              "path": ".references/srd-5.2.1/Classes/Wizard.md"
-            }
-          }
-        ],
-        "unitId": "suggestion"
-      },
-      {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/unseen_servant.md",
         "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
@@ -3500,48 +3579,6 @@
           }
         ],
         "unitId": "unseen_servant"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "spell Unit pressure",
-            "concept": "Bard spell list Zone of Truth",
-            "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_zone_of_truth",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 211,
-              "lineStart": 211,
-              "path": ".references/srd-5.2.1/Classes/Bard.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Cleric spell list Zone of Truth",
-            "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_zone_of_truth",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 198,
-              "lineStart": 198,
-              "path": ".references/srd-5.2.1/Classes/Cleric.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Paladin spell list Zone of Truth",
-            "id": "srd521:classes/paladin:spell-level-2:spell-unit-pressure:paladin_spell_list_zone_of_truth",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 204,
-              "lineStart": 204,
-              "path": ".references/srd-5.2.1/Classes/Paladin.md"
-            }
-          }
-        ],
-        "unitId": "zone_of_truth"
       }
     ],
     "nonExecutableClassContainers": [
@@ -8161,19 +8198,19 @@
       "missing": 1,
       "profile-subset-supported": 23,
       "supported-profile": 113,
-      "unsupported-profile": 31
+      "unsupported-profile": 34
     },
     "groupsByStatus": {
       "blocked-follow-up-split": 13,
       "closed-character-fact-and-runtime-detached-split": 3,
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
-      "closed-runtime-detached-table-adjudication": 29,
-      "open-profile-accounting": 2,
+      "closed-runtime-detached-table-adjudication": 33,
+      "open-profile-accounting": 1,
       "open-runtime-behavior": 1,
       "supported-profile": 113
     },
-    "nonSupportedFrontier": 55,
-    "strictDenominator": 168
+    "nonSupportedFrontier": 58,
+    "strictDenominator": 171
   }
 }

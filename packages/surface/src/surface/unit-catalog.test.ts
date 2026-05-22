@@ -141,10 +141,13 @@ const requiredFirstVerticalUnitIds = [
   "protection_from_poison",
   "shield",
   "shatter",
+  "silence",
   "shining_smite",
   "see_invisibility",
   "sleep",
   "spider_climb",
+  "suggestion",
+  "zone_of_truth",
   "thunderwave",
   "eldritch_blast",
   "minor_illusion",
@@ -254,6 +257,180 @@ describe("SRD Unit catalog boundary", () => {
           ],
         },
       ]);
+    }
+  });
+
+  test("keeps Silence's coupled sound-area Surface atom in the catalog projection", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const silence = result.catalog.requireUnit("silence");
+
+      expect(silence.kind).toBe("spell");
+      if (
+        silence.kind !== "spell" ||
+        silence.mechanics.family !== "ongoing_effect"
+      ) {
+        throw new Error("Expected Silence to be an ongoing-effect spell.");
+      }
+      expect(silence.mechanics).toMatchObject({
+        level: 2,
+        school: "illusion",
+        castingTime: { kind: "action", ritual: true },
+        range: { kind: "point", feet: 120 },
+        components: { v: true, s: true, m: false },
+        duration: {
+          kind: "concentration",
+          upTo: { unit: "minute", amount: 10 },
+        },
+        attachment: {
+          value: {
+            kind: "area",
+            origin: { kind: "point_within_range" },
+            shape: { kind: "sphere", radiusFeet: 20 },
+          },
+        },
+        operations: [
+          {
+            trigger: { kind: "passive" },
+            effect: {
+              kind: "area_of_silence",
+              soundBoundary: "blocks_creation_and_passage",
+              appliesWhen: "entirely_inside_area",
+              grantsDamageImmunity: "thunder",
+              imposesCondition: "deafened",
+              preventsSpellComponent: "verbal",
+            },
+          },
+        ],
+      });
+    }
+  });
+
+  test("keeps Suggestion's table-choice Surface facts in the catalog projection", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const suggestion = result.catalog.requireUnit("suggestion");
+
+      expect(suggestion.kind).toBe("spell");
+      if (
+        suggestion.kind !== "spell" ||
+        suggestion.mechanics.family !== "activation"
+      ) {
+        throw new Error("Expected Suggestion to be an activation spell.");
+      }
+      expect(suggestion.mechanics).toMatchObject({
+        level: 2,
+        school: "enchantment",
+        castingTime: { kind: "action" },
+        range: { kind: "point", feet: 30 },
+        components: { v: true, s: false, m: "a drop of honey" },
+        duration: {
+          kind: "concentration",
+          upTo: { unit: "hour", amount: 8 },
+          earlyEnd: [{ kind: "target_damaged_by_caster_or_ally" }],
+        },
+        phases: [
+          {
+            kind: "save_gate",
+            attachment: {
+              holeId: "suggestion_target",
+              label: "target",
+              value: {
+                kind: "target",
+                selection: {
+                  mode: "one",
+                  targetKinds: ["creature"],
+                },
+              },
+            },
+            ability: "wis",
+            dc: { kind: "caster_spell_save_dc" },
+            onFail: {
+              kind: "apply_condition",
+              condition: "charmed",
+              duration: "spell_duration",
+            },
+            onSuccess: { kind: "none" },
+          },
+        ],
+      });
+    }
+  });
+
+  test("keeps Zone of Truth's truthfulness Surface facts in the catalog projection", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const zoneOfTruth = result.catalog.requireUnit("zone_of_truth");
+
+      expect(zoneOfTruth.kind).toBe("spell");
+      if (
+        zoneOfTruth.kind !== "spell" ||
+        zoneOfTruth.mechanics.family !== "ongoing_effect"
+      ) {
+        throw new Error(
+          "Expected Zone of Truth to be an ongoing-effect spell.",
+        );
+      }
+      expect(zoneOfTruth.mechanics).toMatchObject({
+        level: 2,
+        school: "enchantment",
+        castingTime: { kind: "action" },
+        range: { kind: "point", feet: 60 },
+        components: { v: true, s: true, m: false },
+        duration: {
+          kind: "timed",
+          value: { unit: "minute", amount: 10 },
+        },
+        attachment: {
+          holeId: "zone_of_truth_sphere",
+          value: {
+            kind: "area",
+            origin: { kind: "point_within_range" },
+            shape: { kind: "sphere", radiusFeet: 15 },
+          },
+        },
+        operations: [
+          {
+            trigger: { kind: "on_creature_starts_turn_in_area" },
+            effect: {
+              kind: "save_gate",
+              ability: "cha",
+              dc: { kind: "caster_spell_save_dc" },
+              onFail: {
+                kind: "composite",
+                effects: [
+                  {
+                    kind: "truthfulness_constraint",
+                    prohibitedCommunication: "deliberate_lie",
+                    appliesWhile: "in_spell_area",
+                    targetAwareness: "aware_of_spell",
+                    allowedResponse: "evasive_or_silent_truthful",
+                  },
+                  { kind: "reveal_save_outcome_to_caster" },
+                ],
+              },
+              onSuccess: { kind: "reveal_save_outcome_to_caster" },
+            },
+            usageLimit: {
+              kind: "once_per_turn",
+              limitGroup: "zone_of_truth_save_per_turn",
+            },
+          },
+          {
+            trigger: { kind: "on_creature_enters_area" },
+            usageLimit: {
+              kind: "once_per_turn",
+              limitGroup: "zone_of_truth_save_per_turn",
+            },
+          },
+        ],
+      });
     }
   });
 

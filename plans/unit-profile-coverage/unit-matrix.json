@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 396,
-      "numerator": 192,
-      "percent": "48.5%"
+      "denominator": 399,
+      "numerator": 195,
+      "percent": "48.9%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 468,
-      "numerator": 224,
-      "percent": "47.9%"
+      "denominator": 471,
+      "numerator": 227,
+      "percent": "48.2%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 225
+      "value": 228
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 136,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 225,
-      "numerator": 225,
+      "denominator": 228,
+      "numerator": 228,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "79.4%"
     },
     "supportedProfileCoverage": {
-      "denominator": 193,
+      "denominator": 196,
       "numerator": 136,
-      "percent": "70.5%"
+      "percent": "69.4%"
     }
   },
   "metricSemantics": [
@@ -3467,7 +3467,7 @@
         "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
         "packages/battle-runtime/src/battle-subjects.ts"
       ],
-      "sourceBoundary": "The runtime consumes a caller-supplied point-origin 20-foot-radius Sphere area identity, caster-owned Concentration up to 10 minutes, active Difficult Terrain movement-cost facts derived from caller-supplied movement distance through the area, and 2d4 Piercing damage per 5 feet traveled into or within the area. It owns Magic Action and level-2-or-higher Spell Slot spending, the active hazard identity, movement-cost projection, movement-triggered damage scaling, and cleanup on Concentration or duration end. Automatic geometry, pathfinding, and camouflaged-terrain recognition remain table/spatial facts deferred to the separate Search-boundary task.",
+      "sourceBoundary": "The runtime consumes a caller-supplied point-origin 20-foot-radius Sphere area identity, caster-owned Concentration up to 10 minutes, active Difficult Terrain movement-cost facts derived from caller-supplied movement distance through the area, and 2d4 Piercing damage per 5 feet traveled into or within the area. It owns Magic Action and level-2-or-higher Spell Slot spending, the active hazard identity, movement-cost projection, movement-triggered damage scaling, and cleanup on Concentration or duration end. Automatic geometry and pathfinding remain table/spatial facts. Camouflaged-terrain recognition is an accepted runtime-detached Search/perception witness: the table owns visibility at cast time, the Search Action declaration before entry, skill/check result, and recognized-hazard witness; runtime does not store per-observer terrain knowledge.",
       "taskRefs": [
         "L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME"
       ],
@@ -10593,7 +10593,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests and package-local Quint checks cover Spike Growth area admission, Magic Action and Spell Slot spending, concentration-owned active area recording, caller-supplied Difficult Terrain movement-cost projection, per-5-foot Piercing damage scaling, Concentration break cleanup, and duration-expiry cleanup, while automatic geometry and Search recognition remain table-owned follow-up work.",
+      "note": "Focused battle-runtime tests and package-local Quint checks cover Spike Growth area admission, Magic Action and Spell Slot spending, concentration-owned active area recording, caller-supplied Difficult Terrain movement-cost projection, per-5-foot Piercing damage scaling, Concentration break cleanup, and duration-expiry cleanup. Automatic geometry remains table-owned, and Search recognition is closed as a runtime-detached table/perception witness boundary.",
       "profileIds": [
         "spell.invocation-spike-growth-movement-hazard"
       ],
@@ -23393,6 +23393,29 @@
       },
       "claim": {
         "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table/spatial and audio adjudication owner",
+          "reason": "Silence's audio boundary, entirely-inside area membership, Thunder-immunity projection, Deafened projection, and Verbal-component casting block require table-supplied area/membership facts; promoted battle runtime must not infer audio geometry automatically."
+        },
+        "reason": "Silence is authored and installed as an SRD Surface Spell Definition with Action casting that spends a level-2 Spell Slot, Ritual casting that takes 10 extra minutes and expends no Spell Slot, point-origin 20-foot-radius Sphere area identity, caster-owned Concentration up to 10 minutes, no sound creation or passage through the Sphere, Thunder damage Immunity for creatures and objects entirely inside it, Deafened for creatures entirely inside it, and Verbal-component spellcasting impossibility there. Task 5 claims no promoted battle-runtime profile because automatic sound propagation, area membership, entirely-inside adjudication, and Verbal-component availability are runtime-detached table-spatial/audio facts outside promoted battle Unit profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/silence.json",
+      "unitId": "silence"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
           "kind": "table-spatial-derivation",
           "owner": "table/sight and light projection owner",
           "reason": "Automatic line-of-sight, map geometry, and Bright Light presentation/color rendering remain caller/table-owned; battle runtime consumes explicit sight and light-projection witness facts and owns the Shining Smite spell effect and mechanical projections."
@@ -23629,12 +23652,16 @@
         "battleReadinessClosure": {
           "kind": "table-spatial-derivation",
           "owner": "table/spatial movement owner",
-          "reason": "Automatic geometry, pathfinding, and camouflaged-terrain recognition remain caller-supplied table/spatial facts outside promoted battle runtime."
+          "reason": "Automatic geometry and pathfinding remain caller-supplied table/spatial facts outside promoted battle runtime."
         },
         "deferredMechanics": [
           {
-            "followUpTaskId": "L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION",
-            "mechanic": "camouflaged terrain recognition and Search-boundary support"
+            "battleReadinessClosure": {
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "runtime-detached table Search/perception witness owner",
+              "reason": "The SRD recognition clause depends on table-owned visibility at cast time, the creature's declared Search Action before entering, skill applicability, and the resulting terrain-recognition witness. Promoted battle runtime already consumes movement-area facts for Spike Growth and does not store parallel per-observer terrain knowledge or perception state."
+            },
+            "mechanic": "camouflaged terrain recognition for creatures that could not see the area when cast, including Search Action spend and Wisdom (Perception or Survival) result against the caster's Spell Save DC before entering"
           }
         ],
         "profileIds": [
@@ -23680,7 +23707,7 @@
             "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
             "packages/battle-runtime/src/battle-subjects.ts"
           ],
-          "sourceBoundary": "The runtime consumes a caller-supplied point-origin 20-foot-radius Sphere area identity, caster-owned Concentration up to 10 minutes, active Difficult Terrain movement-cost facts derived from caller-supplied movement distance through the area, and 2d4 Piercing damage per 5 feet traveled into or within the area. It owns Magic Action and level-2-or-higher Spell Slot spending, the active hazard identity, movement-cost projection, movement-triggered damage scaling, and cleanup on Concentration or duration end. Automatic geometry, pathfinding, and camouflaged-terrain recognition remain table/spatial facts deferred to the separate Search-boundary task.",
+          "sourceBoundary": "The runtime consumes a caller-supplied point-origin 20-foot-radius Sphere area identity, caster-owned Concentration up to 10 minutes, active Difficult Terrain movement-cost facts derived from caller-supplied movement distance through the area, and 2d4 Piercing damage per 5 feet traveled into or within the area. It owns Magic Action and level-2-or-higher Spell Slot spending, the active hazard identity, movement-cost projection, movement-triggered damage scaling, and cleanup on Concentration or duration end. Automatic geometry and pathfinding remain table/spatial facts. Camouflaged-terrain recognition is an accepted runtime-detached Search/perception witness: the table owns visibility at cast time, the Search Action declaration before entry, skill/check result, and recognized-hazard witness; runtime does not store per-observer terrain knowledge.",
           "taskRefs": [
             "L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME"
           ],
@@ -23699,6 +23726,52 @@
       ],
       "sourceRecordPath": "packages/surface/content/spike_growth.json",
       "unitId": "spike_growth"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "social-knowledge-effect",
+          "owner": "runtime-detached table/social suggestion adjudication owner",
+          "reason": "Suggestion's hearing/understanding gate, suggested course of activity, achievable and obvious-damage judgment, Charmed target pursuit, and activity-completion ending require table/player choice and social adjudication facts; promoted battle runtime must not infer or enforce commanded behavior from authored spell identity."
+        },
+        "reason": "Suggestion is authored and installed as an SRD Surface Spell Definition with Action casting that spends a level-2 Spell Slot, 30-foot range, V/M honey component, caster-owned Concentration up to 8 hours, one creature target, Wisdom Saving Throw against the caster's Spell Save DC, failed-save Charmed condition for the spell duration, and early ending when the caster or allies deal damage to the target. Task 6 claims no promoted battle-runtime profile because hearing and understanding, the player-authored suggested activity, achievable and obvious-damage judgment, target pursuit, and activity-completion ending are runtime-detached table/social adjudication facts outside promoted battle Unit profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/suggestion.json",
+      "unitId": "suggestion"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "social-knowledge-effect",
+          "owner": "runtime-detached table/social truth adjudication owner",
+          "reason": "Zone of Truth's truthfulness constraint, conversation answers, deliberate-lie judgment, evasive response handling, and caster save-outcome knowledge require table/social adjudication facts; promoted battle runtime must not add conversation-state or lie-detection state without a clear executable battle owner."
+        },
+        "reason": "Zone of Truth is authored and installed as an SRD Surface Spell Definition with Action casting that spends a level-2 Spell Slot, point-origin 15-foot-radius Sphere area identity, 10-minute duration, recurring Charisma Saving Throw when a creature enters the area for the first time on a turn or starts its turn there, failed-save deliberate-lie prohibition while in the area, affected-creature spell awareness and evasive truthful response permission, and caster knowledge of each save outcome. Task 7 claims no promoted battle-runtime profile because conversation content, statement truth, evasion, and lie adjudication are runtime-detached table/social knowledge facts outside promoted battle Unit profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/zone_of_truth.json",
+      "unitId": "zone_of_truth"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

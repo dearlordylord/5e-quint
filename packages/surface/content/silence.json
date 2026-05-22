@@ -1,0 +1,65 @@
+{
+  "description": "For the duration, no sound can be created within or pass through a 20-foot-radius Sphere centered on a point you choose within range. Any creature or object entirely inside the Sphere has Immunity to Thunder damage, and creatures have the Deafened condition while entirely inside it. Casting a spell that includes a Verbal component is impossible there.",
+  "id": "silence",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "holeId": "silence_point",
+      "kind": "hole",
+      "label": "spell origin point",
+      "value": {
+        "kind": "area",
+        "origin": {
+          "kind": "point_within_range"
+        },
+        "shape": {
+          "kind": "sphere",
+          "radiusFeet": 20
+        }
+      }
+    },
+    "castingTime": {
+      "kind": "action",
+      "ritual": true
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 10,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "level": 2,
+    "operations": [
+      {
+        "effect": {
+          "appliesWhen": "entirely_inside_area",
+          "grantsDamageImmunity": "thunder",
+          "imposesCondition": "deafened",
+          "kind": "area_of_silence",
+          "preventsSpellComponent": "verbal",
+          "soundBoundary": "blocks_creation_and_passage"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      }
+    ],
+    "range": {
+      "feet": 120,
+      "kind": "point"
+    },
+    "school": "illusion"
+  },
+  "name": "Silence",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#Silence"
+  }
+}

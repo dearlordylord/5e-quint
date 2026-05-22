@@ -14,6 +14,8 @@ import magicMouthInput from "../../content/magic_mouth.json";
 import moonbeamInput from "../../content/moonbeam.json";
 import prayerOfHealingInput from "../../content/prayer_of_healing.json";
 import ropeTrickInput from "../../content/rope_trick.json";
+import silenceInput from "../../content/silence.json";
+import zoneOfTruthInput from "../../content/zone_of_truth.json";
 import wardingBondInput from "../../content/warding_bond.json";
 import { decodeUnitRecordSync } from "../surface/schema.ts";
 import { traceUnit } from "./tracer.ts";
@@ -424,6 +426,61 @@ describe("Surface trace interpreter", () => {
             "occupant perception: can_see_out_through_portal",
             "on end: drop_contents_out",
           ].join("\n"),
+        }),
+      ]),
+    );
+  });
+
+  test("renders Silence as a coupled sound-area rule", () => {
+    const trace = traceUnit(decodeUnitRecordSync(silenceInput));
+
+    expect(trace.nodes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          atomKind: "hole",
+          label: expect.stringContaining("sphere r=20 ft"),
+        }),
+        expect.objectContaining({
+          atomKind: "area_of_silence",
+          label: [
+            "area_of_silence",
+            "blocks_creation_and_passage",
+            "entirely_inside_area",
+            "immunity: thunder",
+            "condition: deafened",
+            "blocks component: verbal",
+          ].join("\n"),
+        }),
+      ]),
+    );
+  });
+
+  test("renders Zone of Truth as a save-gated truthfulness rule", () => {
+    const trace = traceUnit(decodeUnitRecordSync(zoneOfTruthInput));
+
+    expect(trace.nodes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          atomKind: "hole",
+          label: expect.stringContaining("sphere r=15 ft"),
+        }),
+        expect.objectContaining({
+          atomKind: "save_gate",
+          label: expect.stringContaining("CHA vs caster spell save DC"),
+        }),
+        expect.objectContaining({
+          atomKind: "truthfulness_constraint",
+          label: [
+            "truthfulness_constraint",
+            "prohibits: deliberate_lie",
+            "while: in_spell_area",
+            "target: aware_of_spell",
+            "may respond: evasive_or_silent_truthful",
+          ].join("\n"),
+        }),
+        expect.objectContaining({
+          atomKind: "reveal_save_outcome_to_caster",
+          label: "reveal_save_outcome_to_caster",
         }),
       ]),
     );

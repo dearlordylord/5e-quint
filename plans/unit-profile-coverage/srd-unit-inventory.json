@@ -194,14 +194,14 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 514,
-      "percent": "92.4%",
+      "numerator": 526,
+      "percent": "94.6%",
       "rowsByStatus": {
-        "accepted": 377,
-        "accepted-no-battle-effect": 137,
+        "accepted": 379,
+        "accepted-no-battle-effect": 147,
         "owner-evidence-required": 2,
-        "partial-battle-runtime": 16,
-        "battle-runtime-required": 24
+        "partial-battle-runtime": 14,
+        "battle-runtime-required": 14
       }
     },
     "levelOneClassContainers": 12,
@@ -219,16 +219,14 @@
       "catalog-installed-owner-evidence-present": 398,
       "non-runtime": 24,
       "catalog-installed-owner-evidence-required": 9,
-      "catalog-only/dead-for-now": 108,
-      "missing-authored-record": 10,
+      "catalog-only/dead-for-now": 118,
       "catalog-authored-executable-follow-up": 6,
       "catalog-installed-needs-owner-evidence": 1
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 235,
-      "catalog-only/dead-for-now": 108,
+      "catalog-only/dead-for-now": 118,
       "catalog-installed-owner-evidence-required": 8,
-      "missing-authored-record": 10,
       "catalog-authored-executable-follow-up": 6
     },
     "levelOneRowsByCategory": {
@@ -6993,19 +6991,39 @@
       "detail": "Silence (Illusion; C, R)",
       "candidateUnitId": "silence",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "silence",
+        "sourceRecordPath": "packages/surface/content/silence.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "silence"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached table/spatial and audio adjudication owner",
+        "reason": "Silence's audio boundary, entirely-inside area membership, Thunder-immunity projection, Deafened projection, and Verbal-component casting block require table-supplied area/membership facts; promoted battle runtime must not infer audio geometry automatically."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit silence is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached table/spatial and audio adjudication owner",
+          "evidence": "Silence's audio boundary, entirely-inside area membership, Thunder-immunity projection, Deafened projection, and Verbal-component casting block require table-supplied area/membership facts; promoted battle runtime must not infer audio geometry automatically.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Silence's audio boundary, entirely-inside area membership, Thunder-immunity projection, Deafened projection, and Verbal-component casting block require table-supplied area/membership facts; promoted battle runtime must not infer audio geometry automatically.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_suggestion",
@@ -7022,19 +7040,39 @@
       "detail": "Suggestion (Enchantment; C)",
       "candidateUnitId": "suggestion",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "suggestion",
+        "sourceRecordPath": "packages/surface/content/suggestion.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "suggestion"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "social-knowledge-effect",
+        "owner": "runtime-detached table/social suggestion adjudication owner",
+        "reason": "Suggestion's hearing/understanding gate, suggested course of activity, achievable and obvious-damage judgment, Charmed target pursuit, and activity-completion ending require table/player choice and social adjudication facts; promoted battle runtime must not infer or enforce commanded behavior from authored spell identity."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit suggestion is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached table/social suggestion adjudication owner",
+          "evidence": "Suggestion's hearing/understanding gate, suggested course of activity, achievable and obvious-damage judgment, Charmed target pursuit, and activity-completion ending require table/player choice and social adjudication facts; promoted battle runtime must not infer or enforce commanded behavior from authored spell identity.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Suggestion's hearing/understanding gate, suggested course of activity, achievable and obvious-damage judgment, Charmed target pursuit, and activity-completion ending require table/player choice and social adjudication facts; promoted battle runtime must not infer or enforce commanded behavior from authored spell identity.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_zone_of_truth",
@@ -7051,19 +7089,39 @@
       "detail": "Zone of Truth (Enchantment; —)",
       "candidateUnitId": "zone_of_truth",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "zone_of_truth",
+        "sourceRecordPath": "packages/surface/content/zone_of_truth.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "zone_of_truth"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "social-knowledge-effect",
+        "owner": "runtime-detached table/social truth adjudication owner",
+        "reason": "Zone of Truth's truthfulness constraint, conversation answers, deliberate-lie judgment, evasive response handling, and caster save-outcome knowledge require table/social adjudication facts; promoted battle runtime must not add conversation-state or lie-detection state without a clear executable battle owner."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit zone_of_truth is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached table/social truth adjudication owner",
+          "evidence": "Zone of Truth's truthfulness constraint, conversation answers, deliberate-lie judgment, evasive response handling, and caster save-outcome knowledge require table/social adjudication facts; promoted battle runtime must not add conversation-state or lie-detection state without a clear executable battle owner.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Zone of Truth's truthfulness constraint, conversation answers, deliberate-lie judgment, evasive response handling, and caster save-outcome knowledge require table/social adjudication facts; promoted battle runtime must not add conversation-state or lie-detection state without a clear executable battle owner.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/cleric:level-1:class-container:cleric_class_container",
@@ -9230,19 +9288,39 @@
       "detail": "Silence (Illusion; C, R)",
       "candidateUnitId": "silence",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "silence",
+        "sourceRecordPath": "packages/surface/content/silence.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "silence"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached table/spatial and audio adjudication owner",
+        "reason": "Silence's audio boundary, entirely-inside area membership, Thunder-immunity projection, Deafened projection, and Verbal-component casting block require table-supplied area/membership facts; promoted battle runtime must not infer audio geometry automatically."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit silence is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached table/spatial and audio adjudication owner",
+          "evidence": "Silence's audio boundary, entirely-inside area membership, Thunder-immunity projection, Deafened projection, and Verbal-component casting block require table-supplied area/membership facts; promoted battle runtime must not infer audio geometry automatically.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Silence's audio boundary, entirely-inside area membership, Thunder-immunity projection, Deafened projection, and Verbal-component casting block require table-supplied area/membership facts; promoted battle runtime must not infer audio geometry automatically.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_spiritual_weapon",
@@ -9340,19 +9418,39 @@
       "detail": "Zone of Truth (Enchantment; —)",
       "candidateUnitId": "zone_of_truth",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "zone_of_truth",
+        "sourceRecordPath": "packages/surface/content/zone_of_truth.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "zone_of_truth"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "social-knowledge-effect",
+        "owner": "runtime-detached table/social truth adjudication owner",
+        "reason": "Zone of Truth's truthfulness constraint, conversation answers, deliberate-lie judgment, evasive response handling, and caster save-outcome knowledge require table/social adjudication facts; promoted battle runtime must not add conversation-state or lie-detection state without a clear executable battle owner."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit zone_of_truth is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached table/social truth adjudication owner",
+          "evidence": "Zone of Truth's truthfulness constraint, conversation answers, deliberate-lie judgment, evasive response handling, and caster save-outcome knowledge require table/social adjudication facts; promoted battle runtime must not add conversation-state or lie-detection state without a clear executable battle owner.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Zone of Truth's truthfulness constraint, conversation answers, deliberate-lie judgment, evasive response handling, and caster save-outcome knowledge require table/social adjudication facts; promoted battle runtime must not add conversation-state or lie-detection state without a clear executable battle owner.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/druid:level-1:class-container:druid_class_container",
@@ -12271,6 +12369,12 @@
       },
       "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "runtime-detached table Search/perception witness owner",
+        "reason": "The SRD recognition clause depends on table-owned visibility at cast time, the creature's declared Search Action before entering, skill applicability, and the resulting terrain-recognition witness. Promoted battle runtime already consumes movement-area facts for Spike Growth and does not store parallel per-observer terrain knowledge or perception state."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -12284,7 +12388,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/fighter:level-1:class-container:fighter_class_container",
@@ -15567,19 +15671,39 @@
       "detail": "Zone of Truth (Enchantment; —)",
       "candidateUnitId": "zone_of_truth",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "zone_of_truth",
+        "sourceRecordPath": "packages/surface/content/zone_of_truth.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "zone_of_truth"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "social-knowledge-effect",
+        "owner": "runtime-detached table/social truth adjudication owner",
+        "reason": "Zone of Truth's truthfulness constraint, conversation answers, deliberate-lie judgment, evasive response handling, and caster save-outcome knowledge require table/social adjudication facts; promoted battle runtime must not add conversation-state or lie-detection state without a clear executable battle owner."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit zone_of_truth is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached table/social truth adjudication owner",
+          "evidence": "Zone of Truth's truthfulness constraint, conversation answers, deliberate-lie judgment, evasive response handling, and caster save-outcome knowledge require table/social adjudication facts; promoted battle runtime must not add conversation-state or lie-detection state without a clear executable battle owner.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Zone of Truth's truthfulness constraint, conversation answers, deliberate-lie judgment, evasive response handling, and caster save-outcome knowledge require table/social adjudication facts; promoted battle runtime must not add conversation-state or lie-detection state without a clear executable battle owner.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/ranger:level-1:class-container:ranger_class_container",
@@ -17492,19 +17616,39 @@
       "detail": "Silence (Illusion; C, R)",
       "candidateUnitId": "silence",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "silence",
+        "sourceRecordPath": "packages/surface/content/silence.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "silence"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached table/spatial and audio adjudication owner",
+        "reason": "Silence's audio boundary, entirely-inside area membership, Thunder-immunity projection, Deafened projection, and Verbal-component casting block require table-supplied area/membership facts; promoted battle runtime must not infer audio geometry automatically."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit silence is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached table/spatial and audio adjudication owner",
+          "evidence": "Silence's audio boundary, entirely-inside area membership, Thunder-immunity projection, Deafened projection, and Verbal-component casting block require table-supplied area/membership facts; promoted battle runtime must not infer audio geometry automatically.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Silence's audio boundary, entirely-inside area membership, Thunder-immunity projection, Deafened projection, and Verbal-component casting block require table-supplied area/membership facts; promoted battle runtime must not infer audio geometry automatically.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_spike_growth",
@@ -17534,6 +17678,12 @@
       },
       "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "runtime-detached table Search/perception witness owner",
+        "reason": "The SRD recognition clause depends on table-owned visibility at cast time, the creature's declared Search Action before entering, skill applicability, and the resulting terrain-recognition witness. Promoted battle runtime already consumes movement-area facts for Spike Growth and does not store parallel per-observer terrain knowledge or perception state."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -17547,7 +17697,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/rogue:level-1:class-container:rogue_class_container",
@@ -21613,19 +21763,39 @@
       "detail": "Suggestion (Enchantment; C)",
       "candidateUnitId": "suggestion",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "suggestion",
+        "sourceRecordPath": "packages/surface/content/suggestion.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "suggestion"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "social-knowledge-effect",
+        "owner": "runtime-detached table/social suggestion adjudication owner",
+        "reason": "Suggestion's hearing/understanding gate, suggested course of activity, achievable and obvious-damage judgment, Charmed target pursuit, and activity-completion ending require table/player choice and social adjudication facts; promoted battle runtime must not infer or enforce commanded behavior from authored spell identity."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit suggestion is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached table/social suggestion adjudication owner",
+          "evidence": "Suggestion's hearing/understanding gate, suggested course of activity, achievable and obvious-damage judgment, Charmed target pursuit, and activity-completion ending require table/player choice and social adjudication facts; promoted battle runtime must not infer or enforce commanded behavior from authored spell identity.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Suggestion's hearing/understanding gate, suggested course of activity, achievable and obvious-damage judgment, Charmed target pursuit, and activity-completion ending require table/player choice and social adjudication facts; promoted battle runtime must not infer or enforce commanded behavior from authored spell identity.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_web",
@@ -23504,19 +23674,39 @@
       "detail": "Suggestion (Enchantment; C)",
       "candidateUnitId": "suggestion",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "suggestion",
+        "sourceRecordPath": "packages/surface/content/suggestion.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "suggestion"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "social-knowledge-effect",
+        "owner": "runtime-detached table/social suggestion adjudication owner",
+        "reason": "Suggestion's hearing/understanding gate, suggested course of activity, achievable and obvious-damage judgment, Charmed target pursuit, and activity-completion ending require table/player choice and social adjudication facts; promoted battle runtime must not infer or enforce commanded behavior from authored spell identity."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit suggestion is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached table/social suggestion adjudication owner",
+          "evidence": "Suggestion's hearing/understanding gate, suggested course of activity, achievable and obvious-damage judgment, Charmed target pursuit, and activity-completion ending require table/player choice and social adjudication facts; promoted battle runtime must not infer or enforce commanded behavior from authored spell identity.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Suggestion's hearing/understanding gate, suggested course of activity, achievable and obvious-damage judgment, Charmed target pursuit, and activity-completion ending require table/player choice and social adjudication facts; promoted battle runtime must not infer or enforce commanded behavior from authored spell identity.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/wizard:level-1:class-container:wizard_class_container",
@@ -27517,19 +27707,39 @@
       "detail": "Suggestion (Enchantment; C)",
       "candidateUnitId": "suggestion",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "suggestion",
+        "sourceRecordPath": "packages/surface/content/suggestion.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "suggestion"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "social-knowledge-effect",
+        "owner": "runtime-detached table/social suggestion adjudication owner",
+        "reason": "Suggestion's hearing/understanding gate, suggested course of activity, achievable and obvious-damage judgment, Charmed target pursuit, and activity-completion ending require table/player choice and social adjudication facts; promoted battle runtime must not infer or enforce commanded behavior from authored spell identity."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit suggestion is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached table/social suggestion adjudication owner",
+          "evidence": "Suggestion's hearing/understanding gate, suggested course of activity, achievable and obvious-damage judgment, Charmed target pursuit, and activity-completion ending require table/player choice and social adjudication facts; promoted battle runtime must not infer or enforce commanded behavior from authored spell identity.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Suggestion's hearing/understanding gate, suggested course of activity, achievable and obvious-damage judgment, Charmed target pursuit, and activity-completion ending require table/player choice and social adjudication facts; promoted battle runtime must not infer or enforce commanded behavior from authored spell identity.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_web",
