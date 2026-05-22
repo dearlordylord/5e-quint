@@ -4,6 +4,7 @@ import { Either, Option, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import findFamiliarInput from "../../content/find_familiar.json";
+import flyInput from "../../content/fly.json";
 import magicWeaponInput from "../../content/magic_weapon.json";
 import moonbeamInput from "../../content/moonbeam.json";
 import sorcererFontOfMagicInput from "../../content/sorcerer_font_of_magic.json";
@@ -22,6 +23,7 @@ import {
   TargetSelectionSchema,
 } from "./schema.ts";
 import {
+  assertSrd521Unit,
   buildUnitCatalog,
   defineSrdUnitCollection,
   srdUnitCollection,
@@ -3974,6 +3976,72 @@ describe("SRD Unit catalog boundary", () => {
           frequency: "once_on_each_target_turn",
           maxJumpDistanceFeet: 30,
           movementCostFeet: 10,
+        },
+      ]);
+    }
+  });
+
+  test("round-trips Fly as a touched willing creature target before runtime admission", () => {
+    const flyCollection = defineSrdUnitCollection({
+      units: [assertSrd521Unit(decodeUnitRecordSync(flyInput))],
+    });
+    const result = buildUnitCatalog({ collections: [flyCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const fly = result.catalog.requireUnit("fly");
+      expect(fly.kind).toBe("spell");
+      if (fly.kind !== "spell") return;
+      expect(fly.mechanics.family).toBe("activation");
+      if (fly.mechanics.family !== "activation") return;
+
+      expect(fly.mechanics.castingTime).toEqual({ kind: "action" });
+      expect(fly.mechanics.range).toEqual({ kind: "touch" });
+      expect(fly.mechanics.duration).toEqual({
+        kind: "concentration",
+        upTo: { unit: "minute", amount: 10 },
+      });
+
+      const phase = fly.mechanics.phases[0];
+      expect(phase?.kind).toBe("direct");
+      if (phase?.kind !== "direct") return;
+
+      expect(phase.attachment.kind).toBe("hole");
+      if (phase.attachment.kind !== "hole") return;
+      expect(phase.attachment.value.kind).toBe("target");
+      if (phase.attachment.value.kind !== "target") return;
+      expect(
+        Either.isRight(
+          Schema.decodeUnknownEither(TargetSelectionSchema)(
+            phase.attachment.value.selection,
+          ),
+        ),
+      ).toBe(true);
+      expect(phase.attachment).toEqual({
+        kind: "hole",
+        holeId: "fly_target",
+        label: "target",
+        value: {
+          kind: "target",
+          selection: {
+            mode: "choose_up_to",
+            count: {
+              kind: "linear",
+              base: 1,
+              perSlotAboveBase: 1,
+              baseLevel: 3,
+            },
+            targetKinds: ["creature"],
+            disposition: "willing",
+          },
+        },
+      });
+      expect(phase.effects).toEqual([
+        {
+          kind: "grant_speed",
+          speedKind: "fly",
+          feet: 60,
+          hover: true,
         },
       ]);
     }
