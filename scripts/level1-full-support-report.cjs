@@ -19,6 +19,21 @@ const strictLevel12Bands = [
   "spell-level-2",
 ];
 const companionWorktreeExcludedUnitIds = ["find_familiar"];
+const srdAuthoredCharacterCreationOptionGroups = [
+  {
+    group: "backgrounds",
+    label: "SRD backgrounds",
+    unitIds: [
+      "background_acolyte",
+      "background_criminal",
+      "background_sage",
+      "background_soldier",
+    ],
+    source: ".references/srd-5.2.1/Character-Origins.md:33-63",
+    reason:
+      "SRD 5.2.1 publishes Acolyte, Criminal, Sage, and Soldier as character Background choices.",
+  },
+];
 const level1Scope = {
   title: "Level 1",
   outputTitle: "Level 1 Full Support",
@@ -173,6 +188,41 @@ function buildMatrixUnitsById(matrix) {
     groups.set(unit.unitId, current);
     return groups;
   }, new Map());
+}
+
+function buildSrdAuthoredCharacterCreationReadiness(matrixUnitsById) {
+  const groups = srdAuthoredCharacterCreationOptionGroups.map((group) => {
+    const variants = group.unitIds.map((unitId) => {
+      const matrixUnit = matrixUnitsById.get(unitId)?.[0];
+      const supported = matrixUnit?.catalogAdmission?.status === "installed";
+      return stable({
+        unitId,
+        supported,
+        catalogStatus: matrixUnit?.catalogAdmission?.status ?? "missing",
+        sourceRecordPath: matrixUnit?.sourceRecordPath,
+      });
+    });
+    const installedVariantIds = variants
+      .filter((variant) => variant.supported)
+      .map((variant) => variant.unitId);
+    const missingVariantIds = variants
+      .filter((variant) => !variant.supported)
+      .map((variant) => variant.unitId);
+    const complete = missingVariantIds.length === 0;
+    return stable({
+      ...group,
+      complete,
+      installedVariantIds,
+      missingVariantIds,
+      variants,
+    });
+  });
+  const openGroups = groups.filter((group) => !group.complete);
+  return stable({
+    openBlockerCount: openGroups.length,
+    totalGroupCount: groups.length,
+    groups,
+  });
 }
 
 function strictCandidateMatrixUnit(unitId, matrixUnitsById) {
@@ -496,9 +546,7 @@ function groupRowsByStatus(rows, scope) {
       count: group.unitIds.length,
       unitIds: group.unitIds.sort(),
     }))
-    .sort(
-      (a, b) => b.count - a.count || a.status.localeCompare(b.status),
-    );
+    .sort((a, b) => b.count - a.count || a.status.localeCompare(b.status));
 }
 
 function groupRowsByClaimTag(rows) {
@@ -565,12 +613,7 @@ function validateAdoptedNoMatrixSrdPressureDecisions(
   }
 }
 
-function buildStrictFullSupport(
-  matrix,
-  srdUnitInventory,
-  scope,
-  options = {},
-) {
+function buildStrictFullSupport(matrix, srdUnitInventory, scope, options = {}) {
   const candidateRowsByUnitId = buildStrictCandidateGroups(
     srdUnitInventory,
     scope.levelBands,
@@ -667,7 +710,8 @@ function buildStrictFullSupport(
     (group) => !strictTargetClosureStatuses.has(group.status),
   );
 
-  const productReadiness = srdUnitInventory.metrics[scope.productReadinessMetric];
+  const productReadiness =
+    srdUnitInventory.metrics[scope.productReadinessMetric];
   if (productReadiness === undefined) {
     fail(`SRD Unit inventory lacks ${scope.productReadinessMetric}.`);
   }
@@ -676,8 +720,7 @@ function buildStrictFullSupport(
     generatedBy: "scripts/unit-profile-coverage-check.cjs",
     sourceArtifacts: {
       unitMatrix: "plans/unit-profile-coverage/unit-matrix.json",
-      srdUnitInventory:
-        "plans/unit-profile-coverage/srd-unit-inventory.json",
+      srdUnitInventory: "plans/unit-profile-coverage/srd-unit-inventory.json",
     },
     scope: {
       title: scope.title,
@@ -707,6 +750,8 @@ function buildStrictFullSupport(
       rulesKernelSupportedUnitCoverage:
         rulesKernelSupportedUnitJoin.metrics.rulesKernelSupportedUnitCoverage,
     },
+    srdAuthoredCharacterCreationReadiness:
+      buildSrdAuthoredCharacterCreationReadiness(matrixUnitsById),
     summary: {
       candidateUnitIdsBeforeExclusions: candidateUnitIds.length,
       strictDenominator: strictRows.length,
@@ -719,21 +764,14 @@ function buildStrictFullSupport(
     },
     groups,
     rulesKernelSupportedUnitJoin,
-    frontierRows: frontierRows.sort((a, b) =>
-      a.unitId.localeCompare(b.unitId),
-    ),
+    frontierRows: frontierRows.sort((a, b) => a.unitId.localeCompare(b.unitId)),
     openFrontier,
     outsideDenominator,
   });
 }
 
 function buildLevel1FullSupport(matrix, srdUnitInventory, options = {}) {
-  return buildStrictFullSupport(
-    matrix,
-    srdUnitInventory,
-    level1Scope,
-    options,
-  );
+  return buildStrictFullSupport(matrix, srdUnitInventory, level1Scope, options);
 }
 
 function buildLevel12FullSupport(matrix, srdUnitInventory, options = {}) {
@@ -798,7 +836,7 @@ function renderStrictFullSupport(report, scope) {
     "",
     "## Metrics",
     "",
-    "| Metric | Covered |",
+    "| Metric | Result |",
     "| --- | ---: |",
     `| Strict runtime/profile support | ${renderMetric(report.metrics.strictRuntimeProfileSupport)} |`,
     `| Strict target closure | ${renderMetric(report.metrics.strictTargetClosure)} |`,
@@ -806,6 +844,31 @@ function renderStrictFullSupport(report, scope) {
     `| Rules-kernel profile join | ${renderMetric(report.metrics.rulesKernelProfileJoin)} |`,
     `| Rules-kernel covered profile join | ${renderMetric(report.metrics.rulesKernelCoveredProfileJoin)} |`,
     `| Supported Unit rules-kernel chain | ${renderMetric(report.metrics.rulesKernelSupportedUnitCoverage)} |`,
+    "",
+    "These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.",
+    "",
+    "## Full-Support Claim Gate",
+    "",
+    "| Gate | Status | Blocking issue |",
+    "| --- | --- | --- |",
+    `| SRD-authored character-creation catalog | ${report.srdAuthoredCharacterCreationReadiness.openBlockerCount === 0 ? "pass" : "blocked"} | ${report.srdAuthoredCharacterCreationReadiness.openBlockerCount === 0 ? "_none_" : "SRD Background family is incomplete"} |`,
+    "",
+    "A failed gate invalidates a full level-support claim without pretending to be a weighted completion percentage.",
+    "",
+    "## SRD-Authored Character Creation Catalog",
+    "",
+    "| Group | Status | Installed records | Missing SRD records | Source |",
+    "| --- | --- | --- | --- | --- |",
+    ...report.srdAuthoredCharacterCreationReadiness.groups.map((group) => {
+      const installed =
+        group.installedVariantIds.map((unitId) => `\`${unitId}\``).join(", ") ||
+        "_none_";
+      const missing =
+        group.missingVariantIds.map((unitId) => `\`${unitId}\``).join(", ") ||
+        "_none_";
+      const status = group.complete ? "complete" : "incomplete";
+      return `| ${group.label} | ${status} | ${installed} | ${missing} | \`${group.source}\` |`;
+    }),
     "",
     "## Scope",
     "",

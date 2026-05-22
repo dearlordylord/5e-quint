@@ -6,7 +6,7 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 
 ## Metrics
 
-| Metric | Covered |
+| Metric | Result |
 | --- | ---: |
 | Strict runtime/profile support | 116/171 (67.8%) |
 | Strict target closure | 171/171 (100%) |
@@ -14,6 +14,22 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | Rules-kernel profile join | 90/90 (100%) |
 | Rules-kernel covered profile join | 90/90 (100%) |
 | Supported Unit rules-kernel chain | 116/116 (100%) |
+
+These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
+
+## Full-Support Claim Gate
+
+| Gate | Status | Blocking issue |
+| --- | --- | --- |
+| SRD-authored character-creation catalog | pass | _none_ |
+
+A failed gate invalidates a full level-support claim without pretending to be a weighted completion percentage.
+
+## SRD-Authored Character Creation Catalog
+
+| Group | Status | Installed records | Missing SRD records | Source |
+| --- | --- | --- | --- | --- |
+| SRD backgrounds | complete | `background_acolyte`, `background_criminal`, `background_sage`, `background_soldier` | _none_ | `.references/srd-5.2.1/Character-Origins.md:33-63` |
 
 ## Scope
 

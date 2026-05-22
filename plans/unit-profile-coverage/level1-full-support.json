@@ -5360,6 +5360,58 @@
     "srdUnitInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
     "unitMatrix": "plans/unit-profile-coverage/unit-matrix.json"
   },
+  "srdAuthoredCharacterCreationReadiness": {
+    "groups": [
+      {
+        "complete": true,
+        "group": "backgrounds",
+        "installedVariantIds": [
+          "background_acolyte",
+          "background_criminal",
+          "background_sage",
+          "background_soldier"
+        ],
+        "label": "SRD backgrounds",
+        "missingVariantIds": [],
+        "reason": "SRD 5.2.1 publishes Acolyte, Criminal, Sage, and Soldier as character Background choices.",
+        "source": ".references/srd-5.2.1/Character-Origins.md:33-63",
+        "unitIds": [
+          "background_acolyte",
+          "background_criminal",
+          "background_sage",
+          "background_soldier"
+        ],
+        "variants": [
+          {
+            "catalogStatus": "installed",
+            "sourceRecordPath": "packages/surface/content/background_acolyte.json",
+            "supported": true,
+            "unitId": "background_acolyte"
+          },
+          {
+            "catalogStatus": "installed",
+            "sourceRecordPath": "packages/surface/content/background_criminal.json",
+            "supported": true,
+            "unitId": "background_criminal"
+          },
+          {
+            "catalogStatus": "installed",
+            "sourceRecordPath": "packages/surface/content/background_sage.json",
+            "supported": true,
+            "unitId": "background_sage"
+          },
+          {
+            "catalogStatus": "installed",
+            "sourceRecordPath": "packages/surface/content/background_soldier.json",
+            "supported": true,
+            "unitId": "background_soldier"
+          }
+        ]
+      }
+    ],
+    "openBlockerCount": 0,
+    "totalGroupCount": 1
+  },
   "summary": {
     "candidateUnitIdsBeforeExclusions": 120,
     "groupsByClaimTag": {
