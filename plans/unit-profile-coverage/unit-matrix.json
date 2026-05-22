@@ -3146,9 +3146,10 @@
         "packages/battle-runtime/src/battle-reducer/spells-invocation-guards.ts",
         "packages/battle-runtime/src/battle-subjects.ts"
       ],
-      "sourceBoundary": "The runtime consumes caller-supplied known Beast Stat Block identities from the Character Sheet and a shape-admitted Druid Wild Shape Unit support profile. This promoted slice supports the RAW merged-equipment choice only; fallen equipment, worn-equipment practicality, Beast Spells, Beast-form Grapple/free-hand anatomy, unsupported stat-block action sections, attack prose riders, multi-component damage, and stat-block non-Attack actions remain outside this profile. It owns Bonus Action and Wild Shape use spending, Druid-level Temporary Hit Points, active form Stat Block projection of Armor Class, Size, Speed, Beast Dexterity for Mage Armor AC while shaped, supported form attacks with executable attack-roll damage only, and Beast Strength Shove save DC, no-spellcasting projection for levels before Beast Spells, half-Druid-level duration in hours, active-form Character Sheet handoff blocking, and reversion on dismiss, reuse, Incapacitated, Unconscious, terminal zero Hit Points, or duration expiry.",
+      "sourceBoundary": "The runtime consumes caller-supplied known Beast Stat Block identities from the Character Sheet and a shape-admitted Druid Wild Shape Unit support profile. This promoted slice supports the RAW merged-equipment choice only; fallen equipment, worn-equipment practicality, Beast Spells, Beast-form Grapple/free-hand anatomy, unsupported stat-block action sections, attack prose riders, multi-component damage, and stat-block non-Attack actions remain outside this profile. It owns Bonus Action and Wild Shape use spending, Druid-level Temporary Hit Points, active form Stat Block projection of Armor Class, Size, Speed, Beast Dexterity for Mage Armor AC while shaped, supported form attacks with executable attack-roll damage only, Wild Shape D20 statistic projection for Beast Strength, Dexterity, and Constitution plus retained character Intelligence, Wisdom, and Charisma, retained Skill and Saving Throw proficiencies using the character Proficiency Bonus, gained Beast proficiencies and higher Beast stat-block modifiers where present, Beast Strength Shove save DC while shaped, true-form Unarmed Strike ability modifier preservation, no-spellcasting projection for levels before Beast Spells, half-Druid-level duration in hours, active-form Character Sheet handoff blocking, and reversion on dismiss, reuse, Incapacitated, Unconscious, terminal zero Hit Points, or duration expiry.",
       "taskRefs": [
-        "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME"
+        "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME",
+        "L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION"
       ],
       "title": "Unit feature spends a Bonus Action and Wild Shape use to assume a known Beast Stat Block form",
       "verificationOwners": [
@@ -10889,6 +10890,22 @@
     },
     {
       "claimKind": "qnt-proof",
+      "note": "Package-local promoted Quint module battleRuntimeDruidWildShape proves the active Wild Shape D20 statistic projection: Beast Strength, Dexterity, and Constitution; retained character Intelligence, Wisdom, and Charisma; retained character Skill and Saving Throw proficiency bonuses; and higher Beast stat-block Skill and Saving Throw modifiers where present.",
+      "profileIds": [
+        "unit-feature.druid-wild-shape-known-form"
+      ],
+      "taskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Wild Shape battle-runtime tests cover Character Sheet D20 source facts threaded into battle initialization, active-form ability-score projection from Beast physical scores plus retained character mental scores, retained and Beast Skill modifier reconciliation, retained and higher Beast Saving Throw modifier reconciliation, Wild Shape Beast Strength Shove DC, and preservation of true-form Unarmed Strike ability modifiers such as Monk Dexterous Attacks.",
+      "profileIds": [
+        "unit-feature.druid-wild-shape-known-form"
+      ],
+      "taskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION"
+    },
+    {
+      "claimKind": "qnt-proof",
       "note": "Promoted battle-runtime Quint facts cover Lesser Restoration's Bonus Action and level-2-or-higher Spell Slot spend, one touched target, and exact SRD choice removal for Blinded, Deafened, Paralyzed, or Poisoned while preserving unchosen condition effects.",
       "profileIds": [
         "spell.invocation-direct-condition-removal"
@@ -11364,7 +11381,7 @@
     },
     {
       "claimKind": "accepted-follow-up-split",
-      "note": "Task 13 rechecked SRD Wild Shape retained statistics and merged runtime support. The merged subset already covers resource spend, known-form admission, Druid-level Temporary Hit Points, form Armor Class/Size/Speed, Beast Dexterity for Mage Armor, Beast Strength Shove DC, no-spellcasting before Beast Spells, and active-form handoff blocking. Active-form persistence across Character Sheet handoff is accepted-runtime-detached by ASSUMPTIONS.md A27. Remaining battle-owned retained-statistic work is narrowed to L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION for effective ability-score and proficiency reconciliation; equipment/anatomy/sense/communication and broader Stat Block action gaps remain under the shape-shifting runtime split.",
+      "note": "Task 13 rechecked SRD Wild Shape retained statistics and merged runtime support. Task 22 now closes the battle-owned D20 statistic projection for effective ability scores plus Skill and Saving Throw proficiency reconciliation. Active-form persistence across Character Sheet handoff remains accepted-runtime-detached by ASSUMPTIONS.md A27. Remaining retained-statistic work is non-D20: senses, language, speech, anatomy, active-form duration across non-battle time, and other non-D20 Stat Block-vs-Character Sheet projections under the shared transformation owner.",
       "profileIds": [],
       "taskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-RETAINED-STATISTICS"
     },
@@ -13445,20 +13462,20 @@
           },
           {
             "followUpTaskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-RETAINED-STATISTICS",
-            "mechanic": "Full SRD game-statistic replacement beyond the Character Sheet facts remains split: generic ability-score uses beyond supported Shove DC, Dexterity, Constitution, Skill, Saving Throw, sense, language, speech, anatomy, active-form duration across non-battle time, and other Stat Block-vs-Character Sheet projections need a shared transformation owner before they are claimed."
+            "mechanic": "Remaining non-D20 Wild Shape retained-statistic work beyond the Character Sheet facts and promoted battle D20 projection: sense, language, speech, anatomy, active-form duration across non-battle time, and other non-D20 Stat Block-vs-Character Sheet projections need a shared transformation owner before they are claimed."
           }
         ],
         "followUpTasks": [
           {
             "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME",
-            "mechanic": "Promote the remaining Wild Shape battle execution beyond the merged-equipment subset: equipment disposition choices for falling or worn equipment, Beast Spells casting exceptions, Beast-form Grapple/free-hand anatomy, full retained-statistic projection, and active-form handoff persistence or a typed cross-session boundary.",
+            "mechanic": "Promote the remaining Wild Shape battle execution beyond the merged-equipment subset: equipment disposition choices for falling or worn equipment, Beast Spells casting exceptions, Beast-form Grapple/free-hand anatomy, unsupported Stat Block action sections, attack prose riders, multi-component damage, Stat Block non-Attack actions, and active-form handoff persistence or a typed cross-session boundary.",
             "owner": "battle-runtime, character-battle-runtime, and package-local battle-runtime.qnt parity",
             "requiredOutput": "Supported Unit profile with focused runtime tests, generated owner evidence, and package-local promoted Quint/MBT parity; otherwise leave the runtime path unpromoted with a precise blocked disposition.",
             "title": "Druid Wild Shape Shape-Shifting Runtime And Promoted Parity"
           },
           {
             "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-RETAINED-STATISTICS",
-            "mechanic": "Project the full SRD replacement and retention matrix for Wild Shape beyond Character Sheet resource and known-form facts, including generic ability-score use, Skill and Saving Throw proficiency reconciliation, senses, communication/anatomy restrictions, active-form duration across non-battle time, and other rules that depend on the Beast Stat Block versus retained Character Sheet facts.",
+            "mechanic": "Project the remaining non-D20 SRD replacement and retention matrix for Wild Shape beyond Character Sheet resource/known-form facts and promoted battle D20 facts, including senses, communication/anatomy restrictions, active-form duration across non-battle time, and other non-D20 rules that depend on the Beast Stat Block versus retained Character Sheet facts.",
             "owner": "shared shape-shifting statistics projection and session persistence",
             "requiredOutput": "Supported runtime profile and focused tests for shared shape-shifted statistics and active-form persistence without duplicating true-form or Stat Block facts.",
             "title": "Druid Wild Shape Retained Statistics And Active Form Persistence"
@@ -13474,7 +13491,7 @@
           "Character Creation projects Wild Shape character facts from the retained Surface feature, Druid class level, and SRD Stat Block catalog: use-count thresholds, one use regained on Short Rest, all uses regained on Long Rest, rounded-down hour duration, known-form count thresholds, Beast-form eligibility, maximum Challenge Rating thresholds, Fly Speed eligibility, and one eligible known-form replacement on Long Rest; the RAW recommended Stat Blocks remain Surface recommendations rather than default known-form state",
           "Character Sheet requires explicit selected known Beast form Stat Block identities for Wild Shape builds, validates and stores them as current known-form state, tracks expended Wild Shape uses, derives capacity and reset cadence from CharacterBuild resources and Surface feature facts, regains one expended use on Short Rest, clears expended uses on Long Rest, and applies one eligible known-form replacement on Long Rest",
           "App and MCP sheet-creation boundaries accept explicit Wild Shape known-form Stat Block ids or return a typed missing-known-forms workflow issue, and Character Sheet battle handoff preserves current Wild Shape known-form identities when rebuilding a sheet from battle state",
-          "Battle runtime promotes a merged-equipment, pre-Beast-Spells Wild Shape subset: Bonus Action and Wild Shape use spending, caller-selected known Beast form, Druid-level Temporary Hit Points, form Armor Class, Size, Speed, Beast Dexterity Mage Armor AC, supported Stat Block attacks with executable attack-roll damage only, form resources, Beast Strength Shove DC, pre-Beast-Spells no-spellcasting projection, reversion on dismiss, reuse, Incapacitated, terminal zero Hit Points, or duration expiry, and active-form Character Sheet handoff block"
+          "Battle runtime promotes a merged-equipment, pre-Beast-Spells Wild Shape subset: Bonus Action and Wild Shape use spending, caller-selected known Beast form, Druid-level Temporary Hit Points, form Armor Class, Size, Speed, Beast Dexterity Mage Armor AC, supported Stat Block attacks with executable attack-roll damage only, form resources, Wild Shape D20 statistic projection for Beast Strength, Dexterity, and Constitution plus retained character Intelligence, Wisdom, and Charisma, retained Skill and Saving Throw proficiencies using the character Proficiency Bonus, gained Beast proficiencies and higher Beast stat-block modifiers where present, Beast Strength Shove DC while shaped, true-form Unarmed Strike ability modifier preservation, pre-Beast-Spells no-spellcasting projection, reversion on dismiss, reuse, Incapacitated, terminal zero Hit Points, or duration expiry, and active-form Character Sheet handoff block"
         ],
         "tag": "profile-subset-supported"
       },
@@ -13493,7 +13510,7 @@
         {
           "ownerPath": "packages/battle-runtime/src/battle-runtime-druid-wild-shape.test.ts",
           "tag": "deterministic-admission-projection",
-          "taskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME"
+          "taskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION"
         }
       ],
       "executableMechanics": true,
@@ -13576,9 +13593,10 @@
             "packages/battle-runtime/src/battle-reducer/spells-invocation-guards.ts",
             "packages/battle-runtime/src/battle-subjects.ts"
           ],
-          "sourceBoundary": "The runtime consumes caller-supplied known Beast Stat Block identities from the Character Sheet and a shape-admitted Druid Wild Shape Unit support profile. This promoted slice supports the RAW merged-equipment choice only; fallen equipment, worn-equipment practicality, Beast Spells, Beast-form Grapple/free-hand anatomy, unsupported stat-block action sections, attack prose riders, multi-component damage, and stat-block non-Attack actions remain outside this profile. It owns Bonus Action and Wild Shape use spending, Druid-level Temporary Hit Points, active form Stat Block projection of Armor Class, Size, Speed, Beast Dexterity for Mage Armor AC while shaped, supported form attacks with executable attack-roll damage only, and Beast Strength Shove save DC, no-spellcasting projection for levels before Beast Spells, half-Druid-level duration in hours, active-form Character Sheet handoff blocking, and reversion on dismiss, reuse, Incapacitated, Unconscious, terminal zero Hit Points, or duration expiry.",
+          "sourceBoundary": "The runtime consumes caller-supplied known Beast Stat Block identities from the Character Sheet and a shape-admitted Druid Wild Shape Unit support profile. This promoted slice supports the RAW merged-equipment choice only; fallen equipment, worn-equipment practicality, Beast Spells, Beast-form Grapple/free-hand anatomy, unsupported stat-block action sections, attack prose riders, multi-component damage, and stat-block non-Attack actions remain outside this profile. It owns Bonus Action and Wild Shape use spending, Druid-level Temporary Hit Points, active form Stat Block projection of Armor Class, Size, Speed, Beast Dexterity for Mage Armor AC while shaped, supported form attacks with executable attack-roll damage only, Wild Shape D20 statistic projection for Beast Strength, Dexterity, and Constitution plus retained character Intelligence, Wisdom, and Charisma, retained Skill and Saving Throw proficiencies using the character Proficiency Bonus, gained Beast proficiencies and higher Beast stat-block modifiers where present, Beast Strength Shove save DC while shaped, true-form Unarmed Strike ability modifier preservation, no-spellcasting projection for levels before Beast Spells, half-Druid-level duration in hours, active-form Character Sheet handoff blocking, and reversion on dismiss, reuse, Incapacitated, Unconscious, terminal zero Hit Points, or duration expiry.",
           "taskRefs": [
-            "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME"
+            "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME",
+            "L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION"
           ],
           "title": "Unit feature spends a Bonus Action and Wild Shape use to assume a known Beast Stat Block form",
           "verificationOwners": [

@@ -78,6 +78,7 @@ import {
   type BattleSubject,
   type CombatantId,
 } from "./index.ts";
+import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import type {
   BattleActiveEffect,
   BattleSpellTurnStartDamageRollHole,
@@ -1801,6 +1802,7 @@ function level1BuffMarkSmiteCreature(input: {
       characterId: characterId(`${input.combatantId}-character`),
       characterUnitRefs: [],
       classLevels: [{ className, level: 1 }],
+      d20Statistics: testCharacterD20Statistics(),
       ...(input.weaponProficiencies === undefined
         ? {}
         : { weaponProficiencies: input.weaponProficiencies }),

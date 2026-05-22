@@ -70,6 +70,7 @@ import {
   type BattleSubject,
   type CombatantId,
 } from "./index.ts";
+import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 
 function startBattleRight(
   input: Parameters<typeof startBattle>[0],
@@ -2396,6 +2397,7 @@ function mbtCharacterCreatureInit(input: {
       characterId: characterId(input.characterId),
       characterUnitRefs: [],
       classLevels: [{ className: "fighter", level: 1 }],
+      d20Statistics: testCharacterD20Statistics({ str: 16 }),
       armorClass: defaultArmorClassState(),
       size: "medium",
       speed: { walkFeet: movementFeet(30) },
@@ -2446,6 +2448,7 @@ function rogueCreatureInit(input: {
         },
       ],
       classLevels: [{ className: "rogue", level: 1 }],
+      d20Statistics: testCharacterD20Statistics({ str: 16 }),
       armorClass: {
         ...defaultArmorClassState(),
         rightHandUse: "mainWeapon",
@@ -2499,6 +2502,7 @@ function extraAttackCreatureInit(input: {
       characterId: characterId(`extra-attack-${unit.className}-character`),
       characterUnitRefs: [extraAttackUnitRef(unit)],
       classLevels: [{ className: unit.className, level: 5 }],
+      d20Statistics: testCharacterD20Statistics({ str: 16 }),
       armorClass: {
         ...defaultArmorClassState(),
         rightHandUse: "mainWeapon",
@@ -2536,6 +2540,7 @@ function adrenalineRushCreatureInit(input: {
       characterId: characterId("adrenaline-rush-character"),
       characterUnitRefs: [adrenalineRushUnitRef(unit)],
       classLevels: [{ className: "fighter", level: 5 }],
+      d20Statistics: testCharacterD20Statistics({ str: 16 }),
       armorClass: defaultArmorClassState(),
       size: "medium",
       speed: { walkFeet: movementFeet(30) },
@@ -2568,6 +2573,7 @@ function scalarBuffCasterCreatureInit(input: {
       characterId: characterId("scalar-buff-caster-character"),
       characterUnitRefs: [],
       classLevels: [{ className: "fighter", level: 1 }],
+      d20Statistics: testCharacterD20Statistics({ str: 16 }),
       armorClass: defaultArmorClassState(),
       size: "medium",
       speed: { walkFeet: movementFeet(30) },
@@ -2610,6 +2616,7 @@ function starryWispCasterCreatureInit(input: {
       characterId: characterId("starry-wisp-caster-character"),
       characterUnitRefs: [],
       classLevels: [{ className: "fighter", level: 5 }],
+      d20Statistics: testCharacterD20Statistics({ str: 16 }),
       armorClass: defaultArmorClassState(),
       size: "medium",
       speed: { walkFeet: movementFeet(30) },
@@ -2652,6 +2659,7 @@ function eldritchBlastCasterCreatureInit(input: {
       characterId: characterId("eldritch-blast-caster-character"),
       characterUnitRefs: [],
       classLevels: [{ className: "fighter", level: 5 }],
+      d20Statistics: testCharacterD20Statistics({ str: 16 }),
       armorClass: defaultArmorClassState(),
       size: "medium",
       speed: { walkFeet: movementFeet(30) },
@@ -2690,6 +2698,7 @@ function sleepCasterCreatureInit(input: {
       characterId: characterId("sleep-caster-character"),
       characterUnitRefs: [],
       classLevels: [{ className: "fighter", level: 1 }],
+      d20Statistics: testCharacterD20Statistics({ str: 16 }),
       armorClass: defaultArmorClassState(),
       size: "medium",
       speed: { walkFeet: movementFeet(30) },
@@ -2728,6 +2737,7 @@ function sleepTargetCreatureInit(input: {
       characterId: characterId("sleep-target-character"),
       characterUnitRefs: [],
       classLevels: [{ className: "fighter", level: 1 }],
+      d20Statistics: testCharacterD20Statistics({ str: 16 }),
       armorClass: defaultArmorClassState(),
       size: "medium",
       speed: { walkFeet: movementFeet(30) },

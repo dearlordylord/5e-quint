@@ -31,6 +31,7 @@ import {
   type BattleState,
   type CombatantId,
 } from "./index.ts";
+import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 
 const ruleCoreMovementMbtHoles = [
   "Movement",
@@ -391,6 +392,7 @@ function movementCreature(input: {
       characterId: characterId(input.characterId),
       characterUnitRefs: [],
       classLevels: [{ className: "fighter", level: 1 }],
+      d20Statistics: testCharacterD20Statistics(),
       armorClass: defaultArmorClassState(),
       size: "medium",
       speed: { walkFeet: movementFeet(movementSpeedFeet) },

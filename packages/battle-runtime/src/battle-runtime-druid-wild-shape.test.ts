@@ -1,8 +1,9 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.druid-wild-shape-known-form
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
-// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME druid_wild_shape
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION druid_wild_shape
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { ClassLevel } from "@dnd/shared/types";
+import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import * as Either from "effect/Either";
 import { expect, test } from "vitest";
 
@@ -11,14 +12,19 @@ import {
   activeDruidWildShapeEffect,
   battleDruidWildShapeKnownForms,
   battleShapeShiftedRuntimeState,
+  combatantAbilityCheckModifier,
+  combatantD20AbilityScore,
   combatantHasActiveDruidWildShape,
   combatantIsShapeShifted,
+  combatantSavingThrowModifier,
+  combatantSkillModifier,
   parseSupportedUnitFeatureProfile,
   revertShapeShiftedCombatantToTrueForm,
   startBattle,
   type BattleCreatureState,
   type BattleState,
   type BattleSubject,
+  type CharacterBattleD20Statistics,
   type CharacterBattleCreatureState,
 } from "./index.ts";
 import {
@@ -45,8 +51,8 @@ const ratId = "stat_block_rat";
 const ridingHorseId = "stat_block_riding_horse";
 const lizardId = "stat_block_lizard";
 const catId = "stat_block_cat";
-const spiderId = "stat_block_spider";
 const wolfId = "stat_block_wolf";
+const spiderId = "stat_block_spider";
 
 test("assumes, reuses, and dismisses a known Beast Wild Shape form", () => {
   const initial = druidWildShapeBattle();
@@ -167,6 +173,133 @@ test("uses Beast Strength for Shove while in Wild Shape", () => {
   }
 
   expect(outcome.dc).toBe(13);
+});
+
+test("projects Beast physical and retained character mental Ability Scores", () => {
+  const initial = druidWildShapeBattle({
+    d20Statistics: {
+      abilityScores: {
+        str: 8,
+        dex: 8,
+        con: 8,
+        int: 16,
+        wis: 14,
+        cha: 12,
+      },
+      savingThrowProficiencies: [],
+      skillProficiencies: [],
+      skillExpertise: [],
+    },
+  });
+  const assumed = requireResolved(
+    resolveDruidWildShape(
+      initial,
+      wildShapeSubject(initial, {
+        action: "assumeForm",
+        formStatBlockId: ridingHorseId,
+      }),
+    ),
+  );
+  const druid = requireCharacter(assumed.state, druidId);
+
+  expect(combatantD20AbilityScore(druid, "str")).toBe(16);
+  expect(combatantD20AbilityScore(druid, "dex")).toBe(13);
+  expect(combatantD20AbilityScore(druid, "con")).toBe(12);
+  expect(combatantD20AbilityScore(druid, "int")).toBe(16);
+  expect(combatantD20AbilityScore(druid, "wis")).toBe(14);
+  expect(combatantD20AbilityScore(druid, "cha")).toBe(12);
+});
+
+test("projects retained and Beast Skill modifiers while in Wild Shape", () => {
+  const ridingHorseWithSkills: StatBlockRecord = {
+    ...statBlockCatalog.requireStatBlock(ridingHorseId),
+    statBlock: {
+      ...statBlockCatalog.requireStatBlock(ridingHorseId).statBlock,
+      skillModifiers: [
+        { modifier: 5, skill: "perception" },
+        { modifier: 4, skill: "stealth" },
+      ],
+    },
+  };
+  const initial = druidWildShapeBattle({
+    knownForms: druidWildShapeKnownFormsReplacingRidingHorse(
+      ridingHorseWithSkills,
+    ),
+    d20Statistics: {
+      abilityScores: {
+        str: 8,
+        dex: 10,
+        con: 10,
+        int: 16,
+        wis: 14,
+        cha: 10,
+      },
+      savingThrowProficiencies: [],
+      skillProficiencies: ["nature", "stealth"],
+      skillExpertise: ["stealth"],
+    },
+  });
+  const assumed = requireResolved(
+    resolveDruidWildShape(
+      initial,
+      wildShapeSubject(initial, {
+        action: "assumeForm",
+        formStatBlockId: ridingHorseId,
+      }),
+    ),
+  );
+  const druid = requireCharacter(assumed.state, druidId);
+
+  expect(
+    combatantAbilityCheckModifier(druid, { ability: "int", skill: "nature" }),
+  ).toBe(5);
+  expect(combatantSkillModifier(druid, "stealth")).toBe(5);
+  expect(combatantSkillModifier(druid, "perception")).toBe(5);
+});
+
+test("projects retained and higher Beast Saving Throw modifiers while in Wild Shape", () => {
+  const ridingHorseWithSavingThrows: StatBlockRecord = {
+    ...statBlockCatalog.requireStatBlock(ridingHorseId),
+    statBlock: {
+      ...statBlockCatalog.requireStatBlock(ridingHorseId).statBlock,
+      savingThrowModifiers: [
+        { ability: "dex", modifier: 6 },
+        { ability: "wis", modifier: 1 },
+      ],
+    },
+  };
+  const initial = druidWildShapeBattle({
+    knownForms: druidWildShapeKnownFormsReplacingRidingHorse(
+      ridingHorseWithSavingThrows,
+    ),
+    d20Statistics: {
+      abilityScores: {
+        str: 8,
+        dex: 10,
+        con: 10,
+        int: 10,
+        wis: 14,
+        cha: 12,
+      },
+      savingThrowProficiencies: ["dex", "wis"],
+      skillProficiencies: [],
+      skillExpertise: [],
+    },
+  });
+  const assumed = requireResolved(
+    resolveDruidWildShape(
+      initial,
+      wildShapeSubject(initial, {
+        action: "assumeForm",
+        formStatBlockId: ridingHorseId,
+      }),
+    ),
+  );
+  const druid = requireCharacter(assumed.state, druidId);
+
+  expect(combatantSavingThrowModifier(druid, "dex")).toBe(6);
+  expect(combatantSavingThrowModifier(druid, "wis")).toBe(4);
+  expect(combatantSavingThrowModifier(druid, "cha")).toBe(1);
 });
 
 test("offers one assume-form act for each known Beast form", () => {
@@ -395,6 +528,8 @@ test("rounds odd-level duration down through the general division rule", () => {
 
 function druidWildShapeBattle(input?: {
   readonly druidLevel?: number;
+  readonly d20Statistics?: CharacterBattleD20Statistics;
+  readonly knownForms?: readonly StatBlockRecord[];
 }): BattleState {
   return startBattleRight({
     battleId: battleId("battle-druid-wild-shape"),
@@ -405,19 +540,22 @@ function druidWildShapeBattle(input?: {
   });
 }
 
-function druidWildShapeCreatureInit(input?: { readonly druidLevel?: number }) {
+function druidWildShapeCreatureInit(input?: {
+  readonly druidLevel?: number;
+  readonly d20Statistics?: CharacterBattleD20Statistics;
+  readonly knownForms?: readonly StatBlockRecord[];
+}) {
   return characterSeed({
     combatantId: druidId,
     displayName: "Druid",
     initiative: 20,
     classLevels: [{ className: "druid", level: input?.druidLevel ?? 2 }],
     resources: [{ unit: unitLibrary.requireUnit("druid_wild_shape") }],
-    druidWildShapeKnownForms: [
-      statBlockCatalog.requireStatBlock(ratId),
-      statBlockCatalog.requireStatBlock(ridingHorseId),
-      statBlockCatalog.requireStatBlock(lizardId),
-      statBlockCatalog.requireStatBlock(catId),
-    ],
+    ...(input?.d20Statistics === undefined
+      ? {}
+      : { d20Statistics: input.d20Statistics }),
+    druidWildShapeKnownForms:
+      input?.knownForms ?? druidWildShapeKnownFormsWith(catId),
     spellcasting: {
       ...wizardSpellcasting({
         cantrips: [spellRecord("produce_flame")],
@@ -426,6 +564,29 @@ function druidWildShapeCreatureInit(input?: { readonly druidLevel?: number }) {
       sourceClassName: "druid",
     },
   });
+}
+
+function druidWildShapeKnownFormsWith(
+  fourthFormId: string,
+  fourthForm: StatBlockRecord = statBlockCatalog.requireStatBlock(fourthFormId),
+): readonly StatBlockRecord[] {
+  return [
+    statBlockCatalog.requireStatBlock(ratId),
+    statBlockCatalog.requireStatBlock(ridingHorseId),
+    statBlockCatalog.requireStatBlock(lizardId),
+    fourthForm,
+  ];
+}
+
+function druidWildShapeKnownFormsReplacingRidingHorse(
+  ridingHorse: StatBlockRecord,
+): readonly StatBlockRecord[] {
+  return [
+    statBlockCatalog.requireStatBlock(ratId),
+    ridingHorse,
+    statBlockCatalog.requireStatBlock(lizardId),
+    statBlockCatalog.requireStatBlock(catId),
+  ];
 }
 
 function wildShapeSubject(

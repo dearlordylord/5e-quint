@@ -209,6 +209,7 @@ export function battleCreatureStateFromInit(
         characterId: creatureInit.characterId,
         characterUnitRefs: creatureInit.characterUnitRefs,
         classLevels,
+        d20Statistics: creatureInit.d20Statistics,
         ...(creatureInit.druidWildShapeKnownForms === undefined
           ? {}
           : {

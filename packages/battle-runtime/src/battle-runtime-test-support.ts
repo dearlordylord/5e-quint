@@ -88,6 +88,8 @@ import {
   type OngoingFeatureSourceKey,
   type SpellInvocationRef,
 } from "./index.ts";
+import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+export { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
   characterBattleResourceIsUseCount,
   characterBattleResourceIsUnlimited,
@@ -1975,6 +1977,10 @@ export function characterSeed(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["characterUnitRefs"];
+  readonly d20Statistics?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["d20Statistics"];
   readonly druidWildShapeKnownForms?: readonly StatBlockRecord[];
   readonly spellcasting?: Extract<
     BattleCreatureInit["creatureInit"],
@@ -2058,6 +2064,8 @@ export function characterSeed(input: {
       characterId: characterId("fighter-character"),
       characterUnitRefs: input.characterUnitRefs ?? [],
       classLevels,
+      d20Statistics:
+        input.d20Statistics ?? testCharacterD20Statistics({ str: 16 }),
       armorClass:
         input.armorClass ?? armorClassStateForLoadout(selectedLoadout),
       size: "medium",

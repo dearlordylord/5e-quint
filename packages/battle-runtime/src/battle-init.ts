@@ -6,8 +6,11 @@ import type {
   ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import type {
+  Ability,
   CreatureSpeed,
+  SixAbilityScores,
   Size,
+  Skill,
   StatBlockRecord,
   StatBlockValue,
   UnitRecord,
@@ -63,6 +66,13 @@ export type CharacterBattleLoadoutRef = {
 
 export type CharacterBattleWeaponMasterySelection = {
   readonly weaponUnitId: UnitRecord["id"];
+};
+
+export type CharacterBattleD20Statistics = {
+  readonly abilityScores: SixAbilityScores;
+  readonly savingThrowProficiencies: readonly Ability[];
+  readonly skillProficiencies: readonly Skill[];
+  readonly skillExpertise: readonly Skill[];
 };
 
 export type BattleWalkSpeed = {
@@ -281,6 +291,7 @@ export type CharacterBattleCreatureInit = {
   readonly characterId: CharacterId;
   readonly characterUnitRefs: readonly BattleUnitRef[];
   readonly classLevels: readonly CharacterBattleClassLevelInit[];
+  readonly d20Statistics: CharacterBattleD20Statistics;
   readonly druidWildShapeKnownForms?: ReadonlyNonEmptyArray<BattleDruidWildShapeKnownForm>;
   readonly weaponProficiencies?: readonly WeaponProficiency[];
   readonly armorClass: ArmorClassState;

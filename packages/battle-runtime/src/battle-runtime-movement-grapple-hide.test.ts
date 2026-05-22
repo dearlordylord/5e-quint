@@ -30,6 +30,8 @@ import {
   spellRecord,
   magicSubject,
   ROGUE_CUNNING_ACTION_SUPPORT_PROFILE,
+  testCharacterD20Statistics,
+  testUnarmedStrikeDamageAttack,
   fighterId,
   goblinId,
   skeletonId,
@@ -58,6 +60,7 @@ import type {
   BattleSubject,
 } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
+import { abilityModifier } from "@dnd/shared/types";
 
 describe("battle runtime: movement, Grapple, and Hide", () => {
   test("generic combat actions spend the Action and expose typed battle state", () => {
@@ -799,6 +802,45 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         }),
       ]),
     );
+  });
+
+  test("true-form Shove DC uses the projected Unarmed Strike ability modifier", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-dexterous-shove"),
+      combatants: [
+        characterSeed({
+          combatantId: fighterId,
+          initiative: 20,
+          d20Statistics: testCharacterD20Statistics({ str: 10, dex: 16 }),
+          unarmedStrike: {
+            ...testUnarmedStrikeDamageAttack(),
+            attackAbility: "dex",
+            attackAbilityModifier: abilityModifier(3),
+            damageAbilityModifier: abilityModifier(3),
+          },
+        }),
+        statBlockCreatureInit({ combatantId: goblinId, initiative: 10 }),
+      ],
+    });
+    const subject: BattleSubject = {
+      tag: "action",
+      actorId: fighterId,
+      action: "shove",
+    };
+    const target = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const outcome = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetFill(target, goblinId)],
+      }),
+      "shoveOutcome",
+    );
+
+    expect(outcome).toMatchObject({ dc: 13 });
   });
 
   test("release and Escape Grapple end the typed grapple link", () => {

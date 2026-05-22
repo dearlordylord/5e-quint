@@ -200,6 +200,7 @@ export type {
   BattleUnitRef,
   BattleWalkSpeed,
   CharacterBattleCreatureInit,
+  CharacterBattleD20Statistics,
   CharacterBattleInvocationFeature,
   CharacterBattleLoadoutRef,
   CharacterBattleWeaponMasterySelection,
@@ -469,9 +470,15 @@ export {
 export {
   activeDruidWildShapeEffect,
   activeDruidWildShapeForm,
+  combatantAbilityCheckModifier,
+  combatantD20AbilityModifier,
+  combatantD20AbilityScore,
+  combatantD20ProficiencyBonus,
   combatantDruidWildShapeArmorClassState,
   combatantEffectiveSize,
   combatantHasActiveDruidWildShape,
+  combatantSavingThrowModifier,
+  combatantSkillModifier,
   revertDruidWildShapeForm,
   removeEndedDruidWildShapeEffects,
 } from "./battle-reducer/druid-wild-shape.ts";

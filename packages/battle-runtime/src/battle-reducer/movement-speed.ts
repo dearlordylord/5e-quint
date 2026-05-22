@@ -11,7 +11,6 @@ import {
   difficultyClass,
   movementDeltaFeet,
   movementFeet,
-  proficiencyBonus,
   type DifficultyClass,
   type MovementDeltaFeet,
   type MovementFeet,
@@ -74,6 +73,8 @@ import {
 import { isPresentFindFamiliarCombatant } from "../find-familiar-state.ts";
 import {
   activeDruidWildShapeForm,
+  combatantD20AbilityModifier,
+  combatantD20ProficiencyBonus,
   combatantEffectiveSize,
 } from "./druid-wild-shape.ts";
 
@@ -680,21 +681,18 @@ export function unarmedStrikeSaveDc(
   return difficultyClass(
     8 +
       unarmedStrikeSaveDcAbilityModifier(combatant) +
-      combatantProficiencyBonus(combatant),
+      combatantD20ProficiencyBonus(combatant),
   );
 }
 
 export function unarmedStrikeSaveDcAbilityModifier(
   combatant: BattleCreatureState,
 ): number {
-  const wildShapeForm = activeDruidWildShapeForm(combatant);
-  if (wildShapeForm !== null) {
-    return Math.floor((wildShapeForm.statBlock.abilityScores.str - 10) / 2);
+  if (activeDruidWildShapeForm(combatant) !== null) {
+    return combatantD20AbilityModifier(combatant, "str");
   }
   if (combatant.origin.kind === "statBlock") {
-    return Math.floor(
-      (combatant.origin.statBlock.statBlock.abilityScores.str - 10) / 2,
-    );
+    return combatantD20AbilityModifier(combatant, "str");
   }
   return Number(combatant.origin.unarmedStrike.attackAbilityModifier);
 }
@@ -702,12 +700,7 @@ export function unarmedStrikeSaveDcAbilityModifier(
 export function combatantProficiencyBonus(
   combatant: BattleCreatureState,
 ): number {
-  if (combatant.origin.kind === "statBlock") return 2;
-  const level = combatant.origin.classLevels.reduce(
-    (total, classLevel) => total + Number(classLevel.level),
-    0,
-  );
-  return Number(proficiencyBonus(Math.floor((level - 1) / 4) + 2));
+  return combatantD20ProficiencyBonus(combatant);
 }
 
 const SIZE_RANKS: Readonly<Record<Size, number>> = {

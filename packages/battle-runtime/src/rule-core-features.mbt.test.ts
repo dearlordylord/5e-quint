@@ -85,6 +85,7 @@ import {
   type BattleSubject,
   type CombatantId,
 } from "./index.ts";
+import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { parseSupportedUnitFeatureProfile } from "./unit-feature-support.ts";
 import {
   mechanicsOnlyMyceliumStepUnit,
@@ -1922,6 +1923,7 @@ function featureActor(input: {
       characterId: characterId(`${input.combatantId ?? actorId}-character`),
       characterUnitRefs: input.characterUnitRefs ?? [],
       classLevels: input.classLevels ?? [{ className: "fighter", level: 1 }],
+      d20Statistics: testCharacterD20Statistics(),
       armorClass:
         attack === null
           ? defaultArmorClassState()

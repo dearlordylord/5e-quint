@@ -331,6 +331,12 @@ export function battleCreatureInitFromCharacterBuild(
       characterId: input.characterId,
       characterUnitRefs: characterUnitRefs.right,
       classLevels: classLevels.right,
+      d20Statistics: {
+        abilityScores: input.build.abilityScores,
+        savingThrowProficiencies: proficiencies.right.savingThrows,
+        skillProficiencies: proficiencies.right.skills,
+        skillExpertise: proficiencies.right.expertise,
+      },
       weaponProficiencies: [
         ...proficiencies.right.weapon.map((category) => ({
           kind: "weapon_category" as const,

@@ -18,6 +18,12 @@ module battleRuntimeShapeShifting {
     creatureSize: str,
     speedFeet: int,
     strengthModifier: int,
+    dexterityModifier: int,
+    constitutionModifier: int,
+    stealthModifier: int,
+    perceptionModifier: int,
+    dexteritySavingThrowModifier: int,
+    wisdomSavingThrowModifier: int,
   }
 
   type ShapeShiftedRuntimeState =
@@ -87,6 +93,12 @@ module battleRuntimeShapeShifting {
     creatureSize: "large",
     speedFeet: 60,
     strengthModifier: 3,
+    dexterityModifier: 1,
+    constitutionModifier: 1,
+    stealthModifier: 1,
+    perceptionModifier: 0,
+    dexteritySavingThrowModifier: 1,
+    wisdomSavingThrowModifier: 0,
   }
 
   run test_spell_shape_shift_source_reversion_is_explicit_followup = {

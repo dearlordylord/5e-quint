@@ -56,6 +56,7 @@ import {
   type CombatantId,
   type SupportedSpellInvocation,
 } from "./index.ts";
+import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
   CHROMATIC_ORB_DAMAGE_TYPES,
   CHROMATIC_ORB_LEAP_RANGE_FEET,
@@ -1197,6 +1198,7 @@ function level1DamageSpellCreature(input: {
       characterId: characterId(`${input.combatantId}-character`),
       characterUnitRefs: [],
       classLevels: [{ className: input.className, level: 1 }],
+      d20Statistics: testCharacterD20Statistics(),
       armorClass: defaultArmorClassState(),
       size: "medium",
       speed: { walkFeet: movementFeet(30) },

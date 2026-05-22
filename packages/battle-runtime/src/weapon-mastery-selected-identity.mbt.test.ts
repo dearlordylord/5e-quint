@@ -42,6 +42,7 @@ import {
   type BattleSubject,
   type CombatantId,
 } from "./index.ts";
+import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 
 const weaponMasterySelectedIdentityDriverSchema = {
   init: {},
@@ -455,6 +456,7 @@ function weaponMasteryAttackerInit(
       ],
       weaponMasteries: [{ weaponUnitId: scenario.weaponUnitId }],
       classLevels: [{ className: "fighter", level: 1 }],
+      d20Statistics: testCharacterD20Statistics({ str: 16 }),
       armorClass: {
         ...defaultArmorClassState(),
         rightHandUse: "mainWeapon",
@@ -492,6 +494,7 @@ function targetCreatureInit(
       characterId: characterId(`character:${combatantIdValue}`),
       characterUnitRefs: [],
       classLevels: [{ className: "fighter", level: 1 }],
+      d20Statistics: testCharacterD20Statistics({ str: 16 }),
       armorClass: defaultArmorClassState(),
       size: "medium",
       speed: { walkFeet: movementFeet(30) },

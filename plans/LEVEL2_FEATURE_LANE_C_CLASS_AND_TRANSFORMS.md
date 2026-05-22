@@ -133,7 +133,7 @@
     {
       "number": 22,
       "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Druid Wild Shape D20 Statistic Projection"
     },
     {
@@ -749,7 +749,7 @@ Verification notes:
 
 ### Task 22 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION - Druid Wild Shape D20 Statistic Projection
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -774,6 +774,18 @@ Acceptance:
 - The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
 - No companion AI/autonomous-control behavior is introduced.
 - No authored identity dispatch is introduced in runtime code.
+
+Result:
+
+- Implemented battle-owned Wild Shape D20 statistic projection from existing source facts: Character Sheet D20 statistics and selected Beast Stat Blocks.
+- Projected Beast Strength, Dexterity, and Constitution; retained character Intelligence, Wisdom, and Charisma; retained character Skill and Saving Throw proficiencies using character Proficiency Bonus; and higher Beast stat-block Skill/Saving Throw modifiers where present.
+- Kept non-D20 Wild Shape retained-statistic and shape-shifting work visible under Task 23 and the retained-statistics follow-up coverage notes.
+
+Verification notes:
+
+- RAW/ubiquitous-language check: SRD 5.2.1 `Classes/Druid.md#Level 2: Wild Shape` defines the Wild Shape game-statistics replacement and retained Skill/Saving Throw proficiency rules; SRD 5.2.1 `Rules-Glossary.md#Shape-Shifting` says the effect description controls replacement facts; `UBIQUITOUS_LANGUAGE.md` keeps Ability Check, Saving Throw, Skill, Proficiency Bonus, Character Sheet, and Stat Block terms distinct.
+- Focused runtime tests cover active-form Ability Score projection, Skill modifier reconciliation, Saving Throw modifier reconciliation, Wild Shape Shove DC, and true-form Unarmed Strike ability modifier preservation.
+- Package-local promoted Quint tests and generated unit-profile coverage artifacts were updated for the D20 projection slice.
 
 ### Task 23 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME - Druid Wild Shape Shape-Shifting Runtime And Promoted Parity
 
