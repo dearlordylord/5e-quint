@@ -666,11 +666,7 @@ export type BattleOngoingSpellEffectRef =
     };
 export type BattleAntimagicFieldOngoingSpellEffectRef =
   | Extract<BattleOngoingSpellEffectRef, { readonly kind: "spellLightEmitter" }>
-  | {
-      readonly kind: "spellActiveEffect";
-      readonly activeEffectKind: "spellObjectContactDamage";
-      readonly sourceEffectId: BattleSpellEffectOccurrenceId;
-    };
+  | Extract<BattleOngoingSpellEffectRef, { readonly kind: "spellActiveEffect" }>;
 export type BattleOngoingSpellTarget =
   | {
       readonly kind: "combatant";

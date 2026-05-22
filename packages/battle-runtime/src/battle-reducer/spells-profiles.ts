@@ -1698,6 +1698,11 @@ export function supportedSpiritualWeaponRepeatAttackProfile(
         effect.kind !== "spiritualWeapon" ||
         effect.sourceCombatantId !== actor.combatantId ||
         effect.sourceSpellId !== spell.id ||
+        (state !== undefined &&
+          ongoingSpellEffectSuppressedByAntimagicField(
+            state,
+            antimagicFieldOngoingSpellEffectRefForActiveEffect(effect),
+          )) ||
         !spiritualWeaponRepeatIsLaterTurn(effect, state)
       ) {
         return [];

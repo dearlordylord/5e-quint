@@ -4,6 +4,7 @@
 module battleRuntimeLight {
   import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
+  import battleRuntimeAntimagicSuppression.* from "./battle-runtime-antimagic-suppression"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
@@ -506,26 +507,6 @@ module battleRuntimeLight {
           )
       | ObjectInvisibleRevealLightEmitter(_) => true
     })
-
-  pure def activeEffectsAntimagicSuppressedOngoingSpellEffects(effects: Set[ActiveEffect]): Set[OngoingSpellEffectRef] =
-    effects
-      .map(effect => match effect {
-        | AntimagicFieldOngoingSpellSuppression(data) => data.suppressedOngoingSpellEffects
-        | _ => Set()
-      })
-      .fold(Set(), (left, right) => left.union(right))
-
-  pure def antimagicSuppressedOngoingSpellEffects(state: BattleState): Set[OngoingSpellEffectRef] =
-    activeEffectsAntimagicSuppressedOngoingSpellEffects(state.fighter.activeEffects)
-      .union(activeEffectsAntimagicSuppressedOngoingSpellEffects(state.goblin.activeEffects))
-
-  pure def antimagicSuppressesOngoingSpellActiveEffect(
-    state: BattleState,
-    activeEffectKind: OngoingSpellActiveEffectKind,
-    effectId: int,
-  ): bool =
-    antimagicSuppressedOngoingSpellEffects(state)
-      .contains(OngoingSpellActiveEffectRef({ activeEffectKind: activeEffectKind, effectId: effectId }))
 
   pure def lightEmitterSuppressedByAntimagic(
     emitter: LightEmitter,

@@ -3505,14 +3505,17 @@
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/antimagic-field-suppression.ts",
         "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
       ],
-      "sourceBoundary": "The runtime consumes the authored Antimagic Field ongoing-spell suppression shape, a self-origin 10-foot Emanation area identity, and caller-supplied affected tracked ongoing Spell Effect facts. It owns Magic Action and level-8-or-higher Spell Slot spending, caster-owned Concentration up to 1 hour, active Antimagic Field suppression state, suppression of ordinary tracked spell-created light emitters and tracked spellObjectContactDamage active-effect occurrences without deleting the ongoing spell occurrence, duration ticking while suppressed, exclusion of artifact/deity spell sources from suppression, and cleanup on Concentration or duration end. Spellcasting prevention, Magic Action prevention, magical targeting prevention, magic item suppression, magical area clipping, teleportation/planar travel blocking, portal closure, Dispel Magic immunity on the aura, and broader not-yet-tracked ongoing Spell Effect suppression remain outside this tracked-effect subset.",
+      "sourceBoundary": "The runtime consumes the authored Antimagic Field ongoing-spell suppression shape, a self-origin 10-foot Emanation area identity, and caller-supplied affected tracked ongoing Spell Effect facts. It owns Magic Action and level-8-or-higher Spell Slot spending, caster-owned Concentration up to 1 hour, active Antimagic Field suppression state, suppression of ordinary tracked spell-created light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences without deleting the ongoing spell occurrence, duration ticking while suppressed, stale-subject rejection for suppressed tracked repeat subjects, exclusion of artifact/deity spell sources from suppression, and cleanup on Concentration or duration end. Spellcasting prevention, Magic Action prevention, Emanation origin-inclusion choice, magical targeting prevention, magic item suppression, magical area clipping, teleportation/planar travel blocking, portal closure, Dispel Magic immunity on the aura, and broader not-yet-tracked ongoing Spell Effect suppression remain outside this tracked-effect subset.",
       "taskRefs": [
         "L12G-ANTIMAGIC-FIELD-TRACKED-LIGHT-SUPPRESSION",
-        "L12G-FOLLOWUP-ANTIMAGIC-FIELD-GENERIC-SUPPRESSION"
+        "L12G-FOLLOWUP-ANTIMAGIC-FIELD-GENERIC-SUPPRESSION",
+        "L12G-FOLLOWUP-ANTIMAGIC-FIELD-PREVENTION-AND-BROADER-SUPPRESSION"
       ],
       "title": "Spell invocation suppresses tracked ongoing spell effects inside Antimagic Field",
       "verificationOwners": [
@@ -11206,6 +11209,22 @@
     },
     {
       "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests extend Antimagic Field suppression to tracked Spiritual Weapon active-effect occurrences. Coverage includes stable occurrence-reference suppression, no deletion of the suppressed occurrence, duration ticking while suppressed, stale resolver rejection for previously discovered Spiritual Weapon repeat subjects, and restoration when Antimagic Field concentration ends. Spellcasting and Magic Action prevention, including the caster-origin Emanation case, remain split out because the runtime has no explicit origin-included or aura-membership fact at this boundary.",
+      "profileIds": [
+        "spell.invocation-antimagic-field-ongoing-spell-suppression"
+      ],
+      "taskId": "L12G-FOLLOWUP-ANTIMAGIC-FIELD-PREVENTION-AND-BROADER-SUPPRESSION"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Focused package-local Quint proofs extend Antimagic Field ongoing Spell Effect refs to Spiritual Weapon, covering repeat-attack suppression without deleting the tracked occurrence; the shared Antimagic suppression ref helper is model-only and does not infer Emanation origin membership.",
+      "profileIds": [
+        "spell.invocation-antimagic-field-ongoing-spell-suppression"
+      ],
+      "taskId": "L12G-FOLLOWUP-ANTIMAGIC-FIELD-PREVENTION-AND-BROADER-SUPPRESSION"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
       "note": "Focused Character Sheet runtime tests cover Prayer of Healing Surface-profile admission by shape, completed-cast recipient eligibility consumption, level-2-or-higher Spell Slot spend at completion, existing Short Rest benefit application to each recipient without duplicating the rest algorithm, slot-scaled capped healing, same-spell recipient Long Rest lockout, and Long Rest lockout clearing while range and interruption remain caller/table facts.",
       "profileIds": [
         "character-sheet.spell-rest-benefit-application"
@@ -17560,20 +17579,28 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "L12G-FOLLOWUP-ANTIMAGIC-FIELD-PREVENTION-AND-BROADER-SUPPRESSION",
-            "mechanic": "spellcasting prevention, Magic Action prevention, magical targeting prevention, magic item suppression, magical area clipping, teleportation and planar travel blocking, portal closure, Dispel Magic immunity on the aura, and broader not-yet-tracked ongoing Spell Effect suppression"
+            "battleReadinessClosure": {
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "future origin-inclusion, area-membership, magic item, portal, planar travel, and magical-target witness owners",
+              "reason": "The promoted battle runtime consumes the Antimagic Field area identity and affected tracked ongoing Spell Effect refs, but it does not store whether the creator included the Emanation origin or which combatants/items/effects are otherwise inside the aura. Spellcasting and Magic Action prevention cannot be represented without an explicit origin-included or aura-membership fact."
+            },
+            "mechanic": "spellcasting prevention, Magic Action prevention, Emanation origin-inclusion choice for the caster, other-creature aura membership, magical targeting prevention, magic item suppression, magical area clipping, teleportation and planar travel blocking, portal closure, and Dispel Magic immunity on the aura"
+          },
+          {
+            "followUpTaskId": "L12G-RECURSIVE-TAIL-LANE-B",
+            "mechanic": "remaining not-yet-tracked ongoing Spell Effect suppression beyond tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences"
           }
         ],
         "followUpTasks": [
           {
-            "id": "L12G-FOLLOWUP-ANTIMAGIC-FIELD-PREVENTION-AND-BROADER-SUPPRESSION",
-            "mechanic": "Split and promote Antimagic Field clauses whose owners are still absent: spellcasting and Magic Action prevention, magical targeting prevention, magic item suppression, magical area clipping, teleportation/planar travel blocking, portal closure, Dispel Magic immunity on the aura, and suppression of ongoing Spell Effects beyond tracked spell-light emitters and tracked spellObjectContactDamage occurrences.",
-            "owner": "battle-runtime magical prevention owners plus broader ongoing Spell Effect occurrence model",
-            "requiredOutput": "Focused owner-specific runtime profiles or accepted closures with tests and promoted Quint/runtime parity; suppressed occurrences must keep ticking and must not be deleted while suppressed.",
-            "title": "Antimagic Field Prevention And Broader Suppression Runtime"
+            "id": "L12G-RECURSIVE-TAIL-LANE-B",
+            "mechanic": "Refresh Lane B metrics and add concrete remaining Antimagic Field prevention or ongoing Spell Effect suppression tasks if real executable frontiers remain after Task 12.",
+            "owner": "Ralph planning tail",
+            "requiredOutput": "Plan update with any next Ralph-sized Antimagic Field prevention or broader ongoing Spell Effect task, including an explicit origin-inclusion or aura-membership fact if spellcasting/Magic Action prevention is promoted.",
+            "title": "Lane B Recursive Planning Tail"
           }
         ],
-        "futureProfileOwner": "Antimagic Field prevention boundaries plus broader ongoing Spell Effect occurrence model",
+        "futureProfileOwner": "Lane B recursive planning tail for remaining ongoing Spell Effect occurrence model plus future Antimagic Field prevention owners",
         "profileIds": [
           "spell.invocation-antimagic-field-ongoing-spell-suppression"
         ],
@@ -17584,10 +17611,12 @@
           "Magic Action prepared spell cast with a level-8-or-higher Spell Slot",
           "caller-supplied self-origin 10-foot Emanation area identity",
           "caster-owned Concentration up to 1 hour",
-          "caller-supplied affected tracked ongoing Spell Effect facts identify ordinary spell-created light emitters and tracked spellObjectContactDamage active-effect occurrences inside the aura",
+          "caller-supplied affected tracked ongoing Spell Effect facts identify ordinary spell-created light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences inside the aura",
           "tracked spell-created light emitters are suppressed while inside the aura without deleting their ongoing spell occurrence",
           "tracked spellObjectContactDamage active-effect occurrences are suppressed while inside the aura without deleting their ongoing spell occurrence",
-          "suppressed tracked spell-light and spellObjectContactDamage durations continue ticking while suppressed",
+          "tracked Spiritual Weapon active-effect occurrences are suppressed while inside the aura without deleting their ongoing spell occurrence",
+          "suppressed tracked spell-light, spellObjectContactDamage, and Spiritual Weapon durations continue ticking while suppressed",
+          "previously discovered tracked Spiritual Weapon repeat subjects reject as stale while their occurrence is suppressed by Antimagic Field",
           "artifact/deity spell-effect sources are excluded from suppression",
           "Concentration and duration cleanup remove the active suppression field"
         ],
@@ -17612,14 +17641,17 @@
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/antimagic-field-suppression.ts",
             "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
             "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
           ],
-          "sourceBoundary": "The runtime consumes the authored Antimagic Field ongoing-spell suppression shape, a self-origin 10-foot Emanation area identity, and caller-supplied affected tracked ongoing Spell Effect facts. It owns Magic Action and level-8-or-higher Spell Slot spending, caster-owned Concentration up to 1 hour, active Antimagic Field suppression state, suppression of ordinary tracked spell-created light emitters and tracked spellObjectContactDamage active-effect occurrences without deleting the ongoing spell occurrence, duration ticking while suppressed, exclusion of artifact/deity spell sources from suppression, and cleanup on Concentration or duration end. Spellcasting prevention, Magic Action prevention, magical targeting prevention, magic item suppression, magical area clipping, teleportation/planar travel blocking, portal closure, Dispel Magic immunity on the aura, and broader not-yet-tracked ongoing Spell Effect suppression remain outside this tracked-effect subset.",
+          "sourceBoundary": "The runtime consumes the authored Antimagic Field ongoing-spell suppression shape, a self-origin 10-foot Emanation area identity, and caller-supplied affected tracked ongoing Spell Effect facts. It owns Magic Action and level-8-or-higher Spell Slot spending, caster-owned Concentration up to 1 hour, active Antimagic Field suppression state, suppression of ordinary tracked spell-created light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences without deleting the ongoing spell occurrence, duration ticking while suppressed, stale-subject rejection for suppressed tracked repeat subjects, exclusion of artifact/deity spell sources from suppression, and cleanup on Concentration or duration end. Spellcasting prevention, Magic Action prevention, Emanation origin-inclusion choice, magical targeting prevention, magic item suppression, magical area clipping, teleportation/planar travel blocking, portal closure, Dispel Magic immunity on the aura, and broader not-yet-tracked ongoing Spell Effect suppression remain outside this tracked-effect subset.",
           "taskRefs": [
             "L12G-ANTIMAGIC-FIELD-TRACKED-LIGHT-SUPPRESSION",
-            "L12G-FOLLOWUP-ANTIMAGIC-FIELD-GENERIC-SUPPRESSION"
+            "L12G-FOLLOWUP-ANTIMAGIC-FIELD-GENERIC-SUPPRESSION",
+            "L12G-FOLLOWUP-ANTIMAGIC-FIELD-PREVENTION-AND-BROADER-SUPPRESSION"
           ],
           "title": "Spell invocation suppresses tracked ongoing spell effects inside Antimagic Field",
           "verificationOwners": [

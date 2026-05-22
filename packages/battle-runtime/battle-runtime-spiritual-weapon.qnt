@@ -9,6 +9,7 @@ module battleRuntimeSpiritualWeapon {
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeOngoingSpellDispel.* from "./battle-runtime-ongoing-spell-dispel"
+  import battleRuntimeAntimagicSuppression.* from "./battle-runtime-antimagic-suppression"
 
   // RAW trace: .references/srd-5.2.1/Spells/Descriptions-S-Z.md:512-525.
   // The promoted model covers Spiritual Weapon's Bonus Action level-2 cast,
@@ -194,6 +195,11 @@ module battleRuntimeSpiritualWeapon {
     effects.exists(effect => match effect {
       | SpiritualWeapon(data) =>
           data.source == source and
+            not(antimagicSuppressesOngoingSpellActiveEffect(
+              state,
+              OngoingSpellSpiritualWeaponEffect,
+              data.effectId,
+            )) and
             (currentActor(state) != data.source or
               state.initiative.round != data.startedRound)
       | _ => false
@@ -482,6 +488,39 @@ module battleRuntimeSpiritualWeapon {
     val fact = { target: Goblin, forcePositionId: 2, reachFeet: 5 }
     val repeated = resolveFighterSpiritualWeaponRepeatAttack(active, fill, fact, true, 4, true)
     all {
+      assert(repeated == active),
+    }
+  }
+
+  run test_antimagic_field_suppresses_spiritual_weapon_repeat_without_deleting = {
+    val weapon = spiritualWeaponEffect(Fighter, 1, 2, 3, 1)
+    val active = {
+      ...initialState,
+      initiative: { ...initialState.initiative, round: 2 },
+      fighter: {
+        ...initialState.fighter,
+        activeEffects: Set(weapon),
+        concentrating: true,
+      },
+      goblin: {
+        ...initialState.goblin,
+        activeEffects: Set(AntimagicFieldOngoingSpellSuppression({
+          areaId: 1,
+          radiusFeet: 10,
+          suppressedOngoingSpellEffects: Set(OngoingSpellActiveEffectRef({
+            activeEffectKind: OngoingSpellSpiritualWeaponEffect,
+            effectId: spiritualWeaponEffectId(Fighter),
+          })),
+          durationTicks: 10,
+        })),
+        concentrating: true,
+      },
+    }
+    val fill = SpiritualWeaponRepositionForcePosition({ positionId: 2, moveDistanceFeet: 20 })
+    val fact = { target: Goblin, forcePositionId: 2, reachFeet: 5 }
+    val repeated = resolveFighterSpiritualWeaponRepeatAttack(active, fill, fact, true, 4, true)
+    all {
+      assert(activeEffectsContainSpiritualWeaponEffectId(active.fighter.activeEffects, spiritualWeaponEffectId(Fighter))),
       assert(repeated == active),
     }
   }

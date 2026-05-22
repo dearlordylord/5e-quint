@@ -1,5 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
@@ -44,6 +45,7 @@ import {
   maybeOpenReactionWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
+  type BattleCreatureState,
   type BattleFill,
   type BattleResolutionResult,
   type BattleSpellCastingTimeResource,
@@ -142,6 +144,10 @@ import {
   spiritualWeaponForcePositionHole,
   spiritualWeaponForcePositionInvalidReason,
 } from "./spells-targeting.ts";
+import {
+  antimagicFieldOngoingSpellEffectRefForActiveEffect,
+  ongoingSpellEffectSuppressedByAntimagicField,
+} from "./antimagic-field-suppression.ts";
 
 import {
   admitSpellMetamagicApplications,
@@ -433,17 +439,24 @@ function resolveSpellActInternal(
 ): BattleResolutionResult {
   const subject = input.subject;
   const actor = input.state.combatants.get(subject.actorId);
-  const invocation =
+  let invocation =
     actor?.origin.kind === "character"
-      ? supportedSpellActs(actor, input.state).find(
-          (candidate) =>
-            supportedSpellInvocationMatchesRef(candidate, subject.invocation) &&
-            (candidate.procedure !== "spellHostedWeaponAttack" ||
-              (subject.componentWeaponItemId !== undefined &&
-                candidate.componentWeapon.itemId ===
-                  subject.componentWeaponItemId)),
-        )
+      ? supportedActionSpellInvocationForSubject(actor, input.state, subject)
       : undefined;
+  if (
+    actor?.origin.kind === "character" &&
+    invocation == null &&
+    options.allowBonusActionInvocation === true &&
+    invocationRefHasAntimagicSuppressedRepeatResolverGuard(
+      subject.invocation.procedure,
+    )
+  ) {
+    invocation = supportedActionSpellInvocationForSubject(
+      actor,
+      stateForAntimagicSuppressedRepeatLookup(input.state),
+      subject,
+    );
+  }
   if (actor?.origin.kind !== "character" || invocation == null) {
     return invalidResult(
       input.state,
@@ -510,6 +523,21 @@ function resolveSpellActInternal(
       input.state,
       "staleSubject",
       "Action-time spell act is unavailable while an active ongoing feature prevents spellcasting.",
+    );
+  }
+  if (
+    invocation.procedure === "spiritualWeaponRepeatAttack" &&
+    ongoingSpellEffectSuppressedByAntimagicField(
+      input.state,
+      antimagicFieldOngoingSpellEffectRefForActiveEffect(
+        invocation.activeEffect,
+      ),
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Spiritual Weapon repeat attack is suppressed by Antimagic Field.",
     );
   }
   if (
@@ -2158,6 +2186,20 @@ function spendSpellActResolutionResources(input: {
       );
     }
     if (
+      ongoingSpellEffectSuppressedByAntimagicField(
+        input.state,
+        antimagicFieldOngoingSpellEffectRefForActiveEffect(
+          input.invocation.activeEffect,
+        ),
+      )
+    ) {
+      return invalidResult(
+        input.errorState,
+        "staleSubject",
+        "Spiritual Weapon repeat attack is suppressed by Antimagic Field.",
+      );
+    }
+    if (
       input.spiritualWeaponForcePosition === undefined ||
       input.spiritualWeaponForcePosition.mode !== "reposition"
     ) {
@@ -2557,17 +2599,17 @@ export function resolveBonusActionSpellAct(
 ): BattleResolutionResult {
   const subject = input.subject;
   const actor = input.state.combatants.get(subject.actorId);
-  const invocation =
+  let invocation =
     actor?.origin.kind === "character"
-      ? supportedSpellActs(actor, input.state).find(
-          (candidate) =>
-            supportedSpellInvocationMatchesRef(candidate, subject.invocation) &&
-            (candidate.procedure !== "weaponAttackOverride" ||
-              (subject.componentWeaponItemId !== undefined &&
-                candidate.attachedWeapon.itemId ===
-                  subject.componentWeaponItemId)),
-        )
+      ? supportedBonusActionSpellInvocationForSubject(actor, input.state, subject)
       : undefined;
+  if (actor?.origin.kind === "character" && invocation == null) {
+    invocation = antimagicSuppressedInvocationForStaleSubject(
+      actor,
+      input.state,
+      subject,
+    );
+  }
   if (actor?.origin.kind !== "character" || invocation == null) {
     return invalidResult(
       input.state,
@@ -2940,6 +2982,82 @@ function resolveBonusActionSpellAttackProxyAct(
         subject: input.subject,
       }
     : result;
+}
+
+function supportedActionSpellInvocationForSubject(
+  actor: BattleCreatureState,
+  state: BattleState,
+  subject: ActionSpellBattleResolutionInput["subject"],
+): SupportedSpellInvocation | undefined {
+  return supportedSpellActs(actor, state).find(
+    (candidate) =>
+      supportedSpellInvocationMatchesRef(candidate, subject.invocation) &&
+      (candidate.procedure !== "spellHostedWeaponAttack" ||
+        (subject.componentWeaponItemId !== undefined &&
+          candidate.componentWeapon.itemId === subject.componentWeaponItemId)),
+  );
+}
+
+function supportedBonusActionSpellInvocationForSubject(
+  actor: BattleCreatureState,
+  state: BattleState,
+  subject: BonusActionSpellBattleResolutionInput["subject"],
+): SupportedSpellInvocation | undefined {
+  return supportedSpellActs(actor, state).find(
+    (candidate) =>
+      supportedSpellInvocationMatchesRef(candidate, subject.invocation) &&
+      (candidate.procedure !== "weaponAttackOverride" ||
+        (subject.componentWeaponItemId !== undefined &&
+          candidate.attachedWeapon.itemId === subject.componentWeaponItemId)),
+  );
+}
+
+function antimagicSuppressedInvocationForStaleSubject(
+  actor: BattleCreatureState,
+  state: BattleState,
+  subject: BonusActionSpellBattleResolutionInput["subject"],
+): SupportedSpellInvocation | undefined {
+  if (
+    !invocationRefHasAntimagicSuppressedRepeatResolverGuard(
+      subject.invocation.procedure,
+    )
+  ) {
+    return undefined;
+  }
+  return supportedBonusActionSpellInvocationForSubject(
+    actor,
+    stateForAntimagicSuppressedRepeatLookup(state),
+    subject,
+  );
+}
+
+function stateForAntimagicSuppressedRepeatLookup(
+  state: BattleState,
+): BattleState {
+  return {
+    ...state,
+    combatants: new Map(
+      [...state.combatants].map(([combatantId, combatant]) => [
+        combatantId,
+        {
+          ...combatant,
+          activeEffects: combatant.activeEffects.filter(
+            (effect) =>
+              effect.kind !== "antimagicFieldOngoingSpellSuppression",
+          ),
+        },
+      ]),
+    ),
+  };
+}
+
+function invocationRefHasAntimagicSuppressedRepeatResolverGuard(
+  procedure: ActionSpellBattleResolutionInput["subject"]["invocation"]["procedure"],
+): boolean {
+  return (
+    procedure === "objectContactDamageRepeat" ||
+    procedure === "spiritualWeaponRepeatAttack"
+  );
 }
 
 export function resolveBonusActionDashSpellAct(

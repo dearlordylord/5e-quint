@@ -15,7 +15,7 @@ type TrackedOngoingSpellActiveEffect = Extract<
 >;
 type TrackedAntimagicFieldOngoingSpellActiveEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "spellObjectContactDamage" }
+  { readonly kind: "spellObjectContactDamage" | "spiritualWeapon" }
 >;
 
 export function ongoingSpellEffectRefForEmitter(
@@ -55,7 +55,10 @@ export function antimagicFieldOngoingSpellEffectRefForActiveEffect(
   return {
     kind: "spellActiveEffect",
     activeEffectKind: effect.kind,
-    sourceEffectId: effect.effectId,
+    sourceEffectId:
+      effect.kind === "spellObjectContactDamage"
+        ? effect.effectId
+        : effect.sourceEffectId,
   };
 }
 

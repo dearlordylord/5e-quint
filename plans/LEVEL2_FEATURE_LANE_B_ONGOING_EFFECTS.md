@@ -73,7 +73,7 @@
     {
       "number": 12,
       "id": "L12G-FOLLOWUP-ANTIMAGIC-FIELD-PREVENTION-AND-BROADER-SUPPRESSION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Antimagic Field Prevention And Broader Suppression Runtime"
     },
     {
@@ -290,7 +290,7 @@ Output:
 
 ### Task 12 - L12G-FOLLOWUP-ANTIMAGIC-FIELD-PREVENTION-AND-BROADER-SUPPRESSION - Antimagic Field Prevention And Broader Suppression Runtime
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 - Task 2 Antimagic Field support for tracked spell-light emitters and tracked `spellObjectContactDamage` active-effect occurrences.
@@ -298,9 +298,10 @@ Input:
 - SRD Antimagic Field prevention/suppression clauses.
 
 Output:
-- Split and promote Antimagic Field clauses whose owners are still absent: spellcasting prevention, Magic Action prevention, magical targeting prevention, magic item suppression, magical area clipping, teleportation/planar travel blocking, portal closure, Dispel Magic immunity on the aura, and suppression of ongoing Spell Effects beyond tracked spell-light emitters and tracked `spellObjectContactDamage` occurrences.
-- Model only owner-specific executable subsets with focused tests and promoted Quint/runtime parity; close or split clauses that still lack precise owners.
-- Suppressed occurrences must keep ticking and must not be deleted while suppressed.
+- Promoted Antimagic Field suppression for tracked `spiritualWeapon` active-effect occurrences alongside the existing tracked spell-light and `spellObjectContactDamage` occurrences.
+- Suppressed tracked Spiritual Weapon occurrences keep ticking, are not deleted while suppressed, and previously discovered repeat-attack subjects reject as stale while the occurrence is suppressed.
+- Spellcasting prevention, Magic Action prevention, Emanation origin-inclusion choice for the caster, other-creature aura membership, magical targeting prevention, magic item suppression, magical area clipping, teleportation/planar travel blocking, portal closure, and Dispel Magic immunity on the aura are closed from this runtime-promotion task because the promoted battle runtime does not yet own explicit origin-inclusion, aura-membership, item, portal, planar-travel, or magical-target witness facts.
+- Remaining not-yet-tracked ongoing Spell Effect suppression beyond tracked spell-light emitters, tracked `spellObjectContactDamage` active-effect occurrences, and tracked `spiritualWeapon` active-effect occurrences stays visible through Task 13's recursive planning tail.
 
 ### Task 13 - L12G-RECURSIVE-TAIL-LANE-B - Lane B Recursive Planning Tail
 
@@ -312,6 +313,7 @@ Output:
 - Refresh level-2 ongoing-effect metrics.
 - Add the next concrete, Ralph-sized Lane B tasks only if real frontier remains.
 - Split or close remaining Dispel Magic ongoing Spell Effect frontiers from Task 11's residual set: other creature active effects, area effects, object effects, and spell-specific exceptions or immunities.
+- Split or close remaining Antimagic Field frontiers from Task 12's residual set: not-yet-tracked ongoing Spell Effect suppression plus any future prevention task that first introduces explicit origin-inclusion, aura-membership, item, portal, planar-travel, or magical-target witness ownership.
 
 ### Task 14 - L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-RUNTIME - Enlarge Reduce Object Runtime Support
 

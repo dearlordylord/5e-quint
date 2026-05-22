@@ -337,7 +337,8 @@ function trackedOngoingSpellEffectKeys(
     ),
     ...[...state.combatants.values()].flatMap((combatant) =>
       combatant.activeEffects.flatMap((effect) =>
-        effect.kind === "spellObjectContactDamage"
+        effect.kind === "spellObjectContactDamage" ||
+        effect.kind === "spiritualWeapon"
           ? [
               ongoingSpellEffectRefKey(
                 antimagicFieldOngoingSpellEffectRefForActiveEffect(effect),

@@ -2427,7 +2427,10 @@ const BattleAntimagicFieldOngoingSpellEffectRefSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("spellActiveEffect"),
-    activeEffectKind: Schema.Literal("spellObjectContactDamage"),
+    activeEffectKind: Schema.Literal(
+      "spellObjectContactDamage",
+      "spiritualWeapon",
+    ),
     sourceEffectId: BattleSpellEffectOccurrenceId,
   }),
 );
@@ -3597,7 +3600,9 @@ type BattleFillEncoded =
                   }
                 | {
                     readonly kind: "spellActiveEffect";
-                    readonly activeEffectKind: "spellObjectContactDamage";
+                    readonly activeEffectKind:
+                      | "spellObjectContactDamage"
+                      | "spiritualWeapon";
                     readonly sourceEffectId: string;
                   };
               readonly sourceKind: "ordinarySpell" | "artifact" | "deity";
