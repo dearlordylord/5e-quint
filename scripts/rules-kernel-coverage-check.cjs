@@ -8,7 +8,9 @@ const {
   battleFrontierSubjects,
   coveragePaths,
   coveredStatuses,
+  generatorReadinessBlockers,
   generatorReadinessStatuses,
+  generatorSubsetConstructs,
   markerKinds,
   nonSemanticStatuses,
   obligationKinds,
@@ -751,6 +753,20 @@ function validateGeneratorReadiness(
   const proofOnly = stringArrayOrEmpty(readiness.proofOnly);
   const generatorSubset = stringArrayOrEmpty(readiness.generatorSubset);
   const blockedBy = stringArrayOrEmpty(readiness.blockedBy);
+  for (const construct of generatorSubset) {
+    if (!generatorSubsetConstructs.has(construct)) {
+      issues.push(
+        `${context}.generatorSubset has unknown generation-subset construct ${construct}.`,
+      );
+    }
+  }
+  for (const blocker of blockedBy) {
+    if (!generatorReadinessBlockers.has(blocker)) {
+      issues.push(
+        `${context}.blockedBy has unknown generator-readiness blocker ${blocker}.`,
+      );
+    }
+  }
   const semanticCoreSet = new Set(semanticCore);
   for (const ownerPath of proofOnly) {
     if (semanticCoreSet.has(ownerPath)) {

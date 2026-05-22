@@ -100,6 +100,17 @@ dry-run artifact.
   one blocker; other statuses use an empty array for no known blockers. Omitted
   arrays are invalid.
 
+`generatorSubset` and `blockedBy` values are checked vocabularies documented in
+`scripts/rules-kernel-coverage-config.cjs`. Keep the token catalog there so
+readiness row data, checker validation, and token descriptions change together.
+Generation-subset tokens name observed QNT constructs such as records, variants,
+pure definitions, local bindings, conditionals, pattern matches, collection
+operators, and integer/Boolean expressions. Blocker tokens name concrete
+generator-cleanliness blockers such as run-block coupling, MBT harness coupling,
+proof-helper coupling, fixture-world coupling, bridge projection coupling,
+selected-identity coupling, or an unsupported construct; they are not migration
+history labels.
+
 Generator-readiness statuses are:
 
 - `not-assessed`: the obligation has no C-lane classification claim yet.

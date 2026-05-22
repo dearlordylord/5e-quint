@@ -239,6 +239,7 @@ function runSelfTest() {
   const invalidGeneratorSemanticsResult = buildKernelCoverage({ root });
   for (const issue of [
     "generator-readiness row 1.generatorSubset repeats record.",
+    "generator-readiness row 1.blockedBy has unknown generator-readiness blocker sample blocker.",
     "generator-readiness row 1.sample.qnt cannot be both semanticCore and proofOnly.",
     "generator-readiness row 1.semantic-core-candidate must have empty blockedBy.",
   ]) {
@@ -247,6 +248,24 @@ function runSelfTest() {
       `Expected generator-readiness issue ${issue}, got ${JSON.stringify(invalidGeneratorSemanticsResult.issues)}`,
     );
   }
+  writeFile(
+    sampleGeneratorReadinessPath,
+    JSON.stringify({
+      obligationId: "BATTLE.SAMPLE",
+      status: "semantic-core-candidate",
+      semanticCore: ["sample.qnt"],
+      proofOnly: [],
+      generatorSubset: ["unknown-construct"],
+      blockedBy: [],
+    }) + "\n",
+  );
+  const unknownGeneratorSubsetResult = buildKernelCoverage({ root });
+  assert.ok(
+    unknownGeneratorSubsetResult.issues.includes(
+      "generator-readiness row 1.generatorSubset has unknown generation-subset construct unknown-construct.",
+    ),
+    `Expected generator-readiness unknown subset issue, got ${JSON.stringify(unknownGeneratorSubsetResult.issues)}`,
+  );
   writeFile(sampleGeneratorReadinessPath, initialGeneratorReadinessText);
 
   const initialObligationsText = fs.readFileSync(

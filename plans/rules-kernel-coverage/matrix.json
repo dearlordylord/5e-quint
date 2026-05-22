@@ -5512,7 +5512,7 @@
   "generatorReadiness": [
     {
       "blockedBy": [
-        "packages/shared-algebras/proofs/rule-core/hit-point-damage.qnt mixes semantic definitions with run tests; split tests or teach the generator to ignore run blocks before treating the whole file as generation-subset-clean"
+        "run-block-coupled"
       ],
       "generatorSubset": [
         "variant",
