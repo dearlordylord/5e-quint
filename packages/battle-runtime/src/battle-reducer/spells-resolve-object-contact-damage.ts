@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 
 import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
 import {
@@ -46,15 +47,25 @@ import {
   damageLifecycleHideousLaughterDamageRepeatSaveHoles,
   fillsMatchingHoleIds,
 } from "./damage-apply.ts";
-import { needsHolesResult } from "./hole-helpers.ts";
+import {
+  deduplicateBattleHolesById,
+  needsHolesResult,
+} from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
 import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
 import {
+  applyAvailableSourceDamageRollPenalty,
+  damageAmountByTypeAfterTargetAdjustments,
+  sourceDamageRollPenaltyRollHoleForDamageRoll,
+  sourceDamageRollPenaltyRollForDamageRoll,
+  unexpectedSourceDamageRollPenaltyRoll,
+} from "./damage-helpers.ts";
+import {
   applyPreparedSlotSpellDamage,
   savingThrowRollModeProjections,
-  spellDamageAmountForTarget,
+  spellDamageByTypeForTarget,
   spellDamageHole,
   validateSpellDamageFill,
 } from "./spells-damage-fills.ts";
@@ -554,7 +565,8 @@ function resolveObjectContactDamage(input: {
       input.fillSet.damageDispositions.length > 0 ||
       input.fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
       input.fillSet.objectContactSavingThrowOutcome !== undefined ||
-      input.fillSet.objectDropResolution !== undefined
+      input.fillSet.objectDropResolution !== undefined ||
+      input.fillSet.sourceDamageRollPenaltyRolls.length > 0
     ) {
       return invalidResult(
         input.errorState,
@@ -582,19 +594,120 @@ function resolveObjectContactDamage(input: {
   if (damageValidation !== null) {
     return invalidResult(input.errorState, "invalidFill", damageValidation);
   }
-  const concentrationSaves = input.targetIds.flatMap((targetId) => {
+  const sourceCombatant = input.state.combatants.get(input.actorId);
+  const expectedSourcePenaltyHoles = input.targetIds.flatMap((targetId) => {
     const target = input.state.combatants.get(targetId);
     if (target === undefined || input.fillSet.damageRoll === undefined) {
+      return [];
+    }
+    const damageByType = spellDamageByTypeForTarget(
+      target,
+      input.invocation,
+      input.fillSet.damageRoll,
+    );
+    const hole = sourceDamageRollPenaltyRollHoleForDamageRoll(
+      sourceCombatant,
+      damageByType,
+      input.fillSet.damageRoll.holeId,
+    );
+    return hole === null ? [] : [hole];
+  });
+  if (
+    unexpectedSourceDamageRollPenaltyRoll(
+      input.fillSet.sourceDamageRollPenaltyRolls,
+      expectedSourcePenaltyHoles,
+    ) !== undefined
+  ) {
+    return invalidResult(
+      input.errorState,
+      "invalidFill",
+      "Source damage roll penalty does not match an active source-side damage penalty.",
+    );
+  }
+  const sourcePenaltyChecks = input.targetIds.map((targetId) => {
+    const target = input.state.combatants.get(targetId);
+    if (target === undefined || input.fillSet.damageRoll === undefined) {
+      return { tag: "ok" as const, damageByType: new Map() };
+    }
+    const damageByType = spellDamageByTypeForTarget(
+      target,
+      input.invocation,
+      input.fillSet.damageRoll,
+    );
+    return applyAvailableSourceDamageRollPenalty(
+      sourceCombatant,
+      damageByType,
+      input.fillSet.damageRoll.holeId,
+      sourceDamageRollPenaltyRollForDamageRoll(
+        input.fillSet.sourceDamageRollPenaltyRolls,
+        sourceCombatant,
+        damageByType,
+        input.fillSet.damageRoll.holeId,
+      ),
+    );
+  });
+  if (sourcePenaltyChecks.some((check) => check.tag === "invalid")) {
+    return invalidResult(
+      input.errorState,
+      "invalidFill",
+      "Source damage roll penalty does not match an active source-side damage penalty.",
+    );
+  }
+  const missingSourcePenaltyHoles = deduplicateBattleHolesById(
+    sourcePenaltyChecks.flatMap((check) =>
+      check.tag === "needsHoles" ? [...check.holes] : [],
+    ),
+  );
+  if (missingSourcePenaltyHoles.length > 0) {
+    return needsHolesResult(needsHolesState, input.subject, [
+      ...missingSourcePenaltyHoles,
+    ]);
+  }
+  const damageAmountByTargetId = new Map(
+    input.targetIds.flatMap((targetId): readonly [CombatantId, number][] => {
+      const target = input.state.combatants.get(targetId);
+      if (target === undefined || input.fillSet.damageRoll === undefined) {
+        return [];
+      }
+      const damageByType = spellDamageByTypeForTarget(
+        target,
+        input.invocation,
+        input.fillSet.damageRoll,
+      );
+      const sourcePenalty = applyAvailableSourceDamageRollPenalty(
+        input.state.combatants.get(input.actorId),
+        damageByType,
+        input.fillSet.damageRoll.holeId,
+        sourceDamageRollPenaltyRollForDamageRoll(
+          input.fillSet.sourceDamageRollPenaltyRolls,
+          input.state.combatants.get(input.actorId),
+          damageByType,
+          input.fillSet.damageRoll.holeId,
+        ),
+      );
+      return sourcePenalty.tag === "ok"
+        ? [
+            [
+              targetId,
+              damageAmountByTypeAfterTargetAdjustments(
+                target,
+                sourcePenalty.damageByType,
+              ),
+            ],
+          ]
+        : [];
+    }),
+  );
+  const concentrationSaves = input.targetIds.flatMap((targetId) => {
+    const target = input.state.combatants.get(targetId);
+    const damageAmount = damageAmountByTargetId.get(targetId);
+    if (target === undefined || damageAmount === undefined) {
       return [];
     }
     return damageLifecycleConcentrationSavingThrowHoles({
       state: input.state,
       target,
-      damageAmount: spellDamageAmountForTarget(
-        target,
-        input.invocation,
-        input.fillSet.damageRoll,
-      ),
+      damageAmount,
     });
   });
   const missingConcentrationSaves = concentrationSaves.filter(
@@ -627,17 +740,14 @@ function resolveObjectContactDamage(input: {
   }
   const damageDispositionHoles = input.targetIds.flatMap((targetId) => {
     const target = input.state.combatants.get(targetId);
-    if (target === undefined || input.fillSet.damageRoll === undefined) {
+    const damageAmount = damageAmountByTargetId.get(targetId);
+    if (target === undefined || damageAmount === undefined) {
       return [];
     }
     const hole = zeroHitPointReplacementDispositionHole({
       damageSourceId: input.actorId,
       target,
-      damageAmount: spellDamageAmountForTarget(
-        target,
-        input.invocation,
-        input.fillSet.damageRoll,
-      ),
+      damageAmount,
     });
     return hole === null ? [] : [hole];
   });
@@ -664,14 +774,10 @@ function resolveObjectContactDamage(input: {
   }
   const hideousLaughterSaveChecks = input.targetIds.map((targetId) => {
     const target = input.state.combatants.get(targetId);
-    if (target === undefined || input.fillSet.damageRoll === undefined) {
+    const damageAmount = damageAmountByTargetId.get(targetId);
+    if (target === undefined || damageAmount === undefined) {
       return { tag: "ok" as const, holes: [] };
     }
-    const damageAmount = spellDamageAmountForTarget(
-      target,
-      input.invocation,
-      input.fillSet.damageRoll,
-    );
     const holes = damageLifecycleHideousLaughterDamageRepeatSaveHoles({
       state: input.state,
       target,
@@ -722,7 +828,10 @@ function resolveObjectContactDamage(input: {
     );
   }
   const damagedHoldingOrWearingTargets =
-    objectContactDamagedHoldingOrWearingTargets(input);
+    objectContactDamagedHoldingOrWearingTargets({
+      ...input,
+      damageAmountByTargetId,
+    });
   const objectContactSaveHole = objectContactSavingThrowOutcomeHole({
     state: input.state,
     actorId: input.actorId,
@@ -825,14 +934,10 @@ function resolveObjectContactDamage(input: {
     ) ?? [];
   const damaged = input.targetIds.reduce((state, targetId) => {
     const target = state.combatants.get(targetId);
-    if (target === undefined || input.fillSet.damageRoll === undefined) {
+    const damageAmount = damageAmountByTargetId.get(targetId);
+    if (target === undefined || damageAmount === undefined) {
       return state;
     }
-    const damageAmount = spellDamageAmountForTarget(
-      target,
-      input.invocation,
-      input.fillSet.damageRoll,
-    );
     const concentrationSave = concentrationSavingThrowHole(
       target,
       damageAmount,
@@ -890,14 +995,10 @@ function resolveObjectContactDamage(input: {
     events: input.targetIds.flatMap(
       (targetId): readonly BattleAfterDamageEvent[] => {
         const target = input.state.combatants.get(targetId);
-        if (target === undefined || input.fillSet.damageRoll === undefined) {
+        const damageAmount = damageAmountByTargetId.get(targetId);
+        if (target === undefined || damageAmount === undefined) {
           return [];
         }
-        const damageAmount = spellDamageAmountForTarget(
-          target,
-          input.invocation,
-          input.fillSet.damageRoll,
-        );
         return [
           {
             damageSourceId: input.actorId,
@@ -920,6 +1021,7 @@ function objectContactDamagedHoldingOrWearingTargets(input: {
   readonly fillSet: OkSpellFillSet;
   readonly invocation: ObjectContactDamageAnyInvocation;
   readonly targetIds: readonly CombatantId[];
+  readonly damageAmountByTargetId: ReadonlyMap<CombatantId, number>;
   readonly holdingOrWearingByTarget: ReadonlyMap<
     CombatantId,
     ObjectContactHoldingOrWearingRelation
@@ -935,11 +1037,7 @@ function objectContactDamagedHoldingOrWearingTargets(input: {
     ) {
       return [];
     }
-    const damageAmount = spellDamageAmountForTarget(
-      target,
-      input.invocation,
-      input.fillSet.damageRoll,
-    );
+    const damageAmount = input.damageAmountByTargetId.get(targetId) ?? 0;
     return damageAmount <= 0 ? [] : [{ targetId, target }];
   });
 }

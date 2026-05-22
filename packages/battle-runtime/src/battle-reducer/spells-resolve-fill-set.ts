@@ -1,5 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // Spell replay fill parser extracted from spells-resolve.ts.
 // Owns classification and validation of supplied fills against spell replay holes.
 
@@ -32,7 +33,10 @@ import {
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import type { BattleObjectId, CombatantId } from "../identity.ts";
-import { isSpellDamageReductionRollFill } from "./damage-helpers.ts";
+import {
+  isSourceDamageRollPenaltyRollFill,
+  isSpellDamageReductionRollFill,
+} from "./damage-helpers.ts";
 import { validateUniqueAttackSightFacts } from "./attack-fill-set.ts";
 import { isHideousLaughterDamageRepeatSaveFill } from "./hideous-laughter-repeat-save.ts";
 import {
@@ -229,6 +233,10 @@ export type SpellFillSet =
         BattleFill,
         { readonly kind: "rolledDice" }
       >[];
+      readonly sourceDamageRollPenaltyRolls: readonly Extract<
+        BattleFill,
+        { readonly kind: "rolledDice" }
+      >[];
       readonly attackBurstDamageRoll:
         | Extract<BattleFill, { readonly kind: "rolledDice" }>
         | undefined;
@@ -360,6 +368,10 @@ export function spellFillSet(
     | undefined;
   let movement: Extract<BattleFill, { readonly kind: "movement" }> | undefined;
   const spellDamageReductionRolls: Extract<
+    BattleFill,
+    { readonly kind: "rolledDice" }
+  >[] = [];
+  const sourceDamageRollPenaltyRolls: Extract<
     BattleFill,
     { readonly kind: "rolledDice" }
   >[] = [];
@@ -1276,6 +1288,20 @@ export function spellFillSet(
         spellDamageReductionRolls.push(fill);
         continue;
       }
+      if (isSourceDamageRollPenaltyRollFill(fill)) {
+        if (
+          sourceDamageRollPenaltyRolls.some(
+            (candidate) => candidate.holeId === fill.holeId,
+          )
+        ) {
+          return {
+            tag: "invalid",
+            message: "Source damage roll penalty was filled twice.",
+          };
+        }
+        sourceDamageRollPenaltyRolls.push(fill);
+        continue;
+      }
       if (
         invocation.procedure === "directHitPointRestoration" ||
         (invocation.procedure === "scalarBuff" &&
@@ -1437,6 +1463,7 @@ export function spellFillSet(
     mirrorImageDuplicateRoll,
     movement,
     spellDamageReductionRolls,
+    sourceDamageRollPenaltyRolls,
     attackBurstDamageRoll,
     healingRoll,
   };
@@ -1485,6 +1512,7 @@ export function spellFillSetContainsOnlySpellCastReactionFacts(
     fillSet.mirrorImageDuplicateRoll === undefined &&
     fillSet.movement === undefined &&
     fillSet.spellDamageReductionRolls.length === 0 &&
+    fillSet.sourceDamageRollPenaltyRolls.length === 0 &&
     fillSet.attackBurstDamageRoll === undefined &&
     fillSet.healingRoll === undefined
   );

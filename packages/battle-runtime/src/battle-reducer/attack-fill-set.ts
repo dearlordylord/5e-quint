@@ -1,5 +1,6 @@
 // Attack replay fill parser extracted from attack-resolution.ts.
 // Owns classification of attack fills and the uniqueness invariant for attack target range facts.
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 
 import {
   ATTACK_DAMAGE_DISPOSITION_HOLE_ID,
@@ -13,7 +14,10 @@ import {
   type BattleTargetSpatialFact,
 } from "../battle-reducer.ts";
 import type { CombatantId } from "../identity.ts";
-import { isSpellDamageReductionRollFill } from "./damage-helpers.ts";
+import {
+  isSourceDamageRollPenaltyRollFill,
+  isSpellDamageReductionRollFill,
+} from "./damage-helpers.ts";
 import {
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_DAMAGE_HOLE_ID,
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SAVE_HOLE_ID,
@@ -50,6 +54,7 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
   let damageRoll: BattleRolledDiceFill | undefined;
   let mirrorImageDuplicateRoll: BattleRolledDiceFill | undefined;
   let spellDamageReductionRoll: BattleRolledDiceFill | undefined;
+  const sourceDamageRollPenaltyRolls: BattleRolledDiceFill[] = [];
   let attackDamageReductionRedirectTarget:
     | Extract<BattleFill, { readonly kind: "targetChoice" }>
     | undefined;
@@ -278,6 +283,21 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
       continue;
     }
 
+    if (fill.kind === "rolledDice" && isSourceDamageRollPenaltyRollFill(fill)) {
+      if (
+        sourceDamageRollPenaltyRolls.some(
+          (candidate) => candidate.holeId === fill.holeId,
+        )
+      ) {
+        return {
+          tag: "invalid",
+          message: "Source damage roll penalty was filled twice.",
+        };
+      }
+      sourceDamageRollPenaltyRolls.push(fill);
+      continue;
+    }
+
     if (
       fill.kind === "rolledDice" &&
       fill.holeId === WEAPON_MASTERY_CLEAVE_DAMAGE_HOLE_ID
@@ -370,6 +390,7 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     damageRoll,
     mirrorImageDuplicateRoll,
     spellDamageReductionRoll,
+    sourceDamageRollPenaltyRolls,
     attackDamageReductionRedirectTarget,
     attackDamageReductionRedirectSave,
     attackDamageReductionRedirectDamage,

@@ -5,6 +5,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 
@@ -54,12 +55,16 @@ import {
   activeMarkedDamageRiders,
   activeSpellWeaponDamageRiders,
   applyAvailableSpellDamageReduction,
+  applyAvailableSourceDamageRollPenalty,
   attackDamageByTypeEntries,
   damageAmountByTypeAfterTargetAdjustments,
   damageAmountByTypeEntriesToMap,
   damageAmountByTypeMapEntries,
   fixedAttackDamageByTypeEntries,
   ongoingFeatureDamageModifier,
+  sourceDamageRollPenaltyRollHoleForDamageRoll,
+  sourceDamageRollPenaltyRollForDamageRoll,
+  unexpectedSourceDamageRollPenaltyRoll,
 } from "./damage-helpers.ts";
 
 import {
@@ -311,7 +316,11 @@ export function resolveSelectedAttackProcedure(
   }
 
   if (fillSet.attackRoll == null) {
-    if (fillSet.damageRoll != null || fillSet.damageDispositionFilled) {
+    if (
+      fillSet.damageRoll != null ||
+      fillSet.damageDispositionFilled ||
+      fillSet.sourceDamageRollPenaltyRolls.length > 0
+    ) {
       return invalidResult(
         input.state,
         "invalidFill",
@@ -764,11 +773,11 @@ export function resolveSelectedAttackProcedure(
     );
     const primaryConcentrationSavingThrow =
       concentrationSave === null
-      ? undefined
-      : concentrationSavingThrowFillFor(
-          primaryConcentrationSavingThrows,
-          concentrationSave,
-        );
+        ? undefined
+        : concentrationSavingThrowFillFor(
+            primaryConcentrationSavingThrows,
+            concentrationSave,
+          );
     const concentrationSaveCheck =
       damageLifecycleConcentrationSavingThrowFillCheck({
         state: sapRedirectState,
@@ -884,6 +893,13 @@ export function resolveSelectedAttackProcedure(
     });
   }
   if (hit && fillSet.damageRoll == null) {
+    if (fillSet.sourceDamageRollPenaltyRolls.length > 0) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Attack damage can only be filled after a hit.",
+      );
+    }
     return needsHolesResult(hitAppliedState, input.subject, [
       attackDamageHole(
         attack,
@@ -900,7 +916,12 @@ export function resolveSelectedAttackProcedure(
       ),
     ]);
   }
-  if (!hit && (fillSet.damageRoll != null || fillSet.damageDispositionFilled)) {
+  if (
+    !hit &&
+    (fillSet.damageRoll != null ||
+      fillSet.damageDispositionFilled ||
+      fillSet.sourceDamageRollPenaltyRolls.length > 0)
+  ) {
     return invalidResult(
       input.state,
       "invalidFill",
@@ -929,8 +950,9 @@ export function resolveSelectedAttackProcedure(
     if (damageValidation !== null) {
       return invalidResult(input.state, "invalidFill", damageValidation);
     }
+    const damageSource = attackRolledState.combatants.get(attackerId);
     const damageRollByType = attackDamageByTypeEntries(
-      attackRolledState.combatants.get(attackerId),
+      damageSource,
       attack,
       fillSet.damageRoll,
       critical,
@@ -939,9 +961,52 @@ export function resolveSelectedAttackProcedure(
       spellWeaponDamageRiders,
       spellMarkedDamageRiders,
     );
+    const expectedSourcePenaltyHole =
+      sourceDamageRollPenaltyRollHoleForDamageRoll(
+        damageSource,
+        damageAmountByTypeEntriesToMap(damageRollByType),
+        fillSet.damageRoll.holeId,
+      );
+    if (
+      unexpectedSourceDamageRollPenaltyRoll(
+        fillSet.sourceDamageRollPenaltyRolls,
+        expectedSourcePenaltyHole === null ? [] : [expectedSourcePenaltyHole],
+      ) !== undefined
+    ) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Source damage roll penalty does not match an active source-side damage penalty.",
+      );
+    }
+    const sourcePenalty = applyAvailableSourceDamageRollPenalty(
+      damageSource,
+      damageAmountByTypeEntriesToMap(damageRollByType),
+      fillSet.damageRoll.holeId,
+      sourceDamageRollPenaltyRollForDamageRoll(
+        fillSet.sourceDamageRollPenaltyRolls,
+        damageSource,
+        damageAmountByTypeEntriesToMap(damageRollByType),
+        fillSet.damageRoll.holeId,
+      ),
+    );
+    if (sourcePenalty.tag === "invalid") {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Source damage roll penalty does not match an active source-side damage penalty.",
+      );
+    }
+    if (sourcePenalty.tag === "needsHoles") {
+      return needsHolesResult(hitAppliedState, input.subject, [
+        ...sourcePenalty.holes,
+      ]);
+    }
     const damageEvent = {
       kind: "rolledDamage" as const,
-      damageRollByType,
+      damageRollByType: damageAmountByTypeMapEntries(
+        sourcePenalty.damageByType,
+      ),
     } satisfies BattleAttackDamageEvent;
     const reducedDamageEvent = attackDamageEventAfterPendingReductions(
       damageEvent,
@@ -1072,11 +1137,11 @@ export function resolveSelectedAttackProcedure(
     );
     const primaryConcentrationSavingThrow =
       concentrationSave === null
-      ? undefined
-      : concentrationSavingThrowFillFor(
-          primaryConcentrationSavingThrows,
-          concentrationSave,
-        );
+        ? undefined
+        : concentrationSavingThrowFillFor(
+            primaryConcentrationSavingThrows,
+            concentrationSave,
+          );
     const concentrationSaveCheck =
       damageLifecycleConcentrationSavingThrowFillCheck({
         state: sapRedirectState,
@@ -1221,6 +1286,7 @@ function attackPostMirrorImageFillsArePresent(
     fillSet.damageRoll !== undefined ||
     fillSet.damageDispositionFilled ||
     fillSet.spellDamageReductionRoll !== undefined ||
+    fillSet.sourceDamageRollPenaltyRolls.length > 0 ||
     fillSet.attackDamageReductionRedirectTarget !== undefined ||
     fillSet.attackDamageReductionRedirectSave !== undefined ||
     fillSet.attackDamageReductionRedirectDamage !== undefined ||
@@ -1594,9 +1660,41 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     cleaveCritical,
     input.fillSet.weaponMasteryCleaveAttackRoll.value,
   );
+  const cleaveDamageSource = cleaveAttackRolledState.combatants.get(
+    input.subject.actorId,
+  );
+  const sourcePenalty = applyAvailableSourceDamageRollPenalty(
+    cleaveDamageSource,
+    damageAmountByTypeEntriesToMap(damageByType),
+    input.fillSet.weaponMasteryCleaveDamageRoll.holeId,
+    sourceDamageRollPenaltyRollForDamageRoll(
+      input.fillSet.sourceDamageRollPenaltyRolls,
+      cleaveDamageSource,
+      damageAmountByTypeEntriesToMap(damageByType),
+      input.fillSet.weaponMasteryCleaveDamageRoll.holeId,
+    ),
+  );
+  if (sourcePenalty.tag === "invalid") {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "Source damage roll penalty does not match an active source-side damage penalty.",
+      ),
+    };
+  }
+  if (sourcePenalty.tag === "needsHoles") {
+    return {
+      tag: "result",
+      result: needsHolesResult(cleaveAttackRolledState, input.subject, [
+        ...sourcePenalty.holes,
+      ]),
+    };
+  }
   const damageEvent = {
     kind: "rolledDamage" as const,
-    damageRollByType: damageByType,
+    damageRollByType: damageAmountByTypeMapEntries(sourcePenalty.damageByType),
   } satisfies BattleAttackDamageEvent;
   const cleaveDamageAmount = attackDamageEventAmountForTarget(
     secondTarget,

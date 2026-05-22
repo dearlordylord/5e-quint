@@ -2,6 +2,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // Extracted from ../battle-reducer.ts; this module owns Effect Schema values,
 // while domain types remain exported by the reducer facade.
 
@@ -2550,6 +2551,20 @@ export const BattleHoleSchema = Schema.Union(
       amount: Schema.Struct({
         dice: Schema.Literal(1),
         dieSize: Schema.Literal(4),
+      }),
+    }),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("rolledDice"),
+    sourceDamageRollPenalty: Schema.Struct({
+      sourceSpellId: Schema.String,
+      sourceCombatantId: CombatantId,
+      affectedCombatantId: CombatantId,
+      damageRollHoleId: Schema.String,
+      amount: Schema.Struct({
+        dice: Schema.Literal(1),
+        dieSize: Schema.Literal(8),
       }),
     }),
   }),

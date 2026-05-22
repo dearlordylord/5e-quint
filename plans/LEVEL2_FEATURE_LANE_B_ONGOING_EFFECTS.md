@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Ray Of Enfeeblement Damage Roll Penalty Runtime"
     },
     {
@@ -211,7 +211,7 @@ Output:
 
 ### Task 6 - L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY - Ray Of Enfeeblement Damage Roll Penalty Runtime
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 - Task B5.

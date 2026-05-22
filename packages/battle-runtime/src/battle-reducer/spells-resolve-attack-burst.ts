@@ -1,5 +1,6 @@
 // Attack-burst save-damage spell resolution, currently Ice Knife.
 // Extracted from spells-resolve.ts as a procedure-local resolver slice.
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION
 
@@ -44,7 +45,14 @@ import {
   damageLifecycleHideousLaughterDamageRepeatSaveHoles,
   fillsMatchingHoleIds,
 } from "./damage-apply.ts";
-import { activeMarkedDamageRiders } from "./damage-helpers.ts";
+import {
+  activeMarkedDamageRiders,
+  applyAvailableSourceDamageRollPenalty,
+  damageAmountByTypeAfterTargetAdjustments,
+  sourceDamageRollPenaltyRollHoleForDamageRoll,
+  sourceDamageRollPenaltyRollForDamageRoll,
+  unexpectedSourceDamageRollPenaltyRoll,
+} from "./damage-helpers.ts";
 import { needsHolesResult } from "./hole-helpers.ts";
 import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
 import { invalidResult } from "./result-helpers.ts";
@@ -55,9 +63,9 @@ import {
   applyPreparedSlotSpellDamage,
   applySpellDamage,
   spellAttackRollHole,
-  spellBurstDamageAmountForTarget,
+  spellBurstDamageByTypeForTarget,
   spellBurstDamageHole,
-  spellDamageAmountForTarget,
+  spellDamageByTypeForTarget,
   spellDamageHole,
   spellSavingThrowOutcomeHole,
   spellTargetHole,
@@ -400,15 +408,58 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
     }
   }
 
-  const attackDamageAmount =
+  const attackDamageByType =
     hitTarget && input.fillSet.attackBurstDamageRoll !== undefined
-      ? spellDamageAmountForTarget(
+      ? spellDamageByTypeForTarget(
           target,
           input.invocation,
           input.fillSet.attackBurstDamageRoll,
           "full",
           spellMarkedDamageRiders,
           critical,
+        )
+      : undefined;
+  const attackExpectedSourcePenaltyHole =
+    attackDamageByType === undefined ||
+    input.fillSet.attackBurstDamageRoll === undefined
+      ? null
+      : sourceDamageRollPenaltyRollHoleForDamageRoll(
+          attackResolvedState.combatants.get(input.actorId),
+          attackDamageByType,
+          input.fillSet.attackBurstDamageRoll.holeId,
+        );
+  const attackSourcePenalty =
+    attackDamageByType !== undefined &&
+    input.fillSet.attackBurstDamageRoll !== undefined
+      ? applyAvailableSourceDamageRollPenalty(
+          attackResolvedState.combatants.get(input.actorId),
+          attackDamageByType,
+          input.fillSet.attackBurstDamageRoll.holeId,
+          sourceDamageRollPenaltyRollForDamageRoll(
+            input.fillSet.sourceDamageRollPenaltyRolls,
+            attackResolvedState.combatants.get(input.actorId),
+            attackDamageByType,
+            input.fillSet.attackBurstDamageRoll.holeId,
+          ),
+        )
+      : ({ tag: "ok", damageByType: new Map() } as const);
+  if (attackSourcePenalty.tag === "invalid") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Source damage roll penalty does not match an active source-side damage penalty.",
+    );
+  }
+  if (attackSourcePenalty.tag === "needsHoles") {
+    return needsHolesResult(attackResolvedState, input.input.subject, [
+      ...attackSourcePenalty.holes,
+    ]);
+  }
+  const attackDamageAmount =
+    hitTarget && input.fillSet.attackBurstDamageRoll !== undefined
+      ? damageAmountByTypeAfterTargetAdjustments(
+          target,
+          attackSourcePenalty.damageByType,
         )
       : 0;
   const attackDamageEventKey = String(
@@ -523,6 +574,19 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
             hideousLaughterDamageRepeatSaves:
               attackHideousLaughterLifecycleFills,
             hideousLaughterDamageRepeatSaveEventKey: attackDamageEventKey,
+            sourceDamageRollPenaltyRoll: sourceDamageRollPenaltyRollForDamageRoll(
+              input.fillSet.sourceDamageRollPenaltyRolls,
+              attackResolvedState.combatants.get(input.actorId),
+              spellDamageByTypeForTarget(
+                target,
+                input.invocation,
+                input.fillSet.attackBurstDamageRoll,
+                "full",
+                spellMarkedDamageRiders,
+                critical,
+              ),
+              input.fillSet.attackBurstDamageRoll.holeId,
+            ),
             damageSourceId: input.actorId,
           },
         )
@@ -578,6 +642,20 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
   }
 
   if (failedTargets.length > 0 && input.fillSet.damageRoll === undefined) {
+    if (
+      unexpectedSourceDamageRollPenaltyRoll(
+        input.fillSet.sourceDamageRollPenaltyRolls,
+        attackExpectedSourcePenaltyHole === null
+          ? []
+          : [attackExpectedSourcePenaltyHole],
+      ) !== undefined
+    ) {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        "Source damage roll penalty does not match an active source-side damage penalty.",
+      );
+    }
     return needsHolesResult(damagedByAttack, input.input.subject, [
       spellBurstDamageHole(input.invocation),
     ]);
@@ -602,6 +680,69 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
       );
     }
   }
+  const burstDamageByType =
+    failedTargets.length > 0 && input.fillSet.damageRoll !== undefined
+      ? spellBurstDamageByTypeForTarget(
+          target,
+          input.invocation,
+          input.fillSet.damageRoll,
+          "full",
+        )
+      : undefined;
+  const burstExpectedSourcePenaltyHole =
+    burstDamageByType === undefined || input.fillSet.damageRoll === undefined
+      ? null
+      : sourceDamageRollPenaltyRollHoleForDamageRoll(
+          damagedByAttack.combatants.get(input.actorId),
+          burstDamageByType,
+          input.fillSet.damageRoll.holeId,
+        );
+  const expectedSourcePenaltyHoles = [
+    ...(attackExpectedSourcePenaltyHole === null
+      ? []
+      : [attackExpectedSourcePenaltyHole]),
+    ...(burstExpectedSourcePenaltyHole === null
+      ? []
+      : [burstExpectedSourcePenaltyHole]),
+  ];
+  if (
+    unexpectedSourceDamageRollPenaltyRoll(
+      input.fillSet.sourceDamageRollPenaltyRolls,
+      expectedSourcePenaltyHoles,
+    ) !== undefined
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Source damage roll penalty does not match an active source-side damage penalty.",
+    );
+  }
+  const burstSourcePenalty =
+    burstDamageByType !== undefined && input.fillSet.damageRoll !== undefined
+      ? applyAvailableSourceDamageRollPenalty(
+          damagedByAttack.combatants.get(input.actorId),
+          burstDamageByType,
+          input.fillSet.damageRoll.holeId,
+          sourceDamageRollPenaltyRollForDamageRoll(
+            input.fillSet.sourceDamageRollPenaltyRolls,
+            damagedByAttack.combatants.get(input.actorId),
+            burstDamageByType,
+            input.fillSet.damageRoll.holeId,
+          ),
+        )
+      : ({ tag: "ok", damageByType: new Map() } as const);
+  if (burstSourcePenalty.tag === "invalid") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Source damage roll penalty does not match an active source-side damage penalty.",
+    );
+  }
+  if (burstSourcePenalty.tag === "needsHoles") {
+    return needsHolesResult(damagedByAttack, input.input.subject, [
+      ...burstSourcePenalty.holes,
+    ]);
+  }
 
   const burstDamageByTargetId = new Map(
     failedTargets.flatMap((targetId): readonly [CombatantId, number][] => {
@@ -611,11 +752,9 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
         : [
             [
               targetId,
-              spellBurstDamageAmountForTarget(
+              damageAmountByTypeAfterTargetAdjustments(
                 burstTarget,
-                input.invocation,
-                input.fillSet.damageRoll,
-                "full",
+                burstSourcePenalty.damageByType,
               ),
             ],
           ];
@@ -818,6 +957,19 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
             hideousLaughterDamageRepeatSaves:
               attackHideousLaughterLifecycleFills,
             hideousLaughterDamageRepeatSaveEventKey: attackDamageEventKey,
+            sourceDamageRollPenaltyRoll: sourceDamageRollPenaltyRollForDamageRoll(
+              input.fillSet.sourceDamageRollPenaltyRolls,
+              attackResolvedState.combatants.get(input.actorId),
+              spellDamageByTypeForTarget(
+                target,
+                input.invocation,
+                input.fillSet.attackBurstDamageRoll,
+                "full",
+                spellMarkedDamageRiders,
+                critical,
+              ),
+              input.fillSet.attackBurstDamageRoll.holeId,
+            ),
             damageSourceId: input.actorId,
           },
         )

@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-ray-of-enfeeblement-d20-lifecycle
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-ray-of-enfeeblement-d20-lifecycle spell.invocation-ray-of-enfeeblement-damage-penalty
 
 module battleRuntimeSpellFactsTests {
   import battleRuntime.* from "./battle-runtime"
@@ -62,6 +62,28 @@ module battleRuntimeSpellFactsTests {
       rayOfEnfeeblementD20LifecycleActiveEffectsAfterNextAttack(raySuccess.goblin.activeEffects, Fighter)
     val rayAfterRepeatSaveEffects =
       rayOfEnfeeblementD20LifecycleActiveEffectsAfterRepeatSave(rayFailure.goblin.activeEffects, Fighter, true)
+    val rayDamagePenaltyEffects = Set(RayOfEnfeeblementDamageRollPenalty({ source: Fighter, durationTicks: rayOfEnfeeblementD20LifecycleDurationTicks }))
+    val resistanceReductionEffects = Set(ResistanceDamageReduction({ damageType: Fire, usedThisTurn: false }))
+    val resistantConcentratingTarget = {
+      ...initialState.goblin,
+      concentrating: true,
+      activeEffects: resistanceReductionEffects,
+    }
+    val rayPenaltyResistedReducedTarget =
+      saveGatedDamageTargetAfterRayPenaltyLifecycle(
+        FireballSaveGate,
+        resistantConcentratingTarget,
+        rayDamagePenaltyEffects,
+        Fighter,
+        20,
+        4,
+        true,
+        Set(Fire),
+        Set(),
+        Set(),
+        3,
+        false,
+      )
     all {
       assert(rollModifierMaximumTargets(BlessRollModifier, 2) == 4),
       assert(rollModifierMaximumTargets(BaneRollModifier, 3) == 5),
@@ -319,6 +341,7 @@ module battleRuntimeSpellFactsTests {
       assert(activeEffectsWithoutSpellEffectConcentration(Set(Blurred)) == Set()),
       assert(activeEffectsWithoutSpellEffectConcentration(Set(RayOfEnfeeblementNextAttackDisadvantage({ source: Fighter }))) == Set()),
       assert(activeEffectsWithoutSpellEffectConcentration(Set(RayOfEnfeeblementD20Lifecycle({ source: Fighter, durationTicks: 10 }))) == Set()),
+      assert(activeEffectsWithoutSpellEffectConcentration(Set(RayOfEnfeeblementDamageRollPenalty({ source: Fighter, durationTicks: 10 }))) == Set()),
       assert(rayOfEnfeeblementD20LifecycleTargeting == TargetListSaveTargets({
         minTargets: 1,
         baseSlotLevel: 2,
@@ -336,8 +359,22 @@ module battleRuntimeSpellFactsTests {
       assert(not(rayOfEnfeeblementD20LifecycleConcentratingAfterEffectsChange(rayAfterNextAttackEffects, Fighter, raySuccess.fighter.concentrating))),
       assert(rayFailure.fighter.concentrating),
       assert(rayFailure.goblin.activeEffects.contains(RayOfEnfeeblementD20Lifecycle({ source: Fighter, durationTicks: rayOfEnfeeblementD20LifecycleDurationTicks }))),
-      assert(rayFailedEffects == Set(RayOfEnfeeblementD20Lifecycle({ source: Fighter, durationTicks: rayOfEnfeeblementD20LifecycleDurationTicks }))),
+      assert(rayFailure.goblin.activeEffects.contains(RayOfEnfeeblementDamageRollPenalty({ source: Fighter, durationTicks: rayOfEnfeeblementD20LifecycleDurationTicks }))),
+      assert(rayFailedEffects == Set(
+        RayOfEnfeeblementD20Lifecycle({ source: Fighter, durationTicks: rayOfEnfeeblementD20LifecycleDurationTicks }),
+        RayOfEnfeeblementDamageRollPenalty({ source: Fighter, durationTicks: rayOfEnfeeblementD20LifecycleDurationTicks }),
+      )),
       assert(raySuccessEffects == Set(RayOfEnfeeblementNextAttackDisadvantage({ source: Fighter }))),
+      assert(rayOfEnfeeblementDamageRollPenaltyApplies(rayFailure.goblin.activeEffects, Fighter)),
+      assert(not(rayOfEnfeeblementDamageRollPenaltyApplies(rayFailure.goblin.activeEffects, Goblin))),
+      assert(damageAfterRayOfEnfeeblementDamageRollPenalty(rayFailure.goblin.activeEffects, Fighter, 6, 4) == 2),
+      assert(damageAfterRayOfEnfeeblementDamageRollPenalty(rayFailure.goblin.activeEffects, Fighter, 3, 8) == 0),
+      assert(damageAfterRayOfEnfeeblementDamageRollPenalty(rayFailure.goblin.activeEffects, Goblin, 6, 4) == 6),
+      assert(saveGatedDamageAfterRayPenaltyAndTargetAdjustments(FireballSaveGate, rayDamagePenaltyEffects, Fighter, 20, 4, true, Set(Fire), Set(), Set()) == 4),
+      assert(saveGatedDamageAfterRayPenaltyAndTargetAdjustments(FireballSaveGate, rayDamagePenaltyEffects, Goblin, 20, 4, true, Set(Fire), Set(), Set()) == 5),
+      assert(saveGatedDamageAfterRayPenaltyResistanceSpellReduction(FireballSaveGate, rayDamagePenaltyEffects, resistanceReductionEffects, Fighter, 20, 4, true, Set(Fire), Set(), Set(), 3) == 1),
+      assert(rayPenaltyResistedReducedTarget.hp == 9),
+      assert(not(rayPenaltyResistedReducedTarget.concentrating)),
       assert(rayOfEnfeeblementD20LifecycleAttackRollMode(rayFailure.goblin.activeEffects, StrAbility) == DisadvantageSpellAttackRoll),
       assert(rayOfEnfeeblementD20LifecycleAttackRollMode(rayFailure.goblin.activeEffects, DexAbility) == NormalSpellAttackRoll),
       assert(rayOfEnfeeblementD20LifecycleAbilityCheckRollMode(rayFailure.goblin.activeEffects, StrAbility) == DisadvantageAbilityCheck),
@@ -345,6 +382,7 @@ module battleRuntimeSpellFactsTests {
       assert(rayOfEnfeeblementD20LifecycleSavingThrowRollMode(rayFailure.goblin.activeEffects, StrAbility) == DisadvantageSavingThrow),
       assert(rayOfEnfeeblementD20LifecycleSavingThrowRollMode(rayFailure.goblin.activeEffects, DexAbility) == NormalSavingThrow),
       assert(not(rayAfterRepeatSaveEffects.contains(RayOfEnfeeblementD20Lifecycle({ source: Fighter, durationTicks: rayOfEnfeeblementD20LifecycleDurationTicks })))),
+      assert(not(rayAfterRepeatSaveEffects.contains(RayOfEnfeeblementDamageRollPenalty({ source: Fighter, durationTicks: rayOfEnfeeblementD20LifecycleDurationTicks })))),
       assert(not(rayOfEnfeeblementD20LifecycleConcentratingAfterEffectsChange(rayAfterRepeatSaveEffects, Fighter, rayFailure.fighter.concentrating))),
       assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(ProtectionFromEvilAndGoodCreatureTypeProtection), true) == DisadvantageSpellAttackRoll),
       assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(GuidingBoltNextAttackAdvantage, ProtectionFromEvilAndGoodCreatureTypeProtection), false) == NormalSpellAttackRoll),

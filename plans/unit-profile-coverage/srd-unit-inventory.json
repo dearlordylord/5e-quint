@@ -200,8 +200,8 @@
         "accepted": 379,
         "accepted-no-battle-effect": 147,
         "owner-evidence-required": 2,
-        "partial-battle-runtime": 18,
-        "battle-runtime-required": 10
+        "partial-battle-runtime": 16,
+        "battle-runtime-required": 12
       }
     },
     "levelOneClassContainers": 12,
@@ -219,15 +219,15 @@
       "catalog-installed-owner-evidence-present": 398,
       "non-runtime": 24,
       "catalog-installed-owner-evidence-required": 9,
-      "catalog-only/dead-for-now": 120,
-      "catalog-authored-executable-follow-up": 4,
+      "catalog-only/dead-for-now": 122,
+      "catalog-authored-executable-follow-up": 2,
       "catalog-installed-needs-owner-evidence": 1
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 235,
-      "catalog-only/dead-for-now": 120,
+      "catalog-only/dead-for-now": 122,
       "catalog-installed-owner-evidence-required": 8,
-      "catalog-authored-executable-follow-up": 4
+      "catalog-authored-executable-follow-up": 2
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -23610,11 +23610,11 @@
         "state": "not-installed",
         "unitId": "ray_of_enfeeblement"
       },
-      "unitProfileDisposition": "profile-subset-supported",
-      "finalDisposition": "catalog-authored-executable-follow-up",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY: L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY owns Promote Ray of Enfeeblement's failed-save source-side damage penalty: subtract 1d8 from all damage rolls made by the affected target while the spell effect is active, covering attack, spell, and other battle-owned damage rolls through one generic spell damage-roll penalty hole/fill path that applies before target-side Resistance, damage reductions, Concentration saves, and damage disposition. Required output: Supported-profile or profile-subset-supported Unit claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Ray damage-roll subtraction without duplicating damage state.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_spider_climb",
@@ -27459,11 +27459,11 @@
         "state": "not-installed",
         "unitId": "ray_of_enfeeblement"
       },
-      "unitProfileDisposition": "profile-subset-supported",
-      "finalDisposition": "catalog-authored-executable-follow-up",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
       "ownerEvidence": [],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY: L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY owns Promote Ray of Enfeeblement's failed-save source-side damage penalty: subtract 1d8 from all damage rolls made by the affected target while the spell effect is active, covering attack, spell, and other battle-owned damage rolls through one generic spell damage-roll penalty hole/fill path that applies before target-side Resistance, damage reductions, Concentration saves, and damage disposition. Required output: Supported-profile or profile-subset-supported Unit claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Ray damage-roll subtraction without duplicating damage state.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_rope_trick",

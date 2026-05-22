@@ -72,38 +72,38 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 90,
-      "numerator": 90,
+      "denominator": 91,
+      "numerator": 91,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 90,
-      "numerator": 90,
+      "denominator": 91,
+      "numerator": 91,
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 123,
+      "denominator": 124,
       "numerator": 105,
-      "percent": "85.4%"
+      "percent": "84.7%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 123,
+      "denominator": 124,
       "numerator": 105,
-      "percent": "85.4%"
+      "percent": "84.7%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 136,
+      "denominator": 137,
       "numerator": 126,
-      "percent": "92.6%"
+      "percent": "92%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 90,
-      "numerator": 90,
+      "denominator": 91,
+      "numerator": 91,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 90,
-      "numerator": 90,
+      "denominator": 91,
+      "numerator": 91,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -3545,6 +3545,53 @@
       ]
     },
     {
+      "id": "spell.invocation-ray-of-enfeeblement-damage-penalty",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/active-effect/types.ts",
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-fill-set.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-offhand.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-runtime-protocol.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/opportunity-attacks.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-profiles-save-gates.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-burst.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-sequence.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-release.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+      ],
+      "sourceBoundary": "The runtime consumes Ray of Enfeeblement's failed-save active effect as one source-side 1d8 damage-roll penalty owned by the affected target. It requests a typed rolled-dice hole keyed to each positive source damage-roll hole, subtracts the roll from by-type damage before target-side Resistance, spell damage reductions, Concentration saves, zero-Hit-Point disposition, and damage application, and removes the paired penalty with the Ray lifecycle effect through repeat-save success or Concentration cleanup without storing duplicate damage state.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY"
+      ],
+      "title": "Ray of Enfeeblement failed save subtracts 1d8 from source damage rolls",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-ray-of-enfeeblement.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-ice-knife.test.ts"
+        }
+      ]
+    },
+    {
       "id": "spell.invocation-dragons-breath-initial",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -3577,14 +3624,14 @@
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 123,
+        "denominator": 124,
         "numerator": 105,
-        "percent": "85.4%"
+        "percent": "84.7%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 123,
+        "denominator": 124,
         "numerator": 105,
-        "percent": "85.4%"
+        "percent": "84.7%"
       }
     },
     "profileKinds": [
@@ -5195,6 +5242,12 @@
         "profileKind": "spell-invocation"
       },
       {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-ray-of-enfeeblement-damage-penalty",
+        "profileKind": "spell-invocation"
+      },
+      {
         "joinStatus": "covered",
         "obligations": [
           {
@@ -5216,9 +5269,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 136,
+          "denominator": 137,
           "numerator": 126,
-          "percent": "92.6%"
+          "percent": "92%"
         }
       },
       "units": [
@@ -7573,6 +7626,24 @@
             }
           ],
           "unitId": "ranger_weapon_mastery"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-ray-of-enfeeblement-d20-lifecycle",
+              "profileKind": "spell-invocation"
+            },
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-ray-of-enfeeblement-damage-penalty",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "ray_of_enfeeblement"
         },
         {
           "joinStatus": "covered",
@@ -10766,6 +10837,22 @@
         "spell.invocation-ray-of-enfeeblement-d20-lifecycle"
       ],
       "taskId": "L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint ownership records Ray of Enfeeblement's failed-save source-side damage-roll penalty as a spell procedure profile that subtracts 1d8 before target-side damage adjustment and damage lifecycle resolution.",
+      "profileIds": [
+        "spell.invocation-ray-of-enfeeblement-damage-penalty"
+      ],
+      "taskId": "L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused runtime tests cover Ray of Enfeeblement failed-save damage-roll penalty on an affected source's weapon damage roll, spell attack sequence damage roll, Ice Knife attack-burst damage roll, and successful-save half-damage spell roll. Runtime ownership now threads typed 1d8 source-penalty holes through generic attack/spell damage plus Cleave, save-gated, object-contact, chained, repeated-allocation, readied/reaction, and turn-start damage-roll paths before target-side damage handling.",
+      "profileIds": [
+        "spell.invocation-ray-of-enfeeblement-damage-penalty"
+      ],
+      "taskId": "L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY"
     },
     {
       "claimKind": "qnt-proof",
@@ -28525,23 +28612,13 @@
         "status": "not-in-unit-catalog"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "followUpTaskId": "L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY",
-            "mechanic": "failed-save subtraction of 1d8 from all damage rolls made by the affected target"
-          }
-        ],
-        "followUpTasks": [
-          {
-            "id": "L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY",
-            "mechanic": "Promote Ray of Enfeeblement's failed-save source-side damage penalty: subtract 1d8 from all damage rolls made by the affected target while the spell effect is active, covering attack, spell, and other battle-owned damage rolls through one generic spell damage-roll penalty hole/fill path that applies before target-side Resistance, damage reductions, Concentration saves, and damage disposition.",
-            "owner": "battle-runtime damage-roll pipeline plus promoted Quint parity",
-            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Ray damage-roll subtraction without duplicating damage state.",
-            "title": "Ray Of Enfeeblement Damage Roll Penalty Runtime"
-          }
-        ],
+        "deferredMechanics": [],
         "profileIds": [
-          "spell.invocation-ray-of-enfeeblement-d20-lifecycle"
+          "spell.invocation-ray-of-enfeeblement-d20-lifecycle",
+          "spell.invocation-ray-of-enfeeblement-damage-penalty"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
         ],
         "supportedMechanics": [
           "Magic Action and level-2-or-higher Spell Slot spend",
@@ -28549,10 +28626,11 @@
           "Constitution save gate",
           "success-side Disadvantage on the target's next attack roll until the start of the caster's next turn",
           "failed-save Disadvantage on Strength-based D20 Tests: Strength attack rolls with explicit attack ability, Strength Ability Checks, and Strength Saving Throws",
-          "end-of-target-turn Constitution repeat save ending the active spell effect on success",
-          "caster Concentration cleanup for success and failed-save D20 lifecycle effects"
+          "failed-save subtraction of 1d8 from positive damage rolls made by the affected target before target-side Resistance, damage reductions, Concentration saves, zero-Hit-Point disposition, and damage application",
+          "end-of-target-turn Constitution repeat save ending the active spell effects on success",
+          "caster Concentration cleanup for success-side and failed-save Ray effects"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [],
@@ -28592,6 +28670,53 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-ray-of-enfeeblement.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "spell.invocation-ray-of-enfeeblement-damage-penalty",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/active-effect/types.ts",
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-fill-set.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-offhand.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-runtime-protocol.ts",
+            "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
+            "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+            "packages/battle-runtime/src/battle-reducer/opportunity-attacks.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-profiles-save-gates.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-burst.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-sequence.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-release.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+          ],
+          "sourceBoundary": "The runtime consumes Ray of Enfeeblement's failed-save active effect as one source-side 1d8 damage-roll penalty owned by the affected target. It requests a typed rolled-dice hole keyed to each positive source damage-roll hole, subtracts the roll from by-type damage before target-side Resistance, spell damage reductions, Concentration saves, zero-Hit-Point disposition, and damage application, and removes the paired penalty with the Ray lifecycle effect through repeat-save success or Concentration cleanup without storing duplicate damage state.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY"
+          ],
+          "title": "Ray of Enfeeblement failed save subtracts 1d8 from source damage rolls",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-ray-of-enfeeblement.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-ice-knife.test.ts"
             }
           ]
         }

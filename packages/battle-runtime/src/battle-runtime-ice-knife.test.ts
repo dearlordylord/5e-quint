@@ -1,3 +1,4 @@
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-ray-of-enfeeblement-damage-penalty
 import {
   startBattleRight,
   requireResolved,
@@ -32,8 +33,216 @@ import type {
   BattleSubject,
 } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
+import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
+import { sourceDamageRollPenaltyRollHole } from "./battle-reducer/damage-helpers.ts";
 
 describe("battle runtime: Ice Knife", () => {
+  test("Ray of Enfeeblement source penalty is requested before Ice Knife attack-burst save damage", () => {
+    const primaryTargetId = combatantId("ice-knife-ray-primary");
+    const baseState = startBattleRight({
+      battleId: battleId("battle-ice-knife-ray-penalty"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            cantrips: [],
+            preparedSpells: [spellRecord("ice_knife")],
+            spellSlots: [{ spellLevel: 2, count: 1 }],
+          }),
+        }),
+        characterSeed({
+          combatantId: primaryTargetId,
+          displayName: "Primary Target",
+          initiative: 10,
+          side: oppositionSide,
+          currentHp: 30,
+          maxHp: 30,
+        }),
+      ],
+    });
+    const wizard = baseState.combatants.get(wizardId);
+    if (wizard === undefined) {
+      throw new Error("Expected Wizard.");
+    }
+    const state = {
+      ...baseState,
+      combatants: new Map(baseState.combatants).set(wizardId, {
+        ...wizard,
+        activeEffects: [
+          ...wizard.activeEffects,
+          {
+            kind: "sourceDamageRollPenalty" as const,
+            sourceSpellId: "ray_of_enfeeblement",
+            sourceCombatantId: primaryTargetId,
+            amount: { dice: 1 as const, dieSize: 8 as const },
+            expiresAt: {
+              kind: "concentration" as const,
+              combatantId: primaryTargetId,
+            },
+          },
+        ],
+      }),
+    };
+    const subject: BattleSubject = {
+      tag: "actionSpell",
+      actorId: wizardId,
+      invocation: spellSlotInvocationRef(
+        "ice_knife",
+        2,
+        "attackBurstSaveDamage",
+      ),
+      mode: { tag: "cast" },
+    };
+    const target = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const targetChoice = targetFill(target, primaryTargetId);
+    const attack = requireHole(
+      resolveBattleSubject({ state, subject, fills: [targetChoice] }),
+      "attackRoll",
+    );
+    const attackRoll = attackRollFill(attack, { total: 25, naturalD20: 20 });
+    const attackDamage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetChoice, attackRoll],
+      }),
+      "rolledDice",
+    );
+    const penalty = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetChoice,
+          attackRoll,
+          damageRollFillWithGroups(attackDamage, [[5, 5]]),
+        ],
+      }),
+      "rolledDice",
+    );
+    expect(penalty).toHaveProperty(
+      "sourceDamageRollPenalty.damageRollHoleId",
+      attackDamage.holeId,
+    );
+    const stalePenalty = sourceDamageRollPenaltyRollHole({
+      sourceSpellId: "ray_of_enfeeblement",
+      sourceCombatantId: primaryTargetId,
+      affectedCombatantId: wizardId,
+      damageRollHoleId: holeId(
+        "battle:test:ice-knife-attack-stale-source-penalty",
+      ),
+      amount: { dice: 1, dieSize: 8 },
+    });
+    const savingThrows = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetChoice,
+          attackRoll,
+          damageRollFillWithGroups(attackDamage, [[5, 5]]),
+          damageRollFillWithGroups(penalty, [[3]]),
+        ],
+      }),
+      "savingThrowOutcome",
+    );
+    const burstDamage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetChoice,
+          attackRoll,
+          damageRollFillWithGroups(attackDamage, [[5, 5]]),
+          damageRollFillWithGroups(penalty, [[3]]),
+          {
+            kind: "savingThrowOutcome",
+            holeId: savingThrows.holeId,
+            value: {
+              area: {
+                originAnchorId: primaryTargetId,
+                affectedTargetIds: [primaryTargetId],
+              },
+              outcomes: [{ targetId: primaryTargetId, succeeded: false }],
+            },
+          } satisfies Extract<
+            BattleFill,
+            { readonly kind: "savingThrowOutcome" }
+          >,
+        ],
+      }),
+      "rolledDice",
+    );
+    const burstPenalty = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetChoice,
+          attackRoll,
+          damageRollFillWithGroups(attackDamage, [[5, 5]]),
+          damageRollFillWithGroups(penalty, [[3]]),
+          {
+            kind: "savingThrowOutcome",
+            holeId: savingThrows.holeId,
+            value: {
+              area: {
+                originAnchorId: primaryTargetId,
+                affectedTargetIds: [primaryTargetId],
+              },
+              outcomes: [{ targetId: primaryTargetId, succeeded: false }],
+            },
+          } satisfies Extract<
+            BattleFill,
+            { readonly kind: "savingThrowOutcome" }
+          >,
+          damageRollFillWithGroups(burstDamage, [[4, 4, 4]]),
+        ],
+      }),
+      "rolledDice",
+    );
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetChoice,
+          attackRoll,
+          damageRollFillWithGroups(attackDamage, [[5, 5]]),
+          damageRollFillWithGroups(penalty, [[3]]),
+          {
+            kind: "savingThrowOutcome",
+            holeId: savingThrows.holeId,
+            value: {
+              area: {
+                originAnchorId: primaryTargetId,
+                affectedTargetIds: [primaryTargetId],
+              },
+              outcomes: [{ targetId: primaryTargetId, succeeded: false }],
+            },
+          } satisfies Extract<
+            BattleFill,
+            { readonly kind: "savingThrowOutcome" }
+          >,
+          damageRollFillWithGroups(burstDamage, [[4, 4, 4]]),
+          damageRollFillWithGroups(burstPenalty, [[2]]),
+          damageRollFillWithGroups(stalePenalty, [[1]]),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Source damage roll penalty does not match an active source-side damage penalty.",
+    });
+  });
+
   test("Ice Knife resolves critical attack damage and mandatory primary-target burst", () => {
     const primaryTargetId = combatantId("ice-knife-primary");
     const baseState = startBattleRight({

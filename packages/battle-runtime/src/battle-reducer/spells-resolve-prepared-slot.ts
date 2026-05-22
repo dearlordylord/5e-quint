@@ -1,7 +1,10 @@
 // Prepared-slot repeated-damage-allocation spell resolution extracted from spells-resolve.ts.
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 
+import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { spendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
+import type { DamageType } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 import {
   maybeOpenReactionWindow,
@@ -9,6 +12,7 @@ import {
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type BattleAfterDamageEvent,
+  type BattleCreatureState,
   type BattleFill,
   type BattleHoleId,
   type BattleResolutionResult,
@@ -30,6 +34,14 @@ import {
   damageLifecycleHideousLaughterDamageRepeatSaveHoles,
   fillsMatchingHoleIds,
 } from "./damage-apply.ts";
+import {
+  addDamageAmountForType,
+  applyAvailableSourceDamageRollPenalty,
+  damageAmountByTypeAfterTargetAdjustments,
+  sourceDamageRollPenaltyRollHoleForDamageRoll,
+  sourceDamageRollPenaltyRollForDamageRoll,
+  unexpectedSourceDamageRollPenaltyRoll,
+} from "./damage-helpers.ts";
 import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
@@ -41,7 +53,7 @@ import {
 import { expendSpellSlot } from "./spell-effects.ts";
 import {
   applyPreparedSlotSpellDamage,
-  repeatedDamageAllocationSpellDamageAmount,
+  spellDamageNegatedForTarget,
   spellDamageHole,
   spellTargetAllocationHole,
   validatePreparedSlotSpellDamageGroups,
@@ -272,22 +284,117 @@ export function resolvePreparedSlotSpellAct(input: {
   }
 
   if (input.fillSet.damageRoll == null) {
+    if (input.fillSet.sourceDamageRollPenaltyRolls.length > 0) {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        "Source damage roll penalty does not match an active source-side damage penalty.",
+      );
+    }
     return needsHolesResult(input.input.state, input.input.subject, [
       spellDamageHole(input.invocation),
     ]);
   }
+  const damageRoll = input.fillSet.damageRoll;
   const damageValidation =
     validateSpellDamageFill(
-      input.fillSet.damageRoll,
+      damageRoll,
       input.invocation,
       false,
     ) ??
     validatePreparedSlotSpellDamageGroups(
-      input.fillSet.damageRoll,
+      damageRoll,
       targetAllocation.allocations,
     );
   if (damageValidation !== null) {
     return invalidResult(input.input.state, "invalidFill", damageValidation);
+  }
+
+  const source = input.input.state.combatants.get(input.actorId);
+  const expectedSourcePenaltyHoles = targetAllocation.allocations.flatMap(
+    (allocation, allocationIndex) => {
+      const target = input.input.state.combatants.get(allocation.targetId);
+      if (target === undefined) {
+        return [];
+      }
+      const damageByType = repeatedDamageAllocationSpellDamageByType(
+        target,
+        input.invocation,
+        damageRoll,
+        allocationIndex,
+        allocation.count,
+      );
+      const hole = sourceDamageRollPenaltyRollHoleForDamageRoll(
+        source,
+        damageByType,
+        repeatedDamageAllocationSourceDamageRollHoleId(
+          damageRoll.holeId,
+          allocationIndex,
+        ),
+      );
+      return hole === null ? [] : [hole];
+    },
+  );
+  if (
+    unexpectedSourceDamageRollPenaltyRoll(
+      input.fillSet.sourceDamageRollPenaltyRolls,
+      expectedSourcePenaltyHoles,
+    ) !== undefined
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Source damage roll penalty does not match an active source-side damage penalty.",
+    );
+  }
+  const damageAmountByAllocationIndex = new Map<number, number>();
+  for (const [allocationIndex, allocation] of targetAllocation.allocations.entries()) {
+    const target = input.input.state.combatants.get(allocation.targetId);
+    if (target === undefined) {
+      continue;
+    }
+    const damageByType = repeatedDamageAllocationSpellDamageByType(
+      target,
+      input.invocation,
+      damageRoll,
+      allocationIndex,
+      allocation.count,
+    );
+    const sourcePenaltyDamageRollHoleId =
+      repeatedDamageAllocationSourceDamageRollHoleId(
+        damageRoll.holeId,
+        allocationIndex,
+      );
+    const sourcePenalty = applyAvailableSourceDamageRollPenalty(
+      source,
+      damageByType,
+      sourcePenaltyDamageRollHoleId,
+      sourceDamageRollPenaltyRollForDamageRoll(
+        input.fillSet.sourceDamageRollPenaltyRolls,
+        source,
+        damageByType,
+        sourcePenaltyDamageRollHoleId,
+      ),
+    );
+    if (sourcePenalty.tag === "invalid") {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        "Source damage roll penalty does not match an active source-side damage penalty.",
+      );
+    }
+    if (sourcePenalty.tag === "needsHoles") {
+      return needsHolesResult(input.input.state, input.input.subject, [
+        ...sourcePenalty.holes,
+      ]);
+    }
+    damageAmountByAllocationIndex.set(
+      allocationIndex,
+      damageAmountByTypeAfterTargetAdjustments(
+        target,
+        sourcePenalty.damageByType,
+      ),
+    );
   }
 
   const concentrationSaves = targetAllocation.allocations.flatMap(
@@ -296,13 +403,8 @@ export function resolvePreparedSlotSpellAct(input: {
       if (target === undefined) {
         return [];
       }
-      const damageAmount = repeatedDamageAllocationSpellDamageAmount(
-        target,
-        input.invocation,
-        input.fillSet.damageRoll!,
-        allocationIndex,
-        allocation.count,
-      );
+      const damageAmount =
+        damageAmountByAllocationIndex.get(allocationIndex) ?? 0;
       return damageLifecycleConcentrationSavingThrowHoles({
         state: input.input.state,
         target,
@@ -344,13 +446,8 @@ export function resolvePreparedSlotSpellAct(input: {
       if (target === undefined) {
         return [];
       }
-      const damageAmount = repeatedDamageAllocationSpellDamageAmount(
-        target,
-        input.invocation,
-        input.fillSet.damageRoll!,
-        allocationIndex,
-        allocation.count,
-      );
+      const damageAmount =
+        damageAmountByAllocationIndex.get(allocationIndex) ?? 0;
       const hole = zeroHitPointReplacementDispositionHole({
         damageSourceId: input.actorId,
         target,
@@ -386,13 +483,8 @@ export function resolvePreparedSlotSpellAct(input: {
       if (target === undefined) {
         return { tag: "ok" as const, holes: [] };
       }
-      const damageAmount = repeatedDamageAllocationSpellDamageAmount(
-        target,
-        input.invocation,
-        input.fillSet.damageRoll!,
-        allocationIndex,
-        allocation.count,
-      );
+      const damageAmount =
+        damageAmountByAllocationIndex.get(allocationIndex) ?? 0;
       const holes = damageLifecycleHideousLaughterDamageRepeatSaveHoles({
         state: input.input.state,
         target,
@@ -457,13 +549,8 @@ export function resolvePreparedSlotSpellAct(input: {
       if (target === undefined) {
         return state;
       }
-      const damageAmount = repeatedDamageAllocationSpellDamageAmount(
-        target,
-        input.invocation,
-        input.fillSet.damageRoll!,
-        allocationIndex,
-        allocation.count,
-      );
+      const damageAmount =
+        damageAmountByAllocationIndex.get(allocationIndex) ?? 0;
       const concentrationSave = concentrationSavingThrowHole(
         target,
         damageAmount,
@@ -551,20 +638,14 @@ export function resolvePreparedSlotSpellAct(input: {
     currentTurnResources: slotTurnResources.right,
   };
   if (input.opensAfterDamageReactionWindow !== false) {
-    const damageRoll = input.fillSet.damageRoll;
     const afterDamageEvents = targetAllocation.allocations.flatMap(
       (allocation, allocationIndex): readonly BattleAfterDamageEvent[] => {
         const target = input.input.state.combatants.get(allocation.targetId);
         if (target === undefined) {
           return [];
         }
-        const damageAmount = repeatedDamageAllocationSpellDamageAmount(
-          target,
-          input.invocation,
-          damageRoll,
-          allocationIndex,
-          allocation.count,
-        );
+        const damageAmount =
+          damageAmountByAllocationIndex.get(allocationIndex) ?? 0;
         return [
           {
             damageSourceId: input.actorId,
@@ -609,4 +690,38 @@ function spellAllocationSpatialFacts(
       fact.kind === "reactionSpellDamagerVisibleWithinRange",
   );
   return allocationFacts.length === facts.length ? allocationFacts : null;
+}
+
+function repeatedDamageAllocationSourceDamageRollHoleId(
+  damageRollHoleId: BattleHoleId,
+  allocationIndex: number,
+): BattleHoleId {
+  return holeId(`${damageRollHoleId}:allocation:${allocationIndex}`);
+}
+
+function repeatedDamageAllocationSpellDamageByType(
+  target: BattleCreatureState,
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "repeatedDamageAllocation" }
+  >,
+  damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+  allocationIndex: number,
+  repeatedEffectCount: number,
+): ReadonlyMap<DamageType, number> {
+  if (spellDamageNegatedForTarget(target, invocation.spell.id)) {
+    return new Map();
+  }
+  const group = damageRoll.value[allocationIndex];
+  const diceTotal =
+    group?.results.reduce(
+      (groupTotal, dieResult): number => groupTotal + Number(dieResult),
+      0,
+    ) ?? 0;
+  const flat = (invocation.damage.expr.flat ?? 0) * repeatedEffectCount;
+  return addDamageAmountForType(
+    new Map(),
+    invocation.damage.damageType,
+    diceTotal + flat,
+  );
 }

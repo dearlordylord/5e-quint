@@ -4,6 +4,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.passive-saving-throw-roll-mode
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
@@ -41,6 +42,7 @@ import {
 import {
   addDamageAmountForType,
   applyAvailableSpellDamageReduction,
+  applyAvailableSourceDamageRollPenalty,
   damageAmountAfterTargetAdjustments,
   damageAmountByTypeAfterTargetAdjustments,
 } from "./damage-helpers.ts";
@@ -1549,6 +1551,10 @@ type SpellDamageContext = {
   readonly spellDamageReductionRoll?:
     | Extract<BattleFill, { readonly kind: "rolledDice" }>
     | undefined;
+  readonly sourceDamageRollPenaltyRoll?:
+    | Extract<BattleFill, { readonly kind: "rolledDice" }>
+    | undefined;
+  readonly sourcePenaltyDamageByType?: ReadonlyMap<DamageType, number>;
   readonly spellDamageReductionRollHoleForReduction?:
     | Parameters<typeof applyAvailableSpellDamageReduction>[3]
     | undefined;
@@ -1576,18 +1582,40 @@ export function applySpellDamage(
     damageDisposition = { kind: "ordinaryDamage" },
     spellMarkedDamageRiders = [],
     spellDamageReductionRoll,
+    sourceDamageRollPenaltyRoll,
+    sourcePenaltyDamageByType,
     spellDamageReductionRollHoleForReduction,
     damageSourceId,
   } = context;
+  const spellDamageByType = spellDamageByTypeForTarget(
+    target,
+    invocation,
+    damageRoll,
+    "full",
+    spellMarkedDamageRiders,
+    critical,
+  );
+  const sourcePenalty =
+    sourcePenaltyDamageByType !== undefined
+      ? ({ tag: "ok", damageByType: sourcePenaltyDamageByType } as const)
+      : sourceDamageRollPenaltyRoll === undefined
+      ? ({ tag: "ok", damageByType: spellDamageByType } as const)
+      : applyAvailableSourceDamageRollPenalty(
+          damageSourceId === undefined
+            ? undefined
+            : state.combatants.get(damageSourceId),
+          spellDamageByType,
+          damageRoll.holeId,
+          sourceDamageRollPenaltyRoll,
+        );
+  if (sourcePenalty.tag !== "ok") {
+    return state;
+  }
   const reduction = applyAvailableSpellDamageReduction(
     target,
-    spellDamageByTypeForTarget(
-      target,
-      invocation,
-      damageRoll,
+    damageAmountByTypeAfterSaveDamageResult(
+      sourcePenalty.damageByType,
       saveDamageResult,
-      spellMarkedDamageRiders,
-      critical,
     ),
     spellDamageReductionRoll,
     spellDamageReductionRollHoleForReduction,
@@ -1753,6 +1781,18 @@ export function spellDamageByTypeForTarget(
   );
 }
 
+export function damageAmountByTypeAfterSaveDamageResult(
+  damageByType: ReadonlyMap<DamageType, number>,
+  saveDamageResult: SaveDamageResult,
+): ReadonlyMap<DamageType, number> {
+  return new Map(
+    [...damageByType].map(([damageType, amount]) => [
+      damageType,
+      applySaveDamageResult(amount, saveDamageResult),
+    ]),
+  );
+}
+
 export function spellObjectDamageOutcome(input: {
   readonly objectId: BattleObjectId;
   readonly invocation: SpellObjectDamageInvocation;
@@ -1760,23 +1800,37 @@ export function spellObjectDamageOutcome(input: {
   readonly critical: boolean;
   readonly disposition: BattleObjectDamageDisposition;
 }): BattleObjectDamageOutcome {
-  const rolledDamage = spellObjectRolledDamage(
+  const damageByType = spellObjectDamageByType(
     input.invocation,
     input.damageRoll,
     input.critical,
   );
-  const damageType = input.invocation.damage.damageType;
+  return spellObjectDamageOutcomeFromDamageByType({
+    objectId: input.objectId,
+    damageType: input.invocation.damage.damageType,
+    damageByType,
+    disposition: input.disposition,
+  });
+}
+
+export function spellObjectDamageOutcomeFromDamageByType(input: {
+  readonly objectId: BattleObjectId;
+  readonly damageType: DamageType;
+  readonly damageByType: ReadonlyMap<DamageType, number>;
+  readonly disposition: BattleObjectDamageDisposition;
+}): BattleObjectDamageOutcome {
+  const rolledDamage = input.damageByType.get(input.damageType) ?? 0;
   return Match.value(input.disposition).pipe(
     Match.when({ kind: "tableResolved" }, () => ({
       kind: "tableResolved" as const,
       objectId: input.objectId,
-      damageType,
+      damageType: input.damageType,
       rolledDamage: damageAmount(rolledDamage),
     })),
     Match.when({ kind: "hitPoints" }, (disposition) =>
       objectHitPointDamageOutcome({
         objectId: input.objectId,
-        damageType,
+        damageType: input.damageType,
         rolledDamage,
         priorHitPoints: disposition.hitPoints,
         damageThreshold: null,
@@ -1785,13 +1839,25 @@ export function spellObjectDamageOutcome(input: {
     Match.when({ kind: "hitPointsWithDamageThreshold" }, (disposition) =>
       objectHitPointDamageOutcome({
         objectId: input.objectId,
-        damageType,
+        damageType: input.damageType,
         rolledDamage,
         priorHitPoints: disposition.hitPoints,
         damageThreshold: disposition.damageThreshold,
       }),
     ),
     Match.exhaustive,
+  );
+}
+
+export function spellObjectDamageByType(
+  invocation: SpellObjectDamageInvocation,
+  damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+  critical: boolean,
+): ReadonlyMap<DamageType, number> {
+  return addDamageAmountForType(
+    new Map(),
+    invocation.damage.damageType,
+    spellObjectRolledDamage(invocation, damageRoll, critical),
   );
 }
 
@@ -1856,6 +1922,21 @@ export function spellBurstDamageAmountForTarget(
   damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
   saveDamageResult: SaveDamageResult,
 ): number {
+  return damageAmountByTypeAfterTargetAdjustments(
+    target,
+    spellBurstDamageByTypeForTarget(target, invocation, damageRoll, saveDamageResult),
+  );
+}
+
+export function spellBurstDamageByTypeForTarget(
+  _target: BattleCreatureState,
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "attackBurstSaveDamage" }
+  >,
+  damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+  saveDamageResult: SaveDamageResult,
+): ReadonlyMap<DamageType, number> {
   const diceTotal = damageRoll.value.reduce(
     (total: number, group: RolledDiceGroup): number =>
       total +
@@ -1867,10 +1948,10 @@ export function spellBurstDamageAmountForTarget(
     0,
   );
   const flat = invocation.burst.damage.expr.flat ?? 0;
-  return damageAmountAfterTargetAdjustments(
-    target,
-    applySaveDamageResult(diceTotal + flat, saveDamageResult),
+  return addDamageAmountForType(
+    new Map(),
     invocation.burst.damage.damageType,
+    applySaveDamageResult(diceTotal + flat, saveDamageResult),
   );
 }
 

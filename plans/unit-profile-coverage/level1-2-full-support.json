@@ -2159,52 +2159,6 @@
       "unitId": "ranger_fighting_style"
     },
     {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "follow-up-split"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY: Promote Ray of Enfeeblement's failed-save source-side damage penalty: subtract 1d8 from all damage rolls made by the affected target while the spell effect is active, covering attack, spell, and other battle-owned damage rolls through one generic spell damage-roll penalty hole/fill path that applies before target-side Resistance, damage reductions, Concentration saves, and damage disposition. Owner: battle-runtime damage-roll pipeline plus promoted Quint parity. Required output: Supported-profile or profile-subset-supported Unit claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Ray damage-roll subtraction without duplicating damage state.",
-      "sourceRecordPath": "packages/surface/content/ray_of_enfeeblement.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Warlock spell list Ray of Enfeeblement",
-          "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_ray_of_enfeeblement",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 372,
-            "lineStart": 372,
-            "path": ".references/srd-5.2.1/Classes/Warlock.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Ray of Enfeeblement",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_ray_of_enfeeblement",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 224,
-            "lineStart": 224,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "blocked-follow-up-split",
-      "strictTargetClosed": true,
-      "unitId": "ray_of_enfeeblement"
-    },
-    {
       "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
@@ -2727,7 +2681,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 113,
+      "count": 114,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -2810,6 +2764,7 @@
         "protection_from_poison",
         "ranger_deft_explorer",
         "ranger_weapon_mastery",
+        "ray_of_enfeeblement",
         "ray_of_frost",
         "ray_of_sickness",
         "resistance",
@@ -2887,7 +2842,7 @@
       ]
     },
     {
-      "count": 12,
+      "count": 11,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
@@ -2900,7 +2855,6 @@
         "enthrall",
         "levitate",
         "moonbeam",
-        "ray_of_enfeeblement",
         "sorcerer_metamagic",
         "spiritual_weapon"
       ]
@@ -2962,30 +2916,30 @@
       "rowsByStatus": {
         "accepted": 379,
         "accepted-no-battle-effect": 147,
-        "battle-runtime-required": 10,
+        "battle-runtime-required": 12,
         "owner-evidence-required": 2,
-        "partial-battle-runtime": 18
+        "partial-battle-runtime": 16
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 85,
+      "denominator": 87,
       "numerator": 78,
-      "percent": "91.8%"
+      "percent": "89.7%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 85,
+      "denominator": 87,
       "numerator": 78,
-      "percent": "91.8%"
+      "percent": "89.7%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 113,
+      "denominator": 114,
       "numerator": 103,
-      "percent": "91.2%"
+      "percent": "90.4%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 171,
-      "numerator": 113,
-      "percent": "66.1%"
+      "numerator": 114,
+      "percent": "66.7%"
     },
     "strictTargetClosure": {
       "denominator": 171,
@@ -5413,9 +5367,9 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 113,
+        "denominator": 114,
         "numerator": 103,
-        "percent": "91.2%"
+        "percent": "90.4%"
       }
     },
     "units": [
@@ -7355,6 +7309,24 @@
         "unitId": "ranger_weapon_mastery"
       },
       {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-ray-of-enfeeblement-d20-lifecycle",
+            "profileKind": "spell-invocation"
+          },
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-ray-of-enfeeblement-damage-penalty",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "ray_of_enfeeblement"
+      },
+      {
         "joinStatus": "covered",
         "profiles": [
           {
@@ -8197,21 +8169,21 @@
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
       "missing": 1,
-      "profile-subset-supported": 25,
-      "supported-profile": 113,
+      "profile-subset-supported": 24,
+      "supported-profile": 114,
       "unsupported-profile": 32
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 12,
+      "blocked-follow-up-split": 11,
       "closed-character-fact-and-runtime-detached-split": 3,
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 33,
       "open-profile-accounting": 2,
       "open-runtime-behavior": 1,
-      "supported-profile": 113
+      "supported-profile": 114
     },
-    "nonSupportedFrontier": 58,
+    "nonSupportedFrontier": 57,
     "strictDenominator": 171
   }
 }

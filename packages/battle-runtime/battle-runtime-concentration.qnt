@@ -70,6 +70,7 @@ module battleRuntimeConcentration {
         | MindSpikeConcentrationDuration(_) => false
         | RayOfEnfeeblementNextAttackDisadvantage(_) => false
         | RayOfEnfeeblementD20Lifecycle(_) => false
+        | RayOfEnfeeblementDamageRollPenalty(_) => false
         | SelfTransformationModeEffect(_) => false
         | DragonsBreathEffect(_) => false
         | _ => true
