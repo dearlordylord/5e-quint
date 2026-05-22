@@ -43,9 +43,10 @@ only the current frontier context.
 ## Known Pre-Existing Failures (untriaged)
 
 - **Resolved 2026-05-21** (all pre-existing on master, confirmed independent of the
-  active-effect refactor, fixed and verified — deterministic `@dnd/battle-runtime`
-  suite 962 passed / 0 failed; full `@dnd/mcp` suite 87 passed; `pnpm -r typecheck`
-  green across all packages):
+  active-effect refactor, fixed and verified on the active-effect milestone
+  `30ea0fdf` — deterministic `@dnd/battle-runtime` suite 962 passed / 0 failed; full
+  `@dnd/mcp` suite 87 passed; `pnpm -r typecheck` green at that commit. Master has
+  since regressed — see the 2026-05-22 note below):
   - battle-runtime ability-modifier resource-cap init throw (9 tests) —
     `characterResourceState` computed the default use count eagerly even when
     `usesRemaining` was supplied; now lazy.
@@ -73,6 +74,16 @@ only the current frontier context.
   exist in the `.qnt` corpus. quint-connect version matches the main repo. Likely a
   missing cache-priming step in worktree setup; blocks MBT verification outside the
   main checkout.
+- **`@dnd/battle-runtime` does not compile on master (2026-05-22).** Automation
+  landed after milestone `30ea0fdf` left the package with dozens of `tsc --noEmit`
+  errors across several half-finished features: `spikeGrowthHazard` and
+  `seeInvisibleAndEthereal` active-effect arms referenced but never added to the
+  `BattleActiveEffect` union; `antimagicFieldOngoingSpellSuppression` missing
+  `suppressedOngoingSpellEffects`; `damage-helpers.ts` / `spells-holes-fills.ts`
+  missing several exports (source-damage-roll-penalty / Ray of Enfeeblement); and
+  incomplete Dragon's Breath and `targetAbilityChoices` wiring. Runtime-visible too:
+  `mcp-protocol.test.ts` reaches `isSourceDamageRollPenaltyRollFill is not a
+  function`. Owner / Ralph lanes must finish these features.
 
 ## Ralph Task Index
 
