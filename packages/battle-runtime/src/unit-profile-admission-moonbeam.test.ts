@@ -1,5 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME moonbeam
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-moonbeam-movable-zone
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
 import { describe, expect, test } from "vitest";
 import {
   damageRollFillWithGroups,
@@ -19,11 +20,13 @@ import {
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
+  breakBattleConcentration,
   elapsedTimeTicks,
   endTurn,
   Hp,
   movementFeet,
   resolveBattleSubject,
+  spellId,
   spellSlotInvocationRef,
 } from "./unit-profile-admission-test-support.ts";
 import {
@@ -244,6 +247,102 @@ describe("L12G deterministic Moonbeam admission", () => {
     expect(requireCombatant(resolved.state, spellTargetId).hp).toBe(Hp(24));
   });
 
+  test("table-triggered save is limited once per creature per turn and resets on turn advance", () => {
+    const spell = spellRecord(moonbeamUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      targetHp: 30,
+      targetMaxHp: 30,
+    });
+    const act = spellAct({ state, spellId: moonbeamUnitId, slotLevel: 2 });
+    const area = requireHole(act.initialHoles, "spellAreaChoice");
+    const cast = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [moonbeamAreaFill(area)],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Moonbeam cast to resolve.");
+    }
+    const targetTurn = endTurn({ state: cast.state, actorId: spellCasterId });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected caster End Turn to resolve.");
+    }
+    const saveSubject = {
+      tag: "runtimeCommand" as const,
+      actorId: spellTargetId,
+      command: "movableZoneSave" as const,
+      sourceCombatantId: spellCasterId,
+      sourceSpellId: spellId(moonbeamUnitId),
+      areaId: moonbeamAreaId,
+      trigger: "entersArea" as const,
+    };
+
+    const needsSave = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: saveSubject,
+      fills: [],
+    });
+    const save = requireResultHole(needsSave, "savingThrowOutcome");
+    const failedSave = singleTargetSavingThrowOutcomeFill(
+      save,
+      spellTargetId,
+      false,
+    );
+    const needsDamage = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: saveSubject,
+      fills: [failedSave],
+    });
+    const damage = requireResultHole(needsDamage, "rolledDice");
+    const firstSave = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: saveSubject,
+      fills: [failedSave, damageRollFillWithGroups(damage, [[5, 8]])],
+    });
+    if (firstSave.tag !== "resolved") {
+      throw new Error("Expected Moonbeam table-triggered save to resolve.");
+    }
+    expect(requireCombatant(firstSave.state, spellTargetId).hp).toBe(Hp(17));
+    const activeMoonbeam = requireCombatant(
+      firstSave.state,
+      spellCasterId,
+    ).activeEffects.find((effect) => effect.kind === "moonbeam");
+    expect(activeMoonbeam).toEqual(
+      expect.objectContaining({ savedThisTurn: [spellTargetId] }),
+    );
+
+    const duplicateSave = resolveBattleSubject({
+      state: firstSave.state,
+      subject: saveSubject,
+      fills: [],
+    });
+    expect(duplicateSave).toMatchObject({ tag: "resolved" });
+    if (duplicateSave.tag !== "resolved") {
+      throw new Error("Expected duplicate Moonbeam save to resolve.");
+    }
+    expect(requireCombatant(duplicateSave.state, spellTargetId).hp).toBe(
+      Hp(17),
+    );
+
+    const endTurnSave = moonbeamEndTurnSaveAct(duplicateSave.state);
+    const nextTurn = resolveBattleSubject({
+      state: duplicateSave.state,
+      subject: endTurnSave.subject,
+      fills: [],
+    });
+    if (nextTurn.tag !== "resolved") {
+      throw new Error("Expected duplicate end-turn save to advance the turn.");
+    }
+    expect(requireCombatant(nextTurn.state, spellTargetId).hp).toBe(Hp(17));
+    expect(
+      requireCombatant(nextTurn.state, spellCasterId).activeEffects.find(
+        (effect) => effect.kind === "moonbeam",
+      ),
+    ).toEqual(expect.objectContaining({ savedThisTurn: [] }));
+  });
+
   test("reposition spends magic action and offers moonbeamRepositionMovement hole", () => {
     const spell = spellRecord(moonbeamUnitId);
     const state = spellBattle({
@@ -289,5 +388,32 @@ describe("L12G deterministic Moonbeam admission", () => {
     });
 
     expect(resolved).toMatchObject({ tag: "resolved" });
+  });
+
+  test("breaking concentration removes the movable cylinder effect", () => {
+    const spell = spellRecord(moonbeamUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const act = spellAct({ state, spellId: moonbeamUnitId, slotLevel: 2 });
+    const area = requireHole(act.initialHoles, "spellAreaChoice");
+    const cast = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [moonbeamAreaFill(area)],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Moonbeam cast to resolve.");
+    }
+
+    const broken = breakBattleConcentration(cast.state, spellCasterId);
+
+    expect(requireCombatant(broken, spellCasterId).concentration).toBeNull();
+    expect(
+      requireCombatant(broken, spellCasterId).activeEffects.some(
+        (effect) => effect.kind === "moonbeam",
+      ),
+    ).toBe(false);
   });
 });

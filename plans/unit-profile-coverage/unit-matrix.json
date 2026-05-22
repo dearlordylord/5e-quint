@@ -83,8 +83,8 @@
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 118,
-      "numerator": 99,
-      "percent": "83.9%"
+      "numerator": 100,
+      "percent": "84.7%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 118,
@@ -3434,8 +3434,8 @@
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 118,
-        "numerator": 99,
-        "percent": "83.9%"
+        "numerator": 100,
+        "percent": "84.7%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 118,
@@ -4940,7 +4940,7 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
@@ -4957,7 +4957,7 @@
           {
             "obligationId": "BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle Moonbeam movable Cylinder lifecycle, once-per-turn save limiting, reposition, damage, and cleanup"
           },
           {

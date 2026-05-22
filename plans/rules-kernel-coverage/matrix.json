@@ -1,8 +1,8 @@
 {
   "summary": {
     "total": 72,
-    "covered": 62,
-    "open": 5,
+    "covered": 63,
+    "open": 4,
     "nonSemantic": 5,
     "byRuntime": {
       "shared-algebras": 1,
@@ -12,9 +12,9 @@
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 62,
+      "covered": 63,
       "needs-qnt-owner": 0,
-      "needs-parity-witness": 4,
+      "needs-parity-witness": 3,
       "needs-surface-evidence": 1,
       "boundary-only": 4,
       "unsupported-by-admission": 1
@@ -744,12 +744,14 @@
       "title": "Battle Blur self Spell Effect, Attack Roll Disadvantage projection, Blindsight and Truesight bypass witnesses, roll-mode cancellation, Concentration, and cleanup"
     },
     {
-      "followUpTaskIds": [
-        "RKBC-NONFEATURE-MOONBEAM-MOVABLE-ZONE-WITNESS"
-      ],
       "id": "BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE",
       "kind": "active-effect-lifecycle",
-      "parityWitnesses": [],
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-moonbeam.test.ts"
+        }
+      ],
       "profiles": [
         "spell.invocation-moonbeam-movable-zone"
       ],
@@ -759,10 +761,11 @@
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
         "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
       ],
-      "status": "needs-parity-witness",
+      "status": "covered",
       "surfaceEvidence": [
         ".references/srd-5.2.1/Spells/Descriptions-M-P.md#Moonbeam"
       ],

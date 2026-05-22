@@ -103,7 +103,7 @@
     {
       "number": 17,
       "id": "RKBC-NONFEATURE-MOONBEAM-MOVABLE-ZONE-WITNESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Moonbeam Movable Zone Coverage Witness"
     },
     {
@@ -285,7 +285,7 @@ Output:
 
 ### Task 17 - RKBC-NONFEATURE-MOONBEAM-MOVABLE-ZONE-WITNESS - Moonbeam Movable Zone Coverage Witness
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 - Task 14.
