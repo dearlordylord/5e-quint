@@ -91,7 +91,7 @@
     {
       "number": 15,
       "id": "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Darkness Spell-Created Light Dispel"
     },
     {
@@ -469,7 +469,7 @@ RAW/ubiquitous-language planning check against local SRD spell entries and
 
 ### Task 15 - L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL - Darkness Spell-Created Light Dispel
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -479,8 +479,8 @@ Input:
 
 Output:
 
-- Promote or precisely close Darkness overlap dispel of level-2-or-lower spell-created Bright/Dim Light, consuming generic spell-created light facts such as Continual Flame without spell identity dispatch.
-- Updated plan/profile/evidence/report artifacts only when they are the correct owner.
+- Supported Darkness overlap dispel of level-2-or-lower spell-created Bright/Dim Light through generic tracked spell-light source effect id and source spell level facts, without authored spell identity dispatch.
+- Updated Darkness and Continual Flame profile/evidence/report artifacts to remove this follow-up while keeping Dispel Magic and object-origin Darkness as separate visible boundaries.
 - Focused verification, `git diff --check`, and reviewer-loop convergence.
 
 Acceptance:
