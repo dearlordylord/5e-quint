@@ -24,13 +24,13 @@
     "obligations[].profiles": "Derived from profileObligations by obligation id; authored obligations.jsonl rows must not contain profiles."
   },
   "battleHoleFrontierSummary": {
-    "total": 101,
+    "total": 103,
     "bySubject": {
-      "battle-hole-family": 64,
-      "battle-fill-kind": 37
+      "battle-hole-family": 65,
+      "battle-fill-kind": 38
     },
     "byClassification": {
-      "semantic-frontier": 78,
+      "semantic-frontier": 80,
       "deterministic-boundary-projection": 0,
       "table-owned-fact": 23,
       "unsupported-dead-branch": 0
@@ -2565,6 +2565,18 @@
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
+        "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES",
+        "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "targetAbilityChoices",
+      "id": "BattleSpellTargetAbilityChoicesHole",
+      "reason": "Per-target ability choices bind each selected target to the Ability Check Advantage ability for target-scaled roll-modifier spells, so the selected choices are reducer-visible spell roll-modifier and Ability Check semantics.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
         "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE"
       ],
       "followUpTaskIds": [],
@@ -3000,6 +3012,18 @@
       "followUpTaskIds": [],
       "id": "abilityChoice",
       "reason": "Ability choices determine later roll modifiers, checks, or marked-damage semantics covered by Ability Check, spell roll-modifier, and marked-damage rider obligations.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES",
+        "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS"
+      ],
+      "fillKind": "targetAbilityChoices",
+      "followUpTaskIds": [],
+      "id": "targetAbilityChoices",
+      "reason": "Per-target ability-choice fills determine which Ability Check Advantage effect is attached to each selected target for target-scaled roll-modifier spells.",
       "subject": "battle-fill-kind"
     },
     {

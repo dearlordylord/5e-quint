@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "L12G-FOLLOWUP-ENHANCE-ABILITY-UPCAST-PER-TARGET-ABILITIES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Enhance Ability Upcast Per-Target Ability Choices"
     },
     {
@@ -238,7 +238,7 @@ Output:
 
 ### Task 10 - L12G-FOLLOWUP-ENHANCE-ABILITY-UPCAST-PER-TARGET-ABILITIES - Enhance Ability Upcast Per-Target Ability Choices
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 - Existing Enhance Ability single-target roll modifier subset.

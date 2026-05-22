@@ -1193,7 +1193,7 @@ module battleRuntime {
       | BlessRollModifier => 3 + (if (slotLevel > 1) slotLevel - 1 else 0)
       | GuidanceRollModifier => 1
       | PassWithoutTraceRollModifier => Set(Fighter, Goblin).size()
-      | EnhanceAbilityRollModifier => 1
+      | EnhanceAbilityRollModifier => 1 + (if (slotLevel > 2) slotLevel - 2 else 0)
     }
 
   pure def rollModifierActiveEffect(
@@ -1216,17 +1216,18 @@ module battleRuntime {
       (invocation != PassWithoutTraceRollModifier or selectedTargets.contains(Fighter))
   }
 
-  pure def rollModifierTargetedState(
+  pure def rollModifierTargetedStateWithTargetAbilities(
     state: BattleState,
     invocation: RollModifierSpell,
     targets: Set[Actor],
-    chosenAbility: Ability,
+    fighterChosenAbility: Ability,
+    goblinChosenAbility: Ability,
     chosenSkill: AbilityCheckSkill,
   ): BattleState =
     {
       ...state,
-      fighter: if (targets.contains(Fighter)) { ...state.fighter, activeEffects: state.fighter.activeEffects.union(Set(rollModifierActiveEffect(invocation, chosenAbility, chosenSkill))) } else state.fighter,
-      goblin: if (targets.contains(Goblin)) { ...state.goblin, activeEffects: state.goblin.activeEffects.union(Set(rollModifierActiveEffect(invocation, chosenAbility, chosenSkill))) } else state.goblin,
+      fighter: if (targets.contains(Fighter)) { ...state.fighter, activeEffects: state.fighter.activeEffects.union(Set(rollModifierActiveEffect(invocation, fighterChosenAbility, chosenSkill))) } else state.fighter,
+      goblin: if (targets.contains(Goblin)) { ...state.goblin, activeEffects: state.goblin.activeEffects.union(Set(rollModifierActiveEffect(invocation, goblinChosenAbility, chosenSkill))) } else state.goblin,
     }
 
   pure def resolveRollModifierSpell(
@@ -1236,6 +1237,27 @@ module battleRuntime {
     failedSaveTargets: Set[Actor],
     slotLevel: int,
     chosenAbility: Ability,
+    chosenSkill: AbilityCheckSkill,
+  ): BattleState =
+    resolveRollModifierSpellWithTargetAbilities(
+      state,
+      invocation,
+      selectedTargets,
+      failedSaveTargets,
+      slotLevel,
+      chosenAbility,
+      chosenAbility,
+      chosenSkill,
+    )
+
+  pure def resolveRollModifierSpellWithTargetAbilities(
+    state: BattleState,
+    invocation: RollModifierSpell,
+    selectedTargets: Set[Actor],
+    failedSaveTargets: Set[Actor],
+    slotLevel: int,
+    fighterChosenAbility: Ability,
+    goblinChosenAbility: Ability,
     chosenSkill: AbilityCheckSkill,
   ): BattleState = {
     val affectedTargets =
@@ -1255,7 +1277,7 @@ module battleRuntime {
         fighter: breakConcentration(state.fighter),
         goblin: { ...state.goblin, activeEffects: activeEffectsWithoutSpellEffectConcentration(state.goblin.activeEffects) },
       }
-      val effected = rollModifierTargetedState(concentrationBase, invocation, affectedTargets, chosenAbility, chosenSkill)
+      val effected = rollModifierTargetedStateWithTargetAbilities(concentrationBase, invocation, affectedTargets, fighterChosenAbility, goblinChosenAbility, chosenSkill)
       val resolved = {
         ...effected,
         fighter: { ...effected.fighter, concentrating: true },

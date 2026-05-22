@@ -3620,6 +3620,11 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
       "Battle runtime MBT does not model spellcasting ability check holes.",
     );
   }
+  if (hole.kind === "targetAbilityChoices") {
+    throw new Error(
+      "Battle runtime MBT does not model target ability choices holes.",
+    );
+  }
   return [
     Match.value(hole).pipe(
       Match.when({ kind: "targetChoice" }, () => "TargetChoice" as const),

@@ -51,6 +51,7 @@ import {
   applyJumpMovementReplacementSpellEffect,
   applyMirrorImageHitInterceptionSpellEffect,
   applyRollModifierSpellEffect,
+  applyRollModifierSpellEffectsByTarget,
   applyScalarBuffSpellEffect,
   applySelfTransformationModeEffect,
   applyThaumaturgyBoomingVoiceSpellEffect,
@@ -630,7 +631,10 @@ export function resolveRollModifierSpellAct(input: {
     );
   }
 
-  const effectSelection = rollModifierSpellEffectSelection(input);
+  const effectSelection = rollModifierSpellEffectSelection({
+    ...input,
+    targetIds: targetSelection.targetIds,
+  });
   if (effectSelection.tag === "needsHoles") {
     return needsHolesResult(input.input.state, input.input.subject, [
       effectSelection.hole,
@@ -681,11 +685,20 @@ export function resolveRollModifierSpellAct(input: {
   const concentrationBase = spellRequiresConcentration(input.invocation)
     ? breakBattleConcentration(input.input.state, input.actorId)
     : input.input.state;
-  const effected = applyRollModifierSpellEffect(
-    concentrationBase,
-    affectedTargets.targetIds,
-    effectSelection.effect,
-  );
+  const affectedTargetIds = new Set(affectedTargets.targetIds);
+  const effected =
+    effectSelection.selection.kind === "sameForTargets"
+      ? applyRollModifierSpellEffect(
+          concentrationBase,
+          affectedTargets.targetIds,
+          effectSelection.selection.effect,
+        )
+      : applyRollModifierSpellEffectsByTarget(
+          concentrationBase,
+          effectSelection.selection.targetEffects.filter((targetEffect) =>
+            affectedTargetIds.has(targetEffect.targetId),
+          ),
+        );
   const resourced = spendSpellCastResources({
     state: effected,
     actorId: input.actorId,

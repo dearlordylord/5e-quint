@@ -41,6 +41,7 @@ import {
 } from "./mirror-image-hit-interception.ts";
 import {
   spellBurstDamageHole,
+  rollModifierUsesTargetAbilityChoices,
   spellAttackSequencePartAttackRollHoleId,
   spellAttackSequencePartDamageHoleId,
   spellAttackSequencePartObjectTargetHoleId,
@@ -58,6 +59,7 @@ import {
   spellAbilityChoiceHoleId,
   spellRollModifierAbilityChoiceHoleId,
   spellRollModifierSkillChoiceHoleId,
+  spellRollModifierTargetAbilityChoicesHoleId,
   spellSavingThrowOutcomeHoleId,
   selfTransformationModeChoiceHoleId,
   spellTargetAllocationHoleId,
@@ -183,6 +185,9 @@ export type SpellFillSet =
         | undefined;
       readonly skillChoice: Skill | undefined;
       readonly abilityChoice: Ability | undefined;
+      readonly targetAbilityChoices:
+        | Extract<BattleFill, { readonly kind: "targetAbilityChoices" }>
+        | undefined;
       readonly thaumaturgyActiveOneMinuteEffectCount:
         | Extract<
             BattleFill,
@@ -321,6 +326,9 @@ export function spellFillSet(
   let savingThrowOutcomes: BattleSpellSavingThrowOutcomeValue | undefined;
   let skillChoice: Skill | undefined;
   let abilityChoice: Ability | undefined;
+  let targetAbilityChoices:
+    | Extract<BattleFill, { readonly kind: "targetAbilityChoices" }>
+    | undefined;
   let thaumaturgyActiveOneMinuteEffectCount:
     | Extract<
         BattleFill,
@@ -1066,6 +1074,13 @@ export function spellFillSet(
             message: "Spell ability choice does not match this spell act.",
           };
         }
+        if (rollModifierUsesTargetAbilityChoices(invocation)) {
+          return {
+            tag: "invalid",
+            message:
+              "Per-target roll modifier spells require target ability choices.",
+          };
+        }
         if (fill.holeId !== spellRollModifierAbilityChoiceHoleId(invocation)) {
           return {
             tag: "invalid",
@@ -1118,6 +1133,53 @@ export function spellFillSet(
         };
       }
       abilityChoice = fill.value;
+      continue;
+    }
+
+    if (fill.kind === "targetAbilityChoices") {
+      if (
+        invocation.procedure !== "rollModifier" ||
+        invocation.abilityChoices === null ||
+        !rollModifierUsesTargetAbilityChoices(invocation)
+      ) {
+        return {
+          tag: "invalid",
+          message: "Spell target ability choices do not match this spell act.",
+        };
+      }
+      if (
+        fill.holeId !== spellRollModifierTargetAbilityChoicesHoleId(invocation)
+      ) {
+        return {
+          tag: "invalid",
+          message:
+            "Spell target ability choices must use the selected spell act target-ability-choices hole.",
+        };
+      }
+      const seenTargets = new Set<CombatantId>();
+      for (const choice of fill.value.choices) {
+        if (!invocation.abilityChoices.includes(choice.ability)) {
+          return {
+            tag: "invalid",
+            message:
+              "Spell target ability choice is not available for this spell.",
+          };
+        }
+        if (seenTargets.has(choice.targetId)) {
+          return {
+            tag: "invalid",
+            message: "Spell target ability choice includes a target twice.",
+          };
+        }
+        seenTargets.add(choice.targetId);
+      }
+      if (targetAbilityChoices !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Spell target ability choices were filled twice.",
+        };
+      }
+      targetAbilityChoices = fill;
       continue;
     }
 
@@ -1422,6 +1484,7 @@ export function spellFillSet(
     savingThrowOutcomes,
     skillChoice,
     abilityChoice,
+    targetAbilityChoices,
     thaumaturgyActiveOneMinuteEffectCount,
     commandOptionChoice,
     selfTransformationModeChoice,
@@ -1470,6 +1533,7 @@ export function spellFillSetContainsOnlySpellCastReactionFacts(
       fillSet.savingThrowOutcomes === undefined) &&
     fillSet.skillChoice === undefined &&
     fillSet.abilityChoice === undefined &&
+    fillSet.targetAbilityChoices === undefined &&
     fillSet.thaumaturgyActiveOneMinuteEffectCount === undefined &&
     fillSet.commandOptionChoice === undefined &&
     fillSet.selfTransformationModeChoice === undefined &&

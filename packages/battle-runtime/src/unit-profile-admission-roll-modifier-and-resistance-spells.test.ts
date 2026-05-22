@@ -40,6 +40,7 @@ import {
   spellAct,
   spellTargetFill,
   spellTargetListFill,
+  targetAbilityChoicesFill,
   withResistanceEffect,
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
@@ -60,6 +61,8 @@ import type {
   BattleSubject,
 } from "./unit-profile-admission-test-support.ts";
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
+import { BattleHoleSchema } from "./index.ts";
+import { Either, Schema } from "effect";
 
 function withProtectionFromPoisonResistance(
   state: BattleState,
@@ -557,6 +560,107 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         skill: "athletics",
       }),
     ).toBeUndefined();
+  });
+
+  test("enhance ability scales targets by slot and applies per-target ability choices", () => {
+    const spell = spellRecord(enhanceAbilityUnitId);
+    const secondTargetId = combatantId("unit-profile-enhance-target-2");
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+      extraTargetIds: [secondTargetId],
+    });
+    const act = spellAct({
+      state,
+      spellId: enhanceAbilityUnitId,
+      slotLevel: 3,
+    });
+    const targetListHole = requireHole(act.initialHoles, "spellTargetList");
+    const abilityByTargetHole = requireHole(
+      act.initialHoles,
+      "targetAbilityChoices",
+    );
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(
+        enhanceAbilityUnitId,
+        3,
+        "rollModifier",
+      ),
+      mode: { tag: "cast" },
+    });
+    expect(targetListHole.maxTargets).toBe(2);
+    expect(abilityByTargetHole.choices).toEqual([
+      "str",
+      "dex",
+      "int",
+      "wis",
+      "cha",
+    ]);
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(BattleHoleSchema)(abilityByTargetHole),
+      ),
+    ).toBe(true);
+    if (!("abilityChoiceApplication" in abilityByTargetHole.spell)) {
+      throw new Error(
+        "Expected target ability choices hole to carry an ability-choice roll modifier invocation.",
+      );
+    }
+    const {
+      abilityChoiceApplication: _abilityChoiceApplication,
+      ...spellWithoutAbilityChoiceApplication
+    } = abilityByTargetHole.spell;
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleHoleSchema)({
+          ...abilityByTargetHole,
+          spell: spellWithoutAbilityChoiceApplication,
+        }),
+      ),
+    ).toBe(true);
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetListFill(
+          targetListHole,
+          spellCasterId,
+          enhanceAbilityUnitId,
+          [spellTargetId, secondTargetId],
+        ),
+        targetAbilityChoicesFill(abilityByTargetHole, [
+          { targetId: spellTargetId, ability: "dex" },
+          { targetId: secondTargetId, ability: "wis" },
+        ]),
+      ],
+    });
+
+    expect(resolved.tag).toBe("resolved");
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected upcast Enhance Ability to resolve.");
+    }
+    expect(
+      resolved.state.combatants.get(spellTargetId)?.activeEffects,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "abilityCheckRollMode",
+        sourceSpellId: enhanceAbilityUnitId,
+        ability: "dex",
+      }),
+    );
+    expect(
+      resolved.state.combatants.get(secondTargetId)?.activeEffects,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "abilityCheckRollMode",
+        sourceSpellId: enhanceAbilityUnitId,
+        ability: "wis",
+      }),
+    );
   });
 
   test("resistance stores a chosen damage-type reduction with a once-per-turn use marker", () => {
@@ -1179,11 +1283,7 @@ describe("L12G Protection from Poison deterministic Spell Unit admission", () =>
     const poisonResolved = resolveBattleSubject({
       state: poisonState,
       subject: act.subject,
-      fills: [
-        targetFill,
-        attackFill,
-        damageRollFillWithGroups(damage, [[5]]),
-      ],
+      fills: [targetFill, attackFill, damageRollFillWithGroups(damage, [[5]])],
     });
     expect(poisonResolved).toMatchObject({ tag: "resolved" });
     if (poisonResolved.tag !== "resolved") {

@@ -4,6 +4,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS
 import {
+  type RollModifierSpellEffect,
   isScalarBuffTargetListInvocation,
   type SelectedRollModifierSpellEffect,
   type ActionSpellBattleResolutionInput,
@@ -14,8 +15,10 @@ import {
 import type { CombatantId } from "../identity.ts";
 import {
   sameCombatantIdSet,
+  rollModifierUsesTargetAbilityChoices,
   spellRollModifierAbilityChoiceHole,
   spellRollModifierSkillChoiceHole,
+  spellRollModifierTargetAbilityChoicesHole,
   spellSavingThrowOutcomeHole,
   spellTargetHole,
   spellTargetIsLegal,
@@ -62,7 +65,21 @@ export type DirectConditionRemovalSpellTargetSelection =
   | { readonly tag: "invalid"; readonly message: string };
 
 export type RollModifierSpellEffectSelection =
-  | { readonly tag: "ok"; readonly effect: SelectedRollModifierSpellEffect }
+  | {
+      readonly tag: "ok";
+      readonly selection:
+        | {
+            readonly kind: "sameForTargets";
+            readonly effect: SelectedRollModifierSpellEffect;
+          }
+        | {
+            readonly kind: "byTarget";
+            readonly targetEffects: readonly {
+              readonly targetId: CombatantId;
+              readonly effect: RollModifierSpellEffect;
+            }[];
+          };
+    }
   | { readonly tag: "needsHoles"; readonly hole: BattleHole }
   | { readonly tag: "invalid"; readonly message: string };
 
@@ -495,9 +512,13 @@ export function rollModifierSpellEffectSelection(input: {
     { readonly procedure: "rollModifier" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+  readonly targetIds: readonly CombatantId[];
 }): RollModifierSpellEffectSelection {
   if (input.invocation.effect.kind === "d20RollModifier") {
-    if (input.fillSet.abilityChoice !== undefined) {
+    if (
+      input.fillSet.abilityChoice !== undefined ||
+      input.fillSet.targetAbilityChoices !== undefined
+    ) {
       return {
         tag: "invalid",
         message: "This roll modifier spell does not choose an ability.",
@@ -507,10 +528,13 @@ export function rollModifierSpellEffectSelection(input: {
       return input.fillSet.skillChoice === undefined
         ? {
             tag: "ok",
-            effect: {
-              ...input.invocation.effect,
-              sourceCombatantId: input.actorId,
-              skill: input.invocation.effect.skill,
+            selection: {
+              kind: "sameForTargets",
+              effect: {
+                ...input.invocation.effect,
+                sourceCombatantId: input.actorId,
+                skill: input.invocation.effect.skill,
+              },
             },
           }
         : {
@@ -527,10 +551,13 @@ export function rollModifierSpellEffectSelection(input: {
     return input.invocation.skillChoices.includes(input.fillSet.skillChoice)
       ? {
           tag: "ok",
-          effect: {
-            ...input.invocation.effect,
-            sourceCombatantId: input.actorId,
-            skill: input.fillSet.skillChoice,
+          selection: {
+            kind: "sameForTargets",
+            effect: {
+              ...input.invocation.effect,
+              sourceCombatantId: input.actorId,
+              skill: input.fillSet.skillChoice,
+            },
           },
         }
       : {
@@ -553,6 +580,55 @@ export function rollModifierSpellEffectSelection(input: {
       message: "This roll modifier spell does not choose an ability.",
     };
   }
+  if (rollModifierUsesTargetAbilityChoices(input.invocation)) {
+    if (input.fillSet.abilityChoice !== undefined) {
+      return {
+        tag: "invalid",
+        message:
+          "Per-target roll modifier spells do not use one shared ability choice.",
+      };
+    }
+    const targetAbilityChoices = input.fillSet.targetAbilityChoices;
+    if (targetAbilityChoices === undefined) {
+      return {
+        tag: "needsHoles",
+        hole: spellRollModifierTargetAbilityChoicesHole(input.invocation),
+      };
+    }
+    const selectedTargets = new Set(input.targetIds);
+    if (
+      targetAbilityChoices.value.choices.length !== selectedTargets.size ||
+      !targetAbilityChoices.value.choices.every((choice) =>
+        selectedTargets.has(choice.targetId),
+      )
+    ) {
+      return {
+        tag: "invalid",
+        message:
+          "Roll modifier spell target ability choices must match the selected targets.",
+      };
+    }
+    return {
+      tag: "ok",
+      selection: {
+        kind: "byTarget",
+        targetEffects: targetAbilityChoices.value.choices.map((choice) => ({
+          targetId: choice.targetId,
+          effect: {
+            ...input.invocation.effect,
+            sourceCombatantId: input.actorId,
+            ability: choice.ability,
+          },
+        })),
+      },
+    };
+  }
+  if (input.fillSet.targetAbilityChoices !== undefined) {
+    return {
+      tag: "invalid",
+      message: "This roll modifier spell does not choose abilities per target.",
+    };
+  }
   if (input.fillSet.abilityChoice === undefined) {
     return {
       tag: "needsHoles",
@@ -562,10 +638,13 @@ export function rollModifierSpellEffectSelection(input: {
   return abilityChoices.includes(input.fillSet.abilityChoice)
     ? {
         tag: "ok",
-        effect: {
-          ...input.invocation.effect,
-          sourceCombatantId: input.actorId,
-          ability: input.fillSet.abilityChoice,
+        selection: {
+          kind: "sameForTargets",
+          effect: {
+            ...input.invocation.effect,
+            sourceCombatantId: input.actorId,
+            ability: input.fillSet.abilityChoice,
+          },
         },
       }
     : {

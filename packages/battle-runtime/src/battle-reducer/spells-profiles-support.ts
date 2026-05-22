@@ -128,6 +128,7 @@ type AbilityCheckRollModeSpellProjection = {
   readonly saveGate: null;
   readonly skillChoices: null;
   readonly abilityChoices: readonly Ability[];
+  readonly abilityChoiceApplication: "single" | "perTarget";
   readonly targeting: RollModifierSpellTargeting;
 };
 type RollModifierSpellProjection =
@@ -1197,6 +1198,7 @@ export function supportedPreparedRollModifierSpellProfile(
         effect: projection.effect,
         skillChoices: null,
         abilityChoices: projection.abilityChoices,
+        abilityChoiceApplication: projection.abilityChoiceApplication,
       },
     ];
   });
@@ -3094,6 +3096,7 @@ export function supportedCantripRollModifierSpellProfile(
       effect: projection.effect,
       skillChoices: null,
       abilityChoices: projection.abilityChoices,
+      abilityChoiceApplication: projection.abilityChoiceApplication,
     },
   ];
 }
@@ -3449,30 +3452,27 @@ export function rollModifierSpellProjection(
           };
     }
     if (operation.effect.kind === "modify_roll_advantage") {
+      const targeting = rollModifierSpellTargeting(
+        spell.mechanics.attachment,
+        spell.mechanics.level,
+        slotLevel,
+      );
       const modifier = rollModifierAbilityCheckRollModeEffect(
         actorId,
         spell,
         operation.effect,
         expiresAt,
       );
-      return modifier === null ||
-        rollModifierSpellTargeting(
-          spell.mechanics.attachment,
-          spell.mechanics.level,
-          spellSlotLevel(spell.mechanics.level),
-        ) === null
+      return modifier === null || targeting === null
         ? null
         : {
-            targeting: {
-              kind: "targetList",
-              minTargets: 1,
-              maxTargets: 1,
-            },
+            targeting,
             effect: modifier.effect,
             rangeFeet,
             saveGate: null,
             skillChoices: null,
             abilityChoices: modifier.abilityChoices,
+            abilityChoiceApplication: modifier.abilityChoiceApplication,
           };
     }
     return null;
@@ -3580,6 +3580,7 @@ export function rollModifierAbilityCheckRollModeEffect(
 ): {
   readonly effect: AbilityCheckRollModeSpellEffect;
   readonly abilityChoices: readonly Ability[];
+  readonly abilityChoiceApplication: "single" | "perTarget";
 } | null {
   const abilityFilter = rollModifierAbilityChoiceFilter(effect.abilityFilter);
   if (
@@ -3608,30 +3609,44 @@ export function rollModifierAbilityCheckRollModeEffect(
       expiresAt,
     },
     abilityChoices: abilityFilter.value.options,
+    abilityChoiceApplication:
+      abilityFilter.kind === "per_target_hole" ? "perTarget" : "single",
   };
 }
 
-type RollModifierAbilityChoiceFilter = Extract<
-  NonNullable<
-    Extract<
-      EffectAtom,
-      { readonly kind: "modify_roll_advantage" }
-    >["abilityFilter"]
-  >,
-  { readonly kind: "hole" }
->;
+type RollModifierPerTargetAbilityChoiceFilter = {
+  readonly kind: "per_target_hole";
+  readonly value: {
+    readonly kind: "choice";
+    readonly options: readonly Ability[];
+  };
+};
+type RollModifierAbilityChoiceFilter =
+  | Extract<
+      NonNullable<
+        Extract<
+          EffectAtom,
+          { readonly kind: "modify_roll_advantage" }
+        >["abilityFilter"]
+      >,
+      { readonly kind: "hole" }
+    >
+  | RollModifierPerTargetAbilityChoiceFilter;
 
 function rollModifierAbilityChoiceFilter(
-  abilityFilter: Extract<
-    EffectAtom,
-    { readonly kind: "modify_roll_advantage" }
-  >["abilityFilter"],
+  abilityFilter:
+    | Extract<
+        EffectAtom,
+        { readonly kind: "modify_roll_advantage" }
+      >["abilityFilter"]
+    | RollModifierPerTargetAbilityChoiceFilter,
 ): RollModifierAbilityChoiceFilter | null {
   if (abilityFilter === undefined || !("kind" in abilityFilter)) {
     return null;
   }
   if (
-    abilityFilter.kind !== "hole" ||
+    (abilityFilter.kind !== "hole" &&
+      abilityFilter.kind !== "per_target_hole") ||
     abilityFilter.value.kind !== "choice" ||
     abilityFilter.value.options.length === 0
   ) {

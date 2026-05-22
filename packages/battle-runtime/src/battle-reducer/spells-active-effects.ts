@@ -422,7 +422,9 @@ export function battleLightEmitters(
           !(
             isTrackedOngoingSpellLightEmitter(emitter) &&
             suppressedEffectKeys.has(
-              ongoingSpellEffectRefKey(ongoingSpellEffectRefForEmitter(emitter)),
+              ongoingSpellEffectRefKey(
+                ongoingSpellEffectRefForEmitter(emitter),
+              ),
             )
           ),
       );
@@ -3128,7 +3130,21 @@ export function applyRollModifierSpellEffect(
   targetIds: readonly CombatantId[],
   selectedEffect: SelectedRollModifierSpellEffect,
 ): BattleState {
-  return targetIds.reduce((nextState, targetId) => {
+  return applyRollModifierSpellEffectsByTarget(
+    state,
+    targetIds.map((targetId) => ({ targetId, effect: selectedEffect })),
+  );
+}
+
+export function applyRollModifierSpellEffectsByTarget(
+  state: BattleState,
+  targetEffects: readonly {
+    readonly targetId: CombatantId;
+    readonly effect: SelectedRollModifierSpellEffect;
+  }[],
+): BattleState {
+  return targetEffects.reduce((nextState, targetEffect) => {
+    const { targetId, effect: selectedEffect } = targetEffect;
     const target = nextState.combatants.get(targetId);
     if (target === undefined) {
       return nextState;

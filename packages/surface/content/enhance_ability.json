@@ -45,7 +45,7 @@
         "effect": {
           "abilityFilter": {
             "holeId": "enhance_ability_chosen_ability",
-            "kind": "hole",
+            "kind": "per_target_hole",
             "label": "chosen ability",
             "value": {
               "kind": "choice",

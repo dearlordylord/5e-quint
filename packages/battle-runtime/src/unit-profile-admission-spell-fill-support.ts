@@ -1041,9 +1041,7 @@ export function webRestrainedNoLongerInAreaAct(
   return act;
 }
 
-export function webAreaRemovedAct(
-  state: BattleState,
-): AvailableBattleAct & {
+export function webAreaRemovedAct(state: BattleState): AvailableBattleAct & {
   readonly subject: Extract<
     BattleSubject,
     {
@@ -1353,6 +1351,20 @@ export function abilityChoiceFill(
   value: Ability,
 ): Extract<BattleFill, { readonly kind: "abilityChoice" }> {
   return { kind: "abilityChoice", holeId: hole.holeId, value };
+}
+
+export function targetAbilityChoicesFill(
+  hole: Extract<BattleHole, { readonly kind: "targetAbilityChoices" }>,
+  choices: readonly {
+    readonly targetId: CombatantId;
+    readonly ability: Ability;
+  }[],
+): Extract<BattleFill, { readonly kind: "targetAbilityChoices" }> {
+  return {
+    kind: "targetAbilityChoices",
+    holeId: hole.holeId,
+    value: { choices },
+  };
 }
 
 export function isSelectedSorcerousBurstDamageInvocation(

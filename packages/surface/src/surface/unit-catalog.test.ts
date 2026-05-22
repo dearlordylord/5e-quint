@@ -2110,7 +2110,7 @@ describe("SRD Unit catalog boundary", () => {
             affects: "self_roll",
             on: ["ability_check"],
             abilityFilter: {
-              kind: "hole",
+              kind: "per_target_hole",
               holeId: "enhance_ability_chosen_ability",
               label: "chosen ability",
               value: {

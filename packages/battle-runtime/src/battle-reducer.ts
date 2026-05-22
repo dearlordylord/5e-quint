@@ -2144,6 +2144,7 @@ export type RollModifierSpellInvocation = RollModifierSpellInvocationBase &
         readonly effect: AbilityCheckRollModeSpellEffect;
         readonly skillChoices: null;
         readonly abilityChoices: readonly Ability[];
+        readonly abilityChoiceApplication: "single" | "perTarget";
       }
   );
 export type CreatureTypeProtectionSpellInvocation = {
@@ -4552,6 +4553,17 @@ export type BattleSpellAbilityChoiceHole = {
     | Extract<SupportedSpellInvocation, { readonly procedure: "rollModifier" }>;
   readonly choices: readonly Ability[];
 };
+export type BattleSpellTargetAbilityChoicesHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "targetAbilityChoices";
+  readonly label: string;
+  readonly spell: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "rollModifier" }
+  >;
+  readonly choices: readonly Ability[];
+};
 export type BattleSpellConditionChoiceHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -5009,6 +5021,7 @@ export type BattleHole =
   | BattleSpellHealingRollHole
   | BattleSpellSkillChoiceHole
   | BattleSpellAbilityChoiceHole
+  | BattleSpellTargetAbilityChoicesHole
   | BattleSpellConditionChoiceHole
   | BattleThaumaturgyActiveOneMinuteEffectCountHole
   | BattleCommandOptionChoiceHole
@@ -5105,6 +5118,16 @@ export type BattleFill =
       readonly kind: "abilityChoice";
       readonly holeId: BattleHoleId;
       readonly value: Ability;
+    }
+  | {
+      readonly kind: "targetAbilityChoices";
+      readonly holeId: BattleHoleId;
+      readonly value: {
+        readonly choices: readonly {
+          readonly targetId: CombatantId;
+          readonly ability: Ability;
+        }[];
+      };
     }
   | {
       readonly kind: "thaumaturgyActiveOneMinuteEffectCount";

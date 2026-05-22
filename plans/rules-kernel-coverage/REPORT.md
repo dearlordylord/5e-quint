@@ -107,16 +107,16 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Battle Hole Frontier
 
-- Total classified rows: 101
+- Total classified rows: 103
 
 | Subject | Count |
 | --- | ---: |
-| battle-hole-family | 64 |
-| battle-fill-kind | 37 |
+| battle-hole-family | 65 |
+| battle-fill-kind | 38 |
 
 | Classification | Count |
 | --- | ---: |
-| semantic-frontier | 78 |
+| semantic-frontier | 80 |
 | deterministic-boundary-projection | 0 |
 | table-owned-fact | 23 |
 | unsupported-dead-branch | 0 |
@@ -145,6 +145,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | battle-hole-family | `BattleSpellHealingRollHole` | `rolledDice` | semantic-frontier | `BATTLE.SPELL.HIT_POINT_RESTORATION` | _none_ |
 | battle-hole-family | `BattleSpellSkillChoiceHole` | `skillChoice` | semantic-frontier | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES`, `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS` | _none_ |
 | battle-hole-family | `BattleSpellAbilityChoiceHole` | `abilityChoice` | semantic-frontier | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES`, `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS`, `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` | _none_ |
+| battle-hole-family | `BattleSpellTargetAbilityChoicesHole` | `targetAbilityChoices` | semantic-frontier | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES`, `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS` | _none_ |
 | battle-hole-family | `BattleSpellConditionChoiceHole` | `conditionChoice` | semantic-frontier | `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` | _none_ |
 | battle-hole-family | `BattleThaumaturgyActiveOneMinuteEffectCountHole` | `thaumaturgyActiveOneMinuteEffectCount` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
 | battle-hole-family | `BattleCommandOptionChoiceHole` | `commandOptionChoice` | semantic-frontier | `BATTLE.COMMAND.OPTION_AND_NEXT_TURN` | _none_ |
@@ -181,6 +182,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | battle-fill-kind | `conditionChoice` | `conditionChoice` | semantic-frontier | `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` | _none_ |
 | battle-fill-kind | `skillChoice` | `skillChoice` | semantic-frontier | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` | _none_ |
 | battle-fill-kind | `abilityChoice` | `abilityChoice` | semantic-frontier | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES`, `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS`, `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` | _none_ |
+| battle-fill-kind | `targetAbilityChoices` | `targetAbilityChoices` | semantic-frontier | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES`, `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS` | _none_ |
 | battle-fill-kind | `thaumaturgyActiveOneMinuteEffectCount` | `thaumaturgyActiveOneMinuteEffectCount` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
 | battle-fill-kind | `commandOptionChoice` | `commandOptionChoice` | semantic-frontier | `BATTLE.COMMAND.OPTION_AND_NEXT_TURN` | _none_ |
 | battle-fill-kind | `dancingLightsPlacement` | `dancingLightsPlacement` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |

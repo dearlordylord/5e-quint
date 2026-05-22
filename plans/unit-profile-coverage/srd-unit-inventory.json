@@ -194,14 +194,14 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 526,
-      "percent": "94.6%",
+      "numerator": 532,
+      "percent": "95.7%",
       "rowsByStatus": {
-        "accepted": 379,
+        "accepted": 385,
         "accepted-no-battle-effect": 147,
         "owner-evidence-required": 2,
-        "partial-battle-runtime": 16,
-        "battle-runtime-required": 12
+        "battle-runtime-required": 12,
+        "partial-battle-runtime": 10
       }
     },
     "levelOneClassContainers": 12,
@@ -6358,7 +6358,7 @@
         "state": "installed",
         "unitId": "enhance_ability"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -6373,7 +6373,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_enlarge_reduce",
@@ -8942,7 +8942,7 @@
         "state": "installed",
         "unitId": "enhance_ability"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -8957,7 +8957,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_find_traps",
@@ -11723,7 +11723,7 @@
         "state": "installed",
         "unitId": "enhance_ability"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -11738,7 +11738,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_enlarge_reduce",
@@ -17210,7 +17210,7 @@
         "state": "installed",
         "unitId": "enhance_ability"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -17225,7 +17225,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_find_traps",
@@ -21032,7 +21032,7 @@
         "state": "installed",
         "unitId": "enhance_ability"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -21047,7 +21047,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_enlarge_reduce",
@@ -26759,7 +26759,7 @@
         "state": "installed",
         "unitId": "enhance_ability"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -26774,7 +26774,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "partial-battle-runtime"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_enlarge_reduce",

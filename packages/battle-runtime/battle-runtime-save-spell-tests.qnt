@@ -118,6 +118,28 @@ module battleRuntimeSaveSpellTests {
     }
   }
 
+  run test_enhance_ability_upcast_applies_per_target_ability_advantage = {
+    val result =
+      resolveRollModifierSpellWithTargetAbilities(
+        initialState,
+        EnhanceAbilityRollModifier,
+        Set(Fighter, Goblin),
+        Set(),
+        3,
+        DexAbility,
+        WisAbility,
+        StealthSkill,
+      )
+    all {
+      assert(result.fighter.concentrating),
+      assert(result.fighter.activeEffects.contains(EnhanceAbilityCheckAdvantage({ ability: DexAbility }))),
+      assert(not(result.fighter.activeEffects.contains(EnhanceAbilityCheckAdvantage({ ability: WisAbility })))),
+      assert(result.goblin.activeEffects.contains(EnhanceAbilityCheckAdvantage({ ability: WisAbility }))),
+      assert(not(result.goblin.activeEffects.contains(EnhanceAbilityCheckAdvantage({ ability: DexAbility })))),
+      assert(battleActorHasCommittedSpellSlotUse(result, Fighter)),
+    }
+  }
+
   run test_guidance_preserves_existing_turn_spell_slot_guard = {
     val alreadySpent = commitActorSpellSlotUse(initialState, Fighter)
     val result = resolveRollModifierSpell(alreadySpent, GuidanceRollModifier, Set(Fighter), Set(), 0, StrAbility, StealthSkill)
