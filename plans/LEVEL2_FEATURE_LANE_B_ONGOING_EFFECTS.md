@@ -85,7 +85,7 @@
     {
       "number": 14,
       "id": "L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Enlarge Reduce Object Runtime Support"
     },
     {
@@ -115,19 +115,19 @@
     {
       "number": 25,
       "id": "L3-SPELL-FIREBALL-RUNTIME-SURVEY",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Level 3 Fireball Runtime Survey And Task Split"
     },
     {
       "number": 26,
       "id": "L3-SPELL-MASS-HEALING-WORD-RUNTIME-SURVEY",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Level 3 Mass Healing Word Runtime Survey And Task Split"
     },
     {
       "number": 27,
       "id": "L3-SPELL-VAMPIRIC-TOUCH-RUNTIME-SURVEY",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Level 3 Vampiric Touch Runtime Survey And Task Split"
     }
   ]
@@ -135,6 +135,9 @@
 -->
 
 This is an active Ralph execution plan for level-2 feature/runtime coverage. It replaces stale Loop B continuation work; do not merge or replay old B worktree commits.
+
+
+Planning policy update, 2026-05-22: until the owner explicitly reopens level-3 expansion, recursive tails and deciders must add only level-1/level-2 closure tasks. Park not-yet-started level-3 tasks as `deferred` instead of expanding this lane with more level-3 work.
 
 Every Ralph prompt for this lane must include:
 
@@ -312,7 +315,9 @@ Output:
 
 ### Task 14 - L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-RUNTIME - Enlarge Reduce Object Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
+
+Completed: pruned on 2026-05-22 because Lane A already closed the Enlarge/Reduce object branch as an accepted runtime-detached object/item lifecycle boundary; rerunning object runtime support here would duplicate a closed frontier.
 
 Depends on:
 - Task 9 creature-target Enlarge/Reduce runtime support.
@@ -431,7 +436,9 @@ Acceptance:
 
 ### Task 25 - L3-SPELL-FIREBALL-RUNTIME-SURVEY - Level 3 Fireball Runtime Survey And Task Split
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred Detail: Owner instruction on 2026-05-22: park not-yet-started level-3 work while the level-1/level-2 closure frontier remains active.
 
 Input:
 
@@ -453,7 +460,9 @@ Acceptance:
 
 ### Task 26 - L3-SPELL-MASS-HEALING-WORD-RUNTIME-SURVEY - Level 3 Mass Healing Word Runtime Survey And Task Split
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred Detail: Owner instruction on 2026-05-22: park not-yet-started level-3 work while the level-1/level-2 closure frontier remains active.
 
 Input:
 
@@ -475,7 +484,9 @@ Acceptance:
 
 ### Task 27 - L3-SPELL-VAMPIRIC-TOUCH-RUNTIME-SURVEY - Level 3 Vampiric Touch Runtime Survey And Task Split
 
-Status: `ready-for-research`
+Status: `deferred`
+
+Deferred Detail: Owner instruction on 2026-05-22: park not-yet-started level-3 work while the level-1/level-2 closure frontier remains active.
 
 Input:
 
