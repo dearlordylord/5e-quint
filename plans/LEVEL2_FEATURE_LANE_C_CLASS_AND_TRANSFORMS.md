@@ -109,7 +109,7 @@
     {
       "number": 18,
       "id": "L3-SPELL-SLOW-RUNTIME-SURVEY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Level 3 Slow Runtime Survey"
     },
     {
@@ -171,6 +171,24 @@
       "id": "L3-FOLLOWUP-HASTE-LETHARGY-RUNTIME",
       "status": "blocked",
       "title": "Haste Lethargy Runtime Support"
+    },
+    {
+      "number": 29,
+      "id": "L3-FOLLOWUP-SLOW-SURFACE-AUTHORING",
+      "status": "ready-for-research",
+      "title": "Slow Surface Authoring And Restriction Shape"
+    },
+    {
+      "number": 30,
+      "id": "L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME",
+      "status": "blocked",
+      "title": "Slow Active Penalties Runtime Support"
+    },
+    {
+      "number": 31,
+      "id": "L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME",
+      "status": "blocked",
+      "title": "Slow Turn Restrictions And Somatic Failure Runtime Support"
     }
   ]
 }
@@ -528,7 +546,7 @@ Verification notes:
 
 ### Task 18 - L3-SPELL-SLOW-RUNTIME-SURVEY - Level 3 Slow Runtime Survey
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -547,6 +565,22 @@ Acceptance:
 - The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
 - No companion AI/autonomous-control behavior is introduced.
 - No authored identity dispatch is introduced in runtime code.
+
+Result:
+
+- Rechecked SRD 5.2.1 Slow RAW. Slow is present in the local SRD corpus but has no authored `packages/surface/content/slow.json`, no Unit catalog admission, and no `slow` row in the Unit profile claims or generated matrix.
+- Confirmed that local `Slow` Surface mentions are weapon Mastery Property data only, not the Slow spell. Runtime follow-ups must keep the spell separate from mastery identity.
+- Closed Task 18 as a follow-up split instead of claiming support. The promoted package-local battle runtime has no Slow Unit/profile owner today.
+- Recorded the detailed survey in `plans/unit-profile-coverage/L3_SLOW_RUNTIME_SURVEY.md`.
+- Split Surface authoring to `L3-FOLLOWUP-SLOW-SURFACE-AUTHORING`: author Slow only after Surface can represent save-gated multi-target active effects, Speed ratio, AC and Dexterity Saving Throw penalties, Reaction suppression, Action-or-Bonus-Action mutual exclusion, Attack-action one-attack cap, Somatic failure chance, and repeated end-of-target-turn saves.
+- Split active penalties runtime to `L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME`: promote Magic Action and level-3+ Spell Slot spend, caster-owned Concentration, 40-foot Cube affected-creature boundary, Wisdom save, active Speed ratio, -2 Armor Class, -2 Dexterity Saving Throws, no Reactions, and repeat-save cleanup without authored-identity dispatch.
+- Split turn and Somatic runtime to `L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME`: promote Action-or-Bonus-Action mutual exclusion, Attack-action one-attack cap, and the 25 percent Somatic-component spell failure chance from typed active-effect facts.
+
+Verification notes:
+
+- RAW/ubiquitous-language check: SRD 5.2.1 `Spells/Descriptions-S-Z.md#Slow`; `UBIQUITOUS_LANGUAGE.md` terms for Magic Action, Spell Slot, Concentration, Speed, Movement, Armor Class, Saving Throw, Action, Bonus Action, Reaction, Attack action, and Somatic components.
+- Coverage verification: Task 18 changed survey/plan artifacts only and did not add Unit claims, Surface catalog admission, runtime reducers, or promoted Quint behavior. `pnpm unit-profile-coverage:check` and `git diff --check` are the relevant checks; MBT is not applicable.
+- Reviewer-loop convergence: survey review found no runtime/code-change issues; architecture and connascence review kept Slow split into Surface authoring, active penalty lifecycle, and target-turn/Somatic restrictions instead of adding workaround adapters, companion AI, or authored-identity dispatch.
 
 ### Task 19 - L3-SPELL-PROTECTION-FROM-ENERGY-RUNTIME-SURVEY - Level 3 Protection From Energy Runtime Survey
 
@@ -802,4 +836,74 @@ Acceptance:
 
 - Haste can claim exact active-effect support only if Task 27 and this task both land.
 - Focused runtime tests and promoted Quint/runtime parity cover end-of-effect lethargy lifecycle and cleanup.
+- No companion AI/autonomous-control behavior or authored identity dispatch is introduced.
+
+### Task 29 - L3-FOLLOWUP-SLOW-SURFACE-AUTHORING - Slow Surface Authoring And Restriction Shape
+
+Status: `ready-for-research`
+
+Input:
+
+- Local RAW under `.references/srd-5.2.1/Spells/Descriptions-S-Z.md#Slow`.
+- `UBIQUITOUS_LANGUAGE.md`.
+- Existing Surface spell activation, save-gate, speed ratio, AC, d20 modifier, action restriction, and repeated-save shapes.
+- The Task 18 survey note.
+
+Output:
+
+- Author `slow` Surface content only after the Surface schema can represent Slow losslessly.
+- Preserve Magic Action casting, level-3 Spell Slot, 120-foot range, V/S/M molasses component, caster-owned Concentration, up to six chosen creature targets in a 40-foot Cube, Wisdom save, active Speed ratio 1/2, -2 Armor Class, -2 Dexterity Saving Throw modifier, no Reactions, Action-or-Bonus-Action mutual exclusion, Attack-action one-attack cap, Somatic-component spell failure chance, and end-of-target-turn repeat saves.
+- Keep the Slow spell distinct from the Slow weapon Mastery Property; do not use mastery identity as the spell runtime owner.
+
+Acceptance:
+
+- `packages/surface/content/slow.dhall` and generated JSON are admitted by the Surface catalog without lossy prose-only placeholders.
+- No runtime code branches on Slow authored identity.
+- Follow-up runtime tasks remain blocked until the Surface record exposes typed facts.
+
+### Task 30 - L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME - Slow Active Penalties Runtime Support
+
+Status: `blocked`
+
+Blocked on: `L3-FOLLOWUP-SLOW-SURFACE-AUTHORING`
+
+Input:
+
+- Authored Slow Surface record with typed active-penalty facts.
+- Package-local promoted `packages/battle-runtime/battle-runtime.qnt`.
+- Current spell invocation, concentration, save-gate, scalar buff, d20 modifier, movement, reaction, and active-effect reducers.
+
+Output:
+
+- Promote Slow's save-gated active penalties through typed spell procedure support: Magic Action and level-3+ Spell Slot spend, caster-owned Concentration, caller-supplied affected-creature set for the 40-foot Cube, Wisdom save, active Speed ratio projection used by Movement and Dash budgets, -2 Armor Class projection, -2 Dexterity Saving Throw modifier, no-Reaction projection, and end-of-target-turn repeat saves that clean up only the successful target's Slow effect.
+- Update Unit claims/evidence/report artifacts only after deterministic admission/projection and focused runtime/parity evidence exist.
+
+Acceptance:
+
+- Slow lands as `supported-profile` or `profile-subset-supported` for active penalties, without the target-turn and Somatic failure subset unless Task 31 is also complete.
+- Focused runtime tests and promoted Quint/runtime parity cover resource spend, Concentration, initial and repeat saves, active projections, Reaction suppression, per-target cleanup, and duration/concentration cleanup.
+- No companion AI/autonomous-control behavior or authored identity dispatch is introduced.
+
+### Task 31 - L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME - Slow Turn Restrictions And Somatic Failure Runtime Support
+
+Status: `blocked`
+
+Blocked on: `L3-FOLLOWUP-SLOW-SURFACE-AUTHORING`, `L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME`
+
+Input:
+
+- Authored Slow Surface record with typed target-turn and Somatic failure facts.
+- Promoted Slow active-effect lifecycle from Task 30.
+- Current action-resource, Bonus Action, Attack action, spell component, and chance-result reducers.
+
+Output:
+
+- Promote Slow's target-turn restrictions from active effect state: on affected targets' turns, spending an Action prevents spending a Bonus Action and spending a Bonus Action prevents spending an Action.
+- Cap affected targets' Attack action at one attack without changing unrelated Extra Attack or granted-action owners.
+- Represent the 25 percent failure chance for affected targets casting spells with Somatic components without adding spell-id-specific gates.
+
+Acceptance:
+
+- Slow can claim exact active-effect support only if Task 30 and this task both land.
+- Focused runtime tests and promoted Quint/runtime parity cover action/Bonus Action mutual exclusion, Attack-action cap, Somatic-component failure chance, unaffected spell casts, and cleanup after the Slow effect ends.
 - No companion AI/autonomous-control behavior or authored identity dispatch is introduced.
