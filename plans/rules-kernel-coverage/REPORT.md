@@ -5,15 +5,15 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 ## Summary
 
 - Total obligations: 72
-- Covered obligations: 64
-- Open transitional obligations: 3
+- Covered obligations: 65
+- Open transitional obligations: 2
 - Boundary or unsupported obligations: 5
 
 | Status | Count |
 | --- | ---: |
-| covered | 64 |
+| covered | 65 |
 | needs-qnt-owner | 0 |
-| needs-parity-witness | 2 |
+| needs-parity-witness | 1 |
 | needs-surface-evidence | 1 |
 | boundary-only | 4 |
 | unsupported-by-admission | 1 |
@@ -59,7 +59,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS` | battle | covered | `spell.invocation-roll-modifier`, `spell.invocation-self-ability-check-advantage` |
 | `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` | battle | covered | `spell.scalar-buff` |
 | `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION` | battle | covered | `spell.creature-type-protection-and-charm` |
-| `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS` | battle | needs-parity-witness | `spell.invocation-condition-immunity-turn-start-temporary-hit-points` |
+| `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS` | battle | covered | `spell.invocation-condition-immunity-turn-start-temporary-hit-points` |
 | `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` | battle | needs-parity-witness | `spell.invocation-condition-removal-protection`, `spell.invocation-direct-condition-removal` |
 | `BATTLE.SPELL.SELF_TRANSFORMATION_MODE` | battle | covered | `spell.invocation-self-transformation-mode` |
 | `BATTLE.SPELL.REACTION_CASTING_TIME` | battle | covered | `spell.reaction-counterspell`, `spell.reaction-hellish-rebuke` |
@@ -228,7 +228,6 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Open Work
 
-- `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS` (needs-parity-witness; follow-up: `RKBC-NONFEATURE-CONDITION-IMMUNITY-THP-WITNESS`): Battle spell condition immunity with start-turn Temporary Hit Point refresh and concentration cleanup
 - `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` (needs-parity-witness; follow-up: `RKBC-NONFEATURE-CONDITION-REMOVAL-PROTECTION-WITNESS`): Battle direct condition removal, poison protection condition removal, poison resistance, and poison Saving Throw Advantage
 - `BATTLE.SURFACE.EXECUTABLE_PROFILE_JOIN` (needs-surface-evidence; follow-up: `RKBC-NONFEATURE-SURFACE-PROFILE-JOIN-EVIDENCE`): Prove each currently admitted executable battle Surface profile points to a covered semantic obligation
 

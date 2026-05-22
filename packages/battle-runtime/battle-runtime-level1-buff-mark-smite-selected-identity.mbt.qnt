@@ -550,6 +550,20 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     clearTrueStrikeSpellHostedWeaponAttackProjection,
   }
 
+  action doHeroismFrightenedImmunityTurnStartTemporaryHitPointsCleanup = all {
+    qLastResult == "init",
+    recordWithoutMarkedDamageProjection(
+      0, 12, 3, true, false, 1, "none", "none", 0, 0,
+      "none", 0, 0, 0,
+      "none", "none", "none", 0,
+      false, false, false, "none", "none", "none", "none", 0, 0, "none", "none",
+      "heroism",
+    ),
+    clearSearingSmiteLifecycleProjection,
+    clearShillelaghWeaponAttackOverrideProjection,
+    clearTrueStrikeSpellHostedWeaponAttackProjection,
+  }
+
   action doHuntersMarkMarkedDamageRiderConcentrationAndSameTurnTransfer = all {
     qLastResult == "init",
     recordProjection(
@@ -665,6 +679,7 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape,
     doFalseLifeTemporaryHitPoints,
     doHeroismFrightenedImmunityTurnStartTemporaryHitPoints,
+    doHeroismFrightenedImmunityTurnStartTemporaryHitPointsCleanup,
     doHuntersMarkMarkedDamageRiderConcentrationAndSameTurnTransfer,
     doHexMarkedDamageRiderAndLaterTurnTransfer,
     doLongstriderSpeedIncrease,

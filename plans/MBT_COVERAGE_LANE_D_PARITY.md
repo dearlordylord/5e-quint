@@ -115,7 +115,7 @@
     {
       "number": 19,
       "id": "RKBC-NONFEATURE-CONDITION-IMMUNITY-THP-WITNESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Condition Immunity Temporary Hit Point Coverage Witness"
     },
     {
@@ -305,7 +305,7 @@ Output:
 
 ### Task 19 - RKBC-NONFEATURE-CONDITION-IMMUNITY-THP-WITNESS - Condition Immunity Temporary Hit Point Coverage Witness
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 - Task 14.

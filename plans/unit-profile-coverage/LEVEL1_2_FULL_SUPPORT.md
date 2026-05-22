@@ -12,8 +12,8 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | Strict target closure | 165/168 (98.2%) |
 | Product readiness | 514/556 (92.4%) |
 | Rules-kernel profile join | 78/85 (91.8%) |
-| Rules-kernel covered profile join | 75/85 (88.2%) |
-| Supported Unit rules-kernel chain | 100/113 (88.5%) |
+| Rules-kernel covered profile join | 76/85 (89.4%) |
+| Supported Unit rules-kernel chain | 101/113 (89.4%) |
 
 ## Scope
 
@@ -57,7 +57,6 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `cleric_divine_order` | unmapped | `character-creation.class-feature-option-projection` (unmapped: no obligation mapping) |
 | `druid_primal_order` | unmapped | `character-creation.class-feature-option-projection` (unmapped: no obligation mapping) |
 | `heat_metal` | unmapped | `spell.invocation-object-contact-damage` (unmapped: no obligation mapping) |
-| `heroism` | mapped-open | `spell.invocation-condition-immunity-turn-start-temporary-hit-points` (mapped-open: `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS` (needs-parity-witness)) |
 | `lesser_restoration` | mapped-open | `spell.invocation-direct-condition-removal` (mapped-open: `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` (needs-parity-witness)) |
 | `monk_uncanny_metabolism` | unmapped | `character-creation.class-feature-source-fact-projection` (unmapped: no obligation mapping) |
 | `protection_from_poison` | mapped-open | `spell.invocation-condition-removal-protection` (mapped-open: `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` (needs-parity-witness)) |

@@ -1,8 +1,8 @@
 {
   "summary": {
     "total": 72,
-    "covered": 64,
-    "open": 3,
+    "covered": 65,
+    "open": 2,
     "nonSemantic": 5,
     "byRuntime": {
       "shared-algebras": 1,
@@ -12,9 +12,9 @@
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 64,
+      "covered": 65,
       "needs-qnt-owner": 0,
-      "needs-parity-witness": 2,
+      "needs-parity-witness": 1,
       "needs-surface-evidence": 1,
       "boundary-only": 4,
       "unsupported-by-admission": 1
@@ -901,25 +901,37 @@
       "title": "Battle creature-type protection, Charmed/Frightened/possession prevention, and relevant-effect Saving Throw Advantage"
     },
     {
-      "followUpTaskIds": [
-        "RKBC-NONFEATURE-CONDITION-IMMUNITY-THP-WITNESS"
-      ],
       "id": "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
       "kind": "active-effect-lifecycle",
-      "parityWitnesses": [],
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-level1-buff-mark-smite-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
       "profiles": [
         "spell.invocation-condition-immunity-turn-start-temporary-hit-points"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt"
+        "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt",
+        "packages/battle-runtime/battle-runtime-timed-effects.qnt",
+        "packages/battle-runtime/battle-runtime-concentration.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
         "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
       ],
-      "status": "needs-parity-witness",
-      "surfaceEvidence": [],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Heroism",
+        ".references/srd-5.2.1/Rules-Glossary.md#Concentration",
+        ".references/srd-5.2.1/Playing-the-Game.md#Temporary Hit Points",
+        ".references/srd-5.2.1/Rules-Glossary.md#Temporary Hit Points"
+      ],
       "title": "Battle spell condition immunity with start-turn Temporary Hit Point refresh and concentration cleanup"
     },
     {
