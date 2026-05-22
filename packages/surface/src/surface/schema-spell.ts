@@ -1368,6 +1368,14 @@ type EffectAtom =
       readonly preventsSpellComponent: "verbal";
     }
   | {
+      readonly kind: "truthfulness_constraint";
+      readonly prohibitedCommunication: "deliberate_lie";
+      readonly appliesWhile: "in_spell_area";
+      readonly targetAwareness: "aware_of_spell";
+      readonly allowedResponse: "evasive_or_silent_truthful";
+    }
+  | { readonly kind: "reveal_save_outcome_to_caster" }
+  | {
       readonly kind: "end_overlapping_spell_created_bright_or_dim_light";
       readonly maxSpellLevel: number;
     }
@@ -3382,6 +3390,16 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         grantsDamageImmunity: Schema.Literal("thunder"),
         imposesCondition: Schema.Literal("deafened"),
         preventsSpellComponent: Schema.Literal("verbal"),
+      }),
+      strictStruct({
+        kind: Schema.Literal("truthfulness_constraint"),
+        prohibitedCommunication: Schema.Literal("deliberate_lie"),
+        appliesWhile: Schema.Literal("in_spell_area"),
+        targetAwareness: Schema.Literal("aware_of_spell"),
+        allowedResponse: Schema.Literal("evasive_or_silent_truthful"),
+      }),
+      strictStruct({
+        kind: Schema.Literal("reveal_save_outcome_to_caster"),
       }),
       Schema.Struct({
         kind: Schema.Literal(

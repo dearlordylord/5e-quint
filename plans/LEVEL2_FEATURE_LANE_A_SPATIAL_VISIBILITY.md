@@ -10,8 +10,8 @@
     {"number":4,"id":"L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION","status":"done","title":"Spike Growth Hazard Recognition Boundary"},
     {"number":5,"id":"L12G-MISSING-SILENCE","status":"done","title":"Silence Definition And Support Or Closure"},
     {"number":6,"id":"L12G-MISSING-SUGGESTION","status":"done","title":"Suggestion Definition And Closure"},
-    {"number":7,"id":"L12G-MISSING-ZONE-OF-TRUTH","status":"ready-for-research","title":"Zone Of Truth Definition And Closure"},
-    {"number":8,"id":"L12G-RECURSIVE-TAIL-LANE-A","status":"blocked","title":"Lane A Recursive Planning Tail"}
+    {"number":7,"id":"L12G-MISSING-ZONE-OF-TRUTH","status":"done","title":"Zone Of Truth Definition And Closure"},
+    {"number":8,"id":"L12G-RECURSIVE-TAIL-LANE-A","status":"ready-for-research","title":"Lane A Recursive Planning Tail"}
   ]
 }
 -->
@@ -112,18 +112,18 @@ Output:
 
 ### Task 7 - L12G-MISSING-ZONE-OF-TRUTH - Zone Of Truth Definition And Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 - SRD Zone of Truth text and existing truth/knowledge/table adjudication boundaries.
 
 Output:
-- Authored Surface definition plus coverage disposition.
-- Do not add conversation-state or lie-detection runtime state unless it has a clear executable battle owner.
+- Authored SRD Surface definition plus accepted runtime-detached closure for Zone of Truth's recurring Charisma Saving Throw, failed-save truthfulness constraint, affected-creature spell awareness, evasive truthful response permission, and caster save-outcome knowledge.
+- Runtime records no conversation transcript, statement-truth facts, evasive-response handling, or lie-detection state; table/social adjudication remains the boundary.
 
 ### Task 8 - L12G-RECURSIVE-TAIL-LANE-A - Lane A Recursive Planning Tail
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Unblock only after all ready Lane A tasks are done or explicitly closed.
 

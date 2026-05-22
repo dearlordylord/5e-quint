@@ -2669,6 +2669,59 @@
       "status": "closed-runtime-detached-table-adjudication",
       "strictTargetClosed": true,
       "unitId": "thaumaturgy"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "social-knowledge-effect"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "Zone of Truth's truthfulness constraint, conversation answers, deliberate-lie judgment, evasive response handling, and caster save-outcome knowledge require table/social adjudication facts; promoted battle runtime must not add conversation-state or lie-detection state without a clear executable battle owner.",
+      "sourceRecordPath": "packages/surface/content/zone_of_truth.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Bard spell list Zone of Truth",
+          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_zone_of_truth",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 211,
+            "lineStart": 211,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Cleric spell list Zone of Truth",
+          "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_zone_of_truth",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 198,
+            "lineStart": 198,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Paladin spell list Zone of Truth",
+          "id": "srd521:classes/paladin:spell-level-2:spell-unit-pressure:paladin_spell_list_zone_of_truth",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 204,
+            "lineStart": 204,
+            "path": ".references/srd-5.2.1/Classes/Paladin.md"
+          }
+        }
+      ],
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
+      "unitId": "zone_of_truth"
     }
   ],
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
@@ -2794,7 +2847,7 @@
       ]
     },
     {
-      "count": 32,
+      "count": 33,
       "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
@@ -2829,7 +2882,8 @@
         "speak_with_animals",
         "spike_growth",
         "suggestion",
-        "thaumaturgy"
+        "thaumaturgy",
+        "zone_of_truth"
       ]
     },
     {
@@ -2903,12 +2957,12 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 523,
-      "percent": "94.1%",
+      "numerator": 526,
+      "percent": "94.6%",
       "rowsByStatus": {
         "accepted": 379,
-        "accepted-no-battle-effect": 144,
-        "battle-runtime-required": 17,
+        "accepted-no-battle-effect": 147,
+        "battle-runtime-required": 14,
         "owner-evidence-required": 2,
         "partial-battle-runtime": 14
       }
@@ -2929,13 +2983,13 @@
       "percent": "88.5%"
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 170,
+      "denominator": 171,
       "numerator": 113,
-      "percent": "66.5%"
+      "percent": "66.1%"
     },
     "strictTargetClosure": {
-      "denominator": 170,
-      "numerator": 168,
+      "denominator": 171,
+      "numerator": 169,
       "percent": "98.8%"
     }
   },
@@ -3525,48 +3579,6 @@
           }
         ],
         "unitId": "unseen_servant"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "spell Unit pressure",
-            "concept": "Bard spell list Zone of Truth",
-            "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_zone_of_truth",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 211,
-              "lineStart": 211,
-              "path": ".references/srd-5.2.1/Classes/Bard.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Cleric spell list Zone of Truth",
-            "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_zone_of_truth",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 198,
-              "lineStart": 198,
-              "path": ".references/srd-5.2.1/Classes/Cleric.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Paladin spell list Zone of Truth",
-            "id": "srd521:classes/paladin:spell-level-2:spell-unit-pressure:paladin_spell_list_zone_of_truth",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 204,
-              "lineStart": 204,
-              "path": ".references/srd-5.2.1/Classes/Paladin.md"
-            }
-          }
-        ],
-        "unitId": "zone_of_truth"
       }
     ],
     "nonExecutableClassContainers": [
@@ -8186,19 +8198,19 @@
       "missing": 1,
       "profile-subset-supported": 23,
       "supported-profile": 113,
-      "unsupported-profile": 33
+      "unsupported-profile": 34
     },
     "groupsByStatus": {
       "blocked-follow-up-split": 13,
       "closed-character-fact-and-runtime-detached-split": 3,
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
-      "closed-runtime-detached-table-adjudication": 32,
+      "closed-runtime-detached-table-adjudication": 33,
       "open-profile-accounting": 1,
       "open-runtime-behavior": 1,
       "supported-profile": 113
     },
-    "nonSupportedFrontier": 57,
-    "strictDenominator": 170
+    "nonSupportedFrontier": 58,
+    "strictDenominator": 171
   }
 }

@@ -147,6 +147,7 @@ const requiredFirstVerticalUnitIds = [
   "sleep",
   "spider_climb",
   "suggestion",
+  "zone_of_truth",
   "thunderwave",
   "eldritch_blast",
   "minor_illusion",
@@ -354,6 +355,79 @@ describe("SRD Unit catalog boundary", () => {
               duration: "spell_duration",
             },
             onSuccess: { kind: "none" },
+          },
+        ],
+      });
+    }
+  });
+
+  test("keeps Zone of Truth's truthfulness Surface facts in the catalog projection", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const zoneOfTruth = result.catalog.requireUnit("zone_of_truth");
+
+      expect(zoneOfTruth.kind).toBe("spell");
+      if (
+        zoneOfTruth.kind !== "spell" ||
+        zoneOfTruth.mechanics.family !== "ongoing_effect"
+      ) {
+        throw new Error(
+          "Expected Zone of Truth to be an ongoing-effect spell.",
+        );
+      }
+      expect(zoneOfTruth.mechanics).toMatchObject({
+        level: 2,
+        school: "enchantment",
+        castingTime: { kind: "action" },
+        range: { kind: "point", feet: 60 },
+        components: { v: true, s: true, m: false },
+        duration: {
+          kind: "timed",
+          value: { unit: "minute", amount: 10 },
+        },
+        attachment: {
+          holeId: "zone_of_truth_sphere",
+          value: {
+            kind: "area",
+            origin: { kind: "point_within_range" },
+            shape: { kind: "sphere", radiusFeet: 15 },
+          },
+        },
+        operations: [
+          {
+            trigger: { kind: "on_creature_starts_turn_in_area" },
+            effect: {
+              kind: "save_gate",
+              ability: "cha",
+              dc: { kind: "caster_spell_save_dc" },
+              onFail: {
+                kind: "composite",
+                effects: [
+                  {
+                    kind: "truthfulness_constraint",
+                    prohibitedCommunication: "deliberate_lie",
+                    appliesWhile: "in_spell_area",
+                    targetAwareness: "aware_of_spell",
+                    allowedResponse: "evasive_or_silent_truthful",
+                  },
+                  { kind: "reveal_save_outcome_to_caster" },
+                ],
+              },
+              onSuccess: { kind: "reveal_save_outcome_to_caster" },
+            },
+            usageLimit: {
+              kind: "once_per_turn",
+              limitGroup: "zone_of_truth_save_per_turn",
+            },
+          },
+          {
+            trigger: { kind: "on_creature_enters_area" },
+            usageLimit: {
+              kind: "once_per_turn",
+              limitGroup: "zone_of_truth_save_per_turn",
+            },
           },
         ],
       });

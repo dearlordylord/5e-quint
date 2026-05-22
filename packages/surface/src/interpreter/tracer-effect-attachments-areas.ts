@@ -50,6 +50,8 @@ export type AttachmentAndAreaEffectAtom = Extract<
       | "area_is_heavily_obscured"
       | "area_is_magical_darkness"
       | "area_of_silence"
+      | "truthfulness_constraint"
+      | "reveal_save_outcome_to_caster"
       | "end_overlapping_spell_created_bright_or_dim_light"
       | "area_anchor_or_layering_requirement"
       | "area_section_burns_away"
@@ -460,6 +462,32 @@ export function traceAttachmentAndAreaEffectAtom(
           `condition: ${e.imposesCondition}`,
           `blocks component: ${e.preventsSpellComponent}`,
         ].join("\n"),
+      });
+      return id;
+    }
+    case "truthfulness_constraint": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "truthfulness_constraint",
+        label: [
+          "truthfulness_constraint",
+          `prohibits: ${e.prohibitedCommunication}`,
+          `while: ${e.appliesWhile}`,
+          `target: ${e.targetAwareness}`,
+          `may respond: ${e.allowedResponse}`,
+        ].join("\n"),
+      });
+      return id;
+    }
+    case "reveal_save_outcome_to_caster": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "reveal_save_outcome_to_caster",
+        label: "reveal_save_outcome_to_caster",
       });
       return id;
     }

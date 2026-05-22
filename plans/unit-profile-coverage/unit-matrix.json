@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 398,
-      "numerator": 194,
-      "percent": "48.7%"
+      "denominator": 399,
+      "numerator": 195,
+      "percent": "48.9%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 470,
-      "numerator": 226,
-      "percent": "48.1%"
+      "denominator": 471,
+      "numerator": 227,
+      "percent": "48.2%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 227
+      "value": 228
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 136,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 227,
-      "numerator": 227,
+      "denominator": 228,
+      "numerator": 228,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "79.4%"
     },
     "supportedProfileCoverage": {
-      "denominator": 195,
+      "denominator": 196,
       "numerator": 136,
-      "percent": "69.7%"
+      "percent": "69.4%"
     }
   },
   "metricSemantics": [
@@ -23749,6 +23749,29 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/suggestion.json",
       "unitId": "suggestion"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "social-knowledge-effect",
+          "owner": "runtime-detached table/social truth adjudication owner",
+          "reason": "Zone of Truth's truthfulness constraint, conversation answers, deliberate-lie judgment, evasive response handling, and caster save-outcome knowledge require table/social adjudication facts; promoted battle runtime must not add conversation-state or lie-detection state without a clear executable battle owner."
+        },
+        "reason": "Zone of Truth is authored and installed as an SRD Surface Spell Definition with Action casting that spends a level-2 Spell Slot, point-origin 15-foot-radius Sphere area identity, 10-minute duration, recurring Charisma Saving Throw when a creature enters the area for the first time on a turn or starts its turn there, failed-save deliberate-lie prohibition while in the area, affected-creature spell awareness and evasive truthful response permission, and caster knowledge of each save outcome. Task 7 claims no promoted battle-runtime profile because conversation content, statement truth, evasion, and lie adjudication are runtime-detached table/social knowledge facts outside promoted battle Unit profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/zone_of_truth.json",
+      "unitId": "zone_of_truth"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

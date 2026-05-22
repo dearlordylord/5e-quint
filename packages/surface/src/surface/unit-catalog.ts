@@ -215,6 +215,7 @@ import warlockMagicalCunningInput from "../../content/warlock_magical_cunning.js
 import viciousMockeryInput from "../../content/vicious_mockery.json";
 import wardingBondInput from "../../content/warding_bond.json";
 import webInput from "../../content/web.json";
+import zoneOfTruthInput from "../../content/zone_of_truth.json";
 import weaponClubInput from "../../content/weapon_club.json";
 import weaponDaggerInput from "../../content/weapon_dagger.json";
 import weaponFlailInput from "../../content/weapon_flail.json";
@@ -545,6 +546,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     spiderClimbInput,
     spikeGrowthInput,
     suggestionInput,
+    zoneOfTruthInput,
     thunderwaveInput,
     trueStrikeInput,
     eldritchBlastInput,
