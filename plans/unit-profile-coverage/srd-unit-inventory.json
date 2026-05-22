@@ -239,10 +239,10 @@
       "numerator": 22,
       "percent": "17.2%",
       "rowsByStatus": {
-        "battle-runtime-required": 61,
+        "battle-runtime-required": 65,
         "accepted-no-battle-effect": 13,
         "partial-battle-runtime": 8,
-        "owner-evidence-required": 37,
+        "owner-evidence-required": 33,
         "accepted": 9
       }
     },
@@ -276,9 +276,9 @@
       "catalog-installed-owner-evidence-required": 2,
       "catalog-only/dead-for-now": 137,
       "missing-authored-record": 58,
-      "catalog-authored-review-required": 37,
-      "catalog-installed-needs-owner-evidence": 1,
-      "catalog-authored-executable-follow-up": 4
+      "catalog-authored-review-required": 33,
+      "catalog-authored-executable-follow-up": 8,
+      "catalog-installed-needs-owner-evidence": 1
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 243,
@@ -290,8 +290,8 @@
       "missing-authored-record": 58,
       "catalog-only/dead-for-now": 13,
       "catalog-installed-owner-evidence-present": 17,
-      "catalog-authored-review-required": 37,
-      "catalog-authored-executable-follow-up": 3
+      "catalog-authored-review-required": 33,
+      "catalog-authored-executable-follow-up": 7
     },
     "levelThreeInstalledSpellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 17
@@ -7709,10 +7709,11 @@
         "state": "not-installed",
         "unitId": "hypnotic_pattern"
       },
-      "finalDisposition": "catalog-authored-review-required",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Promote follow-up split L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR, L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME: L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR owns Repair Hypnotic Pattern's Surface shape so the SRD spell definition, 30-foot Cube, sight-gated affected-creature predicate, Charmed plus Incapacitated plus Speed 0 failed-save bundle, target-takes-damage early end, and another-creature action-spend shake-awake escape are represented as typed procedure facts instead of prose-only runtime behavior. Required output: Updated Dhall and generated JSON content plus focused Surface/unit-catalog tests proving Hypnotic Pattern round-trips with typed sight-gated area targeting and target-specific escape facts before runtime admission.; L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME owns Promote Hypnotic Pattern after Surface repair by admitting the repaired record into the Unit catalog; spending the Magic Action and level-3-or-higher Spell Slot; owning caster Concentration up to 1 minute; consuming caller-supplied Cube affected-creature and sight witnesses; resolving Wisdom Saving Throws; applying one source-owned target effect that projects Charmed, Incapacitated, and Speed 0; removing only the spell-owned target effect on affected-target damage or another creature's shake-awake action; and cleaning up on Concentration or duration end without authored-identity dispatch. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, generated coverage artifacts, and promoted Quint/runtime parity for cast admission, Spell Slot spend, Concentration ownership, Saving Throw outcomes, linked condition and Speed projection, damage cleanup, shake-awake cleanup, and duration cleanup while leaving automatic Cube geometry, Total Cover, point-of-origin inclusion, area membership, and sight derivation table-owned.",
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_major_image",
@@ -26138,10 +26139,11 @@
         "state": "not-installed",
         "unitId": "hypnotic_pattern"
       },
-      "finalDisposition": "catalog-authored-review-required",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Promote follow-up split L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR, L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME: L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR owns Repair Hypnotic Pattern's Surface shape so the SRD spell definition, 30-foot Cube, sight-gated affected-creature predicate, Charmed plus Incapacitated plus Speed 0 failed-save bundle, target-takes-damage early end, and another-creature action-spend shake-awake escape are represented as typed procedure facts instead of prose-only runtime behavior. Required output: Updated Dhall and generated JSON content plus focused Surface/unit-catalog tests proving Hypnotic Pattern round-trips with typed sight-gated area targeting and target-specific escape facts before runtime admission.; L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME owns Promote Hypnotic Pattern after Surface repair by admitting the repaired record into the Unit catalog; spending the Magic Action and level-3-or-higher Spell Slot; owning caster Concentration up to 1 minute; consuming caller-supplied Cube affected-creature and sight witnesses; resolving Wisdom Saving Throws; applying one source-owned target effect that projects Charmed, Incapacitated, and Speed 0; removing only the spell-owned target effect on affected-target damage or another creature's shake-awake action; and cleaning up on Concentration or duration end without authored-identity dispatch. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, generated coverage artifacts, and promoted Quint/runtime parity for cast admission, Spell Slot spend, Concentration ownership, Saving Throw outcomes, linked condition and Speed projection, damage cleanup, shake-awake cleanup, and duration cleanup while leaving automatic Cube geometry, Total Cover, point-of-origin inclusion, area membership, and sight derivation table-owned.",
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_lightning_bolt",
@@ -28715,10 +28717,11 @@
         "state": "not-installed",
         "unitId": "hypnotic_pattern"
       },
-      "finalDisposition": "catalog-authored-review-required",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Promote follow-up split L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR, L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME: L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR owns Repair Hypnotic Pattern's Surface shape so the SRD spell definition, 30-foot Cube, sight-gated affected-creature predicate, Charmed plus Incapacitated plus Speed 0 failed-save bundle, target-takes-damage early end, and another-creature action-spend shake-awake escape are represented as typed procedure facts instead of prose-only runtime behavior. Required output: Updated Dhall and generated JSON content plus focused Surface/unit-catalog tests proving Hypnotic Pattern round-trips with typed sight-gated area targeting and target-specific escape facts before runtime admission.; L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME owns Promote Hypnotic Pattern after Surface repair by admitting the repaired record into the Unit catalog; spending the Magic Action and level-3-or-higher Spell Slot; owning caster Concentration up to 1 minute; consuming caller-supplied Cube affected-creature and sight witnesses; resolving Wisdom Saving Throws; applying one source-owned target effect that projects Charmed, Incapacitated, and Speed 0; removing only the spell-owned target effect on affected-target damage or another creature's shake-awake action; and cleaning up on Concentration or duration end without authored-identity dispatch. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, generated coverage artifacts, and promoted Quint/runtime parity for cast admission, Spell Slot spend, Concentration ownership, Saving Throw outcomes, linked condition and Speed projection, damage cleanup, shake-awake cleanup, and duration cleanup while leaving automatic Cube geometry, Total Cover, point-of-origin inclusion, area membership, and sight derivation table-owned.",
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_magic_circle",
@@ -33560,10 +33563,11 @@
         "state": "not-installed",
         "unitId": "hypnotic_pattern"
       },
-      "finalDisposition": "catalog-authored-review-required",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this level-3 spell row as accepted.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Promote follow-up split L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR, L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME: L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR owns Repair Hypnotic Pattern's Surface shape so the SRD spell definition, 30-foot Cube, sight-gated affected-creature predicate, Charmed plus Incapacitated plus Speed 0 failed-save bundle, target-takes-damage early end, and another-creature action-spend shake-awake escape are represented as typed procedure facts instead of prose-only runtime behavior. Required output: Updated Dhall and generated JSON content plus focused Surface/unit-catalog tests proving Hypnotic Pattern round-trips with typed sight-gated area targeting and target-specific escape facts before runtime admission.; L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME owns Promote Hypnotic Pattern after Surface repair by admitting the repaired record into the Unit catalog; spending the Magic Action and level-3-or-higher Spell Slot; owning caster Concentration up to 1 minute; consuming caller-supplied Cube affected-creature and sight witnesses; resolving Wisdom Saving Throws; applying one source-owned target effect that projects Charmed, Incapacitated, and Speed 0; removing only the spell-owned target effect on affected-target damage or another creature's shake-awake action; and cleaning up on Concentration or duration end without authored-identity dispatch. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, generated coverage artifacts, and promoted Quint/runtime parity for cast admission, Spell Slot spend, Concentration ownership, Saving Throw outcomes, linked condition and Speed projection, damage cleanup, shake-awake cleanup, and duration cleanup while leaving automatic Cube geometry, Total Cover, point-of-origin inclusion, area membership, and sight derivation table-owned.",
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_lightning_bolt",

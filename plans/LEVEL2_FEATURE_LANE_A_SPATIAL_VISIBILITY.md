@@ -127,7 +127,7 @@
     {
       "number": 21,
       "id": "L3-SPELL-HYPNOTIC-PATTERN-RUNTIME-SURVEY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Level 3 Hypnotic Pattern Runtime Survey And Task Split"
     },
     {
@@ -147,6 +147,18 @@
       "id": "L3-FOLLOWUP-FLY-END-FALL-WITNESS",
       "status": "blocked",
       "title": "Fly End Fall Witness"
+    },
+    {
+      "number": 25,
+      "id": "L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR",
+      "status": "ready-for-research",
+      "title": "Hypnotic Pattern Surface Escape Repair"
+    },
+    {
+      "number": 26,
+      "id": "L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME",
+      "status": "blocked",
+      "title": "Hypnotic Pattern Control Runtime"
     }
   ]
 }
@@ -195,10 +207,12 @@ Every task must include:
 | 18 | L12G-FOLLOWUP-FIND-STEED-COMPANION-BOUNDARY - Find Steed Companion Boundary Closure | done | L12G-RECURSIVE-TAIL-LANE-A-2 | none | Find Steed Surface content, mounted-combat text, Unit/profile claims, owner evidence, and focused tests | Completed by recording `find_steed` as an `unsupported-profile` closed at the companion-control boundary, without Unit catalog admission, companion AI, autonomous control behavior, or authored-identity dispatch. |
 | 19 | L3-SPELL-FLY-RUNTIME-SURVEY - Level 3 Fly Runtime Survey And Task Split | done | L12G-RECURSIVE-TAIL-LANE-A-2 | L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR | Fly Surface content, Speed and Movement language, current Unit/profile claims, and falling witness boundaries | Completed by recording Fly as an unsupported-profile follow-up split; no runtime support, companion behavior, or authored-identity dispatch is claimed. |
 | 20 | L3-SPELL-LIGHTNING-BOLT-RUNTIME-SURVEY - Level 3 Lightning Bolt Runtime Survey And Task Split | done | L12G-RECURSIVE-TAIL-LANE-A-2 | none | Lightning Bolt Surface content, line/area damage support, Unit/profile claims, and focused tests | Completed by admitting Lightning Bolt as a supported self-origin Line save-gated damage profile while leaving Line direction, Total Cover blocking, point-of-origin inclusion choice, affected-creature derivation, and map geometry table-owned. |
-| 21 | L3-SPELL-HYPNOTIC-PATTERN-RUNTIME-SURVEY - Level 3 Hypnotic Pattern Runtime Survey And Task Split | ready-for-research | L12G-RECURSIVE-TAIL-LANE-A-2 | none | Hypnotic Pattern Surface content, condition-save/incapacitation support, Unit/profile claims, and focused tests | Next level-3 spell runtime survey. |
+| 21 | L3-SPELL-HYPNOTIC-PATTERN-RUNTIME-SURVEY - Level 3 Hypnotic Pattern Runtime Survey And Task Split | done | L12G-RECURSIVE-TAIL-LANE-A-2 | L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR | Hypnotic Pattern Surface content, condition-save/incapacitation support, Unit/profile claims, and focused tests | Completed by recording Hypnotic Pattern as an unsupported-profile follow-up split for Surface sight/escape repair and battle control runtime support; no companion behavior or authored-identity dispatch is claimed. |
 | 22 | L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR - Fly Surface Target Repair | ready-for-research | L3-SPELL-FLY-RUNTIME-SURVEY | L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME | Fly Surface target shape and sibling touched willing creature spell selection vocabulary | Repair target eligibility shape before runtime admission. |
 | 23 | L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME - Fly Special Speed Runtime | blocked | L3-FOLLOWUP-FLY-SURFACE-TARGET-REPAIR | L3-FOLLOWUP-FLY-END-FALL-WITNESS | Fly fixed special Speed, hover, movement kind vocabulary, active-effect cleanup, and promoted Quint parity | Promote the active Fly Speed grant after the Surface target repair lands. |
 | 24 | L3-FOLLOWUP-FLY-END-FALL-WITNESS - Fly End Fall Witness | blocked | L3-FOLLOWUP-FLY-SPECIAL-SPEED-RUNTIME | none | Fly spell-end falling clause, caller-supplied aloft/can-stop-fall witnesses, and existing falling reaction/landing pipeline | Promote the spell-end fall handoff after the active Fly effect exists. |
+| 25 | L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR - Hypnotic Pattern Surface Escape Repair | ready-for-research | L3-SPELL-HYPNOTIC-PATTERN-RUNTIME-SURVEY | L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME | Hypnotic Pattern sight-gated area targeting and target-specific escape facts | Repair typed Surface facts before runtime admission. |
+| 26 | L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME - Hypnotic Pattern Control Runtime | blocked | L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR | none | Hypnotic Pattern linked Charmed/Incapacitated/Speed 0 target effect, damage cleanup, shake-awake action, and promoted Quint parity | Promote the battle control lifecycle after the Surface escape repair lands. |
 
 ## Tasks
 
@@ -775,7 +789,7 @@ Completed:
 
 ### Task 21 - L3-SPELL-HYPNOTIC-PATTERN-RUNTIME-SURVEY - Level 3 Hypnotic Pattern Runtime Survey And Task Split
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -794,3 +808,97 @@ Acceptance:
 - The task lands as supported, accepted-closed/runtime-detached, or a smaller precise follow-up split.
 - No companion AI/autonomous-control behavior is introduced.
 - No authored identity dispatch is introduced in runtime code.
+
+Completed:
+
+- Hypnotic Pattern closes as an unsupported-profile follow-up split rather than
+  support or runtime-detached closure. The installed Surface record captures the
+  SRD spell's Action cast, 120-foot range, 30-foot Cube, Wisdom Saving Throw,
+  Charmed plus Incapacitated plus Speed 0 failed-save bundle, Concentration, and
+  target-damage early end, but exact runtime support still needs typed
+  sight-gated area target facts and the action-spend shake-awake escape.
+- Added the schedulable follow-up tasks:
+  `L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR` and
+  `L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME`.
+- Automatic Cube geometry, Total Cover, point-of-origin inclusion, area
+  membership, and sight derivation remain table/spatial witness facts.
+- No companion AI/autonomous-control behavior or authored-identity runtime
+  dispatch is introduced.
+- Survey and generated coverage artifacts are recorded in
+  `plans/unit-profile-coverage/L3_HYPNOTIC_PATTERN_RUNTIME_SURVEY.md`,
+  `unit-claims.jsonl`, `SRD_UNIT_INVENTORY.md`, `UNIT_REPORT.md`,
+  `srd-unit-inventory.json`, and `unit-matrix.json`.
+
+### Task 25 - L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR - Hypnotic Pattern Surface Escape Repair
+
+Status: `ready-for-research`
+
+Depends on: L3-SPELL-HYPNOTIC-PATTERN-RUNTIME-SURVEY
+
+Blocks: L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME
+
+Input:
+
+- SRD Hypnotic Pattern text and current
+  `packages/surface/content/hypnotic_pattern.dhall` / generated JSON.
+- Existing Surface spell area, composite effect, and duration escape vocabulary.
+- `L3_HYPNOTIC_PATTERN_RUNTIME_SURVEY.md`.
+
+Output:
+
+- Repair Hypnotic Pattern's Surface shape so the 30-foot Cube, sight-gated
+  affected-creature predicate, Charmed plus Incapacitated plus Speed 0
+  failed-save bundle, target-takes-damage early end, and another-creature
+  action-spend shake-awake escape are represented as typed procedure facts
+  instead of prose-only runtime behavior.
+- Updated Dhall and generated JSON content plus focused Surface/unit-catalog
+  tests proving the repaired record round-trips before runtime admission.
+
+Acceptance:
+
+- The repaired Surface record preserves exact SRD provenance and does not
+  represent sight, area membership, Total Cover, or Cube geometry as duplicated
+  battle state.
+- The shake-awake escape is target-specific and requires someone other than the
+  affected target to spend an action.
+- No runtime support is claimed from Surface admission alone.
+
+### Task 26 - L3-FOLLOWUP-HYPNOTIC-PATTERN-CONTROL-RUNTIME - Hypnotic Pattern Control Runtime
+
+Status: `blocked`
+
+Depends on: L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR
+
+Blocks: none
+
+Input:
+
+- Repaired Hypnotic Pattern Surface record from
+  `L3-FOLLOWUP-HYPNOTIC-PATTERN-SURFACE-ESCAPE-REPAIR`.
+- Existing condition-save, Hideous Laughter damage lifecycle, action-resource,
+  Concentration, and area witness support.
+- `packages/battle-runtime/battle-runtime.qnt` promoted runtime authority.
+
+Output:
+
+- Promote Hypnotic Pattern by admitting the repaired record into the Unit
+  catalog; spending the Magic Action and level-3-or-higher Spell Slot; owning
+  caster Concentration up to 1 minute; consuming caller-supplied Cube
+  affected-creature and sight witnesses; resolving Wisdom Saving Throws;
+  applying one source-owned target effect that projects Charmed, Incapacitated,
+  and Speed 0; removing only the spell-owned target effect on affected-target
+  damage or another creature's shake-awake action; and cleaning up on
+  Concentration or duration end.
+- Supported-profile or profile-subset-supported Unit claim, deterministic
+  admission/projection evidence, focused runtime tests, generated coverage
+  artifacts, and promoted Quint/runtime parity.
+
+Acceptance:
+
+- Charmed, Incapacitated, and Speed 0 cannot diverge for the same spell-owned
+  Hypnotic Pattern target effect, and independent condition or Speed sources are
+  preserved.
+- Automatic Cube geometry, Total Cover, point-of-origin inclusion, area
+  membership, and sight derivation remain caller/table-owned.
+- No companion AI/autonomous-control behavior or authored-identity runtime
+  dispatch is introduced.
