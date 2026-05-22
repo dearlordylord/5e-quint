@@ -25,6 +25,23 @@ const {
 const root = process.env.RULES_KERNEL_COVERAGE_ROOT ?? process.cwd();
 const write = process.argv.includes("--write");
 const selfTest = process.argv.includes("--self-test");
+const generatorReadinessArrayFields = [
+  "semanticCore",
+  "proofOnly",
+  "generatorSubset",
+  "blockedBy",
+];
+const generatorReadinessSemanticCoreStatuses = new Set([
+  "semantic-core-candidate",
+  "fixture-bound",
+  "generation-subset-clean",
+]);
+const generatorReadinessSubsetStatuses = new Set([
+  "semantic-core-candidate",
+  "fixture-bound",
+  "generation-subset-clean",
+]);
+const generatorReadinessBlockerStatuses = new Set(["fixture-bound", "blocked"]);
 
 function isRecord(value) {
   return value != null && typeof value === "object" && !Array.isArray(value);
@@ -118,6 +135,21 @@ function validateStringArray(value, context) {
 function validateRequiredStringArray(value, context) {
   if (value === undefined) return [`${context} must be an array.`];
   return validateStringArray(value, context);
+}
+
+function stringArrayOrEmpty(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function duplicateStrings(value) {
+  const seen = new Set();
+  const duplicates = new Set();
+  for (const entry of stringArrayOrEmpty(value)) {
+    if (typeof entry !== "string") continue;
+    if (seen.has(entry)) duplicates.add(entry);
+    seen.add(entry);
+  }
+  return [...duplicates];
 }
 
 function lastTypeName(typeName) {
@@ -703,36 +735,50 @@ function validateGeneratorReadiness(
   if (!generatorReadinessStatuses.has(readiness.status)) {
     issues.push(`${context}.status has unknown value ${readiness.status}.`);
   }
-  for (const field of [
-    "semanticCore",
-    "proofOnly",
-    "generatorSubset",
-    "blockedBy",
-  ]) {
+  for (const field of generatorReadinessArrayFields) {
     issues.push(
       ...validateRequiredStringArray(readiness[field], `${context}.${field}`),
     );
   }
-  const semanticCore = readiness.semanticCore ?? [];
-  const generatorSubset = readiness.generatorSubset ?? [];
-  const blockedBy = readiness.blockedBy ?? [];
+  for (const field of generatorReadinessArrayFields) {
+    for (const duplicate of duplicateStrings(readiness[field])) {
+      issues.push(`${context}.${field} repeats ${duplicate}.`);
+    }
+  }
+  const semanticCore = stringArrayOrEmpty(readiness.semanticCore);
+  const proofOnly = stringArrayOrEmpty(readiness.proofOnly);
+  const generatorSubset = stringArrayOrEmpty(readiness.generatorSubset);
+  const blockedBy = stringArrayOrEmpty(readiness.blockedBy);
+  const semanticCoreSet = new Set(semanticCore);
+  for (const ownerPath of proofOnly) {
+    if (semanticCoreSet.has(ownerPath)) {
+      issues.push(
+        `${context}.${ownerPath} cannot be both semanticCore and proofOnly.`,
+      );
+    }
+  }
+  if (readiness.status === "not-assessed") {
+    for (const field of generatorReadinessArrayFields) {
+      const entries = stringArrayOrEmpty(readiness[field]);
+      if (entries.length > 0) {
+        issues.push(`${context}.not-assessed must have empty ${field}.`);
+      }
+    }
+  }
   if (
-    (readiness.status === "semantic-core-candidate" ||
-      readiness.status === "fixture-bound" ||
-      readiness.status === "generation-subset-clean") &&
+    generatorReadinessSemanticCoreStatuses.has(readiness.status) &&
     semanticCore.length === 0
   ) {
     issues.push(`${context}.${readiness.status} requires semanticCore.`);
   }
   if (
-    (readiness.status === "semantic-core-candidate" ||
-      readiness.status === "generation-subset-clean") &&
+    generatorReadinessSubsetStatuses.has(readiness.status) &&
     generatorSubset.length === 0
   ) {
     issues.push(`${context}.${readiness.status} requires generatorSubset.`);
   }
   if (
-    (readiness.status === "fixture-bound" || readiness.status === "blocked") &&
+    generatorReadinessBlockerStatuses.has(readiness.status) &&
     blockedBy.length === 0
   ) {
     issues.push(`${context}.${readiness.status} requires blockedBy.`);
@@ -740,8 +786,17 @@ function validateGeneratorReadiness(
   if (readiness.status === "generation-subset-clean" && blockedBy.length > 0) {
     issues.push(`${context}.generation-subset-clean must not have blockedBy.`);
   }
+  if (
+    !generatorReadinessBlockerStatuses.has(readiness.status) &&
+    blockedBy.length > 0
+  ) {
+    issues.push(`${context}.${readiness.status} must have empty blockedBy.`);
+  }
+  if (readiness.status === "blocked" && semanticCore.length > 0) {
+    issues.push(`${context}.blocked must not declare semanticCore.`);
+  }
   for (const field of ["semanticCore", "proofOnly"]) {
-    for (const ownerPath of readiness[field] ?? []) {
+    for (const ownerPath of stringArrayOrEmpty(readiness[field])) {
       if (!fs.existsSync(path.join(rootPath, ownerPath))) {
         issues.push(`${context}.${field} path ${ownerPath} does not exist.`);
       }
@@ -749,7 +804,7 @@ function validateGeneratorReadiness(
   }
   if (obligation !== undefined) {
     const qntOwners = new Set(obligation.qntOwners ?? []);
-    for (const ownerPath of readiness.semanticCore ?? []) {
+    for (const ownerPath of semanticCore) {
       if (!qntOwners.has(ownerPath)) {
         issues.push(
           `${context}.semanticCore path ${ownerPath} is not declared as a QNT owner by ${obligation.id}.`,

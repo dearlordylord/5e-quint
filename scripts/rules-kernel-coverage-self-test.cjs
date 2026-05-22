@@ -145,6 +145,61 @@ function runSelfTest() {
   assert.equal(result.matrix.summary.byStatus["boundary-only"], 1);
   assert.equal(result.matrix.generatorReadiness.length, 1);
 
+  const sampleGeneratorReadinessPath = path.join(
+    root,
+    "plans",
+    "rules-kernel-coverage",
+    "generator-readiness.jsonl",
+  );
+  const initialGeneratorReadinessText = fs.readFileSync(
+    sampleGeneratorReadinessPath,
+    "utf8",
+  );
+  writeFile(
+    sampleGeneratorReadinessPath,
+    JSON.stringify({
+      obligationId: "BATTLE.SAMPLE",
+      status: "not-assessed",
+    }) + "\n",
+  );
+  const missingGeneratorArrayResult = buildKernelCoverage({ root });
+  for (const field of [
+    "semanticCore",
+    "proofOnly",
+    "generatorSubset",
+    "blockedBy",
+  ]) {
+    assert.ok(
+      missingGeneratorArrayResult.issues.includes(
+        `generator-readiness row 1.${field} must be an array.`,
+      ),
+      `Expected missing generator-readiness ${field} issue, got ${JSON.stringify(missingGeneratorArrayResult.issues)}`,
+    );
+  }
+  writeFile(
+    sampleGeneratorReadinessPath,
+    JSON.stringify({
+      obligationId: "BATTLE.SAMPLE",
+      status: "semantic-core-candidate",
+      semanticCore: ["sample.qnt"],
+      proofOnly: ["sample.qnt"],
+      generatorSubset: ["record", "record"],
+      blockedBy: ["sample blocker"],
+    }) + "\n",
+  );
+  const invalidGeneratorSemanticsResult = buildKernelCoverage({ root });
+  for (const issue of [
+    "generator-readiness row 1.generatorSubset repeats record.",
+    "generator-readiness row 1.sample.qnt cannot be both semanticCore and proofOnly.",
+    "generator-readiness row 1.semantic-core-candidate must have empty blockedBy.",
+  ]) {
+    assert.ok(
+      invalidGeneratorSemanticsResult.issues.includes(issue),
+      `Expected generator-readiness issue ${issue}, got ${JSON.stringify(invalidGeneratorSemanticsResult.issues)}`,
+    );
+  }
+  writeFile(sampleGeneratorReadinessPath, initialGeneratorReadinessText);
+
   const initialObligationsText = fs.readFileSync(
     path.join(root, "plans", "rules-kernel-coverage", "obligations.jsonl"),
     "utf8",

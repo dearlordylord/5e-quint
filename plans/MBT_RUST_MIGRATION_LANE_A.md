@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "MBTRUST-A-CHECKER-SCHEMA-HARDENING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Generator Readiness Checker Schema Hardening"
     },
     {
@@ -153,7 +153,7 @@ Output:
 
 ### Task 2 - MBTRUST-A-CHECKER-SCHEMA-HARDENING - Generator Readiness Checker Schema Hardening
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -295,4 +295,3 @@ Output:
 - A short closeout note explaining what is generator-ready, what is fixture-bound
   or proof-only, and what concrete next lane would be needed before real Rust
   generation.
-
