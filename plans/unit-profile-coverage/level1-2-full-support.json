@@ -8257,6 +8257,892 @@
     "openBlockerCount": 0,
     "totalGroupCount": 1
   },
+  "srdAuthoredProductReadiness": {
+    "blockerRows": [
+      {
+        "group": "background-origin-feat-refs",
+        "ownerUnitId": "background_acolyte",
+        "ready": false,
+        "relation": "background.originFeatId",
+        "status": "missing-authored-record",
+        "unitId": "feat_magic_initiate_cleric"
+      },
+      {
+        "duplicateRowCount": 2,
+        "group": "background-origin-feat-refs",
+        "kind": "feat",
+        "ownerUnitId": "background_criminal",
+        "ready": false,
+        "relation": "background.originFeatId",
+        "sourceRecordPath": "packages/surface/content/alert.json",
+        "status": "not-in-unit-catalog, not-in-unit-catalog",
+        "unitId": "alert"
+      },
+      {
+        "group": "background-origin-feat-refs",
+        "ownerUnitId": "background_sage",
+        "ready": false,
+        "relation": "background.originFeatId",
+        "status": "missing-authored-record",
+        "unitId": "feat_magic_initiate_wizard"
+      },
+      {
+        "group": "level-scoped-class-feature-grants",
+        "ownerUnitId": "class_warlock",
+        "ready": false,
+        "relation": "class.featureGrants.level-1",
+        "status": "missing-authored-record",
+        "unitId": "warlock_pact_magic"
+      }
+    ],
+    "blockingGroupCount": 2,
+    "groups": [
+      {
+        "blockerRows": [],
+        "complete": true,
+        "description": "Every SRD background selectable at character creation must be installed.",
+        "group": "background-records",
+        "label": "SRD background records",
+        "metrics": {
+          "denominator": 4,
+          "numerator": 4,
+          "percent": "100%"
+        },
+        "rows": [
+          {
+            "kind": "background",
+            "ready": true,
+            "sourceRecordPath": "packages/surface/content/background_acolyte.json",
+            "status": "installed",
+            "unitId": "background_acolyte"
+          },
+          {
+            "kind": "background",
+            "ready": true,
+            "sourceRecordPath": "packages/surface/content/background_criminal.json",
+            "status": "installed",
+            "unitId": "background_criminal"
+          },
+          {
+            "kind": "background",
+            "ready": true,
+            "sourceRecordPath": "packages/surface/content/background_sage.json",
+            "status": "installed",
+            "unitId": "background_sage"
+          },
+          {
+            "kind": "background",
+            "ready": true,
+            "sourceRecordPath": "packages/surface/content/background_soldier.json",
+            "status": "installed",
+            "unitId": "background_soldier"
+          }
+        ],
+        "rowsByStatus": {
+          "installed": 4
+        }
+      },
+      {
+        "blockerRows": [
+          {
+            "ownerUnitId": "background_acolyte",
+            "ready": false,
+            "relation": "background.originFeatId",
+            "status": "missing-authored-record",
+            "unitId": "feat_magic_initiate_cleric"
+          },
+          {
+            "duplicateRowCount": 2,
+            "kind": "feat",
+            "ownerUnitId": "background_criminal",
+            "ready": false,
+            "relation": "background.originFeatId",
+            "sourceRecordPath": "packages/surface/content/alert.json",
+            "status": "not-in-unit-catalog, not-in-unit-catalog",
+            "unitId": "alert"
+          },
+          {
+            "ownerUnitId": "background_sage",
+            "ready": false,
+            "relation": "background.originFeatId",
+            "status": "missing-authored-record",
+            "unitId": "feat_magic_initiate_wizard"
+          }
+        ],
+        "complete": false,
+        "description": "Every finalized background origin feat ref must resolve through the Unit catalog before character-to-battle admission can be claimed.",
+        "group": "background-origin-feat-refs",
+        "label": "SRD background origin feat refs",
+        "metrics": {
+          "denominator": 4,
+          "numerator": 1,
+          "percent": "25%"
+        },
+        "rows": [
+          {
+            "ownerUnitId": "background_acolyte",
+            "ready": false,
+            "relation": "background.originFeatId",
+            "status": "missing-authored-record",
+            "unitId": "feat_magic_initiate_cleric"
+          },
+          {
+            "duplicateRowCount": 2,
+            "kind": "feat",
+            "ownerUnitId": "background_criminal",
+            "ready": false,
+            "relation": "background.originFeatId",
+            "sourceRecordPath": "packages/surface/content/alert.json",
+            "status": "not-in-unit-catalog, not-in-unit-catalog",
+            "unitId": "alert"
+          },
+          {
+            "ownerUnitId": "background_sage",
+            "ready": false,
+            "relation": "background.originFeatId",
+            "status": "missing-authored-record",
+            "unitId": "feat_magic_initiate_wizard"
+          },
+          {
+            "kind": "feat",
+            "ownerUnitId": "background_soldier",
+            "ready": true,
+            "relation": "background.originFeatId",
+            "sourceRecordPath": "packages/surface/content/feat_savage_attacker.json",
+            "status": "installed",
+            "unitId": "feat_savage_attacker"
+          }
+        ],
+        "rowsByStatus": {
+          "installed": 1,
+          "missing-authored-record": 2,
+          "not-in-unit-catalog, not-in-unit-catalog": 1
+        }
+      },
+      {
+        "blockerRows": [],
+        "complete": true,
+        "description": "Every concrete Unit ref in SRD background starting equipment must resolve through the Unit catalog.",
+        "group": "background-starting-equipment-unit-refs",
+        "label": "SRD background concrete equipment refs",
+        "metrics": {
+          "denominator": 4,
+          "numerator": 4,
+          "percent": "100%"
+        },
+        "rows": [
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "weapon",
+            "ownerUnitId": "background_criminal",
+            "quantity": 2,
+            "ready": true,
+            "relation": "startingEquipment.option_a.unit_ref",
+            "sourceRecordPath": "packages/surface/content/weapon_dagger.json",
+            "status": "installed",
+            "unitId": "weapon_dagger"
+          },
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "weapon",
+            "ownerUnitId": "background_sage",
+            "ready": true,
+            "relation": "startingEquipment.option_a.unit_ref",
+            "sourceRecordPath": "packages/surface/content/weapon_quarterstaff.json",
+            "status": "installed",
+            "unitId": "weapon_quarterstaff"
+          },
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "weapon",
+            "ownerUnitId": "background_soldier",
+            "ready": true,
+            "relation": "startingEquipment.option_a.unit_ref",
+            "sourceRecordPath": "packages/surface/content/weapon_spear.json",
+            "status": "installed",
+            "unitId": "weapon_spear"
+          },
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "weapon",
+            "ownerUnitId": "background_soldier",
+            "ready": true,
+            "relation": "startingEquipment.option_a.unit_ref",
+            "sourceRecordPath": "packages/surface/content/weapon_shortbow.json",
+            "status": "installed",
+            "unitId": "weapon_shortbow"
+          }
+        ],
+        "rowsByStatus": {
+          "installed": 4
+        }
+      },
+      {
+        "blockerRows": [],
+        "complete": true,
+        "description": "Every SRD species selectable at character creation must be installed.",
+        "group": "species-records",
+        "label": "SRD species records",
+        "metrics": {
+          "denominator": 6,
+          "numerator": 6,
+          "percent": "100%"
+        },
+        "rows": [
+          {
+            "kind": "species",
+            "ready": true,
+            "sourceRecordPath": "packages/surface/content/species_dragonborn.json",
+            "status": "installed",
+            "unitId": "species_dragonborn"
+          },
+          {
+            "kind": "species",
+            "ready": true,
+            "sourceRecordPath": "packages/surface/content/species_dwarf.json",
+            "status": "installed",
+            "unitId": "species_dwarf"
+          },
+          {
+            "kind": "species",
+            "ready": true,
+            "sourceRecordPath": "packages/surface/content/species_elf.json",
+            "status": "installed",
+            "unitId": "species_elf"
+          },
+          {
+            "kind": "species",
+            "ready": true,
+            "sourceRecordPath": "packages/surface/content/species_goliath.json",
+            "status": "installed",
+            "unitId": "species_goliath"
+          },
+          {
+            "kind": "species",
+            "ready": true,
+            "sourceRecordPath": "packages/surface/content/species_orc.json",
+            "status": "installed",
+            "unitId": "species_orc"
+          },
+          {
+            "kind": "species",
+            "ready": true,
+            "sourceRecordPath": "packages/surface/content/species_tiefling.json",
+            "status": "installed",
+            "unitId": "species_tiefling"
+          }
+        ],
+        "rowsByStatus": {
+          "installed": 6
+        }
+      },
+      {
+        "blockerRows": [],
+        "complete": true,
+        "description": "Every finalized species trait ref must resolve through the Unit catalog before character-to-battle admission can be claimed.",
+        "group": "species-trait-refs",
+        "label": "SRD species trait refs",
+        "metrics": {
+          "denominator": 11,
+          "numerator": 11,
+          "percent": "100%"
+        },
+        "rows": [
+          {
+            "kind": "species_trait",
+            "ownerUnitId": "species_dragonborn",
+            "ready": true,
+            "relation": "species.traits.breathWeapon",
+            "sourceRecordPath": "packages/surface/content/species_dragonborn_breath_weapon.json",
+            "status": "installed",
+            "unitId": "species_dragonborn_breath_weapon"
+          },
+          {
+            "kind": "species_trait",
+            "ownerUnitId": "species_dragonborn",
+            "ready": true,
+            "relation": "species.traits.damageResistance",
+            "sourceRecordPath": "packages/surface/content/species_dragonborn_damage_resistance.json",
+            "status": "installed",
+            "unitId": "species_dragonborn_damage_resistance"
+          },
+          {
+            "kind": "species_trait",
+            "ownerUnitId": "species_dragonborn",
+            "ready": true,
+            "relation": "species.traits.darkvision",
+            "sourceRecordPath": "packages/surface/content/species_dragonborn_darkvision.json",
+            "status": "installed",
+            "unitId": "species_dragonborn_darkvision"
+          },
+          {
+            "kind": "species_trait",
+            "ownerUnitId": "species_dwarf",
+            "ready": true,
+            "relation": "species.traits.darkvision",
+            "sourceRecordPath": "packages/surface/content/species_dwarf_darkvision.json",
+            "status": "installed",
+            "unitId": "dwarf_darkvision"
+          },
+          {
+            "kind": "species_trait",
+            "ownerUnitId": "species_dwarf",
+            "ready": true,
+            "relation": "species.traits.dwarvenResilience",
+            "sourceRecordPath": "packages/surface/content/species_dwarf_dwarven_resilience.json",
+            "status": "installed",
+            "unitId": "dwarf_dwarven_resilience"
+          },
+          {
+            "kind": "species_trait",
+            "ownerUnitId": "species_elf",
+            "ready": true,
+            "relation": "species.traits.darkvision",
+            "sourceRecordPath": "packages/surface/content/darkvision_elf.json",
+            "status": "installed",
+            "unitId": "elf_darkvision"
+          },
+          {
+            "kind": "species_trait",
+            "ownerUnitId": "species_goliath",
+            "ready": true,
+            "relation": "species.traits.powerfulBuild",
+            "sourceRecordPath": "packages/surface/content/species_goliath_powerful_build.json",
+            "status": "installed",
+            "unitId": "species_goliath_powerful_build"
+          },
+          {
+            "kind": "species_trait",
+            "ownerUnitId": "species_orc",
+            "ready": true,
+            "relation": "species.traits.adrenalineRush",
+            "sourceRecordPath": "packages/surface/content/orc_adrenaline_rush.json",
+            "status": "installed",
+            "unitId": "orc_adrenaline_rush"
+          },
+          {
+            "kind": "species_trait",
+            "ownerUnitId": "species_orc",
+            "ready": true,
+            "relation": "species.traits.darkvision",
+            "sourceRecordPath": "packages/surface/content/species_orc_darkvision.json",
+            "status": "installed",
+            "unitId": "orc_darkvision"
+          },
+          {
+            "kind": "species_trait",
+            "ownerUnitId": "species_orc",
+            "ready": true,
+            "relation": "species.traits.relentlessEndurance",
+            "sourceRecordPath": "packages/surface/content/orc_relentless_endurance.json",
+            "status": "installed",
+            "unitId": "orc_relentless_endurance"
+          },
+          {
+            "kind": "species_trait",
+            "ownerUnitId": "species_tiefling",
+            "ready": true,
+            "relation": "species.traits.darkvision",
+            "sourceRecordPath": "packages/surface/content/species_tiefling_darkvision.json",
+            "status": "installed",
+            "unitId": "species_tiefling_darkvision"
+          }
+        ],
+        "rowsByStatus": {
+          "installed": 11
+        }
+      },
+      {
+        "blockerRows": [
+          {
+            "ownerUnitId": "class_warlock",
+            "ready": false,
+            "relation": "class.featureGrants.level-1",
+            "status": "missing-authored-record",
+            "unitId": "warlock_pact_magic"
+          }
+        ],
+        "complete": false,
+        "description": "Every level-scoped class feature grant retained by finalization must resolve through the Unit catalog.",
+        "group": "level-scoped-class-feature-grants",
+        "label": "SRD class feature grants through level 2",
+        "metrics": {
+          "denominator": 43,
+          "numerator": 42,
+          "percent": "97.7%"
+        },
+        "rows": [
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_barbarian",
+            "ready": true,
+            "relation": "class.featureGrants.level-1",
+            "sourceRecordPath": "packages/surface/content/barbarian_rage.json",
+            "status": "installed",
+            "unitId": "barbarian_rage"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_barbarian",
+            "ready": true,
+            "relation": "class.featureGrants.level-1",
+            "sourceRecordPath": "packages/surface/content/barbarian_unarmored_defense.json",
+            "status": "installed",
+            "unitId": "barbarian_unarmored_defense"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_barbarian",
+            "ready": true,
+            "relation": "class.featureGrants.level-1",
+            "sourceRecordPath": "packages/surface/content/barbarian_weapon_mastery.json",
+            "status": "installed",
+            "unitId": "barbarian_weapon_mastery"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_bard",
+            "ready": true,
+            "relation": "class.featureGrants.level-1",
+            "sourceRecordPath": "packages/surface/content/bard_bardic_inspiration.json",
+            "status": "installed",
+            "unitId": "bard_bardic_inspiration"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_bard",
+            "ready": true,
+            "relation": "class.featureGrants.level-2",
+            "sourceRecordPath": "packages/surface/content/bard_expertise.json",
+            "status": "installed",
+            "unitId": "bard_expertise"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_bard",
+            "ready": true,
+            "relation": "class.featureGrants.level-2",
+            "sourceRecordPath": "packages/surface/content/bard_jack_of_all_trades.json",
+            "status": "installed",
+            "unitId": "bard_jack_of_all_trades"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_cleric",
+            "ready": true,
+            "relation": "class.featureGrants.level-1",
+            "sourceRecordPath": "packages/surface/content/cleric_divine_order.json",
+            "status": "installed",
+            "unitId": "cleric_divine_order"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_cleric",
+            "ready": true,
+            "relation": "class.featureGrants.level-2",
+            "sourceRecordPath": "packages/surface/content/cleric_channel_divinity.json",
+            "status": "installed",
+            "unitId": "cleric_channel_divinity"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_druid",
+            "ready": true,
+            "relation": "class.featureGrants.level-1",
+            "sourceRecordPath": "packages/surface/content/druid_druidic.json",
+            "status": "installed",
+            "unitId": "druid_druidic"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_druid",
+            "ready": true,
+            "relation": "class.featureGrants.level-1",
+            "sourceRecordPath": "packages/surface/content/druid_primal_order.json",
+            "status": "installed",
+            "unitId": "druid_primal_order"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_druid",
+            "ready": true,
+            "relation": "class.featureGrants.level-2",
+            "sourceRecordPath": "packages/surface/content/druid_wild_shape.json",
+            "status": "installed",
+            "unitId": "druid_wild_shape"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_druid",
+            "ready": true,
+            "relation": "class.featureGrants.level-2",
+            "sourceRecordPath": "packages/surface/content/druid_wild_companion.json",
+            "status": "installed",
+            "unitId": "druid_wild_companion"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_fighter",
+            "ready": true,
+            "relation": "class.featureGrants.level-1",
+            "sourceRecordPath": "packages/surface/content/fighter_fighting_style.json",
+            "status": "installed",
+            "unitId": "fighter_fighting_style"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_fighter",
+            "ready": true,
+            "relation": "class.featureGrants.level-1",
+            "sourceRecordPath": "packages/surface/content/fighter_second_wind.json",
+            "status": "installed",
+            "unitId": "fighter_second_wind"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_fighter",
+            "ready": true,
+            "relation": "class.featureGrants.level-1",
+            "sourceRecordPath": "packages/surface/content/fighter_weapon_mastery.json",
+            "status": "installed",
+            "unitId": "fighter_weapon_mastery"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_fighter",
+            "ready": true,
+            "relation": "class.featureGrants.level-2",
+            "sourceRecordPath": "packages/surface/content/fighter_action_surge.json",
+            "status": "installed",
+            "unitId": "fighter_action_surge"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_fighter",
+            "ready": true,
+            "relation": "class.featureGrants.level-2",
+            "sourceRecordPath": "packages/surface/content/fighter_tactical_mind.json",
+            "status": "installed",
+            "unitId": "fighter_tactical_mind"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_monk",
+            "ready": true,
+            "relation": "class.featureGrants.level-1",
+            "sourceRecordPath": "packages/surface/content/monk_martial_arts.json",
+            "status": "installed",
+            "unitId": "monk_martial_arts"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_monk",
+            "ready": true,
+            "relation": "class.featureGrants.level-1",
+            "sourceRecordPath": "packages/surface/content/monk_unarmored_defense.json",
+            "status": "installed",
+            "unitId": "monk_unarmored_defense"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_monk",
+            "ready": true,
+            "relation": "class.featureGrants.level-2",
+            "sourceRecordPath": "packages/surface/content/monk_monks_focus.json",
+            "status": "installed",
+            "unitId": "monk_monks_focus"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_monk",
+            "ready": true,
+            "relation": "class.featureGrants.level-2",
+            "sourceRecordPath": "packages/surface/content/monk_unarmored_movement.json",
+            "status": "installed",
+            "unitId": "monk_unarmored_movement"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_monk",
+            "ready": true,
+            "relation": "class.featureGrants.level-2",
+            "sourceRecordPath": "packages/surface/content/monk_uncanny_metabolism.json",
+            "status": "installed",
+            "unitId": "monk_uncanny_metabolism"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_paladin",
+            "ready": true,
+            "relation": "class.featureGrants.level-1",
+            "sourceRecordPath": "packages/surface/content/paladin_lay_on_hands.json",
+            "status": "installed",
+            "unitId": "paladin_lay_on_hands"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_paladin",
+            "ready": true,
+            "relation": "class.featureGrants.level-1",
+            "sourceRecordPath": "packages/surface/content/paladin_weapon_mastery.json",
+            "status": "installed",
+            "unitId": "paladin_weapon_mastery"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_paladin",
+            "ready": true,
+            "relation": "class.featureGrants.level-2",
+            "sourceRecordPath": "packages/surface/content/paladin_fighting_style.json",
+            "status": "installed",
+            "unitId": "paladin_fighting_style"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_paladin",
+            "ready": true,
+            "relation": "class.featureGrants.level-2",
+            "sourceRecordPath": "packages/surface/content/paladin_paladins_smite.json",
+            "status": "installed",
+            "unitId": "paladin_paladins_smite"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_ranger",
+            "ready": true,
+            "relation": "class.featureGrants.level-1",
+            "sourceRecordPath": "packages/surface/content/ranger_favored_enemy.json",
+            "status": "installed",
+            "unitId": "ranger_favored_enemy"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_ranger",
+            "ready": true,
+            "relation": "class.featureGrants.level-1",
+            "sourceRecordPath": "packages/surface/content/ranger_weapon_mastery.json",
+            "status": "installed",
+            "unitId": "ranger_weapon_mastery"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_ranger",
+            "ready": true,
+            "relation": "class.featureGrants.level-2",
+            "sourceRecordPath": "packages/surface/content/ranger_deft_explorer.json",
+            "status": "installed",
+            "unitId": "ranger_deft_explorer"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_ranger",
+            "ready": true,
+            "relation": "class.featureGrants.level-2",
+            "sourceRecordPath": "packages/surface/content/ranger_fighting_style.json",
+            "status": "installed",
+            "unitId": "ranger_fighting_style"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_rogue",
+            "ready": true,
+            "relation": "class.featureGrants.level-1",
+            "sourceRecordPath": "packages/surface/content/rogue_expertise.json",
+            "status": "installed",
+            "unitId": "rogue_expertise"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_rogue",
+            "ready": true,
+            "relation": "class.featureGrants.level-1",
+            "sourceRecordPath": "packages/surface/content/rogue_sneak_attack.json",
+            "status": "installed",
+            "unitId": "rogue_sneak_attack"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_rogue",
+            "ready": true,
+            "relation": "class.featureGrants.level-1",
+            "sourceRecordPath": "packages/surface/content/rogue_thieves_cant.json",
+            "status": "installed",
+            "unitId": "rogue_thieves_cant"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_rogue",
+            "ready": true,
+            "relation": "class.featureGrants.level-1",
+            "sourceRecordPath": "packages/surface/content/rogue_weapon_mastery.json",
+            "status": "installed",
+            "unitId": "rogue_weapon_mastery"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_sorcerer",
+            "ready": true,
+            "relation": "class.featureGrants.level-1",
+            "sourceRecordPath": "packages/surface/content/sorcerer_innate_sorcery.json",
+            "status": "installed",
+            "unitId": "sorcerer_innate_sorcery"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_sorcerer",
+            "ready": true,
+            "relation": "class.featureGrants.level-2",
+            "sourceRecordPath": "packages/surface/content/sorcerer_font_of_magic.json",
+            "status": "installed",
+            "unitId": "sorcerer_font_of_magic"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_sorcerer",
+            "ready": true,
+            "relation": "class.featureGrants.level-2",
+            "sourceRecordPath": "packages/surface/content/sorcerer_metamagic.json",
+            "status": "installed",
+            "unitId": "sorcerer_metamagic"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_warlock",
+            "ready": true,
+            "relation": "class.featureGrants.level-1",
+            "sourceRecordPath": "packages/surface/content/warlock_eldritch_invocations.json",
+            "status": "installed",
+            "unitId": "warlock_eldritch_invocations"
+          },
+          {
+            "ownerUnitId": "class_warlock",
+            "ready": false,
+            "relation": "class.featureGrants.level-1",
+            "status": "missing-authored-record",
+            "unitId": "warlock_pact_magic"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_warlock",
+            "ready": true,
+            "relation": "class.featureGrants.level-2",
+            "sourceRecordPath": "packages/surface/content/warlock_magical_cunning.json",
+            "status": "installed",
+            "unitId": "warlock_magical_cunning"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_wizard",
+            "ready": true,
+            "relation": "class.featureGrants.level-1",
+            "sourceRecordPath": "packages/surface/content/wizard_ritual_adept.json",
+            "status": "installed",
+            "unitId": "wizard_ritual_adept"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_wizard",
+            "ready": true,
+            "relation": "class.featureGrants.level-1",
+            "sourceRecordPath": "packages/surface/content/wizard_arcane_recovery.json",
+            "status": "installed",
+            "unitId": "wizard_arcane_recovery"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_wizard",
+            "ready": true,
+            "relation": "class.featureGrants.level-2",
+            "sourceRecordPath": "packages/surface/content/wizard_scholar.json",
+            "status": "installed",
+            "unitId": "wizard_scholar"
+          }
+        ],
+        "rowsByStatus": {
+          "installed": 42,
+          "missing-authored-record": 1
+        }
+      },
+      {
+        "blockerRows": [],
+        "complete": true,
+        "description": "Every concrete Unit ref in SRD class starting equipment must resolve through the Unit catalog.",
+        "group": "class-starting-equipment-unit-refs",
+        "label": "SRD class concrete equipment refs",
+        "metrics": {
+          "denominator": 0,
+          "numerator": 0,
+          "percent": "n/a"
+        },
+        "rows": [],
+        "rowsByStatus": {}
+      },
+      {
+        "blockerRows": [],
+        "complete": true,
+        "description": "Unique concrete weapon, armor, and shield Unit refs reachable from SRD starting equipment.",
+        "group": "starting-equipment-concrete-unit-refs",
+        "label": "Unique SRD concrete equipment refs",
+        "metrics": {
+          "denominator": 4,
+          "numerator": 4,
+          "percent": "100%"
+        },
+        "rows": [
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "weapon",
+            "ownerUnitId": "background_criminal",
+            "quantity": 2,
+            "ready": true,
+            "relation": "startingEquipment.option_a.unit_ref",
+            "sourceRecordPath": "packages/surface/content/weapon_dagger.json",
+            "status": "installed",
+            "unitId": "weapon_dagger"
+          },
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "weapon",
+            "ownerUnitId": "background_sage",
+            "ready": true,
+            "relation": "startingEquipment.option_a.unit_ref",
+            "sourceRecordPath": "packages/surface/content/weapon_quarterstaff.json",
+            "status": "installed",
+            "unitId": "weapon_quarterstaff"
+          },
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "weapon",
+            "ownerUnitId": "background_soldier",
+            "ready": true,
+            "relation": "startingEquipment.option_a.unit_ref",
+            "sourceRecordPath": "packages/surface/content/weapon_shortbow.json",
+            "status": "installed",
+            "unitId": "weapon_shortbow"
+          },
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "weapon",
+            "ownerUnitId": "background_soldier",
+            "ready": true,
+            "relation": "startingEquipment.option_a.unit_ref",
+            "sourceRecordPath": "packages/surface/content/weapon_spear.json",
+            "status": "installed",
+            "unitId": "weapon_spear"
+          }
+        ],
+        "rowsByStatus": {
+          "installed": 4
+        }
+      }
+    ],
+    "metrics": {
+      "denominator": 76,
+      "numerator": 72,
+      "percent": "94.7%"
+    },
+    "openBlockerCount": 4
+  },
   "summary": {
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {

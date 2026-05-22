@@ -40,6 +40,7 @@ const level1Scope = {
   description:
     "This strict view tracks executable SRD level-1, cantrip, and level-1 spell pressure separately from the broader product readiness closure metric.",
   levelBands: strictLevelBands,
+  maxCharacterLevel: 1,
   productReadinessMetric: "levelOneBattleReadiness",
 };
 const level12Scope = {
@@ -48,6 +49,7 @@ const level12Scope = {
   description:
     "This strict view tracks executable SRD level-1 plus level-2 class pressure, cantrips, and level-1 plus level-2 spell pressure separately from the broader product readiness closure metric.",
   levelBands: strictLevel12Bands,
+  maxCharacterLevel: 2,
   productReadinessMetric: "levelOneTwoBattleReadiness",
 };
 const adoptedNoMatrixSrdPressureDecisionUnitIds = new Set([
@@ -222,6 +224,296 @@ function buildSrdAuthoredCharacterCreationReadiness(matrixUnitsById) {
     openBlockerCount: openGroups.length,
     totalGroupCount: groups.length,
     groups,
+  });
+}
+
+function readJsonIfExists(root, relativePath) {
+  if (root === undefined || relativePath === undefined) return undefined;
+  const absolutePath = path.join(root, relativePath);
+  if (!fs.existsSync(absolutePath)) return undefined;
+  return JSON.parse(fs.readFileSync(absolutePath, "utf8"));
+}
+
+function matrixRowsForUnit(unitId, matrixUnitsById) {
+  return matrixUnitsById.get(unitId) ?? [];
+}
+
+function installedMatrixRow(unitId, matrixUnitsById) {
+  return matrixRowsForUnit(unitId, matrixUnitsById).find(
+    (row) => row.catalogAdmission?.status === "installed",
+  );
+}
+
+function representativeMatrixRow(unitId, matrixUnitsById) {
+  return (
+    installedMatrixRow(unitId, matrixUnitsById) ??
+    matrixRowsForUnit(unitId, matrixUnitsById)[0]
+  );
+}
+
+function catalogReadinessForUnit(unitId, matrixUnitsById) {
+  const rows = matrixRowsForUnit(unitId, matrixUnitsById);
+  const installed = rows.find(
+    (row) => row.catalogAdmission?.status === "installed",
+  );
+  if (installed !== undefined) {
+    return {
+      status: "installed",
+      ready: true,
+      kind: installed.kind,
+      sourceRecordPath: installed.sourceRecordPath,
+    };
+  }
+  if (rows.length === 0) {
+    return {
+      status: "missing-authored-record",
+      ready: false,
+    };
+  }
+  return {
+    status:
+      rows
+        .map((row) => row.catalogAdmission?.status)
+        .filter(Boolean)
+        .sort()
+        .join(", ") || "not-installed",
+    ready: false,
+    kind: rows[0].kind,
+    sourceRecordPath: rows[0].sourceRecordPath,
+    duplicateRowCount: rows.length > 1 ? rows.length : undefined,
+  };
+}
+
+function groupRowsByReadyStatus(rows) {
+  return Object.fromEntries(
+    Array.from(
+      rows.reduce((counts, row) => {
+        counts.set(row.status, (counts.get(row.status) ?? 0) + 1);
+        return counts;
+      }, new Map()),
+    ).sort(([left], [right]) => left.localeCompare(right)),
+  );
+}
+
+function unitRefRowsFromStartingEquipment(record, ownerUnitId, matrixUnitsById) {
+  return (record.startingEquipment ?? []).flatMap((choice) =>
+    (choice.items ?? [])
+      .filter((item) => item.kind === "unit_ref")
+      .map((item) => {
+        const readiness = catalogReadinessForUnit(item.unitId, matrixUnitsById);
+        return stable({
+          group: "starting-equipment-unit-refs",
+          ownerUnitId,
+          relation: `startingEquipment.${choice.id}.unit_ref`,
+          unitId: item.unitId,
+          quantity: item.quantity,
+          ...readiness,
+        });
+      }),
+  );
+}
+
+function dependencyRow(ownerUnitId, relation, unitId, matrixUnitsById) {
+  return stable({
+    ownerUnitId,
+    relation,
+    unitId,
+    ...catalogReadinessForUnit(unitId, matrixUnitsById),
+  });
+}
+
+function uniqueRowsByKey(rows, keyFn) {
+  return Array.from(
+    rows
+      .reduce((map, row) => {
+        const key = keyFn(row);
+        if (!map.has(key)) map.set(key, row);
+        return map;
+      }, new Map())
+      .values(),
+  );
+}
+
+function readinessGroup({ group, label, rows, description }) {
+  const blockerRows = rows.filter((row) => !row.ready);
+  return stable({
+    group,
+    label,
+    description,
+    complete: blockerRows.length === 0,
+    metrics: countCoverage(rows.length - blockerRows.length, rows.length),
+    rowsByStatus: groupRowsByReadyStatus(rows),
+    blockerRows,
+    rows,
+  });
+}
+
+function srdRecordsOfKind(matrixUnitsById, kind) {
+  return Array.from(matrixUnitsById.values())
+    .flatMap((rows) => rows)
+    .filter(
+      (row) =>
+        row.kind === kind &&
+        row.collectionId === "srd-5.2.1" &&
+        row.catalogAdmission?.status === "installed",
+    )
+    .sort((left, right) => left.unitId.localeCompare(right.unitId));
+}
+
+function buildSrdAuthoredProductReadiness(matrixUnitsById, scope, options = {}) {
+  const root = options.root;
+  const backgroundRows = srdAuthoredCharacterCreationOptionGroups[0].unitIds.map(
+    (unitId) => {
+      const readiness = catalogReadinessForUnit(unitId, matrixUnitsById);
+      return stable({ unitId, ...readiness });
+    },
+  );
+  const backgroundRecords = backgroundRows
+    .map((row) => representativeMatrixRow(row.unitId, matrixUnitsById))
+    .filter(Boolean)
+    .map((row) => readJsonIfExists(root, row.sourceRecordPath))
+    .filter(Boolean);
+  const backgroundOriginFeatRows = backgroundRecords.map((record) =>
+    dependencyRow(
+      record.id,
+      "background.originFeatId",
+      record.originFeatId,
+      matrixUnitsById,
+    ),
+  );
+  const backgroundStartingEquipmentRows = uniqueRowsByKey(
+    backgroundRecords.flatMap((record) =>
+      unitRefRowsFromStartingEquipment(record, record.id, matrixUnitsById),
+    ),
+    (row) => `${row.ownerUnitId}:${row.relation}:${row.unitId}`,
+  );
+
+  const speciesRows = srdRecordsOfKind(matrixUnitsById, "species").map(
+    (row) => ({
+      unitId: row.unitId,
+      ...catalogReadinessForUnit(row.unitId, matrixUnitsById),
+    }),
+  );
+  const speciesRecords = speciesRows
+    .map((row) => representativeMatrixRow(row.unitId, matrixUnitsById))
+    .filter(Boolean)
+    .map((row) => readJsonIfExists(root, row.sourceRecordPath))
+    .filter(Boolean);
+  const speciesTraitRows = uniqueRowsByKey(
+    speciesRecords.flatMap((record) =>
+      Object.entries(record.traits ?? {}).map(([traitKey, unitId]) =>
+        dependencyRow(record.id, `species.traits.${traitKey}`, unitId, matrixUnitsById),
+      ),
+    ),
+    (row) => `${row.ownerUnitId}:${row.relation}:${row.unitId}`,
+  );
+
+  const classRecords = srdRecordsOfKind(matrixUnitsById, "class")
+    .map((row) => readJsonIfExists(root, row.sourceRecordPath))
+    .filter(Boolean);
+  const classFeatureGrantRows = uniqueRowsByKey(
+    classRecords.flatMap((record) =>
+      (record.featureGrants ?? [])
+        .filter((grant) => grant.level <= scope.maxCharacterLevel)
+        .map((grant) =>
+          dependencyRow(
+            record.id,
+            `class.featureGrants.level-${grant.level}`,
+            grant.unitId,
+            matrixUnitsById,
+          ),
+        ),
+    ),
+    (row) => `${row.ownerUnitId}:${row.relation}:${row.unitId}`,
+  );
+  const classStartingEquipmentRows = uniqueRowsByKey(
+    classRecords.flatMap((record) =>
+      unitRefRowsFromStartingEquipment(record, record.id, matrixUnitsById),
+    ),
+    (row) => `${row.ownerUnitId}:${row.relation}:${row.unitId}`,
+  );
+
+  const concreteEquipmentRows = uniqueRowsByKey(
+    [...backgroundStartingEquipmentRows, ...classStartingEquipmentRows],
+    (row) => row.unitId,
+  ).sort((left, right) => left.unitId.localeCompare(right.unitId));
+
+  const groups = [
+    readinessGroup({
+      group: "background-records",
+      label: "SRD background records",
+      description:
+        "Every SRD background selectable at character creation must be installed.",
+      rows: backgroundRows,
+    }),
+    readinessGroup({
+      group: "background-origin-feat-refs",
+      label: "SRD background origin feat refs",
+      description:
+        "Every finalized background origin feat ref must resolve through the Unit catalog before character-to-battle admission can be claimed.",
+      rows: backgroundOriginFeatRows,
+    }),
+    readinessGroup({
+      group: "background-starting-equipment-unit-refs",
+      label: "SRD background concrete equipment refs",
+      description:
+        "Every concrete Unit ref in SRD background starting equipment must resolve through the Unit catalog.",
+      rows: backgroundStartingEquipmentRows,
+    }),
+    readinessGroup({
+      group: "species-records",
+      label: "SRD species records",
+      description:
+        "Every SRD species selectable at character creation must be installed.",
+      rows: speciesRows,
+    }),
+    readinessGroup({
+      group: "species-trait-refs",
+      label: "SRD species trait refs",
+      description:
+        "Every finalized species trait ref must resolve through the Unit catalog before character-to-battle admission can be claimed.",
+      rows: speciesTraitRows,
+    }),
+    readinessGroup({
+      group: "level-scoped-class-feature-grants",
+      label: `SRD class feature grants through level ${scope.maxCharacterLevel}`,
+      description:
+        "Every level-scoped class feature grant retained by finalization must resolve through the Unit catalog.",
+      rows: classFeatureGrantRows,
+    }),
+    readinessGroup({
+      group: "class-starting-equipment-unit-refs",
+      label: "SRD class concrete equipment refs",
+      description:
+        "Every concrete Unit ref in SRD class starting equipment must resolve through the Unit catalog.",
+      rows: classStartingEquipmentRows,
+    }),
+    readinessGroup({
+      group: "starting-equipment-concrete-unit-refs",
+      label: "Unique SRD concrete equipment refs",
+      description:
+        "Unique concrete weapon, armor, and shield Unit refs reachable from SRD starting equipment.",
+      rows: concreteEquipmentRows,
+    }),
+  ];
+  const blockingGroups = groups.filter((group) => !group.complete);
+  const blockerRows = groups.flatMap((group) =>
+    group.blockerRows.map((row) => ({ ...row, group: group.group })),
+  );
+  const totalRows = groups.reduce(
+    (total, group) => total + group.metrics.denominator,
+    0,
+  );
+  const readyRows = groups.reduce(
+    (total, group) => total + group.metrics.numerator,
+    0,
+  );
+  return stable({
+    metrics: countCoverage(readyRows, totalRows),
+    openBlockerCount: blockerRows.length,
+    blockingGroupCount: blockingGroups.length,
+    groups,
+    blockerRows,
   });
 }
 
@@ -715,6 +1007,11 @@ function buildStrictFullSupport(matrix, srdUnitInventory, scope, options = {}) {
   if (productReadiness === undefined) {
     fail(`SRD Unit inventory lacks ${scope.productReadinessMetric}.`);
   }
+  const srdAuthoredProductReadiness = buildSrdAuthoredProductReadiness(
+    matrixUnitsById,
+    scope,
+    options,
+  );
 
   return stable({
     generatedBy: "scripts/unit-profile-coverage-check.cjs",
@@ -750,6 +1047,7 @@ function buildStrictFullSupport(matrix, srdUnitInventory, scope, options = {}) {
       rulesKernelSupportedUnitCoverage:
         rulesKernelSupportedUnitJoin.metrics.rulesKernelSupportedUnitCoverage,
     },
+    srdAuthoredProductReadiness,
     srdAuthoredCharacterCreationReadiness:
       buildSrdAuthoredCharacterCreationReadiness(matrixUnitsById),
     summary: {
@@ -826,6 +1124,23 @@ function renderNoMatrixRows(rows) {
       });
 }
 
+function renderReadinessGroupRows(groups) {
+  return groups.map((group) => {
+    const status = group.complete ? "complete" : "blocked";
+    return `| ${group.label} | ${status} | ${renderMetric(group.metrics)} | ${md(group.description)} |`;
+  });
+}
+
+function renderReadinessBlockerRows(rows) {
+  if (rows.length === 0) {
+    return ["| _none_ | _none_ | _none_ | _none_ | _none_ |"];
+  }
+  return rows.map(
+    (row) =>
+      `| ${row.group} | \`${row.ownerUnitId ?? "_root_"}\` | ${md(row.relation ?? "self")} | \`${row.unitId}\` | ${md(row.status)} |`,
+  );
+}
+
 function renderStrictFullSupport(report, scope) {
   return `${[
     `# ${scope.outputTitle}`,
@@ -841,6 +1156,7 @@ function renderStrictFullSupport(report, scope) {
     `| Strict runtime/profile support | ${renderMetric(report.metrics.strictRuntimeProfileSupport)} |`,
     `| Strict target closure | ${renderMetric(report.metrics.strictTargetClosure)} |`,
     `| Product readiness | ${renderMetric(report.metrics.productReadiness)} |`,
+    `| SRD authored product readiness | ${renderMetric(report.srdAuthoredProductReadiness.metrics)} |`,
     `| Rules-kernel profile join | ${renderMetric(report.metrics.rulesKernelProfileJoin)} |`,
     `| Rules-kernel covered profile join | ${renderMetric(report.metrics.rulesKernelCoveredProfileJoin)} |`,
     `| Supported Unit rules-kernel chain | ${renderMetric(report.metrics.rulesKernelSupportedUnitCoverage)} |`,
@@ -851,11 +1167,25 @@ function renderStrictFullSupport(report, scope) {
     "",
     "| Gate | Status | Blocking issue |",
     "| --- | --- | --- |",
-    `| SRD-authored character-creation catalog | ${report.srdAuthoredCharacterCreationReadiness.openBlockerCount === 0 ? "pass" : "blocked"} | ${report.srdAuthoredCharacterCreationReadiness.openBlockerCount === 0 ? "_none_" : "SRD Background family is incomplete"} |`,
+    `| SRD authored product readiness | ${report.srdAuthoredProductReadiness.openBlockerCount === 0 ? "pass" : "blocked"} | ${report.srdAuthoredProductReadiness.openBlockerCount === 0 ? "_none_" : `${report.srdAuthoredProductReadiness.openBlockerCount} unresolved authored readiness row(s)`} |`,
     "",
     "A failed gate invalidates a full level-support claim without pretending to be a weighted completion percentage.",
     "",
-    "## SRD-Authored Character Creation Catalog",
+    "## SRD-Authored Product Readiness",
+    "",
+    "This gate checks authored records and retained Unit references that must resolve before finalized characters can honestly be called product-ready. It is intentionally propagated across level reports so higher-level and future PHB+ readiness inherit the same admission discipline.",
+    "",
+    "| Group | Status | Ready | Meaning |",
+    "| --- | --- | ---: | --- |",
+    ...renderReadinessGroupRows(report.srdAuthoredProductReadiness.groups),
+    "",
+    "### Readiness Blockers",
+    "",
+    "| Group | Owner Unit | Relation | Blocking Unit | Status |",
+    "| --- | --- | --- | --- | --- |",
+    ...renderReadinessBlockerRows(report.srdAuthoredProductReadiness.blockerRows),
+    "",
+    "## Legacy SRD-Authored Character Creation Catalog",
     "",
     "| Group | Status | Installed records | Missing SRD records | Source |",
     "| --- | --- | --- | --- | --- |",
