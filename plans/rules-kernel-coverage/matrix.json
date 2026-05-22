@@ -21,7 +21,8 @@
     }
   },
   "derivedFields": {
-    "obligations[].profiles": "Derived from profileObligations by obligation id; authored obligations.jsonl rows must not contain profiles."
+    "obligations[].profiles": "Derived from profileObligations by obligation id; authored obligations.jsonl rows must not contain profiles.",
+    "qntOwnerRoles[].obligationIds": "Derived from obligations[].qntOwners for covered obligations; qnt-owner-roles.jsonl rows classify ownerPath only."
   },
   "battleHoleFrontierSummary": {
     "total": 110,
@@ -4949,6 +4950,563 @@
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "profileId": "spell.invocation-spiritual-weapon-attack-proxy"
+    }
+  ],
+  "qntOwnerRoles": [
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-chained-spell-attack.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-chained-spell-attack.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-command-choice.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.COMMAND.OPTION_AND_NEXT_TURN"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-command-choice.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-concentration.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
+        "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
+        "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
+        "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
+        "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-concentration.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-creature-type-protection.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-creature-type-protection.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-damage-adjustments.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-damage-adjustments.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-direct-condition-removal.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-direct-condition-removal.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt is a bounded replay or run-test owner for covered parity evidence; treat it as fixture-bound unless later split.",
+      "obligationIds": [
+        "BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt",
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-ground-command.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.COMMAND.OPTION_AND_NEXT_TURN"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-ground-command.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-gust-of-wind.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-gust-of-wind.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-hit-points.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE",
+        "BATTLE.SPELL.MAKE_STABLE_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-hit-points.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-light.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-light.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-marked-riders.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-marked-riders.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-marked-spells.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-marked-spells.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-metamagic.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-mirror-image.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-mirror-image.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-monk-focus.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-protection-from-poison.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-protection-from-poison.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-reaction-window.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.REACTION_CASTING_TIME"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
+        "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES",
+        "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-sanctuary.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.SANCTUARY.TARGETING_INTERDICTION",
+        "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-sanctuary.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-save-gated-spell.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE",
+        "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY",
+        "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
+        "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-see-invisibility.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-see-invisibility.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-self-transformation.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.SELF_TRANSFORMATION_MODE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-self-transformation.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
+        "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-spell-attack.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
+        "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
+        "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE",
+        "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt is a bounded replay or run-test owner for covered parity evidence; treat it as fixture-bound unless later split.",
+      "obligationIds": [
+        "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt",
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-spell-invocation.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
+        "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
+        "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
+        "BATTLE.SPELL.REACTION_CASTING_TIME",
+        "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-thaumaturgy.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-thaumaturgy.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-timed-effects.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
+        "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
+        "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-timed-effects.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-warding-bond.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-warding-bond.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-weapon-attacks.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
+        "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES",
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE",
+        "BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION",
+        "BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE",
+        "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
+        "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
+        "BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING",
+        "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
+        "BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE",
+        "BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE",
+        "BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE",
+        "BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE",
+        "BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE",
+        "BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE",
+        "BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE",
+        "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
+        "BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE",
+        "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
+        "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
+        "BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE",
+        "BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE",
+        "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
+        "BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE",
+        "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
+        "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt is a bounded replay or run-test owner for covered parity evidence; treat it as fixture-bound unless later split.",
+      "obligationIds": [
+        "CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS",
+        "CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION"
+      ],
+      "ownerPath": "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt",
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt is a bounded replay or run-test owner for covered parity evidence; treat it as fixture-bound unless later split.",
+      "obligationIds": [
+        "CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS",
+        "CHARACTER.BATTLE.HANDOFF.SETTLEMENT"
+      ],
+      "ownerPath": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt",
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt is a bounded replay or run-test owner for covered parity evidence; treat it as fixture-bound unless later split.",
+      "obligationIds": [
+        "SHEET.FEATURE_RESOURCES.TRANSITIONS"
+      ],
+      "ownerPath": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt is a bounded replay or run-test owner for covered parity evidence; treat it as fixture-bound unless later split.",
+      "obligationIds": [
+        "CREATION.CLASS_FEATURE_RESOURCE.PROJECTION",
+        "CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION"
+      ],
+      "ownerPath": "packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt",
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt is a selected-identity replay owner; it proves concrete selected catalog identity reaches runtime behavior rather than supplying reusable generator input.",
+      "obligationIds": [
+        "CREATION.CLASS_FEATURE_OPTION.PROJECTION"
+      ],
+      "ownerPath": "packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt",
+      "role": "selected-identity-trace"
+    },
+    {
+      "evidence": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt is a selected-identity replay owner; it proves concrete selected catalog identity reaches runtime behavior rather than supplying reusable generator input.",
+      "obligationIds": [
+        "CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT",
+        "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION"
+      ],
+      "ownerPath": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
+      "role": "selected-identity-trace"
+    },
+    {
+      "evidence": "packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.mbt.qnt is a selected-identity replay owner; it proves concrete selected catalog identity reaches runtime behavior rather than supplying reusable generator input.",
+      "obligationIds": [
+        "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION"
+      ],
+      "ownerPath": "packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.mbt.qnt",
+      "role": "selected-identity-trace"
+    },
+    {
+      "evidence": "packages/character-creation-runtime/character-creation-runtime-slice.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "CREATION.CHOICE_DISCOVERY_CARDINALITY",
+        "CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY"
+      ],
+      "ownerPath": "packages/character-creation-runtime/character-creation-runtime-slice.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt is a selected-identity replay owner; it proves concrete selected catalog identity reaches runtime behavior rather than supplying reusable generator input.",
+      "obligationIds": [
+        "CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE",
+        "CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION"
+      ],
+      "ownerPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt",
+      "role": "selected-identity-trace"
+    },
+    {
+      "evidence": "packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt is a selected-identity replay owner; it proves concrete selected catalog identity reaches runtime behavior rather than supplying reusable generator input.",
+      "obligationIds": [
+        "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION"
+      ],
+      "ownerPath": "packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt",
+      "role": "selected-identity-trace"
+    },
+    {
+      "evidence": "packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt is a bounded replay or run-test owner for covered parity evidence; treat it as fixture-bound unless later split.",
+      "obligationIds": [
+        "SHEET.ABILITY_CHECK.PROFICIENCY_BONUS"
+      ],
+      "ownerPath": "packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt",
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt is a selected-identity replay owner; it proves concrete selected catalog identity reaches runtime behavior rather than supplying reusable generator input.",
+      "obligationIds": [
+        "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE"
+      ],
+      "ownerPath": "packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt",
+      "role": "selected-identity-trace"
+    },
+    {
+      "evidence": "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt is a bounded replay or run-test owner for covered parity evidence; treat it as fixture-bound unless later split.",
+      "obligationIds": [
+        "SHEET.HP_REST_HIT_DICE.TRANSITIONS"
+      ],
+      "ownerPath": "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt",
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "packages/character-sheet-runtime/character-sheet-spell-rest-benefit-application.mbt.qnt is a bounded replay or run-test owner for covered parity evidence; treat it as fixture-bound unless later split.",
+      "obligationIds": [
+        "SHEET.SPELL_REST_BENEFIT.APPLICATION"
+      ],
+      "ownerPath": "packages/character-sheet-runtime/character-sheet-spell-rest-benefit-application.mbt.qnt",
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt is a bounded replay or run-test owner for covered parity evidence; treat it as fixture-bound unless later split.",
+      "obligationIds": [
+        "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS"
+      ],
+      "ownerPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt is a selected-identity replay owner; it proves concrete selected catalog identity reaches runtime behavior rather than supplying reusable generator input.",
+      "obligationIds": [
+        "SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION"
+      ],
+      "ownerPath": "packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt",
+      "role": "selected-identity-trace"
+    },
+    {
+      "evidence": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt is a selected-identity replay owner; it proves concrete selected catalog identity reaches runtime behavior rather than supplying reusable generator input.",
+      "obligationIds": [
+        "SHEET.WEAPON_MASTERY.RESELECTION"
+      ],
+      "ownerPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt",
+      "role": "selected-identity-trace"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/death-saves-algebra-inductive.qnt is an inductive proof owner for covered algebra, not an implementation source.",
+      "obligationIds": [
+        "BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/death-saves-algebra-inductive.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.DAMAGE.ATTACK_BRANCHES",
+        "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/hit-point-damage.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "SHARED.HIT_POINTS.POSITIVE_DAMAGE"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/hit-point-damage.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/hit-point-recovery.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "SHEET.HP_REST_HIT_DICE.TRANSITIONS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/hit-point-recovery.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.REACTION.OFFER_DECLINE_RESUME"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/shove-outcome.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/shove-outcome.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+        "BATTLE.SPELL.HIT_POINT_RESTORATION",
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.STAT_BLOCK.ATTACK_CONTROL"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": [
+        "BATTLE.DAMAGE.ATTACK_BRANCHES",
+        "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
+        "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+      "role": "semantic-core"
     }
   ],
   "generatorReadiness": [

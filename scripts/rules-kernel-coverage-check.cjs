@@ -14,6 +14,7 @@ const {
   obligationKinds,
   obligationStatuses,
   parityWitnessKinds,
+  qntOwnerRoles,
   runtimes,
 } = require("./rules-kernel-coverage-config.cjs");
 const { scanClaimFiles } = require("./rules-kernel-coverage-claim-scan.cjs");
@@ -714,6 +715,7 @@ function validateGeneratorReadiness(
   index,
   rootPath,
   obligationsById,
+  qntOwnerRolesByPath,
 ) {
   const issues = [];
   const context = `generator-readiness row ${index + 1}`;
@@ -810,6 +812,12 @@ function validateGeneratorReadiness(
           `${context}.semanticCore path ${ownerPath} is not declared as a QNT owner by ${obligation.id}.`,
         );
       }
+      const ownerRole = qntOwnerRolesByPath.get(ownerPath);
+      if (ownerRole !== undefined && ownerRole !== "semantic-core") {
+        issues.push(
+          `${context}.semanticCore path ${ownerPath} has QNT owner role ${ownerRole}; expected semantic-core.`,
+        );
+      }
     }
   }
   if (readiness.dryRun !== undefined) {
@@ -818,6 +826,42 @@ function validateGeneratorReadiness(
     } else if (!fs.existsSync(path.join(rootPath, readiness.dryRun))) {
       issues.push(`${context}.dryRun path ${readiness.dryRun} does not exist.`);
     }
+  }
+  return issues;
+}
+
+function qntOwnerPaths(obligations) {
+  const ownerPaths = new Set();
+  for (const obligation of obligations) {
+    if (!coveredStatuses.has(obligation.status)) continue;
+    for (const ownerPath of obligation.qntOwners ?? []) {
+      ownerPaths.add(ownerPath);
+    }
+  }
+  return ownerPaths;
+}
+
+function validateQntOwnerRole(row, index, rootPath, expectedQntOwnerPaths) {
+  const issues = [];
+  const context = `qnt-owner-roles row ${index + 1}`;
+  if (!isRecord(row)) return [`${context} must be an object.`];
+  if (typeof row.ownerPath !== "string" || row.ownerPath.length === 0) {
+    issues.push(`${context}.ownerPath must be a non-empty string.`);
+  } else {
+    if (!expectedQntOwnerPaths.has(row.ownerPath)) {
+      issues.push(
+        `${context}.ownerPath ${row.ownerPath} is not a covered obligation QNT owner.`,
+      );
+    }
+    if (!fs.existsSync(path.join(rootPath, row.ownerPath))) {
+      issues.push(`${context}.ownerPath ${row.ownerPath} does not exist.`);
+    }
+  }
+  if (!qntOwnerRoles.has(row.role)) {
+    issues.push(`${context}.role has unknown value ${row.role}.`);
+  }
+  if (typeof row.evidence !== "string" || row.evidence.length === 0) {
+    issues.push(`${context}.evidence must be a non-empty string.`);
   }
   return issues;
 }
@@ -1094,14 +1138,26 @@ function buildMatrix(rootPath) {
   const obligations = readJsonl(rootPath, paths.obligations);
   const battleHoleFrontier = readJsonl(rootPath, paths.battleHoleFrontier);
   const profileObligations = readJsonl(rootPath, paths.profileObligations);
+  const qntOwnerRoleRows = readJsonl(rootPath, paths.qntOwnerRoles);
   const generatorReadiness = readJsonl(rootPath, paths.generatorReadiness);
   const profiles = readJsonl(rootPath, paths.unitProfiles);
   const profileIdsByObligation = profilesByObligation(profileObligations);
+  const obligationIdsByQntOwner = new Map();
+  for (const obligation of obligations) {
+    if (!coveredStatuses.has(obligation.status)) continue;
+    for (const ownerPath of obligation.qntOwners ?? []) {
+      const current = obligationIdsByQntOwner.get(ownerPath) ?? [];
+      current.push(obligation.id);
+      obligationIdsByQntOwner.set(ownerPath, current);
+    }
+  }
   return {
     summary: buildSummary(obligations),
     derivedFields: {
       "obligations[].profiles":
         "Derived from profileObligations by obligation id; authored obligations.jsonl rows must not contain profiles.",
+      "qntOwnerRoles[].obligationIds":
+        "Derived from obligations[].qntOwners for covered obligations; qnt-owner-roles.jsonl rows classify ownerPath only.",
     },
     battleHoleFrontierSummary: buildBattleFrontierSummary(battleHoleFrontier),
     obligations: obligations.map((obligation) =>
@@ -1112,6 +1168,12 @@ function buildMatrix(rootPath) {
     ),
     battleHoleFrontier: battleHoleFrontier.map((row) => stable(row)),
     profileObligations: profileObligations.map((mapping) => stable(mapping)),
+    qntOwnerRoles: qntOwnerRoleRows.map((row) =>
+      stable({
+        ...row,
+        obligationIds: (obligationIdsByQntOwner.get(row.ownerPath) ?? []).sort(),
+      }),
+    ),
     generatorReadiness: generatorReadiness.map((readiness) =>
       stable(readiness),
     ),
@@ -1126,7 +1188,7 @@ function renderReport(matrix, issues) {
   lines.push("# Rules Kernel Coverage Report");
   lines.push("");
   lines.push(
-    "Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-frontier.jsonl`, `profile-obligations.jsonl`, `generator-readiness.jsonl`, and `KERNEL-COVERAGE` source markers.",
+    "Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-frontier.jsonl`, `profile-obligations.jsonl`, `qnt-owner-roles.jsonl`, `generator-readiness.jsonl`, and `KERNEL-COVERAGE` source markers.",
   );
   lines.push("");
   lines.push("## Summary");
@@ -1206,6 +1268,22 @@ function renderReport(matrix, issues) {
     }
   }
   lines.push("");
+  lines.push("## QNT Owner Roles");
+  lines.push("");
+  if (matrix.qntOwnerRoles.length === 0) {
+    lines.push("No QNT owner roles recorded yet.");
+  } else {
+    lines.push("| Owner | Role | Obligations |");
+    lines.push("| --- | --- | --- |");
+    for (const row of matrix.qntOwnerRoles) {
+      const obligations =
+        (row.obligationIds ?? [])
+          .map((obligationId) => `\`${obligationId}\``)
+          .join(", ") || "_none_";
+      lines.push(`| \`${row.ownerPath}\` | ${row.role} | ${obligations} |`);
+    }
+  }
+  lines.push("");
   lines.push("## Generator Readiness");
   lines.push("");
   if (matrix.generatorReadiness.length === 0) {
@@ -1280,6 +1358,7 @@ function buildKernelCoverage({ root: rootPath }) {
   const obligations = readJsonl(rootPath, paths.obligations);
   const battleHoleFrontier = readJsonl(rootPath, paths.battleHoleFrontier);
   const profileObligations = readJsonl(rootPath, paths.profileObligations);
+  const qntOwnerRoleRows = readJsonl(rootPath, paths.qntOwnerRoles);
   const generatorReadiness = readJsonl(rootPath, paths.generatorReadiness);
   const profiles = readJsonl(rootPath, paths.unitProfiles);
   const expectedBattleFrontier = extractBattleFrontierSource(rootPath);
@@ -1384,6 +1463,27 @@ function buildKernelCoverage({ root: rootPath }) {
     }
   }
 
+  const expectedQntOwnerPaths = qntOwnerPaths(obligations);
+  const qntOwnerRolesByPath = new Map();
+  for (const [index, row] of qntOwnerRoleRows.entries()) {
+    if (isRecord(row) && typeof row.ownerPath === "string") {
+      if (qntOwnerRolesByPath.has(row.ownerPath)) {
+        issues.push(
+          `qnt-owner-roles row ${index + 1}: duplicate QNT owner role for ${row.ownerPath}.`,
+        );
+      }
+      qntOwnerRolesByPath.set(row.ownerPath, row.role);
+    }
+    issues.push(
+      ...validateQntOwnerRole(row, index, rootPath, expectedQntOwnerPaths),
+    );
+  }
+  for (const ownerPath of expectedQntOwnerPaths) {
+    if (!qntOwnerRolesByPath.has(ownerPath)) {
+      issues.push(`qnt-owner-roles is missing QNT owner ${ownerPath}.`);
+    }
+  }
+
   const derivedProfilesByObligation = profilesByObligation(profileObligations);
   const readinessObligationIds = new Set();
   for (const [index, readiness] of generatorReadiness.entries()) {
@@ -1401,6 +1501,7 @@ function buildKernelCoverage({ root: rootPath }) {
         index,
         rootPath,
         obligationsById,
+        qntOwnerRolesByPath,
       ),
     );
   }

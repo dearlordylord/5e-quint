@@ -63,6 +63,15 @@ const generatorReadinessStatuses = new Set([
   "blocked",
 ]);
 
+const qntOwnerRoles = new Set([
+  "semantic-core",
+  "proof-only",
+  "mbt-fixture",
+  "bridge",
+  "selected-identity-trace",
+  "legacy-reference",
+]);
+
 const markerKinds = new Set([
   "qnt-owner",
   "runtime-owner",
@@ -89,6 +98,7 @@ function coveragePaths(root) {
     obligations: path.join(coverageDir, "obligations.jsonl"),
     battleHoleFrontier: path.join(coverageDir, "battle-hole-frontier.jsonl"),
     profileObligations: path.join(coverageDir, "profile-obligations.jsonl"),
+    qntOwnerRoles: path.join(coverageDir, "qnt-owner-roles.jsonl"),
     generatorReadiness: path.join(coverageDir, "generator-readiness.jsonl"),
     matrix: path.join(coverageDir, "matrix.json"),
     report: path.join(coverageDir, "REPORT.md"),
@@ -113,6 +123,7 @@ module.exports = {
   obligationKinds,
   obligationStatuses,
   parityWitnessKinds,
+  qntOwnerRoles,
   runtimes,
   skippedScanDirs,
 };

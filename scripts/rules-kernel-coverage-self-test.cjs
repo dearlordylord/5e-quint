@@ -97,6 +97,19 @@ function runSelfTest() {
       root,
       "plans",
       "rules-kernel-coverage",
+      "qnt-owner-roles.jsonl",
+    ),
+    JSON.stringify({
+      ownerPath: "sample.qnt",
+      role: "semantic-core",
+      evidence: "sample.qnt is the qnt-owner marker source for BATTLE.SAMPLE.",
+    }) + "\n",
+  );
+  writeFile(
+    path.join(
+      root,
+      "plans",
+      "rules-kernel-coverage",
       "generator-readiness.jsonl",
     ),
     JSON.stringify({
@@ -143,7 +156,43 @@ function runSelfTest() {
   assert.deepEqual(result.issues, []);
   assert.equal(result.matrix.summary.byStatus.covered, 1);
   assert.equal(result.matrix.summary.byStatus["boundary-only"], 1);
+  assert.equal(result.matrix.qntOwnerRoles.length, 1);
   assert.equal(result.matrix.generatorReadiness.length, 1);
+
+  const sampleQntOwnerRolesPath = path.join(
+    root,
+    "plans",
+    "rules-kernel-coverage",
+    "qnt-owner-roles.jsonl",
+  );
+  const initialQntOwnerRolesText = fs.readFileSync(
+    sampleQntOwnerRolesPath,
+    "utf8",
+  );
+  writeFile(sampleQntOwnerRolesPath, "");
+  const missingQntOwnerRoleResult = buildKernelCoverage({ root });
+  assert.ok(
+    missingQntOwnerRoleResult.issues.includes(
+      "qnt-owner-roles is missing QNT owner sample.qnt.",
+    ),
+    `Expected missing qnt-owner role issue, got ${JSON.stringify(missingQntOwnerRoleResult.issues)}`,
+  );
+  writeFile(
+    sampleQntOwnerRolesPath,
+    JSON.stringify({
+      ownerPath: "sample.qnt",
+      role: "mbt-fixture",
+      evidence: "sample invalid role for readiness semanticCore check.",
+    }) + "\n",
+  );
+  const wrongSemanticCoreRoleResult = buildKernelCoverage({ root });
+  assert.ok(
+    wrongSemanticCoreRoleResult.issues.includes(
+      "generator-readiness row 1.semanticCore path sample.qnt has QNT owner role mbt-fixture; expected semantic-core.",
+    ),
+    `Expected semanticCore role issue, got ${JSON.stringify(wrongSemanticCoreRoleResult.issues)}`,
+  );
+  writeFile(sampleQntOwnerRolesPath, initialQntOwnerRolesText);
 
   const sampleGeneratorReadinessPath = path.join(
     root,
@@ -271,6 +320,16 @@ function runSelfTest() {
       "\n",
   );
   writeFile(
+    sampleQntOwnerRolesPath,
+    initialQntOwnerRolesText +
+      JSON.stringify({
+        ownerPath: "multi.qnt",
+        role: "semantic-core",
+        evidence: "multi.qnt is the qnt-owner marker source for BATTLE.MULTI.",
+      }) +
+      "\n",
+  );
+  writeFile(
     path.join(root, "multi.qnt"),
     "// KERNEL-COVERAGE: qnt-owner BATTLE.MULTI\nmodule multi {}\n",
   );
@@ -305,6 +364,7 @@ function runSelfTest() {
     path.join(root, "plans", "unit-profile-coverage", "profiles.jsonl"),
     initialProfilesText,
   );
+  writeFile(sampleQntOwnerRolesPath, initialQntOwnerRolesText);
   for (const fileName of [
     "multi.qnt",
     "multi.ts",

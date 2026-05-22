@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "MBTRUST-A-QNT-ROLE-INVENTORY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "QNT Role Inventory For Generation Readiness"
     },
     {
@@ -172,7 +172,7 @@ Output:
 
 ### Task 3 - MBTRUST-A-QNT-ROLE-INVENTORY - QNT Role Inventory For Generation Readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 

@@ -66,6 +66,14 @@ that boundary coverage never substitutes for reducer-semantic ownership.
 [Generator Readiness Source Of Truth](#generator-readiness-source-of-truth).
 Generated reports summarize those rows but are not the source of truth.
 
+`qnt-owner-roles.jsonl` records the C-lane role classification for every QNT
+owner path cited by a covered obligation. Rows classify only the owner path;
+the obligation list for each owner is derived from `obligations.jsonl` so the
+owner-to-obligation join has one source of truth. The checker fails if a
+covered QNT owner is missing a role row, if a role row points at a non-owner,
+or if a generator-readiness `semanticCore` path is classified as anything other
+than `semantic-core`.
+
 ## Generator Readiness Source Of Truth
 
 Generator readiness is a per-obligation C-lane assessment of whether a covered
@@ -104,6 +112,23 @@ Generator-readiness statuses are:
   listed blockers are resolved.
 - `blocked`: the row has a concrete generator-readiness blocker and is not a
   semantic-core candidate in its current shape.
+
+QNT owner roles are:
+
+- `semantic-core`: the QNT owner supplies executable rule semantics for at
+  least one covered obligation and may be used in `semanticCore` readiness
+  rows.
+- `proof-only`: the QNT owner supports proof or induction but is not an
+  implementation source.
+- `mbt-fixture`: the QNT owner is a replay or MBT fixture with bounded cases,
+  trace variables, or harness actions.
+- `bridge`: the QNT owner projects between semantic facts and a runtime or MBT
+  bridge shape.
+- `selected-identity-trace`: the QNT owner proves a concrete selected Unit or
+  authored catalog identity reaches a runtime entrypoint; it is content
+  evidence, not reusable reducer semantics.
+- `legacy-reference`: the QNT owner is reference material for a non-active
+  proof lane and is not a generator input.
 
 ## Terms
 
