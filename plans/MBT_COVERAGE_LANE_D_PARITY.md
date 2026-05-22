@@ -121,7 +121,7 @@
     {
       "number": 20,
       "id": "RKBC-NONFEATURE-CONDITION-REMOVAL-PROTECTION-WITNESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Condition Removal And Protection Coverage Witness"
     },
     {
@@ -315,7 +315,7 @@ Output:
 
 ### Task 20 - RKBC-NONFEATURE-CONDITION-REMOVAL-PROTECTION-WITNESS - Condition Removal And Protection Coverage Witness
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 - Task 14.
