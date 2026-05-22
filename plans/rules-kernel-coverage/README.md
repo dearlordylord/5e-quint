@@ -62,12 +62,48 @@ missing QNT/parity ownership. A semantic row may also point at a non-semantic
 boundary obligation when the same hole or fill carries caller/table facts, but
 that boundary coverage never substitutes for reducer-semantic ownership.
 
-`generator-readiness.jsonl` records the separate C-axis question: whether a
-covered obligation's QNT owner is shaped like generator-ready semantic core.
-Rows must point to real obligation ids and any referenced dry-run artifact.
-Rows must explicitly declare `semanticCore`, `proofOnly`, `generatorSubset`, and
-`blockedBy`; omitted arrays are invalid because empty and unknown are different
-states.
+`generator-readiness.jsonl` records the separate C-axis question defined in
+[Generator Readiness Source Of Truth](#generator-readiness-source-of-truth).
+Generated reports summarize those rows but are not the source of truth.
+
+## Generator Readiness Source Of Truth
+
+Generator readiness is a per-obligation C-lane assessment of whether a covered
+obligation's QNT owner can act as a future implementation source. It does not
+change B-lane coverage, does not prove additional TS parity, and does not imply
+generated Rust exists.
+
+`generator-readiness.jsonl` is obligation-centered. Each row must point to a
+real obligation id and must explicitly declare `semanticCore`, `proofOnly`,
+`generatorSubset`, and `blockedBy`; omitted arrays are invalid because empty and
+unknown are different states. If present, `dryRun` points at a checked manual
+dry-run artifact.
+
+- `semanticCore`: QNT owner files intended to supply executable rule semantics
+  for the obligation. Every path must also be declared by the obligation's QNT
+  owner list.
+- `proofOnly`: QNT files that support proof, induction, fixtures, or tests but
+  are not intended as generator input for implementation semantics.
+- `generatorSubset`: the observed QNT language constructs a future generator
+  would need for the row. The subset vocabulary is checked as row data today and
+  is intentionally refined by the C-lane generation-subset tasks.
+- `blockedBy`: concrete blockers that prevent treating the row as
+  generation-subset-clean. `fixture-bound` and `blocked` rows require at least
+  one blocker; other statuses use an empty array for no known blockers. Omitted
+  arrays are invalid.
+
+Generator-readiness statuses are:
+
+- `not-assessed`: the obligation has no C-lane classification claim yet.
+- `semantic-core-candidate`: semantic-core files and their observed subset are
+  identified, but the row is not yet certified generation-subset-clean.
+- `generation-subset-clean`: semantic-core files are identified, the subset is
+  recorded, and there are no known blockers for generation-subset cleanliness.
+- `fixture-bound`: executable semantics are present, but fixture, run-test, proof,
+  or bounded-world coupling prevents direct generator consumption until the
+  listed blockers are resolved.
+- `blocked`: the row has a concrete generator-readiness blocker and is not a
+  semantic-core candidate in its current shape.
 
 ## Terms
 
@@ -85,9 +121,8 @@ states.
   where caller/table decisions, random results, or table facts enter reducer
   replay. Frontier classification is executable coverage metadata; it is not a
   replacement for QNT ownership of reducer semantics.
-- **Generator readiness:** a per-obligation assessment of which QNT files are
-  semantic core, which are proof-only, and what language subset a future
-  QNT-to-Rust generator would need.
+- **Generator readiness:** the C-lane assessment defined in
+  [Generator Readiness Source Of Truth](#generator-readiness-source-of-truth).
 
 ## Statuses
 
