@@ -12,8 +12,8 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | Strict target closure | 165/168 (98.2%) |
 | Product readiness | 514/556 (92.4%) |
 | Rules-kernel profile join | 78/85 (91.8%) |
-| Rules-kernel covered profile join | 76/85 (89.4%) |
-| Supported Unit rules-kernel chain | 101/113 (89.4%) |
+| Rules-kernel covered profile join | 78/85 (91.8%) |
+| Supported Unit rules-kernel chain | 103/113 (91.2%) |
 
 ## Scope
 
@@ -57,9 +57,7 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `cleric_divine_order` | unmapped | `character-creation.class-feature-option-projection` (unmapped: no obligation mapping) |
 | `druid_primal_order` | unmapped | `character-creation.class-feature-option-projection` (unmapped: no obligation mapping) |
 | `heat_metal` | unmapped | `spell.invocation-object-contact-damage` (unmapped: no obligation mapping) |
-| `lesser_restoration` | mapped-open | `spell.invocation-direct-condition-removal` (mapped-open: `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` (needs-parity-witness)) |
 | `monk_uncanny_metabolism` | unmapped | `character-creation.class-feature-source-fact-projection` (unmapped: no obligation mapping) |
-| `protection_from_poison` | mapped-open | `spell.invocation-condition-removal-protection` (mapped-open: `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` (needs-parity-witness)) |
 | `ranger_deft_explorer` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
 | `rogue_expertise` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
 | `see_invisibility` | unmapped | `spell.invocation-see-invisible-observer-sight` (unmapped: no obligation mapping) |

@@ -83,8 +83,8 @@
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 121,
-      "numerator": 102,
-      "percent": "84.3%"
+      "numerator": 104,
+      "percent": "86%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 121,
@@ -93,8 +93,8 @@
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 136,
-      "numerator": 124,
-      "percent": "91.2%"
+      "numerator": 126,
+      "percent": "92.6%"
     },
     "runtimeMappingCoverage": {
       "denominator": 88,
@@ -3514,8 +3514,8 @@
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 121,
-        "numerator": 102,
-        "percent": "84.3%"
+        "numerator": 104,
+        "percent": "86%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 121,
@@ -4949,12 +4949,12 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle direct condition removal, poison protection condition removal, poison resistance, and poison Saving Throw Advantage"
           }
         ],
@@ -4994,12 +4994,12 @@
         "profileKind": "stat-block-control"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
             "runtime": "battle",
-            "status": "needs-parity-witness",
+            "status": "covered",
             "title": "Battle direct condition removal, poison protection condition removal, poison resistance, and poison Saving Throw Advantage"
           }
         ],
@@ -5134,8 +5134,8 @@
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
           "denominator": 136,
-          "numerator": 124,
-          "percent": "91.2%"
+          "numerator": 126,
+          "percent": "92.6%"
         }
       },
       "units": [
@@ -6727,15 +6727,15 @@
           "unitId": "jump"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle direct condition removal, poison protection condition removal, poison resistance, and poison Saving Throw Advantage"
                 }
               ],
@@ -7391,15 +7391,15 @@
           "unitId": "protection_from_evil_and_good"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
                   "runtime": "battle",
-                  "status": "needs-parity-witness",
+                  "status": "covered",
                   "title": "Battle direct condition removal, poison protection condition removal, poison resistance, and poison Saving Throw Advantage"
                 }
               ],

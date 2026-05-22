@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
 
 module battleRuntimeProtectionFromPoison {
   import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"

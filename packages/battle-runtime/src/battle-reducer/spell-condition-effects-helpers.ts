@@ -3,6 +3,7 @@
 // these small helpers; hoisting them here keeps M↔P unidirectional. Mechanical
 // extraction — no behavior change.
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
 
 import {
   applyCondition,
