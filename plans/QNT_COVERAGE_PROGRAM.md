@@ -1,0 +1,128 @@
+# QNT Coverage Program
+
+<!-- ralph-task-index
+{
+  "schema": "ralph-plan.v1",
+  "tasks": [
+    { "number": 0, "id": "QCP-PILOT-SLICE", "status": "todo", "title": "Pilot slice (creature-attack) end-to-end" },
+    { "number": 1, "id": "QCP-SEMCORE-EXTRACTION", "status": "todo", "title": "Semantic-core extraction (run blocks out of rule-core .qnt)" },
+    { "number": 2, "id": "QCP-MISSING-ATOMICS", "status": "todo", "title": "Author missing atomic semantic-core rules" },
+    { "number": 3, "id": "QCP-COMPOSITE-SLICES", "status": "todo", "title": "Author per-composite slice MBT" },
+    { "number": 4, "id": "QCP-RESIDUAL-TRANSITIONAL", "status": "todo", "title": "Resolve 6 remaining transitional obligations" },
+    { "number": 5, "id": "QCP-UNIT-IDENTITY-GATE", "status": "todo", "title": "Per-Unit selected-identity test as hard gate" },
+    { "number": 6, "id": "QCP-INTEGRATION-MBT-PATTERNS", "status": "todo", "title": "Maintain integration MBT for high-value cross-slice sequencing" },
+    { "number": 7, "id": "QCP-LANG-PARITY-MARKER", "status": "blocked", "title": "Language-target parity marker enforced per covered obligation" }
+  ]
+}
+-->
+
+This plan rolls up the bounded program of work to reach the achievable 100% QNT coverage as framed in [ADR-0001 — Forest of QNT slices, no single top, sibling language harnesses](../docs/adr/0001-forest-of-qnt-slices.md).
+
+## Source Of Truth
+
+- ADR-0001 — architectural framing for everything below.
+- `plans/rules-kernel-coverage/README.md` — obligation/profile/marker/witness vocabulary.
+- `plans/rules-kernel-coverage/obligations.jsonl` — the obligation registry (92 today; 86 covered, 6 boundary/unsupported).
+- `plans/rules-kernel-coverage/generator-readiness.jsonl` — semantic-core status per obligation.
+- `plans/unit-profile-coverage/` — per-Unit support and selected-identity tracking.
+- `plans/MBT_RUST_MIGRATION_LANE_A.md` — closed precursor lane that produced the readiness inventory this plan now consumes.
+
+## Working Discipline
+
+- Tactical roll-up only; do not duplicate vocabulary or rules from the source-of-truth docs above.
+- Update this file as work reveals new findings — append a "Findings" subsection per task when something surprises, do not let it drift into commit history only.
+- Each task lands in its own commit (or small PR), with green checker + green parity.
+- The harness gains a minimal timing wrapper (~10 lines) as part of pilot-slice tooling; no dashboard, no aggregator.
+
+## Pilot Slice — Task 0 (QCP-PILOT-SLICE)
+
+Status: `todo`
+
+Goal: prove the slice template end-to-end before the horizontal tasks below run in earnest.
+
+Output:
+
+- Sub-step of Task 1: extract `run test_*` blocks from `packages/shared-algebras/proofs/rule-core/hit-point-damage.qnt` to TS unit tests next to `damage-apply.ts`. Atomic file becomes pure semantic-core.
+- First instance of Task 3: new `packages/battle-runtime/creature-attack.qnt` (composite, imports `hit-point-damage`) + `packages/battle-runtime/creature-attack.mbt.qnt` (bounded MBT, state `{attackerHp, targetHp}` 0..20, ~3 actions, per-action `nondet damage`/`hit`) + `packages/battle-runtime/src/battle-reducer/creature-attack.ts` (composite pure function) + `packages/battle-runtime/src/creature-attack.mbt.test.ts` (parity test).
+- New obligation row in `obligations.jsonl` for the composite, with `KERNEL-COVERAGE` markers on all source files.
+- `generator-readiness.jsonl` row for `SHARED.HIT_POINTS.POSITIVE_DAMAGE` drops `run-block-coupled`.
+
+Acceptance: `pnpm rules-kernel-coverage:check` green; new parity test green; existing parity tests stay green.
+
+After pilot: Tasks 1, 3 continue mechanically using the pilot as template.
+
+## Tasks
+
+### Task 1 - QCP-SEMCORE-EXTRACTION
+
+Status: `todo`
+
+Input: rule-core `.qnt` files with `run` test blocks mixed in (every row in `generator-readiness.jsonl` with `blockedBy: run-block-coupled`).
+
+Output: `run` blocks moved out to TS unit tests next to the TS mirror (default) or to a sibling `.mbt.qnt` only when the assertion is state-machine shaped. Each rule-core file becomes pure semantic-core (only `type`, `pure def`, `pure val`, `import`). `generator-readiness.jsonl` row updated to drop the blocker. Existing parity tests stay green.
+
+Acceptance: checker green; no `run-block-coupled` rows remain.
+
+### Task 2 - QCP-MISSING-ATOMICS
+
+Status: `todo`
+
+Input: composite obligations whose semantics require atomic rules not yet broken out as standalone files (initial gap list: `spell-save-gate`, `slot-expenditure` — identified during this plan's grilling; more discovered during composite authoring).
+
+Output: new atomic `.qnt` files in `packages/shared-algebras/proofs/rule-core/`, each pure semantic-core, with TS mirror functions and atomic-level unit tests.
+
+Acceptance: each new atomic referenced by at least one composite slice; checker green.
+
+### Task 3 - QCP-COMPOSITE-SLICES
+
+Status: `in-progress` (pilot slice covers the first instance)
+
+Input: profile-level obligations not yet witnessed by a slice-style MBT (composite `.qnt` + `.mbt.qnt` + TS mirror + parity test, per the pilot template).
+
+Output: one composite slice per missing profile, following the pilot template. State per slice kept bounded; variability via per-action `nondet`/fills.
+
+Acceptance: new obligation row per slice; parity test green; checker green.
+
+### Task 4 - QCP-RESIDUAL-TRANSITIONAL
+
+Status: `todo`
+
+Input: the 6 non-`covered` rows in `obligations.jsonl` (5 boundary-only, 1 unsupported-by-admission).
+
+Output: each row either re-classified permanently with rationale, or closed by adding the missing witness — no transitional remain.
+
+Acceptance: checker reports 0 transitional.
+
+### Task 5 - QCP-UNIT-IDENTITY-GATE
+
+Status: `todo`
+
+Input: every Unit claimed as supported in `unit-profile-coverage/`.
+
+Output: each supported Unit has at least one selected-identity test that proves admission + entrypoint reachability. `unit-profile-coverage:check` fails if a supported Unit lacks one. Template the test where the procedure shape is uniform.
+
+Acceptance: gate enabled; check green.
+
+### Task 6 - QCP-INTEGRATION-MBT-PATTERNS
+
+Status: `todo`
+
+Input: cross-slice sequencing patterns where the production reducer composes multiple composites (concentration interactions, reaction interrupts, turn-end cleanup, ...).
+
+Output: bounded fixture-world integration MBTs that exercise the chosen patterns. Never claim exhaustiveness; document scope per file.
+
+Acceptance: each integration MBT documents its scope; bounded execution time; checker green.
+
+### Task 7 - QCP-LANG-PARITY-MARKER
+
+Status: `blocked` (waits on first non-TS language target arriving)
+
+Input: a second language-target implementation arrives.
+
+Output: `rules-kernel-coverage-check.cjs` learns a marker pattern `<lang>-parity-witness OBLIGATION.ID`; every `covered` obligation must have one per active language target.
+
+Acceptance: checker enforces marker presence per active language; CI red on missing marker.
+
+## Findings
+
+(append as findings emerge during the work)
