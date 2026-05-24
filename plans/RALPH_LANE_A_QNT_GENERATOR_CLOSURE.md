@@ -122,7 +122,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 19,
       "id": "A19-RECURSIVE-NEXT-BATCH",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Mine next QNT generator-readiness batch"
     },
     {
@@ -148,6 +148,78 @@ or prove from checker-owned artifacts that no such work remains.
       "id": "A23-ATTACK-BURST-SAVE-DAMAGE-CORE",
       "status": "done",
       "title": "Split attack-burst save damage core"
+    },
+    {
+      "number": 24,
+      "id": "A24-READINESS-DENOMINATOR-GATE",
+      "status": "ready-for-research",
+      "title": "Gate generator-readiness denominator completeness"
+    },
+    {
+      "number": 25,
+      "id": "A25-READINESS-MISSING-ROW-REPORT",
+      "status": "ready-for-research",
+      "title": "Report generator-readiness missing rows"
+    },
+    {
+      "number": 26,
+      "id": "A26-SEMANTIC-CORE-RUN-BLOCK-SCANNER",
+      "status": "ready-for-research",
+      "title": "Detect run blocks in semantic-core owners"
+    },
+    {
+      "number": 27,
+      "id": "A27-BLOCKER-TOKEN-CONTRACT-HARDENING",
+      "status": "ready-for-research",
+      "title": "Harden generator blocker token contract"
+    },
+    {
+      "number": 28,
+      "id": "A28-HIT-POINT-RESTORATION-READINESS",
+      "status": "ready-for-research",
+      "title": "Assess hit point restoration generator readiness"
+    },
+    {
+      "number": 29,
+      "id": "A29-ATTACK-DAMAGE-COMPOSITION-READINESS",
+      "status": "ready-for-research",
+      "title": "Assess attack damage composition generator readiness"
+    },
+    {
+      "number": 30,
+      "id": "A30-DAMAGE-ADJUSTMENTS-READINESS",
+      "status": "ready-for-research",
+      "title": "Assess damage adjustment generator readiness"
+    },
+    {
+      "number": 31,
+      "id": "A31-SHOVE-OUTCOME-READINESS",
+      "status": "ready-for-research",
+      "title": "Assess shove outcome generator readiness"
+    },
+    {
+      "number": 32,
+      "id": "A32-STAT-BLOCK-CONTROLS-READINESS",
+      "status": "ready-for-research",
+      "title": "Assess stat block controls generator readiness"
+    },
+    {
+      "number": 33,
+      "id": "A33-HIT-POINT-RECOVERY-READINESS",
+      "status": "ready-for-research",
+      "title": "Assess hit point recovery generator readiness"
+    },
+    {
+      "number": 34,
+      "id": "A34-UNIT-FEATURE-PROCEDURE-SURVEY",
+      "status": "ready-for-research",
+      "title": "Survey unit feature procedure readiness split"
+    },
+    {
+      "number": 35,
+      "id": "A35-BATTLE-RUNTIME-MEGA-OWNER-SURVEY",
+      "status": "ready-for-research",
+      "title": "Survey battle-runtime mega-owner readiness split"
     }
   ]
 }
@@ -199,11 +271,23 @@ Lane A must not:
 | 16 | A16-FIXTURE-BOUND-STATUS-CLOSURE - Close spell procedure fixture-bound readiness row | done | A14,A15 | Only if blockers are actually gone. |
 | 17 | A17-CHECKER-REGRESSION-TEST - Add generator-readiness regression coverage | done | none | Ordered after A16 in this plan; prevent silent fallback to fixture-bound. |
 | 18 | A18-END-TO-END-QNT-VERIFICATION - Run and document lane A verification | done | none | Ordered after A17 in this plan; coverage, examples, typecheck if touched. |
-| 19 | A19-RECURSIVE-NEXT-BATCH - Mine next QNT generator-readiness batch | ready-for-research | none | Ordered after A18 in this plan; must append >=12 tasks or prove exhaustion. |
+| 19 | A19-RECURSIVE-NEXT-BATCH - Mine next QNT generator-readiness batch | done | none | Added A24-A35 from current checker/readiness evidence. |
 | 20 | A20-DIRECT-SPELL-DAMAGE-CORE - Split direct spell damage projection core | done | none | Magic Missile fixture split. |
 | 21 | A21-DEFENSIVE-SPELL-EFFECT-CORE - Split defensive spell effect projection core | done | none | Mage Armor fixture split. |
 | 22 | A22-READIED-SPELL-RESPONSE-CORE - Split Readied Spell Response core | done | none | Ready spell hold/release split. |
 | 23 | A23-ATTACK-BURST-SAVE-DAMAGE-CORE - Split attack-burst save damage core | done | none | Ice Knife fixture split. |
+| 24 | A24-READINESS-DENOMINATOR-GATE - Gate generator-readiness denominator completeness | ready-for-research | none | Use existing `not-assessed` status for covered semantic-core obligations not yet evaluated. |
+| 25 | A25-READINESS-MISSING-ROW-REPORT - Report generator-readiness missing rows | ready-for-research | A24 | Generated report should expose the readiness backlog without hand inspection. |
+| 26 | A26-SEMANTIC-CORE-RUN-BLOCK-SCANNER - Detect run blocks in semantic-core owners | ready-for-research | A24 | Prevent semantic-core role rows from hiding run-test coupling outside readiness rows. |
+| 27 | A27-BLOCKER-TOKEN-CONTRACT-HARDENING - Harden generator blocker token contract | ready-for-research | A24,A26 | Keep blocker vocabulary and scanner output coupled. |
+| 28 | A28-HIT-POINT-RESTORATION-READINESS - Assess hit point restoration generator readiness | ready-for-research | A24 | Current owner is `spell-procedure-profiles.qnt`; classify before future generator work. |
+| 29 | A29-ATTACK-DAMAGE-COMPOSITION-READINESS - Assess attack damage composition generator readiness | ready-for-research | A24,A26 | Shared algebra owner has run blocks and composition semantics. |
+| 30 | A30-DAMAGE-ADJUSTMENTS-READINESS - Assess damage adjustment generator readiness | ready-for-research | A24,A26 | Shared algebra owner needs subset/blocker classification. |
+| 31 | A31-SHOVE-OUTCOME-READINESS - Assess shove outcome generator readiness | ready-for-research | A24,A26 | `shove-outcome.qnt` currently includes run blocks. |
+| 32 | A32-STAT-BLOCK-CONTROLS-READINESS - Assess stat block controls generator readiness | ready-for-research | A24,A26 | Shared algebra owner needs subset/blocker classification. |
+| 33 | A33-HIT-POINT-RECOVERY-READINESS - Assess hit point recovery generator readiness | ready-for-research | A24,A26 | Sheet HP/rest owner needs subset/blocker classification. |
+| 34 | A34-UNIT-FEATURE-PROCEDURE-SURVEY - Survey unit feature procedure readiness split | ready-for-research | A24,A26 | Large shared algebra owner must be split into runnable follow-ups before readiness closure. |
+| 35 | A35-BATTLE-RUNTIME-MEGA-OWNER-SURVEY - Survey battle-runtime mega-owner readiness split | ready-for-research | A24,A25 | `battle-runtime.qnt` owns many covered obligations; classify split candidates without reducer changes. |
 
 ## Task Details
 
@@ -389,7 +473,7 @@ Acceptance: this plan records only durable findings, not a work log.
 
 ### Task 19 - A19-RECURSIVE-NEXT-BATCH - Mine next QNT generator-readiness batch
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: inspect `QNT_COVERAGE_PROGRAM.md`, `REPORT.md`,
 `generator-readiness.jsonl`, and the remaining QCP tasks. Append at least 12
@@ -447,6 +531,185 @@ and successful-save burst damage policy.
 
 Acceptance: Ice Knife examples pass; no Ice Knife attack-burst save-damage
 fixture facts remain in `spell-procedure-profiles.qnt`.
+
+### Task 24 - A24-READINESS-DENOMINATOR-GATE - Gate generator-readiness denominator completeness
+
+Status: `ready-for-research`
+
+Input: `QNT_COVERAGE_PROGRAM.md`, `qnt-owner-roles.jsonl`,
+`obligations.jsonl`, `generator-readiness.jsonl`, and
+`scripts/rules-kernel-coverage-check.cjs`.
+
+Output: update the checker so every covered obligation with at least one
+`semantic-core` QNT owner has a generator-readiness row. Use existing
+`not-assessed` rows for obligations not yet classified; do not invent an
+exclusion status.
+
+Acceptance: `pnpm rules-kernel-coverage:check -- --write` then check pass, and
+the generated report no longer requires manual comparison between owner roles
+and readiness rows to find missing denominator entries.
+
+### Task 25 - A25-READINESS-MISSING-ROW-REPORT - Report generator-readiness missing rows
+
+Status: `ready-for-research`
+
+Input: the denominator gate from A24 and the generated `REPORT.md`.
+
+Output: extend generated reporting so missing or `not-assessed`
+generator-readiness rows are summarized with obligation id, semantic-core owner
+paths, and owner roles.
+
+Acceptance: the report makes the generator-readiness backlog visible without
+reading raw JSONL; checker and self-test pass.
+
+### Task 26 - A26-SEMANTIC-CORE-RUN-BLOCK-SCANNER - Detect run blocks in semantic-core owners
+
+Status: `ready-for-research`
+
+Input: `qnt-owner-roles.jsonl`, semantic-core QNT owner paths, and current
+rule-core files such as `shove-outcome.qnt`.
+
+Output: teach the checker or a checked helper to detect `run` blocks in any
+`semantic-core` owner and connect that finding to generator-readiness blocker
+classification.
+
+Acceptance: checker self-test covers a semantic-core owner with a `run` block,
+normal check passes, and current findings are surfaced either as blockers or as
+explicit follow-up evidence.
+
+### Task 27 - A27-BLOCKER-TOKEN-CONTRACT-HARDENING - Harden generator blocker token contract
+
+Status: `ready-for-research`
+
+Input: the blocker token vocabulary in
+`scripts/rules-kernel-coverage-config.cjs`, the README generator-readiness
+contract, and A26 scanner output.
+
+Output: make scanner-produced blocker names and hand-authored `blockedBy`
+tokens share one checked vocabulary. Add self-test coverage for unknown,
+misspelled, and stale blocker tokens.
+
+Acceptance: checker self-test and normal check pass; a new scanner blocker
+cannot be introduced without updating the documented token catalog.
+
+### Task 28 - A28-HIT-POINT-RESTORATION-READINESS - Assess hit point restoration generator readiness
+
+Status: `ready-for-research`
+
+Input: `BATTLE.SPELL.HIT_POINT_RESTORATION`,
+`packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt`, and
+the corresponding examples/proof-only files.
+
+Output: add or update the generator-readiness row for hit point restoration.
+If the executable definitions remain coupled to spell procedure fixture worlds,
+record blockers and split follow-up tasks instead of claiming clean readiness.
+
+Acceptance: coverage check passes and the report clearly classifies hit point
+restoration as `generation-subset-clean`, `semantic-core-candidate`, or blocked
+with concrete blockers.
+
+### Task 29 - A29-ATTACK-DAMAGE-COMPOSITION-READINESS - Assess attack damage composition generator readiness
+
+Status: `ready-for-research`
+
+Input: `BATTLE.DAMAGE.ATTACK_BRANCHES`,
+`BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP`,
+`packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt`, and
+its inductive/proof companions.
+
+Output: classify attack damage composition for generator readiness, including
+whether its run examples must move out of the semantic-core path or be recorded
+as blocker evidence.
+
+Acceptance: generator-readiness JSONL and generated report agree; checker
+passes; any remaining blockers name concrete constructs or fixture coupling.
+
+### Task 30 - A30-DAMAGE-ADJUSTMENTS-READINESS - Assess damage adjustment generator readiness
+
+Status: `ready-for-research`
+
+Input: `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION`,
+`packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt`,
+and any proof-only companions.
+
+Output: add a readiness row or update an existing row for damage component
+adjustments with exact subset tokens and blocker evidence.
+
+Acceptance: coverage check passes and the readiness row does not duplicate
+facts already owned by the damage adjustment QNT owner or runtime markers.
+
+### Task 31 - A31-SHOVE-OUTCOME-READINESS - Assess shove outcome generator readiness
+
+Status: `ready-for-research`
+
+Input: `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY`,
+`packages/shared-algebras/proofs/rule-core/shove-outcome.qnt`, and A26 scanner
+results.
+
+Output: classify shove outcome generator readiness. If `run` blocks remain in
+the semantic-core owner, either extract them to a proof/example owner or record
+the checked blocker.
+
+Acceptance: checker passes and the readiness row distinguishes executable
+shove outcome definitions from example/test coupling.
+
+### Task 32 - A32-STAT-BLOCK-CONTROLS-READINESS - Assess stat block controls generator readiness
+
+Status: `ready-for-research`
+
+Input: `BATTLE.STAT_BLOCK.ATTACK_CONTROL`,
+`packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt`, and its
+inductive companion.
+
+Output: classify stat block controls for generator readiness, including
+generator subset tokens and proof-only ownership.
+
+Acceptance: checker passes and the generated report gives a non-transitional
+readiness status for stat block controls.
+
+### Task 33 - A33-HIT-POINT-RECOVERY-READINESS - Assess hit point recovery generator readiness
+
+Status: `ready-for-research`
+
+Input: `SHEET.HP_REST_HIT_DICE.TRANSITIONS`,
+`packages/shared-algebras/proofs/rule-core/hit-point-recovery.qnt`, and
+character-sheet HP/rest MBT owner roles.
+
+Output: classify the hit point recovery semantic core without duplicating the
+character-sheet MBT fixture role as generator input.
+
+Acceptance: checker passes and the readiness row cleanly separates semantic
+core, proof-only, and MBT fixture ownership.
+
+### Task 34 - A34-UNIT-FEATURE-PROCEDURE-SURVEY - Survey unit feature procedure readiness split
+
+Status: `ready-for-research`
+
+Input: `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`,
+`packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt`,
+`qnt-owner-roles.jsonl`, and current checker output.
+
+Output: produce a concise Findings update and follow-up task list for splitting
+unit feature procedure readiness into atomic generator-clean semantic cores.
+Do not implement feature behavior or selected-identity policy in this task.
+
+Acceptance: checker passes, every discovered blocker has a proposed owner task,
+and no readiness row is marked clean from catalog/profile metadata alone.
+
+### Task 35 - A35-BATTLE-RUNTIME-MEGA-OWNER-SURVEY - Survey battle-runtime mega-owner readiness split
+
+Status: `ready-for-research`
+
+Input: covered obligations currently owned by
+`packages/battle-runtime/battle-runtime.qnt`, the generated `REPORT.md`, and
+the QCP composite-slice rules.
+
+Output: identify which `battle-runtime.qnt` obligations are generator-readiness
+candidates, which are MBT/slice cleanliness work, and which require future
+atomic tasks. Keep production reducer behavior unchanged.
+
+Acceptance: append concrete follow-up tasks or record a checker-backed reason
+no further split is needed; checker passes.
 
 ## Verification
 
@@ -542,3 +805,16 @@ fixture facts remain in `spell-procedure-profiles.qnt`.
   `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` out of `fixture-bound`. A17 should
   then add regression coverage so proof/example files, fixture-world coupling,
   or omitted readiness arrays cannot silently re-enter generator inputs.
+- Task 19 recursive review: `generator-readiness.jsonl` now has four
+  `generation-subset-clean` rows and no row-level blockers, but
+  `QNT_COVERAGE_PROGRAM.md` still leaves QCP-SEMCORE-EXTRACTION,
+  QCP-MISSING-ATOMICS, QCP-COMPOSITE-SLICES, QCP-UNIT-IDENTITY-GATE, and
+  QCP-INTEGRATION-MBT-PATTERNS open. The generated `REPORT.md` also lists many
+  covered semantic-core QNT owners outside the four readiness rows, including
+  `spell-procedure-profiles.qnt` for hit point restoration,
+  `attack-damage-composition.qnt`, `damage-component-adjustments.qnt`,
+  `shove-outcome.qnt`, `stat-block-controls.qnt`, `hit-point-recovery.qnt`,
+  `unit-feature-procedure-profiles.qnt`, and the broad
+  `battle-runtime.qnt` owner. A24-A35 turn that discovery into checker and
+  readiness tasks instead of treating the clean four-row readiness file as
+  proof of generator-readiness exhaustion.
