@@ -88,13 +88,13 @@ identity evidence or an explicit non-applicable classification.
     {
       "number": 13,
       "id": "B13-PROFILE-SUBSET-IDENTITY-DISPOSITIONS",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Classify subset-supported identity expectations"
     },
     {
       "number": 14,
       "id": "B14-FULL-SUPPORT-REPORT-PROJECTION",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Project selected-identity gate into full-support reports"
     },
     {
@@ -184,8 +184,8 @@ Lane B must not:
 | 10 | B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH - Backfill level-2 control spell identity evidence | done | none | Control/condition spells. |
 | 11 | B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH - Backfill level-2 mobility spell identity evidence | done | none | Mobility/position spells. |
 | 12 | B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH - Backfill level-2 protection spell identity evidence | done | none | Protection/restoration/buff spells. |
-| 13 | B13-PROFILE-SUBSET-IDENTITY-DISPOSITIONS - Classify subset-supported identity expectations | ready-for-implementation-after-light-research | none | Explicit non-applicable rows. |
-| 14 | B14-FULL-SUPPORT-REPORT-PROJECTION - Project selected-identity gate into full-support reports | blocked | B1-B13 | Report-level metric. |
+| 13 | B13-PROFILE-SUBSET-IDENTITY-DISPOSITIONS - Classify subset-supported identity expectations | done | none | Explicit non-applicable rows. |
+| 14 | B14-FULL-SUPPORT-REPORT-PROJECTION - Project selected-identity gate into full-support reports | ready-for-implementation-after-light-research | B1-B13 | Report-level metric. |
 | 15 | B15-UNIT-REPORT-HONESTY-PASS - Refresh Unit report wording and metrics | blocked | B14 | No inflated 100% language. |
 | 16 | B16-MCP-SCENARIO-IDENTITY-SMOKE - Add MCP selected-identity smoke coverage | blocked | B14 | One narrow smoke scenario. |
 | 17 | B17-END-TO-END-UNIT-VERIFICATION - Run and document lane B verification | blocked | B15,B16 | Unit coverage and typecheck. |
@@ -366,7 +366,7 @@ Acceptance: gap report count decreases; runtime-detached parts stay explicit.
 
 ### Task 13 - B13-PROFILE-SUBSET-IDENTITY-DISPOSITIONS - Classify subset-supported identity expectations
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: for profile-subset-supported Units where selected-identity evidence is
 not meaningful for the closed/outside-runtime portion, add explicit
@@ -375,9 +375,15 @@ non-applicable disposition data instead of silently counting them green.
 Acceptance: full-support reports distinguish "has selected identity witness"
 from "identity witness not applicable to closed portion".
 
+Result: profile-subset-supported deferred mechanics can now declare
+`deferredMechanicsSelectedIdentityDisposition`, and generated full-support
+reports distinguish `witness-present` from
+`missing-witness-deferred-not-applicable` in selected-identity replay
+accounting.
+
 ### Task 14 - B14-FULL-SUPPORT-REPORT-PROJECTION - Project selected-identity gate into full-support reports
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Output: update `LEVEL1_FULL_SUPPORT.md` and `LEVEL1_2_FULL_SUPPORT.md` so their
 claim gate includes selected-identity readiness as a separate layer on top of

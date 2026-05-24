@@ -9209,6 +9209,10 @@
         "catalogAdmissionStatus": "installed",
         "collectionId": "srd-5.2.1",
         "kind": "spell",
+        "selectedIdentity": {
+          "reason": "The Unit has no selected-identity-mbt evidence.",
+          "status": "missing-witness"
+        },
         "sourceRecordPath": "packages/surface/content/antimagic_field.json",
         "support": {
           "profileIds": [
@@ -9222,6 +9226,10 @@
         "catalogAdmissionStatus": "installed",
         "collectionId": "srd-5.2.1",
         "kind": "spell",
+        "selectedIdentity": {
+          "reason": "The Unit has no selected-identity-mbt evidence.",
+          "status": "missing-witness"
+        },
         "sourceRecordPath": "packages/surface/content/counterspell.json",
         "support": {
           "profileIds": [
@@ -9235,6 +9243,10 @@
         "catalogAdmissionStatus": "installed",
         "collectionId": "srd-5.2.1",
         "kind": "spell",
+        "selectedIdentity": {
+          "reason": "The Unit has no selected-identity-mbt evidence.",
+          "status": "missing-witness"
+        },
         "sourceRecordPath": "packages/surface/content/dispel_magic.json",
         "support": {
           "profileIds": [
@@ -9248,6 +9260,10 @@
         "catalogAdmissionStatus": "installed",
         "collectionId": "srd-5.2.1",
         "kind": "spell",
+        "selectedIdentity": {
+          "reason": "The Unit has no selected-identity-mbt evidence.",
+          "status": "missing-witness"
+        },
         "sourceRecordPath": "packages/surface/content/find_familiar.json",
         "support": {
           "profileIds": [
@@ -9261,6 +9277,10 @@
         "catalogAdmissionStatus": "installed",
         "collectionId": "srd-5.2.1",
         "kind": "spell",
+        "selectedIdentity": {
+          "reason": "The Unit has no selected-identity-mbt evidence.",
+          "status": "missing-witness"
+        },
         "sourceRecordPath": "packages/surface/content/fireball.json",
         "support": {
           "profileIds": [
@@ -9274,6 +9294,10 @@
         "catalogAdmissionStatus": "installed",
         "collectionId": "srd-5.2.1",
         "kind": "spell",
+        "selectedIdentity": {
+          "reason": "The Unit has no selected-identity-mbt evidence.",
+          "status": "missing-witness"
+        },
         "sourceRecordPath": "packages/surface/content/lightning_bolt.json",
         "support": {
           "profileIds": [
@@ -9287,6 +9311,11 @@
         "catalogAdmissionStatus": "installed",
         "collectionId": "srd-5.2.1",
         "kind": "spell",
+        "selectedIdentity": {
+          "owner": "runtime-detached table/perception/knowledge owner",
+          "reason": "The location knowledge, Hidden prevention, and observer-scoped Invisible benefit denial are table/perception knowledge facts outside promoted battle-runtime replay.",
+          "status": "missing-witness-deferred-not-applicable"
+        },
         "sourceRecordPath": "packages/surface/content/mind_spike.json",
         "support": {
           "profileIds": [
@@ -9300,6 +9329,10 @@
         "catalogAdmissionStatus": "installed",
         "collectionId": "srd-5.2.1",
         "kind": "spell",
+        "selectedIdentity": {
+          "reason": "The Unit has no selected-identity-mbt evidence.",
+          "status": "missing-witness"
+        },
         "sourceRecordPath": "packages/surface/content/shining_smite.json",
         "support": {
           "profileIds": [
@@ -9313,6 +9346,11 @@
         "catalogAdmissionStatus": "installed",
         "collectionId": "srd-5.2.1",
         "kind": "spell",
+        "selectedIdentity": {
+          "owner": "runtime-detached presentation/environment owner",
+          "reason": "The non-Booming minor wonders are presentation/environment adjudication and have no production replay boundary that can bind a selected Unit identity.",
+          "status": "missing-witness-deferred-not-applicable"
+        },
         "sourceRecordPath": "packages/surface/content/thaumaturgy.json",
         "support": {
           "profileIds": [
@@ -24651,6 +24689,11 @@
             "mechanic": "Altered Eyes, Fire Play, Invisible Hand, Phantom Sound, Tremors, and non-Booming presentation/environment consequences remain runtime-detached table adjudication"
           }
         ],
+        "deferredMechanicsSelectedIdentityDisposition": {
+          "owner": "runtime-detached presentation/environment owner",
+          "reason": "The non-Booming minor wonders are presentation/environment adjudication and have no production replay boundary that can bind a selected Unit identity.",
+          "tag": "not-applicable"
+        },
         "profileIds": [
           "spell.invocation-self-ability-check-advantage"
         ],
@@ -25253,6 +25296,11 @@
             "mechanic": "failed-save same-plane location knowledge while the spell remains active, target cannot become hidden from the caster while known, and Invisible condition grants no benefit against the caster while the caster has this knowledge"
           }
         ],
+        "deferredMechanicsSelectedIdentityDisposition": {
+          "owner": "runtime-detached table/perception/knowledge owner",
+          "reason": "The location knowledge, Hidden prevention, and observer-scoped Invisible benefit denial are table/perception knowledge facts outside promoted battle-runtime replay.",
+          "tag": "not-applicable"
+        },
         "profileIds": [
           "spell.invocation-damage-save-or-attack"
         ],

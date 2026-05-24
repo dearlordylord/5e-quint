@@ -1,6 +1,7 @@
 const {
   catalogAdmissionDispositionCategories,
   catalogAdmissionDispositionCategory,
+  selectedIdentityNonApplicableDispositionTag,
 } = require("./unit-profile-coverage-config.cjs");
 const {
   hasVariantMagicMechanics,
@@ -10,6 +11,15 @@ const {
   buildRulesKernelProfileJoin,
   buildRulesKernelSupportedUnitJoin,
 } = require("./rules-kernel-profile-join.cjs");
+
+const selectedIdentityStatus = Object.freeze({
+  missingWitness: "missing-witness",
+  missingWitnessDeferredNotApplicable:
+    "missing-witness-deferred-not-applicable",
+  notApplicable: "not-applicable",
+  notRequired: "not-required",
+  witnessPresent: "witness-present",
+});
 
 function stable(value) {
   if (Array.isArray(value)) return value.map(stable);
@@ -184,6 +194,54 @@ function groupUnitEvidence(unitEvidence) {
     grouped.set(row.unitId, current);
   }
   return grouped;
+}
+
+function selectedIdentityEvidenceStatus(unit, selectedIdentityMbtEvidenceTag) {
+  const claim = unit.claim;
+  if (
+    claim?.tag !== "supported-profile" &&
+    claim?.tag !== "profile-subset-supported"
+  ) {
+    return {
+      status: selectedIdentityStatus.notRequired,
+      reason:
+        "Selected identity replay evidence is only required for supported profile claims.",
+    };
+  }
+
+  const hasWitness = (unit.evidence ?? []).some(
+    (evidence) => evidence.tag === selectedIdentityMbtEvidenceTag,
+  );
+  if (hasWitness) {
+    return {
+      status: selectedIdentityStatus.witnessPresent,
+      reason: `The Unit has ${selectedIdentityMbtEvidenceTag} evidence.`,
+    };
+  }
+
+  const disposition = claim.selectedIdentityEvidenceDisposition;
+  if (disposition?.tag === selectedIdentityNonApplicableDispositionTag) {
+    return {
+      status: selectedIdentityStatus.notApplicable,
+      owner: disposition.owner,
+      reason: disposition.reason,
+    };
+  }
+
+  const deferredDisposition =
+    claim.deferredMechanicsSelectedIdentityDisposition;
+  if (deferredDisposition?.tag === selectedIdentityNonApplicableDispositionTag) {
+    return {
+      status: selectedIdentityStatus.missingWitnessDeferredNotApplicable,
+      owner: deferredDisposition.owner,
+      reason: deferredDisposition.reason,
+    };
+  }
+
+  return {
+    status: selectedIdentityStatus.missingWitness,
+    reason: `The Unit has no ${selectedIdentityMbtEvidenceTag} evidence.`,
+  };
 }
 
 function assertMetricDefinitionCoverage(matrixMetrics) {
@@ -471,16 +529,23 @@ function buildSelectedIdentityReplayGapReport({
 }) {
   const rows = units
     .filter((unit) => isSelectedIdentityReplayGapClaim(unit.claim))
-    .filter(
-      (unit) =>
-        !(unit.evidence ?? []).some(
-          (evidence) => evidence.tag === selectedIdentityMbtEvidenceTag,
-        ),
-    )
     .map((unit) => ({
+      unit,
+      selectedIdentity: selectedIdentityEvidenceStatus(
+        unit,
+        selectedIdentityMbtEvidenceTag,
+      ),
+    }))
+    .filter(
+      ({ selectedIdentity }) =>
+        selectedIdentity.status !== selectedIdentityStatus.witnessPresent &&
+        selectedIdentity.status !== selectedIdentityStatus.notApplicable,
+    )
+    .map(({ unit, selectedIdentity }) => ({
       catalogAdmissionStatus: unit.catalogAdmission.status,
       collectionId: unit.collectionId,
       kind: unit.kind,
+      selectedIdentity,
       sourceRecordPath: unit.sourceRecordPath,
       support: selectedIdentityReplayGapSupport(unit.claim),
       unitId: unit.unitId,
@@ -1073,17 +1138,19 @@ function renderReport(
     "",
     `This generated view lists ${selectedIdentityReplayGapClaimTags
       .map((tag) => `\`${tag}\``)
-      .join(" and ")} Units that have no \`${selectedIdentityMbtEvidenceTag}\` evidence row.`,
+      .join(" and ")} Units that have no \`${selectedIdentityMbtEvidenceTag}\` evidence row. Whole-claim non-applicable dispositions are excluded; deferred-portion non-applicable dispositions remain visible with their selected identity status.`,
     "",
-    "| Unit | Claim | Catalog | Collection | Kind | Profiles | Source |",
-    "| --- | --- | --- | --- | --- | --- | --- |",
+    "| Unit | Claim | Selected identity | Catalog | Collection | Kind | Profiles | Source |",
+    "| --- | --- | --- | --- | --- | --- | --- | --- |",
     ...(matrix.selectedIdentityReplayGaps.rows.length === 0
-      ? ["| _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ |"]
+      ? [
+          "| _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ |",
+        ]
       : matrix.selectedIdentityReplayGaps.rows.map((row) => {
           const profiles = row.support.profileIds
             .map((id) => `\`${id}\``)
             .join(", ");
-          return `| \`${row.unitId}\` | ${row.support.tag} | ${row.catalogAdmissionStatus} | ${row.collectionId} | ${row.kind} | ${profiles} | \`${row.sourceRecordPath}\` |`;
+          return `| \`${row.unitId}\` | ${row.support.tag} | ${row.selectedIdentity.status} | ${row.catalogAdmissionStatus} | ${row.collectionId} | ${row.kind} | ${profiles} | \`${row.sourceRecordPath}\` |`;
         })),
     "",
     "## Unsupported And Widening Pressure",
@@ -1125,5 +1192,7 @@ module.exports = {
   buildMatrix,
   percent,
   renderReport,
+  selectedIdentityEvidenceStatus,
+  selectedIdentityStatus,
   stable,
 };

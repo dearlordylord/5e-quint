@@ -708,6 +708,12 @@ function runSelfTest(root) {
               reason: "",
               note: "ambiguous optional disposition text",
             },
+            deferredMechanicsSelectedIdentityDisposition: {
+              tag: "not-needed",
+              owner: "",
+              reason: "",
+              note: "ambiguous deferred disposition text",
+            },
           },
         },
       ],
@@ -728,6 +734,12 @@ function runSelfTest(root) {
       "Unit fixture_bad_disposition selectedIdentityEvidenceDisposition.owner must be a non-empty string.",
       "Unit fixture_bad_disposition selectedIdentityEvidenceDisposition.reason must be a non-empty string.",
       "Unit fixture_bad_disposition selectedIdentityEvidenceDisposition requires a supported-profile or profile-subset-supported claim.",
+      "Unit fixture_bad_disposition deferredMechanicsSelectedIdentityDisposition must not include unsupported field note.",
+      "Unit fixture_bad_disposition deferredMechanicsSelectedIdentityDisposition.tag must be not-applicable.",
+      "Unit fixture_bad_disposition deferredMechanicsSelectedIdentityDisposition.owner must be a non-empty string.",
+      "Unit fixture_bad_disposition deferredMechanicsSelectedIdentityDisposition.reason must be a non-empty string.",
+      "Unit fixture_bad_disposition must not declare both selectedIdentityEvidenceDisposition and deferredMechanicsSelectedIdentityDisposition.",
+      "Unit fixture_bad_disposition deferredMechanicsSelectedIdentityDisposition requires a profile-subset-supported claim.",
     ]) {
       if (!malformedSelectedIdentityDispositionIssues.includes(expectedIssue)) {
         fail(

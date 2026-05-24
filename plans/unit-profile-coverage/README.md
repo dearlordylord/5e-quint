@@ -109,6 +109,16 @@ Current evidence tags are:
   actions with `UNIT-IDENTITY-MBT-REPLAY`, executes deterministic replay rows
   for those actions, and compares QCORE-observable projections.
 
+Profile-subset claims may also classify selected-identity expectations for
+their deferred mechanics. Use
+`deferredMechanicsSelectedIdentityDisposition: { tag: "not-applicable", owner,
+reason }` only when the deferred mechanics are closed at a non-runtime,
+table-owned, later-level, or other explicit boundary that has no production
+entrypoint where selected Unit identity could be replayed. This classification
+does not satisfy the replay witness for the supported runtime portion of the
+Unit; it only prevents the closed deferred portion from being mistaken for a
+missing witness.
+
 ## Classic Non-SRD Authoring Lane
 
 The full QMBT17 intake contract is

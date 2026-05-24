@@ -27,6 +27,16 @@ Product readiness is diagnostic lower-layer accounting. Rows in statuses other t
 | accepted | 279 |
 | accepted-no-battle-effect | 88 |
 
+### Selected Identity Replay Accounting
+
+This is diagnostic for the strict denominator. `witness-present` means a concrete selected Unit identity reaches an MBT/QNT replay owner; `missing-witness-deferred-not-applicable` means the claim still lacks a replay witness for its supported runtime portion while the deferred closed portion is explicitly outside selected-identity replay.
+
+| Selected identity status | Rows |
+| --- | ---: |
+| missing-witness-deferred-not-applicable | 1 |
+| not-required | 11 |
+| witness-present | 82 |
+
 ## Full-Support Claim Gate
 
 | Gate | Status | Blocking issue |
@@ -98,24 +108,24 @@ This gate checks authored records and retained Unit references that must resolve
 
 ## Non-Supported Frontier Detail
 
-| Unit | Status | Claim | Catalog | Closure kinds | Reason |
-| --- | --- | --- | --- | --- | --- |
-| `alarm` | closed-runtime-detached-table-adjudication | unsupported-profile | not-in-unit-catalog | outside-runtime-presentation-exploration | Alarm is an exploration/table procedure; promoted battle runtime does not own hidden monitoring, map patrol, or notification adjudication. |
-| `barbarian_weapon_mastery` | closed-later-level-only | profile-subset-supported | installed | later-level-only | The remaining Barbarian Weapon Mastery selected-weapon count increases occur only after level 1. |
-| `charm_person` | closed-runtime-detached-table-adjudication | profile-subset-supported | installed | social-knowledge-effect | Friendly disposition, the Charmed condition's Social Advantage, social interaction adjudication, and target knowledge when the spell ends are social/knowledge facts outside promoted battle runtime state. |
-| `comprehend_languages` | closed-runtime-detached-table-adjudication | unsupported-profile | not-in-unit-catalog | outside-runtime-presentation-exploration | Language comprehension and secret-message adjudication are table-owned communication facts outside promoted battle runtime. |
-| `detect_evil_and_good` | closed-runtime-detached-table-adjudication | unsupported-profile | installed | outside-runtime-presentation-exploration | Sensing, occlusion, and Hallow discovery are exploration/detection state outside promoted battle runtime. |
-| `detect_magic` | closed-runtime-detached-table-adjudication | unsupported-profile | installed | outside-runtime-presentation-exploration | Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime. |
-| `detect_poison_and_disease` | closed-runtime-detached-table-adjudication | unsupported-profile | installed | outside-runtime-presentation-exploration | Poison, disease, creature-kind sensing, occlusion, and identification are exploration/detection state outside promoted battle runtime. |
-| `druid_druidic` | closed-character-fact-and-runtime-detached-split | unsupported-profile | installed | character-fact-and-runtime-detached-split | Druidic hidden-message spotting, Investigation adjudication, and deciphering are runtime-detached table adjudication outside promoted battle runtime; Druidic language and always-prepared Speak with Animals Spell Access remain character-owned CharacterBuild facts derived from authored Surface content. |
-| `fighter_weapon_mastery` | closed-later-level-only | profile-subset-supported | installed | later-level-only | The remaining Fighter Weapon Mastery selected-weapon count increases occur only after level 1. |
-| `identify` | closed-runtime-detached-table-adjudication | unsupported-profile | not-in-unit-catalog | outside-runtime-presentation-exploration | Identification facts are supplied by the table or item/knowledge owner; promoted battle runtime does not model discovery of hidden item or spell facts. |
-| `minor_illusion` | closed-runtime-detached-table-adjudication | unsupported-profile | installed | outside-runtime-presentation-exploration | Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are illusion/exploration state outside promoted battle runtime. |
-| `ranger_favored_enemy` | closed-later-level-only | profile-subset-supported | installed | later-level-only | The remaining Favored Enemy free-cast count changes occur only after level 1. |
-| `rogue_thieves_cant` | closed-character-fact-and-runtime-detached-split | unsupported-profile | installed | character-fact-and-runtime-detached-split | Thieves' Cant communication adjudication is runtime-detached table adjudication outside promoted battle runtime; Thieves' Cant and the additional Character Creation language choice remain character-owned CharacterBuild facts derived from authored Surface content. |
-| `silent_image` | closed-runtime-detached-table-adjudication | unsupported-profile | not-in-unit-catalog | outside-runtime-presentation-exploration | Silent Image creates table-adjudicated illusion and presentation state; promoted battle runtime does not own image rendering or discovery adjudication. |
-| `speak_with_animals` | closed-runtime-detached-table-adjudication | unsupported-profile | not-in-unit-catalog | outside-runtime-presentation-exploration | Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes. |
-| `thaumaturgy` | closed-runtime-detached-table-adjudication | profile-subset-supported | installed | outside-runtime-presentation-exploration | Thaumaturgy's non-Booming minor wonders alter appearance, flames, doors/windows, sounds, and tremors; promoted battle runtime owns only Booming Voice's check Advantage and consumes total active-effect count witnesses for the shared cap. |
+| Unit | Status | Claim | Selected identity | Catalog | Closure kinds | Reason |
+| --- | --- | --- | --- | --- | --- | --- |
+| `alarm` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | not-in-unit-catalog | outside-runtime-presentation-exploration | Alarm is an exploration/table procedure; promoted battle runtime does not own hidden monitoring, map patrol, or notification adjudication. |
+| `barbarian_weapon_mastery` | closed-later-level-only | profile-subset-supported | witness-present | installed | later-level-only | The remaining Barbarian Weapon Mastery selected-weapon count increases occur only after level 1. |
+| `charm_person` | closed-runtime-detached-table-adjudication | profile-subset-supported | witness-present | installed | social-knowledge-effect | Friendly disposition, the Charmed condition's Social Advantage, social interaction adjudication, and target knowledge when the spell ends are social/knowledge facts outside promoted battle runtime state. |
+| `comprehend_languages` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | not-in-unit-catalog | outside-runtime-presentation-exploration | Language comprehension and secret-message adjudication are table-owned communication facts outside promoted battle runtime. |
+| `detect_evil_and_good` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | installed | outside-runtime-presentation-exploration | Sensing, occlusion, and Hallow discovery are exploration/detection state outside promoted battle runtime. |
+| `detect_magic` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | installed | outside-runtime-presentation-exploration | Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime. |
+| `detect_poison_and_disease` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | installed | outside-runtime-presentation-exploration | Poison, disease, creature-kind sensing, occlusion, and identification are exploration/detection state outside promoted battle runtime. |
+| `druid_druidic` | closed-character-fact-and-runtime-detached-split | unsupported-profile | not-required | installed | character-fact-and-runtime-detached-split | Druidic hidden-message spotting, Investigation adjudication, and deciphering are runtime-detached table adjudication outside promoted battle runtime; Druidic language and always-prepared Speak with Animals Spell Access remain character-owned CharacterBuild facts derived from authored Surface content. |
+| `fighter_weapon_mastery` | closed-later-level-only | profile-subset-supported | witness-present | installed | later-level-only | The remaining Fighter Weapon Mastery selected-weapon count increases occur only after level 1. |
+| `identify` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | not-in-unit-catalog | outside-runtime-presentation-exploration | Identification facts are supplied by the table or item/knowledge owner; promoted battle runtime does not model discovery of hidden item or spell facts. |
+| `minor_illusion` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | installed | outside-runtime-presentation-exploration | Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are illusion/exploration state outside promoted battle runtime. |
+| `ranger_favored_enemy` | closed-later-level-only | profile-subset-supported | witness-present | installed | later-level-only | The remaining Favored Enemy free-cast count changes occur only after level 1. |
+| `rogue_thieves_cant` | closed-character-fact-and-runtime-detached-split | unsupported-profile | not-required | installed | character-fact-and-runtime-detached-split | Thieves' Cant communication adjudication is runtime-detached table adjudication outside promoted battle runtime; Thieves' Cant and the additional Character Creation language choice remain character-owned CharacterBuild facts derived from authored Surface content. |
+| `silent_image` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | not-in-unit-catalog | outside-runtime-presentation-exploration | Silent Image creates table-adjudicated illusion and presentation state; promoted battle runtime does not own image rendering or discovery adjudication. |
+| `speak_with_animals` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | not-in-unit-catalog | outside-runtime-presentation-exploration | Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes. |
+| `thaumaturgy` | closed-runtime-detached-table-adjudication | profile-subset-supported | missing-witness-deferred-not-applicable | installed | outside-runtime-presentation-exploration | Thaumaturgy's non-Booming minor wonders alter appearance, flames, doors/windows, sounds, and tremors; promoted battle runtime owns only Booming Voice's check Advantage and consumes total active-effect count witnesses for the shared cap. |
 
 ## Outside Denominator Pressure
 

@@ -3,8 +3,13 @@ const path = require("node:path");
 const { fail } = require("./unit-profile-coverage-io.cjs");
 const {
   battleReadinessClosureKind,
+  selectedIdentityMbtEvidenceTag,
 } = require("./unit-profile-coverage-config.cjs");
-const { percent, stable } = require("./unit-profile-coverage-report.cjs");
+const {
+  percent,
+  selectedIdentityEvidenceStatus,
+  stable,
+} = require("./unit-profile-coverage-report.cjs");
 const {
   buildRulesKernelSupportedUnitJoin,
   rulesKernelUnitJoin,
@@ -821,6 +826,10 @@ function rowForStrictUnit(unit, sourceRows, rulesKernelProfileJoin) {
     collectionId: unit.collectionId,
     executableMechanics: unit.executableMechanics,
     kind: unit.kind,
+    selectedIdentity: selectedIdentityEvidenceStatus(
+      unit,
+      selectedIdentityMbtEvidenceTag,
+    ),
     sourceRecordPath: unit.sourceRecordPath,
     closureKinds: closureKindsForClaim(unit.claim),
     rulesKernel:
@@ -859,6 +868,20 @@ function groupRowsByClaimTag(rows) {
     Array.from(
       rows.reduce((counts, row) => {
         counts.set(row.claimTag, (counts.get(row.claimTag) ?? 0) + 1);
+        return counts;
+      }, new Map()),
+    ).sort(([a], [b]) => a.localeCompare(b)),
+  );
+}
+
+function groupRowsBySelectedIdentityStatus(rows) {
+  return Object.fromEntries(
+    Array.from(
+      rows.reduce((counts, row) => {
+        counts.set(
+          row.selectedIdentity.status,
+          (counts.get(row.selectedIdentity.status) ?? 0) + 1,
+        );
         return counts;
       }, new Map()),
     ).sort(([a], [b]) => a.localeCompare(b)),
@@ -1069,6 +1092,8 @@ function buildStrictFullSupport(matrix, srdUnitInventory, scope, options = {}) {
       nonSupportedFrontier:
         strictRows.length - strictRuntimeProfileSupport.length,
       groupsByClaimTag: groupRowsByClaimTag(strictRows),
+      groupsBySelectedIdentityStatus:
+        groupRowsBySelectedIdentityStatus(strictRows),
       groupsByStatus: Object.fromEntries(
         groups.map((group) => [group.status, group.count]),
       ),
@@ -1150,6 +1175,12 @@ function renderProductReadinessStatusRows(metric) {
   );
 }
 
+function renderSelectedIdentityStatusRows(groupsBySelectedIdentityStatus) {
+  return Object.entries(groupsBySelectedIdentityStatus).map(
+    ([status, count]) => `| ${md(status)} | ${count} |`,
+  );
+}
+
 function renderReadinessBlockerRows(rows) {
   if (rows.length === 0) {
     return ["| _none_ | _none_ | _none_ | _none_ | _none_ |"];
@@ -1189,6 +1220,16 @@ function renderStrictFullSupport(report, scope) {
     "| Status | Rows |",
     "| --- | ---: |",
     ...renderProductReadinessStatusRows(report.metrics.productReadiness),
+    "",
+    "### Selected Identity Replay Accounting",
+    "",
+    "This is diagnostic for the strict denominator. `witness-present` means a concrete selected Unit identity reaches an MBT/QNT replay owner; `missing-witness-deferred-not-applicable` means the claim still lacks a replay witness for its supported runtime portion while the deferred closed portion is explicitly outside selected-identity replay.",
+    "",
+    "| Selected identity status | Rows |",
+    "| --- | ---: |",
+    ...renderSelectedIdentityStatusRows(
+      report.summary.groupsBySelectedIdentityStatus,
+    ),
     "",
     "## Full-Support Claim Gate",
     "",
@@ -1291,11 +1332,11 @@ function renderStrictFullSupport(report, scope) {
     "",
     "## Non-Supported Frontier Detail",
     "",
-    "| Unit | Status | Claim | Catalog | Closure kinds | Reason |",
-    "| --- | --- | --- | --- | --- | --- |",
+    "| Unit | Status | Claim | Selected identity | Catalog | Closure kinds | Reason |",
+    "| --- | --- | --- | --- | --- | --- | --- |",
     ...report.frontierRows.map(
       (row) =>
-        `| \`${row.unitId}\` | ${row.status} | ${row.claimTag} | ${row.catalogStatus ?? "missing"} | ${row.closureKinds.length === 0 ? "_none_" : row.closureKinds.join(", ")} | ${md(row.reason)} |`,
+        `| \`${row.unitId}\` | ${row.status} | ${row.claimTag} | ${row.selectedIdentity.status} | ${row.catalogStatus ?? "missing"} | ${row.closureKinds.length === 0 ? "_none_" : row.closureKinds.join(", ")} | ${md(row.reason)} |`,
     ),
     "",
     "## Outside Denominator Pressure",
