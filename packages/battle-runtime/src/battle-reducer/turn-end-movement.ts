@@ -110,6 +110,10 @@ import {
 } from "./damage-apply.ts";
 
 import { maybeOpenReactionWindow, snapshotBattle } from "./dispatcher.ts";
+import {
+  flamingSphereDamageAfterSave,
+  flamingSphereMoveDistanceAccepted,
+} from "./flaming-sphere-hazard-ram.ts";
 
 import { hideousLaughterRepeatSavingThrowOutcomeHole } from "./hideous-laughter-repeat-save.ts";
 
@@ -2818,7 +2822,10 @@ function validateFlamingSphereRamMovement(
   ) {
     return "Movable zone ram movement distance must be a positive integer.";
   }
-  return Number(fill.value.moveFeet) <= Number(hole.movableZone.maxMoveFeet)
+  return flamingSphereMoveDistanceAccepted({
+    moveFeet: Number(fill.value.moveFeet),
+    maxMoveFeet: Number(hole.movableZone.maxMoveFeet),
+  })
     ? null
     : "Movable zone ram movement distance exceeds the spell's maximum.";
 }
@@ -2836,7 +2843,10 @@ function validateFlamingSphereRepositionMovement(
   ) {
     return "Movable zone reposition movement distance must be a positive integer.";
   }
-  return Number(fill.value.moveFeet) <= Number(hole.movableZone.maxMoveFeet)
+  return flamingSphereMoveDistanceAccepted({
+    moveFeet: Number(fill.value.moveFeet),
+    maxMoveFeet: Number(hole.movableZone.maxMoveFeet),
+  })
     ? null
     : "Movable zone reposition movement distance exceeds the spell's maximum.";
 }
@@ -2850,9 +2860,10 @@ function flamingSphereAdjustedDamage(input: {
   const rolledDamage =
     rolledDiceTotal(input.damageFill.value) +
     (input.effect.damage.expr.flat ?? 0);
-  const saveAdjustedDamage = input.saveSucceeded
-    ? Math.floor(rolledDamage / 2)
-    : rolledDamage;
+  const saveAdjustedDamage = flamingSphereDamageAfterSave({
+    rolledDamage,
+    savingThrowSucceeded: input.saveSucceeded,
+  });
   return damageAmountAfterTargetAdjustments(
     input.target,
     saveAdjustedDamage,

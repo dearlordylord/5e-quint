@@ -15,6 +15,7 @@ module battleRuntimeGroundCommand {
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
   import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
   import battleRuntimeShapeShifting.* from "./battle-runtime-shape-shifting"
+  import battleRuntimeFlamingSphereHazardRam.* from "./battle-runtime-flaming-sphere-hazard-ram"
 
   pure val greaseDurationTicks = 10
   pure val greaseAreaId = 1
@@ -31,10 +32,7 @@ module battleRuntimeGroundCommand {
   pure val antimagicFieldDurationTicks = 600
   pure val antimagicFieldAreaId = 6
   pure val antimagicFieldRadiusFeet = 10
-  pure val flamingSphereDurationTicks = 10
   pure val flamingSphereAreaId = 3
-  pure val flamingSphereDiameterFeet = 5
-  pure val flamingSphereRamMaxMoveFeet = 30
   pure val moonbeamDurationTicks = 10
   pure val moonbeamAreaId = 6
   pure val moonbeamRadiusFeet = 5
@@ -346,9 +344,6 @@ module battleRuntimeGroundCommand {
       | _ => false
     })
 
-  pure def flamingSphereDamageDice(slotLevel: int): int =
-    2 + (slotLevel - 2)
-
   pure def activeEffectsWithoutFlamingSphere(effects: Set[ActiveEffect], areaId: int): Set[ActiveEffect] =
     effects.filter(effect => match effect {
       | FlamingSphere(data) => data.areaId != areaId
@@ -402,12 +397,6 @@ module battleRuntimeGroundCommand {
         | _ => 0
       })
       .fold(0, (highest, moveFeet) => if (highest > moveFeet) highest else moveFeet)
-
-  pure def flamingSphereDamageAfterSave(rolledDamage: int, savingThrowSucceeded: bool): int =
-    if (savingThrowSucceeded)
-      rolledDamage / 2
-    else
-      rolledDamage
 
   pure def flamingSphereAdjustedDamage(rolledDamage: int, savingThrowSucceeded: bool): int =
     damageAfterAdjustments(

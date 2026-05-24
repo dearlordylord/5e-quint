@@ -878,19 +878,27 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-flaming-sphere.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/flaming-sphere-hazard-ram.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
         "spell.invocation-flaming-sphere-hazard-ram"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime.qnt",
+        "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts",
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/flaming-sphere-hazard-ram.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
         "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
         "packages/battle-runtime/src/battle-subjects.ts"
@@ -5052,6 +5060,14 @@
         "BATTLE.COMMAND.OPTION_AND_NEXT_TURN"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-ground-command.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt is the bounded composite slice QNT owner carrying executable Flaming Sphere hazard and ram semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt",
       "role": "semantic-core"
     },
     {

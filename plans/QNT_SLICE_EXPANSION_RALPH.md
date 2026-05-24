@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "QNTSLICE-FLAMING-SPHERE-HAZARD-RAM",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add Flaming Sphere Hazard/Ram Composite Slice"
     },
     {
@@ -285,7 +285,7 @@ Acceptance:
 
 ### Task 6 - QNTSLICE-FLAMING-SPHERE-HAZARD-RAM - Add Flaming Sphere Hazard/Ram Composite Slice
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -329,6 +329,15 @@ Output:
   object ignition, lighting projection, initiative, and unrelated active effects
   remain fills or out of scope; the slice owns only the sphere lifecycle and
   target damage transition.
+
+Result:
+
+- Added a bounded Flaming Sphere hazard/ram composite QNT slice and sibling
+  MBT harness.
+- Extracted the production TypeScript mirror for save-adjusted Fire damage and
+  ram/reposition movement admission.
+- Registered the new slice owner and focused MBT parity witness in
+  rules-kernel coverage rows.
 
 Acceptance:
 
