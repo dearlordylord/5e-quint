@@ -1,0 +1,445 @@
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-self-teleport
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE
+// RAW trace:
+// - .references/srd-5.2.1/Spells/Descriptions-M-P.md#Misty Step:
+//   Misty Step is a level 2 Bonus Action spell with range Self that teleports
+//   the caster up to 30 feet to an unoccupied space they can see.
+// - .references/srd-5.2.1/Rules-Glossary.md#Teleportation:
+//   teleportation does not expend Movement, never provokes Opportunity
+//   Attacks, and transports equipment the creature is wearing and carrying.
+// - .references/srd-5.2.1/Playing-the-Game.md#Bonus Actions and
+//   #Opportunity Attacks: a creature can take one Bonus Action on its turn,
+//   and teleportation avoids Opportunity Attacks.
+// - UBIQUITOUS_LANGUAGE.md: Bonus Action, Spell Slot, Movement,
+//   Opportunity Attack, Teleportation, and Holding / Wielding.
+import * as path from "node:path";
+
+import { canSpendBonusAction } from "@dnd/shared-algebras/action-economy-algebra";
+import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
+import { describe, expect, it } from "vitest";
+
+import type {
+  BattleHole,
+  BattleResolutionResult,
+  BattleState,
+} from "./index.ts";
+import { resolveBattleSubject, snapshotBattle } from "./index.ts";
+import {
+  requireCombatant,
+  requireHole,
+} from "./unit-profile-admission-creature-fixture-support.ts";
+import {
+  maybeBonusSpellAct,
+  teleportDestinationFill,
+} from "./unit-profile-admission-spell-fill-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import {
+  battleTablePositionId,
+  movementFeet,
+} from "./unit-profile-admission-test-support.ts";
+import {
+  mistyStepUnitId,
+  spellCasterId,
+} from "./unit-profile-admission-catalog-support.ts";
+
+const LAST_RESULTS = [
+  "init",
+  "destinationWitnessRequired",
+  "selfTeleported",
+] as const;
+type LastResult = (typeof LAST_RESULTS)[number];
+const LAST_RESULT_SET: ReadonlySet<string> = new Set(LAST_RESULTS);
+
+type SelfTeleportProjection = {
+  readonly bonusActionAvailable: boolean;
+  readonly spellAvailable: boolean;
+  readonly destinationWitnessAvailable: boolean;
+  readonly destinationWitnessConsumed: boolean;
+  readonly teleportEmitted: boolean;
+  readonly movementSpentFeet: number;
+  readonly movementRemainingFeet: number;
+  readonly spellSlotExpended: number;
+  readonly spellSlotCommittedThisTurn: boolean;
+  readonly noOpportunityAttackProjected: boolean;
+  readonly equipmentTransportProjected: boolean;
+  readonly destinationDistanceFeet: number;
+  readonly lastResult: LastResult;
+};
+
+type SelfTeleportOutcome = NonNullable<
+  Extract<BattleResolutionResult, { readonly tag: "resolved" }>["teleports"]
+>[number];
+
+type SelfTeleportRuntimeState = {
+  readonly battle: BattleState;
+  readonly lastTeleport: SelfTeleportOutcome | undefined;
+  readonly lastResult: LastResult;
+};
+
+const MISTY_STEP_DESTINATION_ID = battleTablePositionId(
+  "focused-misty-step-destination",
+);
+const MISTY_STEP_DESTINATION_DISTANCE_FEET = movementFeet(30);
+
+const driverSchema = {
+  init: {},
+  doRequestDestinationWitness: {},
+  doCastSelfTeleport: {},
+  doStutter: {},
+  step: {},
+} as const;
+
+function createSelfTeleportLifecycleDriver() {
+  return defineDriver(driverSchema, () => {
+    let state = initialRuntimeState();
+    return {
+      init: () => {
+        state = initialRuntimeState();
+      },
+      doRequestDestinationWitness: () => {
+        state = requestDestinationWitness(state);
+      },
+      doCastSelfTeleport: () => {
+        state = castSelfTeleport(state);
+      },
+      doStutter: () => {},
+      step: () => {},
+      getState: () => selfTeleportProjection(state),
+    };
+  });
+}
+
+const selfTeleportStateCheck = stateCheck(
+  normalizeSelfTeleportQuintState,
+  compareSelfTeleportStates,
+);
+
+describe("Self-teleport lifecycle MBT parity", () => {
+  it("requires a caller-supplied destination witness before resolving", () => {
+    const requested = requestDestinationWitness(initialRuntimeState());
+
+    expect(selfTeleportProjection(requested)).toMatchObject({
+      bonusActionAvailable: true,
+      spellAvailable: true,
+      destinationWitnessAvailable: true,
+      destinationWitnessConsumed: false,
+      teleportEmitted: false,
+      movementSpentFeet: 0,
+      movementRemainingFeet: 30,
+      spellSlotExpended: 0,
+      spellSlotCommittedThisTurn: false,
+      noOpportunityAttackProjected: false,
+      equipmentTransportProjected: false,
+      destinationDistanceFeet: 0,
+      lastResult: "destinationWitnessRequired",
+    });
+  });
+
+  it("spends a Bonus Action and Spell Slot for the self-teleport", () => {
+    const cast = castSelfTeleport(initialRuntimeState());
+
+    expect(selfTeleportProjection(cast)).toMatchObject({
+      bonusActionAvailable: false,
+      spellAvailable: false,
+      destinationWitnessAvailable: false,
+      destinationWitnessConsumed: true,
+      teleportEmitted: true,
+      movementSpentFeet: 0,
+      movementRemainingFeet: 30,
+      spellSlotExpended: 1,
+      spellSlotCommittedThisTurn: true,
+      lastResult: "selfTeleported",
+    });
+  });
+
+  it("projects teleport as non-Movement, non-Opportunity-Attack transport with worn and carried equipment", () => {
+    const cast = castSelfTeleport(initialRuntimeState());
+
+    expect(selfTeleportProjection(cast)).toMatchObject({
+      teleportEmitted: true,
+      movementSpentFeet: 0,
+      movementRemainingFeet: 30,
+      noOpportunityAttackProjected: true,
+      equipmentTransportProjected: true,
+      destinationDistanceFeet: 30,
+      lastResult: "selfTeleported",
+    });
+    expect(cast.lastTeleport).toMatchObject({
+      kind: "selfTeleport",
+      actorId: spellCasterId,
+      destination: {
+        kind: "unoccupiedVisibleDestination",
+        destinationId: MISTY_STEP_DESTINATION_ID,
+        distanceFeet: MISTY_STEP_DESTINATION_DISTANCE_FEET,
+      },
+      spendsMovement: false,
+      provokesOpportunityAttacks: false,
+      transportsWornAndCarriedEquipment: true,
+    });
+  });
+
+  it("matches the focused self-teleport lifecycle against bounded random MBT traces", async () => {
+    await run({
+      spec: path.resolve(
+        import.meta.dirname,
+        "../battle-runtime-self-teleport-lifecycle.mbt.qnt",
+      ),
+      init: "init",
+      step: "step",
+      driver: createSelfTeleportLifecycleDriver(),
+      backend: "typescript",
+      nTraces: 10,
+      maxSteps: 4,
+      stateCheck: selfTeleportStateCheck,
+    });
+  }, 120_000);
+});
+
+function initialRuntimeState(): SelfTeleportRuntimeState {
+  return {
+    battle: spellBattle({
+      preparedSpells: [spellRecord(mistyStepUnitId)],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    }),
+    lastTeleport: undefined,
+    lastResult: "init",
+  };
+}
+
+function requestDestinationWitness(
+  state: SelfTeleportRuntimeState,
+): SelfTeleportRuntimeState {
+  const act = requireSelfTeleportAct(state.battle);
+  const destinationHole = requireTeleportDestinationHole(act.initialHoles);
+  expect(
+    resolveBattleSubject({
+      state: state.battle,
+      subject: act.subject,
+      fills: [],
+    }),
+  ).toMatchObject({ tag: "needsHoles", holes: [destinationHole] });
+  return { ...state, lastResult: "destinationWitnessRequired" };
+}
+
+function castSelfTeleport(
+  state: SelfTeleportRuntimeState,
+): SelfTeleportRuntimeState {
+  const act = requireSelfTeleportAct(state.battle);
+  const destinationHole = requireTeleportDestinationHole(act.initialHoles);
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state: state.battle,
+      subject: act.subject,
+      fills: [
+        teleportDestinationFill({
+          hole: destinationHole,
+          destinationId: MISTY_STEP_DESTINATION_ID,
+          distanceFeet: Number(MISTY_STEP_DESTINATION_DISTANCE_FEET),
+        }),
+      ],
+    }),
+    "Expected Misty Step self-teleport to resolve.",
+  );
+  const teleport = singleSelfTeleportOutcome(resolved);
+  return {
+    battle: resolved.state,
+    lastTeleport: teleport,
+    lastResult: "selfTeleported",
+  };
+}
+
+function selfTeleportProjection(
+  state: SelfTeleportRuntimeState,
+): SelfTeleportProjection {
+  const snapshot = snapshotBattle(state.battle);
+  const caster = snapshot.combatants.find(
+    (combatant) => combatant.combatantId === spellCasterId,
+  );
+  if (caster === undefined) {
+    throw new Error("Expected self-teleport caster in battle snapshot.");
+  }
+  const act = maybeSelfTeleportAct(state.battle);
+  return {
+    bonusActionAvailable: canSpendBonusAction(
+      state.battle.currentTurnResources,
+    ),
+    spellAvailable: act !== undefined,
+    destinationWitnessAvailable:
+      act?.initialHoles.some((hole) => hole.kind === "teleportDestination") ??
+      false,
+    destinationWitnessConsumed: state.lastTeleport !== undefined,
+    teleportEmitted: state.lastTeleport !== undefined,
+    movementSpentFeet: Number(caster.movement.spentFeet),
+    movementRemainingFeet: Number(caster.movement.remainingFeet),
+    spellSlotExpended: casterSpellSlotExpended(state.battle),
+    spellSlotCommittedThisTurn:
+      state.battle.currentTurnResources.spellSlotUsesThisTurn.some(
+        (use) => use.kind === "committed" && use.combatantId === spellCasterId,
+      ),
+    noOpportunityAttackProjected:
+      state.lastTeleport?.provokesOpportunityAttacks === false,
+    equipmentTransportProjected:
+      state.lastTeleport?.transportsWornAndCarriedEquipment === true,
+    destinationDistanceFeet: Number(
+      state.lastTeleport?.destination.distanceFeet ?? 0,
+    ),
+    lastResult: state.lastResult,
+  };
+}
+
+function maybeSelfTeleportAct(state: BattleState) {
+  const act = maybeBonusSpellAct({
+    state,
+    spellId: mistyStepUnitId,
+    slotLevel: 2,
+  });
+  return act?.subject.invocation.tag === "spellSlot" &&
+    act.subject.invocation.procedure === "selfTeleport"
+    ? act
+    : undefined;
+}
+
+function requireSelfTeleportAct(state: BattleState) {
+  const act = maybeSelfTeleportAct(state);
+  expect(act).toBeDefined();
+  if (act === undefined) {
+    throw new Error("Expected Misty Step self-teleport act.");
+  }
+  return act;
+}
+
+function requireTeleportDestinationHole(
+  holes: readonly BattleHole[],
+): Extract<BattleHole, { readonly kind: "teleportDestination" }> {
+  return requireHole(holes, "teleportDestination");
+}
+
+function requireResolved(
+  result: BattleResolutionResult,
+  message: string,
+): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
+  expect(result).toMatchObject({ tag: "resolved" });
+  if (result.tag !== "resolved") {
+    throw new Error(message);
+  }
+  return result;
+}
+
+function singleSelfTeleportOutcome(
+  result: Extract<BattleResolutionResult, { readonly tag: "resolved" }>,
+): SelfTeleportOutcome {
+  expect(result.teleports).toHaveLength(1);
+  const teleport = result.teleports?.[0];
+  if (teleport === undefined) {
+    throw new Error("Expected Misty Step self-teleport outcome.");
+  }
+  return teleport;
+}
+
+function casterSpellSlotExpended(state: BattleState): number {
+  const caster = requireCombatant(state, spellCasterId);
+  if (caster.origin.kind !== "character") {
+    return 0;
+  }
+  const mistyStepSlot = caster.origin.spellcasting?.spellSlots.find(
+    (slot) => Number(slot.spellLevel) === 2,
+  );
+  return Number(mistyStepSlot?.expended ?? 0);
+}
+
+function normalizeSelfTeleportQuintState(raw: unknown): SelfTeleportProjection {
+  const state = quintStateRecord(raw);
+  return {
+    bonusActionAvailable: booleanField(state, "qBonusActionAvailable"),
+    spellAvailable: booleanField(state, "qSpellAvailable"),
+    destinationWitnessAvailable: booleanField(
+      state,
+      "qDestinationWitnessAvailable",
+    ),
+    destinationWitnessConsumed: booleanField(
+      state,
+      "qDestinationWitnessConsumed",
+    ),
+    teleportEmitted: booleanField(state, "qTeleportEmitted"),
+    movementSpentFeet: numberField(state, "qMovementSpentFeet"),
+    movementRemainingFeet: numberField(state, "qMovementRemainingFeet"),
+    spellSlotExpended: numberField(state, "qSpellSlotExpended"),
+    spellSlotCommittedThisTurn: booleanField(
+      state,
+      "qSpellSlotCommittedThisTurn",
+    ),
+    noOpportunityAttackProjected: booleanField(
+      state,
+      "qNoOpportunityAttackProjected",
+    ),
+    equipmentTransportProjected: booleanField(
+      state,
+      "qEquipmentTransportProjected",
+    ),
+    destinationDistanceFeet: numberField(state, "qDestinationDistanceFeet"),
+    lastResult: lastResult(state["qLastResult"]),
+  };
+}
+
+function compareSelfTeleportStates(
+  runtime: SelfTeleportProjection,
+  quint: SelfTeleportProjection,
+): boolean {
+  expect(runtime).toStrictEqual(quint);
+  return true;
+}
+
+function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
+  expect(raw).toBeTypeOf("object");
+  expect(raw).not.toBeNull();
+  if (!isReadonlyRecord(raw)) {
+    throw new Error("Expected Quint state record.");
+  }
+  return raw;
+}
+
+function isReadonlyRecord(
+  raw: unknown,
+): raw is Readonly<Record<string, unknown>> {
+  return typeof raw === "object" && raw !== null;
+}
+
+function booleanField(
+  state: Readonly<Record<string, unknown>>,
+  field: string,
+): boolean {
+  const value = state[field];
+  expect(value).toBeTypeOf("boolean");
+  if (typeof value !== "boolean") {
+    throw new Error(`Expected boolean Quint field ${field}.`);
+  }
+  return value;
+}
+
+function numberField(
+  state: Readonly<Record<string, unknown>>,
+  field: string,
+): number {
+  const value = state[field];
+  if (typeof value === "bigint") {
+    return Number(value);
+  }
+  expect(value).toBeTypeOf("number");
+  if (typeof value !== "number") {
+    throw new Error(`Expected number Quint field ${field}.`);
+  }
+  return value;
+}
+
+function lastResult(raw: unknown): LastResult {
+  expect(raw).toBeTypeOf("string");
+  if (typeof raw !== "string" || !isLastResult(raw)) {
+    throw new Error(`Unexpected self-teleport result ${String(raw)}.`);
+  }
+  return raw;
+}
+
+function isLastResult(value: string): value is LastResult {
+  return LAST_RESULT_SET.has(value);
+}

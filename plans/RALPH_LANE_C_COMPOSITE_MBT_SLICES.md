@@ -167,7 +167,7 @@ slice candidates remain.
     {
       "number": 26,
       "id": "C26-SELF-TELEPORT-SLICE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Add self-teleport lifecycle focused MBT"
     },
     {
@@ -258,7 +258,7 @@ Lane C must not:
 | 23 | C23-QUICKENED-SPELL-GOVERNOR-SLICE - Add Quickened Spell governor focused MBT | done | none | Runtime-test-only obligation; known selection, Sorcery Point affordability, action rewrite, and same-turn leveled-spell governor. |
 | 24 | C24-DARKNESS-POINT-ORIGIN-SLICE - Add Darkness point-origin lifecycle focused MBT | done | none | Runtime-test-only obligation; point-origin magical Darkness area identity, witness consumption, Concentration, and cleanup. |
 | 25 | C25-SPELL-CREATED-HELD-OBJECT-SLICE - Add spell-created held object lifecycle focused MBT | done | none | Runtime-test-only obligation; Flame Blade-style held object, hand occupancy, active-object attack, and cleanup. |
-| 26 | C26-SELF-TELEPORT-SLICE - Add self-teleport lifecycle focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; Misty Step-style destination witness, Bonus Action and Spell Slot spend, and no-OA projection. |
+| 26 | C26-SELF-TELEPORT-SLICE - Add self-teleport lifecycle focused MBT | done | none | Runtime-test-only obligation; Misty Step-style destination witness, Bonus Action and Spell Slot spend, and no-OA projection. |
 | 27 | C27-BLUR-ATTACK-DEFENSE-SLICE - Add Blur attack-roll defense focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; self defense effect, Blindsight/Truesight bypass witnesses, roll-mode cancellation, and cleanup. |
 | 28 | C28-SCALAR-BUFF-ACTIVE-EFFECTS-SLICE - Add scalar buff active effects focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; scalar buffs for AC, Speed, special speeds, HP maximum, and Temporary Hit Points. |
 | 29 | C29-SELF-TRANSFORMATION-MODE-SLICE - Add self-transformation mode focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; Alter Self mode choice/replacement, natural-weapon override, and Aquatic projections. |
@@ -614,7 +614,7 @@ typecheck when TS changes, and `git diff --check`.
 
 ### Task 26 - C26-SELF-TELEPORT-SLICE - Add self-teleport lifecycle focused MBT
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: add a focused `*.mbt.qnt` plus `src/*.mbt.test.ts` witness and package
 script for `BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE`.

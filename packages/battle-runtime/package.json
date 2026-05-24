@@ -30,6 +30,7 @@
     "test:mbt:ray-of-enfeeblement-lifecycle": "vitest run src/ray-of-enfeeblement-lifecycle.mbt.test.ts",
     "test:mbt:sanctuary-selected-identity": "vitest run src/sanctuary-selected-identity.mbt.test.ts",
     "test:mbt:see-invisibility-observer-sight": "vitest run src/see-invisibility-observer-sight.mbt.test.ts",
+    "test:mbt:self-teleport-lifecycle": "vitest run src/self-teleport-lifecycle.mbt.test.ts",
     "test:mbt:spell-created-held-object-lifecycle": "vitest run src/spell-created-held-object-lifecycle.mbt.test.ts",
     "test:mbt:spell-sequencing-integration": "vitest run src/spell-sequencing-integration.mbt.test.ts",
     "test:mbt:spike-growth-movement-hazard": "vitest run src/spike-growth-movement-hazard.mbt.test.ts",

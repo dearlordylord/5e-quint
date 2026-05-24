@@ -1169,6 +1169,12 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-misty-step.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/self-teleport-lifecycle.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-self-teleport-lifecycle.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
