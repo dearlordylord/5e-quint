@@ -95,6 +95,11 @@ Environment:
                           Default is quiet: persist logs to files only.
   RALPH_HEARTBEAT_SECONDS Seconds between supervisor heartbeats while a model
                           or long command is running. Default: 60.
+  RALPH_MIN_COMPLETED_TASKS
+                          Optional workload guard. If set to a positive
+                          integer, the run fails instead of completing when the
+                          plan has no next task before at least this many task
+                          attempts landed.
 EOF
 }
 
@@ -212,6 +217,7 @@ opencode_timeout_seconds="${RALPH_OPENCODE_TIMEOUT_SECONDS:-600}"
 model_chooser="${RALPH_MODEL_CHOOSER:-0}"
 implementation_round_limit="${RALPH_IMPLEMENTATION_ROUND_LIMIT:-0}"
 heartbeat_seconds="${RALPH_HEARTBEAT_SECONDS:-60}"
+min_completed_tasks="${RALPH_MIN_COMPLETED_TASKS:-0}"
 selected_tasks=()
 task_branches=()
 active_worktrees=()
@@ -362,6 +368,7 @@ fi
 [[ "$model_chooser" == "0" || "$model_chooser" == "1" ]] || die "RALPH_MODEL_CHOOSER must be 0 or 1"
 [[ "$implementation_round_limit" =~ ^[0-9]+$ ]] || die "RALPH_IMPLEMENTATION_ROUND_LIMIT must be a non-negative integer"
 [[ "$heartbeat_seconds" =~ ^[1-9][0-9]*$ ]] || die "RALPH_HEARTBEAT_SECONDS must be a positive integer"
+[[ "$min_completed_tasks" =~ ^[0-9]+$ ]] || die "RALPH_MIN_COMPLETED_TASKS must be a non-negative integer"
 
 [[ -f "$plan_file" ]] || die "plan file not found: $plan_file"
 plan_file="$(realpath "$plan_file")"
@@ -423,6 +430,7 @@ write_state() {
     printf 'MODEL_CHOOSER=%q\n' "$model_chooser"
     printf 'IMPLEMENTATION_ROUND_LIMIT=%q\n' "$implementation_round_limit"
     printf 'HEARTBEAT_SECONDS=%q\n' "$heartbeat_seconds"
+    printf 'MIN_COMPLETED_TASKS=%q\n' "$min_completed_tasks"
     printf 'IMPLEMENTATION_RUNNER=%q\n' "$implementation_runner"
     printf 'CLAUDE_MODEL=%q\n' "$claude_model"
     printf 'CLAUDE_EFFORT=%q\n' "$claude_effort"
@@ -907,6 +915,10 @@ append_history() {
   local message="$7"
   printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
     "$iteration" "$task_no" "$task_id" "$attempt" "$result" "$commit" "$message" >>"$history_file"
+}
+
+completed_task_count() {
+  awk -F $'\t' 'NR > 1 && $5 == "completed" { count += 1 } END { print count + 0 }' "$history_file"
 }
 
 cleanup_active_worktrees() {
@@ -2619,6 +2631,13 @@ while true; do
   task_row="$(choose_next_task "$iteration")" || chooser_status=$?
 
   if [[ "$chooser_status" -eq 1 ]]; then
+    completed_count="$(completed_task_count)"
+    if (( completed_count < min_completed_tasks )); then
+      printf 'no next task after %s completed task(s), below RALPH_MIN_COMPLETED_TASKS=%s\n' \
+        "$completed_count" "$min_completed_tasks" >"$last_error_file"
+      note "run" "fatal-workload-underflow iteration=$iteration completed=$completed_count min=$min_completed_tasks"
+      exit 1
+    fi
     note "run" "no-next-task iteration=$iteration"
     break
   fi
