@@ -6342,11 +6342,34 @@
     },
     {
       "blockedBy": [],
-      "generatorSubset": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "membership"
+      ],
       "obligationId": "BATTLE.STAT_BLOCK.ATTACK_CONTROL",
-      "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-controls-inductive.qnt",
+        "packages/shared-algebras/proofs/rule-core/stat-block-controls-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
+      ],
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -7113,16 +7136,6 @@
       "status": "not-assessed"
     },
     {
-      "obligationId": "BATTLE.STAT_BLOCK.ATTACK_CONTROL",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
       "obligationId": "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES",
       "ownerRoles": [
         {
@@ -7371,28 +7384,6 @@
             228
           ],
           "ownerPath": "packages/battle-runtime/battle-runtime-warding-bond.qnt"
-        }
-      ],
-      "readinessStatus": "not-assessed"
-    },
-    {
-      "blocker": "run-block-coupled",
-      "obligationId": "BATTLE.STAT_BLOCK.ATTACK_CONTROL",
-      "owners": [
-        {
-          "lines": [
-            502,
-            510,
-            533,
-            548,
-            556,
-            571,
-            594,
-            610,
-            621,
-            643
-          ],
-          "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
         }
       ],
       "readinessStatus": "not-assessed"
