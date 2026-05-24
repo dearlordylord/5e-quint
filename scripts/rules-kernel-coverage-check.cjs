@@ -1217,6 +1217,61 @@ function profilesByObligation(profileObligations) {
   );
 }
 
+function qntOwnerRoleMap(qntOwnerRoleRows) {
+  return new Map(
+    qntOwnerRoleRows
+      .filter(
+        (row) =>
+          isRecord(row) &&
+          typeof row.ownerPath === "string" &&
+          typeof row.role === "string",
+      )
+      .map((row) => [row.ownerPath, row.role]),
+  );
+}
+
+function semanticCoreOwnerPaths(obligation, qntOwnerRolesByPath) {
+  return (obligation.qntOwners ?? []).filter(
+    (ownerPath) => qntOwnerRolesByPath.get(ownerPath) === "semantic-core",
+  );
+}
+
+function buildGeneratorReadinessBacklog(
+  obligations,
+  generatorReadiness,
+  qntOwnerRolesByPath,
+) {
+  const readinessByObligationId = new Map(
+    generatorReadiness
+      .filter(
+        (readiness) =>
+          isRecord(readiness) && typeof readiness.obligationId === "string",
+      )
+      .map((readiness) => [readiness.obligationId, readiness]),
+  );
+  return obligations.flatMap((obligation) => {
+    if (!coveredStatuses.has(obligation.status)) return [];
+    const semanticCoreOwners = semanticCoreOwnerPaths(
+      obligation,
+      qntOwnerRolesByPath,
+    );
+    if (semanticCoreOwners.length === 0) return [];
+    const readiness = readinessByObligationId.get(obligation.id);
+    const status = readiness?.status ?? "missing";
+    if (status !== "missing" && status !== "not-assessed") return [];
+    return [
+      stable({
+        obligationId: obligation.id,
+        ownerRoles: semanticCoreOwners.map((ownerPath) => ({
+          ownerPath,
+          role: qntOwnerRolesByPath.get(ownerPath),
+        })),
+        status,
+      }),
+    ];
+  });
+}
+
 function buildMatrix(rootPath) {
   const paths = coveragePaths(rootPath);
   const obligations = readJsonl(rootPath, paths.obligations);
@@ -1227,6 +1282,7 @@ function buildMatrix(rootPath) {
   const kernelIrBoundaries = readJsonl(rootPath, paths.kernelIrBoundaries);
   const profiles = readJsonl(rootPath, paths.unitProfiles);
   const profileIdsByObligation = profilesByObligation(profileObligations);
+  const qntOwnerRolesByPath = qntOwnerRoleMap(qntOwnerRoleRows);
   const obligationIdsByQntOwner = new Map();
   for (const obligation of obligations) {
     if (!coveredStatuses.has(obligation.status)) continue;
@@ -1261,6 +1317,11 @@ function buildMatrix(rootPath) {
     ),
     generatorReadiness: generatorReadiness.map((readiness) =>
       stable(readiness),
+    ),
+    generatorReadinessBacklog: buildGeneratorReadinessBacklog(
+      obligations,
+      generatorReadiness,
+      qntOwnerRolesByPath,
     ),
     kernelIrBoundaries: kernelIrBoundaries.map((boundary) =>
       stable(boundary),
@@ -1382,6 +1443,33 @@ function renderReport(matrix, issues) {
     for (const readiness of matrix.generatorReadiness) {
       lines.push(
         `| \`${readiness.obligationId}\` | ${readiness.status} | ${(readiness.generatorSubset ?? []).map((entry) => `\`${entry}\``).join(", ")} |`,
+      );
+    }
+  }
+  lines.push("");
+  lines.push("### Generator Readiness Backlog");
+  lines.push("");
+  lines.push(
+    "Rows here are derived from covered obligations with semantic-core QNT owners whose generator-readiness row is either omitted or still `not-assessed`.",
+  );
+  lines.push("");
+  if (matrix.generatorReadinessBacklog.length === 0) {
+    lines.push("No missing or not-assessed generator-readiness rows.");
+  } else {
+    lines.push("| Obligation | Status | Semantic-core owners | Owner roles |");
+    lines.push("| --- | --- | --- | --- |");
+    for (const backlogRow of matrix.generatorReadinessBacklog) {
+      const owners = backlogRow.ownerRoles
+        .map((ownerRole) => `\`${ownerRole.ownerPath}\``)
+        .join(", ");
+      const ownerRoles = backlogRow.ownerRoles
+        .map(
+          (ownerRole) =>
+            `\`${ownerRole.ownerPath}\`: ${ownerRole.role ?? "_missing_"}`,
+        )
+        .join("<br>");
+      lines.push(
+        `| \`${backlogRow.obligationId}\` | ${backlogRow.status} | ${owners} | ${ownerRoles} |`,
       );
     }
   }

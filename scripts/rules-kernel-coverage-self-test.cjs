@@ -210,6 +210,7 @@ function runSelfTest() {
   assert.equal(result.matrix.summary.byStatus["boundary-only"], 1);
   assert.equal(result.matrix.qntOwnerRoles.length, 3);
   assert.equal(result.matrix.generatorReadiness.length, 1);
+  assert.equal(result.matrix.generatorReadinessBacklog.length, 0);
   assert.equal(result.matrix.kernelIrBoundaries.length, 8);
 
   const sampleQntOwnerRolesPath = path.join(
@@ -266,6 +267,17 @@ function runSelfTest() {
       "generator-readiness is missing row for covered obligation BATTLE.SAMPLE with semantic-core QNT owner(s): sample.qnt.",
     ),
     `Expected missing generator-readiness issue, got ${JSON.stringify(missingGeneratorReadinessResult.issues)}`,
+  );
+  assert.deepEqual(missingGeneratorReadinessResult.matrix.generatorReadinessBacklog, [
+    {
+      obligationId: "BATTLE.SAMPLE",
+      ownerRoles: [{ ownerPath: "sample.qnt", role: "semantic-core" }],
+      status: "missing",
+    },
+  ]);
+  assert.match(
+    missingGeneratorReadinessResult.report,
+    /\| `BATTLE\.SAMPLE` \| missing \| `sample\.qnt` \| `sample\.qnt`: semantic-core \|/,
   );
   writeFile(sampleGeneratorReadinessPath, initialGeneratorReadinessText);
 
@@ -519,6 +531,17 @@ function runSelfTest() {
   );
   const multiRuntimeWitnessResult = buildKernelCoverage({ root });
   assert.deepEqual(multiRuntimeWitnessResult.issues, []);
+  assert.deepEqual(multiRuntimeWitnessResult.matrix.generatorReadinessBacklog, [
+    {
+      obligationId: "BATTLE.MULTI",
+      ownerRoles: [{ ownerPath: "multi.qnt", role: "semantic-core" }],
+      status: "not-assessed",
+    },
+  ]);
+  assert.match(
+    multiRuntimeWitnessResult.report,
+    /\| `BATTLE\.MULTI` \| not-assessed \| `multi\.qnt` \| `multi\.qnt`: semantic-core \|/,
+  );
   writeFile(
     path.join(root, "plans", "rules-kernel-coverage", "obligations.jsonl"),
     initialObligationsText,
