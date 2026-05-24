@@ -63,7 +63,7 @@ closed:
     {
       "number": 6,
       "id": "L12FS-RECURSIVE-NEXT-TASKS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Mine Remaining Level 1-2 Product Readiness Tasks"
     },
     {
@@ -243,7 +243,7 @@ Acceptance:
 
 ### Task 6 - L12FS-RECURSIVE-NEXT-TASKS - Mine Remaining Level 1-2 Product Readiness Tasks
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -260,6 +260,22 @@ Output:
   this task done with a short closeout note.
 - Do not expand into level 3 or PHB+ unless the owner explicitly reopens that
   scope.
+
+Closeout:
+
+- Level 1 SRD authored product readiness is `58/58 (100%)` with no readiness
+  blockers in `plans/unit-profile-coverage/level1-full-support.json`.
+- Level 1-2 SRD authored product readiness is `76/76 (100%)` with no readiness
+  blockers in `plans/unit-profile-coverage/level1-2-full-support.json`.
+- Checker regression coverage is present in
+  `scripts/unit-profile-coverage-self-test.cjs` for missing Magic Initiate
+  origin feat refs, duplicate Alert catalog identity, and the missing retained
+  Warlock Pact Magic feature grant.
+- The level 1-2 report still exposes diagnostic lower-layer product-readiness
+  rows outside the authored claim gate; those rows remain visible but are not
+  hidden level 1-2 full-support blockers under the current metric.
+- No additional level 1 or level 1-2 blocker tasks are needed. The existing
+  Alert Initiative runtime follow-up remains non-blocking for this claim gate.
 
 Acceptance:
 
