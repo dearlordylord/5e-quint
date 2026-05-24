@@ -6352,12 +6352,42 @@
       "status": "not-assessed"
     },
     {
-      "blockedBy": [],
-      "generatorSubset": [],
+      "blockedBy": [
+        "run-block-coupled"
+      ],
+      "followUpTaskIds": [
+        "A34-UNIT-FEATURE-PROCEDURE-SURVEY"
+      ],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "membership"
+      ],
       "obligationId": "BATTLE.DAMAGE.ATTACK_BRANCHES",
-      "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/attack-damage-composition-inductive.qnt",
+        "packages/shared-algebras/proofs/rule-core/attack-damage-composition-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+      ],
+      "status": "fixture-bound"
     },
     {
       "blockedBy": [],
@@ -6376,12 +6406,42 @@
       "status": "not-assessed"
     },
     {
-      "blockedBy": [],
-      "generatorSubset": [],
+      "blockedBy": [
+        "run-block-coupled"
+      ],
+      "followUpTaskIds": [
+        "A34-UNIT-FEATURE-PROCEDURE-SURVEY"
+      ],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "membership"
+      ],
       "obligationId": "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
-      "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/attack-damage-composition-inductive.qnt",
+        "packages/shared-algebras/proofs/rule-core/attack-damage-composition-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+      ],
+      "status": "fixture-bound"
     },
     {
       "blockedBy": [],
@@ -7060,20 +7120,6 @@
       "status": "not-assessed"
     },
     {
-      "obligationId": "BATTLE.DAMAGE.ATTACK_BRANCHES",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt",
-          "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
       "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
       "ownerRoles": [
         {
@@ -7096,20 +7142,6 @@
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-damage-adjustments.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt",
-          "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
           "role": "semantic-core"
         }
       ],
@@ -7371,21 +7403,6 @@
       "owners": [
         {
           "lines": [
-            180,
-            193,
-            206,
-            219,
-            227,
-            237,
-            272,
-            302,
-            327,
-            357
-          ],
-          "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt"
-        },
-        {
-          "lines": [
             1385,
             1401,
             1411,
@@ -7431,7 +7448,7 @@
           "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
         }
       ],
-      "readinessStatus": "not-assessed"
+      "readinessStatus": "fixture-bound"
     },
     {
       "blocker": "run-block-coupled",
@@ -7511,21 +7528,6 @@
       "owners": [
         {
           "lines": [
-            180,
-            193,
-            206,
-            219,
-            227,
-            237,
-            272,
-            302,
-            327,
-            357
-          ],
-          "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt"
-        },
-        {
-          "lines": [
             1385,
             1401,
             1411,
@@ -7571,7 +7573,7 @@
           "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
         }
       ],
-      "readinessStatus": "not-assessed"
+      "readinessStatus": "fixture-bound"
     },
     {
       "blocker": "run-block-coupled",

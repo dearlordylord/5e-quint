@@ -174,9 +174,11 @@ Out of scope for QCORE5:
 - spell attack and save-damage profiles;
 - class feature and stat-block authored breadth.
 
-`attack-damage-composition-inductive.qnt` is the owned proof machine. It samples
-bounded attack-roll and damage procedure facts while keeping only scalar result
-state, and records the branch budget near the `any` action.
+`attack-damage-composition-examples.qnt` owns concrete run examples for the
+attack-roll and Knock Out branches so the reusable semantic core remains
+generator-clean. `attack-damage-composition-inductive.qnt` is the owned proof
+machine. It samples bounded attack-roll and damage procedure facts while keeping
+only scalar result state, and records the branch budget near the `any` action.
 
 ## QCORE6: Action and Turn Procedures
 

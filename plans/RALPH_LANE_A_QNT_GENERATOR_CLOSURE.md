@@ -182,7 +182,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 29,
       "id": "A29-ATTACK-DAMAGE-COMPOSITION-READINESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Assess attack damage composition generator readiness"
     },
     {
@@ -287,7 +287,7 @@ Lane A must not:
 | 26 | A26-SEMANTIC-CORE-RUN-BLOCK-SCANNER - Detect run blocks in semantic-core owners | done | A24 | Prevent semantic-core role rows from hiding run-test coupling outside readiness rows. |
 | 27 | A27-BLOCKER-TOKEN-CONTRACT-HARDENING - Harden generator blocker token contract | done | A24,A26 | Keep blocker vocabulary and scanner output coupled. |
 | 28 | A28-HIT-POINT-RESTORATION-READINESS - Assess hit point restoration generator readiness | done | A24 | Classified as fixture-bound; A36 owns the semantic-core split. |
-| 29 | A29-ATTACK-DAMAGE-COMPOSITION-READINESS - Assess attack damage composition generator readiness | ready-for-research | A24,A26 | Shared algebra owner has run blocks and composition semantics. |
+| 29 | A29-ATTACK-DAMAGE-COMPOSITION-READINESS - Assess attack damage composition generator readiness | done | A24,A26 | Classified as fixture-bound; attack examples moved out; A34 owns the remaining unit-feature run-block split. |
 | 30 | A30-DAMAGE-ADJUSTMENTS-READINESS - Assess damage adjustment generator readiness | ready-for-research | A24,A26 | Shared algebra owner needs subset/blocker classification. |
 | 31 | A31-SHOVE-OUTCOME-READINESS - Assess shove outcome generator readiness | ready-for-research | A24,A26 | `shove-outcome.qnt` currently includes run blocks. |
 | 32 | A32-STAT-BLOCK-CONTROLS-READINESS - Assess stat block controls generator readiness | ready-for-research | A24,A26 | Shared algebra owner needs subset/blocker classification. |
@@ -622,7 +622,7 @@ this obligation can become generator-clean.
 
 ### Task 29 - A29-ATTACK-DAMAGE-COMPOSITION-READINESS - Assess attack damage composition generator readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `BATTLE.DAMAGE.ATTACK_BRANCHES`,
 `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP`,
@@ -635,6 +635,12 @@ as blocker evidence.
 
 Acceptance: generator-readiness JSONL and generated report agree; checker
 passes; any remaining blockers name concrete constructs or fixture coupling.
+
+Result: `BATTLE.DAMAGE.ATTACK_BRANCHES` and
+`BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` are fixture-bound. Local attack damage
+examples moved to a proof-only examples owner; remaining `run-block-coupled`
+evidence is in `unit-feature-procedure-profiles.qnt` and remains assigned to
+A34.
 
 ### Task 30 - A30-DAMAGE-ADJUSTMENTS-READINESS - Assess damage adjustment generator readiness
 
