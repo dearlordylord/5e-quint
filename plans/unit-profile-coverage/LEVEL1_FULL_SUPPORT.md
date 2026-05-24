@@ -6,9 +6,9 @@ This strict view tracks executable SRD character-level-1, cantrip, and spell-lev
 
 ## Claim Summary
 
-Full-support claim: **blocked**.
+Full-support claim: **pass**.
 
-Blockers: strict=0, selected-identity=1, SRD-authored-readiness=0.
+Blockers: strict=0, selected-identity=0, SRD-authored-readiness=0.
 
 ## Metrics
 
@@ -16,7 +16,7 @@ Blockers: strict=0, selected-identity=1, SRD-authored-readiness=0.
 | --- | ---: |
 | Strict runtime/profile support | 78/94 (83%) |
 | Strict target closure | 94/94 (100%) |
-| Selected identity readiness | 82/83 (98.8%) |
+| Selected identity readiness | 83/83 (100%) |
 | Product readiness | 367/367 (100%) |
 | SRD authored product readiness | 58/58 (100%) |
 | Rules-kernel profile join | 58/58 (100%) |
@@ -40,22 +40,21 @@ This is the selected-identity gate layer for the strict denominator. `witness-pr
 
 | Selected identity status | Rows |
 | --- | ---: |
-| missing-witness-deferred-not-applicable | 1 |
 | not-required | 11 |
-| witness-present | 82 |
+| witness-present | 83 |
 
 ### Selected Identity Blockers
 
 | Unit | Strict status | Claim | Selected identity status | Reason |
 | --- | --- | --- | --- | --- |
-| `thaumaturgy` | closed-runtime-detached-table-adjudication | profile-subset-supported | missing-witness-deferred-not-applicable | The non-Booming minor wonders are presentation/environment adjudication and have no production replay boundary that can bind a selected Unit identity. |
+| _none_ | _none_ | _none_ | _none_ | _none_ |
 
 ## Full-Support Claim Gate
 
 | Gate | Status | Result | Blocking issue |
 | --- | --- | ---: | --- |
 | Strict runtime/profile closure | pass | 94/94 (100%) | _none_ |
-| Selected identity readiness | blocked | 82/83 (98.8%) | 1 selected-identity blocker row(s) |
+| Selected identity readiness | pass | 83/83 (100%) | _none_ |
 | SRD authored product readiness | pass | 58/58 (100%) | _none_ |
 
 Every gate row must pass for a full level-support claim. A 100% result in one layer does not satisfy another layer, and failed gates are not combined into a weighted completion percentage.
@@ -140,7 +139,7 @@ This gate checks authored records and retained Unit references that must resolve
 | `rogue_thieves_cant` | closed-character-fact-and-runtime-detached-split | unsupported-profile | not-required | installed | character-fact-and-runtime-detached-split | Thieves' Cant communication adjudication is runtime-detached table adjudication outside promoted battle runtime; Thieves' Cant and the additional Character Creation language choice remain character-owned CharacterBuild facts derived from authored Surface content. |
 | `silent_image` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | not-in-unit-catalog | outside-runtime-presentation-exploration | Silent Image creates table-adjudicated illusion and presentation state; promoted battle runtime does not own image rendering or discovery adjudication. |
 | `speak_with_animals` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | not-in-unit-catalog | outside-runtime-presentation-exploration | Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes. |
-| `thaumaturgy` | closed-runtime-detached-table-adjudication | profile-subset-supported | missing-witness-deferred-not-applicable | installed | outside-runtime-presentation-exploration | Thaumaturgy's non-Booming minor wonders alter appearance, flames, doors/windows, sounds, and tremors; promoted battle runtime owns only Booming Voice's check Advantage and consumes total active-effect count witnesses for the shared cap. |
+| `thaumaturgy` | closed-runtime-detached-table-adjudication | profile-subset-supported | witness-present | installed | outside-runtime-presentation-exploration | Thaumaturgy's non-Booming minor wonders alter appearance, flames, doors/windows, sounds, and tremors; promoted battle runtime owns only Booming Voice's check Advantage and consumes total active-effect count witnesses for the shared cap. |
 
 ## Outside Denominator Pressure
 

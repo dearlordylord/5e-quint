@@ -8,7 +8,7 @@ This strict view tracks executable SRD character-level-1 through character-level
 
 Full-support claim: **blocked**.
 
-Blockers: strict=0, selected-identity=3, SRD-authored-readiness=0.
+Blockers: strict=0, selected-identity=2, SRD-authored-readiness=0.
 
 ## Metrics
 
@@ -16,7 +16,7 @@ Blockers: strict=0, selected-identity=3, SRD-authored-readiness=0.
 | --- | ---: |
 | Strict runtime/profile support | 121/182 (66.5%) |
 | Strict target closure | 182/182 (100%) |
-| Selected identity readiness | 149/152 (98%) |
+| Selected identity readiness | 150/152 (98.7%) |
 | Product readiness | 573/607 (94.4%) |
 | SRD authored product readiness | 76/76 (100%) |
 | Rules-kernel profile join | 93/94 (98.9%) |
@@ -44,9 +44,9 @@ This is the selected-identity gate layer for the strict denominator. `witness-pr
 | Selected identity status | Rows |
 | --- | ---: |
 | missing-witness | 1 |
-| missing-witness-deferred-not-applicable | 2 |
+| missing-witness-deferred-not-applicable | 1 |
 | not-required | 30 |
-| witness-present | 149 |
+| witness-present | 150 |
 
 ### Selected Identity Blockers
 
@@ -54,14 +54,13 @@ This is the selected-identity gate layer for the strict denominator. `witness-pr
 | --- | --- | --- | --- | --- |
 | `mind_spike` | closed-runtime-detached-table-adjudication | profile-subset-supported | missing-witness-deferred-not-applicable | The location knowledge, Hidden prevention, and observer-scoped Invisible benefit denial are table/perception knowledge facts outside promoted battle-runtime replay. |
 | `shining_smite` | supported-profile | supported-profile | missing-witness | The Unit has no selected-identity-mbt evidence. |
-| `thaumaturgy` | closed-runtime-detached-table-adjudication | profile-subset-supported | missing-witness-deferred-not-applicable | The non-Booming minor wonders are presentation/environment adjudication and have no production replay boundary that can bind a selected Unit identity. |
 
 ## Full-Support Claim Gate
 
 | Gate | Status | Result | Blocking issue |
 | --- | --- | ---: | --- |
 | Strict runtime/profile closure | pass | 182/182 (100%) | _none_ |
-| Selected identity readiness | blocked | 149/152 (98%) | 3 selected-identity blocker row(s) |
+| Selected identity readiness | blocked | 150/152 (98.7%) | 2 selected-identity blocker row(s) |
 | SRD authored product readiness | pass | 76/76 (100%) | _none_ |
 
 Every gate row must pass for a full level-support claim. A 100% result in one layer does not satisfy another layer, and failed gates are not combined into a weighted completion percentage.
@@ -191,7 +190,7 @@ This gate checks authored records and retained Unit references that must resolve
 | `speak_with_animals` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | not-in-unit-catalog | outside-runtime-presentation-exploration | Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes. |
 | `spike_growth` | closed-runtime-detached-table-adjudication | profile-subset-supported | witness-present | installed | outside-runtime-presentation-exploration | The SRD recognition clause depends on table-owned visibility at cast time, the creature's declared Search Action before entering, skill applicability, and the resulting terrain-recognition witness. Promoted battle runtime already consumes movement-area facts for Spike Growth and does not store parallel per-observer terrain knowledge or perception state. |
 | `suggestion` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | installed | social-knowledge-effect | Suggestion's hearing/understanding gate, suggested course of activity, achievable and obvious-damage judgment, Charmed target pursuit, and activity-completion ending require table/player choice and social adjudication facts; promoted battle runtime must not infer or enforce commanded behavior from authored spell identity. |
-| `thaumaturgy` | closed-runtime-detached-table-adjudication | profile-subset-supported | missing-witness-deferred-not-applicable | installed | outside-runtime-presentation-exploration | Thaumaturgy's non-Booming minor wonders alter appearance, flames, doors/windows, sounds, and tremors; promoted battle runtime owns only Booming Voice's check Advantage and consumes total active-effect count witnesses for the shared cap. |
+| `thaumaturgy` | closed-runtime-detached-table-adjudication | profile-subset-supported | witness-present | installed | outside-runtime-presentation-exploration | Thaumaturgy's non-Booming minor wonders alter appearance, flames, doors/windows, sounds, and tremors; promoted battle runtime owns only Booming Voice's check Advantage and consumes total active-effect count witnesses for the shared cap. |
 | `warlock_fiend_spells` | closed-later-level-only | profile-subset-supported | witness-present | installed | later-level-only | Task 32 promotes the level-3 inventory row only; later Fiend Spells table rows occur after level 3 and should be added as their own level-gated authored feature grants. |
 | `wizard_evocation_savant` | closed-later-level-only | profile-subset-supported | witness-present | installed | later-level-only | The acquisition-time Wizard 3 Evocation Savant spellbook choices are promoted here. The later grant happens only when future Wizard advancement opens a new Spell Slot level, so it belongs to the future character-advancement owner instead of the level-3 acquisition workflow. |
 | `zone_of_truth` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | installed | social-knowledge-effect | Zone of Truth's truthfulness constraint, conversation answers, deliberate-lie judgment, evasive response handling, and caster save-outcome knowledge require table/social adjudication facts; promoted battle runtime must not add conversation-state or lie-detection state without a clear executable battle owner. |

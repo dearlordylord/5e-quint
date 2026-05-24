@@ -1,7 +1,7 @@
 {
   "claimGate": {
     "authoredReadinessBlockerCount": 0,
-    "selectedIdentityBlockerCount": 3,
+    "selectedIdentityBlockerCount": 2,
     "status": "blocked",
     "strictTargetOpenCount": 0
   },
@@ -2886,9 +2886,8 @@
       "kind": "spell",
       "reason": "Thaumaturgy's non-Booming minor wonders alter appearance, flames, doors/windows, sounds, and tremors; promoted battle runtime owns only Booming Voice's check Advantage and consumes total active-effect count witnesses for the shared cap.",
       "selectedIdentity": {
-        "owner": "runtime-detached presentation/environment owner",
-        "reason": "The non-Booming minor wonders are presentation/environment adjudication and have no production replay boundary that can bind a selected Unit identity.",
-        "status": "missing-witness-deferred-not-applicable"
+        "reason": "The Unit has selected-identity-mbt evidence.",
+        "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/thaumaturgy.json",
       "sourceRows": [
@@ -9337,33 +9336,25 @@
         "sourceRecordPath": "packages/surface/content/shining_smite.json",
         "status": "supported-profile",
         "unitId": "shining_smite"
-      },
-      {
-        "claimTag": "profile-subset-supported",
-        "reason": "The non-Booming minor wonders are presentation/environment adjudication and have no production replay boundary that can bind a selected Unit identity.",
-        "selectedIdentityStatus": "missing-witness-deferred-not-applicable",
-        "sourceRecordPath": "packages/surface/content/thaumaturgy.json",
-        "status": "closed-runtime-detached-table-adjudication",
-        "unitId": "thaumaturgy"
       }
     ],
     "blockingRowsByStatus": {
       "missing-witness": 1,
-      "missing-witness-deferred-not-applicable": 2
+      "missing-witness-deferred-not-applicable": 1
     },
     "metrics": {
       "denominator": 152,
-      "numerator": 149,
-      "percent": "98%"
+      "numerator": 150,
+      "percent": "98.7%"
     },
     "readyRowsByStatus": {
-      "witness-present": 149
+      "witness-present": 150
     },
     "rowsByStatus": {
       "missing-witness": 1,
-      "missing-witness-deferred-not-applicable": 2,
+      "missing-witness-deferred-not-applicable": 1,
       "not-required": 30,
-      "witness-present": 149
+      "witness-present": 150
     }
   },
   "sourceArtifacts": {

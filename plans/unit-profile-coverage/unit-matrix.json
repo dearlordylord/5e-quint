@@ -2795,7 +2795,7 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
-      "sourceBoundary": "The runtime consumes the authored Thaumaturgy Booming Voice cantrip effect, a caller-supplied count of total currently active Thaumaturgy 1-minute effects, and caller-created Charisma (Intimidation) Ability Check or Influence witnesses. Other Thaumaturgy minor wonders and their non-battle presentation/environment effects remain runtime-detached table adjudication.",
+      "sourceBoundary": "The runtime consumes the authored Thaumaturgy Booming Voice cantrip effect, a caller-supplied count of total currently active Thaumaturgy 1-minute effects, and caller-created Charisma (Intimidation) Ability Check witnesses. The table owns whether an Influence action or other adjudication creates that check, its DC, targets, hearing and voice fiction, and outcome. Other Thaumaturgy minor wonders and their non-battle presentation/environment effects remain runtime-detached table adjudication.",
       "taskRefs": [
         "L1D2-THAUMATURGY-BOOMING-VOICE"
       ],
@@ -9243,7 +9243,7 @@
       ],
       "evidenceTag": "selected-identity-mbt"
     },
-    "rowCount": 9,
+    "rowCount": 8,
     "rows": [
       {
         "catalogAdmissionStatus": "installed",
@@ -9381,24 +9381,6 @@
           "tag": "supported-profile"
         },
         "unitId": "shining_smite"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "selectedIdentity": {
-          "owner": "runtime-detached presentation/environment owner",
-          "reason": "The non-Booming minor wonders are presentation/environment adjudication and have no production replay boundary that can bind a selected Unit identity.",
-          "status": "missing-witness-deferred-not-applicable"
-        },
-        "sourceRecordPath": "packages/surface/content/thaumaturgy.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-self-ability-check-advantage"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "thaumaturgy"
       }
     ]
   },
@@ -12067,8 +12049,8 @@
         "profileFactDenominator": 127,
         "profileSubsetSupportedUnits": 20,
         "selectedIdentityReplayDenominator": 106,
-        "selectedIdentityReplayGapUnits": 9,
-        "selectedIdentityReplayWitnessUnits": 97,
+        "selectedIdentityReplayGapUnits": 8,
+        "selectedIdentityReplayWitnessUnits": 98,
         "supportedProfileUnits": 86,
         "unsupportedOrOtherUnits": 18
       },
@@ -24835,7 +24817,7 @@
           "Booming Voice Magic Action cantrip cast with no Spell Slot spend",
           "caller-supplied total active Thaumaturgy 1-minute effect count enforcing the three-active-effects cap without persistent utility state",
           "one-minute self Spell Effect for Booming Voice",
-          "Advantage projection for caller-supplied Charisma (Intimidation) Ability Check or Influence witnesses with normal Advantage/Disadvantage cancellation"
+          "Advantage projection for caller-supplied Charisma (Intimidation) Ability Check witnesses with normal Advantage/Disadvantage cancellation; the table owns whether an Influence action or other adjudication creates that check, its DC, targets, hearing and voice fiction, and outcome"
         ],
         "tag": "profile-subset-supported"
       },
@@ -24844,6 +24826,11 @@
         {
           "ownerPath": "packages/battle-runtime/src/thaumaturgy-booming-voice.test.ts",
           "tag": "deterministic-admission-projection",
+          "taskId": "L1D2-THAUMATURGY-BOOMING-VOICE"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/thaumaturgy-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
           "taskId": "L1D2-THAUMATURGY-BOOMING-VOICE"
         }
       ],
@@ -24859,7 +24846,7 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
-          "sourceBoundary": "The runtime consumes the authored Thaumaturgy Booming Voice cantrip effect, a caller-supplied count of total currently active Thaumaturgy 1-minute effects, and caller-created Charisma (Intimidation) Ability Check or Influence witnesses. Other Thaumaturgy minor wonders and their non-battle presentation/environment effects remain runtime-detached table adjudication.",
+          "sourceBoundary": "The runtime consumes the authored Thaumaturgy Booming Voice cantrip effect, a caller-supplied count of total currently active Thaumaturgy 1-minute effects, and caller-created Charisma (Intimidation) Ability Check witnesses. The table owns whether an Influence action or other adjudication creates that check, its DC, targets, hearing and voice fiction, and outcome. Other Thaumaturgy minor wonders and their non-battle presentation/environment effects remain runtime-detached table adjudication.",
           "taskRefs": [
             "L1D2-THAUMATURGY-BOOMING-VOICE"
           ],

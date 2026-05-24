@@ -17,26 +17,25 @@ Generated reports remain the measurement source of truth:
 
 ## Current Claim State
 
-The generated claim gate is blocked on selected-identity evidence, even though
-the strict target and SRD-authored readiness layers are closed:
+The generated level 1 and character levels 1-2 claim gates now pass; strict
+target closure, selected-identity readiness, and SRD-authored readiness are all
+closed for those reports:
 
 - Level 1 strict target closure: `94/94 (100%)`.
-- Level 1 selected identity readiness: `82/83 (98.8%)`; blocker:
-  `thaumaturgy`.
+- Level 1 selected identity readiness: `83/83 (100%)`.
 - Level 1 SRD authored product readiness: `58/58 (100%)`.
 - Character levels 1-2 strict target closure: `115/115 (100%)`.
-- Character levels 1-2 selected identity readiness: `103/104 (99%)`;
-  blocker: `thaumaturgy`.
+- Character levels 1-2 selected identity readiness: `104/104 (100%)`.
 - Character levels 1-2 SRD authored product readiness: `76/76 (100%)`.
 - Character levels 1-2 product readiness diagnostic: `397/400 (99.3%)`.
-- Full-support claim gate: blocked for both generated level 1 and character
-  levels 1-2 reports until the selected-identity blocker is closed.
+- Full-support claim gate: pass for both generated level 1 and character
+  levels 1-2 reports.
 
 The next generated frontier is character levels 1-3, not spell-level-3:
 
 - Character levels 1-3 strict target closure: `182/182 (100%)`.
-- Character levels 1-3 selected identity readiness: `149/152 (98%)`;
-  blockers: `mind_spike`, `shining_smite`, `thaumaturgy`.
+- Character levels 1-3 selected identity readiness: `150/152 (98.7%)`;
+  blockers: `mind_spike`, `shining_smite`.
 - Character levels 1-3 SRD authored product readiness: `76/76 (100%)`.
 - Character levels 1-3 product readiness diagnostic: `573/607 (94.4%)`.
 
@@ -91,7 +90,7 @@ The next generated frontier is character levels 1-3, not spell-level-3:
     {
       "number": 8,
       "id": "L12FS-THAUMATURGY-SELECTED-IDENTITY",
-      "status": "ready",
+      "status": "done",
       "title": "Close Thaumaturgy Selected-Identity Claim Gate"
     }
   ]
@@ -304,8 +303,8 @@ Closeout:
 - The character levels 1-2 report still exposes diagnostic lower-layer
   product-readiness rows outside the authored claim gate; those rows remain
   visible, but selected-identity blockers are now explicit claim-gate blockers.
-- Additional level 1 and character levels 1-2 selected-identity closure is
-  needed while `thaumaturgy` remains blocked.
+- Level 1 and character levels 1-2 selected-identity closure is complete after
+  the focused `thaumaturgy` Booming Voice selected-identity witness.
 
 Acceptance:
 
@@ -350,7 +349,7 @@ Acceptance:
 
 ### Task 8 - L12FS-THAUMATURGY-SELECTED-IDENTITY - Close Thaumaturgy Selected-Identity Claim Gate
 
-Status: `ready`
+Status: `done`
 
 Input:
 

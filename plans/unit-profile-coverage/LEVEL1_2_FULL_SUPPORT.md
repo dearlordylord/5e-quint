@@ -6,9 +6,9 @@ This strict view tracks executable SRD character-level-1 plus character-level-2 
 
 ## Claim Summary
 
-Full-support claim: **blocked**.
+Full-support claim: **pass**.
 
-Blockers: strict=0, selected-identity=1, SRD-authored-readiness=0.
+Blockers: strict=0, selected-identity=0, SRD-authored-readiness=0.
 
 ## Metrics
 
@@ -16,7 +16,7 @@ Blockers: strict=0, selected-identity=1, SRD-authored-readiness=0.
 | --- | ---: |
 | Strict runtime/profile support | 91/115 (79.1%) |
 | Strict target closure | 115/115 (100%) |
-| Selected identity readiness | 103/104 (99%) |
+| Selected identity readiness | 104/104 (100%) |
 | Product readiness | 397/400 (99.3%) |
 | SRD authored product readiness | 76/76 (100%) |
 | Rules-kernel profile join | 70/70 (100%) |
@@ -42,22 +42,21 @@ This is the selected-identity gate layer for the strict denominator. `witness-pr
 
 | Selected identity status | Rows |
 | --- | ---: |
-| missing-witness-deferred-not-applicable | 1 |
 | not-required | 11 |
-| witness-present | 103 |
+| witness-present | 104 |
 
 ### Selected Identity Blockers
 
 | Unit | Strict status | Claim | Selected identity status | Reason |
 | --- | --- | --- | --- | --- |
-| `thaumaturgy` | closed-runtime-detached-table-adjudication | profile-subset-supported | missing-witness-deferred-not-applicable | The non-Booming minor wonders are presentation/environment adjudication and have no production replay boundary that can bind a selected Unit identity. |
+| _none_ | _none_ | _none_ | _none_ | _none_ |
 
 ## Full-Support Claim Gate
 
 | Gate | Status | Result | Blocking issue |
 | --- | --- | ---: | --- |
 | Strict runtime/profile closure | pass | 115/115 (100%) | _none_ |
-| Selected identity readiness | blocked | 103/104 (99%) | 1 selected-identity blocker row(s) |
+| Selected identity readiness | pass | 104/104 (100%) | _none_ |
 | SRD authored product readiness | pass | 76/76 (100%) | _none_ |
 
 Every gate row must pass for a full level-support claim. A 100% result in one layer does not satisfy another layer, and failed gates are not combined into a weighted completion percentage.
@@ -152,7 +151,7 @@ This gate checks authored records and retained Unit references that must resolve
 | `sorcerer_font_of_magic` | closed-character-fact-and-runtime-detached-split | profile-subset-supported | witness-present | installed | character-fact-and-runtime-detached-split | RAW distinguishes the Bonus Action resource conversion from spell execution, and the existing Character Sheet boundary is the canonical owner of ordinary-vs-created Spell Slot source state. Character Battle intentionally carries only aggregate Spell Slot capacity and the shared Sorcery Point pool, rejects source-ambiguous handoff when both ordinary and created slots of the same level could have been spent, and does not introduce a second battle-local Spell Slot source pool or source ledger. |
 | `sorcerer_metamagic` | blocked-follow-up-split | profile-subset-supported | witness-present | installed | follow-up-split | L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS: Promote Quickened Spell from direct Hit Point restoration to every supported action-casting Spell Invocation procedure, using typed procedure support gates and the level-1-plus spell cast turn fact for slot and free-cast resources. Owner: battle-runtime Spell Invocation discovery and resolution profiles plus package-local Quint parity. Required output: Supported-profile or profile-subset-supported Unit claim with focused runtime tests and promoted Quint/runtime parity for Quickened action-to-Bonus-Action rewrite across each supported spell profile without option authored identity dispatch.; L12G-FOLLOWUP-SORCERER-METAMAGIC-SAVE-OPTIONS: Promote Careful Spell and Heightened Spell against supported save-for-half and save-gated spell procedures, including protected-target automatic success with no successful-save damage and one-target Disadvantage on saves against the spell. Owner: battle-runtime saving throw spell resolution hooks. Required output: Supported-profile or profile-subset-supported Unit claim with typed holes/fills, focused runtime tests, and promoted Quint/runtime parity for Careful and Heightened without option identity dispatch.; L12G-FOLLOWUP-SORCERER-METAMAGIC-DAMAGE-SHAPE-OPTIONS: Promote Transmuted Spell and Twinned Spell for supported spell procedures by substituting only Acid, Cold, Fire, Lightning, Poison, or Thunder spell damage types and increasing effective spell level by 1 only for spells whose higher-slot profile targets one additional creature. Owner: battle-runtime spell damage profile and upcast targeting projection. Required output: Supported-profile or profile-subset-supported Unit claim with focused runtime tests and promoted Quint/runtime parity for typed damage-type substitution and higher-slot target-count projection without duplicating spell slot state. |
 | `speak_with_animals` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | not-in-unit-catalog | outside-runtime-presentation-exploration | Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes. |
-| `thaumaturgy` | closed-runtime-detached-table-adjudication | profile-subset-supported | missing-witness-deferred-not-applicable | installed | outside-runtime-presentation-exploration | Thaumaturgy's non-Booming minor wonders alter appearance, flames, doors/windows, sounds, and tremors; promoted battle runtime owns only Booming Voice's check Advantage and consumes total active-effect count witnesses for the shared cap. |
+| `thaumaturgy` | closed-runtime-detached-table-adjudication | profile-subset-supported | witness-present | installed | outside-runtime-presentation-exploration | Thaumaturgy's non-Booming minor wonders alter appearance, flames, doors/windows, sounds, and tremors; promoted battle runtime owns only Booming Voice's check Advantage and consumes total active-effect count witnesses for the shared cap. |
 
 ## Outside Denominator Pressure
 
