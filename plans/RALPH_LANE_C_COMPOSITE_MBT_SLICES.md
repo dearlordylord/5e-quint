@@ -22,7 +22,7 @@ slice candidates remain.
     { "number": 6, "id": "C6-WEB-RESTRAINT-SLICE", "status": "done", "title": "Add Web restraint hazard slice" },
     { "number": 7, "id": "C7-HEAT-METAL-SLICE", "status": "done", "title": "Add Heat Metal object-contact slice" },
     { "number": 8, "id": "C8-GUST-OF-WIND-SLICE", "status": "done", "title": "Add Gust of Wind line lifecycle slice" },
-    { "number": 9, "id": "C9-ANTIMAGIC-SUPPRESSION-SLICE", "status": "ready-for-implementation-after-light-research", "title": "Add Antimagic Field suppression slice" },
+    { "number": 9, "id": "C9-ANTIMAGIC-SUPPRESSION-SLICE", "status": "done", "title": "Add Antimagic Field suppression slice" },
     { "number": 10, "id": "C10-SPIKE-GROWTH-SLICE", "status": "ready-for-implementation-after-light-research", "title": "Add Spike Growth movement hazard slice" },
     { "number": 11, "id": "C11-DRAGONS-BREATH-INITIAL-SLICE", "status": "ready-for-implementation-after-light-research", "title": "Add Dragon's Breath initial-effect slice" },
     { "number": 12, "id": "C12-DRAGONS-BREATH-GRANTED-ACTION-SLICE", "status": "ready-for-implementation-after-light-research", "title": "Add Dragon's Breath granted-action slice" },
@@ -74,7 +74,7 @@ Lane C must not:
 | 6 | C6-WEB-RESTRAINT-SLICE - Add Web restraint hazard slice | done | none | Focused Web restraint/hazard lifecycle MBT added. |
 | 7 | C7-HEAT-METAL-SLICE - Add Heat Metal object-contact slice | done | none | Object contact and repeat damage. |
 | 8 | C8-GUST-OF-WIND-SLICE - Add Gust of Wind line lifecycle slice | done | none | Line effect and movement interaction. |
-| 9 | C9-ANTIMAGIC-SUPPRESSION-SLICE - Add Antimagic Field suppression slice | ready-for-implementation-after-light-research | none | Suppression active-effect state. |
+| 9 | C9-ANTIMAGIC-SUPPRESSION-SLICE - Add Antimagic Field suppression slice | done | none | Suppression active-effect state. |
 | 10 | C10-SPIKE-GROWTH-SLICE - Add Spike Growth movement hazard slice | ready-for-implementation-after-light-research | none | Movement hazard only; recognition remains table-owned. |
 | 11 | C11-DRAGONS-BREATH-INITIAL-SLICE - Add Dragon's Breath initial-effect slice | ready-for-implementation-after-light-research | none | Initial grant state. |
 | 12 | C12-DRAGONS-BREATH-GRANTED-ACTION-SLICE - Add Dragon's Breath granted-action slice | ready-for-implementation-after-light-research | none | Granted action damage. |
@@ -181,12 +181,17 @@ and `packages/battle-runtime/src/gust-of-wind-line-lifecycle.mbt.test.ts`.
 
 ### Task 9 - C9-ANTIMAGIC-SUPPRESSION-SLICE - Add Antimagic Field suppression slice
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: focused slice for suppressing and restoring ongoing spell effects in an
 Antimagic Field.
 
 Acceptance: active-effect field names match runtime types exactly.
+
+Witnesses:
+`packages/battle-runtime/battle-runtime-antimagic-field-ongoing-suppression.mbt.qnt`
+and
+`packages/battle-runtime/src/antimagic-field-ongoing-suppression.mbt.test.ts`.
 
 ### Task 10 - C10-SPIKE-GROWTH-SLICE - Add Spike Growth movement hazard slice
 
