@@ -53,21 +53,23 @@ Coverage rows are denominator-specific gates, not weighted completion scores. Un
 
 ## Unit Group Denominator Audit
 
-Background, feat, spell, and class-feature groups are counted from installed Unit identities and supported profile facts. The selected-identity replay column is scoped to Unit identities that need replay evidence; it excludes only whole-claim non-applicable dispositions.
+Background, feat, spell, and class-feature groups are counted from installed Unit identities and supported profile facts. The selected-identity replay denominator is scoped to Unit identities that need replay evidence; whole-claim non-applicable dispositions are excluded, while deferred-portion non-applicable dispositions remain visible in a separate bucket.
 
-| Group | Installed Unit denominator | Executable Unit denominator | Supported-profile Units | Profile-subset Units | Unsupported/other Units | Profile fact denominator | Selected-identity replay witnesses/denominator | Selected-identity replay gaps |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Background Units | 4 | 0 | 0 | 0 | 4 | 0 | 0/0 | 0 |
-| Feat Units | 8 | 8 | 5 | 0 | 3 | 5 | 5/5 | 0 |
-| Spell Units | 124 | 124 | 86 | 20 | 18 | 127 | 105/106 | 1 |
-| Class-feature Units | 63 | 63 | 45 | 16 | 2 | 85 | 61/61 | 0 |
+| Group | Installed Unit denominator | Executable Unit denominator | Supported-profile Units | Profile-subset Units | Unsupported/other Units | Profile fact denominator | Selected-identity replay witnesses/denominator | Selected-identity replay gaps | Deferred selected-identity non-applicable |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Background Units | 4 | 0 | 0 | 0 | 4 | 0 | 0/0 | 0 | 0 |
+| Feat Units | 8 | 8 | 5 | 0 | 3 | 5 | 5/5 | 0 | 0 |
+| Spell Units | 124 | 124 | 86 | 20 | 18 | 127 | 105/106 | 0 | 1 |
+| Class-feature Units | 63 | 63 | 45 | 16 | 2 | 85 | 61/61 | 0 | 0 |
 
 | Denominator | Rule |
 | --- | --- |
 | executableUnitDenominator | installed Unit records in the group whose authored mechanics are executable |
 | installedUnitDenominator | installed Unit records in the group; each Unit identity counts once |
 | profileFactDenominator | sum of profileIds on supported-profile and profile-subset-supported Unit claims; one Unit can carry multiple profile facts |
-| selectedIdentityReplayDenominator | supported-profile and profile-subset-supported Unit identities in the group, excluding only whole-claim selected-identity not-applicable dispositions |
+| selectedIdentityDeferredNonApplicableUnits | profile-subset-supported Unit identities whose deferred mechanics are outside selected-identity replay, while the supported runtime portion still has no selected-identity replay witness |
+| selectedIdentityReplayDenominator | supported-profile and profile-subset-supported Unit identities in the group, excluding whole-claim selected-identity not-applicable dispositions; deferred-portion non-applicable rows remain visible in their own bucket |
+| selectedIdentityReplayGapUnits | Unit identities in the selected-identity replay denominator with no replay witness and no whole-claim or deferred-portion selected-identity non-applicable disposition |
 
 ## Rules-Kernel Join
 
@@ -1145,11 +1147,20 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 ## Selected Identity Replay Gaps
 
-This generated view lists `profile-subset-supported` and `supported-profile` Units that have no `selected-identity-mbt` evidence row. Whole-claim non-applicable dispositions are excluded; deferred-portion non-applicable dispositions remain visible with their selected identity status.
+This generated view lists `profile-subset-supported` and `supported-profile` Units that have no `selected-identity-mbt` evidence row and no selected-identity non-applicable disposition at the whole-claim or deferred-mechanics boundary.
+Deferred-portion non-applicable rows are not replay gaps; they are listed in the next section so they remain visible without being counted as missing replay witnesses.
 
 | Unit | Claim | Selected identity | Catalog | Collection | Kind | Profiles | Source |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `mind_spike` | profile-subset-supported | missing-witness-deferred-not-applicable | installed | srd-5.2.1 | spell | `spell.invocation-damage-save-or-attack` | `packages/surface/content/mind_spike.json` |
+| _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ |
+
+## Selected Identity Deferred Non-Applicable
+
+These profile-subset rows have no selected-identity replay witness, but the declared selected-identity non-applicable reason applies only to deferred mechanics outside promoted replay ownership.
+
+| Unit | Claim | Selected identity | Owner | Reason | Catalog | Collection | Kind | Profiles | Source |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `mind_spike` | profile-subset-supported | missing-witness-deferred-not-applicable | runtime-detached table/perception/knowledge owner | The location knowledge, Hidden prevention, and observer-scoped Invisible benefit denial are table/perception knowledge facts outside promoted battle-runtime replay. | installed | srd-5.2.1 | spell | `spell.invocation-damage-save-or-attack` | `packages/surface/content/mind_spike.json` |
 
 ## Unsupported And Widening Pressure
 

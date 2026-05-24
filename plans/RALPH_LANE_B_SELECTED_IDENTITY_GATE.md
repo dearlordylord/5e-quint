@@ -184,7 +184,7 @@ identity evidence or an explicit non-applicable classification.
     {
       "number": 29,
       "id": "B26-DEFERRED-IDENTITY-GAP-SEMANTICS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Clarify deferred selected identity gap semantics"
     },
     {
@@ -290,7 +290,7 @@ Lane B must not:
 | 26 | B23-FIREBALL-IDENTITY-WITNESS - Backfill Fireball selected identity witness | done | none | Gap row: `fireball`, profile-subset-supported `spell.invocation-damage-save-or-attack`, installed Surface record. |
 | 27 | B24-LIGHTNING-BOLT-IDENTITY-WITNESS - Backfill Lightning Bolt selected identity witness | done | none | Gap row: `lightning_bolt`, supported-profile `spell.invocation-damage-save-or-attack`, installed Surface record. |
 | 28 | B25-SHINING-SMITE-IDENTITY-WITNESS - Backfill Shining Smite selected identity witness | done | none | Added selected-identity MBT evidence for `shining_smite`; generated selected-identity gaps no longer list it. |
-| 29 | B26-DEFERRED-IDENTITY-GAP-SEMANTICS - Clarify deferred selected identity gap semantics | ready-for-research | none | Gap rows: `mind_spike` and `thaumaturgy` have deferred-portion non-applicable dispositions but still appear as selected identity gaps; decide whether the generated view needs a separate deferred-visible bucket or whole-claim non-applicable classification. |
+| 29 | B26-DEFERRED-IDENTITY-GAP-SEMANTICS - Clarify deferred selected identity gap semantics | done | none | Generated selected-identity reports now keep deferred-portion non-applicable rows visible in a separate bucket while excluding them from ordinary replay gaps; `mind_spike` is listed there, and `thaumaturgy` already has selected-identity MBT evidence. |
 | 30 | B27-CREATURE-SIZE-RULES-KERNEL-MAPPING - Map creature size change profile to rules-kernel obligations | ready-for-research | none | Metric-honesty gap: `spell.invocation-creature-size-change` is unmapped in `rulesKernelProfileJoin`. |
 | 31 | B28-WIZARD-SPELLBOOK-LEARNING-RULES-KERNEL-MAPPING - Map Wizard spellbook learning profile to rules-kernel obligations | ready-for-research | none | Metric-honesty gap: `character-creation.wizard-spellbook-learning-choice` is unmapped in `rulesKernelProfileJoin`. |
 | 32 | B29-LEVITATED-CREATURE-RULES-KERNEL-MAPPING - Map levitated creature profile to rules-kernel obligations | ready-for-research | none | Metric-honesty gap: `spell.invocation-levitated-creature` is unmapped in `rulesKernelProfileJoin`. |
@@ -742,7 +742,7 @@ lists `shining_smite`.
 
 ### Task 29 - B26-DEFERRED-IDENTITY-GAP-SEMANTICS - Clarify deferred selected identity gap semantics
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: decide and implement the report/checker treatment for
 `missing-witness-deferred-not-applicable` rows such as `mind_spike` and
@@ -751,6 +751,13 @@ or move qualifying whole-claim cases to the existing not-applicable exclusion.
 
 Acceptance: `UNIT_REPORT.md`, `unit-matrix.json`, and metric prose no longer
 make deferred non-applicable rows look like ordinary missing replay witnesses.
+
+Result: the checker keeps deferred selected-identity non-applicable rows visible
+in a dedicated generated bucket instead of counting them as ordinary replay
+gaps. The ordinary selected-identity replay gap table is empty, while
+`mind_spike` remains visible under deferred non-applicable; `thaumaturgy` is not
+listed there because it already has selected-identity MBT evidence for its
+supported Booming Voice subset.
 
 ### Task 30 - B27-CREATURE-SIZE-RULES-KERNEL-MAPPING - Map creature size change profile to rules-kernel obligations
 

@@ -9243,8 +9243,7 @@
       ],
       "evidenceTag": "selected-identity-mbt"
     },
-    "rowCount": 1,
-    "rows": [
+    "deferredNonApplicableRows": [
       {
         "catalogAdmissionStatus": "installed",
         "collectionId": "srd-5.2.1",
@@ -9263,7 +9262,9 @@
         },
         "unitId": "mind_spike"
       }
-    ]
+    ],
+    "rowCount": 0,
+    "rows": []
   },
   "taskClaims": [
     {
@@ -11893,7 +11894,9 @@
       "executableUnitDenominator": "installed Unit records in the group whose authored mechanics are executable",
       "installedUnitDenominator": "installed Unit records in the group; each Unit identity counts once",
       "profileFactDenominator": "sum of profileIds on supported-profile and profile-subset-supported Unit claims; one Unit can carry multiple profile facts",
-      "selectedIdentityReplayDenominator": "supported-profile and profile-subset-supported Unit identities in the group, excluding only whole-claim selected-identity not-applicable dispositions"
+      "selectedIdentityDeferredNonApplicableUnits": "profile-subset-supported Unit identities whose deferred mechanics are outside selected-identity replay, while the supported runtime portion still has no selected-identity replay witness",
+      "selectedIdentityReplayDenominator": "supported-profile and profile-subset-supported Unit identities in the group, excluding whole-claim selected-identity not-applicable dispositions; deferred-portion non-applicable rows remain visible in their own bucket",
+      "selectedIdentityReplayGapUnits": "Unit identities in the selected-identity replay denominator with no replay witness and no whole-claim or deferred-portion selected-identity non-applicable disposition"
     },
     "rows": [
       {
@@ -11903,6 +11906,7 @@
         "label": "Background Units",
         "profileFactDenominator": 0,
         "profileSubsetSupportedUnits": 0,
+        "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 0,
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 0,
@@ -11916,6 +11920,7 @@
         "label": "Feat Units",
         "profileFactDenominator": 5,
         "profileSubsetSupportedUnits": 0,
+        "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 5,
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 5,
@@ -11929,8 +11934,9 @@
         "label": "Spell Units",
         "profileFactDenominator": 127,
         "profileSubsetSupportedUnits": 20,
+        "selectedIdentityDeferredNonApplicableUnits": 1,
         "selectedIdentityReplayDenominator": 106,
-        "selectedIdentityReplayGapUnits": 1,
+        "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 105,
         "supportedProfileUnits": 86,
         "unsupportedOrOtherUnits": 18
@@ -11942,6 +11948,7 @@
         "label": "Class-feature Units",
         "profileFactDenominator": 85,
         "profileSubsetSupportedUnits": 16,
+        "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 61,
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 61,
