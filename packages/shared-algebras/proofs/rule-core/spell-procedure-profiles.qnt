@@ -33,14 +33,6 @@ module spellProcedureProfiles {
   type AttackBurstSaveDamageProfile =
     | IceKnifeAttackBurstSaveDamageProfile
 
-  type SleepRepeatSaveLifecycle =
-    | NoSleepRepeatSaveLifecycle
-    | PendingSleepRepeatSaveLifecycle({ hadIncapacitated: bool })
-    | UnconsciousSleepRepeatSaveLifecycle({
-        hadIncapacitated: bool,
-        hadUnconscious: bool,
-      })
-
   type SpellAreaProfile =
     | NoSpellAreaProfile
     | MassCureWoundsPointOriginSphereArea
@@ -192,42 +184,6 @@ module spellProcedureProfiles {
 
   pure def attackBurstSaveDamageBurstAmount(damageRoll: int, savingThrowSucceeded: bool): int =
     if (savingThrowSucceeded) 0 else damageRoll
-
-  pure def sleepInitialSaveLifecycle(
-    savingThrowSucceeded: bool,
-    hadIncapacitated: bool,
-  ): SleepRepeatSaveLifecycle =
-    if (savingThrowSucceeded)
-      NoSleepRepeatSaveLifecycle
-    else
-      PendingSleepRepeatSaveLifecycle({ hadIncapacitated: hadIncapacitated })
-
-  pure def sleepSavingThrowAutomaticallySucceeds(
-    targetDoesNotSleep: bool,
-    targetHasExhaustionImmunity: bool,
-  ): bool =
-    targetDoesNotSleep or targetHasExhaustionImmunity
-
-  pure def sleepRepeatSaveLifecycle(
-    pending: SleepRepeatSaveLifecycle,
-    savingThrowSucceeded: bool,
-    hadUnconscious: bool,
-  ): SleepRepeatSaveLifecycle =
-    match pending {
-      | PendingSleepRepeatSaveLifecycle(data) =>
-          if (savingThrowSucceeded)
-            NoSleepRepeatSaveLifecycle
-          else
-            UnconsciousSleepRepeatSaveLifecycle({
-              hadIncapacitated: data.hadIncapacitated,
-              hadUnconscious: hadUnconscious,
-            })
-      | _ => pending
-    }
-
-  pure def sleepEffectEndsOnDamage: bool = true
-
-  pure def sleepEffectEndsOnAdjacentShakeAwakeAction: bool = true
 
   pure def rayOfFrostMaximumBaseDamageDice: int = 4
 

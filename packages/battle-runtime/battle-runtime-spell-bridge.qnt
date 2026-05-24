@@ -15,6 +15,7 @@ module battleRuntimeSpellBridge {
   import spellIndependentAttackSequenceCore.* from "../shared-algebras/proofs/rule-core/spell-independent-attack-sequence-core"
   import spellTurnHookCore.* from "../shared-algebras/proofs/rule-core/spell-turn-hook-core"
   import spellObjectHitPointDamageCore.* from "../shared-algebras/proofs/rule-core/spell-object-hit-point-damage-core"
+  import spellSleepRepeatSaveLifecycleCore.* from "../shared-algebras/proofs/rule-core/spell-sleep-repeat-save-lifecycle-core"
   import spellProcedureProfiles.* from "../shared-algebras/proofs/rule-core/spell-procedure-profiles"
 
   type BattleRuntimeDirectHitPointRestorationProfile =

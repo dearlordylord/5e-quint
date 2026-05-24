@@ -86,7 +86,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 13,
       "id": "A13-SLEEP-LIFECYCLE-CORE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Split Sleep repeat-save lifecycle core"
     },
     {
@@ -193,7 +193,7 @@ Lane A must not:
 | 10 | A10-INDEPENDENT-ATTACK-SEQUENCE-CORE - Split independent attack sequence core | done | none | Pure finite sequence facts. |
 | 11 | A11-SPELL-TURN-HOOK-CORE - Split spell turn hook semantic core | done | none | Temporary HP, duration, once-per-turn facts. |
 | 12 | A12-OBJECT-HP-DAMAGE-CORE - Split object hit point damage core | done | none | Keep object state minimal. |
-| 13 | A13-SLEEP-LIFECYCLE-CORE - Split Sleep repeat-save lifecycle core | ready-for-implementation-after-light-research | none | No table adjudication expansion. |
+| 13 | A13-SLEEP-LIFECYCLE-CORE - Split Sleep repeat-save lifecycle core | done | none | No table adjudication expansion. |
 | 14 | A14-QNT-OWNER-ROLE-REFRESH - Refresh owner roles for new semantic cores | blocked | A2-A13,A20-A23 | Generated role closure. |
 | 15 | A15-GENERATOR-SUBSET-TOKEN-AUDIT - Audit generator subset tokens for spell cores | blocked | A2-A13,A20-A23 | Ensure row vocabulary is exact. |
 | 16 | A16-FIXTURE-BOUND-STATUS-CLOSURE - Close spell procedure fixture-bound readiness row | blocked | A14,A15 | Only if blockers are actually gone. |
@@ -332,7 +332,7 @@ Acceptance: destroyed and threshold-blocked examples remain executable.
 
 ### Task 13 - A13-SLEEP-LIFECYCLE-CORE - Split Sleep repeat-save lifecycle core
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: pure semantic-core file for automatic save success, initial pending
 state, repeat save, unconscious state, and end-on-damage/shake facts.

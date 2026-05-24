@@ -385,13 +385,18 @@ needs-targets/needs-attack-roll/needs-damage-roll/complete step states.
 Damage Threshold blocking, full-damage application when the threshold is met,
 Hit Point clamping at 0, and destruction at 0 Hit Points.
 
+`spell-sleep-repeat-save-lifecycle-core.qnt` models Sleep's save lifecycle:
+automatic save success for targets that do not sleep or have Exhaustion
+Immunity, initial failed-save pending state, repeat-save cleanup or Unconscious
+transition, and target-end facts for damage or adjacent shake-awake action.
+
 `spell-procedure-profiles.qnt` models projection-shaped Spell Invocation facts
 and Spell Effects for the production spell procedures without importing Spell
 Definition records, Spell Access lists, Unit ids, or Surface authored ids. The
 QCORE10 spell procedure suite projects supported profiles into focused
 semantic cores for invocation resources, spell damage, attack damage, scalar
-buffs, damage riders, chained attacks, independent attack sequences, and object
-Hit Point damage.
+buffs, damage riders, chained attacks, independent attack sequences, object
+Hit Point damage, and Sleep repeat-save lifecycle facts.
 
 Scope:
 
@@ -437,6 +442,12 @@ Scope:
   blocking, whole-instance damage once the threshold is met, Hit Point
   clamping at 0, and destruction at 0 Hit Points without importing authored
   Spell Definition records;
+- Sleep repeat-save lifecycle facts live in
+  `spell-sleep-repeat-save-lifecycle-core.qnt`; they project automatic save
+  success for targets that do not sleep or have Exhaustion Immunity, initial
+  pending repeat-save state, successful-repeat cleanup, failed-repeat
+  Unconscious transition, and target-end facts for damage or adjacent
+  shake-awake action without importing authored Spell Definition records;
 - Readied Spell Response holds only action-time spell profiles as a readied
   spell held effect, expends the spell's casting resources at the hold
   boundary, starts Concentration while held, opens QCORE8's Readied Spell
