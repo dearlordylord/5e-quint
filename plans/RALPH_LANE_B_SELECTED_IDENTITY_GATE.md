@@ -160,7 +160,7 @@ identity evidence or an explicit non-applicable classification.
     {
       "number": 25,
       "id": "B22-FIND-FAMILIAR-IDENTITY-WITNESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Backfill Find Familiar selected identity witness"
     },
     {
@@ -286,7 +286,7 @@ Lane B must not:
 | 22 | B19-ANTIMAGIC-FIELD-IDENTITY-WITNESS - Backfill Antimagic Field selected identity witness | done | none | Added selected-identity MBT evidence for `antimagic_field`; generated selected-identity gaps no longer list it. |
 | 23 | B20-COUNTERSPELL-IDENTITY-WITNESS - Backfill Counterspell selected identity witness | done | none | Added selected-identity MBT evidence for `counterspell`; generated selected-identity gaps no longer list it. |
 | 24 | B21-DISPEL-MAGIC-IDENTITY-WITNESS - Backfill Dispel Magic selected identity witness | done | none | Added selected-identity MBT evidence for `dispel_magic`; generated selected-identity gaps no longer list it. |
-| 25 | B22-FIND-FAMILIAR-IDENTITY-WITNESS - Backfill Find Familiar selected identity witness | ready-for-research | none | Gap row: `find_familiar`, profile-subset-supported `spell.find-familiar-lifecycle`, installed Surface record. |
+| 25 | B22-FIND-FAMILIAR-IDENTITY-WITNESS - Backfill Find Familiar selected identity witness | done | none | Added focused selected-identity MBT evidence for `find_familiar`; generated selected-identity gaps no longer list it. |
 | 26 | B23-FIREBALL-IDENTITY-WITNESS - Backfill Fireball selected identity witness | ready-for-research | none | Gap row: `fireball`, profile-subset-supported `spell.invocation-damage-save-or-attack`, installed Surface record. |
 | 27 | B24-LIGHTNING-BOLT-IDENTITY-WITNESS - Backfill Lightning Bolt selected identity witness | ready-for-research | none | Gap row: `lightning_bolt`, supported-profile `spell.invocation-damage-save-or-attack`, installed Surface record. |
 | 28 | B25-SHINING-SMITE-IDENTITY-WITNESS - Backfill Shining Smite selected identity witness | ready-for-research | none | Gap row: `shining_smite`, supported-profile `spell.invocation-after-hit-damage-illumination`, installed Surface record. |
@@ -686,7 +686,7 @@ targets. The generated selected-identity gap report no longer lists
 
 ### Task 25 - B22-FIND-FAMILIAR-IDENTITY-WITNESS - Backfill Find Familiar selected identity witness
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: prove selected `find_familiar` identity reaches the lifecycle owner
 already claimed by `spell.find-familiar-lifecycle`, or classify exactly why the
@@ -695,6 +695,12 @@ closed portion is outside replay.
 Acceptance: the generated selected-identity gap row for `find_familiar` is
 cleared or converted to an explicit non-applicable state without adding
 companion AI or table-routing mechanics.
+
+Result: `find_familiar` now has checker-readable `selected-identity-mbt`
+evidence tied to `find-familiar-selected-identity.mbt.test.ts`, where the
+selected spell identity reaches cast, recast replacement, temporary dismissal
+and reappearance, and Touch spell delivery paths. The generated selected-identity
+gap report no longer lists `find_familiar`.
 
 ### Task 26 - B23-FIREBALL-IDENTITY-WITNESS - Backfill Fireball selected identity witness
 

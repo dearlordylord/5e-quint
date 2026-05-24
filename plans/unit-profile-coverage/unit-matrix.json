@@ -9243,25 +9243,8 @@
       ],
       "evidenceTag": "selected-identity-mbt"
     },
-    "rowCount": 6,
+    "rowCount": 5,
     "rows": [
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-mbt evidence.",
-          "status": "missing-witness"
-        },
-        "sourceRecordPath": "packages/surface/content/find_familiar.json",
-        "support": {
-          "profileIds": [
-            "spell.find-familiar-lifecycle"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "find_familiar"
-      },
       {
         "catalogAdmissionStatus": "installed",
         "collectionId": "srd-5.2.1",
@@ -12016,8 +11999,8 @@
         "profileFactDenominator": 127,
         "profileSubsetSupportedUnits": 20,
         "selectedIdentityReplayDenominator": 106,
-        "selectedIdentityReplayGapUnits": 6,
-        "selectedIdentityReplayWitnessUnits": 100,
+        "selectedIdentityReplayGapUnits": 5,
+        "selectedIdentityReplayWitnessUnits": 101,
         "supportedProfileUnits": 86,
         "unsupportedOrOtherUnits": 18
       },
@@ -21412,6 +21395,11 @@
           "ownerPath": "packages/battle-runtime/src/find-familiar-lifecycle.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV84I5"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/find-familiar-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B22-FIND-FAMILIAR-IDENTITY-WITNESS"
         }
       ],
       "executableMechanics": true,
