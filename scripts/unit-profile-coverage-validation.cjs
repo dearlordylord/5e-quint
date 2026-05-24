@@ -28,6 +28,12 @@ function isNonEmptyString(value) {
 
 const unitEvidenceRowFields = new Set(["unitId", "evidence"]);
 const unitEvidenceFields = new Set(["tag", "taskId", "ownerPath"]);
+const selectedIdentityEvidenceDispositionFields = new Set([
+  "tag",
+  "owner",
+  "reason",
+]);
+const selectedIdentityNonApplicableDispositionTag = "not-applicable";
 
 function unexpectedFieldIssues(value, allowedFields, context) {
   return Object.keys(value)
@@ -65,6 +71,41 @@ function unitEvidenceRowSchemaIssues(row, index) {
     }
   }
   return issues;
+}
+
+function selectedIdentityEvidenceDispositionIssues(unitId, disposition) {
+  if (disposition === undefined) return [];
+  const context = `Unit ${unitId} selectedIdentityEvidenceDisposition`;
+  const issues = [];
+  if (!isRecord(disposition)) {
+    return [`${context} must be an object.`];
+  }
+  for (const field of Object.keys(disposition).filter(
+    (field) => !selectedIdentityEvidenceDispositionFields.has(field),
+  )) {
+    issues.push(`${context} must not include unsupported field ${field}.`);
+  }
+  if (disposition.tag !== selectedIdentityNonApplicableDispositionTag) {
+    issues.push(
+      `${context}.tag must be ${selectedIdentityNonApplicableDispositionTag}.`,
+    );
+  }
+  for (const field of ["owner", "reason"]) {
+    if (!isNonEmptyString(disposition[field])) {
+      issues.push(`${context}.${field} must be a non-empty string.`);
+    }
+  }
+  return issues;
+}
+
+function hasSelectedIdentityNonApplicableDisposition(claim) {
+  const disposition = claim?.claim?.selectedIdentityEvidenceDisposition;
+  return (
+    isRecord(disposition) &&
+    disposition.tag === selectedIdentityNonApplicableDispositionTag &&
+    isNonEmptyString(disposition.owner) &&
+    isNonEmptyString(disposition.reason)
+  );
 }
 
 function isUsableUnitEvidenceRow(row) {
@@ -363,6 +404,21 @@ function validateUnitClaims(claims, inventory, authoredSurfaceUnits, profiles) {
         `Unit ${claim.unitId} has unknown claim tag ${claim.claim?.tag}.`,
       );
       continue;
+    }
+    issues.push(
+      ...selectedIdentityEvidenceDispositionIssues(
+        claim.unitId,
+        claim.claim.selectedIdentityEvidenceDisposition,
+      ),
+    );
+    if (
+      claim.claim.selectedIdentityEvidenceDisposition !== undefined &&
+      claim.claim.tag !== "supported-profile" &&
+      claim.claim.tag !== "profile-subset-supported"
+    ) {
+      issues.push(
+        `Unit ${claim.unitId} selectedIdentityEvidenceDisposition requires a supported-profile or profile-subset-supported claim.`,
+      );
     }
     if (
       claim.claim.tag === "supported-profile" ||
@@ -1023,6 +1079,40 @@ function taskClaimIncludesProfile(taskClaims, taskId, profileId) {
   );
 }
 
+function validateSelectedIdentityHardGate({
+  inventory,
+  unitClaims,
+  unitEvidence,
+}) {
+  const selectedIdentityEvidenceUnitIds = new Set(
+    unitEvidence
+      .filter((row) => row.evidence?.tag === selectedIdentityMbtEvidenceTag)
+      .map((row) => row.unitId),
+  );
+  const claimsByUnitId = new Map(
+    unitClaims.map((claim) => [claim.unitId, claim]),
+  );
+  const issues = [];
+
+  for (const unit of inventory) {
+    if (unit.executableMechanics !== true) continue;
+    const claim = claimsByUnitId.get(unit.unitId);
+    if (
+      claim?.claim?.tag !== "supported-profile" &&
+      claim?.claim?.tag !== "profile-subset-supported"
+    ) {
+      continue;
+    }
+    if (selectedIdentityEvidenceUnitIds.has(unit.unitId)) continue;
+    if (hasSelectedIdentityNonApplicableDisposition(claim)) continue;
+    issues.push(
+      `Supported executable Unit ${unit.unitId} has no ${selectedIdentityMbtEvidenceTag} evidence and no selectedIdentityEvidenceDisposition not-applicable classification.`,
+    );
+  }
+
+  return issues;
+}
+
 function validateCoverageInputs({
   root,
   collections,
@@ -1033,8 +1123,8 @@ function validateCoverageInputs({
   taskClaims,
   authoredSurfaceUnits,
   scannedClaims,
-}) {
-  return [
+}, options = {}) {
+  const issues = [
     ...rulesKernelProfileKindClassificationIssues(),
     ...validateCollections(collections.collections, inventory),
     ...validateProfiles(profiles),
@@ -1056,6 +1146,16 @@ function validateCoverageInputs({
       unitEvidence,
     ),
   ];
+  if (options.selectedIdentityHardGate === true) {
+    issues.push(
+      ...validateSelectedIdentityHardGate({
+        inventory,
+        unitClaims,
+        unitEvidence,
+      }),
+    );
+  }
+  return issues;
 }
 
 module.exports = {

@@ -585,6 +585,156 @@ function runSelfTest(root) {
         );
       }
     }
+    const selectedIdentityHardGateIssues = validateCoverageInputs(
+      {
+        root: tempDir,
+        collections: {
+          collections: [{ id: "srd-5.2.1", policy: { tag: "srd" } }],
+        },
+        inventory: [
+          {
+            unitId: "fixture_missing_identity",
+            collectionId: "srd-5.2.1",
+            sourceRecordPath: "fixture/missing-identity.json",
+            provenance: { kind: "srd-5.2.1" },
+            rawRecord: {},
+            executableMechanics: true,
+          },
+          {
+            unitId: "fixture_non_applicable_identity",
+            collectionId: "srd-5.2.1",
+            sourceRecordPath: "fixture/non-applicable-identity.json",
+            provenance: { kind: "srd-5.2.1" },
+            rawRecord: {},
+            executableMechanics: true,
+          },
+        ],
+        profiles: [
+          {
+            id: "fixture.profile",
+            profileKind: "equipment",
+            qntOwners: [],
+            runtimeOwners: [],
+            verificationOwners: [],
+          },
+        ],
+        unitClaims: [
+          {
+            unitId: "fixture_missing_identity",
+            collectionId: "srd-5.2.1",
+            claim: {
+              tag: "supported-profile",
+              profileIds: ["fixture.profile"],
+            },
+          },
+          {
+            unitId: "fixture_non_applicable_identity",
+            collectionId: "srd-5.2.1",
+            claim: {
+              tag: "profile-subset-supported",
+              profileIds: ["fixture.profile"],
+              supportedMechanics: ["fixture supported executable subset"],
+              deferredMechanics: [
+                {
+                  mechanic: "fixture outside-runtime portion",
+                  battleReadinessClosure: {
+                    kind: "outside-battle-runtime",
+                    owner: "fixture self-test",
+                    reason: "The fixture closed portion has no selected identity replay entrypoint.",
+                  },
+                },
+              ],
+              selectedIdentityEvidenceDisposition: {
+                tag: "not-applicable",
+                owner: "fixture self-test",
+                reason: "The fixture closed portion has no selected identity replay entrypoint.",
+              },
+            },
+          },
+        ],
+        unitEvidence: [],
+        taskClaims: [],
+        authoredSurfaceUnits: [],
+        scannedClaims: {
+          profileClaims: [],
+          unitEvidence: [],
+          unitIdentityMbtReplays: [],
+          selectedUnitIdentityReplays: [],
+          selectedUnitIdentityReplayConsumers: [],
+        },
+      },
+      { selectedIdentityHardGate: true },
+    );
+    const missingIdentityExpected =
+      "Supported executable Unit fixture_missing_identity has no selected-identity-mbt evidence and no selectedIdentityEvidenceDisposition not-applicable classification.";
+    if (!selectedIdentityHardGateIssues.includes(missingIdentityExpected)) {
+      fail(
+        `Self-test failed: expected selected identity hard-gate issue ${JSON.stringify(missingIdentityExpected)}, got ${JSON.stringify(selectedIdentityHardGateIssues)}`,
+      );
+    }
+    const nonApplicableBoundaryIssue = selectedIdentityHardGateIssues.find(
+      (issue) => issue.includes("fixture_non_applicable_identity"),
+    );
+    if (nonApplicableBoundaryIssue !== undefined) {
+      fail(
+        `Self-test failed: expected explicit selected identity non-applicable disposition to satisfy hard gate, got ${JSON.stringify(selectedIdentityHardGateIssues)}`,
+      );
+    }
+    const malformedSelectedIdentityDispositionIssues = validateCoverageInputs({
+      root: tempDir,
+      collections: {
+        collections: [{ id: "srd-5.2.1", policy: { tag: "srd" } }],
+      },
+      inventory: [
+        {
+          unitId: "fixture_bad_disposition",
+          collectionId: "srd-5.2.1",
+          sourceRecordPath: "fixture/bad-disposition.json",
+          provenance: { kind: "srd-5.2.1" },
+          rawRecord: {},
+          executableMechanics: true,
+        },
+      ],
+      profiles: [],
+      unitClaims: [
+        {
+          unitId: "fixture_bad_disposition",
+          collectionId: "srd-5.2.1",
+          claim: {
+            tag: "unsupported-profile",
+            selectedIdentityEvidenceDisposition: {
+              tag: "not-needed",
+              owner: "",
+              reason: "",
+              note: "ambiguous optional disposition text",
+            },
+          },
+        },
+      ],
+      unitEvidence: [],
+      taskClaims: [],
+      authoredSurfaceUnits: [],
+      scannedClaims: {
+        profileClaims: [],
+        unitEvidence: [],
+        unitIdentityMbtReplays: [],
+        selectedUnitIdentityReplays: [],
+        selectedUnitIdentityReplayConsumers: [],
+      },
+    });
+    for (const expectedIssue of [
+      "Unit fixture_bad_disposition selectedIdentityEvidenceDisposition must not include unsupported field note.",
+      "Unit fixture_bad_disposition selectedIdentityEvidenceDisposition.tag must be not-applicable.",
+      "Unit fixture_bad_disposition selectedIdentityEvidenceDisposition.owner must be a non-empty string.",
+      "Unit fixture_bad_disposition selectedIdentityEvidenceDisposition.reason must be a non-empty string.",
+      "Unit fixture_bad_disposition selectedIdentityEvidenceDisposition requires a supported-profile or profile-subset-supported claim.",
+    ]) {
+      if (!malformedSelectedIdentityDispositionIssues.includes(expectedIssue)) {
+        fail(
+          `Self-test failed: expected selected identity disposition schema issue ${JSON.stringify(expectedIssue)}, got ${JSON.stringify(malformedSelectedIdentityDispositionIssues)}`,
+        );
+      }
+    }
     const unreviewedLevelThreeSpellIssues = validateSrdUnitInventory({
       rows: [
         {
