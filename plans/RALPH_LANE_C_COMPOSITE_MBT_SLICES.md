@@ -125,8 +125,80 @@ slice candidates remain.
     {
       "number": 19,
       "id": "C19-RECURSIVE-NEXT-BATCH",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Mine next composite MBT slice batch"
+    },
+    {
+      "number": 20,
+      "id": "C20-FIND-FAMILIAR-COMPANION-SLICE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Add Find Familiar companion lifecycle focused MBT"
+    },
+    {
+      "number": 21,
+      "id": "C21-WILD-SHAPE-FORM-SLICE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Add Wild Shape form lifecycle focused MBT"
+    },
+    {
+      "number": 22,
+      "id": "C22-DISPEL-MAGIC-ONGOING-SLICE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Add Dispel Magic ongoing spell ending focused MBT"
+    },
+    {
+      "number": 23,
+      "id": "C23-QUICKENED-SPELL-GOVERNOR-SLICE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Add Quickened Spell governor focused MBT"
+    },
+    {
+      "number": 24,
+      "id": "C24-DARKNESS-POINT-ORIGIN-SLICE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Add Darkness point-origin lifecycle focused MBT"
+    },
+    {
+      "number": 25,
+      "id": "C25-SPELL-CREATED-HELD-OBJECT-SLICE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Add spell-created held object lifecycle focused MBT"
+    },
+    {
+      "number": 26,
+      "id": "C26-SELF-TELEPORT-SLICE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Add self-teleport lifecycle focused MBT"
+    },
+    {
+      "number": 27,
+      "id": "C27-BLUR-ATTACK-DEFENSE-SLICE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Add Blur attack-roll defense focused MBT"
+    },
+    {
+      "number": 28,
+      "id": "C28-SCALAR-BUFF-ACTIVE-EFFECTS-SLICE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Add scalar buff active effects focused MBT"
+    },
+    {
+      "number": 29,
+      "id": "C29-SELF-TRANSFORMATION-MODE-SLICE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Add self-transformation mode focused MBT"
+    },
+    {
+      "number": 30,
+      "id": "C30-REACTION-CASTING-TIME-SLICE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Add reaction casting time focused MBT"
+    },
+    {
+      "number": 31,
+      "id": "C31-CHAINED-ATTACK-SEQUENCE-SLICE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Add chained attack sequence focused MBT"
     }
   ]
 }
@@ -179,7 +251,19 @@ Lane C must not:
 | 16 | C16-SPELL-SEQUENCING-INTEGRATION-MBT - Add bounded spell sequencing integration MBT | done | C4-C12 | Cross-slice bounded fixture over non-duplicate new slices only. |
 | 17 | C17-SLICE-SCRIPT-AND-REPORT-CLOSURE - Refresh package scripts and rules-kernel rows | done | none | Scripts and generated rows, including C1-discovered existing witness cleanup. C4-C12 and C16 are already done; do not keep done task ids as blocking dependencies. |
 | 18 | C18-END-TO-END-SLICE-VERIFICATION - Run and document lane C verification | done | none | Focused MBT-only closure documented in `plans/rules-kernel-coverage/C18_END_TO_END_SLICE_VERIFICATION.md`. |
-| 19 | C19-RECURSIVE-NEXT-BATCH - Mine next composite MBT slice batch | ready-for-research | none | Must append >=12 tasks or prove exhaustion. Runnable after C18 by queue order; no done-task dependency. |
+| 19 | C19-RECURSIVE-NEXT-BATCH - Mine next composite MBT slice batch | done | none | Appended 12 focused MBT slice tasks from covered battle obligations that lack focused witnesses; see `plans/rules-kernel-coverage/C19_RECURSIVE_NEXT_BATCH.md`. |
+| 20 | C20-FIND-FAMILIAR-COMPANION-SLICE - Add Find Familiar companion lifecycle focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; companion lifecycle, replacement, telepathy, touch delivery, and Pact reaction-attack state. |
+| 21 | C21-WILD-SHAPE-FORM-SLICE - Add Wild Shape form lifecycle focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; form statistics, Temporary Hit Points, spellcasting block, and supported reversion. |
+| 22 | C22-DISPEL-MAGIC-ONGOING-SLICE - Add Dispel Magic ongoing spell ending focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; target-scoped ending and higher-level ability-check gate for tracked ongoing spell effects. |
+| 23 | C23-QUICKENED-SPELL-GOVERNOR-SLICE - Add Quickened Spell governor focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; known selection, Sorcery Point affordability, action rewrite, and same-turn leveled-spell governor. |
+| 24 | C24-DARKNESS-POINT-ORIGIN-SLICE - Add Darkness point-origin lifecycle focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; point-origin magical Darkness area identity, witness consumption, Concentration, and cleanup. |
+| 25 | C25-SPELL-CREATED-HELD-OBJECT-SLICE - Add spell-created held object lifecycle focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; Flame Blade-style held object, hand occupancy, active-object attack, and cleanup. |
+| 26 | C26-SELF-TELEPORT-SLICE - Add self-teleport lifecycle focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; Misty Step-style destination witness, Bonus Action and Spell Slot spend, and no-OA projection. |
+| 27 | C27-BLUR-ATTACK-DEFENSE-SLICE - Add Blur attack-roll defense focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; self defense effect, Blindsight/Truesight bypass witnesses, roll-mode cancellation, and cleanup. |
+| 28 | C28-SCALAR-BUFF-ACTIVE-EFFECTS-SLICE - Add scalar buff active effects focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; scalar buffs for AC, Speed, special speeds, HP maximum, and Temporary Hit Points. |
+| 29 | C29-SELF-TRANSFORMATION-MODE-SLICE - Add self-transformation mode focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; Alter Self mode choice/replacement, natural-weapon override, and Aquatic projections. |
+| 30 | C30-REACTION-CASTING-TIME-SLICE - Add reaction casting time focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; Counterspell/Hellish Rebuke triggers, Reaction spend, Spell Slot ledger, interruption, and continuation resume. |
+| 31 | C31-CHAINED-ATTACK-SEQUENCE-SLICE - Add chained attack sequence focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; Chromatic Orb-style damage-type choice, target history, per-step rolls, and leap limits. |
 
 ## Task Details
 
@@ -400,7 +484,7 @@ Findings: see `plans/rules-kernel-coverage/C18_END_TO_END_SLICE_VERIFICATION.md`
 
 ### Task 19 - C19-RECURSIVE-NEXT-BATCH - Mine next composite MBT slice batch
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: append at least 12 new atomic slice tasks from remaining high-value
 covered obligations lacking focused slice witnesses. If fewer than 12 remain,
@@ -408,6 +492,21 @@ record the exact checker/test evidence proving exhaustion.
 
 Acceptance: do not mark done unless at least 12 new runnable tasks were added
 or exhaustion is proven from generated reports and test inventory.
+
+Findings: see `plans/rules-kernel-coverage/C19_RECURSIVE_NEXT_BATCH.md`.
+
+Completed: C19 found 20 covered battle obligations whose generated
+rules-kernel rows do not currently declare a `focused-mbt` witness. Two of
+those already have package-local focused MBT scripts in the test inventory
+(`flaming-sphere-hazard-ram` and `moonbeam-movable-zone`) and should be handled
+as report-alignment cleanup, not duplicate slice work. C19 appended 12 new
+runnable focused-slice tasks, C20-C31, from the remaining high-value
+runtime-test-only obligations.
+
+Verification completed:
+`pnpm rules-kernel-coverage:check -- --write`;
+`pnpm rules-kernel-coverage:check`;
+`git diff --check`.
 
 ## Verification
 
@@ -423,3 +522,176 @@ or exhaustion is proven from generated reports and test inventory.
 
 - Spike Growth recognition is not runtime-owned; this lane may test movement
   hazard damage only, consuming table-provided area/movement facts.
+- C19 did not model new D&D rules. Source anchors for the appended tasks come
+  from existing `obligations.jsonl` surface evidence and were checked against
+  local SRD headings plus `UBIQUITOUS_LANGUAGE.md`; each implementation task
+  must reread its specific SRD passage before changing behavior.
+
+### Task 20 - C20-FIND-FAMILIAR-COMPANION-SLICE - Add Find Familiar companion lifecycle focused MBT
+
+Status: `ready-for-implementation-after-light-research`
+
+Output: add a focused `*.mbt.qnt` plus `src/*.mbt.test.ts` witness and package
+script for `BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE`.
+
+Acceptance: witness covers companion creation/replacement state, selected form
+and type facts, telepathy/touch-delivery runtime state, and Pact of the Chain
+reaction-attack state without adding companion AI or table route ownership.
+
+Verification: focused package script, `pnpm rules-kernel-coverage:check -- --write`,
+`pnpm rules-kernel-coverage:check`, package typecheck when TS changes, and
+`git diff --check`.
+
+### Task 21 - C21-WILD-SHAPE-FORM-SLICE - Add Wild Shape form lifecycle focused MBT
+
+Status: `ready-for-implementation-after-light-research`
+
+Output: add a focused `*.mbt.qnt` plus `src/*.mbt.test.ts` witness and package
+script for `BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE`.
+
+Acceptance: witness covers spending a Wild Shape use, form stat projection,
+Temporary Hit Points, spellcasting block, and supported reversion conditions;
+do not model unsupported Beast catalog expansion in this lane.
+
+Verification: focused package script, rules-kernel write/check, package
+typecheck when TS changes, and `git diff --check`.
+
+### Task 22 - C22-DISPEL-MAGIC-ONGOING-SLICE - Add Dispel Magic ongoing spell ending focused MBT
+
+Status: `ready-for-implementation-after-light-research`
+
+Output: add a focused `*.mbt.qnt` plus `src/*.mbt.test.ts` witness and package
+script for `BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING`.
+
+Acceptance: witness covers ending tracked ongoing spell effects, including the
+higher-level ability-check gate. Keep target choice and object/world matching as
+caller/table facts.
+
+Verification: focused package script, rules-kernel write/check, package
+typecheck when TS changes, and `git diff --check`.
+
+### Task 23 - C23-QUICKENED-SPELL-GOVERNOR-SLICE - Add Quickened Spell governor focused MBT
+
+Status: `ready-for-implementation-after-light-research`
+
+Output: add a focused `*.mbt.qnt` plus `src/*.mbt.test.ts` witness and package
+script for `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR`.
+
+Acceptance: witness covers known Metamagic selection, Sorcery Point
+affordability, one-option-per-spell gates, Action-to-Bonus-Action rewrite, and
+the same-turn level-1-plus spell limit.
+
+Verification: focused package script, rules-kernel write/check, package
+typecheck when TS changes, and `git diff --check`.
+
+### Task 24 - C24-DARKNESS-POINT-ORIGIN-SLICE - Add Darkness point-origin lifecycle focused MBT
+
+Status: `ready-for-implementation-after-light-research`
+
+Output: add a focused `*.mbt.qnt` plus `src/*.mbt.test.ts` witness and package
+script for `BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE`.
+
+Acceptance: witness covers point-origin magical Darkness active effect state,
+caller-supplied area/light witnesses, Concentration ownership, and cleanup. Do
+not add map geometry or line-of-sight derivation.
+
+Verification: focused package script, rules-kernel write/check, package
+typecheck when TS changes, and `git diff --check`.
+
+### Task 25 - C25-SPELL-CREATED-HELD-OBJECT-SLICE - Add spell-created held object lifecycle focused MBT
+
+Status: `ready-for-implementation-after-light-research`
+
+Output: add a focused `*.mbt.qnt` plus `src/*.mbt.test.ts` witness and package
+script for `BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE`.
+
+Acceptance: witness covers held object creation, hand occupancy, release and
+re-evocation, active-object spell attack, light projection where applicable,
+Concentration, and cleanup.
+
+Verification: focused package script, rules-kernel write/check, package
+typecheck when TS changes, and `git diff --check`.
+
+### Task 26 - C26-SELF-TELEPORT-SLICE - Add self-teleport lifecycle focused MBT
+
+Status: `ready-for-implementation-after-light-research`
+
+Output: add a focused `*.mbt.qnt` plus `src/*.mbt.test.ts` witness and package
+script for `BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE`.
+
+Acceptance: witness covers destination witness consumption, Bonus Action and
+Spell Slot spend, no-Movement/no-Opportunity-Attack projection, and equipment
+transport. Destination legality remains caller/table supplied.
+
+Verification: focused package script, rules-kernel write/check, package
+typecheck when TS changes, and `git diff --check`.
+
+### Task 27 - C27-BLUR-ATTACK-DEFENSE-SLICE - Add Blur attack-roll defense focused MBT
+
+Status: `ready-for-implementation-after-light-research`
+
+Output: add a focused `*.mbt.qnt` plus `src/*.mbt.test.ts` witness and package
+script for `BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE`.
+
+Acceptance: witness covers self Spell Effect creation, Attack Roll
+Disadvantage projection, Blindsight and Truesight bypass witnesses, roll-mode
+cancellation, Concentration, and cleanup.
+
+Verification: focused package script, rules-kernel write/check, package
+typecheck when TS changes, and `git diff --check`.
+
+### Task 28 - C28-SCALAR-BUFF-ACTIVE-EFFECTS-SLICE - Add scalar buff active effects focused MBT
+
+Status: `ready-for-implementation-after-light-research`
+
+Output: add a focused `*.mbt.qnt` plus `src/*.mbt.test.ts` witness and package
+script for `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS`.
+
+Acceptance: witness covers representative scalar buffs for Armor Class, Speed,
+special speeds, Hit Point maximum, and Temporary Hit Points while keeping the
+existing profile shapes as the single source of runtime facts.
+
+Verification: focused package script, rules-kernel write/check, package
+typecheck when TS changes, and `git diff --check`.
+
+### Task 29 - C29-SELF-TRANSFORMATION-MODE-SLICE - Add self-transformation mode focused MBT
+
+Status: `ready-for-implementation-after-light-research`
+
+Output: add a focused `*.mbt.qnt` plus `src/*.mbt.test.ts` witness and package
+script for `BATTLE.SPELL.SELF_TRANSFORMATION_MODE`.
+
+Acceptance: witness covers Alter Self mode choice, Magic Action replacement,
+natural-weapon override, and Aquatic projections. Do not model appearance
+adjudication beyond the runtime-owned mode state.
+
+Verification: focused package script, rules-kernel write/check, package
+typecheck when TS changes, and `git diff --check`.
+
+### Task 30 - C30-REACTION-CASTING-TIME-SLICE - Add reaction casting time focused MBT
+
+Status: `ready-for-implementation-after-light-research`
+
+Output: add a focused `*.mbt.qnt` plus `src/*.mbt.test.ts` witness and package
+script for `BATTLE.SPELL.REACTION_CASTING_TIME`.
+
+Acceptance: witness covers spell-cast and after-damage reaction triggers,
+Reaction spend, Spell Slot ledger, interruption, and continuation resume for
+representative Counterspell/Hellish Rebuke-style flows.
+
+Verification: focused package script, rules-kernel write/check, package
+typecheck when TS changes, and `git diff --check`.
+
+### Task 31 - C31-CHAINED-ATTACK-SEQUENCE-SLICE - Add chained attack sequence focused MBT
+
+Status: `ready-for-implementation-after-light-research`
+
+Output: add a focused `*.mbt.qnt` plus `src/*.mbt.test.ts` witness and package
+script for `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE`.
+
+Acceptance: witness covers damage-type choice, duplicate-die leap admission,
+target history, per-step attack and damage rolls, and slot-level leap limits
+without dispatching runtime behavior on authored spell identity.
+
+Verification: focused package script, rules-kernel write/check, package
+typecheck when TS changes, and `git diff --check`.
