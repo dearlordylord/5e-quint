@@ -200,7 +200,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 32,
       "id": "A32-STAT-BLOCK-CONTROLS-READINESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Assess stat block controls generator readiness"
     },
     {
@@ -290,7 +290,7 @@ Lane A must not:
 | 29 | A29-ATTACK-DAMAGE-COMPOSITION-READINESS - Assess attack damage composition generator readiness | done | A24,A26 | Classified as fixture-bound; attack examples moved out; A34 owns the remaining unit-feature run-block split. |
 | 30 | A30-DAMAGE-ADJUSTMENTS-READINESS - Assess damage adjustment generator readiness | done | A24,A26 | Classified as generation-subset-clean; examples moved to proof-only owner. |
 | 31 | A31-SHOVE-OUTCOME-READINESS - Assess shove outcome generator readiness | done | A24,A26 | Classified as generation-subset-clean; examples moved to proof-only owner. |
-| 32 | A32-STAT-BLOCK-CONTROLS-READINESS - Assess stat block controls generator readiness | ready-for-research | A24,A26 | Shared algebra owner needs subset/blocker classification. |
+| 32 | A32-STAT-BLOCK-CONTROLS-READINESS - Assess stat block controls generator readiness | done | A24,A26 | Shared algebra owner needs subset/blocker classification. |
 | 33 | A33-HIT-POINT-RECOVERY-READINESS - Assess hit point recovery generator readiness | ready-for-research | A24,A26 | Sheet HP/rest owner needs subset/blocker classification. |
 | 34 | A34-UNIT-FEATURE-PROCEDURE-SURVEY - Survey unit feature procedure readiness split | ready-for-research | A24,A26 | Large shared algebra owner must be split into runnable follow-ups before readiness closure. |
 | 35 | A35-BATTLE-RUNTIME-MEGA-OWNER-SURVEY - Survey battle-runtime mega-owner readiness split | ready-for-research | A24,A25 | `battle-runtime.qnt` owns many covered obligations; classify split candidates without reducer changes. |
@@ -684,7 +684,7 @@ generator-facing semantic core.
 
 ### Task 32 - A32-STAT-BLOCK-CONTROLS-READINESS - Assess stat block controls generator readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `BATTLE.STAT_BLOCK.ATTACK_CONTROL`,
 `packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt`, and its
