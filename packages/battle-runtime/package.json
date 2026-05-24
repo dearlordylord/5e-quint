@@ -12,6 +12,7 @@
   "scripts": {
     "test": "vitest run",
     "test:mbt:creature-attack": "vitest run src/creature-attack.mbt.test.ts",
+    "test:mbt:mirror-image-hit-interception": "vitest run src/mirror-image-hit-interception.mbt.test.ts",
     "test:mbt:rule-core-hit-point-damage": "vitest run src/rule-core-hit-point-damage.mbt.test.ts",
     "test:mbt:rule-core-features": "vitest run src/rule-core-features.mbt.test.ts",
     "test:mbt:rule-core-movement": "vitest run src/rule-core-movement.mbt.test.ts",

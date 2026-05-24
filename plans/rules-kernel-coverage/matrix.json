@@ -1659,13 +1659,20 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-mirror-image.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/mirror-image-hit-interception.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-mirror-image-hit-interception.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
         "spell.invocation-mirror-image-hit-interception"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-mirror-image.qnt"
+        "packages/battle-runtime/battle-runtime-mirror-image.qnt",
+        "packages/battle-runtime/battle-runtime-mirror-image-hit-interception.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -5102,6 +5109,14 @@
         "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-mirror-image.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-mirror-image-hit-interception.qnt is the bounded composite slice QNT owner carrying executable Mirror Image hit-interception semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-mirror-image-hit-interception.qnt",
       "role": "semantic-core"
     },
     {

@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "QNTSLICE-FIRST-COMPOSITE-AFTER-PILOT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add Mirror Image Hit Interception Composite Slice"
     },
     {
@@ -199,7 +199,7 @@ Acceptance:
 
 ### Task 4 - QNTSLICE-FIRST-COMPOSITE-AFTER-PILOT - Add Mirror Image Hit Interception Composite Slice
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -238,6 +238,15 @@ Output:
 - Not a whole-battle model: the slice starts after an Attack Roll hit has been
   resolved and stops before damage application; it does not model initiative,
   Armor Class, attack dice, target selection, or Hit Point damage.
+
+Result:
+
+- Added a bounded Mirror Image hit-interception composite QNT slice and sibling
+  MBT harness.
+- Reused the production hit-interception helper as the TypeScript parity mirror
+  and added the focused slice parity test/script.
+- Registered the new slice owner and focused MBT parity witness in rules-kernel
+  coverage rows.
 
 Acceptance:
 

@@ -3,10 +3,7 @@
 
 module battleRuntimeMirrorImage {
   import battleRuntimeModel.* from "./battle-runtime-model"
-
-  pure def mirrorImageDurationTicks: int = 10
-  pure def mirrorImageInitialDuplicates: int = 3
-  pure def mirrorImageDuplicateSuccessAtLeast: int = 3
+  import battleRuntimeMirrorImageConstants.* from "./battle-runtime-mirror-image-constants"
 
   pure def mirrorImageActiveEffect(): ActiveEffect =
     MirrorImageDuplicates({
