@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "QNTSEM-SPELL-PROCEDURE-RUN-BLOCK-EXTRACTION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Extract Spell Procedure Semantic-Core Run Blocks"
     },
     {
@@ -131,7 +131,7 @@ Acceptance:
 
 ### Task 3 - QNTSEM-SPELL-PROCEDURE-RUN-BLOCK-EXTRACTION - Extract Spell Procedure Semantic-Core Run Blocks
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 

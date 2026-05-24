@@ -5635,7 +5635,6 @@
     },
     {
       "blockedBy": [
-        "run-block-coupled",
         "fixture-world-coupled",
         "unsupported-construct"
       ],
@@ -5659,7 +5658,8 @@
       ],
       "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
       "proofOnly": [
-        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-examples.qnt"
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
