@@ -142,7 +142,7 @@ identity evidence or an explicit non-applicable classification.
     {
       "number": 22,
       "id": "B19-ANTIMAGIC-FIELD-IDENTITY-WITNESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Backfill Antimagic Field selected identity witness"
     },
     {
@@ -283,7 +283,7 @@ Lane B must not:
 | 19 | L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION - Reconcile Acid Arrow RAW corpus | blocked | none | Owner-decision blocker: resolve the local SRD damage-timing contradiction before modeling Acid Arrow executable behavior. |
 | 20 | L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE - Repair Acid Arrow Surface damage shape | blocked | L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION | Make the approved Acid Arrow damage timing, miss branch, delayed damage, and slot scaling executable in Surface content/schema. |
 | 21 | L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT - Promote Acid Arrow delayed runtime support | blocked | L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION,L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE | Add promoted Quint/runtime parity for the approved Acid Arrow behavior. |
-| 22 | B19-ANTIMAGIC-FIELD-IDENTITY-WITNESS - Backfill Antimagic Field selected identity witness | ready-for-research | none | Gap row: `antimagic_field`, profile-subset-supported `spell.invocation-antimagic-field-ongoing-spell-suppression`, installed Surface record. |
+| 22 | B19-ANTIMAGIC-FIELD-IDENTITY-WITNESS - Backfill Antimagic Field selected identity witness | done | none | Added selected-identity MBT evidence for `antimagic_field`; generated selected-identity gaps no longer list it. |
 | 23 | B20-COUNTERSPELL-IDENTITY-WITNESS - Backfill Counterspell selected identity witness | ready-for-research | none | Gap row: `counterspell`, supported-profile `spell.reaction-counterspell`, installed Surface record. |
 | 24 | B21-DISPEL-MAGIC-IDENTITY-WITNESS - Backfill Dispel Magic selected identity witness | ready-for-research | none | Gap row: `dispel_magic`, profile-subset-supported `spell.invocation-ongoing-spell-ending`, installed Surface record. |
 | 25 | B22-FIND-FAMILIAR-IDENTITY-WITNESS - Backfill Find Familiar selected identity witness | ready-for-research | none | Gap row: `find_familiar`, profile-subset-supported `spell.find-familiar-lifecycle`, installed Surface record. |
@@ -631,7 +631,7 @@ resource spending, and cleanup behavior.
 
 ### Task 22 - B19-ANTIMAGIC-FIELD-IDENTITY-WITNESS - Backfill Antimagic Field selected identity witness
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: add checker-readable `selected-identity-mbt` evidence, or a stricter
 explicit non-applicable classification if research proves the replay boundary
@@ -640,6 +640,12 @@ cannot bind selected Unit identity, for `antimagic_field`.
 Acceptance: `selectedIdentityReplayGaps` no longer reports
 `antimagic_field` as a plain missing witness; any non-applicable disposition
 names the runtime owner for the non-replayed portion.
+
+Result: `antimagic_field` now has checker-readable `selected-identity-mbt`
+evidence tied to `antimagic-field-ongoing-suppression.mbt.test.ts`, with
+deterministic replay rows for ordinary suppression, artifact/deity exclusion,
+and concentration-end restoration. The generated selected-identity gap report no
+longer lists `antimagic_field`.
 
 ### Task 23 - B20-COUNTERSPELL-IDENTITY-WITNESS - Backfill Counterspell selected identity witness
 

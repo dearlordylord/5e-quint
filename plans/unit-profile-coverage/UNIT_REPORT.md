@@ -59,7 +59,7 @@ Background, feat, spell, and class-feature groups are counted from installed Uni
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | Background Units | 4 | 0 | 0 | 0 | 4 | 0 | 0/0 | 0 |
 | Feat Units | 8 | 8 | 5 | 0 | 3 | 5 | 5/5 | 0 |
-| Spell Units | 124 | 124 | 86 | 20 | 18 | 127 | 97/106 | 9 |
+| Spell Units | 124 | 124 | 86 | 20 | 18 | 127 | 98/106 | 8 |
 | Class-feature Units | 63 | 63 | 45 | 16 | 2 | 85 | 61/61 | 0 |
 
 | Denominator | Rule |
@@ -1146,7 +1146,6 @@ This generated view lists `profile-subset-supported` and `supported-profile` Uni
 
 | Unit | Claim | Selected identity | Catalog | Collection | Kind | Profiles | Source |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `antimagic_field` | profile-subset-supported | missing-witness | installed | srd-5.2.1 | spell | `spell.invocation-antimagic-field-ongoing-spell-suppression` | `packages/surface/content/antimagic_field.json` |
 | `counterspell` | supported-profile | missing-witness | installed | srd-5.2.1 | spell | `spell.reaction-counterspell` | `packages/surface/content/counterspell.json` |
 | `dispel_magic` | profile-subset-supported | missing-witness | installed | srd-5.2.1 | spell | `spell.invocation-ongoing-spell-ending` | `packages/surface/content/dispel_magic.json` |
 | `find_familiar` | profile-subset-supported | missing-witness | installed | srd-5.2.1 | spell | `spell.find-familiar-lifecycle` | `packages/surface/content/find_familiar.json` |

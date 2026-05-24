@@ -9243,25 +9243,8 @@
       ],
       "evidenceTag": "selected-identity-mbt"
     },
-    "rowCount": 9,
+    "rowCount": 8,
     "rows": [
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-mbt evidence.",
-          "status": "missing-witness"
-        },
-        "sourceRecordPath": "packages/surface/content/antimagic_field.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-antimagic-field-ongoing-spell-suppression"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "antimagic_field"
-      },
       {
         "catalogAdmissionStatus": "installed",
         "collectionId": "srd-5.2.1",
@@ -12067,8 +12050,8 @@
         "profileFactDenominator": 127,
         "profileSubsetSupportedUnits": 20,
         "selectedIdentityReplayDenominator": 106,
-        "selectedIdentityReplayGapUnits": 9,
-        "selectedIdentityReplayWitnessUnits": 97,
+        "selectedIdentityReplayGapUnits": 8,
+        "selectedIdentityReplayWitnessUnits": 98,
         "supportedProfileUnits": 86,
         "unsupportedOrOtherUnits": 18
       },
@@ -18716,6 +18699,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-antimagic-field.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-FOLLOWUP-ANTIMAGIC-FIELD-GENERIC-SUPPRESSION"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/antimagic-field-ongoing-suppression.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B19-ANTIMAGIC-FIELD-IDENTITY-WITNESS"
         }
       ],
       "executableMechanics": true,

@@ -338,6 +338,7 @@
 {"unitId":"darkness","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME","ownerPath":"packages/battle-runtime/src/unit-profile-admission-darkness.test.ts"}}
 {"unitId":"dispel_magic","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING","ownerPath":"packages/battle-runtime/src/unit-profile-admission-dispel-magic.test.ts"}}
 {"unitId":"antimagic_field","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-ANTIMAGIC-FIELD-GENERIC-SUPPRESSION","ownerPath":"packages/battle-runtime/src/unit-profile-admission-antimagic-field.test.ts"}}
+{"unitId":"antimagic_field","evidence":{"tag":"selected-identity-mbt","taskId":"B19-ANTIMAGIC-FIELD-IDENTITY-WITNESS","ownerPath":"packages/battle-runtime/src/antimagic-field-ongoing-suppression.mbt.test.ts"}}
 {"unitId":"prayer_of_healing","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
 {"unitId":"druid_circle_of_the_land_spells","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-DRUID-CIRCLE-LAND-SPELL-ACCESS","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
 {"unitId":"spike_growth","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME","ownerPath":"packages/battle-runtime/src/unit-profile-admission-spike-growth-movement-hazard.test.ts"}}

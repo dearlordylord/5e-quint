@@ -1,4 +1,6 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-antimagic-field-ongoing-spell-suppression
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B19-ANTIMAGIC-FIELD-IDENTITY-WITNESS antimagic_field
+// UNIT-IDENTITY-MBT-REPLAY: B19-ANTIMAGIC-FIELD-IDENTITY-WITNESS antimagic_field doSuppressOrdinarySpell doSuppressArtifactSpell doBreakAntimagicConcentration
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION
 import * as path from "node:path";
 
@@ -86,6 +88,78 @@ const driverSchema = {
   step: {},
 } as const;
 
+type AntimagicFieldOngoingSuppressionReplayAction = Exclude<
+  keyof typeof driverSchema,
+  "init" | "step"
+>;
+type SelectedUnitIdentityReplaySequence = {
+  readonly name: string;
+  readonly actions: readonly AntimagicFieldOngoingSuppressionReplayAction[];
+  readonly expected: AntimagicFieldOngoingSuppressionState;
+};
+type SelectedUnitIdentityReplay = {
+  readonly taskId: "B19-ANTIMAGIC-FIELD-IDENTITY-WITNESS";
+  readonly unitId: "antimagic_field";
+  readonly actions: readonly AntimagicFieldOngoingSuppressionReplayAction[];
+  readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
+};
+
+const selectedUnitIdentityReplays = [
+  {
+    taskId: "B19-ANTIMAGIC-FIELD-IDENTITY-WITNESS",
+    unitId: "antimagic_field",
+    actions: [
+      "doSuppressOrdinarySpell",
+      "doSuppressArtifactSpell",
+      "doBreakAntimagicConcentration",
+    ],
+    sequences: [
+      {
+        name: "selected-antimagic-field-suppresses-ordinary-ongoing-spell",
+        actions: ["doSuppressOrdinarySpell"],
+        expected: {
+          actionAvailable: false,
+          spellAvailable: false,
+          ongoingSpellEffectActive: true,
+          suppressionActive: true,
+          suppressedEffectRefCount: 1,
+          ongoingSpellSuppressed: true,
+          antimagicCasterConcentrating: true,
+          lastResult: "suppressedOrdinarySpell",
+        },
+      },
+      {
+        name: "selected-antimagic-field-excludes-artifact-ongoing-spell",
+        actions: ["doSuppressArtifactSpell"],
+        expected: {
+          actionAvailable: false,
+          spellAvailable: false,
+          ongoingSpellEffectActive: true,
+          suppressionActive: true,
+          suppressedEffectRefCount: 0,
+          ongoingSpellSuppressed: false,
+          antimagicCasterConcentrating: true,
+          lastResult: "suppressedArtifactSpell",
+        },
+      },
+      {
+        name: "selected-antimagic-field-concentration-end-restores-ordinary-ongoing-spell",
+        actions: ["doSuppressOrdinarySpell", "doBreakAntimagicConcentration"],
+        expected: {
+          actionAvailable: false,
+          spellAvailable: false,
+          ongoingSpellEffectActive: true,
+          suppressionActive: false,
+          suppressedEffectRefCount: 0,
+          ongoingSpellSuppressed: false,
+          antimagicCasterConcentrating: false,
+          lastResult: "restored",
+        },
+      },
+    ],
+  },
+] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
+
 function createAntimagicFieldOngoingSuppressionDriver() {
   return defineDriver(driverSchema, () => {
     let state = initialRuntimeState();
@@ -114,6 +188,40 @@ const antimagicStateCheck = stateCheck(
 );
 
 describe("Antimagic Field ongoing suppression MBT parity", () => {
+  it("replays selected Unit identities deterministically", async () => {
+    for (const replay of selectedUnitIdentityReplays) {
+      const replayedActions =
+        new Set<AntimagicFieldOngoingSuppressionReplayAction>();
+
+      for (const sequence of replay.sequences) {
+        const driver = createAntimagicFieldOngoingSuppressionDriver()();
+
+        for (const actionName of sequence.actions) {
+          replayedActions.add(actionName);
+          const action = driver.actions[actionName];
+          if (action === undefined) {
+            throw new Error(
+              `Missing Antimagic Field selected identity driver action ${actionName}.`,
+            );
+          }
+          await action.handler({});
+        }
+
+        const runtime = driver.getState?.();
+        if (runtime === undefined) {
+          throw new Error(
+            "Antimagic Field selected identity driver must expose getState.",
+          );
+        }
+        expect(runtime, `${replay.unitId}:${sequence.name}`).toEqual(
+          sequence.expected,
+        );
+      }
+
+      expect(replayedActions).toEqual(new Set(replay.actions));
+    }
+  });
+
   it("records ordinary ongoing spell effects as suppressed without deleting them", () => {
     const suppressed = suppressOngoingSpell(
       initialRuntimeState(),
