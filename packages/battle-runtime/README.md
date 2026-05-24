@@ -1073,6 +1073,13 @@ responsibilities, and can expose replay/order/state-transition mistakes that
 isolated assertions would miss. Keep the state space small with one or two
 combatants and bounded fills.
 
+The spell sequencing integration lane is intentionally bounded to one fixed
+fixture world: Dragon's Breath creates a target-granted Magic Action, the target
+uses it while the caster maintains Concentration, then the caster starts Heat
+Metal on a later turn, displacing the prior Concentration effect and opening the
+Heat Metal repeat-damage hook only on a later caster turn. It is not a catalog
+generation input and does not add identity or unit-profile coverage rows.
+
 Prefer table-driven contract tests for ordinary catalog width: another weapon,
 spell, Unit, or Stat Block that exercises an already proved reducer family
 without changing its semantic shape.
