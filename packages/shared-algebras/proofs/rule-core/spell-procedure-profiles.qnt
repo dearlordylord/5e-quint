@@ -23,31 +23,11 @@ module spellProcedureProfiles {
   // - Spells/Gaining-and-Casting.md: Spell Slots, cantrips, Casting Time,
   //   targets, Saving Throws, Attack Rolls, and spell effects.
   // - Rules-Glossary.md: Ready, Magic, Concentration, Spell Attack, Target.
-  // - Spells/Descriptions-A-D.md: Acid Splash, Aid, and Cure Wounds.
+  // - Spells/Descriptions-A-D.md: Acid Splash and Cure Wounds.
   // - Spells/Descriptions-E-L.md: Healing Word.
   // - Spells/Descriptions-M-P.md: Mage Armor, Magic Missile, Mass Cure
   //   Wounds, Mass Healing Word, and Mind Spike.
   // - Spells/Descriptions-Q-R.md: Ray of Frost.
-
-  type ScalarBuffSpellProfile =
-    | FalseLifeScalarBuffProfile
-    | LongstriderScalarBuffProfile
-    | ShieldOfFaithScalarBuffProfile
-    | SpiderClimbScalarBuffProfile
-    | FlyScalarBuffProfile
-    | BarkskinScalarBuffProfile
-    | HeroismScalarBuffProfile
-    | AidScalarBuffProfile
-
-  type ScalarBuffEffect =
-    | LongstriderSpeedIncreaseEffect
-    | ShieldOfFaithArmorClassBonusEffect
-    | SpiderClimbClimbSpeedGrantEffect
-    | FlySpeedHoverGrantEffect
-    | BarkskinArmorClassFloorEffect
-    | HeroismFrightenedImmunityEffect
-    | HeroismTurnStartTemporaryHitPointsEffect({ amount: int })
-    | AidHitPointMaximumIncreaseEffect({ amount: int })
 
   type DamageRiderSpellProfile =
     | DivineFavorWeaponDamageRiderProfile
@@ -242,45 +222,6 @@ module spellProcedureProfiles {
     if (profile == MassCureWoundsSpellProfile) MassCureWoundsPointOriginSphereArea else NoSpellAreaProfile
 
   val massCureWoundsPointOriginSphereRadiusFeet = 30
-
-  pure def scalarBuffSpellAction(profile: ScalarBuffSpellProfile): SpellInvocationAction =
-    if (profile == ShieldOfFaithScalarBuffProfile or profile == BarkskinScalarBuffProfile) BonusActionSpellInvocation else ActionTimeSpellInvocation
-
-  pure def scalarBuffMaximumTargets(profile: ScalarBuffSpellProfile, slotLevel: int): int =
-    if (profile == LongstriderScalarBuffProfile) slotLevel
-    else if (profile == SpiderClimbScalarBuffProfile) 1 + (if (slotLevel > 2) slotLevel - 2 else 0)
-    else if (profile == FlyScalarBuffProfile) 1 + (if (slotLevel > 3) slotLevel - 3 else 0)
-    else if (profile == AidScalarBuffProfile) 3
-    else 1
-
-  pure def scalarBuffTemporaryHitPoints(profile: ScalarBuffSpellProfile, slotLevel: int, rolledDice: int): int =
-    if (profile == FalseLifeScalarBuffProfile) rolledDice + 4 + ((if (slotLevel > 1) slotLevel - 1 else 0) * 5)
-    else 0
-
-  pure def scalarBuffAidHitPointMaximumIncrease(slotLevel: int): int =
-    5 + ((if (slotLevel > 2) slotLevel - 2 else 0) * 5)
-
-  pure def scalarBuffEffects(
-    profile: ScalarBuffSpellProfile,
-    spellcastingAbilityModifier: int,
-    slotLevel: int,
-  ): Set[ScalarBuffEffect] =
-    match profile {
-      | FalseLifeScalarBuffProfile => Set()
-      | LongstriderScalarBuffProfile => Set(LongstriderSpeedIncreaseEffect)
-      | ShieldOfFaithScalarBuffProfile => Set(ShieldOfFaithArmorClassBonusEffect)
-      | SpiderClimbScalarBuffProfile => Set(SpiderClimbClimbSpeedGrantEffect)
-      | FlyScalarBuffProfile => Set(FlySpeedHoverGrantEffect)
-      | BarkskinScalarBuffProfile => Set(BarkskinArmorClassFloorEffect)
-      | HeroismScalarBuffProfile => Set(
-          HeroismFrightenedImmunityEffect,
-          HeroismTurnStartTemporaryHitPointsEffect({ amount: spellcastingAbilityModifier }),
-        )
-      | AidScalarBuffProfile => Set(AidHitPointMaximumIncreaseEffect({ amount: scalarBuffAidHitPointMaximumIncrease(slotLevel) }))
-    }
-
-  pure def scalarBuffRequiresConcentration(profile: ScalarBuffSpellProfile): bool =
-    profile == ShieldOfFaithScalarBuffProfile or profile == SpiderClimbScalarBuffProfile or profile == FlyScalarBuffProfile or profile == HeroismScalarBuffProfile
 
   pure def damageRiderSpellAction(profile: DamageRiderSpellProfile): SpellInvocationAction =
     BonusActionSpellInvocation

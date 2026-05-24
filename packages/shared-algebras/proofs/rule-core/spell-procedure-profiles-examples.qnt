@@ -15,6 +15,7 @@ module spellProcedureProfilesExamples {
   import spellAttackDamageProjectionCore.* from "./spell-attack-damage-projection-core"
   import spellSaveDamageProjectionCore.* from "./spell-save-damage-projection-core"
   import spellSaveConditionProjectionCore.* from "./spell-save-condition-projection-core"
+  import spellScalarBuffProjectionCore.* from "./spell-scalar-buff-projection-core"
   import spellProcedureProfiles.* from "./spell-procedure-profiles"
 
   run test_magic_missile_profile_spends_slot_and_allocates_darts = {
@@ -192,6 +193,7 @@ module spellProcedureProfilesExamples {
       assert(scalarBuffMaximumTargets(LongstriderScalarBuffProfile, 3) == 3),
       assert(scalarBuffMaximumTargets(SpiderClimbScalarBuffProfile, 3) == 2),
       assert(scalarBuffMaximumTargets(FlyScalarBuffProfile, 4) == 2),
+      assert(scalarBuffMaximumTargets(HeroismScalarBuffProfile, 3) == 3),
       assert(scalarBuffMaximumTargets(AidScalarBuffProfile, 3) == 3),
       assert(scalarBuffMaximumTargets(BarkskinScalarBuffProfile, 3) == 1),
       assert(scalarBuffMaximumTargets(FalseLifeScalarBuffProfile, 3) == 1),

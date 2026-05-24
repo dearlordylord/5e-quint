@@ -381,7 +381,8 @@ profiles into Damage Type, hit-applied effects, and object-target support.
 and Spell Effects for the production spell procedures without importing Spell
 Definition records, Spell Access lists, Unit ids, or Surface authored ids. It
 projects supported profiles into the invocation resource core, spell damage
-projection core, and attack-damage projection core.
+projection core, attack-damage projection core, and scalar-buff projection
+core.
 
 Scope:
 
@@ -401,6 +402,12 @@ Scope:
 - Mage Armor creates a persistent Spell Effect for a willing unarmored target,
   derives base AC as `13 + Dexterity modifier`, and ends the effect when the
   target dons armor;
+- scalar buff profile facts for False Life, Longstrider, Shield of Faith,
+  Spider Climb, Fly, Barkskin, Heroism, and Aid live in
+  `spell-scalar-buff-projection-core.qnt`; they project action timing, maximum
+  target count, Concentration requirement, Temporary Hit Points, Hit Point
+  Maximum increases, Speed and special Speed effects, and Armor Class effects
+  without importing authored Spell Definition records;
 - Readied Spell Response holds only action-time spell profiles as a readied
   spell held effect, expends the spell's casting resources at the hold
   boundary, starts Concentration while held, opens QCORE8's Readied Spell

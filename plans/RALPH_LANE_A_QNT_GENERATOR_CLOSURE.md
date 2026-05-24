@@ -50,7 +50,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 7,
       "id": "A7-SCALAR-BUFF-CORE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Split scalar buff projection core"
     },
     {
@@ -187,7 +187,7 @@ Lane A must not:
 | 4 | A4-SAVE-DAMAGE-PROJECTION-CORE - Split save-gated damage projection core | done | none | Pure profile facts only. |
 | 5 | A5-SAVE-CONDITION-PROJECTION-CORE - Split save-gated condition projection core | done | none | Pure profile facts only. |
 | 6 | A6-SPELL-ATTACK-DAMAGE-CORE - Split spell attack damage projection core | done | none | Pure profile facts only. |
-| 7 | A7-SCALAR-BUFF-CORE - Split scalar buff projection core | ready-for-implementation-after-light-research | none | Pure profile facts only. |
+| 7 | A7-SCALAR-BUFF-CORE - Split scalar buff projection core | done | none | Pure profile facts only. |
 | 8 | A8-DAMAGE-RIDER-CORE - Split damage rider projection core | ready-for-implementation-after-light-research | none | Pure profile facts only. |
 | 9 | A9-CHAINED-ATTACK-CORE - Split chained attack projection core | ready-for-implementation-after-light-research | none | Pure profile facts only. |
 | 10 | A10-INDEPENDENT-ATTACK-SEQUENCE-CORE - Split independent attack sequence core | ready-for-implementation-after-light-research | none | Pure finite sequence facts. |
@@ -276,7 +276,7 @@ Flame.
 
 ### Task 7 - A7-SCALAR-BUFF-CORE - Split scalar buff projection core
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: pure semantic-core file for scalar buffs, maximum targets,
 concentration, and temporary hit point formulas.
