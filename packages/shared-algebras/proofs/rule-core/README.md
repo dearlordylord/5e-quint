@@ -145,6 +145,9 @@ Out of scope for QCORE4:
 keeps state to aggregate adjusted typed damage and scalar-reduction outputs, and
 records the branch budget near the `any` action.
 
+`damage-component-adjustments-examples.qnt` keeps QCORE4 run examples outside
+the generator-facing semantic core.
+
 ## QCORE5: Attack Damage Composition
 
 `attack-damage-composition.qnt` models the attack procedure facts that compose

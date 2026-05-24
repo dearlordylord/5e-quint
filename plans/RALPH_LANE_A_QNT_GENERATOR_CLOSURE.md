@@ -188,7 +188,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 30,
       "id": "A30-DAMAGE-ADJUSTMENTS-READINESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Assess damage adjustment generator readiness"
     },
     {
@@ -288,7 +288,7 @@ Lane A must not:
 | 27 | A27-BLOCKER-TOKEN-CONTRACT-HARDENING - Harden generator blocker token contract | done | A24,A26 | Keep blocker vocabulary and scanner output coupled. |
 | 28 | A28-HIT-POINT-RESTORATION-READINESS - Assess hit point restoration generator readiness | done | A24 | Classified as fixture-bound; A36 owns the semantic-core split. |
 | 29 | A29-ATTACK-DAMAGE-COMPOSITION-READINESS - Assess attack damage composition generator readiness | done | A24,A26 | Classified as fixture-bound; attack examples moved out; A34 owns the remaining unit-feature run-block split. |
-| 30 | A30-DAMAGE-ADJUSTMENTS-READINESS - Assess damage adjustment generator readiness | ready-for-research | A24,A26 | Shared algebra owner needs subset/blocker classification. |
+| 30 | A30-DAMAGE-ADJUSTMENTS-READINESS - Assess damage adjustment generator readiness | done | A24,A26 | Classified as generation-subset-clean; examples moved to proof-only owner. |
 | 31 | A31-SHOVE-OUTCOME-READINESS - Assess shove outcome generator readiness | ready-for-research | A24,A26 | `shove-outcome.qnt` currently includes run blocks. |
 | 32 | A32-STAT-BLOCK-CONTROLS-READINESS - Assess stat block controls generator readiness | ready-for-research | A24,A26 | Shared algebra owner needs subset/blocker classification. |
 | 33 | A33-HIT-POINT-RECOVERY-READINESS - Assess hit point recovery generator readiness | ready-for-research | A24,A26 | Sheet HP/rest owner needs subset/blocker classification. |
@@ -644,7 +644,7 @@ A34.
 
 ### Task 30 - A30-DAMAGE-ADJUSTMENTS-READINESS - Assess damage adjustment generator readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION`,
 `packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt`,
@@ -655,6 +655,12 @@ adjustments with exact subset tokens and blocker evidence.
 
 Acceptance: coverage check passes and the readiness row does not duplicate
 facts already owned by the damage adjustment QNT owner or runtime markers.
+
+Result: `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` is
+`generation-subset-clean`. Run examples moved from the semantic-core owner to
+`damage-component-adjustments-examples.qnt`, leaving
+`damage-component-adjustments.qnt` and
+`battle-runtime-damage-adjustments.qnt` as generator-facing semantic cores.
 
 ### Task 31 - A31-SHOVE-OUTCOME-READINESS - Assess shove outcome generator readiness
 
