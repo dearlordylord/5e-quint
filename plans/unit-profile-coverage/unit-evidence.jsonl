@@ -366,3 +366,4 @@
 {"unitId":"druid_circle_of_the_land_spells","evidence":{"tag":"selected-identity-mbt","taskId":"B4-CLASS-FEATURE-IDENTITY-BATCH-1","ownerPath":"packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts"}}
 {"unitId":"druid_wild_companion","evidence":{"tag":"selected-identity-mbt","taskId":"B4-CLASS-FEATURE-IDENTITY-BATCH-1","ownerPath":"packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts"}}
 {"unitId":"druid_wild_shape","evidence":{"tag":"selected-identity-mbt","taskId":"B4-CLASS-FEATURE-IDENTITY-BATCH-1","ownerPath":"packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts"}}
+{"unitId":"fireball","evidence":{"tag":"selected-identity-mbt","taskId":"B23-FIREBALL-IDENTITY-WITNESS","ownerPath":"packages/battle-runtime/src/fireball-selected-identity.mbt.test.ts"}}

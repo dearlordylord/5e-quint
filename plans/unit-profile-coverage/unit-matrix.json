@@ -9243,25 +9243,8 @@
       ],
       "evidenceTag": "selected-identity-mbt"
     },
-    "rowCount": 5,
+    "rowCount": 4,
     "rows": [
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-mbt evidence.",
-          "status": "missing-witness"
-        },
-        "sourceRecordPath": "packages/surface/content/fireball.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-damage-save-or-attack"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "fireball"
-      },
       {
         "catalogAdmissionStatus": "installed",
         "collectionId": "srd-5.2.1",
@@ -11999,8 +11982,8 @@
         "profileFactDenominator": 127,
         "profileSubsetSupportedUnits": 20,
         "selectedIdentityReplayDenominator": 106,
-        "selectedIdentityReplayGapUnits": 5,
-        "selectedIdentityReplayWitnessUnits": 101,
+        "selectedIdentityReplayGapUnits": 4,
+        "selectedIdentityReplayWitnessUnits": 102,
         "supportedProfileUnits": 86,
         "unsupportedOrOtherUnits": 18
       },
@@ -21201,6 +21184,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV54"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/fireball-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B23-FIREBALL-IDENTITY-WITNESS"
         }
       ],
       "executableMechanics": true,

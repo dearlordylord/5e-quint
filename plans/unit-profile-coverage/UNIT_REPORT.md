@@ -59,7 +59,7 @@ Background, feat, spell, and class-feature groups are counted from installed Uni
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | Background Units | 4 | 0 | 0 | 0 | 4 | 0 | 0/0 | 0 |
 | Feat Units | 8 | 8 | 5 | 0 | 3 | 5 | 5/5 | 0 |
-| Spell Units | 124 | 124 | 86 | 20 | 18 | 127 | 101/106 | 5 |
+| Spell Units | 124 | 124 | 86 | 20 | 18 | 127 | 102/106 | 4 |
 | Class-feature Units | 63 | 63 | 45 | 16 | 2 | 85 | 61/61 | 0 |
 
 | Denominator | Rule |
@@ -1147,7 +1147,6 @@ This generated view lists `profile-subset-supported` and `supported-profile` Uni
 
 | Unit | Claim | Selected identity | Catalog | Collection | Kind | Profiles | Source |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `fireball` | profile-subset-supported | missing-witness | installed | srd-5.2.1 | spell | `spell.invocation-damage-save-or-attack` | `packages/surface/content/fireball.json` |
 | `lightning_bolt` | supported-profile | missing-witness | installed | srd-5.2.1 | spell | `spell.invocation-damage-save-or-attack` | `packages/surface/content/lightning_bolt.json` |
 | `mind_spike` | profile-subset-supported | missing-witness-deferred-not-applicable | installed | srd-5.2.1 | spell | `spell.invocation-damage-save-or-attack` | `packages/surface/content/mind_spike.json` |
 | `shining_smite` | supported-profile | missing-witness | installed | srd-5.2.1 | spell | `spell.invocation-after-hit-damage-illumination` | `packages/surface/content/shining_smite.json` |
