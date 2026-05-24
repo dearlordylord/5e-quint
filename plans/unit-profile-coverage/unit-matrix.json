@@ -83,18 +83,18 @@
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 132,
-      "numerator": 131,
-      "percent": "99.2%"
+      "numerator": 132,
+      "percent": "100%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 132,
-      "numerator": 131,
-      "percent": "99.2%"
+      "numerator": 132,
+      "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 144,
-      "numerator": 143,
-      "percent": "99.3%"
+      "numerator": 144,
+      "percent": "100%"
     },
     "runtimeMappingCoverage": {
       "denominator": 96,
@@ -3900,13 +3900,13 @@
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 132,
-        "numerator": 131,
-        "percent": "99.2%"
+        "numerator": 132,
+        "percent": "100%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 132,
-        "numerator": 131,
-        "percent": "99.2%"
+        "numerator": 132,
+        "percent": "100%"
       }
     },
     "profileKinds": [
@@ -5759,8 +5759,15 @@
         "profileKind": "character-sheet"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
+            "runtime": "character-sheet",
+            "status": "covered",
+            "title": "Character Sheet projects retained class-feature always-prepared Spell Access without duplicating class prepared-spell state"
+          }
+        ],
         "profileId": "character-sheet.druid-circle-land-spell-access",
         "profileKind": "character-sheet"
       },
@@ -5787,8 +5794,8 @@
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
           "denominator": 144,
-          "numerator": 143,
-          "percent": "99.3%"
+          "numerator": 144,
+          "percent": "100%"
         }
       },
       "units": [
@@ -6641,11 +6648,18 @@
           "unitId": "dragons_breath"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
+                  "runtime": "character-sheet",
+                  "status": "covered",
+                  "title": "Character Sheet projects retained class-feature always-prepared Spell Access without duplicating class prepared-spell state"
+                }
+              ],
               "profileId": "character-sheet.druid-circle-land-spell-access",
               "profileKind": "character-sheet"
             }

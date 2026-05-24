@@ -123,7 +123,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS` | character-sheet | covered | `character-sheet.pact-slot-recovery`, `character-sheet.short-rest-spell-slot-recovery` |
 | `SHEET.WEAPON_MASTERY.RESELECTION` | character-sheet | covered | `character-sheet.weapon-mastery-reselection` |
 | `SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION` | character-sheet | covered | `character-sheet.spellbook-ritual-invocation` |
-| `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION` | character-sheet | covered | `character-sheet.class-feature-prepared-spell-access` |
+| `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION` | character-sheet | covered | `character-sheet.class-feature-prepared-spell-access`, `character-sheet.druid-circle-land-spell-access` |
 | `BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE` | battle | covered | `spell.invocation-dragons-breath-initial` |
 | `BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION` | battle | covered | `spell.invocation-dragons-breath-granted-action` |
 | `BATTLE.ATTACK.MINIMAL_RESOLUTION` | battle | covered | _direct reducer entrypoint_ |

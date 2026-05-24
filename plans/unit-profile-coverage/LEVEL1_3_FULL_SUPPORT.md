@@ -19,9 +19,9 @@ Blockers: strict=0, selected-identity=1, SRD-authored-readiness=0.
 | Selected identity readiness | 151/152 (99.3%) |
 | Product readiness | 573/607 (94.4%) |
 | SRD authored product readiness | 76/76 (100%) |
-| Rules-kernel profile join | 93/94 (98.9%) |
-| Rules-kernel covered profile join | 93/94 (98.9%) |
-| Supported Unit rules-kernel chain | 120/121 (99.2%) |
+| Rules-kernel profile join | 94/94 (100%) |
+| Rules-kernel covered profile join | 94/94 (100%) |
+| Supported Unit rules-kernel chain | 121/121 (100%) |
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
@@ -125,7 +125,7 @@ This gate checks authored records and retained Unit references that must resolve
 
 | Unit | Status | Profiles Needing Attention |
 | --- | --- | --- |
-| `druid_circle_of_the_land_spells` | unmapped | `character-sheet.druid-circle-land-spell-access` (unmapped: no obligation mapping) |
+| _none_ | _none_ | _none_ |
 
 ## Non-Supported Frontier Detail
 

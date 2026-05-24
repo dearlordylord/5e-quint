@@ -94,6 +94,7 @@
 {"profileId":"character-sheet.pact-slot-recovery","obligationIds":["SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS"]}
 {"profileId":"character-sheet.spellbook-ritual-invocation","obligationIds":["SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION"]}
 {"profileId":"character-sheet.class-feature-prepared-spell-access","obligationIds":["SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION"]}
+{"profileId":"character-sheet.druid-circle-land-spell-access","obligationIds":["SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION"]}
 {"profileId":"character-sheet.weapon-mastery-reselection","obligationIds":["SHEET.WEAPON_MASTERY.RESELECTION"]}
 {"profileId":"character-sheet.healing-resource-action","obligationIds":["SHEET.FEATURE_RESOURCES.TRANSITIONS"]}
 {"profileId":"character-sheet.class-feature-use-count-resource","obligationIds":["SHEET.FEATURE_RESOURCES.TRANSITIONS"]}

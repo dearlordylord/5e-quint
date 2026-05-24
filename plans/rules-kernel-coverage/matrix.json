@@ -2945,7 +2945,7 @@
       "kind": "projection-scalar",
       "parityWitnesses": [
         {
-          "deterministicReplayRationale": "Character Sheet class-feature prepared Spell Access replay is a fixed selected-identity fixture for retained SRD class-feature grants: Life Domain Spells, Oath of Devotion Spells, Paladin's Smite, Favored Enemy, Draconic Spells, and Fiend Spells. The runtime projects spell ids directly from retained Surface class-feature grants into sheet Spell Access without storing a separate per-class prepared-spell roster; random branch interleavings are not the risk at this projection boundary.",
+          "deterministicReplayRationale": "Character Sheet class-feature prepared Spell Access replay is a fixed selected-identity fixture for retained SRD class-feature grants: Life Domain Spells, Circle Spells selected by current Circle of the Land land choice, Oath of Devotion Spells, Paladin's Smite, Favored Enemy, Draconic Spells, and Fiend Spells. The runtime projects spell ids directly from retained Surface class-feature grants or selected-land source facts into sheet Spell Access without storing a separate per-class prepared-spell roster; random branch interleavings are not the risk at this projection boundary.",
           "kind": "deterministic-qnt-replay",
           "ownerPath": "packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts",
           "qntSpecPath": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt",
@@ -2953,7 +2953,8 @@
         }
       ],
       "profiles": [
-        "character-sheet.class-feature-prepared-spell-access"
+        "character-sheet.class-feature-prepared-spell-access",
+        "character-sheet.druid-circle-land-spell-access"
       ],
       "qntOwners": [
         "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt"
@@ -2965,6 +2966,7 @@
       "status": "covered",
       "surfaceEvidence": [
         ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Always-Prepared Spells",
+        ".references/srd-5.2.1/Classes/Druid.md#Level 3: Circle of the Land Spells",
         ".references/srd-5.2.1/Classes/Cleric.md#Level 3: Life Domain Spells",
         ".references/srd-5.2.1/Classes/Paladin.md#Level 2: Paladin's Smite",
         ".references/srd-5.2.1/Classes/Paladin.md#Level 3: Oath of Devotion Spells",
@@ -4990,6 +4992,12 @@
         "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION"
       ],
       "profileId": "character-sheet.class-feature-prepared-spell-access"
+    },
+    {
+      "obligationIds": [
+        "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION"
+      ],
+      "profileId": "character-sheet.druid-circle-land-spell-access"
     },
     {
       "obligationIds": [
