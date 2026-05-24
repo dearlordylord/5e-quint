@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 405,
-      "numerator": 205,
-      "percent": "50.6%"
+      "denominator": 407,
+      "numerator": 207,
+      "percent": "50.9%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 490,
-      "numerator": 250,
-      "percent": "51%"
+      "denominator": 492,
+      "numerator": 252,
+      "percent": "51.2%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 251
+      "value": 253
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 140,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 251,
-      "numerator": 251,
+      "denominator": 253,
+      "numerator": 253,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "77.9%"
     },
     "supportedProfileCoverage": {
-      "denominator": 206,
+      "denominator": 208,
       "numerator": 140,
-      "percent": "68%"
+      "percent": "67.3%"
     }
   },
   "metricSemantics": [
@@ -16344,6 +16344,52 @@
       ],
       "sourceRecordPath": "packages/surface/content/feat_defense.json",
       "unitId": "defense"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "character-creation-runtime and future character-sheet spell-access owner",
+          "reason": "The feat Unit owns SRD authored identity and typed spell-list source facts. Character finalization retains the feat ref without storing duplicate spell-access state, while future character-sheet spell-access support should derive selected spells from the feat's typed Magic Initiate facts and each selected Spell Definition owns invocation runtime behavior."
+        },
+        "reason": "Magic Initiate (Cleric) is an Origin feat spell-access selection source. Character creation retains the selected background and feat Unit refs; selected cantrips, level-1 spell access, and spellcasting ability choice belong to the character spell-access owner rather than promoted battle Unit execution.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "feat",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/feat_magic_initiate_cleric.json",
+      "unitId": "feat_magic_initiate_cleric"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "character-creation-runtime and future character-sheet spell-access owner",
+          "reason": "The feat Unit owns SRD authored identity and typed spell-list source facts. Character finalization retains the feat ref without storing duplicate spell-access state, while future character-sheet spell-access support should derive selected spells from the feat's typed Magic Initiate facts and each selected Spell Definition owns invocation runtime behavior."
+        },
+        "reason": "Magic Initiate (Wizard) is an Origin feat spell-access selection source. Character creation retains the selected background and feat Unit refs; selected cantrips, level-1 spell access, and spellcasting ability choice belong to the character spell-access owner rather than promoted battle Unit execution.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "feat",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/feat_magic_initiate_wizard.json",
+      "unitId": "feat_magic_initiate_wizard"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

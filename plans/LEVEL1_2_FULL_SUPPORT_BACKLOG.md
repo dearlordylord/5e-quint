@@ -23,9 +23,9 @@ The strict runtime/profile target is closed:
 That is not enough for a full product support claim. The full-support gate is
 currently blocked by SRD authored product readiness:
 
-- Level 1 authored product readiness: `54/58 (93.1%)`.
-- Level 1-2 authored product readiness: `72/76 (94.7%)`.
-- Blocking rows: 4.
+- Level 1 authored product readiness: `56/58 (96.6%)`.
+- Level 1-2 authored product readiness: `74/76 (97.4%)`.
+- Blocking rows: 2.
 
 ## Active Backlog
 
@@ -36,7 +36,7 @@ currently blocked by SRD authored product readiness:
     {
       "number": 1,
       "id": "L12FS-MAGIC-INITIATE-ORIGIN-FEATS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve SRD Magic Initiate Origin Feat References"
     },
     {
@@ -85,7 +85,7 @@ until no reasonable findings remain.
 
 ### Task 1 - L12FS-MAGIC-INITIATE-ORIGIN-FEATS - Resolve SRD Magic Initiate Origin Feat References
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -181,7 +181,6 @@ Status: `ready-for-research`
 
 Depends on:
 
-- Task 1.
 - Task 2.
 - Task 3.
 

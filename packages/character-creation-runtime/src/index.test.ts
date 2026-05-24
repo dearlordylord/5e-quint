@@ -3232,6 +3232,7 @@ describe("character creation finalization", () => {
       }
 
       expect(result.build.background).toBe(backgroundUnitId);
+      expect(result.build.spellcasting).toBeUndefined();
       expect(result.build.abilityScores).toEqual(expectedAbilityScores);
       expect(
         expectRight(characterBuildProficiencies(result.build, unitLibrary)),
@@ -3248,6 +3249,12 @@ describe("character creation finalization", () => {
       );
       expect("backgroundSkillProficiencies" in result.build).toBe(false);
       expect("backgroundToolProficiency" in result.build).toBe(false);
+      expect(
+        result.build.features.some(
+          (feature) =>
+            "unitId" in feature && feature.unitId === expectedOriginFeatUnitId,
+        ),
+      ).toBe(false);
     },
   );
 

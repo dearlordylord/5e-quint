@@ -126,6 +126,8 @@ const requiredFirstVerticalUnitIds = [
   "feat_archery",
   "feat_boon_of_combat_prowess",
   "defense",
+  "feat_magic_initiate_cleric",
+  "feat_magic_initiate_wizard",
   "feat_savage_attacker",
   "mastery_cleave",
   "mastery_sap",
@@ -5395,6 +5397,47 @@ describe("SRD Unit catalog boundary", () => {
         },
       });
     }
+  });
+
+  test("authors SRD Magic Initiate background feat specializations", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    expect(result.catalog.requireUnit("background_acolyte")).toMatchObject({
+      kind: "background",
+      originFeatId: "feat_magic_initiate_cleric",
+    });
+    expect(result.catalog.requireUnit("feat_magic_initiate_cleric")).toEqual(
+      expect.objectContaining({
+        category: "origin",
+        id: "feat_magic_initiate_cleric",
+        kind: "feat",
+        mechanics: {
+          family: "magic_initiate",
+          spellList: "cleric",
+        },
+        name: "Magic Initiate (Cleric)",
+      }),
+    );
+
+    expect(result.catalog.requireUnit("background_sage")).toMatchObject({
+      kind: "background",
+      originFeatId: "feat_magic_initiate_wizard",
+    });
+    expect(result.catalog.requireUnit("feat_magic_initiate_wizard")).toEqual(
+      expect.objectContaining({
+        category: "origin",
+        id: "feat_magic_initiate_wizard",
+        kind: "feat",
+        mechanics: {
+          family: "magic_initiate",
+          spellList: "wizard",
+        },
+        name: "Magic Initiate (Wizard)",
+      }),
+    );
   });
 
   test("rejects mismatched on-hit trigger and effect families", () => {

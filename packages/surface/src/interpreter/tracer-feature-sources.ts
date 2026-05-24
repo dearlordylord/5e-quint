@@ -10,6 +10,7 @@ import type {
   MagicItemRecord,
   MagicItemSpawnedCreatureMechanics,
   MagicItemVariant,
+  MagicInitiateMechanics,
   OnHitTriggerMechanics,
   PassiveMechanics,
   SpeciesTraitRecord,
@@ -202,7 +203,9 @@ export function traceFeatUnit(feat: FeatRecord): Trace {
       ? traceOnHitTriggerMechanics(feat.mechanics, nodes, edges, ids)
       : feat.mechanics.family === "triggered_replacement"
         ? traceTriggeredReplacementMechanics(feat.mechanics, nodes, edges, ids)
-        : tracePassiveOrActivated(feat.mechanics, nodes, edges, ids);
+        : feat.mechanics.family === "magic_initiate"
+          ? traceMagicInitiateMechanics(feat.mechanics, nodes, ids)
+          : tracePassiveOrActivated(feat.mechanics, nodes, edges, ids);
   edges.push({ from: rootId, to: procId, relation: "roots" });
 
   return {
@@ -212,6 +215,23 @@ export function traceFeatUnit(feat: FeatRecord): Trace {
     edges,
     atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
   };
+}
+
+function traceMagicInitiateMechanics(
+  mechanics: MagicInitiateMechanics,
+  nodes: TraceNode[],
+  ids: IdGen,
+): string {
+  const procId = ids("magic-initiate");
+  nodes.push({
+    id: procId,
+    category: "procedure",
+    atomKind: "magic_initiate",
+    label:
+      `magic_initiate\n${mechanics.spellList} spell list\n` +
+      "2 cantrips + 1 level 1 spell\nspellcasting ability choice",
+  });
+  return procId;
 }
 
 // ============================================================

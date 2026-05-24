@@ -80,6 +80,8 @@ import featAbilityScoreImprovementInput from "../../content/feat_ability_score_i
 import featArcheryInput from "../../content/feat_archery.json";
 import featBoonOfCombatProwessInput from "../../content/feat_boon_of_combat_prowess.json";
 import featDefenseInput from "../../content/feat_defense.json";
+import featMagicInitiateClericInput from "../../content/feat_magic_initiate_cleric.json";
+import featMagicInitiateWizardInput from "../../content/feat_magic_initiate_wizard.json";
 import featSavageAttackerInput from "../../content/feat_savage_attacker.json";
 import fighterActionSurgeInput from "../../content/fighter_action_surge.json";
 import fighterExtraAttackInput from "../../content/fighter_extra_attack.json";
@@ -454,6 +456,8 @@ export const srdUnitCollection = defineSrdUnitCollection({
     featArcheryInput,
     featBoonOfCombatProwessInput,
     featDefenseInput,
+    featMagicInitiateClericInput,
+    featMagicInitiateWizardInput,
     featSavageAttackerInput,
     paladinLayOnHandsInput,
     paladinFightingStyleInput,

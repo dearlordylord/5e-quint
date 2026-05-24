@@ -1,0 +1,13 @@
+let magicInitiateCleric =
+      { category = "origin"
+      , description =
+          "Magic Initiate specialized to the Cleric spell list: choose two Cleric cantrips, choose one level 1 Cleric spell that is always prepared and has one free Long Rest cast, choose Intelligence, Wisdom, or Charisma as the spellcasting ability, and replace one chosen spell with another same-level Cleric spell when gaining a level."
+      , id = "feat_magic_initiate_cleric"
+      , kind = "feat"
+      , mechanics =
+        { family = "magic_initiate", spellList = "cleric" }
+      , name = "Magic Initiate (Cleric)"
+      , provenance = { kind = "srd-5.2.1", section = "Feats.md:33-45" }
+      }
+
+in  magicInitiateCleric

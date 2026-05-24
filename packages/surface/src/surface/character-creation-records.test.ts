@@ -16,6 +16,8 @@ import classRogueInput from "../../content/class_rogue.json";
 import classSorcererInput from "../../content/class_sorcerer.json";
 import classWarlockInput from "../../content/class_warlock.json";
 import classWizardInput from "../../content/class_wizard.json";
+import featMagicInitiateClericInput from "../../content/feat_magic_initiate_cleric.json";
+import featMagicInitiateWizardInput from "../../content/feat_magic_initiate_wizard.json";
 import fighterTacticalMindInput from "../../content/fighter_tactical_mind.json";
 import rogueCunningActionInput from "../../content/rogue_cunning_action.json";
 import speciesDragonbornInput from "../../content/species_dragonborn.json";
@@ -35,6 +37,7 @@ import {
   decodeBackgroundRecordSync,
   decodeClassFeatureRecordSync,
   decodeClassRecordSync,
+  decodeFeatRecordSync,
   decodeSpeciesRecordSync,
   decodeUnitRecordEither,
   decodeUnitRecordSync,
@@ -1393,6 +1396,46 @@ describe("character-creation Surface records", () => {
       });
     }
   });
+
+  test.each([
+    {
+      input: featMagicInitiateClericInput,
+      expected: {
+        id: "feat_magic_initiate_cleric",
+        name: "Magic Initiate (Cleric)",
+        spellList: "cleric",
+      },
+    },
+    {
+      input: featMagicInitiateWizardInput,
+      expected: {
+        id: "feat_magic_initiate_wizard",
+        name: "Magic Initiate (Wizard)",
+        spellList: "wizard",
+      },
+    },
+  ])(
+    "decodes $expected.name as a Magic Initiate specialization",
+    ({ expected, input }) => {
+      const featRecord = decodeFeatRecordSync(input);
+      const unit = decodeUnitRecordSync(input);
+
+      expect(featRecord).toMatchObject({
+        category: "origin",
+        id: expected.id,
+        kind: "feat",
+        mechanics: {
+          family: "magic_initiate",
+          spellList: expected.spellList,
+        },
+        name: expected.name,
+      });
+      expect(unit).toMatchObject({
+        id: expected.id,
+        kind: "feat",
+      });
+    },
+  );
 
   test.each([
     {

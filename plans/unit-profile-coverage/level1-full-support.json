@@ -5415,14 +5415,6 @@
   "srdAuthoredProductReadiness": {
     "blockerRows": [
       {
-        "group": "background-origin-feat-refs",
-        "ownerUnitId": "background_acolyte",
-        "ready": false,
-        "relation": "background.originFeatId",
-        "status": "missing-authored-record",
-        "unitId": "feat_magic_initiate_cleric"
-      },
-      {
         "duplicateRowCount": 2,
         "group": "background-origin-feat-refs",
         "kind": "feat",
@@ -5432,14 +5424,6 @@
         "sourceRecordPath": "packages/surface/content/alert.json",
         "status": "not-in-unit-catalog, not-in-unit-catalog",
         "unitId": "alert"
-      },
-      {
-        "group": "background-origin-feat-refs",
-        "ownerUnitId": "background_sage",
-        "ready": false,
-        "relation": "background.originFeatId",
-        "status": "missing-authored-record",
-        "unitId": "feat_magic_initiate_wizard"
       },
       {
         "group": "level-scoped-class-feature-grants",
@@ -5500,13 +5484,6 @@
       {
         "blockerRows": [
           {
-            "ownerUnitId": "background_acolyte",
-            "ready": false,
-            "relation": "background.originFeatId",
-            "status": "missing-authored-record",
-            "unitId": "feat_magic_initiate_cleric"
-          },
-          {
             "duplicateRowCount": 2,
             "kind": "feat",
             "ownerUnitId": "background_criminal",
@@ -5515,13 +5492,6 @@
             "sourceRecordPath": "packages/surface/content/alert.json",
             "status": "not-in-unit-catalog, not-in-unit-catalog",
             "unitId": "alert"
-          },
-          {
-            "ownerUnitId": "background_sage",
-            "ready": false,
-            "relation": "background.originFeatId",
-            "status": "missing-authored-record",
-            "unitId": "feat_magic_initiate_wizard"
           }
         ],
         "complete": false,
@@ -5530,15 +5500,17 @@
         "label": "SRD background origin feat refs",
         "metrics": {
           "denominator": 4,
-          "numerator": 1,
-          "percent": "25%"
+          "numerator": 3,
+          "percent": "75%"
         },
         "rows": [
           {
+            "kind": "feat",
             "ownerUnitId": "background_acolyte",
-            "ready": false,
+            "ready": true,
             "relation": "background.originFeatId",
-            "status": "missing-authored-record",
+            "sourceRecordPath": "packages/surface/content/feat_magic_initiate_cleric.json",
+            "status": "installed",
             "unitId": "feat_magic_initiate_cleric"
           },
           {
@@ -5552,10 +5524,12 @@
             "unitId": "alert"
           },
           {
+            "kind": "feat",
             "ownerUnitId": "background_sage",
-            "ready": false,
+            "ready": true,
             "relation": "background.originFeatId",
-            "status": "missing-authored-record",
+            "sourceRecordPath": "packages/surface/content/feat_magic_initiate_wizard.json",
+            "status": "installed",
             "unitId": "feat_magic_initiate_wizard"
           },
           {
@@ -5569,8 +5543,7 @@
           }
         ],
         "rowsByStatus": {
-          "installed": 1,
-          "missing-authored-record": 2,
+          "installed": 3,
           "not-in-unit-catalog, not-in-unit-catalog": 1
         }
       },
@@ -6131,10 +6104,10 @@
     ],
     "metrics": {
       "denominator": 58,
-      "numerator": 54,
-      "percent": "93.1%"
+      "numerator": 56,
+      "percent": "96.6%"
     },
-    "openBlockerCount": 4
+    "openBlockerCount": 2
   },
   "summary": {
     "candidateUnitIdsBeforeExclusions": 120,
