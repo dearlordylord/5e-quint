@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS
 
 module spellAttackBurstSaveDamageCore {
   import damageComponentAdjustments.* from "./damage-component-adjustments"

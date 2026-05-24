@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS
 
 module spellScalarBuffProjectionCore {
   import spellInvocationResourceCore.* from "./spell-invocation-resource-core"

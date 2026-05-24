@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS
 
 module spellSaveConditionProjectionCore {
   import spellSaveDamageProjectionCore.* from "./spell-save-damage-projection-core"

@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS
 
 module spellChainedAttackDamageProjectionCore {
   import damageComponentAdjustments.* from "./damage-component-adjustments"
