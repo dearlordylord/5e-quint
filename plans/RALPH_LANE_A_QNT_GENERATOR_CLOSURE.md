@@ -104,7 +104,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 16,
       "id": "A16-FIXTURE-BOUND-STATUS-CLOSURE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Close spell procedure fixture-bound readiness row"
     },
     {
@@ -196,7 +196,7 @@ Lane A must not:
 | 13 | A13-SLEEP-LIFECYCLE-CORE - Split Sleep repeat-save lifecycle core | done | none | No table adjudication expansion. |
 | 14 | A14-QNT-OWNER-ROLE-REFRESH - Refresh owner roles for new semantic cores | done | A2-A13,A20-A23 | Generated role closure. |
 | 15 | A15-GENERATOR-SUBSET-TOKEN-AUDIT - Audit generator subset tokens for spell cores | done | A2-A13,A20-A23 | Row vocabulary is exact for the split spell semantic cores. |
-| 16 | A16-FIXTURE-BOUND-STATUS-CLOSURE - Close spell procedure fixture-bound readiness row | ready-for-implementation-after-light-research | A14,A15 | Only if blockers are actually gone. |
+| 16 | A16-FIXTURE-BOUND-STATUS-CLOSURE - Close spell procedure fixture-bound readiness row | done | A14,A15 | Only if blockers are actually gone. |
 | 17 | A17-CHECKER-REGRESSION-TEST - Add generator-readiness regression coverage | blocked | A16 | Prevent silent fallback to fixture-bound. |
 | 18 | A18-END-TO-END-QNT-VERIFICATION - Run and document lane A verification | blocked | A17 | Coverage, examples, typecheck if touched. |
 | 19 | A19-RECURSIVE-NEXT-BATCH - Mine next QNT generator-readiness batch | blocked | A18 | Must append >=12 tasks or prove exhaustion. |
@@ -360,7 +360,7 @@ Acceptance: checker self-test and coverage check pass.
 
 ### Task 16 - A16-FIXTURE-BOUND-STATUS-CLOSURE - Close spell procedure fixture-bound readiness row
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: change `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` from
 `fixture-bound` to `generation-subset-clean` only if fixture/example/proof
