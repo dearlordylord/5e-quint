@@ -11,29 +11,144 @@ or prove from checker-owned artifacts that no such work remains.
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    { "number": 1, "id": "A1-SPELL-FIXTURE-BOUND-SURVEY", "status": "done", "title": "Survey spell procedure generator blockers" },
-    { "number": 2, "id": "A2-INVOCATION-CARDINALITY-CORE", "status": "ready-for-implementation-after-light-research", "title": "Extract invocation target cardinality core" },
-    { "number": 3, "id": "A3-INVOCATION-ACTION-SLOT-CORE", "status": "ready-for-implementation-after-light-research", "title": "Extract invocation action and slot mapping core" },
-    { "number": 4, "id": "A4-SAVE-DAMAGE-PROJECTION-CORE", "status": "ready-for-implementation-after-light-research", "title": "Split save-gated damage projection core" },
-    { "number": 5, "id": "A5-SAVE-CONDITION-PROJECTION-CORE", "status": "ready-for-implementation-after-light-research", "title": "Split save-gated condition projection core" },
-    { "number": 6, "id": "A6-SPELL-ATTACK-DAMAGE-CORE", "status": "ready-for-implementation-after-light-research", "title": "Split spell attack damage projection core" },
-    { "number": 7, "id": "A7-SCALAR-BUFF-CORE", "status": "ready-for-implementation-after-light-research", "title": "Split scalar buff projection core" },
-    { "number": 8, "id": "A8-DAMAGE-RIDER-CORE", "status": "ready-for-implementation-after-light-research", "title": "Split damage rider projection core" },
-    { "number": 9, "id": "A9-CHAINED-ATTACK-CORE", "status": "ready-for-implementation-after-light-research", "title": "Split chained attack projection core" },
-    { "number": 10, "id": "A10-INDEPENDENT-ATTACK-SEQUENCE-CORE", "status": "ready-for-implementation-after-light-research", "title": "Split independent attack sequence core" },
-    { "number": 11, "id": "A11-SPELL-TURN-HOOK-CORE", "status": "ready-for-implementation-after-light-research", "title": "Split spell turn hook semantic core" },
-    { "number": 12, "id": "A12-OBJECT-HP-DAMAGE-CORE", "status": "ready-for-implementation-after-light-research", "title": "Split object hit point damage core" },
-    { "number": 13, "id": "A13-SLEEP-LIFECYCLE-CORE", "status": "ready-for-implementation-after-light-research", "title": "Split Sleep repeat-save lifecycle core" },
-    { "number": 14, "id": "A14-QNT-OWNER-ROLE-REFRESH", "status": "blocked", "title": "Refresh owner roles for new semantic cores" },
-    { "number": 15, "id": "A15-GENERATOR-SUBSET-TOKEN-AUDIT", "status": "blocked", "title": "Audit generator subset tokens for spell cores" },
-    { "number": 16, "id": "A16-FIXTURE-BOUND-STATUS-CLOSURE", "status": "blocked", "title": "Close spell procedure fixture-bound readiness row" },
-    { "number": 17, "id": "A17-CHECKER-REGRESSION-TEST", "status": "blocked", "title": "Add generator-readiness regression coverage" },
-    { "number": 18, "id": "A18-END-TO-END-QNT-VERIFICATION", "status": "blocked", "title": "Run and document lane A verification" },
-    { "number": 19, "id": "A19-RECURSIVE-NEXT-BATCH", "status": "blocked", "title": "Mine next QNT generator-readiness batch" },
-    { "number": 20, "id": "A20-DIRECT-SPELL-DAMAGE-CORE", "status": "ready-for-implementation-after-light-research", "title": "Split direct spell damage projection core" },
-    { "number": 21, "id": "A21-DEFENSIVE-SPELL-EFFECT-CORE", "status": "ready-for-implementation-after-light-research", "title": "Split defensive spell effect projection core" },
-    { "number": 22, "id": "A22-READIED-SPELL-RESPONSE-CORE", "status": "ready-for-implementation-after-light-research", "title": "Split Readied Spell Response core" },
-    { "number": 23, "id": "A23-ATTACK-BURST-SAVE-DAMAGE-CORE", "status": "ready-for-implementation-after-light-research", "title": "Split attack-burst save damage core" }
+    {
+      "number": 1,
+      "id": "A1-SPELL-FIXTURE-BOUND-SURVEY",
+      "status": "done",
+      "title": "Survey spell procedure generator blockers"
+    },
+    {
+      "number": 2,
+      "id": "A2-INVOCATION-CARDINALITY-CORE",
+      "status": "done",
+      "title": "Extract invocation target cardinality core"
+    },
+    {
+      "number": 3,
+      "id": "A3-INVOCATION-ACTION-SLOT-CORE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Extract invocation action and slot mapping core"
+    },
+    {
+      "number": 4,
+      "id": "A4-SAVE-DAMAGE-PROJECTION-CORE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Split save-gated damage projection core"
+    },
+    {
+      "number": 5,
+      "id": "A5-SAVE-CONDITION-PROJECTION-CORE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Split save-gated condition projection core"
+    },
+    {
+      "number": 6,
+      "id": "A6-SPELL-ATTACK-DAMAGE-CORE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Split spell attack damage projection core"
+    },
+    {
+      "number": 7,
+      "id": "A7-SCALAR-BUFF-CORE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Split scalar buff projection core"
+    },
+    {
+      "number": 8,
+      "id": "A8-DAMAGE-RIDER-CORE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Split damage rider projection core"
+    },
+    {
+      "number": 9,
+      "id": "A9-CHAINED-ATTACK-CORE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Split chained attack projection core"
+    },
+    {
+      "number": 10,
+      "id": "A10-INDEPENDENT-ATTACK-SEQUENCE-CORE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Split independent attack sequence core"
+    },
+    {
+      "number": 11,
+      "id": "A11-SPELL-TURN-HOOK-CORE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Split spell turn hook semantic core"
+    },
+    {
+      "number": 12,
+      "id": "A12-OBJECT-HP-DAMAGE-CORE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Split object hit point damage core"
+    },
+    {
+      "number": 13,
+      "id": "A13-SLEEP-LIFECYCLE-CORE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Split Sleep repeat-save lifecycle core"
+    },
+    {
+      "number": 14,
+      "id": "A14-QNT-OWNER-ROLE-REFRESH",
+      "status": "blocked",
+      "title": "Refresh owner roles for new semantic cores"
+    },
+    {
+      "number": 15,
+      "id": "A15-GENERATOR-SUBSET-TOKEN-AUDIT",
+      "status": "blocked",
+      "title": "Audit generator subset tokens for spell cores"
+    },
+    {
+      "number": 16,
+      "id": "A16-FIXTURE-BOUND-STATUS-CLOSURE",
+      "status": "blocked",
+      "title": "Close spell procedure fixture-bound readiness row"
+    },
+    {
+      "number": 17,
+      "id": "A17-CHECKER-REGRESSION-TEST",
+      "status": "blocked",
+      "title": "Add generator-readiness regression coverage"
+    },
+    {
+      "number": 18,
+      "id": "A18-END-TO-END-QNT-VERIFICATION",
+      "status": "blocked",
+      "title": "Run and document lane A verification"
+    },
+    {
+      "number": 19,
+      "id": "A19-RECURSIVE-NEXT-BATCH",
+      "status": "blocked",
+      "title": "Mine next QNT generator-readiness batch"
+    },
+    {
+      "number": 20,
+      "id": "A20-DIRECT-SPELL-DAMAGE-CORE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Split direct spell damage projection core"
+    },
+    {
+      "number": 21,
+      "id": "A21-DEFENSIVE-SPELL-EFFECT-CORE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Split defensive spell effect projection core"
+    },
+    {
+      "number": 22,
+      "id": "A22-READIED-SPELL-RESPONSE-CORE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Split Readied Spell Response core"
+    },
+    {
+      "number": 23,
+      "id": "A23-ATTACK-BURST-SAVE-DAMAGE-CORE",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Split attack-burst save damage core"
+    }
   ]
 }
 -->
@@ -67,7 +182,7 @@ Lane A must not:
 | # | Task | Status | Depends | Notes |
 |---:|---|---|---|---|
 | 1 | A1-SPELL-FIXTURE-BOUND-SURVEY - Survey spell procedure generator blockers | done | none | Established exact blocker list. |
-| 2 | A2-INVOCATION-CARDINALITY-CORE - Extract invocation target cardinality core | ready-for-implementation-after-light-research | none | Pure projection split. |
+| 2 | A2-INVOCATION-CARDINALITY-CORE - Extract invocation target cardinality core | done | none | Pure projection split. |
 | 3 | A3-INVOCATION-ACTION-SLOT-CORE - Extract invocation action and slot mapping core | ready-for-implementation-after-light-research | none | Preserve slot-expenditure atom. |
 | 4 | A4-SAVE-DAMAGE-PROJECTION-CORE - Split save-gated damage projection core | ready-for-implementation-after-light-research | none | Pure profile facts only. |
 | 5 | A5-SAVE-CONDITION-PROJECTION-CORE - Split save-gated condition projection core | ready-for-implementation-after-light-research | none | Pure profile facts only. |
@@ -109,7 +224,7 @@ has a concrete owning task in this lane.
 
 ### Task 2 - A2-INVOCATION-CARDINALITY-CORE - Extract invocation target cardinality core
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: move target-count/cardinality pure definitions out of
 `spell-procedure-profiles.qnt` into a focused semantic-core file, preserving
