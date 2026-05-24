@@ -152,7 +152,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 24,
       "id": "A24-READINESS-DENOMINATOR-GATE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Gate generator-readiness denominator completeness"
     },
     {
@@ -276,7 +276,7 @@ Lane A must not:
 | 21 | A21-DEFENSIVE-SPELL-EFFECT-CORE - Split defensive spell effect projection core | done | none | Mage Armor fixture split. |
 | 22 | A22-READIED-SPELL-RESPONSE-CORE - Split Readied Spell Response core | done | none | Ready spell hold/release split. |
 | 23 | A23-ATTACK-BURST-SAVE-DAMAGE-CORE - Split attack-burst save damage core | done | none | Ice Knife fixture split. |
-| 24 | A24-READINESS-DENOMINATOR-GATE - Gate generator-readiness denominator completeness | ready-for-research | none | Use existing `not-assessed` status for covered semantic-core obligations not yet evaluated. |
+| 24 | A24-READINESS-DENOMINATOR-GATE - Gate generator-readiness denominator completeness | done | none | Use existing `not-assessed` status for covered semantic-core obligations not yet evaluated. |
 | 25 | A25-READINESS-MISSING-ROW-REPORT - Report generator-readiness missing rows | ready-for-research | A24 | Generated report should expose the readiness backlog without hand inspection. |
 | 26 | A26-SEMANTIC-CORE-RUN-BLOCK-SCANNER - Detect run blocks in semantic-core owners | ready-for-research | A24 | Prevent semantic-core role rows from hiding run-test coupling outside readiness rows. |
 | 27 | A27-BLOCKER-TOKEN-CONTRACT-HARDENING - Harden generator blocker token contract | ready-for-research | A24,A26 | Keep blocker vocabulary and scanner output coupled. |
@@ -534,7 +534,7 @@ fixture facts remain in `spell-procedure-profiles.qnt`.
 
 ### Task 24 - A24-READINESS-DENOMINATOR-GATE - Gate generator-readiness denominator completeness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `QNT_COVERAGE_PROGRAM.md`, `qnt-owner-roles.jsonl`,
 `obligations.jsonl`, `generator-readiness.jsonl`, and
