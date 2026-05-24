@@ -158,7 +158,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 25,
       "id": "A25-READINESS-MISSING-ROW-REPORT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Report generator-readiness missing rows"
     },
     {
@@ -277,7 +277,7 @@ Lane A must not:
 | 22 | A22-READIED-SPELL-RESPONSE-CORE - Split Readied Spell Response core | done | none | Ready spell hold/release split. |
 | 23 | A23-ATTACK-BURST-SAVE-DAMAGE-CORE - Split attack-burst save damage core | done | none | Ice Knife fixture split. |
 | 24 | A24-READINESS-DENOMINATOR-GATE - Gate generator-readiness denominator completeness | done | none | Use existing `not-assessed` status for covered semantic-core obligations not yet evaluated. |
-| 25 | A25-READINESS-MISSING-ROW-REPORT - Report generator-readiness missing rows | ready-for-research | A24 | Generated report should expose the readiness backlog without hand inspection. |
+| 25 | A25-READINESS-MISSING-ROW-REPORT - Report generator-readiness missing rows | done | A24 | Generated report should expose the readiness backlog without hand inspection. |
 | 26 | A26-SEMANTIC-CORE-RUN-BLOCK-SCANNER - Detect run blocks in semantic-core owners | ready-for-research | A24 | Prevent semantic-core role rows from hiding run-test coupling outside readiness rows. |
 | 27 | A27-BLOCKER-TOKEN-CONTRACT-HARDENING - Harden generator blocker token contract | ready-for-research | A24,A26 | Keep blocker vocabulary and scanner output coupled. |
 | 28 | A28-HIT-POINT-RESTORATION-READINESS - Assess hit point restoration generator readiness | ready-for-research | A24 | Current owner is `spell-procedure-profiles.qnt`; classify before future generator work. |
@@ -551,7 +551,7 @@ and readiness rows to find missing denominator entries.
 
 ### Task 25 - A25-READINESS-MISSING-ROW-REPORT - Report generator-readiness missing rows
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: the denominator gate from A24 and the generated `REPORT.md`.
 
