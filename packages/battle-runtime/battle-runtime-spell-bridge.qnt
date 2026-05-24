@@ -7,6 +7,7 @@ module battleRuntimeSpellBridge {
   import spellInvocationResourceCore.* from "../shared-algebras/proofs/rule-core/spell-invocation-resource-core"
   import spellInvocationTargetCardinalityCore.* from "../shared-algebras/proofs/rule-core/spell-invocation-target-cardinality-core"
   import spellSaveDamageProjectionCore.* from "../shared-algebras/proofs/rule-core/spell-save-damage-projection-core"
+  import spellSaveConditionProjectionCore.* from "../shared-algebras/proofs/rule-core/spell-save-condition-projection-core"
   import spellProcedureProfiles.* from "../shared-algebras/proofs/rule-core/spell-procedure-profiles"
 
   type BattleRuntimeDirectHitPointRestorationProfile =

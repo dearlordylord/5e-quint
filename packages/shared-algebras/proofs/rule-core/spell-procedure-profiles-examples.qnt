@@ -13,6 +13,7 @@ module spellProcedureProfilesExamples {
   import spellInvocationActionSlotCore.* from "./spell-invocation-action-slot-core"
   import spellInvocationTargetCardinalityCore.* from "./spell-invocation-target-cardinality-core"
   import spellSaveDamageProjectionCore.* from "./spell-save-damage-projection-core"
+  import spellSaveConditionProjectionCore.* from "./spell-save-condition-projection-core"
   import spellProcedureProfiles.* from "./spell-procedure-profiles"
 
   run test_magic_missile_profile_spends_slot_and_allocates_darts = {
@@ -86,8 +87,13 @@ module spellProcedureProfilesExamples {
   }
 
   run test_save_gated_spell_profiles_project_damage_targeting_and_effects = {
+    val colorSprayTargets = spellSaveGatedConditionTargeting(ColorSpraySaveConditionProfile)
+    val entangleTargets = spellSaveGatedConditionTargeting(EntangleSaveConditionProfile)
     val animalTargets = spellSaveGatedConditionTargeting(AnimalFriendshipSaveConditionProfile)
+    val charmTargets = spellSaveGatedConditionTargeting(CharmPersonSaveConditionProfile)
     val blindnessTargets = spellSaveGatedConditionTargeting(BlindnessDeafnessSaveConditionProfile)
+    val holdPersonTargets = spellSaveGatedConditionTargeting(HoldPersonSaveConditionProfile)
+    val faerieFireTargets = spellSaveGatedConditionTargeting(FaerieFireSaveAttackRollAdvantageProfile)
     all {
       assert(spellSaveGatedDamageTargeting(SacredFlameSaveDamageProfile) == SpellSingleSaveTarget),
       assert(spellSaveGatedDamageTargeting(AcidSplashSaveDamageProfile) == SpellAreaSaveTargets),
@@ -130,26 +136,47 @@ module spellProcedureProfilesExamples {
       assert(spellSaveGatedDamageFailedSaveEffects(HellishRebukeSaveDamageProfile) == Set()),
       assert(spellSaveGatedDamageFailedSaveEffects(MindSpikeSaveDamageProfile) == Set()),
       assert(spellSaveGatedDamageFailedSaveEffects(ViciousMockerySaveDamageProfile) == Set(ViciousMockeryNextAttackDisadvantageEffect)),
-      assert(spellSaveGatedConditionTargeting(ColorSpraySaveConditionProfile) == SpellAreaSaveTargets),
+      assert(colorSprayTargets == SpellAreaSaveTargets),
+      assert(entangleTargets == SpellAreaSaveTargets),
+      assert(faerieFireTargets == SpellAreaSaveTargets),
       assert(spellSaveGatedConditionSavingThrowAbility(ColorSpraySaveConditionProfile) == SpellConstitutionSavingThrow),
       assert(spellSaveGatedConditionSavingThrowAbility(EntangleSaveConditionProfile) == SpellStrengthSavingThrow),
+      assert(spellSaveGatedConditionSavingThrowAbility(AnimalFriendshipSaveConditionProfile) == SpellWisdomSavingThrow),
+      assert(spellSaveGatedConditionSavingThrowAbility(CharmPersonSaveConditionProfile) == SpellWisdomSavingThrow),
       assert(spellSaveGatedConditionSavingThrowAbility(BlindnessDeafnessSaveConditionProfile) == SpellConstitutionSavingThrow),
+      assert(spellSaveGatedConditionSavingThrowAbility(HoldPersonSaveConditionProfile) == SpellWisdomSavingThrow),
+      assert(spellSaveGatedConditionSavingThrowAbility(FaerieFireSaveAttackRollAdvantageProfile) == SpellDexteritySavingThrow),
+      assert(spellSaveGatedTargetMaxTargets(colorSprayTargets, 1) == 1),
+      assert(spellSaveGatedTargetMaxTargets(entangleTargets, 1) == 1),
       assert(spellSaveGatedTargetMaxTargets(animalTargets, 1) == 1),
       assert(spellSaveGatedTargetMaxTargets(animalTargets, 2) == 2),
+      assert(spellSaveGatedTargetMaxTargets(charmTargets, 1) == 1),
+      assert(spellSaveGatedTargetMaxTargets(charmTargets, 2) == 2),
       assert(spellSaveGatedTargetMaxTargets(blindnessTargets, 2) == 1),
       assert(spellSaveGatedTargetMaxTargets(blindnessTargets, 3) == 2),
+      assert(spellSaveGatedTargetMaxTargets(holdPersonTargets, 2) == 1),
+      assert(spellSaveGatedTargetMaxTargets(holdPersonTargets, 3) == 2),
+      assert(spellSaveGatedTargetMaxTargets(faerieFireTargets, 1) == 1),
+      assert(spellSaveGatedConditionFailedSaveEffects(ColorSpraySaveConditionProfile) == Set(ColorSprayBlindedEffect)),
       assert(spellSaveGatedConditionFailedSaveEffects(EntangleSaveConditionProfile) == Set(EntangleRestrainedEffect)),
+      assert(spellSaveGatedConditionFailedSaveEffects(AnimalFriendshipSaveConditionProfile) == Set(AnimalFriendshipCharmedEffect({ durationTicks: 24 * 60 }))),
+      assert(spellSaveGatedConditionFailedSaveEffects(CharmPersonSaveConditionProfile) == Set(CharmPersonCharmedEffect({ durationTicks: 10 * 60 }))),
       assert(spellSaveGatedConditionFailedSaveEffects(BlindnessDeafnessSaveConditionProfile) == Set(
         BlindnessDeafnessBlindedEffect({ durationTicks: 10 }),
         BlindnessDeafnessDeafenedEffect({ durationTicks: 10 })
       )),
+      assert(spellSaveGatedConditionFailedSaveEffects(HoldPersonSaveConditionProfile) == Set(HoldPersonParalyzedEffect({ durationTicks: 10 }))),
       assert(spellSaveGatedConditionFailedSaveEffects(FaerieFireSaveAttackRollAdvantageProfile) == Set(FaerieFireOutlineEffect)),
       assert(spellSaveGatedConditionTargetCreatureTypeIsLegal(AnimalFriendshipSaveConditionProfile, true, false)),
       assert(not(spellSaveGatedConditionTargetCreatureTypeIsLegal(AnimalFriendshipSaveConditionProfile, false, true))),
       assert(spellSaveGatedConditionTargetCreatureTypeIsLegal(CharmPersonSaveConditionProfile, false, true)),
       assert(not(spellSaveGatedConditionTargetCreatureTypeIsLegal(CharmPersonSaveConditionProfile, true, false))),
+      assert(spellSaveGatedConditionTargetCreatureTypeIsLegal(HoldPersonSaveConditionProfile, false, true)),
+      assert(not(spellSaveGatedConditionTargetCreatureTypeIsLegal(HoldPersonSaveConditionProfile, true, false))),
       assert(spellSaveGatedConditionSavingThrowHasAdvantage(CharmPersonSaveConditionProfile, true)),
       assert(not(spellSaveGatedConditionSavingThrowHasAdvantage(CharmPersonSaveConditionProfile, false))),
+      assert(not(spellSaveGatedConditionSavingThrowHasAdvantage(AnimalFriendshipSaveConditionProfile, true))),
+      assert(not(spellSaveGatedConditionSavingThrowHasAdvantage(FaerieFireSaveAttackRollAdvantageProfile, true))),
     }
   }
 
