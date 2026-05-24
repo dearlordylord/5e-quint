@@ -19,8 +19,8 @@ module creatureAttack {
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
 
   type CreatureAttackState = {
-    attackerHp: int,
-    targetHp: int,
+    creatureAHp: int,
+    creatureBHp: int,
   }
 
   type Attacker = AttackerA | AttackerB
@@ -37,12 +37,12 @@ module creatureAttack {
     if (not(fills.hit)) state
     else match attacker {
       | AttackerA => {
-          attackerHp: state.attackerHp,
-          targetHp: applyDamageToCreature(state.targetHp, fills.damage),
+          creatureAHp: state.creatureAHp,
+          creatureBHp: applyDamageToCreature(state.creatureBHp, fills.damage),
         }
       | AttackerB => {
-          attackerHp: applyDamageToCreature(state.attackerHp, fills.damage),
-          targetHp: state.targetHp,
+          creatureAHp: applyDamageToCreature(state.creatureAHp, fills.damage),
+          creatureBHp: state.creatureBHp,
         }
     }
 }

@@ -13,8 +13,8 @@ import {
 const INITIAL_HP = 20;
 
 const initialState: CreatureAttackState = {
-  attackerHp: INITIAL_HP,
-  targetHp: INITIAL_HP,
+  creatureAHp: INITIAL_HP,
+  creatureBHp: INITIAL_HP,
 };
 
 const QuintIntAsNumber = Schema.transform(
@@ -91,8 +91,8 @@ function normalizeCreatureAttackQuintState(
     Object.entries(raw),
   );
   return {
-    attackerHp: numberFromQuintInt(state["qAttackerHp"], "qAttackerHp"),
-    targetHp: numberFromQuintInt(state["qTargetHp"], "qTargetHp"),
+    creatureAHp: numberFromQuintInt(state["qCreatureAHp"], "qCreatureAHp"),
+    creatureBHp: numberFromQuintInt(state["qCreatureBHp"], "qCreatureBHp"),
   };
 }
 

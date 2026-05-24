@@ -3,20 +3,20 @@
 module creatureAttackMbt {
   import creatureAttack.* from "./creature-attack"
 
-  var qAttackerHp: int
-  var qTargetHp: int
+  var qCreatureAHp: int
+  var qCreatureBHp: int
 
   pure val initialHp: int = 20
   pure val maxDamageRoll: int = 6
 
   action recordNextState(nextState: CreatureAttackState): bool = all {
-    qAttackerHp' = nextState.attackerHp,
-    qTargetHp' = nextState.targetHp,
+    qCreatureAHp' = nextState.creatureAHp,
+    qCreatureBHp' = nextState.creatureBHp,
   }
 
   action init = all {
-    qAttackerHp' = initialHp,
-    qTargetHp' = initialHp,
+    qCreatureAHp' = initialHp,
+    qCreatureBHp' = initialHp,
   }
 
   action doAttackerAAttacks = {
@@ -24,7 +24,7 @@ module creatureAttackMbt {
     nondet hit = Set(true, false).oneOf()
     all {
       recordNextState(resolveCreatureAttack(
-        { attackerHp: qAttackerHp, targetHp: qTargetHp },
+        { creatureAHp: qCreatureAHp, creatureBHp: qCreatureBHp },
         AttackerA,
         { damage: damage, hit: hit },
       )),
@@ -36,7 +36,7 @@ module creatureAttackMbt {
     nondet hit = Set(true, false).oneOf()
     all {
       recordNextState(resolveCreatureAttack(
-        { attackerHp: qAttackerHp, targetHp: qTargetHp },
+        { creatureAHp: qCreatureAHp, creatureBHp: qCreatureBHp },
         AttackerB,
         { damage: damage, hit: hit },
       )),

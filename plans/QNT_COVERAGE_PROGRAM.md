@@ -125,11 +125,10 @@ Acceptance: checker enforces marker presence per active language; CI red on miss
 
 ## Findings
 
-### Pilot Slice (QCP-PILOT-SLICE)
+Durable conventions for slice authors. Not a work log; entries are added only when a future author would otherwise re-discover them.
 
-- **Run-block removal lost no coverage.** Existing `rule-core-hit-point-damage.mbt.qnt` already deterministically replays the same scenarios the run blocks asserted (HP=8 dmg=5 temp=3, monster-dies-at-zero, etc.), with the same inputs to `applyResolvedDamageToPositiveHitPoints`. TS-side parity makes the QNT values absolute by transitive enforcement. Future Task 1 extractions can rely on this: where an MBT replay or atomic-level unit test already covers a scenario, the run block can be deleted outright; otherwise extract to a TS unit test next to the TS mirror.
-- **Effect `Schema` is not StandardSchemaV1-compatible by default.** `quint-connect`'s `defineDriver` requires picks schemas implementing the StandardSchemaV1 `~standard.validate` protocol. Wrap Effect schemas with `Schema.standardSchemaV1(...)`. Bare `Schema.Number` fails at action dispatch with `Cannot read properties of undefined (reading 'validate')`.
-- **Quint emits int picks as JS BigInt.** Validation against `Schema.Number` fails with `Expected number, actual 3n`. Pattern that works (small helper, reusable across future slices):
+- **Driver picks need StandardSchemaV1.** Wrap Effect schemas with `Schema.standardSchemaV1(...)` — bare `Schema.Number` fails at action dispatch with `Cannot read properties of undefined (reading 'validate')`.
+- **Quint int picks arrive as JS `BigInt`.** Decode to `number` at the schema boundary:
   ```ts
   const QuintIntAsNumber = Schema.transform(
     Schema.BigIntFromSelf,
@@ -138,23 +137,11 @@ Acceptance: checker enforces marker presence per active language; CI red on miss
   );
   // damage: Schema.standardSchemaV1(QuintIntAsNumber)
   ```
-  Worth promoting to a shared helper when slice β lands.
-- **`qnt-owner-roles.jsonl` is a hard gate on every new obligation's QNT owner.** A covered obligation with an owner that has no role row fails the checker. Add the role row in the same commit as the new obligation.
-- **`matrix.json` and `REPORT.md` are checker-generated.** After adding/changing obligations, run `pnpm rules-kernel-coverage:check -- --write` to refresh, then `pnpm rules-kernel-coverage:check` to verify clean. Commit the refreshed artifacts.
-
-#### Reviewer-loop pass (RAW + architecture + ubiquitous-language)
-
-First round — three actionable findings, all fixed:
-
-- **Mirror naming aligned.** Quint composite renamed `resolveAttack` → `resolveCreatureAttack` and `AttackFills` → `CreatureAttackFills` to match the TS mirror. The shorter Quint-side names broke the per-slice mirror discipline by gambling on module-qualified context that doesn't survive cross-language review.
-- **Obligation kind corrected.** `composition` → `state-transition`. The slice transitions HP per attack rather than sequencing multiple obligations; `composition` is reserved for sequence/contract obligations. Aligns with how `SHARED.HIT_POINTS.POSITIVE_DAMAGE` is classified.
-- **Out-of-scope explicit in the qnt header.** Added a header comment listing what the pilot intentionally does not model (d20 attack roll vs AC, damage roll formula, critical hits, damage adjustments, Temporary Hit Points, death/unconscious lifecycle, action economy, initiative, turn structure). Future reviewers can see the slice's claim without having to infer it from absences.
-
-Rejected findings (recorded so the next reviewer doesn't re-litigate):
-
-- **"Light atomic usage."** Slice imports `hitPointDamage.*` but only consumes `nonnegative`. Accepted as pilot trait — the goal was the pipeline, not heavy composition. Slice β (wizard-fireball-save) will exercise multi-atomic composition.
-- **"Generic AttackerA/AttackerB labels."** Accepted for the pilot. Real-actor naming (host/target, or role-based) becomes appropriate when the slice ties to production-shaped actors.
-- **"Plain `number` for HP instead of the `Hp` brand from `@dnd/shared/types`."** Accepted — the slice is standalone, not threaded through `BattleState`. Branding pays off when production integration arrives; until then it would couple the pilot to types it doesn't need.
-- **"Initial HP value (20) duplicated between qnt `initialHp` and TS `INITIAL_HP`."** Accepted — the parity test catches any drift loudly on the first state check; the connascence is noisy, not silent.
-
-Second round: no new reasonable findings.
+  Promote to a shared helper when ≥2 slices need it.
+- **`qnt-owner-roles.jsonl` is a hard gate.** Every covered obligation's QNT owner needs a role row in the same commit.
+- **`matrix.json` and `REPORT.md` are checker-generated.** After adding/changing obligations, run `pnpm rules-kernel-coverage:check -- --write`, then `pnpm rules-kernel-coverage:check`. Commit the refreshed artifacts.
+- **Mirror discipline: same names across qnt and TS.** Pure def names, type names, and field names should match the TS mirror; module qualification in qnt does not substitute for fully-qualified naming at the cross-language boundary.
+- **Pick obligation kind from existing rows of the same shape.** Default to `state-transition` for state-change obligations; reserve `composition` for sequencing/contract obligations.
+- **Name state fields by identity, not role, when roles swap.** If both actors can attack and be attacked, use `creatureAHp`/`creatureBHp`, not `attackerHp`/`targetHp` — role-named fields lie when the second actor takes the action.
+- **Document out-of-scope in the qnt header.** Future reviewers should see what a slice intentionally does not model without inferring from absences.
+- **Extracting `run` blocks (Task 1):** if the corresponding MBT replay or atomic-level test already covers the scenario, delete outright (no coverage lost); otherwise extract to a TS unit test next to the TS mirror.

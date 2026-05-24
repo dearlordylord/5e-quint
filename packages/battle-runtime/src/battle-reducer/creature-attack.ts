@@ -3,8 +3,8 @@
 import { Match } from "effect";
 
 export type CreatureAttackState = {
-  readonly attackerHp: number;
-  readonly targetHp: number;
+  readonly creatureAHp: number;
+  readonly creatureBHp: number;
 };
 
 export type Attacker = "attackerA" | "attackerB";
@@ -31,15 +31,15 @@ export function resolveCreatureAttack(
     Match.when(
       "attackerA",
       (): CreatureAttackState => ({
-        attackerHp: state.attackerHp,
-        targetHp: applyDamageToCreature(state.targetHp, fills.damage),
+        creatureAHp: state.creatureAHp,
+        creatureBHp: applyDamageToCreature(state.creatureBHp, fills.damage),
       }),
     ),
     Match.when(
       "attackerB",
       (): CreatureAttackState => ({
-        attackerHp: applyDamageToCreature(state.attackerHp, fills.damage),
-        targetHp: state.targetHp,
+        creatureAHp: applyDamageToCreature(state.creatureAHp, fills.damage),
+        creatureBHp: state.creatureBHp,
       }),
     ),
     Match.exhaustive,
