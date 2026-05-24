@@ -367,12 +367,16 @@ Output:
 
 - Close the `thaumaturgy` selected-identity blocker in the generated claim
   gate.
-- If a supported runtime subset has a production replay boundary, add the
-  focused selected-identity witness there without dispatching on authored
-  identity.
-- If every supported/deferred piece is truly runtime-detached table education,
-  fix the metric classification so that the not-applicable deferred mechanics
-  do not masquerade as a missing replay witness.
+- Preserve the current precise runtime slice: the system may know that the
+  Booming Voice 2024 effect tag is present, time-track its 1-minute duration,
+  enforce the up-to-three active 1-minute Thaumaturgy effect cap through a
+  table-supplied count witness, and project the RAW Charisma (Intimidation)
+  Ability Check Advantage only when the table/caller supplies that typed check.
+- Tighten wording if needed so it is clear that runtime does not own the
+  social/Influence adjudication: the table owns whether an Intimidation check
+  exists, DC, targets, hearing/voice fiction, and outcome.
+- Add the focused selected-identity witness for the supported Booming Voice
+  runtime path without dispatching on authored identity.
 - Regenerate coverage artifacts.
 
 Acceptance:
