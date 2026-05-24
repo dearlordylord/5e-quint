@@ -253,6 +253,19 @@ function representativeMatrixRow(unitId, matrixUnitsById) {
 
 function catalogReadinessForUnit(unitId, matrixUnitsById) {
   const rows = matrixRowsForUnit(unitId, matrixUnitsById);
+  if (rows.length > 1) {
+    return {
+      status: "duplicate-catalog-identity",
+      ready: false,
+      kind: rows[0].kind,
+      sourceRecordPath: rows[0].sourceRecordPath,
+      sourceRecordPaths: rows
+        .map((row) => row.sourceRecordPath)
+        .filter(Boolean)
+        .sort(),
+      duplicateRowCount: rows.length,
+    };
+  }
   const installed = rows.find(
     (row) => row.catalogAdmission?.status === "installed",
   );
@@ -1321,6 +1334,7 @@ function renderLevel12FullSupport(report) {
 module.exports = {
   buildLevel1FullSupport,
   buildLevel12FullSupport,
+  buildSrdAuthoredProductReadiness,
   renderLevel1FullSupport,
   renderLevel12FullSupport,
 };

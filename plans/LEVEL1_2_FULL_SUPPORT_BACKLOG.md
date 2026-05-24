@@ -57,7 +57,7 @@ closed:
     {
       "number": 5,
       "id": "L12FS-METRIC-REGRESSION-GATE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add Full-Support Metric Regression Gate"
     },
     {
@@ -212,7 +212,7 @@ Acceptance:
 
 ### Task 5 - L12FS-METRIC-REGRESSION-GATE - Add Full-Support Metric Regression Gate
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 

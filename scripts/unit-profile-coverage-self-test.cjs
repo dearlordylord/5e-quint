@@ -13,6 +13,9 @@ const {
   hasExecutableMechanics,
   hasVariantMagicMechanics,
 } = require("./unit-profile-coverage-discovery.cjs");
+const {
+  buildSrdAuthoredProductReadiness,
+} = require("./level1-full-support-report.cjs");
 const { fail, toRepoPath } = require("./unit-profile-coverage-io.cjs");
 const {
   validateCollections,
@@ -20,6 +23,140 @@ const {
   validateOwnerClaims,
 } = require("./unit-profile-coverage-validation.cjs");
 const { validateSrdUnitInventory } = require("./srd-unit-inventory.cjs");
+
+function writeFixtureJson(root, relativePath, value) {
+  const absolutePath = path.join(root, relativePath);
+  fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
+  fs.writeFileSync(absolutePath, `${JSON.stringify(value, null, 2)}\n`);
+}
+
+function installedFixtureUnit(unitId, kind, sourceRecordPath) {
+  return {
+    unitId,
+    collectionId: "srd-5.2.1",
+    catalogAdmission: {
+      status: "installed",
+      collectionId: "srd-5.2.1",
+    },
+    sourceRecordPath,
+    kind,
+    executableMechanics: kind !== "background" && kind !== "class",
+  };
+}
+
+function groupFixtureRowsByUnitId(rows) {
+  return rows.reduce((groups, row) => {
+    const current = groups.get(row.unitId) ?? [];
+    current.push(row);
+    groups.set(row.unitId, current);
+    return groups;
+  }, new Map());
+}
+
+function authoredReadinessFixture(root, options = {}) {
+  const contentDir = "packages/surface/content";
+  const backgroundRecords = [
+    {
+      id: "background_acolyte",
+      originFeatId: "feat_magic_initiate_cleric",
+      startingEquipment: [],
+    },
+    {
+      id: "background_criminal",
+      originFeatId: "alert",
+      startingEquipment: [],
+    },
+    {
+      id: "background_sage",
+      originFeatId: "feat_magic_initiate_wizard",
+      startingEquipment: [],
+    },
+    {
+      id: "background_soldier",
+      originFeatId: "feat_savage_attacker",
+      startingEquipment: [],
+    },
+  ];
+  const classRecords = [
+    {
+      id: "class_warlock",
+      featureGrants: [{ level: 1, unitId: "warlock_pact_magic" }],
+      startingEquipment: [],
+    },
+  ];
+  for (const record of [...backgroundRecords, ...classRecords]) {
+    writeFixtureJson(root, `${contentDir}/${record.id}.json`, record);
+  }
+
+  const rows = [
+    ...backgroundRecords.map((record) =>
+      installedFixtureUnit(
+        record.id,
+        "background",
+        `${contentDir}/${record.id}.json`,
+      ),
+    ),
+    installedFixtureUnit(
+      "feat_magic_initiate_cleric",
+      "feat",
+      `${contentDir}/feat_magic_initiate_cleric.json`,
+    ),
+    installedFixtureUnit("alert", "feat", `${contentDir}/alert.json`),
+    installedFixtureUnit(
+      "feat_magic_initiate_wizard",
+      "feat",
+      `${contentDir}/feat_magic_initiate_wizard.json`,
+    ),
+    installedFixtureUnit(
+      "feat_savage_attacker",
+      "feat",
+      `${contentDir}/feat_savage_attacker.json`,
+    ),
+    ...classRecords.map((record) =>
+      installedFixtureUnit(
+        record.id,
+        "class",
+        `${contentDir}/${record.id}.json`,
+      ),
+    ),
+    installedFixtureUnit(
+      "warlock_pact_magic",
+      "class_feature",
+      `${contentDir}/warlock_pact_magic.json`,
+    ),
+  ].filter((row) => !(options.omitUnitIds ?? []).includes(row.unitId));
+
+  if (options.duplicateAlert) {
+    rows.push({
+      ...installedFixtureUnit("alert", "feat", `${contentDir}/alert_copy.json`),
+      catalogAdmission: {
+        status: "not-in-unit-catalog",
+        expectedCollectionId: "srd-5.2.1",
+      },
+    });
+  }
+
+  return buildSrdAuthoredProductReadiness(
+    groupFixtureRowsByUnitId(rows),
+    { maxCharacterLevel: 1 },
+    { root },
+  );
+}
+
+function assertAuthoredReadinessBlocked(readiness, expected) {
+  const matchingBlocker = readiness.blockerRows.find(
+    (row) =>
+      row.group === expected.group &&
+      row.ownerUnitId === expected.ownerUnitId &&
+      row.unitId === expected.unitId &&
+      row.status === expected.status,
+  );
+  if (matchingBlocker === undefined || readiness.openBlockerCount === 0) {
+    fail(
+      `Self-test failed: expected authored readiness blocker ${JSON.stringify(expected)}, got ${JSON.stringify(readiness.blockerRows)}`,
+    );
+  }
+}
 
 function runSelfTest(root) {
   const tempDir = fs.mkdtempSync(
@@ -422,6 +559,43 @@ function runSelfTest(root) {
         );
       }
     }
+    const completeAuthoredReadiness = authoredReadinessFixture(tempDir);
+    if (completeAuthoredReadiness.openBlockerCount !== 0) {
+      fail(
+        `Self-test failed: expected complete authored readiness fixture to pass, got ${JSON.stringify(completeAuthoredReadiness.blockerRows)}`,
+      );
+    }
+    assertAuthoredReadinessBlocked(
+      authoredReadinessFixture(tempDir, {
+        omitUnitIds: ["feat_magic_initiate_cleric"],
+      }),
+      {
+        group: "background-origin-feat-refs",
+        ownerUnitId: "background_acolyte",
+        unitId: "feat_magic_initiate_cleric",
+        status: "missing-authored-record",
+      },
+    );
+    assertAuthoredReadinessBlocked(
+      authoredReadinessFixture(tempDir, { duplicateAlert: true }),
+      {
+        group: "background-origin-feat-refs",
+        ownerUnitId: "background_criminal",
+        unitId: "alert",
+        status: "duplicate-catalog-identity",
+      },
+    );
+    assertAuthoredReadinessBlocked(
+      authoredReadinessFixture(tempDir, {
+        omitUnitIds: ["warlock_pact_magic"],
+      }),
+      {
+        group: "level-scoped-class-feature-grants",
+        ownerUnitId: "class_warlock",
+        unitId: "warlock_pact_magic",
+        status: "missing-authored-record",
+      },
+    );
   } finally {
     fs.rmSync(tempDir, { recursive: true, force: true });
   }
