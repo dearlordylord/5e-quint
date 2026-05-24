@@ -326,9 +326,9 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | Obligation | Status | Subset |
 | --- | --- | --- |
 | `SHARED.HIT_POINTS.POSITIVE_DAMAGE` | generation-subset-clean | `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `implies`, `all-block` |
-| `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` | fixture-bound | `import`, `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `range`, `set-operators`, `membership` |
-| `BATTLE.REACTION.OFFER_DECLINE_RESUME` | fixture-bound | `import`, `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `set-operators`, `membership` |
-| `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | fixture-bound | `import`, `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `membership` |
+| `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `range`, `map`, `set-operators`, `membership` |
+| `BATTLE.REACTION.OFFER_DECLINE_RESUME` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `map`, `set-operators`, `membership` |
+| `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | fixture-bound | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `membership` |
 
 ## Kernel IR Boundaries
 

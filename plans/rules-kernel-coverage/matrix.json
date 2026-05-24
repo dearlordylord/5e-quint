@@ -5568,9 +5568,7 @@
       "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "unsupported-construct"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -5588,6 +5586,7 @@
         "pattern-match",
         "set",
         "range",
+        "map",
         "set-operators",
         "membership"
       ],
@@ -5598,16 +5597,15 @@
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "unsupported-construct"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
         "record",
+        "record-update",
         "pure-def",
         "constant-def",
         "int",
@@ -5620,6 +5618,7 @@
         "all-block",
         "pattern-match",
         "set",
+        "map",
         "set-operators",
         "membership"
       ],
@@ -5631,17 +5630,17 @@
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [
-        "fixture-world-coupled",
-        "unsupported-construct"
+        "fixture-world-coupled"
       ],
       "generatorSubset": [
         "import",
         "variant",
         "record",
+        "record-update",
         "pure-def",
         "constant-def",
         "int",

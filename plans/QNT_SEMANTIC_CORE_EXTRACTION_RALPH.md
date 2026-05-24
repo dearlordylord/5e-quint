@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "QNTSEM-READINESS-REFRESH",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Refresh Generator Readiness After Extraction"
     },
     {
@@ -156,7 +156,7 @@ Acceptance:
 
 ### Task 4 - QNTSEM-READINESS-REFRESH - Refresh Generator Readiness After Extraction
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 

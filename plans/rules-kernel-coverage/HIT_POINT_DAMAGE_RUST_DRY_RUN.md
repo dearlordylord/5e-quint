@@ -45,9 +45,9 @@ The generator-facing core is the pure portion of `hit-point-damage.qnt`:
 - `absorbTemporaryHitPoints`
 - `applyResolvedDamageToPositiveHitPoints`
 
-The `run test_*` blocks in the same file are fixture evidence, not semantic
-input. That keeps the readiness row `fixture-bound` with `run-block-coupled`
-until a later task splits or marks generator-consumable declarations.
+The former `run test_*` blocks were fixture evidence, not semantic input, and
+now live outside this generator-facing core. The readiness row is
+`generation-subset-clean`.
 
 ## Hypothetical Rust Shapes
 
@@ -193,8 +193,6 @@ constructor should return a typed error instead.
   connectives, implication, and `all` blocks.
 - No collection operators, imports, pattern matches, nondeterminism, actions, or
   mutable QNT variables appear in the semantic core.
-- Run blocks are the remaining blocker for direct generator consumption of this
-  file. A later generator-clean split can preserve this dry-run mapping while
-  moving fixture assertions out of the generator input.
+- No readiness blockers remain for direct generator consumption of this file.
 - Damage at 0 Hit Points is intentionally out of scope for this obligation and
   belongs to the death-saving-throw failure procedure.
