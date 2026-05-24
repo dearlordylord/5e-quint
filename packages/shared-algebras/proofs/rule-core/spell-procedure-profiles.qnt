@@ -15,6 +15,7 @@ module spellProcedureProfiles {
   import spellInvocationActionSlotCore.* from "./spell-invocation-action-slot-core"
   import spellInvocationTargetCardinalityCore.* from "./spell-invocation-target-cardinality-core"
   import spellDamageProjectionCore.* from "./spell-damage-projection-core"
+  import spellSaveDamageProjectionCore.* from "./spell-save-damage-projection-core"
   import reactionsContinuationsConcentration.* from "./reactions-continuations-concentration"
 
   // RAW anchors:
@@ -46,38 +47,11 @@ module spellProcedureProfiles {
     | GuidingBoltNextAttackAdvantageHitEffect
     | RayOfSicknessPoisonedHitEffect
 
-  type SpellSaveGatedTargeting =
-    | SpellSingleSaveTarget
-    | SpellAreaSaveTargets
-    | SpellTargetListSaveTargets({
-        minTargets: int,
-        baseSlotLevel: int,
-        baseTargets: int,
-        additionalTargetsPerSlotLevel: int,
-      })
-
-  type SpellSaveGatedDamageSuccess =
-    | SpellNoDamageOnSaveSuccess
-    | SpellHalfDamageOnSaveSuccess
-
   type SpellSavingThrowAbility =
     | SpellStrengthSavingThrow
     | SpellDexteritySavingThrow
     | SpellConstitutionSavingThrow
     | SpellWisdomSavingThrow
-
-  type SpellSaveGatedDamageProfile =
-    | AcidSplashSaveDamageProfile
-    | SacredFlameSaveDamageProfile
-    | InflictWoundsSaveDamageProfile
-    | BurningHandsSaveDamageProfile
-    | FireballSaveDamageProfile
-    | LightningBoltSaveDamageProfile
-    | ViciousMockerySaveDamageProfile
-    | ThunderwaveSaveDamageProfile
-    | DissonantWhispersSaveDamageProfile
-    | HellishRebukeSaveDamageProfile
-    | MindSpikeSaveDamageProfile
 
   type SpellSaveGatedConditionProfile =
     | ColorSpraySaveConditionProfile
@@ -88,10 +62,7 @@ module spellProcedureProfiles {
     | HoldPersonSaveConditionProfile
     | FaerieFireSaveAttackRollAdvantageProfile
 
-  type SpellSaveGatedFailedEffect =
-    | ViciousMockeryNextAttackDisadvantageEffect
-    | ThunderwavePush10FeetEffect
-    | DissonantWhispersForcedReactionMovementEffect
+  type SpellSaveGatedConditionFailedEffect =
     | ColorSprayBlindedEffect
     | EntangleRestrainedEffect
     | AnimalFriendshipCharmedEffect({ durationTicks: int })
@@ -344,89 +315,6 @@ module spellProcedureProfiles {
   pure def spellAttackDamageProfileSupportsObjectTarget(profile: SpellAttackDamageProfile): bool =
     profile == StarryWispSpellAttackProfile or profile == FireBoltSpellAttackProfile or profile == ProduceFlameHurlSpellAttackProfile
 
-  pure def spellSaveGatedDamageTargeting(profile: SpellSaveGatedDamageProfile): SpellSaveGatedTargeting =
-    match profile {
-      | AcidSplashSaveDamageProfile => SpellAreaSaveTargets
-      | SacredFlameSaveDamageProfile => SpellSingleSaveTarget
-      | InflictWoundsSaveDamageProfile => SpellSingleSaveTarget
-      | BurningHandsSaveDamageProfile => SpellAreaSaveTargets
-      | FireballSaveDamageProfile => SpellAreaSaveTargets
-      | LightningBoltSaveDamageProfile => SpellAreaSaveTargets
-      | ViciousMockerySaveDamageProfile => SpellSingleSaveTarget
-      | ThunderwaveSaveDamageProfile => SpellAreaSaveTargets
-      | DissonantWhispersSaveDamageProfile => SpellSingleSaveTarget
-      | HellishRebukeSaveDamageProfile => SpellSingleSaveTarget
-      | MindSpikeSaveDamageProfile => SpellSingleSaveTarget
-    }
-
-  pure def spellSaveGatedDamageSuccess(profile: SpellSaveGatedDamageProfile): SpellSaveGatedDamageSuccess =
-    match profile {
-      | AcidSplashSaveDamageProfile => SpellNoDamageOnSaveSuccess
-      | SacredFlameSaveDamageProfile => SpellNoDamageOnSaveSuccess
-      | InflictWoundsSaveDamageProfile => SpellHalfDamageOnSaveSuccess
-      | BurningHandsSaveDamageProfile => SpellHalfDamageOnSaveSuccess
-      | FireballSaveDamageProfile => SpellHalfDamageOnSaveSuccess
-      | LightningBoltSaveDamageProfile => SpellHalfDamageOnSaveSuccess
-      | ViciousMockerySaveDamageProfile => SpellNoDamageOnSaveSuccess
-      | ThunderwaveSaveDamageProfile => SpellHalfDamageOnSaveSuccess
-      | DissonantWhispersSaveDamageProfile => SpellHalfDamageOnSaveSuccess
-      | HellishRebukeSaveDamageProfile => SpellHalfDamageOnSaveSuccess
-      | MindSpikeSaveDamageProfile => SpellHalfDamageOnSaveSuccess
-    }
-
-  pure def spellSaveGatedDamageType(profile: SpellSaveGatedDamageProfile): RuleDamageType =
-    match profile {
-      | AcidSplashSaveDamageProfile => AcidDamage
-      | SacredFlameSaveDamageProfile => RadiantDamage
-      | InflictWoundsSaveDamageProfile => NecroticDamage
-      | BurningHandsSaveDamageProfile => FireDamage
-      | FireballSaveDamageProfile => FireDamage
-      | LightningBoltSaveDamageProfile => LightningDamage
-      | ViciousMockerySaveDamageProfile => PsychicDamage
-      | ThunderwaveSaveDamageProfile => ThunderDamage
-      | DissonantWhispersSaveDamageProfile => PsychicDamage
-      | HellishRebukeSaveDamageProfile => FireDamage
-      | MindSpikeSaveDamageProfile => PsychicDamage
-    }
-
-  pure def spellSaveGatedDamageRequiresSlot(profile: SpellSaveGatedDamageProfile): bool =
-    match profile {
-      | AcidSplashSaveDamageProfile => false
-      | SacredFlameSaveDamageProfile => false
-      | InflictWoundsSaveDamageProfile => true
-      | BurningHandsSaveDamageProfile => true
-      | FireballSaveDamageProfile => true
-      | LightningBoltSaveDamageProfile => true
-      | ViciousMockerySaveDamageProfile => false
-      | ThunderwaveSaveDamageProfile => true
-      | DissonantWhispersSaveDamageProfile => true
-      | HellishRebukeSaveDamageProfile => true
-      | MindSpikeSaveDamageProfile => true
-    }
-
-  pure def spellSaveGatedDamageRequiresConcentration(profile: SpellSaveGatedDamageProfile): bool =
-    match profile {
-      | AcidSplashSaveDamageProfile => false
-      | SacredFlameSaveDamageProfile => false
-      | InflictWoundsSaveDamageProfile => false
-      | BurningHandsSaveDamageProfile => false
-      | FireballSaveDamageProfile => false
-      | LightningBoltSaveDamageProfile => false
-      | ViciousMockerySaveDamageProfile => false
-      | ThunderwaveSaveDamageProfile => false
-      | DissonantWhispersSaveDamageProfile => false
-      | HellishRebukeSaveDamageProfile => false
-      | MindSpikeSaveDamageProfile => true
-    }
-
-  pure def spellSaveGatedDamageFailedSaveEffects(profile: SpellSaveGatedDamageProfile): Set[SpellSaveGatedFailedEffect] =
-    match profile {
-      | ViciousMockerySaveDamageProfile => Set(ViciousMockeryNextAttackDisadvantageEffect)
-      | ThunderwaveSaveDamageProfile => Set(ThunderwavePush10FeetEffect)
-      | DissonantWhispersSaveDamageProfile => Set(DissonantWhispersForcedReactionMovementEffect)
-      | _ => Set()
-    }
-
   pure def spellSaveGatedConditionTargeting(profile: SpellSaveGatedConditionProfile): SpellSaveGatedTargeting =
     match profile {
       | ColorSpraySaveConditionProfile => SpellAreaSaveTargets
@@ -449,18 +337,7 @@ module spellProcedureProfiles {
       | FaerieFireSaveAttackRollAdvantageProfile => SpellDexteritySavingThrow
     }
 
-  pure def spellSaveGatedTargetMaxTargets(targeting: SpellSaveGatedTargeting, slotLevel: int): int =
-    match targeting {
-      | SpellTargetListSaveTargets(data) =>
-        data.baseTargets +
-          (if (slotLevel > data.baseSlotLevel)
-            (slotLevel - data.baseSlotLevel) * data.additionalTargetsPerSlotLevel
-          else
-            0)
-      | _ => 1
-    }
-
-  pure def spellSaveGatedConditionFailedSaveEffects(profile: SpellSaveGatedConditionProfile): Set[SpellSaveGatedFailedEffect] =
+  pure def spellSaveGatedConditionFailedSaveEffects(profile: SpellSaveGatedConditionProfile): Set[SpellSaveGatedConditionFailedEffect] =
     match profile {
       | ColorSpraySaveConditionProfile => Set(ColorSprayBlindedEffect)
       | EntangleSaveConditionProfile => Set(EntangleRestrainedEffect)

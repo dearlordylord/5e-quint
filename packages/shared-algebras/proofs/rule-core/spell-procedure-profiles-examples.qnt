@@ -12,6 +12,7 @@ module spellProcedureProfilesExamples {
   import spellInvocationResourceCore.* from "./spell-invocation-resource-core"
   import spellInvocationActionSlotCore.* from "./spell-invocation-action-slot-core"
   import spellInvocationTargetCardinalityCore.* from "./spell-invocation-target-cardinality-core"
+  import spellSaveDamageProjectionCore.* from "./spell-save-damage-projection-core"
   import spellProcedureProfiles.* from "./spell-procedure-profiles"
 
   run test_magic_missile_profile_spends_slot_and_allocates_darts = {
@@ -89,10 +90,13 @@ module spellProcedureProfilesExamples {
     val blindnessTargets = spellSaveGatedConditionTargeting(BlindnessDeafnessSaveConditionProfile)
     all {
       assert(spellSaveGatedDamageTargeting(SacredFlameSaveDamageProfile) == SpellSingleSaveTarget),
+      assert(spellSaveGatedDamageTargeting(AcidSplashSaveDamageProfile) == SpellAreaSaveTargets),
       assert(spellSaveGatedDamageTargeting(BurningHandsSaveDamageProfile) == SpellAreaSaveTargets),
       assert(spellSaveGatedDamageTargeting(FireballSaveDamageProfile) == SpellAreaSaveTargets),
       assert(spellSaveGatedDamageTargeting(LightningBoltSaveDamageProfile) == SpellAreaSaveTargets),
       assert(spellSaveGatedDamageTargeting(MindSpikeSaveDamageProfile) == SpellSingleSaveTarget),
+      assert(spellSaveGatedDamageSuccess(AcidSplashSaveDamageProfile) == SpellNoDamageOnSaveSuccess),
+      assert(spellSaveGatedDamageSuccess(SacredFlameSaveDamageProfile) == SpellNoDamageOnSaveSuccess),
       assert(spellSaveGatedDamageSuccess(InflictWoundsSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
       assert(spellSaveGatedDamageSuccess(FireballSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
       assert(spellSaveGatedDamageSuccess(LightningBoltSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
@@ -101,6 +105,8 @@ module spellProcedureProfilesExamples {
       assert(spellSaveGatedDamageSuccess(DissonantWhispersSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
       assert(spellSaveGatedDamageSuccess(HellishRebukeSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
       assert(spellSaveGatedDamageSuccess(MindSpikeSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
+      assert(spellSaveGatedDamageType(AcidSplashSaveDamageProfile) == AcidDamage),
+      assert(spellSaveGatedDamageType(SacredFlameSaveDamageProfile) == RadiantDamage),
       assert(spellSaveGatedDamageType(ViciousMockerySaveDamageProfile) == PsychicDamage),
       assert(spellSaveGatedDamageType(FireballSaveDamageProfile) == FireDamage),
       assert(spellSaveGatedDamageType(LightningBoltSaveDamageProfile) == LightningDamage),

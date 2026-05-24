@@ -370,6 +370,10 @@ access admission facts, and target cardinality facts.
 facts used by Spell Procedure Profiles without importing authored spell
 definitions.
 
+`spell-save-damage-projection-core.qnt` projects save-gated damage profiles
+into target shape, successful-save damage policy, Damage Type, Spell Slot and
+Concentration flags, and failed-save rider effects.
+
 `spell-procedure-profiles.qnt` models projection-shaped Spell Invocation facts
 and Spell Effects for the production spell procedures without importing Spell
 Definition records, Spell Access lists, Unit ids, or Surface authored ids. It

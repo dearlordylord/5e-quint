@@ -32,7 +32,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 4,
       "id": "A4-SAVE-DAMAGE-PROJECTION-CORE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Split save-gated damage projection core"
     },
     {
@@ -184,7 +184,7 @@ Lane A must not:
 | 1 | A1-SPELL-FIXTURE-BOUND-SURVEY - Survey spell procedure generator blockers | done | none | Established exact blocker list. |
 | 2 | A2-INVOCATION-CARDINALITY-CORE - Extract invocation target cardinality core | done | none | Pure projection split. |
 | 3 | A3-INVOCATION-ACTION-SLOT-CORE - Extract invocation action and slot mapping core | done | none | Preserved slot-expenditure atom. |
-| 4 | A4-SAVE-DAMAGE-PROJECTION-CORE - Split save-gated damage projection core | ready-for-implementation-after-light-research | none | Pure profile facts only. |
+| 4 | A4-SAVE-DAMAGE-PROJECTION-CORE - Split save-gated damage projection core | done | none | Pure profile facts only. |
 | 5 | A5-SAVE-CONDITION-PROJECTION-CORE - Split save-gated condition projection core | ready-for-implementation-after-light-research | none | Pure profile facts only. |
 | 6 | A6-SPELL-ATTACK-DAMAGE-CORE - Split spell attack damage projection core | ready-for-implementation-after-light-research | none | Pure profile facts only. |
 | 7 | A7-SCALAR-BUFF-CORE - Split scalar buff projection core | ready-for-implementation-after-light-research | none | Pure profile facts only. |
@@ -245,7 +245,7 @@ spell procedure examples and coverage check pass.
 
 ### Task 4 - A4-SAVE-DAMAGE-PROJECTION-CORE - Split save-gated damage projection core
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: pure semantic-core file for save-gated damage profile targeting,
 damage type, success result, slot/concentration flags, and failed-save effects.

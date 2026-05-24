@@ -6,6 +6,7 @@ module battleRuntimeSpellBridge {
   import spellInvocationActionSlotCore.* from "../shared-algebras/proofs/rule-core/spell-invocation-action-slot-core"
   import spellInvocationResourceCore.* from "../shared-algebras/proofs/rule-core/spell-invocation-resource-core"
   import spellInvocationTargetCardinalityCore.* from "../shared-algebras/proofs/rule-core/spell-invocation-target-cardinality-core"
+  import spellSaveDamageProjectionCore.* from "../shared-algebras/proofs/rule-core/spell-save-damage-projection-core"
   import spellProcedureProfiles.* from "../shared-algebras/proofs/rule-core/spell-procedure-profiles"
 
   type BattleRuntimeDirectHitPointRestorationProfile =
@@ -316,8 +317,8 @@ module battleRuntimeSpellBridge {
     profile: BattleRuntimeSaveGatedDamageProfile
   ): BattleRuntimeSaveGatedDamageSuccess =
     match spellSaveGatedDamageSuccess(battleRuntimeSaveGatedDamageProfile(profile)) {
-      | SpellSaveGateNoDamageOnSuccess => BattleRuntimeNoDamageOnSaveSuccess
-      | SpellSaveGateHalfDamageOnSuccess => BattleRuntimeHalfDamageOnSaveSuccess
+      | SpellNoDamageOnSaveSuccess => BattleRuntimeNoDamageOnSaveSuccess
+      | SpellHalfDamageOnSaveSuccess => BattleRuntimeHalfDamageOnSaveSuccess
     }
 
   pure def battleRuntimeSaveGatedDamageType(
@@ -335,13 +336,19 @@ module battleRuntimeSpellBridge {
   ): bool =
     spellSaveGatedDamageRequiresConcentration(battleRuntimeSaveGatedDamageProfile(profile))
 
-  pure def battleRuntimeSaveGatedFailedEffect(
-    effect: SpellSaveGatedFailedEffect
+  pure def battleRuntimeSaveGatedDamageFailedEffect(
+    effect: SpellSaveGatedDamageFailedEffect
   ): BattleRuntimeSaveGatedFailedEffect =
     match effect {
       | ViciousMockeryNextAttackDisadvantageEffect => BattleRuntimeViciousMockeryNextAttackDisadvantageEffect
       | ThunderwavePush10FeetEffect => BattleRuntimeThunderwavePush10FeetEffect
       | DissonantWhispersForcedReactionMovementEffect => BattleRuntimeDissonantWhispersForcedReactionMovementEffect
+    }
+
+  pure def battleRuntimeSaveGatedConditionFailedEffect(
+    effect: SpellSaveGatedConditionFailedEffect
+  ): BattleRuntimeSaveGatedFailedEffect =
+    match effect {
       | ColorSprayBlindedEffect => BattleRuntimeColorSprayBlindedEffect
       | EntangleRestrainedEffect => BattleRuntimeEntangleRestrainedEffect
       | AnimalFriendshipCharmedEffect(data) => BattleRuntimeAnimalFriendshipCharmedEffect({ durationTicks: data.durationTicks })
@@ -356,13 +363,13 @@ module battleRuntimeSpellBridge {
     profile: BattleRuntimeSaveGatedDamageProfile
   ): Set[BattleRuntimeSaveGatedFailedEffect] =
     spellSaveGatedDamageFailedSaveEffects(battleRuntimeSaveGatedDamageProfile(profile))
-      .map(battleRuntimeSaveGatedFailedEffect)
+      .map(battleRuntimeSaveGatedDamageFailedEffect)
 
   pure def battleRuntimeSaveGatedConditionFailedSaveEffects(
     profile: BattleRuntimeSaveGatedConditionProfile
   ): Set[BattleRuntimeSaveGatedFailedEffect] =
     spellSaveGatedConditionFailedSaveEffects(battleRuntimeSaveGatedConditionProfile(profile))
-      .map(battleRuntimeSaveGatedFailedEffect)
+      .map(battleRuntimeSaveGatedConditionFailedEffect)
 
   pure def battleRuntimeSaveGatedConditionTargetCreatureTypeIsLegal(
     profile: BattleRuntimeSaveGatedConditionProfile,
