@@ -246,6 +246,7 @@
 {"unitId":"ranger_deft_explorer","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-AUTHOR-RANGER-FIGHTING-STYLE","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"ranger_fighting_style","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-AUTHOR-RANGER-FIGHTING-STYLE","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"warlock_magical_cunning","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-AUTHOR-WARLOCK-MAGICAL-CUNNING","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
+{"unitId":"warlock_pact_magic","evidence":{"tag":"deterministic-admission-projection","taskId":"L12FS-WARLOCK-PACT-MAGIC-RETAINED-GRANT","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"druid_wild_shape","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"druid_wild_shape","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
 {"unitId":"monk_monks_focus","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}

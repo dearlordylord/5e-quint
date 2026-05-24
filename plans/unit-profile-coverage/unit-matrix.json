@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 406,
-      "numerator": 208,
-      "percent": "51.2%"
+      "denominator": 407,
+      "numerator": 209,
+      "percent": "51.4%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 491,
-      "numerator": 253,
-      "percent": "51.5%"
+      "denominator": 492,
+      "numerator": 254,
+      "percent": "51.6%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 254
+      "value": 255
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 140,
-      "numerator": 140,
+      "denominator": 141,
+      "numerator": 141,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 254,
-      "numerator": 254,
+      "denominator": 255,
+      "numerator": 255,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -92,8 +92,8 @@
       "percent": "96.2%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 142,
-      "numerator": 141,
+      "denominator": 143,
+      "numerator": 142,
       "percent": "99.3%"
     },
     "runtimeMappingCoverage": {
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 140,
+      "denominator": 141,
       "numerator": 109,
-      "percent": "77.9%"
+      "percent": "77.3%"
     },
     "supportedProfileCoverage": {
-      "denominator": 209,
-      "numerator": 140,
-      "percent": "67%"
+      "denominator": 210,
+      "numerator": 141,
+      "percent": "67.1%"
     }
   },
   "metricSemantics": [
@@ -5673,8 +5673,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 142,
-          "numerator": 141,
+          "denominator": 143,
+          "numerator": 142,
           "percent": "99.3%"
         }
       },
@@ -9032,6 +9032,25 @@
             }
           ],
           "unitId": "warlock_magical_cunning"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation Warlock Pact Magic Spell Access and Pact Slot progression from Surface class facts through build finalization and Warlock class-level gains"
+                }
+              ],
+              "profileId": "character-creation.warlock-pact-magic-advancement",
+              "profileKind": "character-creation"
+            }
+          ],
+          "unitId": "warlock_pact_magic"
         },
         {
           "joinStatus": "covered",
@@ -15804,6 +15823,63 @@
       ],
       "sourceRecordPath": "packages/surface/content/warlock_eldritch_invocations.json",
       "unitId": "warlock_eldritch_invocations"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "character-creation-runtime plus selected spell invocation profiles",
+          "reason": "The retained Pact Magic feature owns CharacterBuild spellcasting source and Pact Slot facts; individual Spell Definition invocation behavior remains owned by selected spell profiles."
+        },
+        "profileIds": [
+          "character-creation.warlock-pact-magic-advancement"
+        ],
+        "supportedMechanics": [
+          "Warlock level-1 CharacterBuild feature ownership is derived from the Warlock class feature grant",
+          "Character Creation finalizes Warlock level-1 Pact Magic cantrips, prepared spells, Pact Slot capacity, Pact Slot level, spellcasting ability, and Arcane Focus from the Surface Warlock class spellcasting facts",
+          "When a Warlock level is gained, Character Creation advances Pact Magic cantrip totals, prepared-spell totals, Pact Slot count, and Pact Slot level from the Surface Warlock progression rows",
+          "Spell execution remains owned by selected spell profiles"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12FS-WARLOCK-PACT-MAGIC-RETAINED-GRANT"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "character-creation.warlock-pact-magic-advancement",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface Warlock Pact Magic progression rows and class spell list facts project into the CharacterBuild Warlock spellcasting source and Pact Magic slot pool during Warlock class-level gains; spell execution and selected invocation execution remain owned by selected spell and invocation profiles.",
+          "taskRefs": [
+            "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
+          ],
+          "title": "Character Creation advances Warlock Pact Magic build facts from Surface progression",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/warlock_pact_magic.json",
+      "unitId": "warlock_pact_magic"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

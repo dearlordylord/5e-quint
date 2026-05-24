@@ -237,6 +237,7 @@ import trueStrikeInput from "../../content/true_strike.json";
 import warlockEldritchInvocationsInput from "../../content/warlock_eldritch_invocations.json";
 import warlockFiendSpellsInput from "../../content/warlock_fiend_spells.json";
 import warlockMagicalCunningInput from "../../content/warlock_magical_cunning.json";
+import warlockPactMagicInput from "../../content/warlock_pact_magic.json";
 import viciousMockeryInput from "../../content/vicious_mockery.json";
 import wardingBondInput from "../../content/warding_bond.json";
 import webInput from "../../content/web.json";
@@ -447,6 +448,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     sorcererMetamagicInput,
     sorcererDraconicSpellsInput,
     warlockEldritchInvocationsInput,
+    warlockPactMagicInput,
     warlockMagicalCunningInput,
     warlockFiendSpellsInput,
     wizardRitualAdeptInput,

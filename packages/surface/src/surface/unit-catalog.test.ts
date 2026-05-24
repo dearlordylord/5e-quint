@@ -42,6 +42,7 @@ const task183ClassFeatureUnitIds = [
   "rogue_thieves_cant",
   "sorcerer_innate_sorcery",
   "warlock_eldritch_invocations",
+  "warlock_pact_magic",
 ] as const;
 
 const task184WeaponMasteryUnitIds = [
@@ -4972,6 +4973,15 @@ describe("SRD Unit catalog boundary", () => {
             }),
             family: "feature_choice",
           }),
+        }),
+        expect.objectContaining({
+          className: "warlock",
+          kind: "class_feature",
+          mechanics: {
+            family: "class_spellcasting_projection",
+            source: "class_record_spellcasting",
+            spellcastingKind: "pact_magic_spellcasting_creation",
+          },
         }),
       ]);
     }

@@ -162,6 +162,7 @@ const SRD_SORCERY_POINTS_POOL_ID = "sorcery_points";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.class-feature-source-fact-projection
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-03 fighter_fighting_style
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE warlock_eldritch_invocations
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12FS-WARLOCK-PACT-MAGIC-RETAINED-GRANT warlock_pact_magic
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-06 cleric_divine_order druid_primal_order
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-CLASS-PALADIN-FIGHTING-STYLE paladin_fighting_style
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-AUTHOR-RANGER-FIGHTING-STYLE ranger_deft_explorer ranger_fighting_style

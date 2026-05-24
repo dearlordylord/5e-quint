@@ -5413,17 +5413,8 @@
     "totalGroupCount": 1
   },
   "srdAuthoredProductReadiness": {
-    "blockerRows": [
-      {
-        "group": "level-scoped-class-feature-grants",
-        "ownerUnitId": "class_warlock",
-        "ready": false,
-        "relation": "class.featureGrants.level-1",
-        "status": "missing-authored-record",
-        "unitId": "warlock_pact_magic"
-      }
-    ],
-    "blockingGroupCount": 1,
+    "blockerRows": [],
+    "blockingGroupCount": 0,
     "groups": [
       {
         "blockerRows": [],
@@ -5757,23 +5748,15 @@
         }
       },
       {
-        "blockerRows": [
-          {
-            "ownerUnitId": "class_warlock",
-            "ready": false,
-            "relation": "class.featureGrants.level-1",
-            "status": "missing-authored-record",
-            "unitId": "warlock_pact_magic"
-          }
-        ],
-        "complete": false,
+        "blockerRows": [],
+        "complete": true,
         "description": "Every level-scoped class feature grant retained by finalization must resolve through the Unit catalog.",
         "group": "level-scoped-class-feature-grants",
         "label": "SRD class feature grants through level 1",
         "metrics": {
           "denominator": 25,
-          "numerator": 24,
-          "percent": "96%"
+          "numerator": 25,
+          "percent": "100%"
         },
         "rows": [
           {
@@ -5975,10 +5958,12 @@
             "unitId": "warlock_eldritch_invocations"
           },
           {
+            "kind": "class_feature",
             "ownerUnitId": "class_warlock",
-            "ready": false,
+            "ready": true,
             "relation": "class.featureGrants.level-1",
-            "status": "missing-authored-record",
+            "sourceRecordPath": "packages/surface/content/warlock_pact_magic.json",
+            "status": "installed",
             "unitId": "warlock_pact_magic"
           },
           {
@@ -6001,8 +5986,7 @@
           }
         ],
         "rowsByStatus": {
-          "installed": 24,
-          "missing-authored-record": 1
+          "installed": 25
         }
       },
       {
@@ -6080,10 +6064,10 @@
     ],
     "metrics": {
       "denominator": 58,
-      "numerator": 57,
-      "percent": "98.3%"
+      "numerator": 58,
+      "percent": "100%"
     },
-    "openBlockerCount": 1
+    "openBlockerCount": 0
   },
   "summary": {
     "candidateUnitIdsBeforeExclusions": 120,
