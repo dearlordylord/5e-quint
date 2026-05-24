@@ -26,7 +26,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Rules-kernel covered profile coverage | 127/132 | 96.2% |
 | Supported Unit rules-kernel chain coverage | 143/144 | 99.3% |
 | Deterministic admission/projection coverage | 142/142 | 100% |
-| Selected identity replay coverage | 140/142 | 98.6% |
+| Selected identity replay coverage | 141/142 | 99.3% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -59,7 +59,7 @@ Background, feat, spell, and class-feature groups are counted from installed Uni
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | Background Units | 4 | 0 | 0 | 0 | 4 | 0 | 0/0 | 0 |
 | Feat Units | 8 | 8 | 5 | 0 | 3 | 5 | 5/5 | 0 |
-| Spell Units | 124 | 124 | 86 | 20 | 18 | 127 | 102/106 | 4 |
+| Spell Units | 124 | 124 | 86 | 20 | 18 | 127 | 103/106 | 3 |
 | Class-feature Units | 63 | 63 | 45 | 16 | 2 | 85 | 61/61 | 0 |
 
 | Denominator | Rule |
@@ -1096,6 +1096,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `invisibility` | `spell.invocation-direct-condition` | B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH | `packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts` |
 | `jump` | `spell.invocation-jump-movement-replacement` | level1-spatial-witness | `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts` |
 | `lesser_restoration` | `spell.invocation-direct-condition-removal` | RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY | `packages/battle-runtime/src/condition-removal-protection-selected-identity.mbt.test.ts` |
+| `lightning_bolt` | `spell.invocation-damage-save-or-attack` | B24-LIGHTNING-BOLT-IDENTITY-WITNESS | `packages/battle-runtime/src/lightning-bolt-selected-identity.mbt.test.ts` |
 | `light` | `spell.invocation-object-light` | level1-spatial-witness | `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts` |
 | `longstrider` | `spell.scalar-buff` | L1E-LONGSTRIDER | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
 | `misty_step` | `spell.invocation-self-teleport` | B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH | `packages/battle-runtime/src/level2-mobility-spell-selected-identity.mbt.test.ts` |
@@ -1147,7 +1148,6 @@ This generated view lists `profile-subset-supported` and `supported-profile` Uni
 
 | Unit | Claim | Selected identity | Catalog | Collection | Kind | Profiles | Source |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `lightning_bolt` | supported-profile | missing-witness | installed | srd-5.2.1 | spell | `spell.invocation-damage-save-or-attack` | `packages/surface/content/lightning_bolt.json` |
 | `mind_spike` | profile-subset-supported | missing-witness-deferred-not-applicable | installed | srd-5.2.1 | spell | `spell.invocation-damage-save-or-attack` | `packages/surface/content/mind_spike.json` |
 | `shining_smite` | supported-profile | missing-witness | installed | srd-5.2.1 | spell | `spell.invocation-after-hit-damage-illumination` | `packages/surface/content/shining_smite.json` |
 | `thaumaturgy` | profile-subset-supported | missing-witness-deferred-not-applicable | installed | srd-5.2.1 | spell | `spell.invocation-self-ability-check-advantage` | `packages/surface/content/thaumaturgy.json` |

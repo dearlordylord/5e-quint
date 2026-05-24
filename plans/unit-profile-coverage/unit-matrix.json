@@ -108,8 +108,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 142,
-      "numerator": 140,
-      "percent": "98.6%"
+      "numerator": 141,
+      "percent": "99.3%"
     },
     "supportedProfileCoverage": {
       "denominator": 210,
@@ -9243,25 +9243,8 @@
       ],
       "evidenceTag": "selected-identity-mbt"
     },
-    "rowCount": 4,
+    "rowCount": 3,
     "rows": [
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-mbt evidence.",
-          "status": "missing-witness"
-        },
-        "sourceRecordPath": "packages/surface/content/lightning_bolt.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-damage-save-or-attack"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "lightning_bolt"
-      },
       {
         "catalogAdmissionStatus": "installed",
         "collectionId": "srd-5.2.1",
@@ -11982,8 +11965,8 @@
         "profileFactDenominator": 127,
         "profileSubsetSupportedUnits": 20,
         "selectedIdentityReplayDenominator": 106,
-        "selectedIdentityReplayGapUnits": 4,
-        "selectedIdentityReplayWitnessUnits": 102,
+        "selectedIdentityReplayGapUnits": 3,
+        "selectedIdentityReplayWitnessUnits": 103,
         "supportedProfileUnits": 86,
         "unsupportedOrOtherUnits": 18
       },
@@ -22837,6 +22820,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L3-SPELL-LIGHTNING-BOLT-RUNTIME-SURVEY"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/lightning-bolt-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B24-LIGHTNING-BOLT-IDENTITY-WITNESS"
         }
       ],
       "executableMechanics": true,
