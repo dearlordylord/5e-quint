@@ -80,7 +80,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 12,
       "id": "A12-OBJECT-HP-DAMAGE-CORE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Split object hit point damage core"
     },
     {
@@ -192,7 +192,7 @@ Lane A must not:
 | 9 | A9-CHAINED-ATTACK-CORE - Split chained attack projection core | done | none | Pure profile facts only. |
 | 10 | A10-INDEPENDENT-ATTACK-SEQUENCE-CORE - Split independent attack sequence core | done | none | Pure finite sequence facts. |
 | 11 | A11-SPELL-TURN-HOOK-CORE - Split spell turn hook semantic core | done | none | Temporary HP, duration, once-per-turn facts. |
-| 12 | A12-OBJECT-HP-DAMAGE-CORE - Split object hit point damage core | ready-for-implementation-after-light-research | none | Keep object state minimal. |
+| 12 | A12-OBJECT-HP-DAMAGE-CORE - Split object hit point damage core | done | none | Keep object state minimal. |
 | 13 | A13-SLEEP-LIFECYCLE-CORE - Split Sleep repeat-save lifecycle core | ready-for-implementation-after-light-research | none | No table adjudication expansion. |
 | 14 | A14-QNT-OWNER-ROLE-REFRESH - Refresh owner roles for new semantic cores | blocked | A2-A13,A20-A23 | Generated role closure. |
 | 15 | A15-GENERATOR-SUBSET-TOKEN-AUDIT - Audit generator subset tokens for spell cores | blocked | A2-A13,A20-A23 | Ensure row vocabulary is exact. |
@@ -323,7 +323,7 @@ Acceptance: examples and coverage check pass.
 
 ### Task 12 - A12-OBJECT-HP-DAMAGE-CORE - Split object hit point damage core
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: pure semantic-core file for object damage threshold and destruction
 calculation.

@@ -381,12 +381,17 @@ profiles into Damage Type, hit-applied effects, and object-target support.
 sequence profiles into Damage Type, object-target support, attack counts, and
 needs-targets/needs-attack-roll/needs-damage-roll/complete step states.
 
+`spell-object-hit-point-damage-core.qnt` models object Hit Point damage:
+Damage Threshold blocking, full-damage application when the threshold is met,
+Hit Point clamping at 0, and destruction at 0 Hit Points.
+
 `spell-procedure-profiles.qnt` models projection-shaped Spell Invocation facts
 and Spell Effects for the production spell procedures without importing Spell
 Definition records, Spell Access lists, Unit ids, or Surface authored ids. The
 QCORE10 spell procedure suite projects supported profiles into focused
 semantic cores for invocation resources, spell damage, attack damage, scalar
-buffs, damage riders, chained attacks, and independent attack sequences.
+buffs, damage riders, chained attacks, independent attack sequences, and object
+Hit Point damage.
 
 Scope:
 
@@ -427,6 +432,11 @@ Scope:
   turn-start Temporary Hit Points, once-per-turn reset, one-round Shield expiry,
   and timed duration ticking without importing authored Spell Definition
   records;
+- object Hit Point damage facts live in
+  `spell-object-hit-point-damage-core.qnt`; they project Damage Threshold
+  blocking, whole-instance damage once the threshold is met, Hit Point
+  clamping at 0, and destruction at 0 Hit Points without importing authored
+  Spell Definition records;
 - Readied Spell Response holds only action-time spell profiles as a readied
   spell held effect, expends the spell's casting resources at the hold
   boundary, starts Concentration while held, opens QCORE8's Readied Spell

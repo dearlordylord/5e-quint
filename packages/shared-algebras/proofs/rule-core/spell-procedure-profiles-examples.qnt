@@ -20,6 +20,7 @@ module spellProcedureProfilesExamples {
   import spellChainedAttackDamageProjectionCore.* from "./spell-chained-attack-damage-projection-core"
   import spellIndependentAttackSequenceCore.* from "./spell-independent-attack-sequence-core"
   import spellTurnHookCore.* from "./spell-turn-hook-core"
+  import spellObjectHitPointDamageCore.* from "./spell-object-hit-point-damage-core"
   import spellProcedureProfiles.* from "./spell-procedure-profiles"
 
   run test_magic_missile_profile_spends_slot_and_allocates_darts = {
@@ -348,12 +349,17 @@ module spellProcedureProfilesExamples {
     val destroyed = objectHitPointDamageResult({
       rolledDamage: 6,
       priorHitPoints: 5,
-      damageThreshold: 0,
+      damageThreshold: ObjectWithoutDamageThreshold,
     })
     val thresholdBlocked = objectHitPointDamageResult({
       rolledDamage: 6,
       priorHitPoints: 10,
-      damageThreshold: 10,
+      damageThreshold: ObjectWithDamageThreshold({ amount: 10 }),
+    })
+    val thresholdMet = objectHitPointDamageResult({
+      rolledDamage: 10,
+      priorHitPoints: 10,
+      damageThreshold: ObjectWithDamageThreshold({ amount: 10 }),
     })
     all {
       assert(destroyed.effectiveDamage == 6),
@@ -363,6 +369,9 @@ module spellProcedureProfilesExamples {
       assert(thresholdBlocked.effectiveDamage == 0),
       assert(thresholdBlocked.nextHitPoints == 10),
       assert(not(thresholdBlocked.destroyed)),
+      assert(thresholdMet.effectiveDamage == 10),
+      assert(thresholdMet.nextHitPoints == 0),
+      assert(thresholdMet.destroyed),
     }
   }
 

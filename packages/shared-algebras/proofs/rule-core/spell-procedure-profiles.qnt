@@ -41,19 +41,6 @@ module spellProcedureProfiles {
         hadUnconscious: bool,
       })
 
-  type ObjectHitPointDamageFacts = {
-    rolledDamage: int,
-    priorHitPoints: int,
-    damageThreshold: int,
-  }
-
-  type ObjectHitPointDamageResult = {
-    effectiveDamage: int,
-    priorHitPoints: int,
-    nextHitPoints: int,
-    destroyed: bool,
-  }
-
   type SpellAreaProfile =
     | NoSpellAreaProfile
     | MassCureWoundsPointOriginSphereArea
@@ -241,20 +228,6 @@ module spellProcedureProfiles {
   pure def sleepEffectEndsOnDamage: bool = true
 
   pure def sleepEffectEndsOnAdjacentShakeAwakeAction: bool = true
-
-  pure def objectHitPointEffectiveDamage(rolledDamage: int, damageThreshold: int): int =
-    if (damageThreshold > 0 and rolledDamage < damageThreshold) 0 else rolledDamage
-
-  pure def objectHitPointDamageResult(facts: ObjectHitPointDamageFacts): ObjectHitPointDamageResult = {
-    val effectiveDamage = objectHitPointEffectiveDamage(facts.rolledDamage, facts.damageThreshold)
-    val nextHitPoints = if (facts.priorHitPoints - effectiveDamage < 0) 0 else facts.priorHitPoints - effectiveDamage
-    {
-      effectiveDamage: effectiveDamage,
-      priorHitPoints: facts.priorHitPoints,
-      nextHitPoints: nextHitPoints,
-      destroyed: nextHitPoints == 0,
-    }
-  }
 
   pure def rayOfFrostMaximumBaseDamageDice: int = 4
 

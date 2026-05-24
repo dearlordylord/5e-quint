@@ -14,6 +14,7 @@ module battleRuntimeSpellBridge {
   import spellChainedAttackDamageProjectionCore.* from "../shared-algebras/proofs/rule-core/spell-chained-attack-damage-projection-core"
   import spellIndependentAttackSequenceCore.* from "../shared-algebras/proofs/rule-core/spell-independent-attack-sequence-core"
   import spellTurnHookCore.* from "../shared-algebras/proofs/rule-core/spell-turn-hook-core"
+  import spellObjectHitPointDamageCore.* from "../shared-algebras/proofs/rule-core/spell-object-hit-point-damage-core"
   import spellProcedureProfiles.* from "../shared-algebras/proofs/rule-core/spell-procedure-profiles"
 
   type BattleRuntimeDirectHitPointRestorationProfile =
@@ -774,6 +775,12 @@ module battleRuntimeSpellBridge {
   pure def battleRuntimeSleepEffectEndsOnAdjacentShakeAwakeAction: bool =
     sleepEffectEndsOnAdjacentShakeAwakeAction
 
+  pure def battleRuntimeObjectDamageThreshold(damageThreshold: int): ObjectDamageThreshold =
+    if (damageThreshold <= 0)
+      ObjectWithoutDamageThreshold
+    else
+      ObjectWithDamageThreshold({ amount: damageThreshold })
+
   pure def battleRuntimeObjectHitPointDamageResult(
     damageType: RuleDamageType,
     rolledDamage: int,
@@ -784,7 +791,7 @@ module battleRuntimeSpellBridge {
     val result = objectHitPointDamageResult({
       rolledDamage: damageAfterObjectImmunity,
       priorHitPoints: priorHitPoints,
-      damageThreshold: damageThreshold,
+      damageThreshold: battleRuntimeObjectDamageThreshold(damageThreshold),
     })
     {
       effectiveDamage: result.effectiveDamage,
@@ -1062,6 +1069,7 @@ module battleRuntimeSpellBridge {
   run test_object_hit_point_damage_projection = {
     val damaged = battleRuntimeObjectHitPointDamageResult(FireDamage, 6, 5, 0)
     val thresholdBlocked = battleRuntimeObjectHitPointDamageResult(FireDamage, 6, 10, 10)
+    val thresholdMet = battleRuntimeObjectHitPointDamageResult(FireDamage, 10, 10, 10)
     val poisonImmune = battleRuntimeObjectHitPointDamageResult(PoisonDamage, 6, 5, 0)
     val psychicImmune = battleRuntimeObjectHitPointDamageResult(PsychicDamage, 6, 5, 0)
     all {
@@ -1072,6 +1080,9 @@ module battleRuntimeSpellBridge {
       assert(thresholdBlocked.effectiveDamage == 0),
       assert(thresholdBlocked.nextHitPoints == 10),
       assert(not(thresholdBlocked.destroyed)),
+      assert(thresholdMet.effectiveDamage == 10),
+      assert(thresholdMet.nextHitPoints == 0),
+      assert(thresholdMet.destroyed),
       assert(poisonImmune.effectiveDamage == 0),
       assert(poisonImmune.nextHitPoints == 5),
       assert(not(poisonImmune.destroyed)),
