@@ -382,7 +382,7 @@ and Spell Effects for the production spell procedures without importing Spell
 Definition records, Spell Access lists, Unit ids, or Surface authored ids. It
 projects supported profiles into the invocation resource core, spell damage
 projection core, attack-damage projection core, and scalar-buff projection
-core.
+core, and damage-rider projection core.
 
 Scope:
 
@@ -408,6 +408,12 @@ Scope:
   target count, Concentration requirement, Temporary Hit Points, Hit Point
   Maximum increases, Speed and special Speed effects, and Armor Class effects
   without importing authored Spell Definition records;
+- damage-rider profile facts for Divine Favor, Divine Smite, Hunter's Mark,
+  Ensnaring Strike, Searing Smite, and Shining Smite live in
+  `spell-damage-rider-projection-core.qnt`; they project action timing,
+  Concentration requirement, damage dice and Damage Types, durations, range,
+  Bright Light radius, and save-advantage facts without importing authored
+  Spell Definition records;
 - Readied Spell Response holds only action-time spell profiles as a readied
   spell held effect, expends the spell's casting resources at the hold
   boundary, starts Concentration while held, opens QCORE8's Readied Spell

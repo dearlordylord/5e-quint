@@ -16,6 +16,7 @@ module spellProcedureProfilesExamples {
   import spellSaveDamageProjectionCore.* from "./spell-save-damage-projection-core"
   import spellSaveConditionProjectionCore.* from "./spell-save-condition-projection-core"
   import spellScalarBuffProjectionCore.* from "./spell-scalar-buff-projection-core"
+  import spellDamageRiderProjectionCore.* from "./spell-damage-rider-projection-core"
   import spellProcedureProfiles.* from "./spell-procedure-profiles"
 
   run test_magic_missile_profile_spends_slot_and_allocates_darts = {

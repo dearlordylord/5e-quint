@@ -56,7 +56,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 8,
       "id": "A8-DAMAGE-RIDER-CORE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Split damage rider projection core"
     },
     {
@@ -188,7 +188,7 @@ Lane A must not:
 | 5 | A5-SAVE-CONDITION-PROJECTION-CORE - Split save-gated condition projection core | done | none | Pure profile facts only. |
 | 6 | A6-SPELL-ATTACK-DAMAGE-CORE - Split spell attack damage projection core | done | none | Pure profile facts only. |
 | 7 | A7-SCALAR-BUFF-CORE - Split scalar buff projection core | done | none | Pure profile facts only. |
-| 8 | A8-DAMAGE-RIDER-CORE - Split damage rider projection core | ready-for-implementation-after-light-research | none | Pure profile facts only. |
+| 8 | A8-DAMAGE-RIDER-CORE - Split damage rider projection core | done | none | Pure profile facts only. |
 | 9 | A9-CHAINED-ATTACK-CORE - Split chained attack projection core | ready-for-implementation-after-light-research | none | Pure profile facts only. |
 | 10 | A10-INDEPENDENT-ATTACK-SEQUENCE-CORE - Split independent attack sequence core | ready-for-implementation-after-light-research | none | Pure finite sequence facts. |
 | 11 | A11-SPELL-TURN-HOOK-CORE - Split spell turn hook semantic core | ready-for-implementation-after-light-research | none | Temporary HP, duration, once-per-turn facts. |
@@ -286,7 +286,7 @@ Climb, Fly, Barkskin, Heroism, and Aid.
 
 ### Task 8 - A8-DAMAGE-RIDER-CORE - Split damage rider projection core
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: pure semantic-core file for Divine Favor, Divine Smite, Hunter's Mark,
 Ensnaring Strike, Searing Smite, and Shining Smite projection facts.
