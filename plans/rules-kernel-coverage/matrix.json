@@ -2842,7 +2842,7 @@
     },
     {
       "id": "BATTLE.ATTACK.MINIMAL_RESOLUTION",
-      "kind": "composition",
+      "kind": "state-transition",
       "parityWitnesses": [
         {
           "kind": "focused-mbt",

@@ -141,3 +141,20 @@ Acceptance: checker enforces marker presence per active language; CI red on miss
   Worth promoting to a shared helper when slice β lands.
 - **`qnt-owner-roles.jsonl` is a hard gate on every new obligation's QNT owner.** A covered obligation with an owner that has no role row fails the checker. Add the role row in the same commit as the new obligation.
 - **`matrix.json` and `REPORT.md` are checker-generated.** After adding/changing obligations, run `pnpm rules-kernel-coverage:check -- --write` to refresh, then `pnpm rules-kernel-coverage:check` to verify clean. Commit the refreshed artifacts.
+
+#### Reviewer-loop pass (RAW + architecture + ubiquitous-language)
+
+First round — three actionable findings, all fixed:
+
+- **Mirror naming aligned.** Quint composite renamed `resolveAttack` → `resolveCreatureAttack` and `AttackFills` → `CreatureAttackFills` to match the TS mirror. The shorter Quint-side names broke the per-slice mirror discipline by gambling on module-qualified context that doesn't survive cross-language review.
+- **Obligation kind corrected.** `composition` → `state-transition`. The slice transitions HP per attack rather than sequencing multiple obligations; `composition` is reserved for sequence/contract obligations. Aligns with how `SHARED.HIT_POINTS.POSITIVE_DAMAGE` is classified.
+- **Out-of-scope explicit in the qnt header.** Added a header comment listing what the pilot intentionally does not model (d20 attack roll vs AC, damage roll formula, critical hits, damage adjustments, Temporary Hit Points, death/unconscious lifecycle, action economy, initiative, turn structure). Future reviewers can see the slice's claim without having to infer it from absences.
+
+Rejected findings (recorded so the next reviewer doesn't re-litigate):
+
+- **"Light atomic usage."** Slice imports `hitPointDamage.*` but only consumes `nonnegative`. Accepted as pilot trait — the goal was the pipeline, not heavy composition. Slice β (wizard-fireball-save) will exercise multi-atomic composition.
+- **"Generic AttackerA/AttackerB labels."** Accepted for the pilot. Real-actor naming (host/target, or role-based) becomes appropriate when the slice ties to production-shaped actors.
+- **"Plain `number` for HP instead of the `Hp` brand from `@dnd/shared/types`."** Accepted — the slice is standalone, not threaded through `BattleState`. Branding pays off when production integration arrives; until then it would couple the pilot to types it doesn't need.
+- **"Initial HP value (20) duplicated between qnt `initialHp` and TS `INITIAL_HP`."** Accepted — the parity test catches any drift loudly on the first state check; the connascence is noisy, not silent.
+
+Second round: no new reasonable findings.

@@ -23,7 +23,7 @@ module creatureAttackMbt {
     nondet damage = 0.to(maxDamageRoll).oneOf()
     nondet hit = Set(true, false).oneOf()
     all {
-      recordNextState(resolveAttack(
+      recordNextState(resolveCreatureAttack(
         { attackerHp: qAttackerHp, targetHp: qTargetHp },
         AttackerA,
         { damage: damage, hit: hit },
@@ -35,7 +35,7 @@ module creatureAttackMbt {
     nondet damage = 0.to(maxDamageRoll).oneOf()
     nondet hit = Set(true, false).oneOf()
     all {
-      recordNextState(resolveAttack(
+      recordNextState(resolveCreatureAttack(
         { attackerHp: qAttackerHp, targetHp: qTargetHp },
         AttackerB,
         { damage: damage, hit: hit },
