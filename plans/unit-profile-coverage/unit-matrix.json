@@ -108,8 +108,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 142,
-      "numerator": 139,
-      "percent": "97.9%"
+      "numerator": 140,
+      "percent": "98.6%"
     },
     "supportedProfileCoverage": {
       "denominator": 210,
@@ -9243,25 +9243,8 @@
       ],
       "evidenceTag": "selected-identity-mbt"
     },
-    "rowCount": 8,
+    "rowCount": 7,
     "rows": [
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-mbt evidence.",
-          "status": "missing-witness"
-        },
-        "sourceRecordPath": "packages/surface/content/counterspell.json",
-        "support": {
-          "profileIds": [
-            "spell.reaction-counterspell"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "counterspell"
-      },
       {
         "catalogAdmissionStatus": "installed",
         "collectionId": "srd-5.2.1",
@@ -12050,8 +12033,8 @@
         "profileFactDenominator": 127,
         "profileSubsetSupportedUnits": 20,
         "selectedIdentityReplayDenominator": 106,
-        "selectedIdentityReplayGapUnits": 8,
-        "selectedIdentityReplayWitnessUnits": 98,
+        "selectedIdentityReplayGapUnits": 7,
+        "selectedIdentityReplayWitnessUnits": 99,
         "supportedProfileUnits": 86,
         "unsupportedOrOtherUnits": 18
       },
@@ -19867,6 +19850,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-candidate-narrowing-spells.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "QMBT22"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/reaction-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "reaction-interruption"
         }
       ],
       "executableMechanics": true,

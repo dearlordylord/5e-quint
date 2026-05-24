@@ -148,7 +148,7 @@ identity evidence or an explicit non-applicable classification.
     {
       "number": 23,
       "id": "B20-COUNTERSPELL-IDENTITY-WITNESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Backfill Counterspell selected identity witness"
     },
     {
@@ -284,7 +284,7 @@ Lane B must not:
 | 20 | L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE - Repair Acid Arrow Surface damage shape | blocked | L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION | Make the approved Acid Arrow damage timing, miss branch, delayed damage, and slot scaling executable in Surface content/schema. |
 | 21 | L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT - Promote Acid Arrow delayed runtime support | blocked | L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION,L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE | Add promoted Quint/runtime parity for the approved Acid Arrow behavior. |
 | 22 | B19-ANTIMAGIC-FIELD-IDENTITY-WITNESS - Backfill Antimagic Field selected identity witness | done | none | Added selected-identity MBT evidence for `antimagic_field`; generated selected-identity gaps no longer list it. |
-| 23 | B20-COUNTERSPELL-IDENTITY-WITNESS - Backfill Counterspell selected identity witness | ready-for-research | none | Gap row: `counterspell`, supported-profile `spell.reaction-counterspell`, installed Surface record. |
+| 23 | B20-COUNTERSPELL-IDENTITY-WITNESS - Backfill Counterspell selected identity witness | done | none | Added selected-identity MBT evidence for `counterspell`; generated selected-identity gaps no longer list it. |
 | 24 | B21-DISPEL-MAGIC-IDENTITY-WITNESS - Backfill Dispel Magic selected identity witness | ready-for-research | none | Gap row: `dispel_magic`, profile-subset-supported `spell.invocation-ongoing-spell-ending`, installed Surface record. |
 | 25 | B22-FIND-FAMILIAR-IDENTITY-WITNESS - Backfill Find Familiar selected identity witness | ready-for-research | none | Gap row: `find_familiar`, profile-subset-supported `spell.find-familiar-lifecycle`, installed Surface record. |
 | 26 | B23-FIREBALL-IDENTITY-WITNESS - Backfill Fireball selected identity witness | ready-for-research | none | Gap row: `fireball`, profile-subset-supported `spell.invocation-damage-save-or-attack`, installed Surface record. |
@@ -649,7 +649,7 @@ longer lists `antimagic_field`.
 
 ### Task 23 - B20-COUNTERSPELL-IDENTITY-WITNESS - Backfill Counterspell selected identity witness
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: prove selected `counterspell` identity reaches the reaction spell owner
 or add the narrow selected-identity smoke needed to make that handoff
@@ -658,6 +658,12 @@ checker-readable.
 Acceptance: `counterspell` has `selected-identity-mbt` evidence tied to a real
 test path, and the evidence does not substitute for the reusable
 `spell.reaction-counterspell` rules-kernel proof.
+
+Result: `counterspell` now has checker-readable `selected-identity-mbt`
+evidence tied to `reaction-spell-selected-identity.mbt.test.ts`, where the
+selected Counterspell invocation resolves a Magic Missile spell-cast Reaction
+window. The generated selected-identity gap report no longer lists
+`counterspell`.
 
 ### Task 24 - B21-DISPEL-MAGIC-IDENTITY-WITNESS - Backfill Dispel Magic selected identity witness
 
