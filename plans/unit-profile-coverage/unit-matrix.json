@@ -3340,6 +3340,10 @@
           "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
         },
         {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/heat-metal-object-contact.mbt.test.ts"
+        },
+        {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-heat-metal.test.ts"
         }
@@ -3366,6 +3370,10 @@
         {
           "kind": "qnt-proof",
           "ownerPath": "packages/battle-runtime/battle-runtime-gust-of-wind.qnt"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/gust-of-wind-line-lifecycle.mbt.test.ts"
         },
         {
           "kind": "runtime-test",
@@ -3428,6 +3436,10 @@
         {
           "kind": "qnt-proof",
           "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/web-restraint-hazard.mbt.test.ts"
         },
         {
           "kind": "runtime-test",
@@ -3579,6 +3591,10 @@
           "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
         },
         {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/antimagic-field-ongoing-suppression.mbt.test.ts"
+        },
+        {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-antimagic-field.test.ts"
         }
@@ -3611,6 +3627,10 @@
           "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
         },
         {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/spike-growth-movement-hazard.mbt.test.ts"
+        },
+        {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-spike-growth-movement-hazard.test.ts"
         }
@@ -3634,6 +3654,10 @@
         {
           "kind": "qnt-proof",
           "ownerPath": "packages/battle-runtime/battle-runtime-see-invisibility.qnt"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/see-invisibility-observer-sight.mbt.test.ts"
         },
         {
           "kind": "runtime-test",
@@ -3670,6 +3694,10 @@
         {
           "kind": "qnt-proof",
           "ownerPath": "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/ray-of-enfeeblement-lifecycle.mbt.test.ts"
         },
         {
           "kind": "runtime-test",
@@ -3715,6 +3743,10 @@
           "ownerPath": "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt"
         },
         {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/ray-of-enfeeblement-lifecycle.mbt.test.ts"
+        },
+        {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-ray-of-enfeeblement.test.ts"
         },
@@ -3747,6 +3779,10 @@
           "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
         },
         {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/dragons-breath-initial-effect.mbt.test.ts"
+        },
+        {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dragons-breath.test.ts"
         }
@@ -3774,6 +3810,10 @@
         {
           "kind": "qnt-proof",
           "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/dragons-breath-granted-action.mbt.test.ts"
         },
         {
           "kind": "runtime-test",
@@ -18706,6 +18746,10 @@
               "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
             },
             {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/antimagic-field-ongoing-suppression.mbt.test.ts"
+            },
+            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-antimagic-field.test.ts"
             }
@@ -21964,6 +22008,10 @@
               "ownerPath": "packages/battle-runtime/battle-runtime-gust-of-wind.qnt"
             },
             {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/gust-of-wind-line-lifecycle.mbt.test.ts"
+            },
+            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gust-of-wind.test.ts"
             }
@@ -22046,6 +22094,10 @@
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/heat-metal-object-contact.mbt.test.ts"
             },
             {
               "kind": "runtime-test",
@@ -24325,6 +24377,10 @@
               "ownerPath": "packages/battle-runtime/battle-runtime-see-invisibility.qnt"
             },
             {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/see-invisibility-observer-sight.mbt.test.ts"
+            },
+            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-see-invisibility.test.ts"
             }
@@ -26561,6 +26617,10 @@
               "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
             },
             {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/spike-growth-movement-hazard.mbt.test.ts"
+            },
+            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-spike-growth-movement-hazard.test.ts"
             }
@@ -27383,6 +27443,10 @@
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/web-restraint-hazard.mbt.test.ts"
             },
             {
               "kind": "runtime-test",
@@ -28928,6 +28992,10 @@
               "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
             },
             {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/dragons-breath-initial-effect.mbt.test.ts"
+            },
+            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dragons-breath.test.ts"
             }
@@ -28955,6 +29023,10 @@
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/dragons-breath-granted-action.mbt.test.ts"
             },
             {
               "kind": "runtime-test",
@@ -31421,6 +31493,10 @@
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt"
             },
             {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/ray-of-enfeeblement-lifecycle.mbt.test.ts"
+            },
+            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-ray-of-enfeeblement.test.ts"
             }
@@ -31462,6 +31538,10 @@
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/ray-of-enfeeblement-lifecycle.mbt.test.ts"
             },
             {
               "kind": "runtime-test",
