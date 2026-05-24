@@ -23,7 +23,7 @@ slice candidates remain.
     { "number": 7, "id": "C7-HEAT-METAL-SLICE", "status": "done", "title": "Add Heat Metal object-contact slice" },
     { "number": 8, "id": "C8-GUST-OF-WIND-SLICE", "status": "done", "title": "Add Gust of Wind line lifecycle slice" },
     { "number": 9, "id": "C9-ANTIMAGIC-SUPPRESSION-SLICE", "status": "done", "title": "Add Antimagic Field suppression slice" },
-    { "number": 10, "id": "C10-SPIKE-GROWTH-SLICE", "status": "ready-for-implementation-after-light-research", "title": "Add Spike Growth movement hazard slice" },
+    { "number": 10, "id": "C10-SPIKE-GROWTH-SLICE", "status": "done", "title": "Add Spike Growth movement hazard slice" },
     { "number": 11, "id": "C11-DRAGONS-BREATH-INITIAL-SLICE", "status": "ready-for-implementation-after-light-research", "title": "Add Dragon's Breath initial-effect slice" },
     { "number": 12, "id": "C12-DRAGONS-BREATH-GRANTED-ACTION-SLICE", "status": "ready-for-implementation-after-light-research", "title": "Add Dragon's Breath granted-action slice" },
     { "number": 13, "id": "C13-MIRROR-IMAGE-SLICE", "status": "done", "title": "Mirror Image hit-interception slice already present" },
@@ -75,7 +75,7 @@ Lane C must not:
 | 7 | C7-HEAT-METAL-SLICE - Add Heat Metal object-contact slice | done | none | Object contact and repeat damage. |
 | 8 | C8-GUST-OF-WIND-SLICE - Add Gust of Wind line lifecycle slice | done | none | Line effect and movement interaction. |
 | 9 | C9-ANTIMAGIC-SUPPRESSION-SLICE - Add Antimagic Field suppression slice | done | none | Suppression active-effect state. |
-| 10 | C10-SPIKE-GROWTH-SLICE - Add Spike Growth movement hazard slice | ready-for-implementation-after-light-research | none | Movement hazard only; recognition remains table-owned. |
+| 10 | C10-SPIKE-GROWTH-SLICE - Add Spike Growth movement hazard slice | done | none | Movement hazard only; recognition remains table-owned. |
 | 11 | C11-DRAGONS-BREATH-INITIAL-SLICE - Add Dragon's Breath initial-effect slice | ready-for-implementation-after-light-research | none | Initial grant state. |
 | 12 | C12-DRAGONS-BREATH-GRANTED-ACTION-SLICE - Add Dragon's Breath granted-action slice | ready-for-implementation-after-light-research | none | Granted action damage. |
 | 13 | C13-MIRROR-IMAGE-SLICE - Mirror Image hit-interception slice already present | done | none | Existing focused MBT and package script found by C1; no new slice work queued. |
@@ -195,13 +195,18 @@ and
 
 ### Task 10 - C10-SPIKE-GROWTH-SLICE - Add Spike Growth movement hazard slice
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: focused slice for movement-triggered hazard damage. The RAW recognition
 clause remains table-owned; this slice consumes the table-provided movement and
 area facts only.
 
 Acceptance: task notes explicitly reject adding perception/knowledge state.
+
+Witnesses:
+`packages/battle-runtime/battle-runtime-spike-growth-movement-hazard.mbt.qnt`
+and
+`packages/battle-runtime/src/spike-growth-movement-hazard.mbt.test.ts`.
 
 ### Task 11 - C11-DRAGONS-BREATH-INITIAL-SLICE - Add Dragon's Breath initial-effect slice
 
