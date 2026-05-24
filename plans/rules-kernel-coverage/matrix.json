@@ -246,8 +246,10 @@
       "kind": "active-effect-lifecycle",
       "parityWitnesses": [
         {
-          "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-invisibility.test.ts"
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/direct-condition-lifecycle.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-direct-condition-lifecycle.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
@@ -341,8 +343,10 @@
       "kind": "active-effect-lifecycle",
       "parityWitnesses": [
         {
-          "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-see-invisibility.test.ts"
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/see-invisibility-observer-sight.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-see-invisibility-observer-sight.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
@@ -372,8 +376,10 @@
       "kind": "active-effect-lifecycle",
       "parityWitnesses": [
         {
-          "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-ray-of-enfeeblement.test.ts"
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/ray-of-enfeeblement-lifecycle.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-ray-of-enfeeblement-lifecycle.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
@@ -409,12 +415,10 @@
       "kind": "active-effect-lifecycle",
       "parityWitnesses": [
         {
-          "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-ray-of-enfeeblement.test.ts"
-        },
-        {
-          "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/battle-runtime-ice-knife.test.ts"
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/ray-of-enfeeblement-lifecycle.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-ray-of-enfeeblement-lifecycle.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
@@ -473,8 +477,10 @@
       "kind": "active-effect-lifecycle",
       "parityWitnesses": [
         {
-          "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-web-restraint-hazard.test.ts"
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/web-restraint-hazard.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-web-restraint-hazard.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
@@ -535,8 +541,10 @@
       "kind": "active-effect-lifecycle",
       "parityWitnesses": [
         {
-          "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-heat-metal.test.ts"
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/heat-metal-object-contact.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-heat-metal-object-contact.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
@@ -564,8 +572,10 @@
       "kind": "active-effect-lifecycle",
       "parityWitnesses": [
         {
-          "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gust-of-wind.test.ts"
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/gust-of-wind-line-lifecycle.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-gust-of-wind-line-lifecycle.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
@@ -679,8 +689,10 @@
       "kind": "active-effect-lifecycle",
       "parityWitnesses": [
         {
-          "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-antimagic-field.test.ts"
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/antimagic-field-ongoing-suppression.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-antimagic-field-ongoing-suppression.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
@@ -706,8 +718,10 @@
       "kind": "active-effect-lifecycle",
       "parityWitnesses": [
         {
-          "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-spike-growth-movement-hazard.test.ts"
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/spike-growth-movement-hazard.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-spike-growth-movement-hazard.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
@@ -1659,8 +1673,10 @@
       "kind": "active-effect-lifecycle",
       "parityWitnesses": [
         {
-          "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-mirror-image.test.ts"
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/mirror-image-hit-interception.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-mirror-image-hit-interception.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
@@ -1688,8 +1704,10 @@
       "kind": "active-effect-lifecycle",
       "parityWitnesses": [
         {
-          "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-warding-bond.test.ts"
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/warding-bond-damage-sharing.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-warding-bond-damage-sharing.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
@@ -2789,8 +2807,10 @@
       "kind": "active-effect-lifecycle",
       "parityWitnesses": [
         {
-          "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dragons-breath.test.ts"
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/dragons-breath-initial-effect.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-dragons-breath-initial-effect.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
@@ -2817,8 +2837,10 @@
       "kind": "state-transition",
       "parityWitnesses": [
         {
-          "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dragons-breath.test.ts"
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/dragons-breath-granted-action.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-dragons-breath-granted-action.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
