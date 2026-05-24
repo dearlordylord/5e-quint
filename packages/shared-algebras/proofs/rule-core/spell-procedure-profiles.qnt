@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS BATTLE.SPELL.HIT_POINT_RESTORATION
 
 module spellProcedureProfiles {
@@ -9,25 +9,20 @@ module spellProcedureProfiles {
   import hitPointRecovery.* from "./hit-point-recovery"
   import damageComponentAdjustments.* from "./damage-component-adjustments"
   import attackDamageComposition.* from "./attack-damage-composition"
-  import actionTurnProcedures.* from "./action-turn-procedures"
   import spellDefinitionProfiles.* from "./spell-definition-profiles"
-  import spellInvocationResourceCore.* from "./spell-invocation-resource-core"
   import spellInvocationActionSlotCore.* from "./spell-invocation-action-slot-core"
-  import spellInvocationTargetCardinalityCore.* from "./spell-invocation-target-cardinality-core"
   import spellDamageProjectionCore.* from "./spell-damage-projection-core"
   import spellAttackDamageProjectionCore.* from "./spell-attack-damage-projection-core"
   import spellSaveDamageProjectionCore.* from "./spell-save-damage-projection-core"
-  import spellChainedAttackDamageProjectionCore.* from "./spell-chained-attack-damage-projection-core"
-  import reactionsContinuationsConcentration.* from "./reactions-continuations-concentration"
 
   // RAW anchors:
   // - Spells/Gaining-and-Casting.md: Spell Slots, cantrips, Casting Time,
   //   targets, Saving Throws, Attack Rolls, and spell effects.
-  // - Rules-Glossary.md: Ready, Magic, Concentration, Spell Attack, Target.
+  // - Rules-Glossary.md: Magic, Spell Attack, Target, and Hit Points.
   // - Spells/Descriptions-A-D.md: Acid Splash and Cure Wounds.
   // - Spells/Descriptions-E-L.md: Healing Word.
-  // - Spells/Descriptions-M-P.md: Mage Armor, Magic Missile, Mass Cure
-  //   Wounds, Mass Healing Word, and Mind Spike.
+  // - Spells/Descriptions-M-P.md: Mass Cure Wounds, Mass Healing Word, and
+  //   Mind Spike.
   // - Spells/Descriptions-Q-R.md: Ray of Frost.
 
   type AttackBurstSaveDamageProfile =
@@ -36,12 +31,6 @@ module spellProcedureProfiles {
   type SpellAreaProfile =
     | NoSpellAreaProfile
     | MassCureWoundsPointOriginSphereArea
-
-  type ReadiedSpellProfile =
-    | ReadiedMagicMissileSpellProfile
-    | ReadiedRayOfFrostSpellProfile
-    | ReadiedAcidSplashSpellProfile
-    | ReadiedMageArmorSpellProfile
 
   type RayOfFrostEffectFacts = {
     attackRoll: AttackRollProcedureFacts,
@@ -66,43 +55,10 @@ module spellProcedureProfiles {
     | NoSpellEffect
     | RayOfFrostSpeedReductionEffect
 
-  type ReadiedSpellHeldEffect =
-    | NoReadiedSpellHeldEffect
-    | HeldReadiedSpellEffect({ profile: ReadiedSpellProfile })
-
   type DamageSpellEffectResult = {
     damageAmount: int,
     damageType: RuleDamageType,
     effect: SpellEffect,
-  }
-
-  type ReadiedSpellProcedureState = {
-    reaction: ReactionProtocolState,
-    heldEffect: ReadiedSpellHeldEffect,
-  }
-
-  type ReadiedSpellRelease =
-    | NoReadiedSpellRelease
-    | ReleasedMagicMissileSpell
-    | ReleasedRayOfFrostSpell
-    | ReleasedAcidSplashSpell
-    | ReleasedMageArmorSpell
-
-  type ReadiedSpellReleaseResult = {
-    readiedSpell: ReadiedSpellProcedureState,
-    released: ReadiedSpellRelease,
-  }
-
-  type ReadiedSpellHoldResult = {
-    spellcasting: SpellcastingProcedureState,
-    readiedSpell: ReadiedSpellProcedureState,
-    held: bool,
-    slotExpended: bool,
-  }
-
-  pure def initialReadiedSpellProcedureState: ReadiedSpellProcedureState = {
-    reaction: initialReactionProtocolState,
-    heldEffect: NoReadiedSpellHeldEffect,
   }
 
   pure def legalSpellEffects: Set[SpellEffect] = Set(
@@ -110,33 +66,8 @@ module spellProcedureProfiles {
     RayOfFrostSpeedReductionEffect
   )
 
-  pure def legalReadiedSpellHeldEffects: Set[ReadiedSpellHeldEffect] = Set(
-    NoReadiedSpellHeldEffect,
-    HeldReadiedSpellEffect({ profile: ReadiedMagicMissileSpellProfile }),
-    HeldReadiedSpellEffect({ profile: ReadiedRayOfFrostSpellProfile }),
-    HeldReadiedSpellEffect({ profile: ReadiedAcidSplashSpellProfile }),
-    HeldReadiedSpellEffect({ profile: ReadiedMageArmorSpellProfile })
-  )
-
   pure def legalSpellEffect(effect: SpellEffect): bool =
     effect.in(legalSpellEffects)
-
-  pure def legalReadiedSpellHeldEffect(effect: ReadiedSpellHeldEffect): bool =
-    effect.in(legalReadiedSpellHeldEffects)
-
-  pure def legalReadiedSpellProcedureState(state: ReadiedSpellProcedureState): bool = all {
-    legalReactionProtocolState(state.reaction),
-    legalReadiedSpellHeldEffect(state.heldEffect),
-  }
-
-  pure def legalReadiedSpellRelease(release: ReadiedSpellRelease): bool =
-    release.in(Set(
-      NoReadiedSpellRelease,
-      ReleasedMagicMissileSpell,
-      ReleasedRayOfFrostSpell,
-      ReleasedAcidSplashSpell,
-      ReleasedMageArmorSpell
-    ))
 
   pure def spellProfileArea(profile: SpellDefinitionProfile): SpellAreaProfile =
     if (profile == MassCureWoundsSpellProfile) MassCureWoundsPointOriginSphereArea else NoSpellAreaProfile
@@ -250,136 +181,5 @@ module spellProcedureProfiles {
         facts.healingDiceRoll + facts.spellcastingAbilityModifier
       )
     }
-
-  pure def asReadiedSpellProfile(profile: SpellDefinitionProfile): ReadiedSpellHeldEffect =
-    if (profile == MagicMissileSpellProfile) {
-      HeldReadiedSpellEffect({ profile: ReadiedMagicMissileSpellProfile })
-    } else if (profile == RayOfFrostSpellProfile) {
-      HeldReadiedSpellEffect({ profile: ReadiedRayOfFrostSpellProfile })
-    } else if (profile == AcidSplashSpellProfile) {
-      HeldReadiedSpellEffect({ profile: ReadiedAcidSplashSpellProfile })
-    } else if (profile == MageArmorSpellProfile) {
-      HeldReadiedSpellEffect({ profile: ReadiedMageArmorSpellProfile })
-    } else {
-      NoReadiedSpellHeldEffect
-    }
-
-  pure def isHeldReadiedSpellEffect(effect: ReadiedSpellHeldEffect): bool =
-    match effect {
-      | HeldReadiedSpellEffect(_) => true
-      | NoReadiedSpellHeldEffect => false
-    }
-
-  pure def readiedSpellReleaseForHeldEffect(effect: ReadiedSpellHeldEffect): ReadiedSpellRelease =
-    match effect {
-      | HeldReadiedSpellEffect(v) =>
-        if (v.profile == ReadiedMagicMissileSpellProfile) ReleasedMagicMissileSpell
-        else if (v.profile == ReadiedRayOfFrostSpellProfile) ReleasedRayOfFrostSpell
-        else if (v.profile == ReadiedAcidSplashSpellProfile) ReleasedAcidSplashSpell
-        else ReleasedMageArmorSpell
-      | NoReadiedSpellHeldEffect => NoReadiedSpellRelease
-    }
-
-  pure def readiedSpellDissipationWindow(window: ReactionWindowState): ReactionWindowState =
-    if (reactionWindowIsKind(window, ReadiedSpellReactionWindow)) {
-      advanceContinuation(window)
-    } else window
-
-  pure def dissipateReadiedSpellIfConcentrationBroken(
-    state: ReadiedSpellProcedureState
-  ): ReadiedSpellProcedureState =
-    if (isHeldReadiedSpellEffect(state.heldEffect)
-      and state.reaction.concentration.reactor == NoConcentration) {
-      {
-        reaction: state.reaction.with(
-          "reactionWindow",
-          readiedSpellDissipationWindow(state.reaction.reactionWindow)
-        ),
-        heldEffect: NoReadiedSpellHeldEffect,
-      }
-    } else state
-
-  pure def holdReadiedSpellResponse(
-    spellcasting: SpellcastingProcedureState,
-    state: ReadiedSpellProcedureState,
-    facts: SpellInvocationFacts,
-    triggerSelected: bool,
-    canConcentrate: bool
-  ): ReadiedSpellHoldResult = {
-    val held = asReadiedSpellProfile(facts.profile)
-    val resourceFacts = spellInvocationResourceFacts(facts)
-    val invocation = resolveSpellInvocationResourceWithActionCost(
-      spellcasting,
-      resourceFacts,
-      StandardActionCost(ReadyAction)
-    )
-    val admitted = all {
-      triggerSelected,
-      canConcentrate,
-      isHeldReadiedSpellEffect(held),
-      invocation.admitted,
-    }
-    val slotExpended = admitted and invocation.slotExpended
-    if (not(admitted)) {
-      spellcasting: spellcasting,
-      readiedSpell: state,
-      held: false,
-      slotExpended: false,
-    } else {
-      spellcasting: invocation.state,
-      readiedSpell: {
-        reaction: state.reaction.with(
-          "reactor",
-          state.reaction.reactor.with("turn", invocation.state.turn)
-        ).with(
-          "concentration",
-          startConcentration(state.reaction.concentration, Reactor, canConcentrate)
-        ),
-        heldEffect: held,
-      },
-      held: true,
-      slotExpended: slotExpended,
-    }
-  }
-
-  pure def offerReadiedSpellReaction(state: ReadiedSpellProcedureState): ReadiedSpellProcedureState = {
-    val current = dissipateReadiedSpellIfConcentrationBroken(state)
-    if (isHeldReadiedSpellEffect(current.heldEffect) and current.reaction.concentration.reactor == Concentrating) {
-      current.with("reaction", current.reaction.with(
-        "reactionWindow",
-        offerReactionWindow(current.reaction.reactionWindow, ReadiedSpellReactionWindow)
-      ))
-    } else current
-  }
-
-  pure def releaseReadiedSpellReaction(state: ReadiedSpellProcedureState): ReadiedSpellReleaseResult = {
-    val current = dissipateReadiedSpellIfConcentrationBroken(state)
-    val canRelease = all {
-      isHeldReadiedSpellEffect(current.heldEffect),
-      current.reaction.concentration.reactor == Concentrating,
-      reactionWindowIsKind(current.reaction.reactionWindow, ReadiedSpellReactionWindow),
-    }
-    val choice = resolveReactionChoice(
-      current.reaction.reactor.turn,
-      current.reaction.reactionWindow,
-      TakeReadiedSpellReaction
-    )
-    if (not(canRelease) or choice.reactionWindow == current.reaction.reactionWindow) {
-      readiedSpell: current,
-      released: NoReadiedSpellRelease,
-    }
-    else {
-      readiedSpell: {
-        reaction: {
-          interruptedActor: current.reaction.interruptedActor,
-          reactor: current.reaction.reactor.with("turn", choice.turn),
-          reactionWindow: choice.reactionWindow,
-          concentration: endConcentration(current.reaction.concentration, Reactor),
-        },
-        heldEffect: NoReadiedSpellHeldEffect,
-      },
-      released: readiedSpellReleaseForHeldEffect(current.heldEffect),
-    }
-  }
 
 }

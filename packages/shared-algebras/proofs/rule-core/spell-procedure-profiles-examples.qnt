@@ -24,6 +24,7 @@ module spellProcedureProfilesExamples {
   import spellObjectHitPointDamageCore.* from "./spell-object-hit-point-damage-core"
   import spellSleepRepeatSaveLifecycleCore.* from "./spell-sleep-repeat-save-lifecycle-core"
   import spellDefensiveEffectCore.* from "./spell-defensive-effect-core"
+  import spellReadiedSpellResponseCore.* from "./spell-readied-spell-response-core"
   import spellProcedureProfiles.* from "./spell-procedure-profiles"
 
   run test_magic_missile_profile_spends_slot_and_allocates_darts = {
@@ -97,6 +98,57 @@ module spellProcedureProfilesExamples {
       assert(invocation.state.slotLedger == initialSpellSlotLedger),
       assert(not(invocation.state.slotSpellCastThisTurn)),
       assert(invocation.state.turn.actionQuota == ActionSpent),
+    }
+  }
+
+  run test_readied_spell_response_admits_action_time_spell_profile = {
+    val held = holdReadiedSpellResponse(
+      initialSpellcastingProcedureState,
+      initialReadiedSpellProcedureState,
+      {
+        profile: CureWoundsSpellProfile,
+        hasSpellAccess: true,
+        selectedSlotLevel: 1,
+        targetCount: 1,
+        targetsAreValid: true,
+      },
+      true,
+      true
+    )
+    val offered = offerReadiedSpellReaction(held.readiedSpell)
+    val release = releaseReadiedSpellReaction(offered)
+    all {
+      assert(held.held),
+      assert(held.slotExpended),
+      assert(held.spellcasting.slotLedger.slotsRemaining == 1),
+      assert(held.spellcasting.turn.actionQuota == ActionSpent),
+      assert(held.readiedSpell.heldEffect == HeldReadiedSpellEffect({ profile: CureWoundsSpellProfile })),
+      assert(release.released == ReleasedReadiedSpell({ profile: CureWoundsSpellProfile })),
+      assert(release.readiedSpell.heldEffect == NoReadiedSpellHeldEffect),
+      assert(release.readiedSpell.reaction.concentration.reactor == NoConcentration),
+      assert(release.readiedSpell.reaction.reactor.turn.reactionAvailable == false),
+    }
+  }
+
+  run test_readied_spell_response_rejects_bonus_action_spell_profile = {
+    val held = holdReadiedSpellResponse(
+      initialSpellcastingProcedureState,
+      initialReadiedSpellProcedureState,
+      {
+        profile: HealingWordSpellProfile,
+        hasSpellAccess: true,
+        selectedSlotLevel: 1,
+        targetCount: 1,
+        targetsAreValid: true,
+      },
+      true,
+      true
+    )
+    all {
+      assert(not(held.held)),
+      assert(not(held.slotExpended)),
+      assert(held.spellcasting == initialSpellcastingProcedureState),
+      assert(held.readiedSpell == initialReadiedSpellProcedureState),
     }
   }
 
@@ -678,7 +730,7 @@ module spellProcedureProfilesExamples {
       assert(released.readiedSpell.reaction.concentration.reactor == NoConcentration),
       assert(released.readiedSpell.heldEffect == NoReadiedSpellHeldEffect),
       assert(released.readiedSpell.reaction.reactionWindow == NoReactionWindow),
-      assert(released.released == ReleasedRayOfFrostSpell),
+      assert(released.released == ReleasedReadiedSpell({ profile: RayOfFrostSpellProfile })),
     }
   }
 

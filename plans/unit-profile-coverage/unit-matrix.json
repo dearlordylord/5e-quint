@@ -2226,7 +2226,7 @@
       "id": "spell.readied-action-time-spell",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
         "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
       ],
       "runtimeOwners": [
@@ -18701,7 +18701,7 @@
           "id": "spell.readied-action-time-spell",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
             "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
           ],
           "runtimeOwners": [
@@ -19493,7 +19493,7 @@
           "id": "spell.readied-action-time-spell",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
             "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
           ],
           "runtimeOwners": [
@@ -19689,7 +19689,7 @@
           "id": "spell.readied-action-time-spell",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
             "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
           ],
           "runtimeOwners": [
@@ -19782,7 +19782,7 @@
           "id": "spell.readied-action-time-spell",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
             "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
           ],
           "runtimeOwners": [
@@ -22121,7 +22121,7 @@
           "id": "spell.readied-action-time-spell",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
             "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
           ],
           "runtimeOwners": [
@@ -22718,7 +22718,7 @@
           "id": "spell.readied-action-time-spell",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
             "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
           ],
           "runtimeOwners": [
@@ -23566,7 +23566,7 @@
           "id": "spell.readied-action-time-spell",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
             "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
           ],
           "runtimeOwners": [
@@ -24016,7 +24016,7 @@
           "id": "spell.readied-action-time-spell",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
             "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
           ],
           "runtimeOwners": [
@@ -24130,7 +24130,7 @@
           "id": "spell.readied-action-time-spell",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
             "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
           ],
           "runtimeOwners": [
@@ -24326,7 +24326,7 @@
           "id": "spell.readied-action-time-spell",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
             "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
           ],
           "runtimeOwners": [
@@ -24706,7 +24706,7 @@
           "id": "spell.readied-action-time-spell",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
             "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
           ],
           "runtimeOwners": [
@@ -25131,7 +25131,7 @@
           "id": "spell.readied-action-time-spell",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
             "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
           ],
           "runtimeOwners": [
@@ -25337,7 +25337,7 @@
           "id": "spell.readied-action-time-spell",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
             "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
           ],
           "runtimeOwners": [
@@ -25451,7 +25451,7 @@
           "id": "spell.readied-action-time-spell",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
             "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
           ],
           "runtimeOwners": [

@@ -17,6 +17,7 @@ module spellProcedureProfilesInductive {
   import spellInvocationTargetCardinalityCore.* from "./spell-invocation-target-cardinality-core"
   import spellDirectDamageProjectionCore.* from "./spell-direct-damage-projection-core"
   import spellDefensiveEffectCore.* from "./spell-defensive-effect-core"
+  import spellReadiedSpellResponseCore.* from "./spell-readied-spell-response-core"
   import spellSlotExpenditure.* from "./spell-slot-expenditure"
   import spellProcedureProfiles.* from "./spell-procedure-profiles"
 
@@ -298,6 +299,8 @@ module spellProcedureProfilesInductive {
       MagicMissileSpellProfile,
       RayOfFrostSpellProfile,
       AcidSplashSpellProfile,
+      CureWoundsSpellProfile,
+      MassCureWoundsSpellProfile,
       MageArmorSpellProfile
     ).oneOf()
     val held = holdReadiedSpellResponse(
@@ -376,7 +379,6 @@ module spellProcedureProfilesInductive {
     legalReactionWindowState(qReactionWindow),
     qInterruptedConcentration.in(Set(NoConcentration, Concentrating)),
     qReactorConcentration.in(Set(NoConcentration, Concentrating)),
-    qReadiedHeldEffect.in(legalReadiedSpellHeldEffects),
     qLastSpellEffect.in(legalSpellEffects),
     legalMageArmorDefensiveEffect(qLastMageArmorEffect),
     legalReadiedSpellRelease(qLastReadiedSpellRelease),

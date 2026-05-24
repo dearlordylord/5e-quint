@@ -205,7 +205,8 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
-        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -5538,6 +5539,14 @@
       "role": "semantic-core"
     },
     {
+      "evidence": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt is the covered obligation QNT owner carrying Readied Spell Response hold, release, resource, and Concentration semantics without a closed SRD spell fixture list.",
+      "obligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
+      "role": "semantic-core"
+    },
+    {
       "evidence": "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
         "BATTLE.STAT_BLOCK.ATTACK_CONTROL"
@@ -5688,7 +5697,8 @@
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
-        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
       ],
       "status": "fixture-bound"
     }
