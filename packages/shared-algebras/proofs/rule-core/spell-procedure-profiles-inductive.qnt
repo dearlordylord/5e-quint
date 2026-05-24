@@ -15,6 +15,7 @@ module spellProcedureProfilesInductive {
   import spellInvocationResourceCore.* from "./spell-invocation-resource-core"
   import spellInvocationActionSlotCore.* from "./spell-invocation-action-slot-core"
   import spellInvocationTargetCardinalityCore.* from "./spell-invocation-target-cardinality-core"
+  import spellDirectDamageProjectionCore.* from "./spell-direct-damage-projection-core"
   import spellSlotExpenditure.* from "./spell-slot-expenditure"
   import spellProcedureProfiles.* from "./spell-procedure-profiles"
 

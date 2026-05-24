@@ -43,12 +43,6 @@ module spellProcedureProfiles {
     | ReadiedAcidSplashSpellProfile
     | ReadiedMageArmorSpellProfile
 
-  type MagicMissileEffectFacts = {
-    slotLevel: int,
-    allocatedDarts: int,
-    dartDamageRoll: int,
-  }
-
   type RayOfFrostEffectFacts = {
     attackRoll: AttackRollProcedureFacts,
     baseDamageDice: int,
@@ -186,37 +180,6 @@ module spellProcedureProfiles {
     if (savingThrowSucceeded) 0 else damageRoll
 
   pure def rayOfFrostMaximumBaseDamageDice: int = 4
-
-  pure def magicMissileDirectDamageFacts(
-    facts: MagicMissileEffectFacts
-  ): DirectSpellDamageFacts = {
-    damageType: ForceDamage,
-    instanceCount: facts.allocatedDarts,
-    damagePerInstance: facts.dartDamageRoll,
-    minimumInstanceCount: 1,
-    maximumInstanceCount: magicMissileDartCount(facts.slotLevel),
-    minimumDamagePerInstance: 2,
-    maximumDamagePerInstance: 5,
-  }
-
-  pure def legalMagicMissileEffectFacts(facts: MagicMissileEffectFacts): bool = all {
-    facts.slotLevel >= 1,
-    facts.slotLevel <= 9,
-    legalDirectSpellDamageFacts(magicMissileDirectDamageFacts(facts)),
-  }
-
-  pure def resolveMagicMissileDamage(facts: MagicMissileEffectFacts): DamageSpellEffectResult = {
-    val result = resolveDirectSpellDamage(magicMissileDirectDamageFacts(facts))
-    if (facts.slotLevel < 1 or facts.slotLevel > 9) {
-      damageAmount: 0,
-      damageType: ForceDamage,
-      effect: NoSpellEffect,
-    } else {
-      damageAmount: result.damageAmount,
-      damageType: result.damageType,
-      effect: NoSpellEffect,
-    }
-  }
 
   pure def resolveRayOfFrostEffect(facts: RayOfFrostEffectFacts): DamageSpellEffectResult = {
     val result = resolveSpellAttackDamageBranch({

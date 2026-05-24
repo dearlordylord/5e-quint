@@ -12,6 +12,7 @@ module spellProcedureProfilesExamples {
   import spellInvocationResourceCore.* from "./spell-invocation-resource-core"
   import spellInvocationActionSlotCore.* from "./spell-invocation-action-slot-core"
   import spellInvocationTargetCardinalityCore.* from "./spell-invocation-target-cardinality-core"
+  import spellDirectDamageProjectionCore.* from "./spell-direct-damage-projection-core"
   import spellAttackDamageProjectionCore.* from "./spell-attack-damage-projection-core"
   import spellSaveDamageProjectionCore.* from "./spell-save-damage-projection-core"
   import spellSaveConditionProjectionCore.* from "./spell-save-condition-projection-core"
@@ -41,10 +42,38 @@ module spellProcedureProfilesExamples {
       allocatedDarts: 4,
       dartDamageRoll: 5,
     })
+    val directDamageFacts = magicMissileDirectDamageFacts({
+      slotLevel: 2,
+      allocatedDarts: 4,
+      dartDamageRoll: 5,
+    })
     all {
       assert(invocation.admitted),
       assert(legalSpellInvocationTargetCount(MagicMissileSpellProfile, 2, 4)),
       assert(not(legalSpellInvocationTargetCount(MagicMissileSpellProfile, 2, 5))),
+      assert(magicMissileSlotLevelLegal(2)),
+      assert(not(magicMissileSlotLevelLegal(0))),
+      assert(magicMissileDartCount(2) == 4),
+      assert(directDamageFacts.damageType == ForceDamage),
+      assert(directDamageFacts.minimumInstanceCount == 1),
+      assert(directDamageFacts.maximumInstanceCount == 4),
+      assert(directDamageFacts.minimumDamagePerInstance == 2),
+      assert(directDamageFacts.maximumDamagePerInstance == 5),
+      assert(legalMagicMissileDirectDamageFacts({
+        slotLevel: 2,
+        allocatedDarts: 4,
+        dartDamageRoll: 5,
+      })),
+      assert(not(legalMagicMissileDirectDamageFacts({
+        slotLevel: 2,
+        allocatedDarts: 5,
+        dartDamageRoll: 5,
+      }))),
+      assert(not(legalMagicMissileDirectDamageFacts({
+        slotLevel: 2,
+        allocatedDarts: 4,
+        dartDamageRoll: 6,
+      }))),
       assert(invocation.slotExpended),
       assert(invocation.state.slotLedger.slotsRemaining == 1),
       assert(invocation.state.slotSpellCastThisTurn),

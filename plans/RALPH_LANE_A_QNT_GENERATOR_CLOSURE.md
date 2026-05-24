@@ -128,7 +128,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 20,
       "id": "A20-DIRECT-SPELL-DAMAGE-CORE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Split direct spell damage projection core"
     },
     {
@@ -200,7 +200,7 @@ Lane A must not:
 | 17 | A17-CHECKER-REGRESSION-TEST - Add generator-readiness regression coverage | blocked | A16 | Prevent silent fallback to fixture-bound. |
 | 18 | A18-END-TO-END-QNT-VERIFICATION - Run and document lane A verification | blocked | A17 | Coverage, examples, typecheck if touched. |
 | 19 | A19-RECURSIVE-NEXT-BATCH - Mine next QNT generator-readiness batch | blocked | A18 | Must append >=12 tasks or prove exhaustion. |
-| 20 | A20-DIRECT-SPELL-DAMAGE-CORE - Split direct spell damage projection core | ready-for-implementation-after-light-research | none | Magic Missile fixture split. |
+| 20 | A20-DIRECT-SPELL-DAMAGE-CORE - Split direct spell damage projection core | done | none | Magic Missile fixture split. |
 | 21 | A21-DEFENSIVE-SPELL-EFFECT-CORE - Split defensive spell effect projection core | ready-for-implementation-after-light-research | none | Mage Armor fixture split. |
 | 22 | A22-READIED-SPELL-RESPONSE-CORE - Split Readied Spell Response core | ready-for-implementation-after-light-research | none | Ready spell hold/release split. |
 | 23 | A23-ATTACK-BURST-SAVE-DAMAGE-CORE - Split attack-burst save damage core | ready-for-implementation-after-light-research | none | Ice Knife fixture split. |
@@ -402,7 +402,7 @@ a checker-backed proof that no such tasks remain.
 
 ### Task 20 - A20-DIRECT-SPELL-DAMAGE-CORE - Split direct spell damage projection core
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: pure semantic-core file for Magic Missile direct damage facts: dart
 count, Force damage type, allocated dart bounds, per-dart damage bounds, and
@@ -512,9 +512,10 @@ fixture facts remain in `spell-procedure-profiles.qnt`.
   - Sleep automatic save success, pending/unconscious lifecycle, and
     damage/shake-awake ending facts remain colocated with spell procedure
     fixture profiles; A13 owns the Sleep lifecycle core.
-  - Magic Missile direct damage remains a closed direct-damage fixture over
-    dart count, Force damage, allocated dart bounds, per-dart damage bounds,
-    and slot-level legality; A20 owns the direct spell damage core.
+  - Magic Missile direct damage now lives in
+    `spell-direct-damage-projection-core.qnt` over dart count, Force damage,
+    allocated dart bounds, per-dart damage bounds, and slot-level legality;
+    A20 is complete.
   - Mage Armor effect admission, base Armor Class calculation, active effect
     projection, and ending the effect when the target dons armor remain closed
     defensive-effect fixture facts; A21 owns the defensive spell effect core.

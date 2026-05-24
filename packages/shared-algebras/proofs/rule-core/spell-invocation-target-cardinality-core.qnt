@@ -3,6 +3,7 @@
 module spellInvocationTargetCardinalityCore {
   import spellDefinitionProfiles.* from "./spell-definition-profiles"
   import spellInvocationResourceCore.* from "./spell-invocation-resource-core"
+  import spellDirectDamageProjectionCore.* from "./spell-direct-damage-projection-core"
 
   // RAW anchors:
   // - Spells/Gaining-and-Casting.md: Targets and Using a Higher-Level Spell Slot.
@@ -10,9 +11,6 @@ module spellInvocationTargetCardinalityCore {
   // - Spells/Descriptions-M-P.md: Magic Missile, Mass Cure Wounds, and Mass
   //   Healing Word.
   // - UBIQUITOUS_LANGUAGE.md: Spell Definition and Spell Invocation.
-
-  pure def magicMissileDartCount(slotLevel: int): int =
-    if (slotLevel <= 1) 3 else slotLevel + 2
 
   pure def spellInvocationTargetCardinality(
     profile: SpellDefinitionProfile,

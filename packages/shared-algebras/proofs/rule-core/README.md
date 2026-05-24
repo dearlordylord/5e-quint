@@ -370,6 +370,10 @@ access admission facts, and target cardinality facts.
 facts used by Spell Procedure Profiles without importing authored spell
 definitions.
 
+`spell-direct-damage-projection-core.qnt` projects Magic Missile direct damage
+facts into the reusable direct spell damage atom: Spell Slot legality, dart
+count, Force Damage Type, allocated dart bounds, and per-dart damage bounds.
+
 `spell-save-damage-projection-core.qnt` projects save-gated damage profiles
 into target shape, successful-save damage policy, Damage Type, Spell Slot and
 Concentration flags, and failed-save rider effects.
@@ -404,8 +408,10 @@ Scope:
   Action for Healing Word, consumes a same-level Spell Slot for leveled spells,
   leaves Cantrip invocations slot-free, and rejects a second slot spell in the
   same turn;
-- Magic Missile slot scaling creates `3 + slot level - 1` Force-damage darts,
-  with caller-provided allocation to one target bounded by the dart count;
+- direct damage profile facts for Magic Missile live in
+  `spell-direct-damage-projection-core.qnt`; they project `3 + slot level - 1`
+  Force-damage darts, with caller-provided allocation to one target bounded by
+  the dart count;
 - Ray of Frost uses QCORE5 spell attack-roll and critical-damage dice-count
   facts, deals Cold damage on a hit, and produces a
   start-of-caster-next-turn Speed-reduction Spell Effect;
