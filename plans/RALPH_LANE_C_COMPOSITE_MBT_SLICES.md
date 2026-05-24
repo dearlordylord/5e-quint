@@ -14,25 +14,120 @@ slice candidates remain.
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    { "number": 1, "id": "C1-SLICE-CANDIDATE-SURVEY", "status": "done", "title": "Survey composite MBT slice candidates" },
-    { "number": 2, "id": "C2-DIRECT-CONDITION-SLICE", "status": "done", "title": "Direct condition lifecycle slice already present" },
-    { "number": 3, "id": "C3-SAVE-CONDITION-SLICE", "status": "done", "title": "Save-gated condition lifecycle slice already present" },
-    { "number": 4, "id": "C4-SEE-INVISIBILITY-SLICE", "status": "done", "title": "Add See Invisibility observer-sight slice" },
-    { "number": 5, "id": "C5-RAY-ENFEEBLEMENT-SLICE", "status": "done", "title": "Add Ray of Enfeeblement lifecycle slice" },
-    { "number": 6, "id": "C6-WEB-RESTRAINT-SLICE", "status": "done", "title": "Add Web restraint hazard slice" },
-    { "number": 7, "id": "C7-HEAT-METAL-SLICE", "status": "done", "title": "Add Heat Metal object-contact slice" },
-    { "number": 8, "id": "C8-GUST-OF-WIND-SLICE", "status": "done", "title": "Add Gust of Wind line lifecycle slice" },
-    { "number": 9, "id": "C9-ANTIMAGIC-SUPPRESSION-SLICE", "status": "done", "title": "Add Antimagic Field suppression slice" },
-    { "number": 10, "id": "C10-SPIKE-GROWTH-SLICE", "status": "done", "title": "Add Spike Growth movement hazard slice" },
-    { "number": 11, "id": "C11-DRAGONS-BREATH-INITIAL-SLICE", "status": "done", "title": "Add Dragon's Breath initial-effect slice" },
-    { "number": 12, "id": "C12-DRAGONS-BREATH-GRANTED-ACTION-SLICE", "status": "done", "title": "Add Dragon's Breath granted-action slice" },
-    { "number": 13, "id": "C13-MIRROR-IMAGE-SLICE", "status": "done", "title": "Mirror Image hit-interception slice already present" },
-    { "number": 14, "id": "C14-WARDING-BOND-SLICE", "status": "done", "title": "Warding Bond linked-effect slice already present" },
-    { "number": 15, "id": "C15-SANCTUARY-SLICE", "status": "done", "title": "Sanctuary targeting-interdiction slice already present" },
-    { "number": 16, "id": "C16-SPELL-SEQUENCING-INTEGRATION-MBT", "status": "ready-for-implementation-after-light-research", "title": "Add bounded spell sequencing integration MBT" },
-    { "number": 17, "id": "C17-SLICE-SCRIPT-AND-REPORT-CLOSURE", "status": "blocked", "title": "Refresh package scripts and rules-kernel rows" },
-    { "number": 18, "id": "C18-END-TO-END-SLICE-VERIFICATION", "status": "blocked", "title": "Run and document lane C verification" },
-    { "number": 19, "id": "C19-RECURSIVE-NEXT-BATCH", "status": "blocked", "title": "Mine next composite MBT slice batch" }
+    {
+      "number": 1,
+      "id": "C1-SLICE-CANDIDATE-SURVEY",
+      "status": "done",
+      "title": "Survey composite MBT slice candidates"
+    },
+    {
+      "number": 2,
+      "id": "C2-DIRECT-CONDITION-SLICE",
+      "status": "done",
+      "title": "Direct condition lifecycle slice already present"
+    },
+    {
+      "number": 3,
+      "id": "C3-SAVE-CONDITION-SLICE",
+      "status": "done",
+      "title": "Save-gated condition lifecycle slice already present"
+    },
+    {
+      "number": 4,
+      "id": "C4-SEE-INVISIBILITY-SLICE",
+      "status": "done",
+      "title": "Add See Invisibility observer-sight slice"
+    },
+    {
+      "number": 5,
+      "id": "C5-RAY-ENFEEBLEMENT-SLICE",
+      "status": "done",
+      "title": "Add Ray of Enfeeblement lifecycle slice"
+    },
+    {
+      "number": 6,
+      "id": "C6-WEB-RESTRAINT-SLICE",
+      "status": "done",
+      "title": "Add Web restraint hazard slice"
+    },
+    {
+      "number": 7,
+      "id": "C7-HEAT-METAL-SLICE",
+      "status": "done",
+      "title": "Add Heat Metal object-contact slice"
+    },
+    {
+      "number": 8,
+      "id": "C8-GUST-OF-WIND-SLICE",
+      "status": "done",
+      "title": "Add Gust of Wind line lifecycle slice"
+    },
+    {
+      "number": 9,
+      "id": "C9-ANTIMAGIC-SUPPRESSION-SLICE",
+      "status": "done",
+      "title": "Add Antimagic Field suppression slice"
+    },
+    {
+      "number": 10,
+      "id": "C10-SPIKE-GROWTH-SLICE",
+      "status": "done",
+      "title": "Add Spike Growth movement hazard slice"
+    },
+    {
+      "number": 11,
+      "id": "C11-DRAGONS-BREATH-INITIAL-SLICE",
+      "status": "done",
+      "title": "Add Dragon's Breath initial-effect slice"
+    },
+    {
+      "number": 12,
+      "id": "C12-DRAGONS-BREATH-GRANTED-ACTION-SLICE",
+      "status": "done",
+      "title": "Add Dragon's Breath granted-action slice"
+    },
+    {
+      "number": 13,
+      "id": "C13-MIRROR-IMAGE-SLICE",
+      "status": "done",
+      "title": "Mirror Image hit-interception slice already present"
+    },
+    {
+      "number": 14,
+      "id": "C14-WARDING-BOND-SLICE",
+      "status": "done",
+      "title": "Warding Bond linked-effect slice already present"
+    },
+    {
+      "number": 15,
+      "id": "C15-SANCTUARY-SLICE",
+      "status": "done",
+      "title": "Sanctuary targeting-interdiction slice already present"
+    },
+    {
+      "number": 16,
+      "id": "C16-SPELL-SEQUENCING-INTEGRATION-MBT",
+      "status": "done",
+      "title": "Add bounded spell sequencing integration MBT"
+    },
+    {
+      "number": 17,
+      "id": "C17-SLICE-SCRIPT-AND-REPORT-CLOSURE",
+      "status": "blocked",
+      "title": "Refresh package scripts and rules-kernel rows"
+    },
+    {
+      "number": 18,
+      "id": "C18-END-TO-END-SLICE-VERIFICATION",
+      "status": "blocked",
+      "title": "Run and document lane C verification"
+    },
+    {
+      "number": 19,
+      "id": "C19-RECURSIVE-NEXT-BATCH",
+      "status": "blocked",
+      "title": "Mine next composite MBT slice batch"
+    }
   ]
 }
 -->
@@ -81,7 +176,7 @@ Lane C must not:
 | 13 | C13-MIRROR-IMAGE-SLICE - Mirror Image hit-interception slice already present | done | none | Existing focused MBT and package script found by C1; no new slice work queued. |
 | 14 | C14-WARDING-BOND-SLICE - Warding Bond linked-effect slice already present | done | none | Existing focused MBT and package script found by C1; no new slice work queued. |
 | 15 | C15-SANCTUARY-SLICE - Sanctuary targeting-interdiction slice already present | done | none | Existing selected-identity MBT found by C1; script/report cleanup remains in C17. |
-| 16 | C16-SPELL-SEQUENCING-INTEGRATION-MBT - Add bounded spell sequencing integration MBT | ready-for-implementation-after-light-research | C4-C12 | Cross-slice bounded fixture over non-duplicate new slices only. |
+| 16 | C16-SPELL-SEQUENCING-INTEGRATION-MBT - Add bounded spell sequencing integration MBT | done | C4-C12 | Cross-slice bounded fixture over non-duplicate new slices only. |
 | 17 | C17-SLICE-SCRIPT-AND-REPORT-CLOSURE - Refresh package scripts and rules-kernel rows | blocked | C4-C12,C16 | Scripts and generated rows, including C1-discovered existing witness cleanup. |
 | 18 | C18-END-TO-END-SLICE-VERIFICATION - Run and document lane C verification | blocked | C17 | Focused MBT only. |
 | 19 | C19-RECURSIVE-NEXT-BATCH - Mine next composite MBT slice batch | blocked | C18 | Must append >=12 tasks or prove exhaustion. |
@@ -267,7 +362,7 @@ package script or obligation-row witness cleanup is handled by C17.
 
 ### Task 16 - C16-SPELL-SEQUENCING-INTEGRATION-MBT - Add bounded spell sequencing integration MBT
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: one bounded fixture-world integration MBT covering two or three
 non-duplicate C4-C12 spell interactions, such as concentration + reaction +
