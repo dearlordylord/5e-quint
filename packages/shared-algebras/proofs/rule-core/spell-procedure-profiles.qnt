@@ -62,16 +62,9 @@ module spellProcedureProfiles {
     spellcastingAbilityModifier: int,
   }
 
-  type MageArmorEffectFacts = {
-    willingTarget: bool,
-    targetWearingArmor: bool,
-    dexterityModifier: int,
-  }
-
   type SpellEffect =
     | NoSpellEffect
     | RayOfFrostSpeedReductionEffect
-    | MageArmorActiveEffect
 
   type ReadiedSpellHeldEffect =
     | NoReadiedSpellHeldEffect
@@ -81,11 +74,6 @@ module spellProcedureProfiles {
     damageAmount: int,
     damageType: RuleDamageType,
     effect: SpellEffect,
-  }
-
-  type MageArmorResult = {
-    effect: SpellEffect,
-    baseArmorClass: int,
   }
 
   type ReadiedSpellProcedureState = {
@@ -119,8 +107,7 @@ module spellProcedureProfiles {
 
   pure def legalSpellEffects: Set[SpellEffect] = Set(
     NoSpellEffect,
-    RayOfFrostSpeedReductionEffect,
-    MageArmorActiveEffect
+    RayOfFrostSpeedReductionEffect
   )
 
   pure def legalReadiedSpellHeldEffects: Set[ReadiedSpellHeldEffect] = Set(
@@ -263,18 +250,6 @@ module spellProcedureProfiles {
         facts.healingDiceRoll + facts.spellcastingAbilityModifier
       )
     }
-
-  pure def resolveMageArmorEffect(facts: MageArmorEffectFacts): MageArmorResult =
-    if (facts.willingTarget and not(facts.targetWearingArmor) and facts.dexterityModifier >= -5 and facts.dexterityModifier <= 10) {
-      effect: MageArmorActiveEffect,
-      baseArmorClass: 13 + facts.dexterityModifier,
-    } else {
-      effect: NoSpellEffect,
-      baseArmorClass: 0,
-    }
-
-  pure def endMageArmorIfTargetDonsArmor(effect: SpellEffect, targetDonsArmor: bool): SpellEffect =
-    if (effect == MageArmorActiveEffect and targetDonsArmor) NoSpellEffect else effect
 
   pure def asReadiedSpellProfile(profile: SpellDefinitionProfile): ReadiedSpellHeldEffect =
     if (profile == MagicMissileSpellProfile) {

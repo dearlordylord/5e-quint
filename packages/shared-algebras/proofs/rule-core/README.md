@@ -419,9 +419,10 @@ Scope:
   successful-save damage;
 - Healing Word spends a Bonus Action/slot and applies QCORE3 HP recovery,
   including zero-HP Death Saving Throw reset and Unconscious removal;
-- Mage Armor creates a persistent Spell Effect for a willing unarmored target,
-  derives base AC as `13 + Dexterity modifier`, and ends the effect when the
-  target dons armor;
+- Mage Armor defensive-effect facts live in
+  `spell-defensive-effect-core.qnt`; they admit a willing unarmored target,
+  derive base AC as `13 + Dexterity modifier`, project the active defensive
+  Spell Effect, and end it when the target dons armor;
 - scalar buff profile facts for False Life, Longstrider, Shield of Faith,
   Spider Climb, Fly, Barkskin, Heroism, and Aid live in
   `spell-scalar-buff-projection-core.qnt`; they project action timing, maximum
@@ -476,7 +477,8 @@ Out of scope for QCORE10:
 bounded slot/action resources, cantrip and leveled invocation paths, direct
 damage, spell attack damage, save-gated damage, healing, Mage Armor effects,
 and Readied Spell Response hold/release while tracking only scalar outputs plus
-one ordinary Spell Effect fixture and one readied spell held-effect fixture.
+ordinary and Mage Armor Spell Effect fixtures and one readied spell held-effect
+fixture.
 
 ## QCORE11: Stat-Block Controls
 

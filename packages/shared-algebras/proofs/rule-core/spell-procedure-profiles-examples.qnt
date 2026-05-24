@@ -23,6 +23,7 @@ module spellProcedureProfilesExamples {
   import spellTurnHookCore.* from "./spell-turn-hook-core"
   import spellObjectHitPointDamageCore.* from "./spell-object-hit-point-damage-core"
   import spellSleepRepeatSaveLifecycleCore.* from "./spell-sleep-repeat-save-lifecycle-core"
+  import spellDefensiveEffectCore.* from "./spell-defensive-effect-core"
   import spellProcedureProfiles.* from "./spell-procedure-profiles"
 
   run test_magic_missile_profile_spends_slot_and_allocates_darts = {
@@ -631,15 +632,22 @@ module spellProcedureProfilesExamples {
   }
 
   run test_mage_armor_creates_persistent_effect_and_donning_armor_ends_it = {
-    val result = resolveMageArmorEffect({
+    val facts = {
       willingTarget: true,
       targetWearingArmor: false,
       dexterityModifier: 2,
-    })
+    }
+    val result = resolveMageArmorDefensiveEffect(facts)
     all {
-      assert(result.effect == MageArmorActiveEffect),
-      assert(result.baseArmorClass == 15),
-      assert(endMageArmorIfTargetDonsArmor(result.effect, true) == NoSpellEffect),
+      assert(mageArmorTargetAdmitted(facts)),
+      assert(mageArmorDexterityModifierInBounds(2)),
+      assert(mageArmorBaseArmorClass(2) == 15),
+      assert(result == MageArmorActiveDefensiveEffect({ baseArmorClass: 15 })),
+      assert(mageArmorDefensiveEffectBaseArmorClass(result) == 15),
+      assert(endMageArmorDefensiveEffectIfTargetDonsArmor(result, true) == NoMageArmorDefensiveEffect),
+      assert(resolveMageArmorDefensiveEffect(facts.with("targetWearingArmor", true)) == NoMageArmorDefensiveEffect),
+      assert(resolveMageArmorDefensiveEffect(facts.with("willingTarget", false)) == NoMageArmorDefensiveEffect),
+      assert(resolveMageArmorDefensiveEffect(facts.with("dexterityModifier", 11)) == NoMageArmorDefensiveEffect),
     }
   }
 

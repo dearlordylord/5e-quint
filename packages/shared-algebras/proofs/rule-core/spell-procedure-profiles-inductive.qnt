@@ -16,6 +16,7 @@ module spellProcedureProfilesInductive {
   import spellInvocationActionSlotCore.* from "./spell-invocation-action-slot-core"
   import spellInvocationTargetCardinalityCore.* from "./spell-invocation-target-cardinality-core"
   import spellDirectDamageProjectionCore.* from "./spell-direct-damage-projection-core"
+  import spellDefensiveEffectCore.* from "./spell-defensive-effect-core"
   import spellSlotExpenditure.* from "./spell-slot-expenditure"
   import spellProcedureProfiles.* from "./spell-procedure-profiles"
 
@@ -39,10 +40,10 @@ module spellProcedureProfilesInductive {
   var qReactorConcentration: ConcentrationState
   var qReadiedHeldEffect: ReadiedSpellHeldEffect
   var qLastSpellEffect: SpellEffect
+  var qLastMageArmorEffect: MageArmorDefensiveEffect
   var qLastReadiedSpellRelease: ReadiedSpellRelease
   var qLastDamageAmount: int
   var qLastHealingAmount: int
-  var qLastBaseArmorClass: int
 
   pure def qTurn: TurnProcedureState = {
     actionQuota: qActionQuota,
@@ -95,10 +96,10 @@ module spellProcedureProfilesInductive {
     qReactorConcentration' = NoConcentration,
     qReadiedHeldEffect' = NoReadiedSpellHeldEffect,
     qLastSpellEffect' = NoSpellEffect,
+    qLastMageArmorEffect' = NoMageArmorDefensiveEffect,
     qLastReadiedSpellRelease' = NoReadiedSpellRelease,
     qLastDamageAmount' = 0,
     qLastHealingAmount' = 0,
-    qLastBaseArmorClass' = 0,
   }
 
   action recordTurn(turn: TurnProcedureState): bool = all {
@@ -160,10 +161,10 @@ module spellProcedureProfilesInductive {
       qReactorConcentration' = qReactorConcentration,
       qReadiedHeldEffect' = qReadiedHeldEffect,
       qLastSpellEffect' = qLastSpellEffect,
+      qLastMageArmorEffect' = qLastMageArmorEffect,
       qLastReadiedSpellRelease' = qLastReadiedSpellRelease,
       qLastDamageAmount' = qLastDamageAmount,
       qLastHealingAmount' = qLastHealingAmount,
-      qLastBaseArmorClass' = qLastBaseArmorClass,
     }
   }
 
@@ -177,13 +178,13 @@ module spellProcedureProfilesInductive {
     all {
       qLastDamageAmount' = result.damageAmount,
       qLastHealingAmount' = qLastHealingAmount,
-      qLastBaseArmorClass' = qLastBaseArmorClass,
       recordSpellcasting(qSpellcasting),
       qReactionWindow' = qReactionWindow,
       qInterruptedConcentration' = qInterruptedConcentration,
       qReactorConcentration' = qReactorConcentration,
       qReadiedHeldEffect' = qReadiedHeldEffect,
       qLastSpellEffect' = qLastSpellEffect,
+      qLastMageArmorEffect' = qLastMageArmorEffect,
       qLastReadiedSpellRelease' = qLastReadiedSpellRelease,
     }
   }
@@ -205,13 +206,13 @@ module spellProcedureProfilesInductive {
     all {
       qLastDamageAmount' = result.damageAmount,
       qLastHealingAmount' = qLastHealingAmount,
-      qLastBaseArmorClass' = qLastBaseArmorClass,
       recordSpellcasting(qSpellcasting),
       qReactionWindow' = qReactionWindow,
       qInterruptedConcentration' = qInterruptedConcentration,
       qReactorConcentration' = qReactorConcentration,
       qReadiedHeldEffect' = qReadiedHeldEffect,
       qLastSpellEffect' = result.effect,
+      qLastMageArmorEffect' = qLastMageArmorEffect,
       qLastReadiedSpellRelease' = qLastReadiedSpellRelease,
     }
   }
@@ -225,13 +226,13 @@ module spellProcedureProfilesInductive {
     all {
       qLastDamageAmount' = result.damageAmount,
       qLastHealingAmount' = qLastHealingAmount,
-      qLastBaseArmorClass' = qLastBaseArmorClass,
       recordSpellcasting(qSpellcasting),
       qReactionWindow' = qReactionWindow,
       qInterruptedConcentration' = qInterruptedConcentration,
       qReactorConcentration' = qReactorConcentration,
       qReadiedHeldEffect' = qReadiedHeldEffect,
       qLastSpellEffect' = qLastSpellEffect,
+      qLastMageArmorEffect' = qLastMageArmorEffect,
       qLastReadiedSpellRelease' = qLastReadiedSpellRelease,
     }
   }
@@ -258,28 +259,30 @@ module spellProcedureProfilesInductive {
     all {
       qLastHealingAmount' = result.hitPointsRegained,
       qLastDamageAmount' = qLastDamageAmount,
-      qLastBaseArmorClass' = qLastBaseArmorClass,
       recordSpellcasting(qSpellcasting),
       qReactionWindow' = qReactionWindow,
       qInterruptedConcentration' = qInterruptedConcentration,
       qReactorConcentration' = qReactorConcentration,
       qReadiedHeldEffect' = qReadiedHeldEffect,
       qLastSpellEffect' = qLastSpellEffect,
+      qLastMageArmorEffect' = qLastMageArmorEffect,
       qLastReadiedSpellRelease' = qLastReadiedSpellRelease,
     }
   }
 
   action doMageArmor = {
     nondet targetWearingArmor = Set(true, false).oneOf()
-    val result = resolveMageArmorEffect({
+    nondet targetDonsArmor = Set(true, false).oneOf()
+    val effect = resolveMageArmorDefensiveEffect({
       willingTarget: true,
       targetWearingArmor: targetWearingArmor,
       dexterityModifier: 2,
     })
+    val endingEffect = endMageArmorDefensiveEffectIfTargetDonsArmor(effect, targetDonsArmor)
     all {
       qReadiedHeldEffect' = qReadiedHeldEffect,
-      qLastSpellEffect' = endMageArmorIfTargetDonsArmor(result.effect, targetWearingArmor),
-      qLastBaseArmorClass' = result.baseArmorClass,
+      qLastSpellEffect' = qLastSpellEffect,
+      qLastMageArmorEffect' = endingEffect,
       qLastDamageAmount' = qLastDamageAmount,
       qLastHealingAmount' = qLastHealingAmount,
       recordSpellcasting(qSpellcasting),
@@ -319,8 +322,8 @@ module spellProcedureProfilesInductive {
       qSlotSpellCastThisTurn' = held.spellcasting.slotSpellCastThisTurn,
       qLastDamageAmount' = qLastDamageAmount,
       qLastHealingAmount' = qLastHealingAmount,
-      qLastBaseArmorClass' = qLastBaseArmorClass,
       qLastSpellEffect' = qLastSpellEffect,
+      qLastMageArmorEffect' = qLastMageArmorEffect,
       qLastReadiedSpellRelease' = releaseResult.released,
     }
   }
@@ -335,15 +338,15 @@ module spellProcedureProfilesInductive {
     qReactorConcentration' = qReactorConcentration,
     qReadiedHeldEffect' = NoReadiedSpellHeldEffect,
     qLastSpellEffect' = NoSpellEffect,
+    qLastMageArmorEffect' = NoMageArmorDefensiveEffect,
     qLastReadiedSpellRelease' = NoReadiedSpellRelease,
     qLastDamageAmount' = qLastDamageAmount,
     qLastHealingAmount' = qLastHealingAmount,
-    qLastBaseArmorClass' = qLastBaseArmorClass,
   }
 
   action step = any {
     // Branch budget: eight spell-profile branches with small fixed samples.
-    // The machine tracks scalar outputs plus one Spell Effect fixture.
+    // The machine tracks scalar outputs plus ordinary and Mage Armor Spell Effect fixtures.
     doSpellInvocation,
     doMagicMissile,
     doRayOfFrost,
@@ -375,12 +378,12 @@ module spellProcedureProfilesInductive {
     qReactorConcentration.in(Set(NoConcentration, Concentrating)),
     qReadiedHeldEffect.in(legalReadiedSpellHeldEffects),
     qLastSpellEffect.in(legalSpellEffects),
+    legalMageArmorDefensiveEffect(qLastMageArmorEffect),
     legalReadiedSpellRelease(qLastReadiedSpellRelease),
     legalReadiedSpellHeldEffect(qReadiedHeldEffect),
     legalSpellEffect(qLastSpellEffect),
     qLastDamageAmount.in(0.to(40)),
     qLastHealingAmount.in(0.to(40)),
-    qLastBaseArmorClass.in(0.to(23)),
     legalTurnProcedureState(qTurn),
     legalSpellSlotLedger(qSlotLedger),
     legalSpellcastingProcedureState(qSpellcasting),

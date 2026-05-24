@@ -134,7 +134,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 21,
       "id": "A21-DEFENSIVE-SPELL-EFFECT-CORE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Split defensive spell effect projection core"
     },
     {
@@ -201,7 +201,7 @@ Lane A must not:
 | 18 | A18-END-TO-END-QNT-VERIFICATION - Run and document lane A verification | blocked | A17 | Coverage, examples, typecheck if touched. |
 | 19 | A19-RECURSIVE-NEXT-BATCH - Mine next QNT generator-readiness batch | blocked | A18 | Must append >=12 tasks or prove exhaustion. |
 | 20 | A20-DIRECT-SPELL-DAMAGE-CORE - Split direct spell damage projection core | done | none | Magic Missile fixture split. |
-| 21 | A21-DEFENSIVE-SPELL-EFFECT-CORE - Split defensive spell effect projection core | ready-for-implementation-after-light-research | none | Mage Armor fixture split. |
+| 21 | A21-DEFENSIVE-SPELL-EFFECT-CORE - Split defensive spell effect projection core | done | none | Mage Armor fixture split. |
 | 22 | A22-READIED-SPELL-RESPONSE-CORE - Split Readied Spell Response core | ready-for-implementation-after-light-research | none | Ready spell hold/release split. |
 | 23 | A23-ATTACK-BURST-SAVE-DAMAGE-CORE - Split attack-burst save damage core | ready-for-implementation-after-light-research | none | Ice Knife fixture split. |
 
@@ -414,7 +414,7 @@ fixture facts remain in `spell-procedure-profiles.qnt`.
 
 ### Task 21 - A21-DEFENSIVE-SPELL-EFFECT-CORE - Split defensive spell effect projection core
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: pure semantic-core file for Mage Armor defensive effect facts:
 willing-target admission, armor-wearing exclusion, Dexterity modifier bounds,
@@ -516,9 +516,11 @@ fixture facts remain in `spell-procedure-profiles.qnt`.
     `spell-direct-damage-projection-core.qnt` over dart count, Force damage,
     allocated dart bounds, per-dart damage bounds, and slot-level legality;
     A20 is complete.
-  - Mage Armor effect admission, base Armor Class calculation, active effect
-    projection, and ending the effect when the target dons armor remain closed
-    defensive-effect fixture facts; A21 owns the defensive spell effect core.
+  - Mage Armor defensive-effect facts now live in
+    `spell-defensive-effect-core.qnt` over willing-target admission,
+    armor-wearing exclusion, Dexterity modifier bounds, base Armor Class
+    calculation, active defensive Spell Effect projection, and ending the
+    effect when the target dons armor; A21 is complete.
   - Readied Spell Response profile admission, held-effect projection,
     resource expenditure at the hold boundary, Concentration, reaction-window
     offer, Reaction spend, dissipation, and release projection remain closed
