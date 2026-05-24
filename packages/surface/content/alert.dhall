@@ -4,8 +4,7 @@
 --   1. Initiative Proficiency - add Proficiency Bonus to Initiative rolls.
 --      Encoded as passive modify_roll_numeric with proficiency_bonus delta.
 --   2. Initiative Swap - swap your initiative with a willing ally immediately
---      after rolling. No v4 atom covers initiative-value exchange between
---      creatures. Omitted until an Initiative setup runtime owner exists.
+--      after rolling, unless either creature has the Incapacitated condition.
 
 let alert =
       { kind = "feat"
@@ -27,6 +26,11 @@ let alert =
                     { kind = "proficiency_bonus"
                     , sign = "+"
                     }
+                }
+              , { kind = "initiative_swap"
+                , timing = "immediately_after_initiative_roll"
+                , ally = "willing_ally_same_combat"
+                , prohibitedByCondition = "incapacitated"
                 }
               ]
           }

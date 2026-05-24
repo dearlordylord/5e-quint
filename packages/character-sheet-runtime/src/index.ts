@@ -74,11 +74,15 @@ import {
 import {
   DieRollResult,
   Hp,
+  characterLevel,
   difficultyClass,
+  proficiencyBonusForCharacterLevel,
   resourceCount,
   spellSlotLevel,
+  type CharacterLevel,
   type Condition,
   type DifficultyClass,
+  type ProficiencyBonus,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import {
@@ -942,6 +946,12 @@ export function characterSheetIssue(
   return Either.left({ tag: "characterSheetIssue", message });
 }
 
+export function characterSheetProficiencyBonusForCharacterLevel(
+  totalLevel: CharacterLevel,
+): ProficiencyBonus {
+  return proficiencyBonusForCharacterLevel(totalLevel);
+}
+
 export function characterSheetAbilityCheckProficiencyBonus(
   input: CharacterSheetAbilityCheckProficiencyBonusInput,
 ): Either.Either<
@@ -958,8 +968,8 @@ export function characterSheetAbilityCheckProficiencyBonus(
     );
   }
 
-  const proficiencyBonus = proficiencyBonusForCharacterLevel(
-    computeTotalLevel(input.build.progression),
+  const proficiencyBonus = characterSheetProficiencyBonusForCharacterLevel(
+    characterLevel(computeTotalLevel(input.build.progression)),
   );
   if (proficiencies.right.expertise.includes(input.skill)) {
     return Either.right({
@@ -1680,8 +1690,8 @@ export function characterSheetMonksFocusSaveDc(
         abilityScoreToMod(
           sheet.build.abilityScores[facts.right.saveDc.ability],
         ) +
-        proficiencyBonusForCharacterLevel(
-          computeTotalLevel(sheet.build.progression),
+        characterSheetProficiencyBonusForCharacterLevel(
+          characterLevel(computeTotalLevel(sheet.build.progression)),
         ),
     ),
   });
@@ -4336,8 +4346,8 @@ function characterSheetResourceCapacity(
   if (cap.kind === "proficiency_bonus") {
     return Either.right(
       resourceCount(
-        proficiencyBonusForCharacterLevel(
-          input.build.progression.advancements.length + 1,
+        characterSheetProficiencyBonusForCharacterLevel(
+          characterLevel(input.build.progression.advancements.length + 1),
         ),
       ),
     );
@@ -4364,10 +4374,6 @@ function classFeatureOwnerLevel(
   return characterSheetIssue(
     "Class-feature resource requires the owning class in progression.",
   );
-}
-
-function proficiencyBonusForCharacterLevel(totalLevel: number): number {
-  return 2 + Math.floor((totalLevel - 1) / 4);
 }
 
 function characterBuildHitDice(

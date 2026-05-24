@@ -20,6 +20,7 @@ export type ActionAndRollEffectAtom = Extract<
       | "grant_alternate_action_cost"
       | "grant_extra_action"
       | "modify_roll_numeric"
+      | "initiative_swap"
       | "jack_of_all_trades_ability_check_bonus"
       | "modify_damage_numeric"
       | "modify_size_category"
@@ -98,6 +99,21 @@ export function traceActionAndRollEffectAtom(
         category: "effect",
         atomKind: "modify_roll_numeric",
         label: `modify_roll_numeric\n${describeDelta(e.delta)}\non ${e.on.join(", ")}${describeWeaponFilter(e.weaponFilter)}`,
+      });
+      return id;
+    }
+    case "initiative_swap": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "initiative_swap",
+        label: [
+          "initiative_swap",
+          e.timing,
+          e.ally,
+          `blocked by ${e.prohibitedByCondition}`,
+        ].join("\n"),
       });
       return id;
     }

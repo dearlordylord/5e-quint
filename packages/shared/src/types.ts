@@ -352,6 +352,12 @@ export function characterLevel(n: number): CharacterLevel {
   return CharacterLevel.make(Math.max(1, Math.min(MAX, Math.floor(n))));
 }
 
+export function proficiencyBonusForCharacterLevel(
+  totalLevel: CharacterLevel,
+): ProficiencyBonus {
+  return proficiencyBonus(2 + Math.floor((totalLevel - 1) / 4));
+}
+
 export const ArmorClass = Schema.Number.pipe(
   Schema.int(),
   Schema.greaterThanOrEqualTo(1),

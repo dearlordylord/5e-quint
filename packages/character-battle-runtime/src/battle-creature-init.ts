@@ -7,8 +7,10 @@ import {
   characterBattleResourceSupportedForUnit,
   parseCharacterBattleClassLevels,
   parseSupportedUnitFeatureProfile,
+  INITIATIVE_PROFICIENCY_AND_SWAP_SUPPORT_PROFILE,
   scoreModifier,
   startBattle,
+  initiativeScore,
   unitIsSupportedClassFeatureSpellFreeCastResource,
   type CharacterBattleFeatureInit,
   type CharacterBattleMetamagicState,
@@ -36,6 +38,7 @@ import {
   characterBuildProficiencies,
   characterBuildSorcererFontOfMagicFacts,
   characterBuildSorcererMetamagicFacts,
+  computeTotalLevel,
   progressionClassLevels,
   type CharacterBuild,
   type CharacterBuildDruidWildShapeFacts,
@@ -48,7 +51,9 @@ import {
   ClassLevel,
   Hp,
   abilityModifier,
+  characterLevel,
   movementFeet,
+  proficiencyBonusForCharacterLevel,
   resourceCount,
   type Condition,
 } from "@dnd/shared/types";
@@ -79,7 +84,7 @@ import {
 } from "./battle-support-profiles.ts";
 
 // KERNEL-COVERAGE: runtime-owner CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.monk-focus-battle-options character-sheet.metamagic-battle-resource-bridge
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.initiative-proficiency-and-swap unit-feature.monk-focus-battle-options character-sheet.metamagic-battle-resource-bridge
 
 // MCP owns cross-runtime wiring. Character creation finalizes a CharacterBuild;
 // battle accepts battle-owned creature-init inputs. This mapper is where
@@ -110,6 +115,61 @@ export type CharacterBuildCreatureInput = {
         CharacterBuild["equipment"]["loadout"]["offHandWeapon"]
       >["itemId"];
 };
+
+export type CharacterBattleInitiativeProficiencyChoice = "add" | "omit";
+
+export function characterBattleInitiativeScore(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly rollTotal: number;
+  readonly proficiencyBonusChoice: CharacterBattleInitiativeProficiencyChoice;
+}): Either.Either<InitiativeScore, BattleCreatureInitIssue> {
+  if (!Number.isInteger(input.rollTotal)) {
+    return battleCreatureInitIssue(
+      "Character battle Initiative roll total must be an integer.",
+    );
+  }
+  if (input.proficiencyBonusChoice === "omit") {
+    return Either.right(initiativeScore(input.rollTotal));
+  }
+
+  const classLevels = characterBattleClassLevels(
+    input.build,
+    input.unitLibrary,
+  );
+  if (Either.isLeft(classLevels)) {
+    return battleCreatureInitIssue(classLevels.left.message);
+  }
+  const characterUnitRefs = characterUnitRefsWithBattleSupportProfiles(
+    input.build,
+    input.unitLibrary,
+    undefined,
+    classLevels.right,
+  );
+  if (Either.isLeft(characterUnitRefs)) {
+    return battleCreatureInitIssue(
+      characterUnitRefs.left.map((issue) => issue.message).join("; "),
+    );
+  }
+  const hasInitiativeProficiency = characterUnitRefs.right.some((unitRef) =>
+    unitRef.supportProfiles.some(
+      (profile) =>
+        typeof profile !== "string" &&
+        profile.kind === INITIATIVE_PROFICIENCY_AND_SWAP_SUPPORT_PROFILE,
+    ),
+  );
+  if (!hasInitiativeProficiency) {
+    return battleCreatureInitIssue(
+      "Character battle Initiative Proficiency Bonus requires an admitted Initiative support profile.",
+    );
+  }
+
+  const totalLevel = computeTotalLevel(input.build.progression);
+  const proficiencyBonus = proficiencyBonusForCharacterLevel(
+    characterLevel(totalLevel),
+  );
+  return Either.right(initiativeScore(input.rollTotal + proficiencyBonus));
+}
 
 export function startBattleFromCharacterBuildAndStatBlock(input: {
   readonly battleId: BattleId;

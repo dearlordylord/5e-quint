@@ -62,8 +62,8 @@
       "value": 255
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 141,
-      "numerator": 141,
+      "denominator": 142,
+      "numerator": 142,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -72,49 +72,49 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 95,
-      "numerator": 95,
+      "denominator": 96,
+      "numerator": 96,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 95,
-      "numerator": 95,
+      "denominator": 96,
+      "numerator": 96,
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 131,
-      "numerator": 126,
+      "denominator": 132,
+      "numerator": 127,
       "percent": "96.2%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 131,
-      "numerator": 126,
+      "denominator": 132,
+      "numerator": 127,
       "percent": "96.2%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 143,
-      "numerator": 142,
+      "denominator": 144,
+      "numerator": 143,
       "percent": "99.3%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 95,
-      "numerator": 95,
+      "denominator": 96,
+      "numerator": 96,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 95,
-      "numerator": 95,
+      "denominator": 96,
+      "numerator": 96,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 141,
+      "denominator": 142,
       "numerator": 109,
-      "percent": "77.3%"
+      "percent": "76.8%"
     },
     "supportedProfileCoverage": {
       "denominator": 210,
-      "numerator": 141,
-      "percent": "67.1%"
+      "numerator": 142,
+      "percent": "67.6%"
     }
   },
   "metricSemantics": [
@@ -701,6 +701,38 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.initiative-proficiency-and-swap",
+      "profileKind": "passive",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-turn-order.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/api-lifecycle.ts",
+        "packages/character-battle-runtime/src/battle-creature-init.ts"
+      ],
+      "sourceBoundary": "The runtime consumes an admitted passive Surface shape with an Initiative Proficiency Bonus roll modifier and an immediate Initiative Swap atom. Character Battle derives the final Initiative score from the caller-supplied Initiative roll total, existing CharacterBuild level progression, and retained support profile when the player chooses to add the Proficiency Bonus. Battle runtime owns only the start-battle setup swap boundary: callers enter the setup workflow from BattleCreatureInit input, not from an arbitrary BattleState, so consumed source opportunities cannot be reset by re-entering setup after a swap. During setup, both combatants must be present in the same combat, on the same side, distinct, the ally must be willing, no combatant may have acted yet, neither participant may be Incapacitated, the source must not have consumed its one post-roll swap opportunity, and the existing Initiative scores are swapped and re-ordered without dispatching on Alert identity or storing parallel swap state in BattleState.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME"
+      ],
+      "title": "Unit feature adds Proficiency Bonus to Initiative rolls and can swap Initiative once with a willing non-Incapacitated ally before turns begin",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-turn-order.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-alert-initiative.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
         }
       ]
     },
@@ -3827,13 +3859,13 @@
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 131,
-        "numerator": 126,
+        "denominator": 132,
+        "numerator": 127,
         "percent": "96.2%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 131,
-        "numerator": 126,
+        "denominator": 132,
+        "numerator": 127,
         "percent": "96.2%"
       }
     },
@@ -4064,6 +4096,19 @@
           }
         ],
         "profileId": "unit-feature.passive-ranged-attack-roll-bonus",
+        "profileKind": "passive"
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
+        "profileId": "unit-feature.initiative-proficiency-and-swap",
         "profileKind": "passive"
       },
       {
@@ -5673,8 +5718,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 143,
-          "numerator": 142,
+          "denominator": 144,
+          "numerator": 143,
           "percent": "99.3%"
         }
       },
@@ -5741,6 +5786,25 @@
             }
           ],
           "unitId": "aid"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
+              "profileId": "unit-feature.initiative-proficiency-and-swap",
+              "profileKind": "passive"
+            }
+          ],
+          "unitId": "alert"
         },
         {
           "joinStatus": "covered",
@@ -11723,6 +11787,22 @@
         "character-creation.wizard-spellbook-learning-choice"
       ],
       "taskId": "L12G-FOLLOWUP-WIZARD-EVOKER-EVOCATION-SAVANT"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime turn-order Quint facts cover Alert Initiative Swap legality: initial Initiative window only, one consumed swap opportunity per source, distinct willing same-combat ally, same-side ally modeling, and Incapacitated blocking for either participant, plus initial turn-order exchange.",
+      "profileIds": [
+        "unit-feature.initiative-proficiency-and-swap"
+      ],
+      "taskId": "L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Surface, battle-runtime, and character-battle-runtime tests cover Alert Surface admission with both Initiative Proficiency and Initiative Swap atoms, mechanics-shape admission without Alert identity dispatch, Character Battle Initiative score derivation from roll total plus build Proficiency Bonus, typed rejection when the support profile is absent, and Battle runtime Initiative Swap gating, one-use source consumption, and score/order exchange.",
+      "profileIds": [
+        "unit-feature.initiative-proficiency-and-swap"
+      ],
+      "taskId": "L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME"
     }
   ],
   "units": [
@@ -16428,24 +16508,68 @@
         "status": "installed"
       },
       "claim": {
-        "followUpTasks": [
-          {
-            "id": "L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME",
-            "mechanic": "Promote Alert by projecting Proficiency Bonus on Initiative rolls and modeling the immediately-after-Initiative willing-ally Initiative Swap gate without authored-identity dispatch.",
-            "owner": "battle-runtime Initiative setup and Character Battle admission owners",
-            "requiredOutput": "Supported-profile or profile-subset-supported Alert claim, focused runtime tests, promoted Quint/runtime parity for Initiative roll bonus and swap legality, and generated coverage artifacts.",
-            "title": "Alert Initiative Runtime Support"
-          }
+        "profileIds": [
+          "unit-feature.initiative-proficiency-and-swap"
         ],
-        "futureProfileOwner": "battle-runtime Initiative setup and turn-order owner",
-        "reason": "Alert is installed as the canonical SRD Origin feat identity for Criminal background selection. Its Initiative Proficiency and Initiative Swap benefits are battle-runtime-relevant Initiative setup behavior, but no promoted Initiative roll/turn-order profile is claimed in this catalog-readiness slice.",
-        "tag": "unsupported-profile"
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Surface Alert records Initiative Proficiency as a Proficiency Bonus Initiative roll modifier and Initiative Swap as an immediately-after-Initiative willing-ally same-combat exchange blocked by either creature being Incapacitated.",
+          "Character Battle derives the final Initiative score from the caller-supplied Initiative roll total, retained Alert support profile, and build Proficiency Bonus without duplicating class progression or Proficiency Bonus state.",
+          "Battle runtime applies the immediately-after-Initiative setup swap at most once per source in a start-battle setup workflow that cannot be re-entered from a swapped BattleState, requires a same-side willing ally and both combatants present and not Incapacitated, swaps the existing combatants' Initiative scores, and rebuilds the initial turn order from those single-source Initiative values without dispatching on Alert identity."
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-alert-initiative.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/character-battle-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME"
+        }
+      ],
       "executableMechanics": true,
       "kind": "feat",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "unit-feature.initiative-proficiency-and-swap",
+          "profileKind": "passive",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-turn-order.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/api-lifecycle.ts",
+            "packages/character-battle-runtime/src/battle-creature-init.ts"
+          ],
+          "sourceBoundary": "The runtime consumes an admitted passive Surface shape with an Initiative Proficiency Bonus roll modifier and an immediate Initiative Swap atom. Character Battle derives the final Initiative score from the caller-supplied Initiative roll total, existing CharacterBuild level progression, and retained support profile when the player chooses to add the Proficiency Bonus. Battle runtime owns only the start-battle setup swap boundary: callers enter the setup workflow from BattleCreatureInit input, not from an arbitrary BattleState, so consumed source opportunities cannot be reset by re-entering setup after a swap. During setup, both combatants must be present in the same combat, on the same side, distinct, the ally must be willing, no combatant may have acted yet, neither participant may be Incapacitated, the source must not have consumed its one post-roll swap opportunity, and the existing Initiative scores are swapped and re-ordered without dispatching on Alert identity or storing parallel swap state in BattleState.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME"
+          ],
+          "title": "Unit feature adds Proficiency Bonus to Initiative rolls and can swap Initiative once with a willing non-Incapacitated ally before turns begin",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-turn-order.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-alert-initiative.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/alert.json",
       "unitId": "alert"
     },

@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.druid-wild-shape-known-form unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.druid-wild-shape-known-form unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.initiative-proficiency-and-swap unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement
 import { Match } from "effect";
 import * as Either from "effect/Either";
 import {
@@ -61,6 +61,8 @@ export const PASSIVE_ARMOR_CLASS_BONUS_SUPPORT_PROFILE =
   "passiveArmorClassBonus";
 export const PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE =
   "passiveRangedAttackRollBonus";
+export const INITIATIVE_PROFICIENCY_AND_SWAP_SUPPORT_PROFILE =
+  "initiativeProficiencyAndSwap";
 export const ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE =
   "attackRollMissToHitReplacement";
 export const PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE =
@@ -132,6 +134,7 @@ export const BATTLE_UNIT_SUPPORT_PROFILES = [
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
   PASSIVE_ARMOR_CLASS_BONUS_SUPPORT_PROFILE,
   PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
+  INITIATIVE_PROFICIENCY_AND_SWAP_SUPPORT_PROFILE,
   ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
   PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
   PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
@@ -164,6 +167,20 @@ export type PassiveRangedAttackRollBonusProfile = {
 export type BattlePassiveRangedAttackRollBonusSupportProfile = {
   readonly kind: typeof PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE;
   readonly attackRoll: PassiveRangedAttackRollBonusProfile;
+};
+export type InitiativeProficiencyAndSwapProfile = {
+  readonly initiativeRollBonus: {
+    readonly amount: { readonly kind: "proficiencyBonus" };
+  };
+  readonly swap: {
+    readonly timing: "immediatelyAfterInitiativeRoll";
+    readonly ally: "willingAllySameCombat";
+    readonly prohibitedByCondition: "incapacitated";
+  };
+};
+export type BattleInitiativeProficiencyAndSwapSupportProfile = {
+  readonly kind: typeof INITIATIVE_PROFICIENCY_AND_SWAP_SUPPORT_PROFILE;
+  readonly initiative: InitiativeProficiencyAndSwapProfile;
 };
 export type AttackRollMissToHitReplacementProfile = {
   readonly optional: true;
@@ -301,6 +318,7 @@ export type BattleUnitSupportProfile =
   | BattleAlternateActionCostSupportProfile
   | BattleMonkFocusBattleOptionsSupportProfile
   | BattlePassiveRangedAttackRollBonusSupportProfile
+  | BattleInitiativeProficiencyAndSwapSupportProfile
   | BattleAttackRollMissToHitReplacementSupportProfile
   | BattlePassiveSavingThrowRollModeSupportProfile
   | BattlePassiveSpeedBonusSupportProfile
@@ -314,6 +332,7 @@ export type BattleUnitSupportProfile =
       | "alternateActionCost"
       | "monkFocusBattleOptions"
       | "passiveRangedAttackRollBonus"
+      | "initiativeProficiencyAndSwap"
       | "attackRollMissToHitReplacement"
       | "passiveSavingThrowRollMode"
       | "passiveSpeedBonus"
@@ -451,6 +470,17 @@ export function battleUnitSupportProfilesForUnit(input: {
   }
   if (passiveRangedAttackRollBonusSupport !== null) {
     supportProfiles.push(passiveRangedAttackRollBonusSupport);
+  }
+
+  const initiativeProficiencyAndSwapSupport =
+    battleInitiativeProficiencyAndSwapSupportForUnit(input.unit);
+  if (initiativeProficiencyAndSwapSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle Initiative proficiency-and-swap Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (initiativeProficiencyAndSwapSupport !== null) {
+    supportProfiles.push(initiativeProficiencyAndSwapSupport);
   }
 
   const attackRollMissToHitReplacementSupport =
@@ -1072,6 +1102,11 @@ export type SupportedUnitFeatureProfile =
       readonly attackRoll: PassiveRangedAttackRollBonusProfile;
     }
   | {
+      readonly kind: "initiativeProficiencyAndSwap";
+      readonly unit: UnitRecord;
+      readonly initiative: InitiativeProficiencyAndSwapProfile;
+    }
+  | {
       readonly kind: "attackRollMissToHitReplacement";
       readonly unit: UnitRecord;
       readonly replacement: AttackRollMissToHitReplacementProfile;
@@ -1619,6 +1654,11 @@ export type BattlePassiveRangedAttackRollBonusSupport =
   | "unsupported"
   | null;
 
+export type BattleInitiativeProficiencyAndSwapSupport =
+  | BattleInitiativeProficiencyAndSwapSupportProfile
+  | "unsupported"
+  | null;
+
 export type BattleAttackRollMissToHitReplacementSupport =
   | BattleAttackRollMissToHitReplacementSupportProfile
   | "unsupported"
@@ -1710,6 +1750,18 @@ export function battlePassiveRangedAttackRollBonusSupportForUnit(
   return attackRoll === null
     ? "unsupported"
     : { kind: PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE, attackRoll };
+}
+
+export function battleInitiativeProficiencyAndSwapSupportForUnit(
+  unit: UnitRecord,
+): BattleInitiativeProficiencyAndSwapSupport {
+  if (!hasInitiativeProficiencyAndSwapMechanics(unit)) {
+    return null;
+  }
+  const initiative = initiativeProficiencyAndSwapProfileForUnit(unit);
+  return initiative === null
+    ? "unsupported"
+    : { kind: INITIATIVE_PROFICIENCY_AND_SWAP_SUPPORT_PROFILE, initiative };
 }
 
 export function battleAttackRollMissToHitReplacementSupportForUnit(
@@ -1863,7 +1915,24 @@ function hasPassiveRangedAttackRollBonusMechanics(unit: UnitRecord): boolean {
     return false;
   }
   const [effect] = unit.mechanics.grants;
-  return effect?.kind === "modify_roll_numeric";
+  return (
+    effect?.kind === "modify_roll_numeric" &&
+    sameStringSet(effect.on, ["attack_roll"])
+  );
+}
+
+function hasInitiativeProficiencyAndSwapMechanics(unit: UnitRecord): boolean {
+  if (unit.kind !== "feat" || unit.mechanics.family !== "passive") {
+    return false;
+  }
+  return (
+    unit.mechanics.grants.some(
+      (effect) =>
+        effect.kind === "modify_roll_numeric" &&
+        sameStringSet(effect.on, ["initiative"]),
+    ) &&
+    unit.mechanics.grants.some((effect) => effect.kind === "initiative_swap")
+  );
 }
 
 function hasAttackRollMissToHitReplacementMechanics(unit: UnitRecord): boolean {
@@ -2150,6 +2219,65 @@ export function passiveRangedAttackRollBonusProfileForUnit(
         },
       }
     : null;
+}
+
+export function initiativeProficiencyAndSwapProfileForUnit(
+  unit: UnitRecord,
+): InitiativeProficiencyAndSwapProfile | null {
+  if (unit.kind !== "feat" || unit.mechanics.family !== "passive") {
+    return null;
+  }
+  const mechanics = unit.mechanics;
+  if (
+    mechanics.condition !== undefined ||
+    mechanics.suppressedBy !== undefined ||
+    mechanics.operations !== undefined
+  ) {
+    return null;
+  }
+  const [left, right, ...extraEffects] = mechanics.grants;
+  if (left === undefined || right === undefined || extraEffects.length > 0) {
+    return null;
+  }
+  const initiativeBonus =
+    left.kind === "modify_roll_numeric"
+      ? left
+      : right.kind === "modify_roll_numeric"
+        ? right
+        : null;
+  const swap =
+    left.kind === "initiative_swap"
+      ? left
+      : right.kind === "initiative_swap"
+        ? right
+        : null;
+
+  if (
+    initiativeBonus === null ||
+    swap === null ||
+    !sameStringSet(initiativeBonus.on, ["initiative"]) ||
+    initiativeBonus.delta.kind !== "proficiency_bonus" ||
+    initiativeBonus.delta.sign !== "+" ||
+    initiativeBonus.weaponFilter !== undefined ||
+    initiativeBonus.abilityFilter !== undefined ||
+    initiativeBonus.skillFilter !== undefined ||
+    initiativeBonus.count !== undefined ||
+    swap.timing !== "immediately_after_initiative_roll" ||
+    swap.ally !== "willing_ally_same_combat" ||
+    swap.prohibitedByCondition !== "incapacitated"
+  ) {
+    return null;
+  }
+  return {
+    initiativeRollBonus: {
+      amount: { kind: "proficiencyBonus" },
+    },
+    swap: {
+      timing: "immediatelyAfterInitiativeRoll",
+      ally: "willingAllySameCombat",
+      prohibitedByCondition: "incapacitated",
+    },
+  };
 }
 
 export function attackRollMissToHitReplacementProfileForUnit(
@@ -2687,6 +2815,7 @@ export function parseSupportedUnitFeatureProfile(
     parseReactionRollOrDamageReductionUnitFeatureProfile(unit, classLevels) ??
     parsePassiveArmorClassBonusUnitFeatureProfile(unit) ??
     parsePassiveRangedAttackRollBonusUnitFeatureProfile(unit) ??
+    parseInitiativeProficiencyAndSwapUnitFeatureProfile(unit) ??
     parseAttackRollMissToHitReplacementUnitFeatureProfile(unit) ??
     parsePassiveSavingThrowRollModeUnitFeatureProfile(unit) ??
     parsePassiveSpeedBonusUnitFeatureProfile(unit) ??
@@ -3416,6 +3545,22 @@ function parsePassiveRangedAttackRollBonusUnitFeatureProfile(
         kind: "passiveRangedAttackRollBonus",
         unit,
         attackRoll,
+      };
+}
+
+function parseInitiativeProficiencyAndSwapUnitFeatureProfile(
+  unit: UnitRecord,
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "initiativeProficiencyAndSwap" }
+> | null {
+  const initiative = initiativeProficiencyAndSwapProfileForUnit(unit);
+  return initiative === null
+    ? null
+    : {
+        kind: "initiativeProficiencyAndSwap",
+        unit,
+        initiative,
       };
 }
 

@@ -3,8 +3,10 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.monk-uncanny-metabolism-initiative-recovery
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.font-of-magic-sorcery-points-to-spell-slot
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.metamagic-battle-resource-bridge
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.initiative-proficiency-and-swap
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.monk-focus-battle-options
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B mastery_sap mastery_topple mastery_cleave
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME alert
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME monk_uncanny_metabolism
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE sorcerer_font_of_magic
 import type {
@@ -86,6 +88,7 @@ import {
   characterUnitRefsWithBattleSupportProfiles,
   characterSheetBattleInit,
   characterArmorClassState,
+  characterBattleInitiativeScore,
   characterBattleResourceInitsFromBuild,
   characterSpellcasting,
   startBattleFromCharacterBuildAndStatBlock,
@@ -125,6 +128,31 @@ function createFreshCharacterSheet(
 }
 
 describe("Character Sheet battle handoff", () => {
+  test("projects Alert Proficiency Bonus into the character Initiative score", () => {
+    const result = characterBattleInitiativeScore({
+      build: {
+        ...defenseBuild({ wearingArmor: false }),
+        background: "background_criminal",
+      },
+      unitLibrary,
+      rollTotal: 14,
+      proficiencyBonusChoice: "add",
+    });
+
+    expect(result).toEqual(Either.right(initiativeScore(16)));
+  });
+
+  test("rejects Initiative Proficiency Bonus when no admitted profile is present", () => {
+    const result = characterBattleInitiativeScore({
+      build: defenseBuild({ wearingArmor: false }),
+      unitLibrary,
+      rollTotal: 14,
+      proficiencyBonusChoice: "add",
+    });
+
+    expect(Either.isLeft(result)).toBe(true);
+  });
+
   test("rejects mismatched battle character identity", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:sheet"),

@@ -5476,6 +5476,12 @@ describe("SRD Unit catalog boundary", () => {
               kind: "modify_roll_numeric",
               on: ["initiative"],
             },
+            {
+              ally: "willing_ally_same_combat",
+              kind: "initiative_swap",
+              prohibitedByCondition: "incapacitated",
+              timing: "immediately_after_initiative_roll",
+            },
           ],
         },
         name: "Alert",

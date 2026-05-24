@@ -265,7 +265,7 @@
       "runtimeProjection": [
         "packages/character-sheet-runtime/src/index.ts:characterSheetAbilityCheckProficiencyBonus",
         "packages/character-sheet-runtime/src/index.ts:characterBuildOwnsJackOfAllTradesFeature",
-        "packages/character-sheet-runtime/src/index.ts:proficiencyBonusForCharacterLevel"
+        "packages/character-sheet-runtime/src/index.ts:characterSheetProficiencyBonusForCharacterLevel"
       ],
       "tests": [
         "packages/character-sheet-runtime/src/index.test.ts:jackOfAllTradesAddsHalfProficiencyBonusTestName",

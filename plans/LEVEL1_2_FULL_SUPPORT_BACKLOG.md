@@ -69,7 +69,7 @@ closed:
     {
       "number": 7,
       "id": "L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Alert Initiative Runtime Support"
     }
   ]
@@ -284,7 +284,7 @@ Acceptance:
 
 ### Task 7 - L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME - Alert Initiative Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 This task is not a dependency of the level 1-2 authored product-readiness gate.
 Alert is installed as the canonical SRD Origin feat identity for Criminal, but
