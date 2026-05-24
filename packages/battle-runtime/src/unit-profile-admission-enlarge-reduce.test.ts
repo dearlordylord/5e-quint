@@ -1,5 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME enlarge_reduce
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-creature-size-change
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE
 import { abilityModifier } from "@dnd/shared-algebras/armor-class-algebra";
 import { proficiencyBonus } from "@dnd/shared/types";
 import type { Size } from "@dnd/surface/surface/types";

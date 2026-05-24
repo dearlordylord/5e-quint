@@ -190,7 +190,7 @@ identity evidence or an explicit non-applicable classification.
     {
       "number": 30,
       "id": "B27-CREATURE-SIZE-RULES-KERNEL-MAPPING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Map creature size change profile to rules-kernel obligations"
     },
     {
@@ -291,7 +291,7 @@ Lane B must not:
 | 27 | B24-LIGHTNING-BOLT-IDENTITY-WITNESS - Backfill Lightning Bolt selected identity witness | done | none | Gap row: `lightning_bolt`, supported-profile `spell.invocation-damage-save-or-attack`, installed Surface record. |
 | 28 | B25-SHINING-SMITE-IDENTITY-WITNESS - Backfill Shining Smite selected identity witness | done | none | Added selected-identity MBT evidence for `shining_smite`; generated selected-identity gaps no longer list it. |
 | 29 | B26-DEFERRED-IDENTITY-GAP-SEMANTICS - Clarify deferred selected identity gap semantics | done | none | Generated selected-identity reports now keep deferred-portion non-applicable rows visible in a separate bucket while excluding them from ordinary replay gaps; `mind_spike` is listed there, and `thaumaturgy` already has selected-identity MBT evidence. |
-| 30 | B27-CREATURE-SIZE-RULES-KERNEL-MAPPING - Map creature size change profile to rules-kernel obligations | ready-for-research | none | Metric-honesty gap: `spell.invocation-creature-size-change` is unmapped in `rulesKernelProfileJoin`. |
+| 30 | B27-CREATURE-SIZE-RULES-KERNEL-MAPPING - Map creature size change profile to rules-kernel obligations | done | none | Mapped `spell.invocation-creature-size-change` to `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE`; generated rules-kernel profile join gaps no longer list it. |
 | 31 | B28-WIZARD-SPELLBOOK-LEARNING-RULES-KERNEL-MAPPING - Map Wizard spellbook learning profile to rules-kernel obligations | ready-for-research | none | Metric-honesty gap: `character-creation.wizard-spellbook-learning-choice` is unmapped in `rulesKernelProfileJoin`. |
 | 32 | B29-LEVITATED-CREATURE-RULES-KERNEL-MAPPING - Map levitated creature profile to rules-kernel obligations | ready-for-research | none | Metric-honesty gap: `spell.invocation-levitated-creature` is unmapped in `rulesKernelProfileJoin`. |
 | 33 | B30-CLASS-FEATURE-PREPARED-SPELL-ACCESS-RULES-KERNEL-MAPPING - Map class feature prepared spell access profile to rules-kernel obligations | ready-for-research | none | Metric-honesty gap: `character-sheet.class-feature-prepared-spell-access` is unmapped in `rulesKernelProfileJoin`. |
@@ -761,7 +761,7 @@ supported Booming Voice subset.
 
 ### Task 30 - B27-CREATURE-SIZE-RULES-KERNEL-MAPPING - Map creature size change profile to rules-kernel obligations
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: map `spell.invocation-creature-size-change` to the correct
 rules-kernel obligation, or split the profile if the current name conflates
@@ -770,6 +770,11 @@ distinct rule owners.
 Acceptance: `rulesKernelProfileJoinCoverage` no longer lists
 `spell.invocation-creature-size-change` as unmapped, and any split preserves
 single-source profile membership for affected Units.
+
+Result: mapped `spell.invocation-creature-size-change` to
+`BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE` using the existing Enlarge/Reduce
+creature-branch QNT, runtime, and runtime-test owners. No profile split was
+needed; the profile remains a single source of membership for affected Units.
 
 ### Task 31 - B28-WIZARD-SPELLBOOK-LEARNING-RULES-KERNEL-MAPPING - Map Wizard spellbook learning profile to rules-kernel obligations
 

@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 93,
-    "covered": 87,
+    "total": 94,
+    "covered": 88,
     "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 69,
+      "battle": 70,
       "character-creation": 12,
       "character-sheet": 8,
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 87,
+      "covered": 88,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -625,6 +625,45 @@
         "UBIQUITOUS_LANGUAGE.md#Spellcasting"
       ],
       "title": "Battle Gust of Wind directional Line state, initial and end-turn Strength saves, failed-save push disposition, closer-to-caster movement cost, direction replacement, and cleanup"
+    },
+    {
+      "id": "BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-enlarge-reduce.test.ts"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-creature-size-change"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt",
+        "packages/battle-runtime/battle-runtime-timed-effects.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/creature-size-change-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/druid-wild-shape.ts",
+        "packages/battle-runtime/src/battle-reducer/hole-helpers.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Enlarge/Reduce",
+        ".references/srd-5.2.1/Playing-the-Game.md#Creature Size",
+        "UBIQUITOUS_LANGUAGE.md#Size",
+        "UBIQUITOUS_LANGUAGE.md#Advantage and Disadvantage",
+        "UBIQUITOUS_LANGUAGE.md#Spellcasting",
+        "UBIQUITOUS_LANGUAGE.md#Damage"
+      ],
+      "title": "Battle Enlarge/Reduce creature branch applies save-gated one-step Size projection, Strength D20 Test roll modes, attack-hit damage adjustment, Concentration cleanup, and duration cleanup"
     },
     {
       "id": "BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING",
@@ -4999,6 +5038,12 @@
     },
     {
       "obligationIds": [
+        "BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE"
+      ],
+      "profileId": "spell.invocation-creature-size-change"
+    },
+    {
+      "obligationIds": [
         "BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING"
       ],
       "profileId": "spell.invocation-ongoing-spell-ending"
@@ -5297,6 +5342,7 @@
       "evidence": "packages/battle-runtime/battle-runtime-timed-effects.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
         "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
+        "BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE",
         "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
         "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE"
       ],
@@ -5336,6 +5382,7 @@
         "BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE",
         "BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION",
         "BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE",
+        "BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE",
         "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
         "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
         "BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING",
@@ -6023,6 +6070,14 @@
     {
       "blockedBy": [],
       "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
       "obligationId": "BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING",
       "proofOnly": [],
       "semanticCore": [],
@@ -6589,6 +6644,20 @@
       "ownerRoles": [
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-gust-of-wind.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-timed-effects.qnt",
           "role": "semantic-core"
         }
       ],

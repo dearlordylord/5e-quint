@@ -83,13 +83,13 @@
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 132,
-      "numerator": 127,
-      "percent": "96.2%"
+      "numerator": 128,
+      "percent": "97%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 132,
-      "numerator": 127,
-      "percent": "96.2%"
+      "numerator": 128,
+      "percent": "97%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 144,
@@ -3900,13 +3900,13 @@
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 132,
-        "numerator": 127,
-        "percent": "96.2%"
+        "numerator": 128,
+        "percent": "97%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 132,
-        "numerator": 127,
-        "percent": "96.2%"
+        "numerator": 128,
+        "percent": "97%"
       }
     },
     "profileKinds": [
@@ -4975,8 +4975,15 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Enlarge/Reduce creature branch applies save-gated one-step Size projection, Strength D20 Test roll modes, attack-hit damage adjustment, Concentration cleanup, and duration cleanup"
+          }
+        ],
         "profileId": "spell.invocation-creature-size-change",
         "profileKind": "spell-invocation"
       },
