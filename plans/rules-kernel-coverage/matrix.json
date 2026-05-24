@@ -1159,17 +1159,25 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-moonbeam.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/moonbeam-movable-zone.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
         "spell.invocation-moonbeam-movable-zone"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/moonbeam-movable-zone.ts",
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
         "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
@@ -5133,6 +5141,14 @@
         "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-mirror-image-hit-interception.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt is the bounded composite slice QNT owner carrying executable Moonbeam movable Cylinder semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt",
       "role": "semantic-core"
     },
     {

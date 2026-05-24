@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "QNTSLICE-MOONBEAM-MOVABLE-ZONE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add Moonbeam Movable Zone Composite Slice"
     },
     {
@@ -346,7 +346,7 @@ Acceptance:
 
 ### Task 7 - QNTSLICE-MOONBEAM-MOVABLE-ZONE - Add Moonbeam Movable Zone Composite Slice
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -389,6 +389,16 @@ Output:
   selection, full shape-shift catalog behavior, and broad turn order stay
   outside the slice; the slice owns save limiting, damage, reposition cost, and
   cleanup for one bounded zone.
+
+Result:
+
+- Added a bounded Moonbeam movable-zone composite QNT slice and sibling MBT
+  harness.
+- Extracted the production TypeScript mirror for save-adjusted Radiant damage,
+  once-per-turn save limiting, Magic Action reposition admission, and
+  shape-shift suppression cleanup.
+- Registered the new slice owner and focused MBT parity witness in
+  rules-kernel coverage rows.
 
 Acceptance:
 

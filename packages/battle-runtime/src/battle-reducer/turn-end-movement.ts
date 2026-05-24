@@ -120,6 +120,10 @@ import { hideousLaughterRepeatSavingThrowOutcomeHole } from "./hideous-laughter-
 import { needsHolesResult } from "./hole-helpers.ts";
 import { maxJumpMovementReplacementDistanceFeet } from "./jump-movement-replacement.ts";
 import { validateLevitatedMovementFact } from "./levitate-creature.ts";
+import {
+  moonbeamDamageAfterSave,
+  moonbeamMoveDistanceAccepted,
+} from "./moonbeam-movable-zone.ts";
 export { resolveOpportunityAttackCommand } from "./opportunity-attacks.ts";
 export {
   applyBattleMovement,
@@ -3582,15 +3586,17 @@ function validateMoonbeamRepositionMovement(
   if (fill.holeId !== hole.holeId) {
     return "Movable zone reposition movement must use the selected movement hole.";
   }
-  if (
-    Number(fill.value.moveFeet) <= 0 ||
-    !Number.isInteger(fill.value.moveFeet)
-  ) {
+  if (!Number.isInteger(fill.value.moveFeet)) {
     return "Movable zone reposition movement distance must be a positive integer.";
   }
-  return Number(fill.value.moveFeet) <= Number(hole.movableZone.maxMoveFeet)
+  return moonbeamMoveDistanceAccepted({
+    moveFeet: Number(fill.value.moveFeet),
+    maxMoveFeet: Number(hole.movableZone.maxMoveFeet),
+  })
     ? null
-    : "Movable zone reposition movement distance exceeds the spell's maximum.";
+    : Number(fill.value.moveFeet) > 0
+      ? "Movable zone reposition movement distance exceeds the spell's maximum."
+      : "Movable zone reposition movement distance must be a positive integer.";
 }
 
 function moonbeamAdjustedDamage(input: {
@@ -3602,12 +3608,12 @@ function moonbeamAdjustedDamage(input: {
   const rolledDamage =
     rolledDiceTotal(input.damageFill.value) +
     (input.effect.damage.expr.flat ?? 0);
-  const saveAdjustedDamage = input.saveSucceeded
-    ? Math.floor(rolledDamage / 2)
-    : rolledDamage;
   return damageAmountAfterTargetAdjustments(
     input.target,
-    saveAdjustedDamage,
+    moonbeamDamageAfterSave({
+      rolledDamage,
+      savingThrowSucceeded: input.saveSucceeded,
+    }),
     input.effect.damage.damageType,
   );
 }
