@@ -40,7 +40,7 @@ identity evidence or an explicit non-applicable classification.
     {
       "number": 5,
       "id": "B5-CLASS-FEATURE-IDENTITY-BATCH-2",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Backfill class-feature identity evidence batch 2"
     },
     {
@@ -158,7 +158,7 @@ Lane B must not:
 | 2 | B2-EVIDENCE-SCHEMA-CHECK - Tighten selected-identity evidence validation | done | none | Validate rows before hard gate. |
 | 3 | B3-HARD-GATE-SELF-TEST - Add hard-gate self-test for missing identity evidence | done | none | Proves checker can fail on missing selected-identity evidence. |
 | 4 | B4-CLASS-FEATURE-IDENTITY-BATCH-1 - Backfill class-feature identity evidence batch 1 | done | none | Barbarian/Bard/Cleric/Druid. |
-| 5 | B5-CLASS-FEATURE-IDENTITY-BATCH-2 - Backfill class-feature identity evidence batch 2 | ready-for-implementation-after-light-research | none | Monk/Ranger/Paladin. |
+| 5 | B5-CLASS-FEATURE-IDENTITY-BATCH-2 - Backfill class-feature identity evidence batch 2 | done | none | Monk/Ranger/Paladin. |
 | 6 | B6-CLASS-FEATURE-IDENTITY-BATCH-3 - Backfill class-feature identity evidence batch 3 | ready-for-implementation-after-light-research | none | Sorcerer/Warlock/Wizard. |
 | 7 | B7-FEAT-IDENTITY-BATCH - Backfill feat identity evidence | ready-for-implementation-after-light-research | none | Alert and Origin feat reachability. |
 | 8 | B8-LEVEL1-SPELL-IDENTITY-BATCH - Backfill level-1 spell identity evidence | ready-for-implementation-after-light-research | none | Any remaining level-1 supported spell ids. |
@@ -229,13 +229,19 @@ Result: selected-identity evidence now covers `barbarian_danger_sense`,
 
 ### Task 5 - B5-CLASS-FEATURE-IDENTITY-BATCH-2 - Backfill class-feature identity evidence batch 2
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: cover Monk, Ranger, and Paladin supported class-feature Units currently
 missing selected identity evidence.
 
 Acceptance: gap report count decreases; profile-subset rows keep explicit
 subset rationale.
+
+Result: selected-identity evidence now covers `monk_monks_focus`,
+`monk_unarmored_movement`, `monk_uncanny_metabolism`,
+`paladin_fighting_style`, `paladin_oath_of_devotion_spells`,
+`paladin_paladins_smite`, `ranger_deft_explorer`, `ranger_favored_enemy`, and
+`ranger_fighting_style`.
 
 ### Task 6 - B6-CLASS-FEATURE-IDENTITY-BATCH-3 - Backfill class-feature identity evidence batch 3
 

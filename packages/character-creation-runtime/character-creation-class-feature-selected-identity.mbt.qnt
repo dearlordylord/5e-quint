@@ -56,10 +56,40 @@ module characterCreationClassFeatureSelectedIdentityMbt {
     recordProjection("druid-wild-companion", "druid_wild_companion", "druid_wild_shape", 2, 0, 0, 0, false, true),
   }
 
+  action doProjectMonksFocus = all {
+    qLastResult == "init",
+    recordProjection("monk-monks-focus", "monk_monks_focus", "none", 3, 2, 0, 0, true, true),
+  }
+
+  action doProjectMonkUncannyMetabolism = all {
+    qLastResult == "init",
+    recordProjection("monk-uncanny-metabolism", "monk_uncanny_metabolism", "monk_monks_focus", 0, 0, 6, 0, true, true),
+  }
+
+  action doSelectPaladinFightingStyle = all {
+    qLastResult == "init",
+    recordProjection("paladin-fighting-style", "paladin_fighting_style", "defense", 2, 0, 0, 0, false, true),
+  }
+
+  action doSelectRangerDeftExplorer = all {
+    qLastResult == "init",
+    recordProjection("ranger-deft-explorer", "ranger_deft_explorer", "none", 3, 0, 0, 0, false, true),
+  }
+
+  action doSelectRangerFightingStyle = all {
+    qLastResult == "init",
+    recordProjection("ranger-fighting-style", "ranger_fighting_style", "guidance", 3, 0, 0, 0, false, true),
+  }
+
   action step = any {
     doSelectBardExpertise,
     doProjectClericChannelDivinity,
     doProjectDruidWildShape,
     doProjectDruidWildCompanion,
+    doProjectMonksFocus,
+    doProjectMonkUncannyMetabolism,
+    doSelectPaladinFightingStyle,
+    doSelectRangerDeftExplorer,
+    doSelectRangerFightingStyle,
   }
 }

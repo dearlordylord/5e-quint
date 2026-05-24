@@ -48,9 +48,27 @@ module characterSheetClassFeatureSelectedIdentityMbt {
     recordProjection("druid-circle-land-spells", "druid_circle_of_the_land_spells", "class_druid", true, 3, 0, "temperate", true),
   }
 
+  action doProjectPaladinOathDevotionSpells = all {
+    qLastResult == "init",
+    recordProjection("paladin-oath-devotion-spells", "paladin_oath_of_devotion_spells", "none", true, 2, 0, "none", true),
+  }
+
+  action doProjectPaladinsSmite = all {
+    qLastResult == "init",
+    recordProjection("paladins-smite", "paladin_paladins_smite", "none", true, 1, 0, "none", true),
+  }
+
+  action doProjectRangerFavoredEnemy = all {
+    qLastResult == "init",
+    recordProjection("ranger-favored-enemy", "ranger_favored_enemy", "none", true, 1, 0, "none", true),
+  }
+
   action step = any {
     doProjectBardJackOfAllTrades,
     doProjectClericLifeDomainSpells,
     doProjectDruidCircleLandSpells,
+    doProjectPaladinOathDevotionSpells,
+    doProjectPaladinsSmite,
+    doProjectRangerFavoredEnemy,
   }
 }

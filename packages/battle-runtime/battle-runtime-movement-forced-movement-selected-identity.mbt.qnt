@@ -112,11 +112,21 @@ module battleRuntimeMovementForcedMovementSelectedIdentityMbt {
     ),
   }
 
+  action doMonkUnarmoredMovementDash = all {
+    qLastResult == "init",
+    recordProjection(
+      40, 80, 40, true, false, false, 0, 0,
+      12, true, false, 0, false, false, 0, 0, 0,
+      "monkUnarmoredMovement",
+    ),
+  }
+
   action step = any {
     doDissonantWhispersForcedReactionMovement,
     doCommandFleeTargetTurn,
     doExpeditiousRetreatImmediateDash,
     doRangerRovingClimbSwimMovement,
     doBarbarianFastMovementDash,
+    doMonkUnarmoredMovementDash,
   }
 }

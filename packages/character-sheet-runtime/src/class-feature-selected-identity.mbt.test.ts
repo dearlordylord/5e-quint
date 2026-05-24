@@ -2,6 +2,10 @@
 // UNIT-IDENTITY-MBT-REPLAY: B4-CLASS-FEATURE-IDENTITY-BATCH-1 bard_jack_of_all_trades doProjectBardJackOfAllTrades
 // UNIT-IDENTITY-MBT-REPLAY: B4-CLASS-FEATURE-IDENTITY-BATCH-1 cleric_life_domain_spells doProjectClericLifeDomainSpells
 // UNIT-IDENTITY-MBT-REPLAY: B4-CLASS-FEATURE-IDENTITY-BATCH-1 druid_circle_of_the_land_spells doProjectDruidCircleLandSpells
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B5-CLASS-FEATURE-IDENTITY-BATCH-2 paladin_oath_of_devotion_spells paladin_paladins_smite ranger_favored_enemy
+// UNIT-IDENTITY-MBT-REPLAY: B5-CLASS-FEATURE-IDENTITY-BATCH-2 paladin_oath_of_devotion_spells doProjectPaladinOathDevotionSpells
+// UNIT-IDENTITY-MBT-REPLAY: B5-CLASS-FEATURE-IDENTITY-BATCH-2 paladin_paladins_smite doProjectPaladinsSmite
+// UNIT-IDENTITY-MBT-REPLAY: B5-CLASS-FEATURE-IDENTITY-BATCH-2 ranger_favored_enemy doProjectRangerFavoredEnemy
 import * as path from "node:path";
 
 import {
@@ -28,12 +32,21 @@ import {
   createFreshCharacterSheet,
 } from "./index.ts";
 
-const TASK_ID = "B4-CLASS-FEATURE-IDENTITY-BATCH-1";
+const TASK_ID_B4 = "B4-CLASS-FEATURE-IDENTITY-BATCH-1";
+const TASK_ID_B5 = "B5-CLASS-FEATURE-IDENTITY-BATCH-2";
 const BARD_JACK_OF_ALL_TRADES_UNIT_ID = "bard_jack_of_all_trades";
 const CLERIC_LIFE_DOMAIN_SPELLS_UNIT_ID = "cleric_life_domain_spells";
 const DRUID_CIRCLE_LAND_SPELLS_UNIT_ID = "druid_circle_of_the_land_spells";
+const PALADIN_OATH_DEVOTION_SPELLS_UNIT_ID =
+  "paladin_oath_of_devotion_spells";
+const PALADIN_PALADINS_SMITE_UNIT_ID = "paladin_paladins_smite";
+const RANGER_FAVORED_ENEMY_UNIT_ID = "ranger_favored_enemy";
 const CLERIC_LIFE_DOMAIN_LEVEL_3_EXPECTED_SPELL_ID = "aid";
 const DRUID_CIRCLE_LAND_TEMPERATE_EXPECTED_SPELL_ID = "misty_step";
+const PALADIN_OATH_DEVOTION_EXPECTED_SPELL_ID =
+  "protection_from_evil_and_good";
+const PALADINS_SMITE_EXPECTED_SPELL_ID = "divine_smite";
+const RANGER_FAVORED_ENEMY_EXPECTED_SPELL_ID = "hunters_mark";
 const DRUID_WILD_SHAPE_KNOWN_FORM_STAT_BLOCK_IDS = [
   "stat_block_rat",
   "stat_block_riding_horse",
@@ -46,13 +59,19 @@ const classFeatureSelectedIdentityResults = [
   "bard-jack-of-all-trades",
   "cleric-life-domain-spells",
   "druid-circle-land-spells",
+  "paladin-oath-devotion-spells",
+  "paladins-smite",
+  "ranger-favored-enemy",
 ] as const;
 type ClassFeatureSelectedIdentityResult =
   (typeof classFeatureSelectedIdentityResults)[number];
 type ClassFeatureSelectedIdentityUnitId =
   | typeof BARD_JACK_OF_ALL_TRADES_UNIT_ID
   | typeof CLERIC_LIFE_DOMAIN_SPELLS_UNIT_ID
-  | typeof DRUID_CIRCLE_LAND_SPELLS_UNIT_ID;
+  | typeof DRUID_CIRCLE_LAND_SPELLS_UNIT_ID
+  | typeof PALADIN_OATH_DEVOTION_SPELLS_UNIT_ID
+  | typeof PALADIN_PALADINS_SMITE_UNIT_ID
+  | typeof RANGER_FAVORED_ENEMY_UNIT_ID;
 type ClassFeatureSelectedIdentityProjection = {
   readonly lastResult: ClassFeatureSelectedIdentityResult;
   readonly featureUnitId: ClassFeatureSelectedIdentityUnitId | "none";
@@ -73,7 +92,7 @@ type SelectedUnitIdentityReplaySequence = {
   readonly expected: ClassFeatureSelectedIdentityProjection;
 };
 type SelectedUnitIdentityReplay = {
-  readonly taskId: typeof TASK_ID;
+  readonly taskId: typeof TASK_ID_B4 | typeof TASK_ID_B5;
   readonly unitId: ClassFeatureSelectedIdentityUnitId;
   readonly actions: readonly ClassFeatureSelectedIdentityDriverAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
@@ -84,6 +103,9 @@ const classFeatureSelectedIdentityDriverSchema = {
   doProjectBardJackOfAllTrades: {},
   doProjectClericLifeDomainSpells: {},
   doProjectDruidCircleLandSpells: {},
+  doProjectPaladinOathDevotionSpells: {},
+  doProjectPaladinsSmite: {},
+  doProjectRangerFavoredEnemy: {},
   step: {},
 } as const;
 
@@ -131,6 +153,42 @@ const selectedUnitIdentityReplays = [
         name: "selected-druid-circle-land-spells-project-selected-land-access",
         actions: ["doProjectDruidCircleLandSpells"],
         expected: druidCircleLandSpellsProjection(),
+      },
+    ],
+  },
+  {
+    taskId: "B5-CLASS-FEATURE-IDENTITY-BATCH-2",
+    unitId: "paladin_oath_of_devotion_spells",
+    actions: ["doProjectPaladinOathDevotionSpells"],
+    sequences: [
+      {
+        name: "selected-paladin-oath-devotion-spells-project-prepared-access",
+        actions: ["doProjectPaladinOathDevotionSpells"],
+        expected: paladinOathDevotionSpellsProjection(),
+      },
+    ],
+  },
+  {
+    taskId: "B5-CLASS-FEATURE-IDENTITY-BATCH-2",
+    unitId: "paladin_paladins_smite",
+    actions: ["doProjectPaladinsSmite"],
+    sequences: [
+      {
+        name: "selected-paladins-smite-projects-divine-smite-access",
+        actions: ["doProjectPaladinsSmite"],
+        expected: paladinsSmiteProjection(),
+      },
+    ],
+  },
+  {
+    taskId: "B5-CLASS-FEATURE-IDENTITY-BATCH-2",
+    unitId: "ranger_favored_enemy",
+    actions: ["doProjectRangerFavoredEnemy"],
+    sequences: [
+      {
+        name: "selected-ranger-favored-enemy-projects-hunters-mark-access",
+        actions: ["doProjectRangerFavoredEnemy"],
+        expected: rangerFavoredEnemyProjection(),
       },
     ],
   },
@@ -211,6 +269,15 @@ function createClassFeatureSelectedIdentityDriver() {
       },
       doProjectDruidCircleLandSpells: () => {
         projection = druidCircleLandSpellsProjection();
+      },
+      doProjectPaladinOathDevotionSpells: () => {
+        projection = paladinOathDevotionSpellsProjection();
+      },
+      doProjectPaladinsSmite: () => {
+        projection = paladinsSmiteProjection();
+      },
+      doProjectRangerFavoredEnemy: () => {
+        projection = rangerFavoredEnemyProjection();
       },
       step: () => {},
       getState: () => projection,
@@ -328,6 +395,80 @@ function druidCircleLandSpellsProjection(): ClassFeatureSelectedIdentityProjecti
     spellCount: access.spellIds.length,
     abilityCheckBonus: 0,
     land: expectedTemperateLand(access.land),
+    accepted: true,
+  };
+}
+
+function paladinOathDevotionSpellsProjection(): ClassFeatureSelectedIdentityProjection {
+  const access = requiredPreparedSpellAccess(
+    classBuild({
+      startingClass: "class_paladin",
+      totalLevel: 3,
+      features: [
+        {
+          kind: "selectedClassChoice",
+          selectedFromUnitId: "class_paladin",
+          unitId: "subclass_paladin_oath_of_devotion",
+        },
+      ],
+    }),
+    PALADIN_OATH_DEVOTION_SPELLS_UNIT_ID,
+  );
+  return preparedSpellAccessProjection({
+    lastResult: "paladin-oath-devotion-spells",
+    access,
+    expectedUnitId: PALADIN_OATH_DEVOTION_SPELLS_UNIT_ID,
+    expectedSpellId: PALADIN_OATH_DEVOTION_EXPECTED_SPELL_ID,
+  });
+}
+
+function paladinsSmiteProjection(): ClassFeatureSelectedIdentityProjection {
+  const access = requiredPreparedSpellAccess(
+    classBuild({ startingClass: "class_paladin", totalLevel: 2 }),
+    PALADIN_PALADINS_SMITE_UNIT_ID,
+  );
+  return preparedSpellAccessProjection({
+    lastResult: "paladins-smite",
+    access,
+    expectedUnitId: PALADIN_PALADINS_SMITE_UNIT_ID,
+    expectedSpellId: PALADINS_SMITE_EXPECTED_SPELL_ID,
+  });
+}
+
+function rangerFavoredEnemyProjection(): ClassFeatureSelectedIdentityProjection {
+  const access = requiredPreparedSpellAccess(
+    classBuild({ startingClass: "class_ranger", totalLevel: 2 }),
+    RANGER_FAVORED_ENEMY_UNIT_ID,
+  );
+  return preparedSpellAccessProjection({
+    lastResult: "ranger-favored-enemy",
+    access,
+    expectedUnitId: RANGER_FAVORED_ENEMY_UNIT_ID,
+    expectedSpellId: RANGER_FAVORED_ENEMY_EXPECTED_SPELL_ID,
+  });
+}
+
+function preparedSpellAccessProjection(input: {
+  readonly lastResult: ClassFeatureSelectedIdentityResult;
+  readonly access: ReturnType<
+    typeof characterSheetClassFeaturePreparedSpellAccessesForBuild
+  >[number];
+  readonly expectedUnitId: ClassFeatureSelectedIdentityUnitId;
+  readonly expectedSpellId: UnitRecord["id"];
+}): ClassFeatureSelectedIdentityProjection {
+  return {
+    lastResult: input.lastResult,
+    featureUnitId: expectedClassFeatureUnitId(
+      input.access.sourceUnitId,
+      input.expectedUnitId,
+    ),
+    spellcastingSourceUnitId: "none",
+    expectedSpellPresent: input.access.spellIds.includes(
+      input.expectedSpellId,
+    ),
+    spellCount: input.access.spellIds.length,
+    abilityCheckBonus: 0,
+    land: "none",
     accepted: true,
   };
 }
@@ -480,7 +621,10 @@ function resultField(raw: unknown): ClassFeatureSelectedIdentityResult {
     raw === "init" ||
     raw === "bard-jack-of-all-trades" ||
     raw === "cleric-life-domain-spells" ||
-    raw === "druid-circle-land-spells"
+    raw === "druid-circle-land-spells" ||
+    raw === "paladin-oath-devotion-spells" ||
+    raw === "paladins-smite" ||
+    raw === "ranger-favored-enemy"
   ) {
     return raw;
   }
@@ -494,7 +638,10 @@ function featureUnitIdField(
     raw === "none" ||
     raw === BARD_JACK_OF_ALL_TRADES_UNIT_ID ||
     raw === CLERIC_LIFE_DOMAIN_SPELLS_UNIT_ID ||
-    raw === DRUID_CIRCLE_LAND_SPELLS_UNIT_ID
+    raw === DRUID_CIRCLE_LAND_SPELLS_UNIT_ID ||
+    raw === PALADIN_OATH_DEVOTION_SPELLS_UNIT_ID ||
+    raw === PALADIN_PALADINS_SMITE_UNIT_ID ||
+    raw === RANGER_FAVORED_ENEMY_UNIT_ID
   ) {
     return raw;
   }

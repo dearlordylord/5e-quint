@@ -26,7 +26,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Rules-kernel covered profile coverage | 127/132 | 96.2% |
 | Supported Unit rules-kernel chain coverage | 143/144 | 99.3% |
 | Deterministic admission/projection coverage | 142/142 | 100% |
-| Selected identity replay coverage | 113/142 | 79.6% |
+| Selected identity replay coverage | 117/142 | 82.4% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -997,7 +997,10 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `druid_primal_order` | `character-creation.class-feature-option-projection` | L1D2-CLERIC-DRUID-ORDER | `packages/character-creation-runtime/src/cleric-druid-order-selected-identity.mbt.test.ts` |
 | `monk_martial_arts` | `unit-feature.martial-arts-attack-projection` | L1D2-MONK-MARTIAL-ARTS-SCALING | `packages/battle-runtime/src/monk-martial-arts-selected-identity.mbt.test.ts` |
 | `monk_unarmored_defense` | `character-sheet.armor-class-base-formula` | armor-class-base-formula | `packages/character-sheet-runtime/src/armor-class-base-selected-identity.mbt.test.ts` |
+| `monk_unarmored_movement` | `unit-feature.passive-speed-bonus` | B5-CLASS-FEATURE-IDENTITY-BATCH-2 | `packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts` |
+| `monk_uncanny_metabolism` | `character-creation.class-feature-source-fact-projection`, `character-sheet.class-feature-long-rest-use-state`, `character-sheet.monk-uncanny-metabolism-initiative-recovery` | B5-CLASS-FEATURE-IDENTITY-BATCH-2 | `packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts` |
 | `monk_deflect_attacks` | `unit-feature.attack-damage-reduction-zero-damage-redirect` | reaction-interruption | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `ranger_deft_explorer` | `character-creation.skill-expertise-choice` | B5-CLASS-FEATURE-IDENTITY-BATCH-2 | `packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts` |
 | `rogue_cunning_action` | `unit-feature.alternate-action-cost` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `rogue_evasion` | `unit-feature.save-damage-replacement` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `rogue_uncanny_dodge` | `unit-feature.reaction-roll-or-damage-reduction` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
@@ -1012,6 +1015,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `defense` | `unit-feature.passive-armor-class-bonus` | passive-and-zero-hp-features | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `feat_savage_attacker` | `unit-feature.weapon-damage-dice-roll-choice` | QMBT31 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `paladin_lay_on_hands` | `character-sheet.healing-resource-action` | healing-stabilization | `packages/character-sheet-runtime/src/healing-resource-selected-identity.mbt.test.ts` |
+| `paladin_paladins_smite` | `spell.invocation-after-hit-damage` | B5-CLASS-FEATURE-IDENTITY-BATCH-2 | `packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts` |
 | `paladin_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | extra-attack-count-scaling | `packages/battle-runtime/src/battle-runtime.mbt.test.ts` |
 | `paladin_weapon_mastery` | `character-creation.weapon-mastery-choice`, `character-sheet.weapon-mastery-reselection` | L1D2-WEAPON-MASTERY-CONTAINERS | `packages/character-creation-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts` |
 | `paladin_weapon_mastery` | `character-creation.weapon-mastery-choice`, `character-sheet.weapon-mastery-reselection` | L1D2-WEAPON-MASTERY-CONTAINERS | `packages/character-sheet-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts` |
@@ -1100,15 +1104,6 @@ This generated view lists `profile-subset-supported` and `supported-profile` Uni
 
 | Unit | Claim | Catalog | Collection | Kind | Profiles | Source |
 | --- | --- | --- | --- | --- | --- | --- |
-| `monk_monks_focus` | profile-subset-supported | installed | srd-5.2.1 | class_feature | `character-creation.class-feature-resource-projection`, `character-sheet.class-feature-use-count-resource`, `unit-feature.monk-focus-battle-options` | `packages/surface/content/monk_monks_focus.json` |
-| `monk_unarmored_movement` | supported-profile | installed | srd-5.2.1 | class_feature | `unit-feature.passive-speed-bonus` | `packages/surface/content/monk_unarmored_movement.json` |
-| `monk_uncanny_metabolism` | supported-profile | installed | srd-5.2.1 | class_feature | `character-creation.class-feature-source-fact-projection`, `character-sheet.class-feature-long-rest-use-state`, `character-sheet.monk-uncanny-metabolism-initiative-recovery` | `packages/surface/content/monk_uncanny_metabolism.json` |
-| `paladin_fighting_style` | profile-subset-supported | installed | srd-5.2.1 | class_feature | `character-creation.class-feature-feat-choice`, `character-creation.class-feature-option-projection` | `packages/surface/content/paladin_fighting_style.json` |
-| `paladin_oath_of_devotion_spells` | profile-subset-supported | installed | srd-5.2.1 | class_feature | `character-sheet.class-feature-prepared-spell-access` | `packages/surface/content/paladin_oath_of_devotion_spells.json` |
-| `paladin_paladins_smite` | supported-profile | installed | srd-5.2.1 | class_feature | `spell.invocation-after-hit-damage` | `packages/surface/content/paladin_paladins_smite.json` |
-| `ranger_deft_explorer` | supported-profile | installed | srd-5.2.1 | class_feature | `character-creation.skill-expertise-choice` | `packages/surface/content/ranger_deft_explorer.json` |
-| `ranger_favored_enemy` | profile-subset-supported | installed | srd-5.2.1 | class_feature | `spell.invocation-marked-damage-rider` | `packages/surface/content/ranger_favored_enemy.json` |
-| `ranger_fighting_style` | profile-subset-supported | installed | srd-5.2.1 | class_feature | `character-creation.class-feature-feat-choice`, `character-creation.class-feature-option-projection` | `packages/surface/content/ranger_fighting_style.json` |
 | `sorcerer_draconic_spells` | profile-subset-supported | installed | srd-5.2.1 | class_feature | `character-sheet.class-feature-prepared-spell-access` | `packages/surface/content/sorcerer_draconic_spells.json` |
 | `sorcerer_font_of_magic` | profile-subset-supported | installed | srd-5.2.1 | class_feature | `character-creation.class-feature-resource-projection`, `character-sheet.class-feature-point-pool-resource`, `character-sheet.font-of-magic-slot-to-sorcery-points`, `character-sheet.font-of-magic-sorcery-points-to-spell-slot`, `character-sheet.metamagic-battle-resource-bridge` | `packages/surface/content/sorcerer_font_of_magic.json` |
 | `sorcerer_metamagic` | profile-subset-supported | installed | srd-5.2.1 | class_feature | `character-creation.class-feature-option-projection`, `character-creation.class-feature-source-fact-projection`, `character-creation.class-feature-advancement-replacement`, `character-sheet.metamagic-battle-resource-bridge`, `unit-feature.metamagic-cast-governor-quickened` | `packages/surface/content/sorcerer_metamagic.json` |
