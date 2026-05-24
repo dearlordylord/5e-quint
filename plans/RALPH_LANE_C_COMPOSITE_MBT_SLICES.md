@@ -19,7 +19,7 @@ slice candidates remain.
     { "number": 3, "id": "C3-SAVE-CONDITION-SLICE", "status": "done", "title": "Save-gated condition lifecycle slice already present" },
     { "number": 4, "id": "C4-SEE-INVISIBILITY-SLICE", "status": "done", "title": "Add See Invisibility observer-sight slice" },
     { "number": 5, "id": "C5-RAY-ENFEEBLEMENT-SLICE", "status": "done", "title": "Add Ray of Enfeeblement lifecycle slice" },
-    { "number": 6, "id": "C6-WEB-RESTRAINT-SLICE", "status": "ready-for-implementation-after-light-research", "title": "Add Web restraint hazard slice" },
+    { "number": 6, "id": "C6-WEB-RESTRAINT-SLICE", "status": "done", "title": "Add Web restraint hazard slice" },
     { "number": 7, "id": "C7-HEAT-METAL-SLICE", "status": "ready-for-implementation-after-light-research", "title": "Add Heat Metal object-contact slice" },
     { "number": 8, "id": "C8-GUST-OF-WIND-SLICE", "status": "ready-for-implementation-after-light-research", "title": "Add Gust of Wind line lifecycle slice" },
     { "number": 9, "id": "C9-ANTIMAGIC-SUPPRESSION-SLICE", "status": "ready-for-implementation-after-light-research", "title": "Add Antimagic Field suppression slice" },
@@ -71,7 +71,7 @@ Lane C must not:
 | 3 | C3-SAVE-CONDITION-SLICE - Save-gated condition lifecycle slice already present | done | none | Existing selected-identity MBT found by C1; script/report cleanup remains in C17. |
 | 4 | C4-SEE-INVISIBILITY-SLICE - Add See Invisibility observer-sight slice | done | none | Observer sight fact only. |
 | 5 | C5-RAY-ENFEEBLEMENT-SLICE - Add Ray of Enfeeblement lifecycle slice | done | none | D20 and damage-penalty lifecycle. |
-| 6 | C6-WEB-RESTRAINT-SLICE - Add Web restraint hazard slice | ready-for-implementation-after-light-research | none | Restraint and hazard lifecycle. |
+| 6 | C6-WEB-RESTRAINT-SLICE - Add Web restraint hazard slice | done | none | Focused Web restraint/hazard lifecycle MBT added. |
 | 7 | C7-HEAT-METAL-SLICE - Add Heat Metal object-contact slice | ready-for-implementation-after-light-research | none | Object contact and repeat damage. |
 | 8 | C8-GUST-OF-WIND-SLICE - Add Gust of Wind line lifecycle slice | ready-for-implementation-after-light-research | none | Line effect and movement interaction. |
 | 9 | C9-ANTIMAGIC-SUPPRESSION-SLICE - Add Antimagic Field suppression slice | ready-for-implementation-after-light-research | none | Suppression active-effect state. |
@@ -142,12 +142,16 @@ Acceptance: the test hits both maintained and ended states.
 
 ### Task 6 - C6-WEB-RESTRAINT-SLICE - Add Web restraint hazard slice
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: focused slice for Web-created restraint/hazard lifecycle using
 caller-supplied area facts.
 
 Acceptance: no geometry derivation is introduced.
+
+Witnesses:
+`packages/battle-runtime/battle-runtime-web-restraint-hazard.mbt.qnt` and
+`packages/battle-runtime/src/web-restraint-hazard.mbt.test.ts`.
 
 ### Task 7 - C7-HEAT-METAL-SLICE - Add Heat Metal object-contact slice
 
