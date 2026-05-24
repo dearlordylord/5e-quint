@@ -312,8 +312,8 @@ module battleRuntimeSpellBridge {
     profile: BattleRuntimeSaveGatedDamageProfile
   ): BattleRuntimeSaveGatedDamageSuccess =
     match spellSaveGatedDamageSuccess(battleRuntimeSaveGatedDamageProfile(profile)) {
-      | SpellNoDamageOnSaveSuccess => BattleRuntimeNoDamageOnSaveSuccess
-      | SpellHalfDamageOnSaveSuccess => BattleRuntimeHalfDamageOnSaveSuccess
+      | SpellSaveGateNoDamageOnSuccess => BattleRuntimeNoDamageOnSaveSuccess
+      | SpellSaveGateHalfDamageOnSuccess => BattleRuntimeHalfDamageOnSaveSuccess
     }
 
   pure def battleRuntimeSaveGatedDamageType(

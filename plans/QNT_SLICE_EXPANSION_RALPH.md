@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "QNTSLICE-SPELL-SAVE-GATE-ATOMIC",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Author Spell Save Gate Atomic Rule"
     },
     {
@@ -168,7 +168,7 @@ Acceptance:
 
 ### Task 3 - QNTSLICE-SPELL-SAVE-GATE-ATOMIC - Author Spell Save Gate Atomic Rule
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -182,6 +182,14 @@ Output:
   equivalent already exists.
 - Add a TypeScript mirror and focused unit tests.
 - Add checker rows/markers required by rules-kernel coverage.
+
+Result:
+
+- Added `spell-save-gate.qnt` as the reusable semantic-core spell Saving Throw
+  gate atom.
+- Added the TypeScript mirror and focused tests in `@dnd/shared-algebras`.
+- Reused the atom from spell procedure profiles and registered the QNT owner in
+  rules-kernel coverage rows.
 
 Acceptance:
 

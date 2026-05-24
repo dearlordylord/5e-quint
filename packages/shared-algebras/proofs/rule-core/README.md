@@ -347,6 +347,12 @@ projection-shaped and Surface-free.
 
 ## QCORE10: Spell Procedure Profiles
 
+`spell-save-gate.qnt` models the reusable spell Saving Throw gate atom:
+Saving Throw success/failure is represented as a typed branch, failure effects
+and success effects are explicit branch facts, and save-gated damage resolves
+to full damage, half damage rounded down, or no damage without naming authored
+spells.
+
 `spell-slot-expenditure.qnt` models the reusable Spell Slot expenditure atom:
 slotless casting leaves the ledger unchanged, leveled casting spends one
 matching available Spell Slot, and a second Spell Slot expenditure on the same

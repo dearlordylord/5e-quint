@@ -202,6 +202,7 @@
         "spell.readied-action-time-spell"
       ],
       "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/spell-save-gate.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-slot-expenditure.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
       ],
@@ -1880,6 +1881,7 @@
         "spell.invocation-spell-created-held-object"
       ],
       "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/spell-save-gate.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
       ],
@@ -5504,6 +5506,15 @@
       "role": "semantic-core"
     },
     {
+      "evidence": "packages/shared-algebras/proofs/rule-core/spell-save-gate.qnt is the covered obligation QNT owner carrying executable Saving Throw success/failure and save-damage branch semantics for spell procedures and later composite spell slices.",
+      "obligationIds": [
+        "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-save-gate.qnt",
+      "role": "semantic-core"
+    },
+    {
       "evidence": "packages/shared-algebras/proofs/rule-core/spell-slot-expenditure.qnt is the covered obligation QNT owner carrying executable Spell Slot expenditure semantics for spell procedures and later composite spell slices.",
       "obligationIds": [
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
@@ -5672,6 +5683,7 @@
         "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
       ],
       "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/spell-save-gate.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-slot-expenditure.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
       ],

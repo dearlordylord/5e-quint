@@ -11,6 +11,7 @@ module spellProcedureProfiles {
   import attackDamageComposition.* from "./attack-damage-composition"
   import actionTurnProcedures.* from "./action-turn-procedures"
   import reactionsContinuationsConcentration.* from "./reactions-continuations-concentration"
+  import spellSaveGate.* from "./spell-save-gate"
   import spellSlotExpenditure.* from "./spell-slot-expenditure"
 
   // RAW anchors:
@@ -65,10 +66,6 @@ module spellProcedureProfiles {
         baseTargets: int,
         additionalTargetsPerSlotLevel: int,
       })
-
-  type SpellSaveGatedDamageSuccess =
-    | SpellNoDamageOnSaveSuccess
-    | SpellHalfDamageOnSaveSuccess
 
   type SpellSavingThrowAbility =
     | SpellStrengthSavingThrow
@@ -424,19 +421,19 @@ module spellProcedureProfiles {
       | MindSpikeSaveDamageProfile => SpellSingleSaveTarget
     }
 
-  pure def spellSaveGatedDamageSuccess(profile: SpellSaveGatedDamageProfile): SpellSaveGatedDamageSuccess =
+  pure def spellSaveGatedDamageSuccess(profile: SpellSaveGatedDamageProfile): SpellSaveGateDamageOnSuccess =
     match profile {
-      | AcidSplashSaveDamageProfile => SpellNoDamageOnSaveSuccess
-      | SacredFlameSaveDamageProfile => SpellNoDamageOnSaveSuccess
-      | InflictWoundsSaveDamageProfile => SpellHalfDamageOnSaveSuccess
-      | BurningHandsSaveDamageProfile => SpellHalfDamageOnSaveSuccess
-      | FireballSaveDamageProfile => SpellHalfDamageOnSaveSuccess
-      | LightningBoltSaveDamageProfile => SpellHalfDamageOnSaveSuccess
-      | ViciousMockerySaveDamageProfile => SpellNoDamageOnSaveSuccess
-      | ThunderwaveSaveDamageProfile => SpellHalfDamageOnSaveSuccess
-      | DissonantWhispersSaveDamageProfile => SpellHalfDamageOnSaveSuccess
-      | HellishRebukeSaveDamageProfile => SpellHalfDamageOnSaveSuccess
-      | MindSpikeSaveDamageProfile => SpellHalfDamageOnSaveSuccess
+      | AcidSplashSaveDamageProfile => SpellSaveGateNoDamageOnSuccess
+      | SacredFlameSaveDamageProfile => SpellSaveGateNoDamageOnSuccess
+      | InflictWoundsSaveDamageProfile => SpellSaveGateHalfDamageOnSuccess
+      | BurningHandsSaveDamageProfile => SpellSaveGateHalfDamageOnSuccess
+      | FireballSaveDamageProfile => SpellSaveGateHalfDamageOnSuccess
+      | LightningBoltSaveDamageProfile => SpellSaveGateHalfDamageOnSuccess
+      | ViciousMockerySaveDamageProfile => SpellSaveGateNoDamageOnSuccess
+      | ThunderwaveSaveDamageProfile => SpellSaveGateHalfDamageOnSuccess
+      | DissonantWhispersSaveDamageProfile => SpellSaveGateHalfDamageOnSuccess
+      | HellishRebukeSaveDamageProfile => SpellSaveGateHalfDamageOnSuccess
+      | MindSpikeSaveDamageProfile => SpellSaveGateHalfDamageOnSuccess
     }
 
   pure def spellSaveGatedDamageType(profile: SpellSaveGatedDamageProfile): RuleDamageType =
@@ -1314,14 +1311,14 @@ module spellProcedureProfiles {
       assert(spellSaveGatedDamageTargeting(FireballSaveDamageProfile) == SpellAreaSaveTargets),
       assert(spellSaveGatedDamageTargeting(LightningBoltSaveDamageProfile) == SpellAreaSaveTargets),
       assert(spellSaveGatedDamageTargeting(MindSpikeSaveDamageProfile) == SpellSingleSaveTarget),
-      assert(spellSaveGatedDamageSuccess(InflictWoundsSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
-      assert(spellSaveGatedDamageSuccess(FireballSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
-      assert(spellSaveGatedDamageSuccess(LightningBoltSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
-      assert(spellSaveGatedDamageSuccess(ViciousMockerySaveDamageProfile) == SpellNoDamageOnSaveSuccess),
-      assert(spellSaveGatedDamageSuccess(ThunderwaveSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
-      assert(spellSaveGatedDamageSuccess(DissonantWhispersSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
-      assert(spellSaveGatedDamageSuccess(HellishRebukeSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
-      assert(spellSaveGatedDamageSuccess(MindSpikeSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
+      assert(spellSaveGatedDamageSuccess(InflictWoundsSaveDamageProfile) == SpellSaveGateHalfDamageOnSuccess),
+      assert(spellSaveGatedDamageSuccess(FireballSaveDamageProfile) == SpellSaveGateHalfDamageOnSuccess),
+      assert(spellSaveGatedDamageSuccess(LightningBoltSaveDamageProfile) == SpellSaveGateHalfDamageOnSuccess),
+      assert(spellSaveGatedDamageSuccess(ViciousMockerySaveDamageProfile) == SpellSaveGateNoDamageOnSuccess),
+      assert(spellSaveGatedDamageSuccess(ThunderwaveSaveDamageProfile) == SpellSaveGateHalfDamageOnSuccess),
+      assert(spellSaveGatedDamageSuccess(DissonantWhispersSaveDamageProfile) == SpellSaveGateHalfDamageOnSuccess),
+      assert(spellSaveGatedDamageSuccess(HellishRebukeSaveDamageProfile) == SpellSaveGateHalfDamageOnSuccess),
+      assert(spellSaveGatedDamageSuccess(MindSpikeSaveDamageProfile) == SpellSaveGateHalfDamageOnSuccess),
       assert(spellSaveGatedDamageType(ViciousMockerySaveDamageProfile) == PsychicDamage),
       assert(spellSaveGatedDamageType(FireballSaveDamageProfile) == FireDamage),
       assert(spellSaveGatedDamageType(LightningBoltSaveDamageProfile) == LightningDamage),
