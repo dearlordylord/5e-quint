@@ -349,6 +349,69 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `range`, `map`, `set-operators`, `membership` |
 | `BATTLE.REACTION.OFFER_DECLINE_RESUME` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `map`, `set-operators`, `membership` |
 | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `constant-val`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `membership` |
+| `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY` | not-assessed |  |
+| `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` | not-assessed |  |
+| `BATTLE.SPELL.HIT_POINT_RESTORATION` | not-assessed |  |
+| `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE` | not-assessed |  |
+| `BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT` | not-assessed |  |
+| `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY` | not-assessed |  |
+| `BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE` | not-assessed |  |
+| `BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING` | not-assessed |  |
+| `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` | not-assessed |  |
+| `BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION` | not-assessed |  |
+| `BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.MAKE_STABLE_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS` | not-assessed |  |
+| `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` | not-assessed |  |
+| `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION` | not-assessed |  |
+| `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS` | not-assessed |  |
+| `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` | not-assessed |  |
+| `BATTLE.SPELL.SELF_TRANSFORMATION_MODE` | not-assessed |  |
+| `BATTLE.SPELL.REACTION_CASTING_TIME` | not-assessed |  |
+| `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` | not-assessed |  |
+| `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` | not-assessed |  |
+| `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` | not-assessed |  |
+| `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE` | not-assessed |  |
+| `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE` | not-assessed |  |
+| `BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION` | not-assessed |  |
+| `BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING` | not-assessed |  |
+| `BATTLE.SANCTUARY.TARGETING_INTERDICTION` | not-assessed |  |
+| `BATTLE.STAT_BLOCK.ATTACK_CONTROL` | not-assessed |  |
+| `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` | not-assessed |  |
+| `BATTLE.COMMAND.OPTION_AND_NEXT_TURN` | not-assessed |  |
+| `BATTLE.DAMAGE.ATTACK_BRANCHES` | not-assessed |  |
+| `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES` | not-assessed |  |
+| `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` | not-assessed |  |
+| `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | not-assessed |  |
+| `BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE` | not-assessed |  |
+| `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY` | not-assessed |  |
+| `CREATION.CHOICE_DISCOVERY_CARDINALITY` | not-assessed |  |
+| `SHEET.HP_REST_HIT_DICE.TRANSITIONS` | not-assessed |  |
+| `BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE` | not-assessed |  |
+| `BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION` | not-assessed |  |
+| `BATTLE.ATTACK.MINIMAL_RESOLUTION` | not-assessed |  |
 
 ## Kernel IR Boundaries
 

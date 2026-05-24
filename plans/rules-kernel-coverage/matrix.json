@@ -5889,6 +5889,510 @@
         "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
       ],
       "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.HIT_POINT_RESTORATION",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.MAKE_STABLE_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.SELF_TRANSFORMATION_MODE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.REACTION_CASTING_TIME",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SANCTUARY.TARGETING_INTERDICTION",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.STAT_BLOCK.ATTACK_CONTROL",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.DAMAGE.ATTACK_BRANCHES",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "CREATION.CHOICE_DISCOVERY_CARDINALITY",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "SHEET.HP_REST_HIT_DICE.TRANSITIONS",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.ATTACK.MINIMAL_RESOLUTION",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
     }
   ],
   "kernelIrBoundaries": [

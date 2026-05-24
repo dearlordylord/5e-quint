@@ -259,6 +259,16 @@ function runSelfTest() {
     sampleGeneratorReadinessPath,
     "utf8",
   );
+  writeFile(sampleGeneratorReadinessPath, "");
+  const missingGeneratorReadinessResult = buildKernelCoverage({ root });
+  assert.ok(
+    missingGeneratorReadinessResult.issues.includes(
+      "generator-readiness is missing row for covered obligation BATTLE.SAMPLE with semantic-core QNT owner(s): sample.qnt.",
+    ),
+    `Expected missing generator-readiness issue, got ${JSON.stringify(missingGeneratorReadinessResult.issues)}`,
+  );
+  writeFile(sampleGeneratorReadinessPath, initialGeneratorReadinessText);
+
   for (const proofFile of ["sample-inductive.qnt", "sample-examples.qnt"]) {
     writeFile(
       sampleGeneratorReadinessPath,
@@ -479,6 +489,19 @@ function runSelfTest() {
       "\n",
   );
   writeFile(
+    sampleGeneratorReadinessPath,
+    initialGeneratorReadinessText +
+      JSON.stringify({
+        obligationId: "BATTLE.MULTI",
+        status: "not-assessed",
+        semanticCore: [],
+        proofOnly: [],
+        generatorSubset: [],
+        blockedBy: [],
+      }) +
+      "\n",
+  );
+  writeFile(
     path.join(root, "multi.qnt"),
     "// KERNEL-COVERAGE: qnt-owner BATTLE.MULTI\nmodule multi {}\n",
   );
@@ -514,6 +537,7 @@ function runSelfTest() {
     initialProfilesText,
   );
   writeFile(sampleQntOwnerRolesPath, initialQntOwnerRolesText);
+  writeFile(sampleGeneratorReadinessPath, initialGeneratorReadinessText);
   for (const fileName of [
     "multi.qnt",
     "multi.ts",

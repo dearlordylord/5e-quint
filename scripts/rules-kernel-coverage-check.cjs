@@ -902,6 +902,29 @@ function qntOwnerPaths(obligations) {
   return ownerPaths;
 }
 
+function generatorReadinessDenominatorGaps(
+  obligations,
+  qntOwnerRolesByPath,
+  readinessObligationIds,
+) {
+  const issues = [];
+  for (const obligation of obligations) {
+    if (!coveredStatuses.has(obligation.status)) continue;
+    const semanticCoreOwners = (obligation.qntOwners ?? []).filter(
+      (ownerPath) => qntOwnerRolesByPath.get(ownerPath) === "semantic-core",
+    );
+    if (
+      semanticCoreOwners.length > 0 &&
+      !readinessObligationIds.has(obligation.id)
+    ) {
+      issues.push(
+        `generator-readiness is missing row for covered obligation ${obligation.id} with semantic-core QNT owner(s): ${semanticCoreOwners.join(", ")}.`,
+      );
+    }
+  }
+  return issues;
+}
+
 function validateQntOwnerRole(row, index, rootPath, expectedQntOwnerPaths) {
   const issues = [];
   const context = `qnt-owner-roles row ${index + 1}`;
@@ -1593,6 +1616,13 @@ function buildKernelCoverage({ root: rootPath }) {
       ),
     );
   }
+  issues.push(
+    ...generatorReadinessDenominatorGaps(
+      obligations,
+      qntOwnerRolesByPath,
+      readinessObligationIds,
+    ),
+  );
 
   const seenKernelIrBoundaries = new Set();
   for (const [index, boundary] of kernelIrBoundaries.entries()) {

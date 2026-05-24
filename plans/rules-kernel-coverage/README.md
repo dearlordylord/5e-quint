@@ -95,7 +95,9 @@ generated Rust exists.
 real obligation id and must explicitly declare `semanticCore`, `proofOnly`,
 `generatorSubset`, and `blockedBy`; omitted arrays are invalid because empty and
 unknown are different states. If present, `dryRun` points at a checked manual
-dry-run artifact.
+dry-run artifact. The checker requires a row for every covered obligation with
+at least one QNT owner role classified as `semantic-core`; use `not-assessed`
+with empty arrays until the C-lane classification is known.
 
 - `semanticCore`: QNT owner files intended to supply executable rule semantics
   for the obligation. Every path must also be declared by the obligation's QNT
