@@ -110,6 +110,12 @@ const CLASS_CONTAINER_WITHOUT_SPELL_ACCESS_CLASS_NAMES = [
   ...NON_SPELLCASTING_CLASS_NAMES,
 ] as const;
 
+const MAGIC_INITIATE_SPELL_LISTS = [
+  "cleric",
+  "druid",
+  "wizard",
+] as const satisfies ReadonlyArray<ClassName>;
+
 const numberTierSchema = Schema.Struct({
   atLevel: Schema.Number,
   value: Schema.Number,
@@ -3010,6 +3016,10 @@ export const FeatMechanicsSchema = Schema.Union(
   ActivatedAbilityMechanicsSchema,
   MasteryOrWeaponDamageDiceRerollMechanicsSchema,
   TriggeredReplacementMechanicsSchema,
+  strictStruct({
+    family: Schema.Literal("magic_initiate"),
+    spellList: Schema.Literal(...MAGIC_INITIATE_SPELL_LISTS),
+  }),
 );
 
 export const FeatRecordSchema = Schema.Struct({

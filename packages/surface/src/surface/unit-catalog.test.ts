@@ -42,6 +42,7 @@ const task183ClassFeatureUnitIds = [
   "rogue_thieves_cant",
   "sorcerer_innate_sorcery",
   "warlock_eldritch_invocations",
+  "warlock_pact_magic",
 ] as const;
 
 const task184WeaponMasteryUnitIds = [
@@ -126,6 +127,8 @@ const requiredFirstVerticalUnitIds = [
   "feat_archery",
   "feat_boon_of_combat_prowess",
   "defense",
+  "feat_magic_initiate_cleric",
+  "feat_magic_initiate_wizard",
   "feat_savage_attacker",
   "mastery_cleave",
   "mastery_sap",
@@ -4971,6 +4974,15 @@ describe("SRD Unit catalog boundary", () => {
             family: "feature_choice",
           }),
         }),
+        expect.objectContaining({
+          className: "warlock",
+          kind: "class_feature",
+          mechanics: {
+            family: "class_spellcasting_projection",
+            source: "class_record_spellcasting",
+            spellcastingKind: "pact_magic_spellcasting_creation",
+          },
+        }),
       ]);
     }
   });
@@ -5395,6 +5407,89 @@ describe("SRD Unit catalog boundary", () => {
         },
       });
     }
+  });
+
+  test("authors SRD Magic Initiate background feat specializations", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    expect(result.catalog.requireUnit("background_acolyte")).toMatchObject({
+      kind: "background",
+      originFeatId: "feat_magic_initiate_cleric",
+    });
+    expect(result.catalog.requireUnit("feat_magic_initiate_cleric")).toEqual(
+      expect.objectContaining({
+        category: "origin",
+        id: "feat_magic_initiate_cleric",
+        kind: "feat",
+        mechanics: {
+          family: "magic_initiate",
+          spellList: "cleric",
+        },
+        name: "Magic Initiate (Cleric)",
+      }),
+    );
+
+    expect(result.catalog.requireUnit("background_sage")).toMatchObject({
+      kind: "background",
+      originFeatId: "feat_magic_initiate_wizard",
+    });
+    expect(result.catalog.requireUnit("feat_magic_initiate_wizard")).toEqual(
+      expect.objectContaining({
+        category: "origin",
+        id: "feat_magic_initiate_wizard",
+        kind: "feat",
+        mechanics: {
+          family: "magic_initiate",
+          spellList: "wizard",
+        },
+        name: "Magic Initiate (Wizard)",
+      }),
+    );
+  });
+
+  test("authors Criminal's SRD Alert origin feat as one catalog identity", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    expect(result.catalog.requireUnit("background_criminal")).toMatchObject({
+      kind: "background",
+      originFeatId: "alert",
+    });
+    expect(result.catalog.requireUnit("alert")).toEqual(
+      expect.objectContaining({
+        category: "origin",
+        id: "alert",
+        kind: "feat",
+        mechanics: {
+          family: "passive",
+          grants: [
+            {
+              delta: {
+                kind: "proficiency_bonus",
+                sign: "+",
+              },
+              kind: "modify_roll_numeric",
+              on: ["initiative"],
+            },
+            {
+              ally: "willing_ally_same_combat",
+              kind: "initiative_swap",
+              prohibitedByCondition: "incapacitated",
+              timing: "immediately_after_initiative_roll",
+            },
+          ],
+        },
+        name: "Alert",
+      }),
+    );
+    expect(
+      result.catalog.listUnits().filter((unit) => unit.id === "alert"),
+    ).toHaveLength(1);
   });
 
   test("rejects mismatched on-hit trigger and effect families", () => {

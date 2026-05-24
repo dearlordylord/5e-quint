@@ -5413,44 +5413,8 @@
     "totalGroupCount": 1
   },
   "srdAuthoredProductReadiness": {
-    "blockerRows": [
-      {
-        "group": "background-origin-feat-refs",
-        "ownerUnitId": "background_acolyte",
-        "ready": false,
-        "relation": "background.originFeatId",
-        "status": "missing-authored-record",
-        "unitId": "feat_magic_initiate_cleric"
-      },
-      {
-        "duplicateRowCount": 2,
-        "group": "background-origin-feat-refs",
-        "kind": "feat",
-        "ownerUnitId": "background_criminal",
-        "ready": false,
-        "relation": "background.originFeatId",
-        "sourceRecordPath": "packages/surface/content/alert.json",
-        "status": "not-in-unit-catalog, not-in-unit-catalog",
-        "unitId": "alert"
-      },
-      {
-        "group": "background-origin-feat-refs",
-        "ownerUnitId": "background_sage",
-        "ready": false,
-        "relation": "background.originFeatId",
-        "status": "missing-authored-record",
-        "unitId": "feat_magic_initiate_wizard"
-      },
-      {
-        "group": "level-scoped-class-feature-grants",
-        "ownerUnitId": "class_warlock",
-        "ready": false,
-        "relation": "class.featureGrants.level-1",
-        "status": "missing-authored-record",
-        "unitId": "warlock_pact_magic"
-      }
-    ],
-    "blockingGroupCount": 2,
+    "blockerRows": [],
+    "blockingGroupCount": 0,
     "groups": [
       {
         "blockerRows": [],
@@ -5498,64 +5462,42 @@
         }
       },
       {
-        "blockerRows": [
-          {
-            "ownerUnitId": "background_acolyte",
-            "ready": false,
-            "relation": "background.originFeatId",
-            "status": "missing-authored-record",
-            "unitId": "feat_magic_initiate_cleric"
-          },
-          {
-            "duplicateRowCount": 2,
-            "kind": "feat",
-            "ownerUnitId": "background_criminal",
-            "ready": false,
-            "relation": "background.originFeatId",
-            "sourceRecordPath": "packages/surface/content/alert.json",
-            "status": "not-in-unit-catalog, not-in-unit-catalog",
-            "unitId": "alert"
-          },
-          {
-            "ownerUnitId": "background_sage",
-            "ready": false,
-            "relation": "background.originFeatId",
-            "status": "missing-authored-record",
-            "unitId": "feat_magic_initiate_wizard"
-          }
-        ],
-        "complete": false,
+        "blockerRows": [],
+        "complete": true,
         "description": "Every finalized background origin feat ref must resolve through the Unit catalog before character-to-battle admission can be claimed.",
         "group": "background-origin-feat-refs",
         "label": "SRD background origin feat refs",
         "metrics": {
           "denominator": 4,
-          "numerator": 1,
-          "percent": "25%"
+          "numerator": 4,
+          "percent": "100%"
         },
         "rows": [
           {
+            "kind": "feat",
             "ownerUnitId": "background_acolyte",
-            "ready": false,
+            "ready": true,
             "relation": "background.originFeatId",
-            "status": "missing-authored-record",
+            "sourceRecordPath": "packages/surface/content/feat_magic_initiate_cleric.json",
+            "status": "installed",
             "unitId": "feat_magic_initiate_cleric"
           },
           {
-            "duplicateRowCount": 2,
             "kind": "feat",
             "ownerUnitId": "background_criminal",
-            "ready": false,
+            "ready": true,
             "relation": "background.originFeatId",
             "sourceRecordPath": "packages/surface/content/alert.json",
-            "status": "not-in-unit-catalog, not-in-unit-catalog",
+            "status": "installed",
             "unitId": "alert"
           },
           {
+            "kind": "feat",
             "ownerUnitId": "background_sage",
-            "ready": false,
+            "ready": true,
             "relation": "background.originFeatId",
-            "status": "missing-authored-record",
+            "sourceRecordPath": "packages/surface/content/feat_magic_initiate_wizard.json",
+            "status": "installed",
             "unitId": "feat_magic_initiate_wizard"
           },
           {
@@ -5569,9 +5511,7 @@
           }
         ],
         "rowsByStatus": {
-          "installed": 1,
-          "missing-authored-record": 2,
-          "not-in-unit-catalog, not-in-unit-catalog": 1
+          "installed": 4
         }
       },
       {
@@ -5808,23 +5748,15 @@
         }
       },
       {
-        "blockerRows": [
-          {
-            "ownerUnitId": "class_warlock",
-            "ready": false,
-            "relation": "class.featureGrants.level-1",
-            "status": "missing-authored-record",
-            "unitId": "warlock_pact_magic"
-          }
-        ],
-        "complete": false,
+        "blockerRows": [],
+        "complete": true,
         "description": "Every level-scoped class feature grant retained by finalization must resolve through the Unit catalog.",
         "group": "level-scoped-class-feature-grants",
         "label": "SRD class feature grants through level 1",
         "metrics": {
           "denominator": 25,
-          "numerator": 24,
-          "percent": "96%"
+          "numerator": 25,
+          "percent": "100%"
         },
         "rows": [
           {
@@ -6026,10 +5958,12 @@
             "unitId": "warlock_eldritch_invocations"
           },
           {
+            "kind": "class_feature",
             "ownerUnitId": "class_warlock",
-            "ready": false,
+            "ready": true,
             "relation": "class.featureGrants.level-1",
-            "status": "missing-authored-record",
+            "sourceRecordPath": "packages/surface/content/warlock_pact_magic.json",
+            "status": "installed",
             "unitId": "warlock_pact_magic"
           },
           {
@@ -6052,8 +5986,7 @@
           }
         ],
         "rowsByStatus": {
-          "installed": 24,
-          "missing-authored-record": 1
+          "installed": 25
         }
       },
       {
@@ -6131,10 +6064,10 @@
     ],
     "metrics": {
       "denominator": 58,
-      "numerator": 54,
-      "percent": "93.1%"
+      "numerator": 58,
+      "percent": "100%"
     },
-    "openBlockerCount": 4
+    "openBlockerCount": 0
   },
   "summary": {
     "candidateUnitIdsBeforeExclusions": 120,

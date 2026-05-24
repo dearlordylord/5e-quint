@@ -9,7 +9,12 @@ import {
 } from "@dnd/shared-algebras/armor-class-algebra";
 import { abilityScoreToMod } from "@dnd/shared-algebras/ability-score-algebra";
 import { elapsedTimeTicksFromHours } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { Hp, SIZES, proficiencyBonus } from "@dnd/shared/types";
+import {
+  Hp,
+  SIZES,
+  characterLevel,
+  proficiencyBonusForCharacterLevel,
+} from "@dnd/shared/types";
 import { druidWildShapeDurationHoursForClassLevel } from "@dnd/surface/surface/druid-wild-shape-readers";
 import type {
   Ability,
@@ -157,7 +162,7 @@ export function combatantD20ProficiencyBonus(
     (total, classLevel) => total + Number(classLevel.level),
     0,
   );
-  return Number(proficiencyBonus(Math.floor((level - 1) / 4) + 2));
+  return Number(proficiencyBonusForCharacterLevel(characterLevel(level)));
 }
 
 export function combatantD20AbilityScore(

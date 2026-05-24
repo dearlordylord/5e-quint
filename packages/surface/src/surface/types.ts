@@ -827,6 +827,10 @@ export type MasteryRecord = Schema.Schema.Type<
 export type FeatMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.FeatMechanicsSchema
 >;
+export type MagicInitiateMechanics = Extract<
+  FeatMechanics,
+  { readonly family: "magic_initiate" }
+>;
 export type FeatRecord = Schema.Schema.Type<
   typeof SurfaceSchema.FeatRecordSchema
 >;

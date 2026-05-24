@@ -83,6 +83,10 @@ export function characterCreature(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["resources"];
+  readonly conditions?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["conditions"];
   readonly armorClass?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -139,6 +143,9 @@ export function characterCreature(input: {
         ? {}
         : { unitFeatures: input.unitFeatures }),
       ...(input.resources === undefined ? {} : { resources: input.resources }),
+      ...(input.conditions === undefined
+        ? {}
+        : { conditions: input.conditions }),
       unarmedStrike: {
         kind: "unarmedStrike",
         effect: {

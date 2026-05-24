@@ -809,6 +809,12 @@ type EffectAtom =
       readonly count?: number;
     }
   | {
+      readonly kind: "initiative_swap";
+      readonly timing: "immediately_after_initiative_roll";
+      readonly ally: "willing_ally_same_combat";
+      readonly prohibitedByCondition: "incapacitated";
+    }
+  | {
       readonly kind: "jack_of_all_trades_ability_check_bonus";
     }
   | {
@@ -2698,6 +2704,12 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         ),
         abilityFilter: optionalExact(AbilityFilterSchema),
         count: optionalExact(Schema.Number),
+      }),
+      strictStruct({
+        kind: Schema.Literal("initiative_swap"),
+        timing: Schema.Literal("immediately_after_initiative_roll"),
+        ally: Schema.Literal("willing_ally_same_combat"),
+        prohibitedByCondition: Schema.Literal("incapacitated"),
       }),
       strictStruct({
         kind: Schema.Literal("jack_of_all_trades_ability_check_bonus"),

@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 405,
-      "numerator": 205,
-      "percent": "50.6%"
+      "denominator": 407,
+      "numerator": 209,
+      "percent": "51.4%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 490,
-      "numerator": 250,
-      "percent": "51%"
+      "denominator": 492,
+      "numerator": 254,
+      "percent": "51.6%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,62 +59,62 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 251
+      "value": 255
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 140,
-      "numerator": 140,
+      "denominator": 142,
+      "numerator": 142,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 251,
-      "numerator": 251,
+      "denominator": 255,
+      "numerator": 255,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 95,
-      "numerator": 95,
+      "denominator": 96,
+      "numerator": 96,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 95,
-      "numerator": 95,
+      "denominator": 96,
+      "numerator": 96,
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 131,
-      "numerator": 126,
+      "denominator": 132,
+      "numerator": 127,
       "percent": "96.2%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 131,
-      "numerator": 126,
+      "denominator": 132,
+      "numerator": 127,
       "percent": "96.2%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 142,
-      "numerator": 141,
+      "denominator": 144,
+      "numerator": 143,
       "percent": "99.3%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 95,
-      "numerator": 95,
+      "denominator": 96,
+      "numerator": 96,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 95,
-      "numerator": 95,
+      "denominator": 96,
+      "numerator": 96,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 140,
+      "denominator": 142,
       "numerator": 109,
-      "percent": "77.9%"
+      "percent": "76.8%"
     },
     "supportedProfileCoverage": {
-      "denominator": 206,
-      "numerator": 140,
-      "percent": "68%"
+      "denominator": 210,
+      "numerator": 142,
+      "percent": "67.6%"
     }
   },
   "metricSemantics": [
@@ -701,6 +701,38 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.initiative-proficiency-and-swap",
+      "profileKind": "passive",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-turn-order.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/api-lifecycle.ts",
+        "packages/character-battle-runtime/src/battle-creature-init.ts"
+      ],
+      "sourceBoundary": "The runtime consumes an admitted passive Surface shape with an Initiative Proficiency Bonus roll modifier and an immediate Initiative Swap atom. Character Battle derives the final Initiative score from the caller-supplied Initiative roll total, existing CharacterBuild level progression, and retained support profile when the player chooses to add the Proficiency Bonus. Battle runtime owns only the start-battle setup swap boundary: callers enter the setup workflow from BattleCreatureInit input, not from an arbitrary BattleState, so consumed source opportunities cannot be reset by re-entering setup after a swap. During setup, both combatants must be present in the same combat, on the same side, distinct, the ally must be willing, no combatant may have acted yet, neither participant may be Incapacitated, the source must not have consumed its one post-roll swap opportunity, and the existing Initiative scores are swapped and re-ordered without dispatching on Alert identity or storing parallel swap state in BattleState.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME"
+      ],
+      "title": "Unit feature adds Proficiency Bonus to Initiative rolls and can swap Initiative once with a willing non-Incapacitated ally before turns begin",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-turn-order.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-alert-initiative.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
         }
       ]
     },
@@ -3827,13 +3859,13 @@
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 131,
-        "numerator": 126,
+        "denominator": 132,
+        "numerator": 127,
         "percent": "96.2%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 131,
-        "numerator": 126,
+        "denominator": 132,
+        "numerator": 127,
         "percent": "96.2%"
       }
     },
@@ -4064,6 +4096,19 @@
           }
         ],
         "profileId": "unit-feature.passive-ranged-attack-roll-bonus",
+        "profileKind": "passive"
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
+        "profileId": "unit-feature.initiative-proficiency-and-swap",
         "profileKind": "passive"
       },
       {
@@ -5673,8 +5718,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 142,
-          "numerator": 141,
+          "denominator": 144,
+          "numerator": 143,
           "percent": "99.3%"
         }
       },
@@ -5741,6 +5786,25 @@
             }
           ],
           "unitId": "aid"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
+              "profileId": "unit-feature.initiative-proficiency-and-swap",
+              "profileKind": "passive"
+            }
+          ],
+          "unitId": "alert"
         },
         {
           "joinStatus": "covered",
@@ -9040,6 +9104,25 @@
               "joinStatus": "covered",
               "obligations": [
                 {
+                  "obligationId": "CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION",
+                  "runtime": "character-creation",
+                  "status": "covered",
+                  "title": "Character Creation Warlock Pact Magic Spell Access and Pact Slot progression from Surface class facts through build finalization and Warlock class-level gains"
+                }
+              ],
+              "profileId": "character-creation.warlock-pact-magic-advancement",
+              "profileKind": "character-creation"
+            }
+          ],
+          "unitId": "warlock_pact_magic"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
                   "obligationId": "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE",
                   "runtime": "battle",
                   "status": "covered",
@@ -11704,6 +11787,22 @@
         "character-creation.wizard-spellbook-learning-choice"
       ],
       "taskId": "L12G-FOLLOWUP-WIZARD-EVOKER-EVOCATION-SAVANT"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime turn-order Quint facts cover Alert Initiative Swap legality: initial Initiative window only, one consumed swap opportunity per source, distinct willing same-combat ally, same-side ally modeling, and Incapacitated blocking for either participant, plus initial turn-order exchange.",
+      "profileIds": [
+        "unit-feature.initiative-proficiency-and-swap"
+      ],
+      "taskId": "L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Surface, battle-runtime, and character-battle-runtime tests cover Alert Surface admission with both Initiative Proficiency and Initiative Swap atoms, mechanics-shape admission without Alert identity dispatch, Character Battle Initiative score derivation from roll total plus build Proficiency Bonus, typed rejection when the support profile is absent, and Battle runtime Initiative Swap gating, one-use source consumption, and score/order exchange.",
+      "profileIds": [
+        "unit-feature.initiative-proficiency-and-swap"
+      ],
+      "taskId": "L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME"
     }
   ],
   "units": [
@@ -15812,6 +15911,63 @@
         "status": "installed"
       },
       "claim": {
+        "battleReadinessClosure": {
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "character-creation-runtime plus selected spell invocation profiles",
+          "reason": "The retained Pact Magic feature owns CharacterBuild spellcasting source and Pact Slot facts; individual Spell Definition invocation behavior remains owned by selected spell profiles."
+        },
+        "profileIds": [
+          "character-creation.warlock-pact-magic-advancement"
+        ],
+        "supportedMechanics": [
+          "Warlock level-1 CharacterBuild feature ownership is derived from the Warlock class feature grant",
+          "Character Creation finalizes Warlock level-1 Pact Magic cantrips, prepared spells, Pact Slot capacity, Pact Slot level, spellcasting ability, and Arcane Focus from the Surface Warlock class spellcasting facts",
+          "When a Warlock level is gained, Character Creation advances Pact Magic cantrip totals, prepared-spell totals, Pact Slot count, and Pact Slot level from the Surface Warlock progression rows",
+          "Spell execution remains owned by selected spell profiles"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12FS-WARLOCK-PACT-MAGIC-RETAINED-GRANT"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "character-creation.warlock-pact-magic-advancement",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface Warlock Pact Magic progression rows and class spell list facts project into the CharacterBuild Warlock spellcasting source and Pact Magic slot pool during Warlock class-level gains; spell execution and selected invocation execution remain owned by selected spell and invocation profiles.",
+          "taskRefs": [
+            "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
+          ],
+          "title": "Character Creation advances Warlock Pact Magic build facts from Surface progression",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/warlock_pact_magic.json",
+      "unitId": "warlock_pact_magic"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "profileIds": [
           "character-sheet.pact-slot-recovery"
         ],
@@ -16344,6 +16500,124 @@
       ],
       "sourceRecordPath": "packages/surface/content/feat_defense.json",
       "unitId": "defense"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "unit-feature.initiative-proficiency-and-swap"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Surface Alert records Initiative Proficiency as a Proficiency Bonus Initiative roll modifier and Initiative Swap as an immediately-after-Initiative willing-ally same-combat exchange blocked by either creature being Incapacitated.",
+          "Character Battle derives the final Initiative score from the caller-supplied Initiative roll total, retained Alert support profile, and build Proficiency Bonus without duplicating class progression or Proficiency Bonus state.",
+          "Battle runtime applies the immediately-after-Initiative setup swap at most once per source in a start-battle setup workflow that cannot be re-entered from a swapped BattleState, requires a same-side willing ally and both combatants present and not Incapacitated, swaps the existing combatants' Initiative scores, and rebuilds the initial turn order from those single-source Initiative values without dispatching on Alert identity."
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-alert-initiative.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/character-battle-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "feat",
+      "profiles": [
+        {
+          "id": "unit-feature.initiative-proficiency-and-swap",
+          "profileKind": "passive",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-turn-order.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/api-lifecycle.ts",
+            "packages/character-battle-runtime/src/battle-creature-init.ts"
+          ],
+          "sourceBoundary": "The runtime consumes an admitted passive Surface shape with an Initiative Proficiency Bonus roll modifier and an immediate Initiative Swap atom. Character Battle derives the final Initiative score from the caller-supplied Initiative roll total, existing CharacterBuild level progression, and retained support profile when the player chooses to add the Proficiency Bonus. Battle runtime owns only the start-battle setup swap boundary: callers enter the setup workflow from BattleCreatureInit input, not from an arbitrary BattleState, so consumed source opportunities cannot be reset by re-entering setup after a swap. During setup, both combatants must be present in the same combat, on the same side, distinct, the ally must be willing, no combatant may have acted yet, neither participant may be Incapacitated, the source must not have consumed its one post-roll swap opportunity, and the existing Initiative scores are swapped and re-ordered without dispatching on Alert identity or storing parallel swap state in BattleState.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME"
+          ],
+          "title": "Unit feature adds Proficiency Bonus to Initiative rolls and can swap Initiative once with a willing non-Incapacitated ally before turns begin",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-turn-order.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-alert-initiative.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/alert.json",
+      "unitId": "alert"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "character-creation-runtime and future character-sheet spell-access owner",
+          "reason": "The feat Unit owns SRD authored identity and typed spell-list source facts. Character finalization retains the feat ref without storing duplicate spell-access state, while future character-sheet spell-access support should derive selected spells from the feat's typed Magic Initiate facts and each selected Spell Definition owns invocation runtime behavior."
+        },
+        "reason": "Magic Initiate (Cleric) is an Origin feat spell-access selection source. Character creation retains the selected background and feat Unit refs; selected cantrips, level-1 spell access, and spellcasting ability choice belong to the character spell-access owner rather than promoted battle Unit execution.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "feat",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/feat_magic_initiate_cleric.json",
+      "unitId": "feat_magic_initiate_cleric"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "character-creation-runtime and future character-sheet spell-access owner",
+          "reason": "The feat Unit owns SRD authored identity and typed spell-list source facts. Character finalization retains the feat ref without storing duplicate spell-access state, while future character-sheet spell-access support should derive selected spells from the feat's typed Magic Initiate facts and each selected Spell Definition owns invocation runtime behavior."
+        },
+        "reason": "Magic Initiate (Wizard) is an Origin feat spell-access selection source. Character creation retains the selected background and feat Unit refs; selected cantrips, level-1 spell access, and spellcasting ability choice belong to the character spell-access owner rather than promoted battle Unit execution.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "feat",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/feat_magic_initiate_wizard.json",
+      "unitId": "feat_magic_initiate_wizard"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -26984,24 +27258,6 @@
       "unitId": "alarm"
     },
     {
-      "authoredSurfaceDuplicateIdCount": 2,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "duplicate-content-issue",
-          "planningLane": "content cleanup",
-          "reason": "More than one authored Surface record declares this Unit id; clean up the duplicate before treating it as catalog pressure."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "feat",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/alert.json",
-      "unitId": "alert"
-    },
-    {
       "authoredSurfaceDuplicateIdCount": 1,
       "catalogAdmission": {
         "disposition": {
@@ -28289,24 +28545,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/fear.json",
       "unitId": "fear"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 2,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "duplicate-content-issue",
-          "planningLane": "content cleanup",
-          "reason": "More than one authored Surface record declares this Unit id; clean up the duplicate before treating it as catalog pressure."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "feat",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/feat_alert.json",
-      "unitId": "alert"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

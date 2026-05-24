@@ -1,14 +1,15 @@
-// Public battle lifecycle API extracted from ../battle-reducer.ts.
-// Mechanical move; no behavior change intended.
+// Public battle lifecycle API and Initial Initiative setup workflow.
 
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.initiative-proficiency-and-swap unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
 import {
   createScoredInitiativeStack,
   insertAtOrderIndex,
   removeFromInitiative,
+  swapInitialInitiativeScores,
 } from "@dnd/shared-algebras/initiative-algebra";
+import { isIncapacitated } from "@dnd/shared-algebras/conditions-algebra";
 
 import { isNonEmptyReadonlyArray } from "effect/Array";
 
@@ -46,11 +47,77 @@ import type {
   BattleStateInitIssue,
 } from "../battle-reducer.ts";
 import { INITIAL_ROUND, INITIAL_TURN_RESOURCES } from "../battle-reducer.ts";
-export function startBattle(input: {
+import { INITIATIVE_PROFICIENCY_AND_SWAP_SUPPORT_PROFILE } from "../unit-feature-support.ts";
+
+const InitialInitiativeSetupBrand: unique symbol = Symbol(
+  "InitialInitiativeSetup",
+);
+
+class InitialInitiativeSetupWorkflow {
+  readonly [InitialInitiativeSetupBrand] = true;
+  #state: BattleState;
+  #setupOpen = true;
+  readonly #consumedInitiativeSwapSources = new Set<CombatantId>();
+
+  constructor(state: BattleState) {
+    this.#state = state;
+  }
+
+  get state(): BattleState {
+    return this.#state;
+  }
+
+  get setupOpen(): boolean {
+    return this.#setupOpen;
+  }
+
+  hasConsumedInitiativeSwapSource(sourceId: CombatantId): boolean {
+    return this.#consumedInitiativeSwapSources.has(sourceId);
+  }
+
+  consumeInitiativeSwap(sourceId: CombatantId, state: BattleState): void {
+    this.#consumedInitiativeSwapSources.add(sourceId);
+    this.#state = state;
+  }
+
+  finish(): BattleState {
+    this.#setupOpen = false;
+    return this.#state;
+  }
+}
+
+export type InitialInitiativeSetup = InitialInitiativeSetupWorkflow;
+
+type StartBattleInput = {
   readonly battleId: BattleId;
   readonly combatants: readonly BattleCreatureInit[];
   readonly hidePrerequisites?: ReadonlyMap<CombatantId, BattleHidePrerequisite>;
-}): Either.Either<BattleState, BattleStateInitIssue> {
+};
+
+export function startBattleWithInitialInitiativeSetup(
+  input: StartBattleInput,
+): Either.Either<InitialInitiativeSetup, BattleStateInitIssue> {
+  const state = startBattle(input);
+  return Either.isLeft(state)
+    ? Either.left(state.left)
+    : Either.right(initialInitiativeSetupState(state.right));
+}
+
+export function finishInitialInitiativeSetup(
+  setup: InitialInitiativeSetup,
+): BattleState {
+  return setup.finish();
+}
+
+function initialInitiativeSetupState(
+  state: BattleState,
+): InitialInitiativeSetup {
+  return new InitialInitiativeSetupWorkflow(state);
+}
+
+export function startBattle(
+  input: StartBattleInput,
+): Either.Either<BattleState, BattleStateInitIssue> {
   if (input.combatants.length === 0) {
     return battleStateInitIssue("startBattle requires at least one combatant.");
   }
@@ -161,6 +228,103 @@ export function createInitialInitiativeForCombatants(input: {
   return Either.isLeft(initiative)
     ? battleStateInitIssue(initiative.left)
     : Either.right(initiative.right);
+}
+
+export function applyInitiativeSwap(input: {
+  readonly setup: InitialInitiativeSetup;
+  readonly sourceId: CombatantId;
+  readonly allyId: CombatantId;
+  readonly allyWilling: boolean;
+}): Either.Either<InitialInitiativeSetup, BattleStateInitIssue> {
+  const state = input.setup.state;
+  if (!input.setup.setupOpen) {
+    return battleStateInitIssue("Initial Initiative setup is already complete.");
+  }
+  if (input.sourceId === input.allyId) {
+    return battleStateInitIssue(
+      "Initiative Swap requires a distinct willing ally.",
+    );
+  }
+  if (input.setup.hasConsumedInitiativeSwapSource(input.sourceId)) {
+    return battleStateInitIssue(
+      "Initiative Swap source has already used its post-roll swap opportunity.",
+    );
+  }
+  if (state.initiative.alreadyActed.length > 0) {
+    return battleStateInitIssue(
+      "Initiative Swap is only available immediately after rolling Initiative.",
+    );
+  }
+  const source = state.combatants.get(input.sourceId);
+  if (source === undefined) {
+    return battleStateInitIssue(
+      "Initiative Swap source must be a combatant in this battle.",
+    );
+  }
+  const ally = state.combatants.get(input.allyId);
+  if (ally === undefined) {
+    return battleStateInitIssue(
+      "Initiative Swap ally must be a combatant in this battle.",
+    );
+  }
+  if (!combatantHasInitiativeProficiencyAndSwap(source)) {
+    return battleStateInitIssue(
+      "Initiative Swap source lacks an admitted Initiative swap support profile.",
+    );
+  }
+  if (source.side !== ally.side) {
+    return battleStateInitIssue(
+      "Initiative Swap requires an ally in the same combat.",
+    );
+  }
+  if (!input.allyWilling) {
+    return battleStateInitIssue("Initiative Swap requires a willing ally.");
+  }
+  if (isIncapacitated(source.conditions) || isIncapacitated(ally.conditions)) {
+    return battleStateInitIssue(
+      "Initiative Swap is blocked while either combatant is Incapacitated.",
+    );
+  }
+
+  const initiative = swapInitialInitiativeScores(
+    state.initiative,
+    input.sourceId,
+    input.allyId,
+  );
+  if (Option.isNone(initiative)) {
+    return battleStateInitIssue("Initiative Swap could not update Initiative.");
+  }
+
+  const combatants = new Map(state.combatants);
+  combatants.set(input.sourceId, {
+    ...source,
+    initiative: ally.initiative,
+  });
+  combatants.set(input.allyId, {
+    ...ally,
+    initiative: source.initiative,
+  });
+  input.setup.consumeInitiativeSwap(input.sourceId, {
+    ...state,
+    combatants,
+    initiative: initiative.value,
+  });
+  return Either.right(input.setup);
+}
+
+function combatantHasInitiativeProficiencyAndSwap(
+  combatant: BattleCreatureState,
+): boolean {
+  return (
+    combatant.origin.kind === "character" &&
+    combatant.origin.characterUnitRefs.some((unitRef) =>
+      unitRef.supportProfiles.some(
+        (profile) =>
+          typeof profile !== "string" &&
+          profile.kind === INITIATIVE_PROFICIENCY_AND_SWAP_SUPPORT_PROFILE,
+      ),
+    )
+  );
 }
 
 export function addBattleCombatant(input: {

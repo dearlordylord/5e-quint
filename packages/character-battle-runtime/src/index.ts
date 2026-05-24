@@ -66,11 +66,14 @@ import {
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.monk-uncanny-metabolism-initiative-recovery
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.font-of-magic-sorcery-points-to-spell-slot
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.metamagic-battle-resource-bridge
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.initiative-proficiency-and-swap
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.monk-focus-battle-options
 export {
   battleCreatureInitFromCharacterBuild,
+  characterBattleInitiativeScore,
   characterBattleResourceInitsFromBuild,
   startBattleFromCharacterBuildAndStatBlock,
+  type CharacterBattleInitiativeProficiencyChoice,
   type CharacterBuildCreatureInput,
 } from "./battle-creature-init.ts";
 export {

@@ -253,6 +253,19 @@ function representativeMatrixRow(unitId, matrixUnitsById) {
 
 function catalogReadinessForUnit(unitId, matrixUnitsById) {
   const rows = matrixRowsForUnit(unitId, matrixUnitsById);
+  if (rows.length > 1) {
+    return {
+      status: "duplicate-catalog-identity",
+      ready: false,
+      kind: rows[0].kind,
+      sourceRecordPath: rows[0].sourceRecordPath,
+      sourceRecordPaths: rows
+        .map((row) => row.sourceRecordPath)
+        .filter(Boolean)
+        .sort(),
+      duplicateRowCount: rows.length,
+    };
+  }
   const installed = rows.find(
     (row) => row.catalogAdmission?.status === "installed",
   );
@@ -1131,6 +1144,12 @@ function renderReadinessGroupRows(groups) {
   });
 }
 
+function renderProductReadinessStatusRows(metric) {
+  return Object.entries(metric.rowsByStatus).map(
+    ([status, count]) => `| ${md(status)} | ${count} |`,
+  );
+}
+
 function renderReadinessBlockerRows(rows) {
   if (rows.length === 0) {
     return ["| _none_ | _none_ | _none_ | _none_ | _none_ |"];
@@ -1162,6 +1181,14 @@ function renderStrictFullSupport(report, scope) {
     `| Supported Unit rules-kernel chain | ${renderMetric(report.metrics.rulesKernelSupportedUnitCoverage)} |`,
     "",
     "These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.",
+    "",
+    "### Product Readiness Accounting",
+    "",
+    "Product readiness is diagnostic lower-layer accounting. Rows in statuses other than `accepted` or `accepted-no-battle-effect` stay visible here, but they do not block the full-support claim unless they also appear in SRD-authored readiness blockers.",
+    "",
+    "| Status | Rows |",
+    "| --- | ---: |",
+    ...renderProductReadinessStatusRows(report.metrics.productReadiness),
     "",
     "## Full-Support Claim Gate",
     "",
@@ -1307,6 +1334,7 @@ function renderLevel12FullSupport(report) {
 module.exports = {
   buildLevel1FullSupport,
   buildLevel12FullSupport,
+  buildSrdAuthoredProductReadiness,
   renderLevel1FullSupport,
   renderLevel12FullSupport,
 };

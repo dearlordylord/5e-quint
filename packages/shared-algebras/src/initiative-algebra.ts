@@ -65,6 +65,43 @@ export const initiativeEntries = <T>(
   ...stack.stillToAct,
 ];
 
+export const swapInitialInitiativeScores = <T>(
+  stack: InitiativeStack<T>,
+  left: T,
+  right: T,
+): Option.Option<InitiativeStack<T>> => {
+  if (stack.alreadyActed.length > 0 || Object.is(left, right)) {
+    return Option.none();
+  }
+  const order = initiativeEntries(stack);
+  const leftEntry = order.find((entry) => Object.is(entry.creature, left));
+  const rightEntry = order.find((entry) => Object.is(entry.creature, right));
+  if (leftEntry === undefined || rightEntry === undefined) {
+    return Option.none();
+  }
+
+  const swappedOrder = order
+    .map((entry, originalOrder) => ({
+      originalOrder,
+      entry: Object.is(entry.creature, left)
+        ? { ...entry, initiative: rightEntry.initiative }
+        : Object.is(entry.creature, right)
+          ? { ...entry, initiative: leftEntry.initiative }
+          : entry,
+    }))
+    .sort(
+      (leftEntryWithOrder, rightEntryWithOrder) =>
+        rightEntryWithOrder.entry.initiative -
+          leftEntryWithOrder.entry.initiative ||
+        leftEntryWithOrder.originalOrder - rightEntryWithOrder.originalOrder,
+    )
+    .map(({ entry }) => entry);
+
+  return isNonEmptyReadonlyArray(swappedOrder)
+    ? Option.some(createInitiativeStack(swappedOrder, stack.round))
+    : Option.none();
+};
+
 export const insertAtOrderIndex = <T>(
   stack: InitiativeStack<T>,
   index: number,

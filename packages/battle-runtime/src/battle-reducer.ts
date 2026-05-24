@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.initiative-proficiency-and-swap
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ongoing-spell-ending
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-mirror-image-hit-interception
@@ -195,8 +196,12 @@ import {
 } from "./battle-reducer/domain-constants.ts";
 export {
   addBattleCombatant,
+  applyInitiativeSwap,
+  finishInitialInitiativeSetup,
   removeBattleCombatants,
   startBattle,
+  startBattleWithInitialInitiativeSetup,
+  type InitialInitiativeSetup,
 } from "./battle-reducer/api-lifecycle.ts";
 
 export {

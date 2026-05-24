@@ -11,18 +11,27 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | Strict runtime/profile support | 78/94 (83%) |
 | Strict target closure | 94/94 (100%) |
 | Product readiness | 367/367 (100%) |
-| SRD authored product readiness | 54/58 (93.1%) |
+| SRD authored product readiness | 58/58 (100%) |
 | Rules-kernel profile join | 58/58 (100%) |
 | Rules-kernel covered profile join | 58/58 (100%) |
 | Supported Unit rules-kernel chain | 78/78 (100%) |
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
+### Product Readiness Accounting
+
+Product readiness is diagnostic lower-layer accounting. Rows in statuses other than `accepted` or `accepted-no-battle-effect` stay visible here, but they do not block the full-support claim unless they also appear in SRD-authored readiness blockers.
+
+| Status | Rows |
+| --- | ---: |
+| accepted | 279 |
+| accepted-no-battle-effect | 88 |
+
 ## Full-Support Claim Gate
 
 | Gate | Status | Blocking issue |
 | --- | --- | --- |
-| SRD authored product readiness | blocked | 4 unresolved authored readiness row(s) |
+| SRD authored product readiness | pass | _none_ |
 
 A failed gate invalidates a full level-support claim without pretending to be a weighted completion percentage.
 
@@ -33,11 +42,11 @@ This gate checks authored records and retained Unit references that must resolve
 | Group | Status | Ready | Meaning |
 | --- | --- | ---: | --- |
 | SRD background records | complete | 4/4 (100%) | Every SRD background selectable at character creation must be installed. |
-| SRD background origin feat refs | blocked | 1/4 (25%) | Every finalized background origin feat ref must resolve through the Unit catalog before character-to-battle admission can be claimed. |
+| SRD background origin feat refs | complete | 4/4 (100%) | Every finalized background origin feat ref must resolve through the Unit catalog before character-to-battle admission can be claimed. |
 | SRD background concrete equipment refs | complete | 4/4 (100%) | Every concrete Unit ref in SRD background starting equipment must resolve through the Unit catalog. |
 | SRD species records | complete | 6/6 (100%) | Every SRD species selectable at character creation must be installed. |
 | SRD species trait refs | complete | 11/11 (100%) | Every finalized species trait ref must resolve through the Unit catalog before character-to-battle admission can be claimed. |
-| SRD class feature grants through level 1 | blocked | 24/25 (96%) | Every level-scoped class feature grant retained by finalization must resolve through the Unit catalog. |
+| SRD class feature grants through level 1 | complete | 25/25 (100%) | Every level-scoped class feature grant retained by finalization must resolve through the Unit catalog. |
 | SRD class concrete equipment refs | complete | 0/0 (n/a) | Every concrete Unit ref in SRD class starting equipment must resolve through the Unit catalog. |
 | Unique SRD concrete equipment refs | complete | 4/4 (100%) | Unique concrete weapon, armor, and shield Unit refs reachable from SRD starting equipment. |
 
@@ -45,10 +54,7 @@ This gate checks authored records and retained Unit references that must resolve
 
 | Group | Owner Unit | Relation | Blocking Unit | Status |
 | --- | --- | --- | --- | --- |
-| background-origin-feat-refs | `background_acolyte` | background.originFeatId | `feat_magic_initiate_cleric` | missing-authored-record |
-| background-origin-feat-refs | `background_criminal` | background.originFeatId | `alert` | not-in-unit-catalog, not-in-unit-catalog |
-| background-origin-feat-refs | `background_sage` | background.originFeatId | `feat_magic_initiate_wizard` | missing-authored-record |
-| level-scoped-class-feature-grants | `class_warlock` | class.featureGrants.level-1 | `warlock_pact_magic` | missing-authored-record |
+| _none_ | _none_ | _none_ | _none_ | _none_ |
 
 ## Legacy SRD-Authored Character Creation Catalog
 

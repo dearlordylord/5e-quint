@@ -4,6 +4,7 @@ import { Option } from "effect";
 // Keep authoring changes in Dhall, then regenerate JSON and trace output.
 import armorChainMailInput from "../../content/armor_chain_mail.json";
 import aidInput from "../../content/aid.json";
+import alertInput from "../../content/alert.json";
 import alterSelfInput from "../../content/alter_self.json";
 import animalFriendshipInput from "../../content/animal_friendship.json";
 import animalMessengerInput from "../../content/animal_messenger.json";
@@ -80,6 +81,8 @@ import featAbilityScoreImprovementInput from "../../content/feat_ability_score_i
 import featArcheryInput from "../../content/feat_archery.json";
 import featBoonOfCombatProwessInput from "../../content/feat_boon_of_combat_prowess.json";
 import featDefenseInput from "../../content/feat_defense.json";
+import featMagicInitiateClericInput from "../../content/feat_magic_initiate_cleric.json";
+import featMagicInitiateWizardInput from "../../content/feat_magic_initiate_wizard.json";
 import featSavageAttackerInput from "../../content/feat_savage_attacker.json";
 import fighterActionSurgeInput from "../../content/fighter_action_surge.json";
 import fighterExtraAttackInput from "../../content/fighter_extra_attack.json";
@@ -234,6 +237,7 @@ import trueStrikeInput from "../../content/true_strike.json";
 import warlockEldritchInvocationsInput from "../../content/warlock_eldritch_invocations.json";
 import warlockFiendSpellsInput from "../../content/warlock_fiend_spells.json";
 import warlockMagicalCunningInput from "../../content/warlock_magical_cunning.json";
+import warlockPactMagicInput from "../../content/warlock_pact_magic.json";
 import viciousMockeryInput from "../../content/vicious_mockery.json";
 import wardingBondInput from "../../content/warding_bond.json";
 import webInput from "../../content/web.json";
@@ -444,6 +448,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     sorcererMetamagicInput,
     sorcererDraconicSpellsInput,
     warlockEldritchInvocationsInput,
+    warlockPactMagicInput,
     warlockMagicalCunningInput,
     warlockFiendSpellsInput,
     wizardRitualAdeptInput,
@@ -454,6 +459,9 @@ export const srdUnitCollection = defineSrdUnitCollection({
     featArcheryInput,
     featBoonOfCombatProwessInput,
     featDefenseInput,
+    alertInput,
+    featMagicInitiateClericInput,
+    featMagicInitiateWizardInput,
     featSavageAttackerInput,
     paladinLayOnHandsInput,
     paladinFightingStyleInput,

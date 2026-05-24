@@ -1,0 +1,13 @@
+let magicInitiateWizard =
+      { category = "origin"
+      , description =
+          "Magic Initiate specialized to the Wizard spell list: choose two Wizard cantrips, choose one level 1 Wizard spell that is always prepared and has one free Long Rest cast, choose Intelligence, Wisdom, or Charisma as the spellcasting ability, and replace one chosen spell with another same-level Wizard spell when gaining a level."
+      , id = "feat_magic_initiate_wizard"
+      , kind = "feat"
+      , mechanics =
+        { family = "magic_initiate", spellList = "wizard" }
+      , name = "Magic Initiate (Wizard)"
+      , provenance = { kind = "srd-5.2.1", section = "Feats.md:33-45" }
+      }
+
+in  magicInitiateWizard

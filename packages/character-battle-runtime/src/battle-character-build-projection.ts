@@ -46,9 +46,10 @@ import { isMonkWeapon } from "@dnd/shared-algebras/martial-arts-algebra";
 import {
   abilityModifier as battleAbilityModifier,
   attackBonus as battleAttackBonus,
+  characterLevel,
   classLevel,
   type AbilityModifier,
-  proficiencyBonus,
+  proficiencyBonusForCharacterLevel,
   resourceCount,
   spellSlotLevel,
 } from "@dnd/shared/types";
@@ -347,7 +348,9 @@ export function characterBaseUnarmedStrikeActionOption(
   const strengthModifier = battleAbilityModifier(
     scoreModifier(build.abilityScores.str),
   );
-  const buildProficiencyBonus = proficiencyBonus(characterLevel(build));
+  const buildProficiencyBonus = proficiencyBonusForCharacterLevel(
+    characterBuildLevel(build),
+  );
   const baseAttack = {
     kind: "unarmedStrike",
     effect: {
@@ -434,7 +437,9 @@ function pactBladeWeaponAttack(
   const charismaModifier = battleAbilityModifier(
     scoreModifier(build.abilityScores.cha),
   );
-  const characterProficiency = proficiencyBonus(characterLevel(build));
+  const characterProficiency = proficiencyBonusForCharacterLevel(
+    characterBuildLevel(build),
+  );
   const charismaAttack = {
     ability: "cha" as const,
     abilityModifier: charismaModifier,
@@ -588,7 +593,9 @@ function martialArtsUnarmedStrike(
     attack.attackAbility,
     attack.attackAbilityModifier,
   );
-  const proficiency = proficiencyBonus(characterLevel(build));
+  const proficiency = proficiencyBonusForCharacterLevel(
+    characterBuildLevel(build),
+  );
   const damageReplacement = projection.martialArts.damageReplacement;
   const effect = {
     kind: "damage" as const,
@@ -767,7 +774,9 @@ export function characterSpellcasting(input: {
     spellcastingAbilityModifier: battleAbilityModifier(
       scoreModifier(build.abilityScores[sources.right.spellcastingAbility]),
     ),
-    proficiencyBonus: proficiencyBonus(characterLevel(build)),
+    proficiencyBonus: proficiencyBonusForCharacterLevel(
+      characterBuildLevel(build),
+    ),
     canCastSpells: canCastSpells.right,
     cantrips: cantrips.right,
     preparedSpells: preparedSpells.right,
@@ -1151,8 +1160,8 @@ function spellcastingSourcesWithOneAbilityAndClass(input: {
       );
 }
 
-function characterLevel(build: CharacterBuild): number {
-  return computeTotalLevel(build.progression);
+function characterBuildLevel(build: CharacterBuild) {
+  return characterLevel(computeTotalLevel(build.progression));
 }
 
 function spellRecordsForIds(

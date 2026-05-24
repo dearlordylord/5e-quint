@@ -4,6 +4,8 @@ import {
   ResourceCount,
   SpellSlotLevel,
   abilityModifier,
+  characterLevel,
+  proficiencyBonusForCharacterLevel,
   resourceCount,
   spellSlotLevel,
   type ProficiencyBonus,
@@ -1161,7 +1163,9 @@ function supportedResourceCapForLevel(
     return resourceCount(resource.cap.uses);
   }
   if (resource.cap.kind === "proficiency_bonus") {
-    return resourceCount(Math.max(2, Math.floor((level - 1) / 4) + 2));
+    return resourceCount(
+      proficiencyBonusForCharacterLevel(characterLevel(level)),
+    );
   }
   if (resource.cap.kind === "linear_per_level") {
     return resourceCount(
