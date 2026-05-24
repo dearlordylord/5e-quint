@@ -381,6 +381,11 @@ Concentration flags, and failed-save rider effects.
 `spell-attack-damage-projection-core.qnt` projects spell attack damage
 profiles into Damage Type, hit-applied effects, and object-target support.
 
+`spell-attack-burst-save-damage-core.qnt` projects attack-burst
+save-damage profiles into Spell Slot requirement, spell attack Damage Type,
+burst Damage Type, higher-slot burst dice, and successful-save burst damage
+policy.
+
 `spell-independent-attack-sequence-core.qnt` projects independent spell attack
 sequence profiles into Damage Type, object-target support, attack counts, and
 needs-targets/needs-attack-roll/needs-damage-roll/complete step states.
@@ -440,6 +445,11 @@ Scope:
   Damage Type, object-target support, Cantrip Upgrade or higher-slot attack
   counts, and the next required sequence step without importing authored Spell
   Definition records;
+- attack-burst save-damage profile facts for Ice Knife live in
+  `spell-attack-burst-save-damage-core.qnt`; they project Spell Slot
+  requirement, Piercing attack Damage Type, Cold burst Damage Type,
+  higher-slot burst dice scaling, and no burst damage on a successful save
+  without importing authored Spell Definition records;
 - spell turn-hook facts live in `spell-turn-hook-core.qnt`; they project
   turn-start Temporary Hit Points, once-per-turn reset, one-round Shield expiry,
   and timed duration ticking without importing authored Spell Definition

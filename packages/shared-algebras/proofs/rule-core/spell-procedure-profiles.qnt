@@ -25,9 +25,6 @@ module spellProcedureProfiles {
   //   Mind Spike.
   // - Spells/Descriptions-Q-R.md: Ray of Frost.
 
-  type AttackBurstSaveDamageProfile =
-    | IceKnifeAttackBurstSaveDamageProfile
-
   type SpellAreaProfile =
     | NoSpellAreaProfile
     | MassCureWoundsPointOriginSphereArea
@@ -73,29 +70,6 @@ module spellProcedureProfiles {
     if (profile == MassCureWoundsSpellProfile) MassCureWoundsPointOriginSphereArea else NoSpellAreaProfile
 
   val massCureWoundsPointOriginSphereRadiusFeet = 30
-
-  pure def attackBurstSaveDamageRequiresSlot(profile: AttackBurstSaveDamageProfile): bool =
-    match profile {
-      | IceKnifeAttackBurstSaveDamageProfile => true
-    }
-
-  pure def attackBurstSaveDamageAttackType(profile: AttackBurstSaveDamageProfile): RuleDamageType =
-    match profile {
-      | IceKnifeAttackBurstSaveDamageProfile => PiercingDamage
-    }
-
-  pure def attackBurstSaveDamageBurstType(profile: AttackBurstSaveDamageProfile): RuleDamageType =
-    match profile {
-      | IceKnifeAttackBurstSaveDamageProfile => ColdDamage
-    }
-
-  pure def attackBurstSaveDamageBurstDice(profile: AttackBurstSaveDamageProfile, slotLevel: int): int =
-    match profile {
-      | IceKnifeAttackBurstSaveDamageProfile => if (slotLevel < 1) 0 else 2 + (slotLevel - 1)
-    }
-
-  pure def attackBurstSaveDamageBurstAmount(damageRoll: int, savingThrowSucceeded: bool): int =
-    if (savingThrowSucceeded) 0 else damageRoll
 
   pure def rayOfFrostMaximumBaseDamageDice: int = 4
 

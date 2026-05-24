@@ -12,6 +12,7 @@ module spellProcedureProfilesExamples {
   import spellInvocationResourceCore.* from "./spell-invocation-resource-core"
   import spellInvocationActionSlotCore.* from "./spell-invocation-action-slot-core"
   import spellInvocationTargetCardinalityCore.* from "./spell-invocation-target-cardinality-core"
+  import spellDamageProjectionCore.* from "./spell-damage-projection-core"
   import spellDirectDamageProjectionCore.* from "./spell-direct-damage-projection-core"
   import spellAttackDamageProjectionCore.* from "./spell-attack-damage-projection-core"
   import spellSaveDamageProjectionCore.* from "./spell-save-damage-projection-core"
@@ -19,6 +20,7 @@ module spellProcedureProfilesExamples {
   import spellScalarBuffProjectionCore.* from "./spell-scalar-buff-projection-core"
   import spellDamageRiderProjectionCore.* from "./spell-damage-rider-projection-core"
   import spellChainedAttackDamageProjectionCore.* from "./spell-chained-attack-damage-projection-core"
+  import spellAttackBurstSaveDamageCore.* from "./spell-attack-burst-save-damage-core"
   import spellIndependentAttackSequenceCore.* from "./spell-independent-attack-sequence-core"
   import spellTurnHookCore.* from "./spell-turn-hook-core"
   import spellObjectHitPointDamageCore.* from "./spell-object-hit-point-damage-core"
@@ -377,8 +379,9 @@ module spellProcedureProfilesExamples {
       assert(attackBurstSaveDamageBurstType(IceKnifeAttackBurstSaveDamageProfile) == ColdDamage),
       assert(attackBurstSaveDamageBurstDice(IceKnifeAttackBurstSaveDamageProfile, 1) == 2),
       assert(attackBurstSaveDamageBurstDice(IceKnifeAttackBurstSaveDamageProfile, 3) == 4),
-      assert(attackBurstSaveDamageBurstAmount(6, false) == 6),
-      assert(attackBurstSaveDamageBurstAmount(6, true) == 0),
+      assert(attackBurstSaveDamageBurstSuccessPolicy(IceKnifeAttackBurstSaveDamageProfile) == SpellNoDamageOnSuccessfulSave),
+      assert(attackBurstSaveDamageProfileBurstAmount(IceKnifeAttackBurstSaveDamageProfile, 6, false) == 6),
+      assert(attackBurstSaveDamageProfileBurstAmount(IceKnifeAttackBurstSaveDamageProfile, 6, true) == 0),
     }
   }
 
