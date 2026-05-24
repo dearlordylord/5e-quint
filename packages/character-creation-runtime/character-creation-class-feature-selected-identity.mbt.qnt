@@ -1,0 +1,65 @@
+// -*- mode: Bluespec; -*-
+
+module characterCreationClassFeatureSelectedIdentityMbt {
+  var qLastResult: str
+  var qFeatureUnitId: str
+  var qLinkedUnitId: str
+  var qChoiceCount: int
+  var qResourceMaximum: int
+  var qKnownFormCount: int
+  var qShortRestRefill: int
+  var qLongRestRefillsAll: bool
+  var qAccepted: bool
+
+  action recordProjection(
+    lastResult: str,
+    featureUnitId: str,
+    linkedUnitId: str,
+    choiceCount: int,
+    resourceMaximum: int,
+    knownFormCount: int,
+    shortRestRefill: int,
+    longRestRefillsAll: bool,
+    accepted: bool,
+  ): bool = all {
+    qLastResult' = lastResult,
+    qFeatureUnitId' = featureUnitId,
+    qLinkedUnitId' = linkedUnitId,
+    qChoiceCount' = choiceCount,
+    qResourceMaximum' = resourceMaximum,
+    qKnownFormCount' = knownFormCount,
+    qShortRestRefill' = shortRestRefill,
+    qLongRestRefillsAll' = longRestRefillsAll,
+    qAccepted' = accepted,
+  }
+
+  action init =
+    recordProjection("init", "none", "none", 0, 0, 0, 0, false, false)
+
+  action doSelectBardExpertise = all {
+    qLastResult == "init",
+    recordProjection("bard-expertise", "bard_expertise", "none", 2, 0, 0, 0, false, true),
+  }
+
+  action doProjectClericChannelDivinity = all {
+    qLastResult == "init",
+    recordProjection("cleric-channel-divinity", "cleric_channel_divinity", "none", 2, 2, 0, 1, true, true),
+  }
+
+  action doProjectDruidWildShape = all {
+    qLastResult == "init",
+    recordProjection("druid-wild-shape", "druid_wild_shape", "none", 0, 2, 4, 1, true, true),
+  }
+
+  action doProjectDruidWildCompanion = all {
+    qLastResult == "init",
+    recordProjection("druid-wild-companion", "druid_wild_companion", "druid_wild_shape", 2, 0, 0, 0, false, true),
+  }
+
+  action step = any {
+    doSelectBardExpertise,
+    doProjectClericChannelDivinity,
+    doProjectDruidWildShape,
+    doProjectDruidWildCompanion,
+  }
+}

@@ -26,7 +26,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Rules-kernel covered profile coverage | 127/132 | 96.2% |
 | Supported Unit rules-kernel chain coverage | 143/144 | 99.3% |
 | Deterministic admission/projection coverage | 142/142 | 100% |
-| Selected identity replay coverage | 109/142 | 76.8% |
+| Selected identity replay coverage | 113/142 | 79.6% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -986,10 +986,14 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `barbarian_rage` | `unit-feature.bonus-action-ongoing-rage` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `barbarian_unarmored_defense` | `character-sheet.armor-class-base-formula` | armor-class-base-formula | `packages/character-sheet-runtime/src/armor-class-base-selected-identity.mbt.test.ts` |
 | `barbarian_reckless_attack` | `unit-feature.first-attack-roll-reckless-advantage` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `barbarian_danger_sense` | `unit-feature.passive-saving-throw-roll-mode` | B4-CLASS-FEATURE-IDENTITY-BATCH-1 | `packages/battle-runtime/src/danger-sense-selected-identity.mbt.test.ts` |
 | `barbarian_fast_movement` | `unit-feature.passive-speed-bonus` | movement-forced-movement | `packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts` |
 | `bard_bardic_inspiration` | `unit-feature.bardic-inspiration-grant`, `unit-feature.bardic-inspiration-failed-d20-test` | L1D2-BARDIC-INSPIRATION-SCALING | `packages/battle-runtime/src/bardic-inspiration-selected-identity.mbt.test.ts` |
 | `bard_cutting_words` | `unit-feature.reaction-roll-or-damage-reduction` | reaction-interruption | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `bard_jack_of_all_trades` | `character-sheet.ability-check-proficiency-bonus` | B4-CLASS-FEATURE-IDENTITY-BATCH-1 | `packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts` |
+| `cleric_channel_divinity` | `character-creation.class-feature-resource-projection` | B4-CLASS-FEATURE-IDENTITY-BATCH-1 | `packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts` |
 | `cleric_divine_order` | `character-creation.class-feature-option-projection` | L1D2-CLERIC-DRUID-ORDER | `packages/character-creation-runtime/src/cleric-druid-order-selected-identity.mbt.test.ts` |
+| `druid_circle_of_the_land_spells` | `character-sheet.druid-circle-land-spell-access` | B4-CLASS-FEATURE-IDENTITY-BATCH-1 | `packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts` |
 | `druid_primal_order` | `character-creation.class-feature-option-projection` | L1D2-CLERIC-DRUID-ORDER | `packages/character-creation-runtime/src/cleric-druid-order-selected-identity.mbt.test.ts` |
 | `monk_martial_arts` | `unit-feature.martial-arts-attack-projection` | L1D2-MONK-MARTIAL-ARTS-SCALING | `packages/battle-runtime/src/monk-martial-arts-selected-identity.mbt.test.ts` |
 | `monk_unarmored_defense` | `character-sheet.armor-class-base-formula` | armor-class-base-formula | `packages/character-sheet-runtime/src/armor-class-base-selected-identity.mbt.test.ts` |
@@ -1096,14 +1100,6 @@ This generated view lists `profile-subset-supported` and `supported-profile` Uni
 
 | Unit | Claim | Catalog | Collection | Kind | Profiles | Source |
 | --- | --- | --- | --- | --- | --- | --- |
-| `barbarian_danger_sense` | supported-profile | installed | srd-5.2.1 | class_feature | `unit-feature.passive-saving-throw-roll-mode` | `packages/surface/content/barbarian_danger_sense.json` |
-| `bard_expertise` | profile-subset-supported | installed | srd-5.2.1 | class_feature | `character-creation.skill-expertise-choice` | `packages/surface/content/bard_expertise.json` |
-| `bard_jack_of_all_trades` | supported-profile | installed | srd-5.2.1 | class_feature | `character-sheet.ability-check-proficiency-bonus` | `packages/surface/content/bard_jack_of_all_trades.json` |
-| `cleric_channel_divinity` | supported-profile | installed | srd-5.2.1 | class_feature | `character-creation.class-feature-resource-projection` | `packages/surface/content/cleric_channel_divinity.json` |
-| `cleric_life_domain_spells` | profile-subset-supported | installed | srd-5.2.1 | class_feature | `character-sheet.class-feature-prepared-spell-access` | `packages/surface/content/cleric_life_domain_spells.json` |
-| `druid_circle_of_the_land_spells` | supported-profile | installed | srd-5.2.1 | class_feature | `character-sheet.druid-circle-land-spell-access` | `packages/surface/content/druid_circle_of_the_land_spells.json` |
-| `druid_wild_companion` | profile-subset-supported | installed | srd-5.2.1 | class_feature | `character-creation.class-feature-source-fact-projection` | `packages/surface/content/druid_wild_companion.json` |
-| `druid_wild_shape` | profile-subset-supported | installed | srd-5.2.1 | class_feature | `character-creation.class-feature-resource-projection`, `character-sheet.class-feature-use-count-resource`, `unit-feature.druid-wild-shape-known-form` | `packages/surface/content/druid_wild_shape.json` |
 | `monk_monks_focus` | profile-subset-supported | installed | srd-5.2.1 | class_feature | `character-creation.class-feature-resource-projection`, `character-sheet.class-feature-use-count-resource`, `unit-feature.monk-focus-battle-options` | `packages/surface/content/monk_monks_focus.json` |
 | `monk_unarmored_movement` | supported-profile | installed | srd-5.2.1 | class_feature | `unit-feature.passive-speed-bonus` | `packages/surface/content/monk_unarmored_movement.json` |
 | `monk_uncanny_metabolism` | supported-profile | installed | srd-5.2.1 | class_feature | `character-creation.class-feature-source-fact-projection`, `character-sheet.class-feature-long-rest-use-state`, `character-sheet.monk-uncanny-metabolism-initiative-recovery` | `packages/surface/content/monk_uncanny_metabolism.json` |

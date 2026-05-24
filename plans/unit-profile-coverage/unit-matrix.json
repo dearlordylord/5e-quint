@@ -108,8 +108,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 142,
-      "numerator": 109,
-      "percent": "76.8%"
+      "numerator": 113,
+      "percent": "79.6%"
     },
     "supportedProfileCoverage": {
       "denominator": 210,
@@ -9203,114 +9203,8 @@
       ],
       "evidenceTag": "selected-identity-mbt"
     },
-    "rowCount": 69,
+    "rowCount": 61,
     "rows": [
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "class_feature",
-        "sourceRecordPath": "packages/surface/content/barbarian_danger_sense.json",
-        "support": {
-          "profileIds": [
-            "unit-feature.passive-saving-throw-roll-mode"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "barbarian_danger_sense"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "class_feature",
-        "sourceRecordPath": "packages/surface/content/bard_expertise.json",
-        "support": {
-          "profileIds": [
-            "character-creation.skill-expertise-choice"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "bard_expertise"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "class_feature",
-        "sourceRecordPath": "packages/surface/content/bard_jack_of_all_trades.json",
-        "support": {
-          "profileIds": [
-            "character-sheet.ability-check-proficiency-bonus"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "bard_jack_of_all_trades"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "class_feature",
-        "sourceRecordPath": "packages/surface/content/cleric_channel_divinity.json",
-        "support": {
-          "profileIds": [
-            "character-creation.class-feature-resource-projection"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "cleric_channel_divinity"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "class_feature",
-        "sourceRecordPath": "packages/surface/content/cleric_life_domain_spells.json",
-        "support": {
-          "profileIds": [
-            "character-sheet.class-feature-prepared-spell-access"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "cleric_life_domain_spells"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "class_feature",
-        "sourceRecordPath": "packages/surface/content/druid_circle_of_the_land_spells.json",
-        "support": {
-          "profileIds": [
-            "character-sheet.druid-circle-land-spell-access"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "druid_circle_of_the_land_spells"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "class_feature",
-        "sourceRecordPath": "packages/surface/content/druid_wild_companion.json",
-        "support": {
-          "profileIds": [
-            "character-creation.class-feature-source-fact-projection"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "druid_wild_companion"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "class_feature",
-        "sourceRecordPath": "packages/surface/content/druid_wild_shape.json",
-        "support": {
-          "profileIds": [
-            "character-creation.class-feature-resource-projection",
-            "character-sheet.class-feature-use-count-resource",
-            "unit-feature.druid-wild-shape-known-form"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "druid_wild_shape"
-      },
       {
         "catalogAdmissionStatus": "installed",
         "collectionId": "srd-5.2.1",
@@ -14080,6 +13974,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-danger-sense.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-CLASS-BARBARIAN-DANGER-SENSE"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/danger-sense-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B4-CLASS-FEATURE-IDENTITY-BATCH-1"
         }
       ],
       "executableMechanics": true,
@@ -14487,6 +14386,11 @@
           "ownerPath": "packages/character-creation-runtime/src/bard-expertise.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-AUTHOR-BARD-EXPERTISE"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B4-CLASS-FEATURE-IDENTITY-BATCH-1"
         }
       ],
       "executableMechanics": true,
@@ -14540,6 +14444,11 @@
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-CLASS-BARD-JACK-OF-ALL-TRADES"
+        },
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B4-CLASS-FEATURE-IDENTITY-BATCH-1"
         }
       ],
       "executableMechanics": true,
@@ -14595,6 +14504,11 @@
           "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B4-CLASS-FEATURE-IDENTITY-BATCH-1"
         }
       ],
       "executableMechanics": true,
@@ -14716,7 +14630,13 @@
         "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B4-CLASS-FEATURE-IDENTITY-BATCH-1"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
       "profiles": [
@@ -14774,6 +14694,11 @@
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-FOLLOWUP-DRUID-CIRCLE-LAND-SPELL-ACCESS"
+        },
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B4-CLASS-FEATURE-IDENTITY-BATCH-1"
         }
       ],
       "executableMechanics": true,
@@ -14945,6 +14870,11 @@
           "ownerPath": "packages/battle-runtime/src/battle-runtime-druid-wild-shape.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B4-CLASS-FEATURE-IDENTITY-BATCH-1"
         }
       ],
       "executableMechanics": true,
@@ -15080,7 +15010,13 @@
         "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B4-CLASS-FEATURE-IDENTITY-BATCH-1"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
       "profiles": [

@@ -936,6 +936,11 @@ export type CharacterSheetBookOfShadowsRitualInvocation = {
   readonly requiresBookOfShadowsOnPerson: true;
 };
 
+export type CharacterSheetClassFeaturePreparedSpellAccess = {
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly spellIds: readonly UnitRecord["id"][];
+};
+
 export type CharacterSheetSpellInvocation =
   | CharacterSheetSpellbookRitualInvocation
   | CharacterSheetBookOfShadowsRitualInvocation;
@@ -6371,13 +6376,16 @@ function hasSelectedWarlockEldritchInvocation(
   });
 }
 
-function featurePreparedSpellIdsForBuild(
-  build: CharacterBuild,
-  unitLibrary: UnitCatalog,
-): readonly UnitRecord["id"][] {
-  const spellIds: UnitRecord["id"][] = [];
-  for (const unitId of characterBuildFeatureUnitIds(build, unitLibrary)) {
-    const unit = unitLibrary.getUnit(unitId);
+export function characterSheetClassFeaturePreparedSpellAccessesForBuild(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+}): readonly CharacterSheetClassFeaturePreparedSpellAccess[] {
+  const accesses: CharacterSheetClassFeaturePreparedSpellAccess[] = [];
+  for (const unitId of characterBuildFeatureUnitIds(
+    input.build,
+    input.unitLibrary,
+  )) {
+    const unit = input.unitLibrary.getUnit(unitId);
     if (
       Option.isNone(unit) ||
       unit.value.kind !== "class_feature" ||
@@ -6385,13 +6393,26 @@ function featurePreparedSpellIdsForBuild(
     ) {
       continue;
     }
-    for (const grant of unit.value.mechanics.grants) {
-      if (grant.kind === "grant_spell_access" && grant.mode === "prepared") {
-        spellIds.push(grant.spellId);
-      }
+    const spellIds = unit.value.mechanics.grants.flatMap((grant) =>
+      grant.kind === "grant_spell_access" && grant.mode === "prepared"
+        ? [grant.spellId]
+        : [],
+    );
+    if (spellIds.length > 0) {
+      accesses.push({ sourceUnitId: unit.value.id, spellIds });
     }
   }
-  return spellIds;
+  return accesses;
+}
+
+function featurePreparedSpellIdsForBuild(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+): readonly UnitRecord["id"][] {
+  return characterSheetClassFeaturePreparedSpellAccessesForBuild({
+    build,
+    unitLibrary,
+  }).flatMap((access) => access.spellIds);
 }
 
 function druidCircleLandPreparedSpellAccessForBuild(input: {
