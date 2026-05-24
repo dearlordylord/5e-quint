@@ -66,6 +66,7 @@
 {"unitId":"shield","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT22","ownerPath":"packages/battle-runtime/src/unit-profile-admission-candidate-narrowing-spells.test.ts"}}
 {"unitId":"shield","evidence":{"tag":"selected-identity-mbt","taskId":"reaction-interruption","ownerPath":"packages/battle-runtime/src/reaction-spell-selected-identity.mbt.test.ts"}}
 {"unitId":"counterspell","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT22","ownerPath":"packages/battle-runtime/src/unit-profile-admission-candidate-narrowing-spells.test.ts"}}
+{"unitId":"counterspell","evidence":{"tag":"selected-identity-mbt","taskId":"reaction-interruption","ownerPath":"packages/battle-runtime/src/reaction-spell-selected-identity.mbt.test.ts"}}
 {"unitId":"healing_word","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT25","ownerPath":"packages/battle-runtime/src/unit-profile-admission-healing-spells.test.ts"}}
 {"unitId":"healing_word","evidence":{"tag":"selected-identity-mbt","taskId":"healing-stabilization","ownerPath":"packages/battle-runtime/src/rule-core-spells.mbt.test.ts"}}
 {"unitId":"cure_wounds","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT32","ownerPath":"packages/battle-runtime/src/unit-profile-admission-healing-spells.test.ts"}}
@@ -236,6 +237,7 @@
 {"unitId":"shillelagh","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84H","ownerPath":"packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts"}}
 {"unitId":"shillelagh","evidence":{"tag":"selected-identity-mbt","taskId":"L1E-SHILLELAGH","ownerPath":"packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts"}}
 {"unitId":"find_familiar","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84I5","ownerPath":"packages/battle-runtime/src/find-familiar-lifecycle.test.ts"}}
+{"unitId":"find_familiar","evidence":{"tag":"selected-identity-mbt","taskId":"B22-FIND-FAMILIAR-IDENTITY-WITNESS","ownerPath":"packages/battle-runtime/src/find-familiar-selected-identity.mbt.test.ts"}}
 {"unitId":"fighter_fighting_style","evidence":{"tag":"deterministic-admission-projection","taskId":"AT-L1-03","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"fighter_fighting_style","evidence":{"tag":"selected-identity-mbt","taskId":"L1D2-FIGHTER-FIGHTING-STYLE","ownerPath":"packages/character-creation-runtime/src/fighter-fighting-style-selected-identity.mbt.test.ts"}}
 {"unitId":"fighter_weapon_mastery","evidence":{"tag":"deterministic-admission-projection","taskId":"AT-L1-04","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
@@ -338,7 +340,9 @@
 {"unitId":"web","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE","ownerPath":"packages/battle-runtime/src/unit-profile-admission-web-restraint-hazard.test.ts"}}
 {"unitId":"darkness","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME","ownerPath":"packages/battle-runtime/src/unit-profile-admission-darkness.test.ts"}}
 {"unitId":"dispel_magic","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING","ownerPath":"packages/battle-runtime/src/unit-profile-admission-dispel-magic.test.ts"}}
+{"unitId":"dispel_magic","evidence":{"tag":"selected-identity-mbt","taskId":"B21-DISPEL-MAGIC-IDENTITY-WITNESS","ownerPath":"packages/battle-runtime/src/dispel-magic-selected-identity.mbt.test.ts"}}
 {"unitId":"antimagic_field","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-ANTIMAGIC-FIELD-GENERIC-SUPPRESSION","ownerPath":"packages/battle-runtime/src/unit-profile-admission-antimagic-field.test.ts"}}
+{"unitId":"antimagic_field","evidence":{"tag":"selected-identity-mbt","taskId":"B19-ANTIMAGIC-FIELD-IDENTITY-WITNESS","ownerPath":"packages/battle-runtime/src/antimagic-field-ongoing-suppression.mbt.test.ts"}}
 {"unitId":"prayer_of_healing","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
 {"unitId":"druid_circle_of_the_land_spells","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-DRUID-CIRCLE-LAND-SPELL-ACCESS","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
 {"unitId":"spike_growth","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME","ownerPath":"packages/battle-runtime/src/unit-profile-admission-spike-growth-movement-hazard.test.ts"}}
@@ -363,3 +367,5 @@
 {"unitId":"druid_circle_of_the_land_spells","evidence":{"tag":"selected-identity-mbt","taskId":"B4-CLASS-FEATURE-IDENTITY-BATCH-1","ownerPath":"packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts"}}
 {"unitId":"druid_wild_companion","evidence":{"tag":"selected-identity-mbt","taskId":"B4-CLASS-FEATURE-IDENTITY-BATCH-1","ownerPath":"packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts"}}
 {"unitId":"druid_wild_shape","evidence":{"tag":"selected-identity-mbt","taskId":"B4-CLASS-FEATURE-IDENTITY-BATCH-1","ownerPath":"packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts"}}
+{"unitId":"fireball","evidence":{"tag":"selected-identity-mbt","taskId":"B23-FIREBALL-IDENTITY-WITNESS","ownerPath":"packages/battle-runtime/src/fireball-selected-identity.mbt.test.ts"}}
+{"unitId":"lightning_bolt","evidence":{"tag":"selected-identity-mbt","taskId":"B24-LIGHTNING-BOLT-IDENTITY-WITNESS","ownerPath":"packages/battle-runtime/src/lightning-bolt-selected-identity.mbt.test.ts"}}

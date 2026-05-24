@@ -1,6 +1,7 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt reaction-interruption shield hellish_rebuke
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt reaction-interruption shield hellish_rebuke counterspell
 // UNIT-IDENTITY-MBT-REPLAY: reaction-interruption shield doResolveShieldReactionSpellHit
 // UNIT-IDENTITY-MBT-REPLAY: reaction-interruption hellish_rebuke doResolveHellishRebukeFailedSavingThrow
+// UNIT-IDENTITY-MBT-REPLAY: reaction-interruption counterspell doResolveCounterspellMagicMissileCast
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -32,7 +33,9 @@ import {
   resolveBattleReaction,
   resolveBattleSubject,
   snapshotBattle,
+  spellSlotInvocationRef,
   startBattle,
+  SPELL_CAST_REACTION_FACTS_HOLE_ID,
   type AvailableBattleAct,
   type BattleCreatureInit,
   type BattleFill,
@@ -48,6 +51,7 @@ const reactionSpellSelectedIdentityDriverSchema = {
   init: {},
   doResolveShieldReactionSpellHit: {},
   doResolveHellishRebukeFailedSavingThrow: {},
+  doResolveCounterspellMagicMissileCast: {},
   step: {},
 } as const;
 type ReactionSpellSelectedIdentityDriverAction = Exclude<
@@ -60,8 +64,10 @@ type ReactionSpellSelectedIdentityProjection = {
   readonly triggerCreatureHp: number;
   readonly reactorArmorClass: number;
   readonly reactorReactionAvailable: boolean;
+  readonly triggerCreatureFirstLevelSlotsExpended: number;
   readonly firstLevelSlotsExpended: number;
   readonly secondLevelSlotsExpended: number;
+  readonly thirdLevelSlotsExpended: number;
   readonly lastResult: "init" | "resolved";
 };
 type SelectedUnitIdentityReplaySequence = {
@@ -76,7 +82,8 @@ type SelectedUnitIdentityReplay = {
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
 };
 
-type ReactionSpellUnitId = "shield" | "hellish_rebuke";
+type ReactionSpellUnitId = "shield" | "hellish_rebuke" | "counterspell";
+type SrdSpellUnitId = ReactionSpellUnitId | "magic_missile";
 
 type AttackAct = AvailableBattleAct & {
   readonly subject: Extract<
@@ -91,6 +98,11 @@ const triggerCreatureId = combatantId(
 );
 const partySide = battleCombatantSide("party");
 const oppositionSide = battleCombatantSide("opposition");
+const counterspellUnitId = "counterspell";
+const magicMissileUnitId = "magic_missile";
+const counterspellSlotLevel = 3;
+const magicMissileSlotLevel = 1;
+const magicMissileDartCount = 3;
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -131,6 +143,23 @@ const selectedUnitIdentityReplays = [
           triggerCreatureHp: 9,
           reactorReactionAvailable: false,
           secondLevelSlotsExpended: 1,
+          lastResult: "resolved",
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "reaction-interruption",
+    unitId: "counterspell",
+    actions: ["doResolveCounterspellMagicMissileCast"],
+    sequences: [
+      {
+        name: "spell-cast-reaction-counters-magic-missile",
+        actions: ["doResolveCounterspellMagicMissileCast"],
+        expected: expectedProjection({
+          reactorReactionAvailable: false,
+          triggerCreatureFirstLevelSlotsExpended: 0,
+          thirdLevelSlotsExpended: 1,
           lastResult: "resolved",
         }),
       },
@@ -265,6 +294,28 @@ function createReactionSpellSelectedIdentityDriver() {
           }),
         );
       },
+      doResolveCounterspellMagicMissileCast: () => {
+        state = counterspellBattle();
+        const awaitingReaction = startMagicMissileWithCounterspell(state);
+        const choice = requireCounterspellChoice(awaitingReaction);
+        recordResolvedResult(
+          resolveBattleReaction({
+            state: awaitingReaction.state,
+            fill: reactionDecisionFill(
+              requireHole(awaitingReaction.holes, "reactionDecision"),
+              {
+                kind: "resolve",
+                reactorId,
+                choice: {
+                  kind: "castTriggeredReactionSpell",
+                  invocation: choice.invocation,
+                  fills: [],
+                },
+              },
+            ),
+          }),
+        );
+      },
       step: () => {},
       getState: () =>
         projectReactionSpellSelectedIdentityState(state, lastResult),
@@ -280,14 +331,16 @@ function expectedProjection(
     triggerCreatureHp: 12,
     reactorArmorClass: 10,
     reactorReactionAvailable: true,
+    triggerCreatureFirstLevelSlotsExpended: 0,
     firstLevelSlotsExpended: 0,
     secondLevelSlotsExpended: 0,
+    thirdLevelSlotsExpended: 0,
     lastResult: "init",
     ...overrides,
   };
 }
 
-function srdSpellRecord(unitId: ReactionSpellUnitId): SpellRecord {
+function srdSpellRecord(unitId: SrdSpellUnitId): SpellRecord {
   const unit = unitLibrary.requireUnit(unitId);
   if (unit.kind !== "spell") {
     throw new Error(`Expected SRD catalog unit ${unitId} to be a Spell.`);
@@ -334,11 +387,61 @@ function reactionSpellBattle(spell: SpellRecord): BattleState {
   return result.right;
 }
 
+function counterspellBattle(): BattleState {
+  const result = startBattle({
+    battleId: battleId("reaction-spell-selected-identity-counterspell"),
+    combatants: [
+      reactionSpellCreature({
+        combatantId: triggerCreatureId,
+        displayName: "Reaction spell trigger creature",
+        initiative: 20,
+        side: oppositionSide,
+        spellcasting: {
+          sourceClassName: "wizard",
+          spellcastingAbilityModifier: abilityModifier(3),
+          proficiencyBonus: proficiencyBonus(2),
+          canCastSpells: true,
+          cantrips: [],
+          preparedSpells: [srdSpellRecord(magicMissileUnitId)],
+          featurePreparedSpells: [],
+          invocationSpellAccesses: [],
+          spellbookRitualSpellAccesses: [],
+          spellSlots: [{ spellLevel: 1, count: 1 }],
+        },
+      }),
+      reactionSpellCreature({
+        combatantId: reactorId,
+        displayName: "Reaction spell caster",
+        initiative: 10,
+        side: partySide,
+        classLevel: 5,
+        spellcasting: {
+          sourceClassName: "wizard",
+          spellcastingAbilityModifier: abilityModifier(3),
+          proficiencyBonus: proficiencyBonus(2),
+          canCastSpells: true,
+          cantrips: [],
+          preparedSpells: [srdSpellRecord(counterspellUnitId)],
+          featurePreparedSpells: [],
+          invocationSpellAccesses: [],
+          spellbookRitualSpellAccesses: [],
+          spellSlots: [{ spellLevel: counterspellSlotLevel, count: 1 }],
+        },
+      }),
+    ],
+  });
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
 function reactionSpellCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: number;
   readonly side: typeof partySide | typeof oppositionSide;
+  readonly classLevel?: number | undefined;
   readonly spellcasting?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -353,7 +456,7 @@ function reactionSpellCreature(input: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),
       characterUnitRefs: [],
-      classLevels: [{ className: "wizard", level: 3 }],
+      classLevels: [{ className: "wizard", level: input.classLevel ?? 3 }],
       d20Statistics: testCharacterD20Statistics(),
       armorClass: defaultArmorClassState(),
       size: "medium",
@@ -379,6 +482,74 @@ function reactionSpellCreature(input: {
         : { spellcasting: input.spellcasting }),
     },
   };
+}
+
+function startMagicMissileWithCounterspell(
+  state: BattleState,
+): Extract<
+  ReturnType<typeof resolveBattleSubject>,
+  { readonly tag: "needsHoles" }
+> {
+  const subject: BattleSubject = {
+    tag: "actionSpell",
+    actorId: triggerCreatureId,
+    invocation: spellSlotInvocationRef(
+      magicMissileUnitId,
+      magicMissileSlotLevel,
+      "repeatedDamageAllocation",
+    ),
+    mode: { tag: "cast" },
+  };
+  const targetAllocationResult = resolveBattleSubject({
+    state,
+    subject,
+    fills: [],
+  });
+  if (targetAllocationResult.tag !== "needsHoles") {
+    throw new Error("Expected Magic Missile target allocation hole.");
+  }
+  const allocation = requireHole(
+    targetAllocationResult.holes,
+    "spellTargetAllocation",
+  );
+  const result = resolveBattleSubject({
+    state,
+    subject,
+    fills: [
+      {
+        kind: "spellTargetAllocation",
+        holeId: allocation.holeId,
+        value: {
+          allocations: [{ targetId: reactorId, count: magicMissileDartCount }],
+        },
+        spatialFacts: [
+          {
+            kind: "spellTarget",
+            casterId: triggerCreatureId,
+            targetId: reactorId,
+            spellId: magicMissileUnitId,
+          },
+        ],
+      },
+      {
+        kind: "targetSpatialFacts",
+        holeId: SPELL_CAST_REACTION_FACTS_HOLE_ID,
+        spatialFacts: [
+          {
+            kind: "counterspellTriggerCasterVisibleWithinRange",
+            reactorId,
+            casterId: triggerCreatureId,
+            spellId: counterspellUnitId,
+            rangeFeet: movementFeet(60),
+          },
+        ],
+      },
+    ],
+  });
+  if (result.tag !== "needsHoles") {
+    throw new Error("Expected Counterspell Reaction window.");
+  }
+  return result;
 }
 
 function resolveAttackRollOnly(input: {
@@ -494,6 +665,35 @@ function resolveShieldReactionChoice(
   });
 }
 
+function requireCounterspellChoice(
+  result: Extract<
+    ReturnType<typeof resolveBattleSubject>,
+    { readonly tag: "needsHoles" }
+  >,
+): Extract<
+  BattleReactionProcedureChoice,
+  { readonly kind: "castTriggeredReactionSpell" }
+> {
+  const choice = result.snapshot.pendingReaction?.choices.find(
+    (
+      candidate,
+    ): candidate is Extract<
+      BattleReactionProcedureChoice,
+      { readonly kind: "castTriggeredReactionSpell" }
+    > =>
+      candidate.kind === "castTriggeredReactionSpell" &&
+      candidate.reactorId === reactorId &&
+      candidate.invocation.tag === "spellSlot" &&
+      candidate.invocation.spellId === counterspellUnitId &&
+      candidate.invocation.procedure === "counterspell" &&
+      Number(candidate.invocation.slotLevel) === counterspellSlotLevel,
+  );
+  if (choice === undefined) {
+    throw new Error("Expected Counterspell level 3 Reaction choice.");
+  }
+  return choice;
+}
+
 function requireHellishRebukeChoice(
   result: Extract<
     ReturnType<typeof resolveBattleSubject>,
@@ -607,8 +807,14 @@ function projectReactionSpellSelectedIdentityState(
     triggerCreatureHp: triggerCreature.hp,
     reactorArmorClass: reactor.armorClass,
     reactorReactionAvailable: reactor.reactionAvailable,
+    triggerCreatureFirstLevelSlotsExpended: expendedSlotsForSpellLevel(
+      state,
+      triggerCreatureId,
+      1,
+    ),
     firstLevelSlotsExpended: expendedSlotsForSpellLevel(state, reactorId, 1),
     secondLevelSlotsExpended: expendedSlotsForSpellLevel(state, reactorId, 2),
+    thirdLevelSlotsExpended: expendedSlotsForSpellLevel(state, reactorId, 3),
     lastResult,
   };
 }
@@ -644,6 +850,10 @@ function normalizeReactionSpellSelectedIdentityQuintState(
       "qReactorArmorClass",
     ),
     reactorReactionAvailable: booleanField(state, "qReactorReactionAvailable"),
+    triggerCreatureFirstLevelSlotsExpended: numberFromQuintInt(
+      state["qTriggerCreatureFirstLevelSlotsExpended"],
+      "qTriggerCreatureFirstLevelSlotsExpended",
+    ),
     firstLevelSlotsExpended: numberFromQuintInt(
       state["qFirstLevelSlotsExpended"],
       "qFirstLevelSlotsExpended",
@@ -651,6 +861,10 @@ function normalizeReactionSpellSelectedIdentityQuintState(
     secondLevelSlotsExpended: numberFromQuintInt(
       state["qSecondLevelSlotsExpended"],
       "qSecondLevelSlotsExpended",
+    ),
+    thirdLevelSlotsExpended: numberFromQuintInt(
+      state["qThirdLevelSlotsExpended"],
+      "qThirdLevelSlotsExpended",
     ),
     lastResult: mbtLastResult(state["qLastResult"]),
   };

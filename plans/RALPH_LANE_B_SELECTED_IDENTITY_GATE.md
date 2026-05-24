@@ -118,7 +118,7 @@ identity evidence or an explicit non-applicable classification.
     {
       "number": 18,
       "id": "B18-RECURSIVE-NEXT-BATCH",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Mine next selected-identity batch"
     },
     {
@@ -138,6 +138,96 @@ identity evidence or an explicit non-applicable classification.
       "id": "L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT",
       "status": "blocked",
       "title": "Promote Acid Arrow delayed runtime support"
+    },
+    {
+      "number": 22,
+      "id": "B19-ANTIMAGIC-FIELD-IDENTITY-WITNESS",
+      "status": "done",
+      "title": "Backfill Antimagic Field selected identity witness"
+    },
+    {
+      "number": 23,
+      "id": "B20-COUNTERSPELL-IDENTITY-WITNESS",
+      "status": "done",
+      "title": "Backfill Counterspell selected identity witness"
+    },
+    {
+      "number": 24,
+      "id": "B21-DISPEL-MAGIC-IDENTITY-WITNESS",
+      "status": "done",
+      "title": "Backfill Dispel Magic selected identity witness"
+    },
+    {
+      "number": 25,
+      "id": "B22-FIND-FAMILIAR-IDENTITY-WITNESS",
+      "status": "done",
+      "title": "Backfill Find Familiar selected identity witness"
+    },
+    {
+      "number": 26,
+      "id": "B23-FIREBALL-IDENTITY-WITNESS",
+      "status": "done",
+      "title": "Backfill Fireball selected identity witness"
+    },
+    {
+      "number": 27,
+      "id": "B24-LIGHTNING-BOLT-IDENTITY-WITNESS",
+      "status": "done",
+      "title": "Backfill Lightning Bolt selected identity witness"
+    },
+    {
+      "number": 28,
+      "id": "B25-SHINING-SMITE-IDENTITY-WITNESS",
+      "status": "ready-for-research",
+      "title": "Backfill Shining Smite selected identity witness"
+    },
+    {
+      "number": 29,
+      "id": "B26-DEFERRED-IDENTITY-GAP-SEMANTICS",
+      "status": "ready-for-research",
+      "title": "Clarify deferred selected identity gap semantics"
+    },
+    {
+      "number": 30,
+      "id": "B27-CREATURE-SIZE-RULES-KERNEL-MAPPING",
+      "status": "ready-for-research",
+      "title": "Map creature size change profile to rules-kernel obligations"
+    },
+    {
+      "number": 31,
+      "id": "B28-WIZARD-SPELLBOOK-LEARNING-RULES-KERNEL-MAPPING",
+      "status": "ready-for-research",
+      "title": "Map Wizard spellbook learning profile to rules-kernel obligations"
+    },
+    {
+      "number": 32,
+      "id": "B29-LEVITATED-CREATURE-RULES-KERNEL-MAPPING",
+      "status": "ready-for-research",
+      "title": "Map levitated creature profile to rules-kernel obligations"
+    },
+    {
+      "number": 33,
+      "id": "B30-CLASS-FEATURE-PREPARED-SPELL-ACCESS-RULES-KERNEL-MAPPING",
+      "status": "ready-for-research",
+      "title": "Map class feature prepared spell access profile to rules-kernel obligations"
+    },
+    {
+      "number": 34,
+      "id": "B31-DRUID-CIRCLE-LAND-SPELL-ACCESS-RULES-KERNEL-MAPPING",
+      "status": "ready-for-research",
+      "title": "Map Druid Circle Land spell access profile to rules-kernel obligations"
+    },
+    {
+      "number": 35,
+      "id": "B32-DRAGONS-BREATH-CATALOG-ADMISSION",
+      "status": "ready-for-research",
+      "title": "Repair Dragon's Breath catalog admission"
+    },
+    {
+      "number": 36,
+      "id": "B33-RAY-OF-ENFEEBLEMENT-CATALOG-ADMISSION",
+      "status": "ready-for-research",
+      "title": "Repair Ray of Enfeeblement catalog admission"
     }
   ]
 }
@@ -189,10 +279,25 @@ Lane B must not:
 | 15 | B15-UNIT-REPORT-HONESTY-PASS - Refresh Unit report wording and metrics | done | B14 | Generated denominator audit for Unit/profile-fact group counts. |
 | 16 | B16-MCP-SCENARIO-IDENTITY-SMOKE - Add MCP selected-identity smoke coverage | done | B14 | One narrow smoke scenario. |
 | 17 | B17-END-TO-END-UNIT-VERIFICATION - Run and document lane B verification | done | B15,B16 | Unit coverage and typecheck. |
-| 18 | B18-RECURSIVE-NEXT-BATCH - Mine next selected-identity batch | ready-for-research | none | Must append >=12 tasks or prove exhaustion. |
+| 18 | B18-RECURSIVE-NEXT-BATCH - Mine next selected-identity batch | done | none | Appended 15 runnable follow-up tasks from generated selected-identity and metric-honesty gaps. |
 | 19 | L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION - Reconcile Acid Arrow RAW corpus | blocked | none | Owner-decision blocker: resolve the local SRD damage-timing contradiction before modeling Acid Arrow executable behavior. |
 | 20 | L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE - Repair Acid Arrow Surface damage shape | blocked | L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION | Make the approved Acid Arrow damage timing, miss branch, delayed damage, and slot scaling executable in Surface content/schema. |
 | 21 | L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT - Promote Acid Arrow delayed runtime support | blocked | L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION,L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE | Add promoted Quint/runtime parity for the approved Acid Arrow behavior. |
+| 22 | B19-ANTIMAGIC-FIELD-IDENTITY-WITNESS - Backfill Antimagic Field selected identity witness | done | none | Added selected-identity MBT evidence for `antimagic_field`; generated selected-identity gaps no longer list it. |
+| 23 | B20-COUNTERSPELL-IDENTITY-WITNESS - Backfill Counterspell selected identity witness | done | none | Added selected-identity MBT evidence for `counterspell`; generated selected-identity gaps no longer list it. |
+| 24 | B21-DISPEL-MAGIC-IDENTITY-WITNESS - Backfill Dispel Magic selected identity witness | done | none | Added selected-identity MBT evidence for `dispel_magic`; generated selected-identity gaps no longer list it. |
+| 25 | B22-FIND-FAMILIAR-IDENTITY-WITNESS - Backfill Find Familiar selected identity witness | done | none | Added focused selected-identity MBT evidence for `find_familiar`; generated selected-identity gaps no longer list it. |
+| 26 | B23-FIREBALL-IDENTITY-WITNESS - Backfill Fireball selected identity witness | done | none | Gap row: `fireball`, profile-subset-supported `spell.invocation-damage-save-or-attack`, installed Surface record. |
+| 27 | B24-LIGHTNING-BOLT-IDENTITY-WITNESS - Backfill Lightning Bolt selected identity witness | done | none | Gap row: `lightning_bolt`, supported-profile `spell.invocation-damage-save-or-attack`, installed Surface record. |
+| 28 | B25-SHINING-SMITE-IDENTITY-WITNESS - Backfill Shining Smite selected identity witness | ready-for-research | none | Gap row: `shining_smite`, supported-profile `spell.invocation-after-hit-damage-illumination`, installed Surface record. |
+| 29 | B26-DEFERRED-IDENTITY-GAP-SEMANTICS - Clarify deferred selected identity gap semantics | ready-for-research | none | Gap rows: `mind_spike` and `thaumaturgy` have deferred-portion non-applicable dispositions but still appear as selected identity gaps; decide whether the generated view needs a separate deferred-visible bucket or whole-claim non-applicable classification. |
+| 30 | B27-CREATURE-SIZE-RULES-KERNEL-MAPPING - Map creature size change profile to rules-kernel obligations | ready-for-research | none | Metric-honesty gap: `spell.invocation-creature-size-change` is unmapped in `rulesKernelProfileJoin`. |
+| 31 | B28-WIZARD-SPELLBOOK-LEARNING-RULES-KERNEL-MAPPING - Map Wizard spellbook learning profile to rules-kernel obligations | ready-for-research | none | Metric-honesty gap: `character-creation.wizard-spellbook-learning-choice` is unmapped in `rulesKernelProfileJoin`. |
+| 32 | B29-LEVITATED-CREATURE-RULES-KERNEL-MAPPING - Map levitated creature profile to rules-kernel obligations | ready-for-research | none | Metric-honesty gap: `spell.invocation-levitated-creature` is unmapped in `rulesKernelProfileJoin`. |
+| 33 | B30-CLASS-FEATURE-PREPARED-SPELL-ACCESS-RULES-KERNEL-MAPPING - Map class feature prepared spell access profile to rules-kernel obligations | ready-for-research | none | Metric-honesty gap: `character-sheet.class-feature-prepared-spell-access` is unmapped in `rulesKernelProfileJoin`. |
+| 34 | B31-DRUID-CIRCLE-LAND-SPELL-ACCESS-RULES-KERNEL-MAPPING - Map Druid Circle Land spell access profile to rules-kernel obligations | ready-for-research | none | Metric-honesty gap: `character-sheet.druid-circle-land-spell-access` is unmapped and leaves `druid_circle_of_the_land_spells` uncovered in `rulesKernelSupportedUnitCoverage`. |
+| 35 | B32-DRAGONS-BREATH-CATALOG-ADMISSION - Repair Dragon's Breath catalog admission | ready-for-research | none | Metric-honesty gap: `dragons_breath` is supported-profile but remains `not-in-unit-catalog`; repair the catalog boundary without treating support as admission. |
+| 36 | B33-RAY-OF-ENFEEBLEMENT-CATALOG-ADMISSION - Repair Ray of Enfeeblement catalog admission | ready-for-research | none | Metric-honesty gap: `ray_of_enfeeblement` is supported-profile but remains `not-in-unit-catalog`; repair the catalog boundary without treating support as admission. |
 
 ## Task Details
 
@@ -437,7 +542,7 @@ findings.
 
 ### Task 18 - B18-RECURSIVE-NEXT-BATCH - Mine next selected-identity batch
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: append at least 12 new atomic tasks for any remaining selected-identity
 or metric-honesty gaps. If fewer than 12 remain, split by Unit group only when
@@ -445,6 +550,35 @@ that produces real independent work.
 
 Acceptance: do not mark done unless at least 12 new runnable tasks were added
 or the generated gap report proves exhaustion.
+
+Result: generated matrix review found 9 selected-identity replay gap rows
+(`antimagic_field`, `counterspell`, `dispel_magic`, `find_familiar`,
+`fireball`, `lightning_bolt`, `mind_spike`, `shining_smite`, and
+`thaumaturgy`), 5 unmapped rules-kernel profiles, 1 rules-kernel supported Unit
+join gap, and 2 supported-profile Units not admitted to the Unit catalog.
+Appended 15 runnable follow-up tasks: 7 selected-identity witness tasks, 1
+deferred selected-identity metric-semantics task, 5 rules-kernel mapping tasks,
+and 2 catalog-admission repair tasks.
+
+Verification completed:
+- `jq '.selectedIdentityReplayGaps.rowCount' plans/unit-profile-coverage/unit-matrix.json`
+  returned `9`.
+- `jq -r '.selectedIdentityReplayGaps.rows[] | [.unitId, .selectedIdentity.status, .support.tag] | @tsv' plans/unit-profile-coverage/unit-matrix.json`
+  returned `antimagic_field`, `counterspell`, `dispel_magic`,
+  `find_familiar`, `fireball`, `lightning_bolt`, `mind_spike`,
+  `shining_smite`, and `thaumaturgy`.
+- `jq -r '.rulesKernelProfileJoin.profiles[] | select(.joinStatus != "covered") | [.profileId, .profileKind, .joinStatus] | @tsv' plans/unit-profile-coverage/unit-matrix.json`
+  returned `spell.invocation-creature-size-change`,
+  `character-creation.wizard-spellbook-learning-choice`,
+  `spell.invocation-levitated-creature`,
+  `character-sheet.class-feature-prepared-spell-access`, and
+  `character-sheet.druid-circle-land-spell-access`, all `unmapped`.
+- `jq -r '.rulesKernelProfileJoin.supportedUnitJoin.units[] | select(.joinStatus != "covered") | [.unitId, .joinStatus, ([.profiles[] | .profileId + ":" + .joinStatus] | join(","))] | @tsv' plans/unit-profile-coverage/unit-matrix.json`
+  returned `druid_circle_of_the_land_spells` joined only through unmapped
+  `character-sheet.druid-circle-land-spell-access`.
+- `jq -r '.units[] | select((.claim.tag == "supported-profile" or .claim.tag == "profile-subset-supported") and (.catalogAdmission.status != "installed")) | [.unitId, .claim.tag, .catalogAdmission.status] | @tsv' plans/unit-profile-coverage/unit-matrix.json`
+  returned `dragons_breath` and `ray_of_enfeeblement`, both
+  `supported-profile` and `not-in-unit-catalog`.
 
 ### Task 19 - L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION - Reconcile Acid Arrow RAW corpus
 
@@ -495,8 +629,214 @@ evidence, focused runtime tests, and promoted Quint/runtime parity cover the
 approved Acid Arrow hit, miss, delayed target-turn damage, slot scaling,
 resource spending, and cleanup behavior.
 
+### Task 22 - B19-ANTIMAGIC-FIELD-IDENTITY-WITNESS - Backfill Antimagic Field selected identity witness
+
+Status: `done`
+
+Output: add checker-readable `selected-identity-mbt` evidence, or a stricter
+explicit non-applicable classification if research proves the replay boundary
+cannot bind selected Unit identity, for `antimagic_field`.
+
+Acceptance: `selectedIdentityReplayGaps` no longer reports
+`antimagic_field` as a plain missing witness; any non-applicable disposition
+names the runtime owner for the non-replayed portion.
+
+Result: `antimagic_field` now has checker-readable `selected-identity-mbt`
+evidence tied to `antimagic-field-ongoing-suppression.mbt.test.ts`, with
+deterministic replay rows for ordinary suppression, artifact/deity exclusion,
+and concentration-end restoration. The generated selected-identity gap report no
+longer lists `antimagic_field`.
+
+### Task 23 - B20-COUNTERSPELL-IDENTITY-WITNESS - Backfill Counterspell selected identity witness
+
+Status: `done`
+
+Output: prove selected `counterspell` identity reaches the reaction spell owner
+or add the narrow selected-identity smoke needed to make that handoff
+checker-readable.
+
+Acceptance: `counterspell` has `selected-identity-mbt` evidence tied to a real
+test path, and the evidence does not substitute for the reusable
+`spell.reaction-counterspell` rules-kernel proof.
+
+Result: `counterspell` now has checker-readable `selected-identity-mbt`
+evidence tied to `reaction-spell-selected-identity.mbt.test.ts`, where the
+selected Counterspell invocation resolves a Magic Missile spell-cast Reaction
+window. The generated selected-identity gap report no longer lists
+`counterspell`.
+
+### Task 24 - B21-DISPEL-MAGIC-IDENTITY-WITNESS - Backfill Dispel Magic selected identity witness
+
+Status: `done`
+
+Output: prove selected `dispel_magic` identity reaches the ongoing-spell ending
+entrypoint, or explicitly classify the non-replayed table-owned portion without
+claiming reducer support.
+
+Acceptance: `selectedIdentityReplayGaps` no longer reports `dispel_magic` as a
+plain missing witness, and any added evidence references an existing or focused
+test that exercises the selected Unit identity.
+
+Result: `dispel_magic` now has checker-readable `selected-identity-mbt`
+evidence tied to `dispel-magic-selected-identity.mbt.test.ts`, where the
+selected Dispel Magic Unit identity resolves the ongoing-spell ending entrypoint
+for object-attached spell light and selected magical-effect active-effect
+targets. The generated selected-identity gap report no longer lists
+`dispel_magic`.
+
+### Task 25 - B22-FIND-FAMILIAR-IDENTITY-WITNESS - Backfill Find Familiar selected identity witness
+
+Status: `done`
+
+Output: prove selected `find_familiar` identity reaches the lifecycle owner
+already claimed by `spell.find-familiar-lifecycle`, or classify exactly why the
+closed portion is outside replay.
+
+Acceptance: the generated selected-identity gap row for `find_familiar` is
+cleared or converted to an explicit non-applicable state without adding
+companion AI or table-routing mechanics.
+
+Result: `find_familiar` now has checker-readable `selected-identity-mbt`
+evidence tied to `find-familiar-selected-identity.mbt.test.ts`, where the
+selected spell identity reaches cast, recast replacement, temporary dismissal
+and reappearance, and Touch spell delivery paths. The generated selected-identity
+gap report no longer lists `find_familiar`.
+
+### Task 26 - B23-FIREBALL-IDENTITY-WITNESS - Backfill Fireball selected identity witness
+
+Status: `done`
+
+Output: prove selected `fireball` identity reaches the damage save-or-attack
+runtime entrypoint through existing or focused promoted runtime coverage.
+
+Acceptance: `fireball` has checker-readable `selected-identity-mbt` evidence,
+and the evidence remains separate from generic
+`spell.invocation-damage-save-or-attack` parity coverage.
+
+### Task 27 - B24-LIGHTNING-BOLT-IDENTITY-WITNESS - Backfill Lightning Bolt selected identity witness
+
+Status: `done`
+
+Output: prove selected `lightning_bolt` identity reaches the supported
+damage-save runtime entrypoint.
+
+Acceptance: `lightning_bolt` has checker-readable `selected-identity-mbt`
+evidence tied to a focused or existing promoted runtime test.
+
+### Task 28 - B25-SHINING-SMITE-IDENTITY-WITNESS - Backfill Shining Smite selected identity witness
+
+Status: `ready-for-research`
+
+Output: prove selected `shining_smite` identity reaches the after-hit damage
+and illumination rider runtime entrypoint.
+
+Acceptance: `shining_smite` has checker-readable `selected-identity-mbt`
+evidence; no new smite reducer behavior is added unless a separate promoted
+runtime task owns it.
+
+### Task 29 - B26-DEFERRED-IDENTITY-GAP-SEMANTICS - Clarify deferred selected identity gap semantics
+
+Status: `ready-for-research`
+
+Output: decide and implement the report/checker treatment for
+`missing-witness-deferred-not-applicable` rows such as `mind_spike` and
+`thaumaturgy`: either keep them visible in a separate deferred-visible bucket,
+or move qualifying whole-claim cases to the existing not-applicable exclusion.
+
+Acceptance: `UNIT_REPORT.md`, `unit-matrix.json`, and metric prose no longer
+make deferred non-applicable rows look like ordinary missing replay witnesses.
+
+### Task 30 - B27-CREATURE-SIZE-RULES-KERNEL-MAPPING - Map creature size change profile to rules-kernel obligations
+
+Status: `ready-for-research`
+
+Output: map `spell.invocation-creature-size-change` to the correct
+rules-kernel obligation, or split the profile if the current name conflates
+distinct rule owners.
+
+Acceptance: `rulesKernelProfileJoinCoverage` no longer lists
+`spell.invocation-creature-size-change` as unmapped, and any split preserves
+single-source profile membership for affected Units.
+
+### Task 31 - B28-WIZARD-SPELLBOOK-LEARNING-RULES-KERNEL-MAPPING - Map Wizard spellbook learning profile to rules-kernel obligations
+
+Status: `ready-for-research`
+
+Output: map `character-creation.wizard-spellbook-learning-choice` to a
+character-creation or character-sheet rules-kernel obligation after checking the
+Wizard spellbook SRD text and ubiquitous language.
+
+Acceptance: `rulesKernelProfileJoinCoverage` no longer lists the Wizard
+spellbook learning profile as unmapped, and selected spellbook facts are not
+duplicated across creation and sheet owners.
+
+### Task 32 - B29-LEVITATED-CREATURE-RULES-KERNEL-MAPPING - Map levitated creature profile to rules-kernel obligations
+
+Status: `ready-for-research`
+
+Output: map `spell.invocation-levitated-creature` to the existing movement,
+condition, or table-caller rules-kernel obligation, or document the missing
+obligation as a new follow-up if no durable owner exists.
+
+Acceptance: `rulesKernelProfileJoinCoverage` no longer lists
+`spell.invocation-levitated-creature` as unmapped unless a new blocked owner
+task is added with concrete rationale.
+
+### Task 33 - B30-CLASS-FEATURE-PREPARED-SPELL-ACCESS-RULES-KERNEL-MAPPING - Map class feature prepared spell access profile to rules-kernel obligations
+
+Status: `ready-for-research`
+
+Output: map `character-sheet.class-feature-prepared-spell-access` to the
+character-sheet spell-access rules-kernel obligation after checking the
+class-feature prepared-spell source shape.
+
+Acceptance: `rulesKernelProfileJoinCoverage` no longer lists
+`character-sheet.class-feature-prepared-spell-access` as unmapped, and the
+mapping does not duplicate per-class spell access state.
+
+### Task 34 - B31-DRUID-CIRCLE-LAND-SPELL-ACCESS-RULES-KERNEL-MAPPING - Map Druid Circle Land spell access profile to rules-kernel obligations
+
+Status: `ready-for-research`
+
+Output: map `character-sheet.druid-circle-land-spell-access` to a
+rules-kernel obligation and confirm `druid_circle_of_the_land_spells` joins
+through that profile.
+
+Acceptance: both `rulesKernelProfileJoinCoverage` and
+`rulesKernelSupportedUnitCoverage` clear the Druid Circle Land spell-access gap
+without adding a parallel Druid-only spell-access state table.
+
+### Task 35 - B32-DRAGONS-BREATH-CATALOG-ADMISSION - Repair Dragon's Breath catalog admission
+
+Status: `ready-for-research`
+
+Output: repair the Unit catalog/admission boundary for `dragons_breath`, which
+is currently supported-profile but `not-in-unit-catalog`.
+
+Acceptance: `dragons_breath` appears as installed in the Unit catalog/admission
+view, with provenance and structured input kept distinct from runtime support
+evidence.
+
+### Task 36 - B33-RAY-OF-ENFEEBLEMENT-CATALOG-ADMISSION - Repair Ray of Enfeeblement catalog admission
+
+Status: `ready-for-research`
+
+Output: repair the Unit catalog/admission boundary for `ray_of_enfeeblement`,
+which is currently supported-profile but `not-in-unit-catalog`.
+
+Acceptance: `ray_of_enfeeblement` appears as installed in the Unit
+catalog/admission view, with catalog admission not inferred from runtime
+support alone.
+
 ## Verification
 
+- Reviewer-loop convergence: after implementation, run RAW traceability,
+  ubiquitous-language/domain-language, architecture/connascence, and code-review
+  passes; fix every reasonable finding and repeat until no reasonable findings
+  remain.
+- RAW/ubiquitous-language check: before implementing any modeled rule, read the
+  relevant `.references/srd-5.2.1/` passage and `UBIQUITOUS_LANGUAGE.md`, then
+  verify the modeled behavior traces to that source text.
 - `pnpm unit-profile-coverage:check -- --write`
 - `pnpm unit-profile-coverage:check`
 - `pnpm unit-profile-coverage:check:self-test` when checker code changes

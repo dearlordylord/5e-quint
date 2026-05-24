@@ -26,7 +26,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Rules-kernel covered profile coverage | 127/132 | 96.2% |
 | Supported Unit rules-kernel chain coverage | 143/144 | 99.3% |
 | Deterministic admission/projection coverage | 142/142 | 100% |
-| Selected identity replay coverage | 139/142 | 97.9% |
+| Selected identity replay coverage | 141/142 | 99.3% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -59,7 +59,7 @@ Background, feat, spell, and class-feature groups are counted from installed Uni
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | Background Units | 4 | 0 | 0 | 0 | 4 | 0 | 0/0 | 0 |
 | Feat Units | 8 | 8 | 5 | 0 | 3 | 5 | 5/5 | 0 |
-| Spell Units | 124 | 124 | 86 | 20 | 18 | 127 | 98/106 | 8 |
+| Spell Units | 124 | 124 | 86 | 20 | 18 | 127 | 104/106 | 2 |
 | Class-feature Units | 63 | 63 | 45 | 16 | 2 | 85 | 61/61 | 0 |
 
 | Denominator | Rule |
@@ -1068,6 +1068,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `chromatic_orb` | `spell.invocation-chained-attack-damage`, `spell.readied-action-time-spell` | level1-damage-spell-selected-identity | `packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts` |
 | `color_spray` | `spell.invocation-condition-save` | condition-saving-throw-lifecycle | `packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts` |
 | `command` | `spell.invocation-command-halt-grovel`, `spell.invocation-command-drop-held-object`, `spell.invocation-command-approach-route`, `spell.invocation-command-flee-route` | movement-forced-movement | `packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts` |
+| `counterspell` | `spell.reaction-counterspell` | reaction-interruption | `packages/battle-runtime/src/reaction-spell-selected-identity.mbt.test.ts` |
 | `cure_wounds` | `spell.hit-point-restoration` | healing-stabilization | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
 | `dancing_lights` | `spell.invocation-dancing-lights-movable-dim-light` | level1-spatial-witness | `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts` |
 | `dissonant_whispers` | `spell.invocation-damage-save-or-attack`, `spell.invocation-forced-reaction-movement` | movement-forced-movement | `packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts` |
@@ -1095,6 +1096,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `invisibility` | `spell.invocation-direct-condition` | B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH | `packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts` |
 | `jump` | `spell.invocation-jump-movement-replacement` | level1-spatial-witness | `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts` |
 | `lesser_restoration` | `spell.invocation-direct-condition-removal` | RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY | `packages/battle-runtime/src/condition-removal-protection-selected-identity.mbt.test.ts` |
+| `lightning_bolt` | `spell.invocation-damage-save-or-attack` | B24-LIGHTNING-BOLT-IDENTITY-WITNESS | `packages/battle-runtime/src/lightning-bolt-selected-identity.mbt.test.ts` |
 | `light` | `spell.invocation-object-light` | level1-spatial-witness | `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts` |
 | `longstrider` | `spell.scalar-buff` | L1E-LONGSTRIDER | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
 | `misty_step` | `spell.invocation-self-teleport` | B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH | `packages/battle-runtime/src/level2-mobility-spell-selected-identity.mbt.test.ts` |
@@ -1146,12 +1148,6 @@ This generated view lists `profile-subset-supported` and `supported-profile` Uni
 
 | Unit | Claim | Selected identity | Catalog | Collection | Kind | Profiles | Source |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `antimagic_field` | profile-subset-supported | missing-witness | installed | srd-5.2.1 | spell | `spell.invocation-antimagic-field-ongoing-spell-suppression` | `packages/surface/content/antimagic_field.json` |
-| `counterspell` | supported-profile | missing-witness | installed | srd-5.2.1 | spell | `spell.reaction-counterspell` | `packages/surface/content/counterspell.json` |
-| `dispel_magic` | profile-subset-supported | missing-witness | installed | srd-5.2.1 | spell | `spell.invocation-ongoing-spell-ending` | `packages/surface/content/dispel_magic.json` |
-| `find_familiar` | profile-subset-supported | missing-witness | installed | srd-5.2.1 | spell | `spell.find-familiar-lifecycle` | `packages/surface/content/find_familiar.json` |
-| `fireball` | profile-subset-supported | missing-witness | installed | srd-5.2.1 | spell | `spell.invocation-damage-save-or-attack` | `packages/surface/content/fireball.json` |
-| `lightning_bolt` | supported-profile | missing-witness | installed | srd-5.2.1 | spell | `spell.invocation-damage-save-or-attack` | `packages/surface/content/lightning_bolt.json` |
 | `mind_spike` | profile-subset-supported | missing-witness-deferred-not-applicable | installed | srd-5.2.1 | spell | `spell.invocation-damage-save-or-attack` | `packages/surface/content/mind_spike.json` |
 | `shining_smite` | supported-profile | missing-witness | installed | srd-5.2.1 | spell | `spell.invocation-after-hit-damage-illumination` | `packages/surface/content/shining_smite.json` |
 
