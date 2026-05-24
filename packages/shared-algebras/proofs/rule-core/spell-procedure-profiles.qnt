@@ -10,7 +10,9 @@ module spellProcedureProfiles {
   import damageComponentAdjustments.* from "./damage-component-adjustments"
   import attackDamageComposition.* from "./attack-damage-composition"
   import actionTurnProcedures.* from "./action-turn-procedures"
+  import spellDefinitionProfiles.* from "./spell-definition-profiles"
   import spellInvocationResourceCore.* from "./spell-invocation-resource-core"
+  import spellInvocationTargetCardinalityCore.* from "./spell-invocation-target-cardinality-core"
   import spellDamageProjectionCore.* from "./spell-damage-projection-core"
   import reactionsContinuationsConcentration.* from "./reactions-continuations-concentration"
 
@@ -23,16 +25,6 @@ module spellProcedureProfiles {
   // - Spells/Descriptions-M-P.md: Mage Armor, Magic Missile, Mass Cure
   //   Wounds, Mass Healing Word, and Mind Spike.
   // - Spells/Descriptions-Q-R.md: Ray of Frost.
-
-  type SpellDefinitionProfile =
-    | MagicMissileSpellProfile
-    | RayOfFrostSpellProfile
-    | AcidSplashSpellProfile
-    | HealingWordSpellProfile
-    | CureWoundsSpellProfile
-    | MassCureWoundsSpellProfile
-    | MassHealingWordSpellProfile
-    | MageArmorSpellProfile
 
   type SpellAttackDamageProfile =
     | RayOfFrostSpellAttackProfile
@@ -334,16 +326,6 @@ module spellProcedureProfiles {
     else if (profile == MassHealingWordSpellProfile) 3
     else if (profile == MassCureWoundsSpellProfile) 5
     else 1
-
-  pure def legalSpellInvocationTargetCount(
-    profile: SpellDefinitionProfile,
-    slotLevel: int,
-    targetCount: int
-  ): bool =
-    legalSpellInvocationTargetCardinality(
-      spellInvocationTargetCardinality(profile, slotLevel),
-      targetCount
-    )
 
   pure def spellProfileArea(profile: SpellDefinitionProfile): SpellAreaProfile =
     if (profile == MassCureWoundsSpellProfile) MassCureWoundsPointOriginSphereArea else NoSpellAreaProfile
@@ -887,24 +869,6 @@ module spellProcedureProfiles {
   pure def timedSpellEffectRemainsActive(durationTicks: int): bool =
     durationTicks > 0
 
-  pure def spellInvocationTargetCardinality(
-    profile: SpellDefinitionProfile,
-    slotLevel: int
-  ): SpellInvocationTargetCardinality =
-    if (profile == AcidSplashSpellProfile) SpellInvocationOpenUpperTargets({ minimumTargetCount: 1 })
-    else if (profile == MagicMissileSpellProfile) SpellInvocationBoundedTargets({
-      minimumTargetCount: 1,
-      maximumTargetCount: magicMissileDartCount(slotLevel),
-    })
-    else if (profile == MassHealingWordSpellProfile or profile == MassCureWoundsSpellProfile) SpellInvocationBoundedTargets({
-      minimumTargetCount: 1,
-      maximumTargetCount: 6,
-    })
-    else SpellInvocationBoundedTargets({
-      minimumTargetCount: 1,
-      maximumTargetCount: 1,
-    })
-
   pure def spellInvocationResourceFacts(
     facts: SpellInvocationFacts
   ): SpellInvocationResourceFacts = {
@@ -934,9 +898,6 @@ module spellProcedureProfiles {
       invocation,
       spellInvocationResourceFacts(facts)
     )
-
-  pure def magicMissileDartCount(slotLevel: int): int =
-    if (slotLevel <= 1) 3 else slotLevel + 2
 
   pure def rayOfFrostMaximumBaseDamageDice: int = 4
 

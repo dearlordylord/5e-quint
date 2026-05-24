@@ -8,7 +8,9 @@ module spellProcedureProfilesExamples {
   import attackDamageComposition.* from "./attack-damage-composition"
   import actionTurnProcedures.* from "./action-turn-procedures"
   import reactionsContinuationsConcentration.* from "./reactions-continuations-concentration"
+  import spellDefinitionProfiles.* from "./spell-definition-profiles"
   import spellInvocationResourceCore.* from "./spell-invocation-resource-core"
+  import spellInvocationTargetCardinalityCore.* from "./spell-invocation-target-cardinality-core"
   import spellProcedureProfiles.* from "./spell-procedure-profiles"
 
   run test_magic_missile_profile_spends_slot_and_allocates_darts = {
@@ -30,6 +32,8 @@ module spellProcedureProfilesExamples {
     })
     all {
       assert(invocation.admitted),
+      assert(legalSpellInvocationTargetCount(MagicMissileSpellProfile, 2, 4)),
+      assert(not(legalSpellInvocationTargetCount(MagicMissileSpellProfile, 2, 5))),
       assert(invocation.slotExpended),
       assert(invocation.state.slotLedger.slotsRemaining == 1),
       assert(invocation.state.slotSpellCastThisTurn),

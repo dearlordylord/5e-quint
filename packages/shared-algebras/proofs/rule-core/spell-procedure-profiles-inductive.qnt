@@ -11,7 +11,10 @@ module spellProcedureProfilesInductive {
   import actionTurnProcedures.* from "./action-turn-procedures"
   import movementSpatialGrapple.* from "./movement-spatial-grapple"
   import reactionsContinuationsConcentration.* from "./reactions-continuations-concentration"
+  import spellDefinitionProfiles.* from "./spell-definition-profiles"
   import spellInvocationResourceCore.* from "./spell-invocation-resource-core"
+  import spellInvocationTargetCardinalityCore.* from "./spell-invocation-target-cardinality-core"
+  import spellSlotExpenditure.* from "./spell-slot-expenditure"
   import spellProcedureProfiles.* from "./spell-procedure-profiles"
 
   var qActionQuota: ActionQuota

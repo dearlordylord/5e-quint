@@ -1,6 +1,7 @@
 // -*- mode: Bluespec; -*-
 
 module ruleCoreSpellsMbt {
+  import spellDefinitionProfiles.* from "../shared-algebras/proofs/rule-core/spell-definition-profiles"
   import spellInvocationResourceCore.* from "../shared-algebras/proofs/rule-core/spell-invocation-resource-core"
   import spellProcedureProfiles.* from "../shared-algebras/proofs/rule-core/spell-procedure-profiles"
 
