@@ -465,6 +465,12 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/find-familiar-lifecycle.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/find-familiar-companion-lifecycle.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
@@ -527,6 +533,12 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-druid-wild-shape.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/druid-wild-shape-form-lifecycle.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
@@ -621,6 +633,12 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dispel-magic.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/dispel-magic-ongoing-spell-ending.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-dispel-magic-ongoing-spell-ending.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
