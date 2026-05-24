@@ -264,6 +264,11 @@ function coveragePaths(root) {
       coverageDir,
       "LEVEL1_2_FULL_SUPPORT.md",
     ),
+    level13FullSupport: path.join(coverageDir, "level1-3-full-support.json"),
+    level13FullSupportReport: path.join(
+      coverageDir,
+      "LEVEL1_3_FULL_SUPPORT.md",
+    ),
     rulesKernelObligations: path.join(
       root,
       "plans",

@@ -1,28 +1,44 @@
-# Level 1-2 Full Support Backlog
+# Character Levels 1-2 Full Support Backlog
 
-This is the single active planning artifact for SRD level 1 plus level 2 full
-support closure. Historical Ralph lanes for level-2 runtime expansion and
-background catalog admission were deleted after their useful work landed.
+This is the single active planning artifact for SRD character levels 1-2 full
+support closure. Character level and spell level are separate axes:
+character levels 1-2 include cantrips and spell-level-1 spells, while
+spell-level-2 spells enter the character-level-3 frontier and spell-level-3
+spells enter the later character-level-5 frontier.
 
 Generated reports remain the measurement source of truth:
 
 - `plans/unit-profile-coverage/LEVEL1_FULL_SUPPORT.md`
 - `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`
+- `plans/unit-profile-coverage/LEVEL1_3_FULL_SUPPORT.md`
 - `plans/unit-profile-coverage/level1-full-support.json`
 - `plans/unit-profile-coverage/level1-2-full-support.json`
+- `plans/unit-profile-coverage/level1-3-full-support.json`
 
 ## Current Claim State
 
-The strict runtime/profile target and SRD-authored full-support claim gate are
-closed:
+The generated claim gate is blocked on selected-identity evidence, even though
+the strict target and SRD-authored readiness layers are closed:
 
 - Level 1 strict target closure: `94/94 (100%)`.
-- Level 1-2 strict target closure: `171/171 (100%)`.
-- Level 1 rules-kernel joins: `58/58 (100%)`.
-- Level 1-2 rules-kernel joins: `90/90 (100%)`.
-- Level 1 authored product readiness: `58/58 (100%)`.
-- Level 1-2 authored product readiness: `76/76 (100%)`.
-- Full-support claim gate: pass for both generated reports.
+- Level 1 selected identity readiness: `82/83 (98.8%)`; blocker:
+  `thaumaturgy`.
+- Level 1 SRD authored product readiness: `58/58 (100%)`.
+- Character levels 1-2 strict target closure: `115/115 (100%)`.
+- Character levels 1-2 selected identity readiness: `103/104 (99%)`;
+  blocker: `thaumaturgy`.
+- Character levels 1-2 SRD authored product readiness: `76/76 (100%)`.
+- Character levels 1-2 product readiness diagnostic: `397/400 (99.3%)`.
+- Full-support claim gate: blocked for both generated level 1 and character
+  levels 1-2 reports until the selected-identity blocker is closed.
+
+The next generated frontier is character levels 1-3, not spell-level-3:
+
+- Character levels 1-3 strict target closure: `182/182 (100%)`.
+- Character levels 1-3 selected identity readiness: `149/152 (98%)`;
+  blockers: `mind_spike`, `shining_smite`, `thaumaturgy`.
+- Character levels 1-3 SRD authored product readiness: `76/76 (100%)`.
+- Character levels 1-3 product readiness diagnostic: `573/607 (94.4%)`.
 
 ## Active Backlog
 
@@ -71,6 +87,12 @@ closed:
       "id": "L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME",
       "status": "done",
       "title": "Alert Initiative Runtime Support"
+    },
+    {
+      "number": 8,
+      "id": "L12FS-THAUMATURGY-SELECTED-IDENTITY",
+      "status": "ready",
+      "title": "Close Thaumaturgy Selected-Identity Claim Gate"
     }
   ]
 }
@@ -182,6 +204,11 @@ Acceptance:
 
 Status: `done`
 
+Superseded note: the current generated reports split strict target closure,
+selected-identity readiness, SRD-authored readiness, and product-readiness
+diagnostics. The full-support claim gate is not green unless strict blockers,
+selected-identity blockers, and SRD-authored blockers are all zero.
+
 Depends on:
 
 - Task 2.
@@ -206,8 +233,8 @@ Output:
 Acceptance:
 
 - Level 1 authored product readiness is `58/58 (100%)`.
-- Level 1-2 authored product readiness is `76/76 (100%)`.
-- Full-support claim gate is unblocked for both reports.
+- Character levels 1-2 authored product readiness is `76/76 (100%)`.
+- Full-support claim gate is blocked until selected-identity blockers are zero.
 - Rules-kernel joins remain green.
 
 ### Task 5 - L12FS-METRIC-REGRESSION-GATE - Add Full-Support Metric Regression Gate
@@ -228,7 +255,8 @@ Input:
 Output:
 
 - Add or tighten focused checker coverage so a future report cannot claim full
-  level support while SRD authored product readiness is blocked.
+  level support while strict target closure, selected-identity readiness, or
+  SRD-authored product readiness is blocked.
 - Keep strict runtime/profile support and authored product readiness as separate
   layers; do not collapse them into one weighted percentage.
 - If the checker already has this regression coverage, document the evidence in
@@ -239,6 +267,8 @@ Acceptance:
 - A missing background origin feat, duplicated catalog identity, or missing
   retained class grant would fail the full-support claim gate in generated
   reports.
+- A missing selected-identity replay witness would also fail the full-support
+  claim gate instead of being hidden behind a separate 100% strict metric.
 - `pnpm unit-profile-coverage:check` is green.
 
 ### Task 6 - L12FS-RECURSIVE-NEXT-TASKS - Mine Remaining Level 1-2 Product Readiness Tasks
@@ -271,11 +301,11 @@ Closeout:
   `scripts/unit-profile-coverage-self-test.cjs` for missing Magic Initiate
   origin feat refs, duplicate Alert catalog identity, and the missing retained
   Warlock Pact Magic feature grant.
-- The level 1-2 report still exposes diagnostic lower-layer product-readiness
-  rows outside the authored claim gate; those rows remain visible but are not
-  hidden level 1-2 full-support blockers under the current metric.
-- No additional level 1 or level 1-2 blocker tasks are needed. The existing
-  Alert Initiative runtime follow-up remains non-blocking for this claim gate.
+- The character levels 1-2 report still exposes diagnostic lower-layer
+  product-readiness rows outside the authored claim gate; those rows remain
+  visible, but selected-identity blockers are now explicit claim-gate blockers.
+- Additional level 1 and character levels 1-2 selected-identity closure is
+  needed while `thaumaturgy` remains blocked.
 
 Acceptance:
 
@@ -317,6 +347,43 @@ Acceptance:
 - Relevant promoted Quint/runtime parity verification passes if battle behavior
   changes.
 - Coverage artifacts no longer report Alert as an unsupported profile.
+
+### Task 8 - L12FS-THAUMATURGY-SELECTED-IDENTITY - Close Thaumaturgy Selected-Identity Claim Gate
+
+Status: `ready`
+
+Input:
+
+- `.references/srd-5.2.1/Spells/Thaumaturgy.md`
+- `UBIQUITOUS_LANGUAGE.md`
+- `packages/surface/content/thaumaturgy.json`
+- Current selected Unit identity evidence, deterministic replay markers, and
+  production Unit-bearing entrypoints for spell support.
+- Current generated reports:
+  `plans/unit-profile-coverage/level1-full-support.json` and
+  `plans/unit-profile-coverage/level1-2-full-support.json`.
+
+Output:
+
+- Close the `thaumaturgy` selected-identity blocker in the generated claim
+  gate.
+- If a supported runtime subset has a production replay boundary, add the
+  focused selected-identity witness there without dispatching on authored
+  identity.
+- If every supported/deferred piece is truly runtime-detached table education,
+  fix the metric classification so that the not-applicable deferred mechanics
+  do not masquerade as a missing replay witness.
+- Regenerate coverage artifacts.
+
+Acceptance:
+
+- `level1-full-support.json` and `level1-2-full-support.json` have
+  `claimGate.status: "pass"`.
+- The generated markdown claim summaries show zero strict blockers, zero
+  selected-identity blockers, and zero SRD-authored blockers for level 1 and
+  character levels 1-2.
+- The fix preserves authored identity only at catalog/selection/evidence
+  boundaries and uses typed support/profile facts for runtime behavior.
 
 ## Follow-Up Splits Not Blocking The Current Claim Gate
 

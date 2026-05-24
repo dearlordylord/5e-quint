@@ -1,5 +1,13 @@
 # L3 Metric Scope Expansion Precheck
 
+Superseded metric note (2026-05-24): generated reports now distinguish
+character level from spell level. `LEVEL1_2_FULL_SUPPORT.md` is scoped to
+character levels 1-2 and therefore includes `spell-level-0` and
+`spell-level-1`, but not `spell-level-2`. `LEVEL1_3_FULL_SUPPORT.md` is now the
+generated character levels 1-3 report and includes `spell-level-2`.
+`spell-level-3` remains outside that scope because it is a later
+character-level-5 frontier.
+
 Task 22 surveyed the current Level 1-2 inventory and report generators before
 opening Level 3 pressure. No runtime behavior, Unit claim, owner-evidence row,
 rules-kernel obligation, or generated coverage artifact changed.

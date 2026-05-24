@@ -288,22 +288,27 @@ const spellUnitExecutableFollowUps = new Map(
   ),
 );
 
-const levelOneBattleReadinessLevelBands = new Set([
-  "level-1",
-  "spell-level-0",
-  "spell-level-1",
-]);
-const levelOneTwoBattleReadinessLevelBands = new Set([
-  "level-1",
-  "level-2",
-  "spell-level-0",
-  "spell-level-1",
-  "spell-level-2",
-]);
+function characterLevelBands(maxCharacterLevel) {
+  const maxSpellLevel = Math.min(9, Math.floor((maxCharacterLevel + 1) / 2));
+  return [
+    ...Array.from(
+      { length: maxCharacterLevel },
+      (_, index) => `level-${index + 1}`,
+    ),
+    ...Array.from(
+      { length: maxSpellLevel + 1 },
+      (_, spellLevel) => `spell-level-${spellLevel}`,
+    ),
+  ];
+}
+
+const levelOneBattleReadinessLevelBands = new Set(characterLevelBands(1));
+const levelOneTwoBattleReadinessLevelBands = new Set(characterLevelBands(2));
+const levelOneThreeBattleReadinessLevelBands = new Set(characterLevelBands(3));
 const levelThreeClassBattleReadinessLevelBands = new Set(["level-3"]);
 const spellLevelBand = (spellLevel) => `spell-level-${spellLevel}`;
 const levelOneSpellPressureLevels = [0, 1];
-const spellPressureLevels = [...levelOneSpellPressureLevels, 2];
+const spellPressureLevels = [0, 1, 2];
 const levelThreeSpellPressureLevels = [3];
 const inventoriedSpellPressureLevels = [
   ...spellPressureLevels,
@@ -321,8 +326,7 @@ const inventoriedSpellPressureLevelBands = new Set([
   ...levelThreeSpellPressureLevelBands,
 ]);
 const rowBattleReadinessLevelBands = new Set([
-  ...levelOneTwoBattleReadinessLevelBands,
-  ...levelThreeClassBattleReadinessLevelBands,
+  ...levelOneThreeBattleReadinessLevelBands,
   ...levelThreeSpellPressureLevelBands,
 ]);
 const authoredNotInstalledSpellReviewRequiredLevelBands = new Set([
@@ -3928,7 +3932,7 @@ function buildSrdUnitInventory({
     generatedBy: "scripts/unit-profile-coverage-check.cjs",
     sourceCorpus: ".references/srd-5.2.1/Classes",
     scope:
-      "SRD 5.2.1 class-derived Unit/catalog backlog rows, prioritized around level 1, level 2, cantrip/level-1/level-2 spell-list pressure, with separately reported level-3 class/subclass and spell-list pressure seeds.",
+      "SRD 5.2.1 class-derived Unit/catalog backlog rows, prioritized by character level. Character levels 1-2 include cantrips and spell-level-1 pressure; character level 3 adds class/subclass level-3 rows and spell-level-2 pressure. Spell-level-3 pressure is reported separately as a later character-level-5 frontier seed.",
     evidenceArtifacts: {
       characterCreationOwnerEvidence: summarizeCharacterCreationOwnerEvidence(
         root,
@@ -3959,6 +3963,10 @@ function buildSrdUnitInventory({
       levelOneTwoBattleReadiness: countBattleReadiness(
         rows,
         levelOneTwoBattleReadinessLevelBands,
+      ),
+      levelOneThreeBattleReadiness: countBattleReadiness(
+        rows,
+        levelOneThreeBattleReadinessLevelBands,
       ),
       levelThreeClassBattleReadiness: countBattleReadiness(
         rows,
@@ -4389,15 +4397,17 @@ function renderSrdUnitInventory(report) {
     "",
     "This is a Unit/catalog backlog denominator, not RAW span coverage and not an MBT queue.",
     "",
+    "Character level and spell level are separate axes. Character levels 1-2 include cantrips and spell-level-1 pressure; spell-level-2 pressure first enters the character-level-3 readiness metric for full casters, and spell-level-3 pressure belongs to the later character-level-5 frontier.",
+    "",
     "## Metrics",
     "",
     `- Total generated rows: ${report.metrics.totalRows}`,
     `- Level-1 rows: ${report.metrics.levelOneRows}`,
     `- Level-2 rows: ${report.metrics.levelTwoRows}`,
     `- Level-3 class/subclass rows: ${report.metrics.levelThreeClassRows}`,
-    `- Spell-list pressure rows for cantrips and level 1-2 spells: ${report.metrics.spellPressureRows}`,
-    `- Level-3 spell-list pressure rows: ${report.metrics.levelThreeSpellPressureRows}`,
-    `- Level-3 installed SRD Surface spell-list pressure rows: ${report.metrics.levelThreeInstalledSpellPressureRows}`,
+    `- Spell-list pressure rows for cantrips and spell levels 1-2: ${report.metrics.spellPressureRows}`,
+    `- Spell-level-3 pressure rows (later character-level-5 frontier): ${report.metrics.levelThreeSpellPressureRows}`,
+    `- Spell-level-3 installed SRD Surface pressure rows (later character-level-5 frontier): ${report.metrics.levelThreeInstalledSpellPressureRows}`,
     `- Missing level-1 class containers: ${report.metrics.missingClassContainers}${missingClassContainerDetail}`,
     "",
     "### Default Progress Metric: Level-1 Battle Readiness",
@@ -4412,15 +4422,27 @@ function renderSrdUnitInventory(report) {
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, count]) => `- ${key}: ${count}`),
     "",
-    "### Expanded Progress Metric: Level 1-2 Battle Readiness",
+    "### Expanded Progress Metric: Character Levels 1-2 Battle Readiness",
     "",
-    "This is the default `%` for level-1 plus level-2 readiness questions. It uses the same acceptance rules as the level-1 metric, but includes level-2 class-feature rows and level-2 spell-list pressure.",
+    "This is the default `%` for character-level-1 plus character-level-2 readiness questions. It uses the same acceptance rules as the level-1 metric, but includes character-level-2 class-feature rows. It deliberately excludes spell-level-2 pressure.",
     "",
     `- Accepted: ${report.metrics.levelOneTwoBattleReadiness.numerator}/${report.metrics.levelOneTwoBattleReadiness.denominator} (${report.metrics.levelOneTwoBattleReadiness.percent})`,
     "",
-    "#### Level 1-2 Battle Readiness by Status",
+    "#### Character Levels 1-2 Battle Readiness by Status",
     "",
     ...Object.entries(report.metrics.levelOneTwoBattleReadiness.rowsByStatus)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, count]) => `- ${key}: ${count}`),
+    "",
+    "### Expanded Progress Metric: Character Levels 1-3 Battle Readiness",
+    "",
+    "This is the default `%` for character-level-1 through character-level-3 readiness questions. It includes character-level-3 class/subclass rows and spell-level-2 pressure. It deliberately excludes spell-level-3 pressure.",
+    "",
+    `- Accepted: ${report.metrics.levelOneThreeBattleReadiness.numerator}/${report.metrics.levelOneThreeBattleReadiness.denominator} (${report.metrics.levelOneThreeBattleReadiness.percent})`,
+    "",
+    "#### Character Levels 1-3 Battle Readiness by Status",
+    "",
+    ...Object.entries(report.metrics.levelOneThreeBattleReadiness.rowsByStatus)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, count]) => `- ${key}: ${count}`),
     "",
@@ -4436,13 +4458,13 @@ function renderSrdUnitInventory(report) {
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, count]) => `- ${key}: ${count}`),
     "",
-    "### Level-3 Spell Battle Readiness",
+    "### Spell-Level-3 Battle Readiness",
     "",
-    "This metric is a separate seed for level-3 spell-list pressure only. It does not affect the Level 1-2 readiness denominator.",
+    "This metric is a separate seed for spell-level-3 pressure only. It belongs to the later character-level-5 frontier for full casters and does not affect Character Levels 1-2 or Character Levels 1-3 readiness denominators.",
     "",
     `- Accepted: ${report.metrics.levelThreeSpellBattleReadiness.numerator}/${report.metrics.levelThreeSpellBattleReadiness.denominator} (${report.metrics.levelThreeSpellBattleReadiness.percent})`,
     "",
-    "#### Level-3 Spell Battle Readiness by Status",
+    "#### Spell-Level-3 Battle Readiness by Status",
     "",
     ...Object.entries(report.metrics.levelThreeSpellBattleReadiness.rowsByStatus)
       .sort(([a], [b]) => a.localeCompare(b))
@@ -4484,19 +4506,19 @@ function renderSrdUnitInventory(report) {
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, count]) => `- ${key}: ${count}`),
     "",
-    "### Spell Unit Pressure by Disposition (Cantrips and Level 1-2 Spells)",
+    "### Spell Unit Pressure by Disposition (Cantrips and Spell Levels 1-2)",
     "",
     ...Object.entries(report.metrics.spellPressureRowsByDisposition)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, count]) => `- ${key}: ${count}`),
     "",
-    "### Level-3 Spell Unit Pressure by Disposition",
+    "### Spell-Level-3 Unit Pressure by Disposition",
     "",
     ...Object.entries(report.metrics.levelThreeSpellPressureRowsByDisposition)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, count]) => `- ${key}: ${count}`),
     "",
-    "### Level-3 Installed Spell Unit Pressure by Disposition",
+    "### Spell-Level-3 Installed Unit Pressure by Disposition",
     "",
     ...Object.entries(
       report.metrics.levelThreeInstalledSpellPressureRowsByDisposition,
@@ -4614,7 +4636,7 @@ function renderSrdUnitInventory(report) {
         .replace(/$/, "|"),
     ),
     "",
-    "## Level-3 Spell-List Pressure Rows",
+    "## Spell-Level-3 Pressure Rows",
     "",
     "| Row | Category | Surface | Authored | Catalog | Unit profile | Disposition | Battle readiness | Readiness closure | Owner evidence | Next action | Source |",
     "|---|---|---|---|---|---|---|---|---|---|---|---|",

@@ -22,8 +22,10 @@ const {
 const {
   buildLevel1FullSupport,
   buildLevel12FullSupport,
+  buildLevel13FullSupport,
   renderLevel1FullSupport,
   renderLevel12FullSupport,
+  renderLevel13FullSupport,
 } = require("./level1-full-support-report.cjs");
 const {
   buildSrdUnitInventory,
@@ -128,6 +130,9 @@ function main() {
   const level12FullSupport = buildLevel12FullSupport(matrix, srdUnitInventory, {
     root,
   });
+  const level13FullSupport = buildLevel13FullSupport(matrix, srdUnitInventory, {
+    root,
+  });
   writeOrCompare(
     { root, write },
     paths.matrix,
@@ -171,6 +176,16 @@ function main() {
     { root, write },
     paths.level12FullSupportReport,
     renderLevel12FullSupport(level12FullSupport),
+  );
+  writeOrCompare(
+    { root, write },
+    paths.level13FullSupport,
+    `${JSON.stringify(level13FullSupport, null, 2)}\n`,
+  );
+  writeOrCompare(
+    { root, write },
+    paths.level13FullSupportReport,
+    renderLevel13FullSupport(level13FullSupport),
   );
   console.log(
     `Unit profile coverage OK: ${inventory.length} Units, ${profiles.length} profiles.`,

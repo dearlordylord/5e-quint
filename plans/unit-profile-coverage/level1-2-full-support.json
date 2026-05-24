@@ -1,43 +1,11 @@
 {
+  "claimGate": {
+    "authoredReadinessBlockerCount": 0,
+    "selectedIdentityBlockerCount": 1,
+    "status": "blocked",
+    "strictTargetOpenCount": 0
+  },
   "frontierRows": [
-    {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "follow-up-split"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION: Resolve the local SRD Acid Arrow damage contradiction by either correcting the local corpus or adding an owner-approved ASSUMPTIONS.md entry that explicitly identifies whether initial hit damage exists, how miss-only half damage is derived, which damage occurs at the end of the target's next turn, and how slot scaling applies. Owner: RAW corpus and ASSUMPTIONS owner. Required output: Owner-approved RAW corpus correction or ASSUMPTIONS.md entry that makes the initial/later/miss damage relationship modelable without inference from contradictory prose.; L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE: After RAW reconciliation, replace Acid Arrow's lossy mechanics with a lossless SRD Surface shape for the approved damage timing, miss branch, end-of-target-next-turn damage, and slot scaling without storing miss damage as an independently fixed approximation. Owner: surface Spell Definition authoring. Required output: Acid Arrow Dhall/JSON content, and schema/tracer support if needed, represent the approved initial/later/miss damage relationships as executable facts that can be projected by battle-runtime without duplicating or reinterpreting spell damage state.; L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT: After RAW reconciliation and Surface repair, promote Acid Arrow as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot, resolves a ranged Spell Attack, applies only approved immediate hit or miss damage, stores approved delayed Acid damage for the end of the target's next turn where sourced, scales approved damage amounts by slot level, and cleans up the Spell Effect occurrence. Owner: battle-runtime spell invocation/effect lifecycle. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the approved Acid Arrow hit, miss, delayed target-turn damage, slot scaling, resource spending, and cleanup behavior.",
-      "selectedIdentity": {
-        "reason": "Selected identity replay evidence is only required for supported profile claims.",
-        "status": "not-required"
-      },
-      "sourceRecordPath": "packages/surface/content/acid_arrow.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Acid Arrow",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_acid_arrow",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 197,
-            "lineStart": 197,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "blocked-follow-up-split",
-      "strictTargetClosed": true,
-      "unitId": "acid_arrow"
-    },
     {
       "catalogDisposition": {
         "category": "srd-candidate",
@@ -87,191 +55,6 @@
       "status": "closed-runtime-detached-table-adjudication",
       "strictTargetClosed": true,
       "unitId": "alarm"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "outside-runtime-presentation-exploration"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Route choice, travel progress, recipient matching, arrival and delivery success, message playback, message loss, and return travel are table/exploration facts outside promoted battle runtime.",
-      "selectedIdentity": {
-        "reason": "Selected identity replay evidence is only required for supported profile claims.",
-        "status": "not-required"
-      },
-      "sourceRecordPath": "packages/surface/content/animal_messenger.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Bard spell list Animal Messenger",
-          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_animal_messenger",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 191,
-            "lineStart": 191,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Druid spell list Animal Messenger",
-          "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_animal_messenger",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 228,
-            "lineStart": 228,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Ranger spell list Animal Messenger",
-          "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_animal_messenger",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 183,
-            "lineStart": 183,
-            "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
-        }
-      ],
-      "status": "closed-runtime-detached-table-adjudication",
-      "strictTargetClosed": true,
-      "unitId": "animal_messenger"
-    },
-    {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "outside-runtime-presentation-exploration"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Object lock state, designated opener and passcode/password handling, the one-minute password unlock window, nonmagical-unlock prevention, magic-suppression interaction for the object-attached lock, and any forced-entry Difficulty Class adjudication are object/table facts outside promoted battle runtime; local SRD 5.2.1 Arcane Lock does not define a forced-entry DC mechanic.",
-      "selectedIdentity": {
-        "reason": "Selected identity replay evidence is only required for supported profile claims.",
-        "status": "not-required"
-      },
-      "sourceRecordPath": "packages/surface/content/arcane_lock.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Arcane Lock",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_arcane_lock",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 199,
-            "lineStart": 199,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "closed-runtime-detached-table-adjudication",
-      "strictTargetClosed": true,
-      "unitId": "arcane_lock"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "social-knowledge-effect"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Magic Aura changes how spells and magical effects interpret a target's magical identity; promoted battle runtime has no generic owner for magical-aura deception or spell/effect effective Creature Type override state, so detection and identification consequences remain table/knowledge adjudication.",
-      "selectedIdentity": {
-        "reason": "Selected identity replay evidence is only required for supported profile claims.",
-        "status": "not-required"
-      },
-      "sourceRecordPath": "packages/surface/content/arcanists_magic_aura.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Arcanist's Magic Aura",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_arcanists_magic_aura",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 200,
-            "lineStart": 200,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "closed-runtime-detached-table-adjudication",
-      "strictTargetClosed": true,
-      "unitId": "arcanists_magic_aura"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "outside-runtime-presentation-exploration"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Future-outcome adjudication, GM-chosen omen selection, changed-circumstances handling, and repeated-casting no-answer resolution are table/session knowledge facts outside promoted battle runtime.",
-      "selectedIdentity": {
-        "reason": "Selected identity replay evidence is only required for supported profile claims.",
-        "status": "not-required"
-      },
-      "sourceRecordPath": "packages/surface/content/augury.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Cleric spell list Augury",
-          "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_augury",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 183,
-            "lineStart": 183,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Druid spell list Augury",
-          "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_augury",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 229,
-            "lineStart": 229,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Augury",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_augury",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 201,
-            "lineStart": 201,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "closed-runtime-detached-table-adjudication",
-      "strictTargetClosed": true,
-      "unitId": "augury"
     },
     {
       "catalogStatus": "installed",
@@ -338,51 +121,6 @@
       "status": "closed-later-level-only",
       "strictTargetClosed": true,
       "unitId": "bard_expertise"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "social-knowledge-effect"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Attitude is social monster disposition rather than battle-owned condition state; the runtime has no per-creature attitude relationship model.",
-      "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
-        "status": "witness-present"
-      },
-      "sourceRecordPath": "packages/surface/content/calm_emotions.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Bard spell list Calm Emotions",
-          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_calm_emotions",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 193,
-            "lineStart": 193,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Cleric spell list Calm Emotions",
-          "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_calm_emotions",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 185,
-            "lineStart": 185,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        }
-      ],
-      "status": "closed-runtime-detached-table-adjudication",
-      "strictTargetClosed": true,
-      "unitId": "calm_emotions"
     },
     {
       "catalogStatus": "installed",
@@ -538,190 +276,6 @@
       "status": "closed-runtime-detached-table-adjudication",
       "strictTargetClosed": true,
       "unitId": "comprehend_languages"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "outside-battle-runtime",
-        "outside-runtime-presentation-exploration"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "SRD component rules require the costly consumed Material component for Continual Flame. Promoted battle runtime spends the Magic Action and Spell Slot and records battle-visible spell effects; inventory, hand access, focus/component substitution eligibility, and costly consumed Material component consumption belong to the character equipment/component legality boundary.; Promoted battle runtime consumes object light and opaque-cover facts; it does not render flame appearance, object covering/hiding, heat, fuel, smothering, or quenching presentation facts.",
-      "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
-        "status": "witness-present"
-      },
-      "sourceRecordPath": "packages/surface/content/continual_flame.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Cleric spell list Continual Flame",
-          "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_continual_flame",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 186,
-            "lineStart": 186,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Druid spell list Continual Flame",
-          "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_continual_flame",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 231,
-            "lineStart": 231,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Continual Flame",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_continual_flame",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 204,
-            "lineStart": 204,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "closed-outside-battle-runtime-boundary",
-      "strictTargetClosed": true,
-      "unitId": "continual_flame"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "follow-up-split"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH: Represent and promote or close Darkness's object branch: target object not worn or carried, 15-foot Emanation originating from that object, object-origin area identity, and opaque-cover blocking, consuming existing object and opaque-cover witness facts without adding duplicate map or cover state. Owner: Surface Spell Definition authoring plus battle-runtime object-origin spell-area and opaque-cover witness boundary. Required output: Darkness Surface content and runtime owner decision with focused tests for the object-origin branch, or accepted closure if object attachment, movement, and opaque-cover blocking stay outside promoted runtime.",
-      "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
-        "status": "witness-present"
-      },
-      "sourceRecordPath": "packages/surface/content/darkness.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Darkness",
-          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_darkness",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 273,
-            "lineStart": 273,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Warlock spell list Darkness",
-          "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_darkness",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 365,
-            "lineStart": 365,
-            "path": ".references/srd-5.2.1/Classes/Warlock.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Darkness",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_darkness",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 205,
-            "lineStart": 205,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "blocked-follow-up-split",
-      "strictTargetClosed": true,
-      "unitId": "darkness"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "outside-runtime-presentation-exploration"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Darkvision changes how an observer treats Dim Light and Darkness, but the promoted light/obscurement boundary already consumes caller-supplied Darkvision observer range and distance facts. Character Sheet spell-granted sense projection, automatic sight-line derivation, and color-only darkness presentation are outside this task's promoted runtime owners.",
-      "selectedIdentity": {
-        "reason": "Selected identity replay evidence is only required for supported profile claims.",
-        "status": "not-required"
-      },
-      "sourceRecordPath": "packages/surface/content/darkvision.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Druid spell list Darkvision",
-          "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_darkvision",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 232,
-            "lineStart": 232,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Ranger spell list Darkvision",
-          "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_darkvision",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 185,
-            "lineStart": 185,
-            "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Darkvision",
-          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_darkvision",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 274,
-            "lineStart": 274,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Darkvision",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_darkvision",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 206,
-            "lineStart": 206,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "closed-runtime-detached-table-adjudication",
-      "strictTargetClosed": true,
-      "unitId": "darkvision"
     },
     {
       "catalogStatus": "installed",
@@ -958,63 +512,6 @@
       "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
-        "social-knowledge-effect"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Thought presence, thought content, qualifying language or telepathy facts, material occlusion, hidden-presence disclosure, deeper-probe knowledge, target awareness, attention shifting, and the target's Arcana-check escape are table/social knowledge adjudication outside promoted battle runtime; the current battle Search owner is scoped to hidden combatant discovery rather than state-of-mind or mind-reading facts.",
-      "selectedIdentity": {
-        "reason": "Selected identity replay evidence is only required for supported profile claims.",
-        "status": "not-required"
-      },
-      "sourceRecordPath": "packages/surface/content/detect_thoughts.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Bard spell list Detect Thoughts",
-          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_detect_thoughts",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 194,
-            "lineStart": 194,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Detect Thoughts",
-          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_detect_thoughts",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 275,
-            "lineStart": 275,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Detect Thoughts",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_detect_thoughts",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 207,
-            "lineStart": 207,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "closed-runtime-detached-table-adjudication",
-      "strictTargetClosed": true,
-      "unitId": "detect_thoughts"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
         "character-fact-and-runtime-detached-split"
       ],
       "collectionId": "srd-5.2.1",
@@ -1114,213 +611,6 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "follow-up-split"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "L12G-FOLLOWUP-ENHANCE-ABILITY-UPCAST-PER-TARGET-ABILITIES: Promote level 3+ Enhance Ability casting so each additional target selected by the upcast can carry its own Strength, Dexterity, Intelligence, Wisdom, or Charisma choice without sharing one cast-level ability choice across all targets. Owner: battle-runtime spell invocation target-list ability-choice lifecycle plus promoted Quint parity. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for slot-scaled target count and per-target chosen Ability Check Advantage effects.",
-      "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
-        "status": "witness-present"
-      },
-      "sourceRecordPath": "packages/surface/content/enhance_ability.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Bard spell list Enhance Ability",
-          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_enhance_ability",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 195,
-            "lineStart": 195,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Cleric spell list Enhance Ability",
-          "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_enhance_ability",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 187,
-            "lineStart": 187,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Druid spell list Enhance Ability",
-          "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_enhance_ability",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 233,
-            "lineStart": 233,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Ranger spell list Enhance Ability",
-          "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_enhance_ability",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 186,
-            "lineStart": 186,
-            "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Enhance Ability",
-          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_enhance_ability",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 277,
-            "lineStart": 277,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Enhance Ability",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_enhance_ability",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 209,
-            "lineStart": 209,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "blocked-follow-up-split",
-      "strictTargetClosed": true,
-      "unitId": "enhance_ability"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "outside-battle-runtime"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Promoted battle runtime has no canonical object Size state, carried/worn item Size state, dropped-item location state, or thrown weapon/ammunition occurrence lifecycle to mutate and clean up. The existing creature branch already models the battle-visible attack damage consequence without duplicating item state, so object and item Size normalization remain outside promoted battle runtime until a generic object/item lifecycle owner exists.",
-      "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
-        "status": "witness-present"
-      },
-      "sourceRecordPath": "packages/surface/content/enlarge_reduce.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Bard spell list Enlarge/Reduce",
-          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_enlarge_reduce",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 196,
-            "lineStart": 196,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Druid spell list Enlarge/Reduce",
-          "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_enlarge_reduce",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 234,
-            "lineStart": 234,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Enlarge/Reduce",
-          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_enlarge_reduce",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 278,
-            "lineStart": 278,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Enlarge/Reduce",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_enlarge_reduce",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 210,
-            "lineStart": 210,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "closed-outside-battle-runtime-boundary",
-      "strictTargetClosed": true,
-      "unitId": "enlarge_reduce"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "social-knowledge-effect"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "The SRD fight/attention clauses depend on table relationship and social attention facts outside promoted battle-runtime state; the runtime consumes caller-selected eligible targets and records battle-visible failed-save Perception effects.",
-      "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
-        "status": "witness-present"
-      },
-      "sourceRecordPath": "packages/surface/content/enthrall.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Bard spell list Enthrall",
-          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_enthrall",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 197,
-            "lineStart": 197,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Warlock spell list Enthrall",
-          "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_enthrall",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 366,
-            "lineStart": 366,
-            "path": ".references/srd-5.2.1/Classes/Warlock.md"
-          }
-        }
-      ],
-      "status": "closed-runtime-detached-table-adjudication",
-      "strictTargetClosed": true,
-      "unitId": "enthrall"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
         "later-level-only"
       ],
       "collectionId": "srd-5.2.1",
@@ -1349,232 +639,6 @@
       "status": "closed-later-level-only",
       "strictTargetClosed": true,
       "unitId": "fighter_weapon_mastery"
-    },
-    {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "companion-control-boundary"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Find Steed's Surface-represented runtime behavior is closed at the companion-control boundary: a future mount companion owner must model summoned mount lifecycle, rider/control state, stat-block projection and actions, disappearance, and item-drop boundaries without autonomous companion action selection or authored-identity dispatch in generic runtime code.",
-      "selectedIdentity": {
-        "reason": "Selected identity replay evidence is only required for supported profile claims.",
-        "status": "not-required"
-      },
-      "sourceRecordPath": "packages/surface/content/find_steed.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Paladin spell list Find Steed",
-          "id": "srd521:classes/paladin:spell-level-2:spell-unit-pressure:paladin_spell_list_find_steed",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 195,
-            "lineStart": 195,
-            "path": ".references/srd-5.2.1/Classes/Paladin.md"
-          }
-        }
-      ],
-      "status": "closed-companion-control-boundary",
-      "strictTargetClosed": true,
-      "unitId": "find_steed"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "outside-runtime-presentation-exploration"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Trap presence, line of sight, non-location warning, and general-danger disclosure are exploration/detection facts supplied by the table rather than promoted battle runtime state.",
-      "selectedIdentity": {
-        "reason": "Selected identity replay evidence is only required for supported profile claims.",
-        "status": "not-required"
-      },
-      "sourceRecordPath": "packages/surface/content/find_traps.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Cleric spell list Find Traps",
-          "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_find_traps",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 188,
-            "lineStart": 188,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Druid spell list Find Traps",
-          "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_find_traps",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 235,
-            "lineStart": 235,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Ranger spell list Find Traps",
-          "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_find_traps",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 187,
-            "lineStart": 187,
-            "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
-        }
-      ],
-      "status": "closed-runtime-detached-table-adjudication",
-      "strictTargetClosed": true,
-      "unitId": "find_traps"
-    },
-    {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "outside-runtime-presentation-exploration"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Corpse/remains preservation, Undead prevention, and raise-dead deadline extension are corpse/remains lifecycle and resurrection/adjudication facts supplied by the table or a future character/rest owner rather than promoted battle runtime state.",
-      "selectedIdentity": {
-        "reason": "Selected identity replay evidence is only required for supported profile claims.",
-        "status": "not-required"
-      },
-      "sourceRecordPath": "packages/surface/content/gentle_repose.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Cleric spell list Gentle Repose",
-          "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_gentle_repose",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 189,
-            "lineStart": 189,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Paladin spell list Gentle Repose",
-          "id": "srd521:classes/paladin:spell-level-2:spell-unit-pressure:paladin_spell_list_gentle_repose",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 196,
-            "lineStart": 196,
-            "path": ".references/srd-5.2.1/Classes/Paladin.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Gentle Repose",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_gentle_repose",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 212,
-            "lineStart": 212,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "closed-runtime-detached-table-adjudication",
-      "strictTargetClosed": true,
-      "unitId": "gentle_repose"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "outside-runtime-presentation-exploration"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Gust of Wind's Line records the authored strong-wind area fact, and promoted Fog Cloud owns strong-wind dispersal as a caller/table-supplied cleanup command. The Gust profile does not derive overlap with gas, vapor, fog, smoke, or other cloud effects; those gas/vapor area owners consume the same table-supplied strong-wind witness at their own effect boundary instead of adding spell-local gas state; Candle and lantern flame state, protected versus unprotected flame classification, wild flame presentation, and the 50 percent extinguishing chance are object/environment presentation facts with no promoted battle-runtime owner; Gust of Wind does not add duplicate flame, candle, lantern, or environmental wind state.",
-      "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
-        "status": "witness-present"
-      },
-      "sourceRecordPath": "packages/surface/content/gust_of_wind.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Druid spell list Gust of Wind",
-          "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_gust_of_wind",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 238,
-            "lineStart": 238,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Ranger spell list Gust of Wind",
-          "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_gust_of_wind",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 188,
-            "lineStart": 188,
-            "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Gust of Wind",
-          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_gust_of_wind",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 281,
-            "lineStart": 281,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Gust of Wind",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_gust_of_wind",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 213,
-            "lineStart": 213,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "closed-runtime-detached-table-adjudication",
-      "strictTargetClosed": true,
-      "unitId": "gust_of_wind"
     },
     {
       "catalogDisposition": {
@@ -1625,349 +689,6 @@
       "status": "closed-runtime-detached-table-adjudication",
       "strictTargetClosed": true,
       "unitId": "identify"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "outside-runtime-presentation-exploration"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Object access-prevention state, Arcane Lock suppression on a target object, open/close adjudication, and audible sound propagation are table/object facts outside promoted battle runtime.",
-      "selectedIdentity": {
-        "reason": "Selected identity replay evidence is only required for supported profile claims.",
-        "status": "not-required"
-      },
-      "sourceRecordPath": "packages/surface/content/knock.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Bard spell list Knock",
-          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_knock",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 201,
-            "lineStart": 201,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Knock",
-          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_knock",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 284,
-            "lineStart": 284,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Knock",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_knock",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 216,
-            "lineStart": 216,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "closed-runtime-detached-table-adjudication",
-      "strictTargetClosed": true,
-      "unitId": "knock"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "outside-battle-runtime"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "The Surface Spell Definition records the loose-object target shape and 500-pound gate, but promoted battle runtime has no canonical loose-object position, weight, aloft/grounded, fixed-object attachment, surface reach, range derivation, map geometry, or gentle-grounding lifecycle state to mutate and clean up. Reusing the creature altitude active effect for objects would duplicate object lifecycle state inside Levitate, so the loose-object branch remains table/object-spatial adjudication until a generic loose-object lifecycle owner exists.",
-      "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
-        "status": "witness-present"
-      },
-      "sourceRecordPath": "packages/surface/content/levitate.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Levitate",
-          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_levitate",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 285,
-            "lineStart": 285,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Levitate",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_levitate",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 217,
-            "lineStart": 217,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "closed-outside-battle-runtime-boundary",
-      "strictTargetClosed": true,
-      "unitId": "levitate"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "outside-runtime-presentation-exploration"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Kind matching, target presence, closest-target selection, and direction/distance disclosure for Beasts, Plant creatures, or nonmagical plants are exploration/table facts outside promoted battle runtime.",
-      "selectedIdentity": {
-        "reason": "Selected identity replay evidence is only required for supported profile claims.",
-        "status": "not-required"
-      },
-      "sourceRecordPath": "packages/surface/content/locate_animals_or_plants.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Bard spell list Locate Animals or Plants",
-          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_locate_animals_or_plants",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 203,
-            "lineStart": 203,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Druid spell list Locate Animals or Plants",
-          "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_locate_animals_or_plants",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 242,
-            "lineStart": 242,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Ranger spell list Locate Animals or Plants",
-          "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_locate_animals_or_plants",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 190,
-            "lineStart": 190,
-            "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
-        }
-      ],
-      "status": "closed-runtime-detached-table-adjudication",
-      "strictTargetClosed": true,
-      "unitId": "locate_animals_or_plants"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "outside-runtime-presentation-exploration"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Object presence, object-kind matching, direct-path lead blocking, and location/motion direction disclosure are exploration/table facts outside promoted battle runtime.",
-      "selectedIdentity": {
-        "reason": "Selected identity replay evidence is only required for supported profile claims.",
-        "status": "not-required"
-      },
-      "sourceRecordPath": "packages/surface/content/locate_object.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Bard spell list Locate Object",
-          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_locate_object",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 204,
-            "lineStart": 204,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Cleric spell list Locate Object",
-          "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_locate_object",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 192,
-            "lineStart": 192,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Druid spell list Locate Object",
-          "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_locate_object",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 243,
-            "lineStart": 243,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Paladin spell list Locate Object",
-          "id": "srd521:classes/paladin:spell-level-2:spell-unit-pressure:paladin_spell_list_locate_object",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 198,
-            "lineStart": 198,
-            "path": ".references/srd-5.2.1/Classes/Paladin.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Ranger spell list Locate Object",
-          "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_locate_object",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 191,
-            "lineStart": 191,
-            "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Locate Object",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_locate_object",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 218,
-            "lineStart": 218,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "closed-runtime-detached-table-adjudication",
-      "strictTargetClosed": true,
-      "unitId": "locate_object"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "outside-runtime-presentation-exploration"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Durable object attachment, arbitrary visual/audible trigger adjudication, message playback, mouth placement, sound volume presentation, and repeat-or-end scheduling are object/presentation facts outside promoted battle runtime.",
-      "selectedIdentity": {
-        "reason": "Selected identity replay evidence is only required for supported profile claims.",
-        "status": "not-required"
-      },
-      "sourceRecordPath": "packages/surface/content/magic_mouth.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Bard spell list Magic Mouth",
-          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_magic_mouth",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 205,
-            "lineStart": 205,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Magic Mouth",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_magic_mouth",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 219,
-            "lineStart": 219,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "closed-runtime-detached-table-adjudication",
-      "strictTargetClosed": true,
-      "unitId": "magic_mouth"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "outside-runtime-presentation-exploration"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "The promoted battle runtime owns Spell Invocation, target admission, save-damage resolution, Spell Slot spend, failed-save Concentration lock, and the one-hour maximum duration cleanup. Same-plane location knowledge, Hidden prevention, and observer-scoped Invisible benefit denial are table/perception knowledge facts not consumed by promoted battle procedures, so they remain runtime-detached rather than stored as parallel state.",
-      "selectedIdentity": {
-        "owner": "runtime-detached table/perception/knowledge owner",
-        "reason": "The location knowledge, Hidden prevention, and observer-scoped Invisible benefit denial are table/perception knowledge facts outside promoted battle-runtime replay.",
-        "status": "missing-witness-deferred-not-applicable"
-      },
-      "sourceRecordPath": "packages/surface/content/mind_spike.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Warlock spell list Mind Spike",
-          "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_mind_spike",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 369,
-            "lineStart": 369,
-            "path": ".references/srd-5.2.1/Classes/Warlock.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Mind Spike",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_mind_spike",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 221,
-            "lineStart": 221,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "closed-runtime-detached-table-adjudication",
-      "strictTargetClosed": true,
-      "unitId": "mind_spike"
     },
     {
       "catalogStatus": "installed",
@@ -2075,39 +796,6 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "follow-up-split"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "L12G-FOLLOWUP-SPELL-SHAPESHIFT-TRUE-FORM-REVERSION: Promote spell-effect shape-shift projection and true-form reversion through the shared Task 20 state, deriving replacement-form and true-form facts from the spell active effect and target state rather than duplicating them. Owner: shared shape-shifting runtime plus spell active-effect lifecycle owners. Required output: Focused spell-transformation runtime tests, package-local promoted Quint/runtime parity for spell-effect reversion, generated coverage artifacts, git diff --check, and reviewer-loop convergence.; L12G-FOLLOWUP-STATBLOCK-SHAPECHANGER-TRUE-FORM-REVERSION: Promote or precisely close stat-block shapechanger active-form state as a true shape-shift owner, keeping true-form Stat Block facts and replacement-form facts derived from one canonical runtime state. Owner: shared shape-shifting runtime plus stat-block battle controls. Required output: Focused stat-block runtime tests, package-local promoted Quint/runtime parity for stat-block reversion, generated coverage artifacts, git diff --check, and reviewer-loop convergence.",
-      "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
-        "status": "witness-present"
-      },
-      "sourceRecordPath": "packages/surface/content/moonbeam.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Druid spell list Moonbeam",
-          "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_moonbeam",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 244,
-            "lineStart": 244,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        }
-      ],
-      "status": "blocked-follow-up-split",
-      "strictTargetClosed": true,
-      "unitId": "moonbeam"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
         "later-level-only"
       ],
       "collectionId": "srd-5.2.1",
@@ -2136,96 +824,6 @@
       "status": "closed-later-level-only",
       "strictTargetClosed": true,
       "unitId": "paladin_fighting_style"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "outside-runtime-presentation-exploration"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Pass without Trace's changing aura membership and non-caster chosen affected creatures depend on caller-supplied table/spatial facts at cast time, and leaving no tracks is pursuit/exploration state outside promoted battle runtime.",
-      "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
-        "status": "witness-present"
-      },
-      "sourceRecordPath": "packages/surface/content/pass_without_trace.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Druid spell list Pass without Trace",
-          "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_pass_without_trace",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 245,
-            "lineStart": 245,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Ranger spell list Pass without Trace",
-          "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_pass_without_trace",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 193,
-            "lineStart": 193,
-            "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
-        }
-      ],
-      "status": "closed-runtime-detached-table-adjudication",
-      "strictTargetClosed": true,
-      "unitId": "pass_without_trace"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "outside-battle-runtime"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Prayer of Healing application consumes completed-cast recipient eligibility facts; map geometry, range over the entire casting, Magic-action sequencing for the 10-minute cast, and interruption detection are not stored as parallel Character Sheet state.",
-      "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
-        "status": "witness-present"
-      },
-      "sourceRecordPath": "packages/surface/content/prayer_of_healing.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Cleric spell list Prayer of Healing",
-          "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_prayer_of_healing",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 193,
-            "lineStart": 193,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Paladin spell list Prayer of Healing",
-          "id": "srd521:classes/paladin:spell-level-2:spell-unit-pressure:paladin_spell_list_prayer_of_healing",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 200,
-            "lineStart": 200,
-            "path": ".references/srd-5.2.1/Classes/Paladin.md"
-          }
-        }
-      ],
-      "status": "closed-outside-battle-runtime-boundary",
-      "strictTargetClosed": true,
-      "unitId": "prayer_of_healing"
     },
     {
       "catalogStatus": "installed",
@@ -2325,96 +923,6 @@
       "status": "closed-character-fact-and-runtime-detached-split",
       "strictTargetClosed": true,
       "unitId": "rogue_thieves_cant"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "outside-runtime-presentation-exploration"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Rope object attachment, extradimensional-space occupancy, entry/exit climbing, line of sight through the portal, attack/spell/effect boundary blocking, and drop-out placement are table/spatial/object presentation facts outside promoted battle runtime.",
-      "selectedIdentity": {
-        "reason": "Selected identity replay evidence is only required for supported profile claims.",
-        "status": "not-required"
-      },
-      "sourceRecordPath": "packages/surface/content/rope_trick.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Rope Trick",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_rope_trick",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 225,
-            "lineStart": 225,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "closed-runtime-detached-table-adjudication",
-      "strictTargetClosed": true,
-      "unitId": "rope_trick"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "outside-runtime-presentation-exploration"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Silence's audio boundary, entirely-inside area membership, Thunder-immunity projection, Deafened projection, and Verbal-component casting block require table-supplied area/membership facts; promoted battle runtime must not infer audio geometry automatically.",
-      "selectedIdentity": {
-        "reason": "Selected identity replay evidence is only required for supported profile claims.",
-        "status": "not-required"
-      },
-      "sourceRecordPath": "packages/surface/content/silence.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Bard spell list Silence",
-          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_silence",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 209,
-            "lineStart": 209,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Cleric spell list Silence",
-          "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_silence",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 195,
-            "lineStart": 195,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Ranger spell list Silence",
-          "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_silence",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 195,
-            "lineStart": 195,
-            "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
-        }
-      ],
-      "status": "closed-runtime-detached-table-adjudication",
-      "strictTargetClosed": true,
-      "unitId": "silence"
     },
     {
       "catalogDisposition": {
@@ -2627,120 +1135,6 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "The SRD recognition clause depends on table-owned visibility at cast time, the creature's declared Search Action before entering, skill applicability, and the resulting terrain-recognition witness. Promoted battle runtime already consumes movement-area facts for Spike Growth and does not store parallel per-observer terrain knowledge or perception state.",
-      "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
-        "status": "witness-present"
-      },
-      "sourceRecordPath": "packages/surface/content/spike_growth.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Druid spell list Spike Growth",
-          "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_spike_growth",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 247,
-            "lineStart": 247,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Ranger spell list Spike Growth",
-          "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_spike_growth",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 196,
-            "lineStart": 196,
-            "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
-        }
-      ],
-      "status": "closed-runtime-detached-table-adjudication",
-      "strictTargetClosed": true,
-      "unitId": "spike_growth"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "social-knowledge-effect"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Suggestion's hearing/understanding gate, suggested course of activity, achievable and obvious-damage judgment, Charmed target pursuit, and activity-completion ending require table/player choice and social adjudication facts; promoted battle runtime must not infer or enforce commanded behavior from authored spell identity.",
-      "selectedIdentity": {
-        "reason": "Selected identity replay evidence is only required for supported profile claims.",
-        "status": "not-required"
-      },
-      "sourceRecordPath": "packages/surface/content/suggestion.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Bard spell list Suggestion",
-          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_suggestion",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 210,
-            "lineStart": 210,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Suggestion",
-          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_suggestion",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 293,
-            "lineStart": 293,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Warlock spell list Suggestion",
-          "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_suggestion",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 374,
-            "lineStart": 374,
-            "path": ".references/srd-5.2.1/Classes/Warlock.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Suggestion",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_suggestion",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 230,
-            "lineStart": 230,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "closed-runtime-detached-table-adjudication",
-      "strictTargetClosed": true,
-      "unitId": "suggestion"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "outside-runtime-presentation-exploration"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
       "reason": "Thaumaturgy's non-Booming minor wonders alter appearance, flames, doors/windows, sounds, and tremors; promoted battle runtime owns only Booming Voice's check Advantage and consumes total active-effect count witnesses for the shared cap.",
       "selectedIdentity": {
         "owner": "runtime-detached presentation/environment owner",
@@ -2765,75 +1159,16 @@
       "status": "closed-runtime-detached-table-adjudication",
       "strictTargetClosed": true,
       "unitId": "thaumaturgy"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "social-knowledge-effect"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Zone of Truth's truthfulness constraint, conversation answers, deliberate-lie judgment, evasive response handling, and caster save-outcome knowledge require table/social adjudication facts; promoted battle runtime must not add conversation-state or lie-detection state without a clear executable battle owner.",
-      "selectedIdentity": {
-        "reason": "Selected identity replay evidence is only required for supported profile claims.",
-        "status": "not-required"
-      },
-      "sourceRecordPath": "packages/surface/content/zone_of_truth.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Bard spell list Zone of Truth",
-          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_zone_of_truth",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 211,
-            "lineStart": 211,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Cleric spell list Zone of Truth",
-          "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_zone_of_truth",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 198,
-            "lineStart": 198,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Paladin spell list Zone of Truth",
-          "id": "srd521:classes/paladin:spell-level-2:spell-unit-pressure:paladin_spell_list_zone_of_truth",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 204,
-            "lineStart": 204,
-            "path": ".references/srd-5.2.1/Classes/Paladin.md"
-          }
-        }
-      ],
-      "status": "closed-runtime-detached-table-adjudication",
-      "strictTargetClosed": true,
-      "unitId": "zone_of_truth"
     }
   ],
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 116,
+      "count": 91,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
         "acid_splash",
-        "aid",
-        "alter_self",
         "animal_friendship",
         "bane",
         "barbarian_danger_sense",
@@ -2842,10 +1177,7 @@
         "barbarian_unarmored_defense",
         "bard_bardic_inspiration",
         "bard_jack_of_all_trades",
-        "barkskin",
         "bless",
-        "blindness_deafness",
-        "blur",
         "burning_hands",
         "chill_touch",
         "chromatic_orb",
@@ -2858,7 +1190,6 @@
         "dissonant_whispers",
         "divine_favor",
         "divine_smite",
-        "dragons_breath",
         "druid_primal_order",
         "eldritch_blast",
         "ensnaring_strike",
@@ -2872,32 +1203,23 @@
         "fighter_second_wind",
         "fighter_tactical_mind",
         "fire_bolt",
-        "flame_blade",
-        "flaming_sphere",
         "fog_cloud",
         "grease",
         "guidance",
         "guiding_bolt",
         "healing_word",
-        "heat_metal",
         "hellish_rebuke",
         "heroism",
         "hex",
         "hideous_laughter",
-        "hold_person",
         "hunters_mark",
         "ice_knife",
         "inflict_wounds",
-        "invisibility",
         "jump",
-        "lesser_restoration",
         "light",
         "longstrider",
         "mage_armor",
         "magic_missile",
-        "magic_weapon",
-        "mirror_image",
-        "misty_step",
         "monk_martial_arts",
         "monk_unarmored_defense",
         "monk_unarmored_movement",
@@ -2908,10 +1230,8 @@
         "poison_spray",
         "produce_flame",
         "protection_from_evil_and_good",
-        "protection_from_poison",
         "ranger_deft_explorer",
         "ranger_weapon_mastery",
-        "ray_of_enfeeblement",
         "ray_of_frost",
         "ray_of_sickness",
         "resistance",
@@ -2921,86 +1241,43 @@
         "rogue_weapon_mastery",
         "sacred_flame",
         "sanctuary",
-        "scorching_ray",
         "searing_smite",
-        "see_invisibility",
-        "shatter",
         "shield",
         "shield_of_faith",
         "shillelagh",
-        "shining_smite",
         "shocking_grasp",
         "sleep",
         "sorcerer_innate_sorcery",
         "sorcerous_burst",
         "spare_the_dying",
-        "spider_climb",
-        "spiritual_weapon",
         "starry_wisp",
         "thunderwave",
         "true_strike",
         "vicious_mockery",
-        "warding_bond",
         "warlock_eldritch_invocations",
         "warlock_magical_cunning",
-        "web",
         "wizard_arcane_recovery",
         "wizard_ritual_adept",
         "wizard_scholar"
       ]
     },
     {
-      "count": 34,
+      "count": 12,
       "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
         "alarm",
-        "animal_messenger",
-        "arcane_lock",
-        "arcanists_magic_aura",
-        "augury",
-        "calm_emotions",
         "charm_person",
         "comprehend_languages",
-        "darkvision",
         "detect_evil_and_good",
         "detect_magic",
         "detect_poison_and_disease",
-        "detect_thoughts",
-        "enthrall",
-        "find_traps",
-        "gentle_repose",
-        "gust_of_wind",
         "identify",
-        "knock",
-        "locate_animals_or_plants",
-        "locate_object",
-        "magic_mouth",
-        "mind_spike",
         "minor_illusion",
         "monk_monks_focus",
-        "pass_without_trace",
-        "rope_trick",
-        "silence",
         "silent_image",
         "speak_with_animals",
-        "spike_growth",
-        "suggestion",
-        "thaumaturgy",
-        "zone_of_truth"
-      ]
-    },
-    {
-      "count": 6,
-      "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
-      "status": "blocked-follow-up-split",
-      "unitIds": [
-        "acid_arrow",
-        "darkness",
-        "druid_wild_shape",
-        "enhance_ability",
-        "moonbeam",
-        "sorcerer_metamagic"
+        "thaumaturgy"
       ]
     },
     {
@@ -3017,17 +1294,6 @@
       ]
     },
     {
-      "count": 4,
-      "description": "The remaining residuals are explicitly outside promoted battle-runtime ownership.",
-      "status": "closed-outside-battle-runtime-boundary",
-      "unitIds": [
-        "continual_flame",
-        "enlarge_reduce",
-        "levitate",
-        "prayer_of_healing"
-      ]
-    },
-    {
       "count": 3,
       "description": "Character facts are owned while only runtime-detached adjudication remains.",
       "status": "closed-character-fact-and-runtime-detached-split",
@@ -3039,50 +1305,57 @@
     },
     {
       "count": 2,
+      "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
+      "status": "blocked-follow-up-split",
+      "unitIds": [
+        "druid_wild_shape",
+        "sorcerer_metamagic"
+      ]
+    },
+    {
+      "count": 1,
       "description": "Companion lifecycle and control residuals are closed at the companion control boundary.",
       "status": "closed-companion-control-boundary",
       "unitIds": [
-        "druid_wild_companion",
-        "find_steed"
+        "druid_wild_companion"
       ]
     }
   ],
   "metrics": {
     "productReadiness": {
-      "denominator": 556,
-      "numerator": 538,
-      "percent": "96.8%",
+      "denominator": 400,
+      "numerator": 397,
+      "percent": "99.3%",
       "rowsByStatus": {
-        "accepted": 391,
-        "accepted-no-battle-effect": 147,
-        "battle-runtime-required": 5,
+        "accepted": 297,
+        "accepted-no-battle-effect": 100,
         "owner-evidence-required": 2,
-        "partial-battle-runtime": 11
+        "partial-battle-runtime": 1
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 90,
-      "numerator": 90,
+      "denominator": 70,
+      "numerator": 70,
       "percent": "100%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 90,
-      "numerator": 90,
+      "denominator": 70,
+      "numerator": 70,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 116,
-      "numerator": 116,
+      "denominator": 91,
+      "numerator": 91,
       "percent": "100%"
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 171,
-      "numerator": 116,
-      "percent": "67.8%"
+      "denominator": 115,
+      "numerator": 91,
+      "percent": "79.1%"
     },
     "strictTargetClosure": {
-      "denominator": 171,
-      "numerator": 171,
+      "denominator": 115,
+      "numerator": 115,
       "percent": "100%"
     }
   },
@@ -5488,8 +3761,8 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 116,
-        "numerator": 116,
+        "denominator": 91,
+        "numerator": 91,
         "percent": "100%"
       }
     },
@@ -5537,44 +3810,6 @@
           }
         ],
         "unitId": "acid_splash"
-      },
-      {
-        "joinStatus": "covered",
-        "profiles": [
-          {
-            "joinStatus": "covered",
-            "obligations": [
-              {
-                "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
-                "runtime": "battle",
-                "status": "covered",
-                "title": "Battle spell scalar buffs for Armor Class, Speed, special speeds, Hit Point maximum, and Temporary Hit Point effects"
-              }
-            ],
-            "profileId": "spell.scalar-buff",
-            "profileKind": "spell-invocation"
-          }
-        ],
-        "unitId": "aid"
-      },
-      {
-        "joinStatus": "covered",
-        "profiles": [
-          {
-            "joinStatus": "covered",
-            "obligations": [
-              {
-                "obligationId": "BATTLE.SPELL.SELF_TRANSFORMATION_MODE",
-                "runtime": "battle",
-                "status": "covered",
-                "title": "Battle self-transformation mode choice, Magic Action mode replacement, natural-weapon override, and Aquatic projections"
-              }
-            ],
-            "profileId": "spell.invocation-self-transformation-mode",
-            "profileKind": "spell-invocation"
-          }
-        ],
-        "unitId": "alter_self"
       },
       {
         "joinStatus": "covered",
@@ -5748,25 +3983,6 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
-                "runtime": "battle",
-                "status": "covered",
-                "title": "Battle spell scalar buffs for Armor Class, Speed, special speeds, Hit Point maximum, and Temporary Hit Point effects"
-              }
-            ],
-            "profileId": "spell.scalar-buff",
-            "profileKind": "spell-invocation"
-          }
-        ],
-        "unitId": "barkskin"
-      },
-      {
-        "joinStatus": "covered",
-        "profiles": [
-          {
-            "joinStatus": "covered",
-            "obligations": [
-              {
                 "obligationId": "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
                 "runtime": "battle",
                 "status": "covered",
@@ -5778,44 +3994,6 @@
           }
         ],
         "unitId": "bless"
-      },
-      {
-        "joinStatus": "covered",
-        "profiles": [
-          {
-            "joinStatus": "covered",
-            "obligations": [
-              {
-                "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
-                "runtime": "battle",
-                "status": "covered",
-                "title": "Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup"
-              }
-            ],
-            "profileId": "spell.invocation-condition-save",
-            "profileKind": "spell-invocation"
-          }
-        ],
-        "unitId": "blindness_deafness"
-      },
-      {
-        "joinStatus": "covered",
-        "profiles": [
-          {
-            "joinStatus": "covered",
-            "obligations": [
-              {
-                "obligationId": "BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE",
-                "runtime": "battle",
-                "status": "covered",
-                "title": "Battle Blur self Spell Effect, Attack Roll Disadvantage projection, Blindsight and Truesight bypass witnesses, roll-mode cancellation, Concentration, and cleanup"
-              }
-            ],
-            "profileId": "spell.invocation-blur-attack-roll-defense",
-            "profileKind": "spell-invocation"
-          }
-        ],
-        "unitId": "blur"
       },
       {
         "joinStatus": "covered",
@@ -6191,38 +4369,6 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE",
-                "runtime": "battle",
-                "status": "covered",
-                "title": "Battle Dragon's Breath initial cast stores target-attached breath effect state"
-              }
-            ],
-            "profileId": "spell.invocation-dragons-breath-initial",
-            "profileKind": "spell-invocation"
-          },
-          {
-            "joinStatus": "covered",
-            "obligations": [
-              {
-                "obligationId": "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
-                "runtime": "battle",
-                "status": "covered",
-                "title": "Battle Dragon's Breath target-granted Magic action resolves Cone save-for-half damage"
-              }
-            ],
-            "profileId": "spell.invocation-dragons-breath-granted-action",
-            "profileKind": "spell-invocation"
-          }
-        ],
-        "unitId": "dragons_breath"
-      },
-      {
-        "joinStatus": "covered",
-        "profiles": [
-          {
-            "joinStatus": "covered",
-            "obligations": [
-              {
                 "obligationId": "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
                 "runtime": "character-creation",
                 "status": "covered",
@@ -6501,80 +4647,6 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
-                "runtime": "battle",
-                "status": "covered",
-                "title": "Battle attack damage disposition offers ordinary damage, Knock Out, or zero-Hit-Point replacement before shared HP damage lifecycle application"
-              },
-              {
-                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
-                "runtime": "battle",
-                "status": "covered",
-                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
-              },
-              {
-                "obligationId": "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
-                "runtime": "battle",
-                "status": "covered",
-                "title": "Battle spell-created held object lifecycle, hand occupancy, release and re-evocation, active-object spell attack, light projection, Concentration, and cleanup"
-              },
-              {
-                "obligationId": "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
-                "runtime": "shared-algebras",
-                "status": "covered",
-                "title": "Shared resolved positive-Hit-Point damage procedure and its TS parity route through consuming reducers"
-              }
-            ],
-            "profileId": "spell.invocation-spell-created-held-object",
-            "profileKind": "spell-invocation"
-          }
-        ],
-        "unitId": "flame_blade"
-      },
-      {
-        "joinStatus": "covered",
-        "profiles": [
-          {
-            "joinStatus": "covered",
-            "obligations": [
-              {
-                "obligationId": "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
-                "runtime": "battle",
-                "status": "covered",
-                "title": "Battle attack damage disposition offers ordinary damage, Knock Out, or zero-Hit-Point replacement before shared HP damage lifecycle application"
-              },
-              {
-                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
-                "runtime": "battle",
-                "status": "covered",
-                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
-              },
-              {
-                "obligationId": "BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE",
-                "runtime": "battle",
-                "status": "covered",
-                "title": "Battle Flaming Sphere area effect, Concentration lifecycle, Dexterity save damage, Bonus Action reposition or ram, slot scaling, and table-spatial boundary"
-              },
-              {
-                "obligationId": "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
-                "runtime": "shared-algebras",
-                "status": "covered",
-                "title": "Shared resolved positive-Hit-Point damage procedure and its TS parity route through consuming reducers"
-              }
-            ],
-            "profileId": "spell.invocation-flaming-sphere-hazard-ram",
-            "profileKind": "table-caller"
-          }
-        ],
-        "unitId": "flaming_sphere"
-      },
-      {
-        "joinStatus": "covered",
-        "profiles": [
-          {
-            "joinStatus": "covered",
-            "obligations": [
-              {
                 "obligationId": "BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE",
                 "runtime": "battle",
                 "status": "covered",
@@ -6701,25 +4773,6 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE",
-                "runtime": "battle",
-                "status": "covered",
-                "title": "Battle Heat Metal object-contact occurrence state, immediate and repeat Fire damage, held-or-worn save/drop outcome, fallback penalty, and cleanup"
-              }
-            ],
-            "profileId": "spell.invocation-object-contact-damage",
-            "profileKind": "spell-invocation"
-          }
-        ],
-        "unitId": "heat_metal"
-      },
-      {
-        "joinStatus": "covered",
-        "profiles": [
-          {
-            "joinStatus": "covered",
-            "obligations": [
-              {
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
@@ -6821,25 +4874,6 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
-                "runtime": "battle",
-                "status": "covered",
-                "title": "Battle save-gated spell conditions, condition-choice holes, non-Sleep repeated Saving Throws, and condition cleanup"
-              }
-            ],
-            "profileId": "spell.invocation-condition-save",
-            "profileKind": "spell-invocation"
-          }
-        ],
-        "unitId": "hold_person"
-      },
-      {
-        "joinStatus": "covered",
-        "profiles": [
-          {
-            "joinStatus": "covered",
-            "obligations": [
-              {
                 "obligationId": "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
                 "runtime": "battle",
                 "status": "covered",
@@ -6928,25 +4962,6 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
-                "runtime": "battle",
-                "status": "covered",
-                "title": "Battle direct spell-owned condition application, concentration cleanup, duration cleanup, and target-action early end"
-              }
-            ],
-            "profileId": "spell.invocation-direct-condition",
-            "profileKind": "spell-invocation"
-          }
-        ],
-        "unitId": "invisibility"
-      },
-      {
-        "joinStatus": "covered",
-        "profiles": [
-          {
-            "joinStatus": "covered",
-            "obligations": [
-              {
                 "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
                 "runtime": "battle",
                 "status": "covered",
@@ -6964,25 +4979,6 @@
           }
         ],
         "unitId": "jump"
-      },
-      {
-        "joinStatus": "covered",
-        "profiles": [
-          {
-            "joinStatus": "covered",
-            "obligations": [
-              {
-                "obligationId": "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
-                "runtime": "battle",
-                "status": "covered",
-                "title": "Battle direct condition removal, poison protection condition removal, poison resistance, and poison Saving Throw Advantage"
-              }
-            ],
-            "profileId": "spell.invocation-direct-condition-removal",
-            "profileKind": "spell-invocation"
-          }
-        ],
-        "unitId": "lesser_restoration"
       },
       {
         "joinStatus": "covered",
@@ -7109,63 +5105,6 @@
           }
         ],
         "unitId": "magic_missile"
-      },
-      {
-        "joinStatus": "covered",
-        "profiles": [
-          {
-            "joinStatus": "covered",
-            "obligations": [
-              {
-                "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
-                "runtime": "battle",
-                "status": "covered",
-                "title": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders"
-              }
-            ],
-            "profileId": "spell.invocation-magic-weapon-enhancement",
-            "profileKind": "spell-invocation"
-          }
-        ],
-        "unitId": "magic_weapon"
-      },
-      {
-        "joinStatus": "covered",
-        "profiles": [
-          {
-            "joinStatus": "covered",
-            "obligations": [
-              {
-                "obligationId": "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION",
-                "runtime": "battle",
-                "status": "covered",
-                "title": "Battle Mirror Image duplicate pool, attack-hit interception roll, duplicate destruction, bypass witnesses, and normal damage continuation"
-              }
-            ],
-            "profileId": "spell.invocation-mirror-image-hit-interception",
-            "profileKind": "spell-invocation"
-          }
-        ],
-        "unitId": "mirror_image"
-      },
-      {
-        "joinStatus": "covered",
-        "profiles": [
-          {
-            "joinStatus": "covered",
-            "obligations": [
-              {
-                "obligationId": "BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE",
-                "runtime": "battle",
-                "status": "covered",
-                "title": "Battle self-teleport spell destination witness, Bonus Action and Spell Slot spend, no-Movement and no-Opportunity-Attack projection, equipment transport, and table-spatial boundary"
-              }
-            ],
-            "profileId": "spell.invocation-self-teleport",
-            "profileKind": "spell-invocation"
-          }
-        ],
-        "unitId": "misty_step"
       },
       {
         "joinStatus": "covered",
@@ -7447,25 +5386,6 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
-                "runtime": "battle",
-                "status": "covered",
-                "title": "Battle direct condition removal, poison protection condition removal, poison resistance, and poison Saving Throw Advantage"
-              }
-            ],
-            "profileId": "spell.invocation-condition-removal-protection",
-            "profileKind": "spell-invocation"
-          }
-        ],
-        "unitId": "protection_from_poison"
-      },
-      {
-        "joinStatus": "covered",
-        "profiles": [
-          {
-            "joinStatus": "covered",
-            "obligations": [
-              {
                 "obligationId": "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
                 "runtime": "character-creation",
                 "status": "covered",
@@ -7509,38 +5429,6 @@
           }
         ],
         "unitId": "ranger_weapon_mastery"
-      },
-      {
-        "joinStatus": "covered",
-        "profiles": [
-          {
-            "joinStatus": "covered",
-            "obligations": [
-              {
-                "obligationId": "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE",
-                "runtime": "battle",
-                "status": "covered",
-                "title": "Battle Ray of Enfeeblement D20 Test lifecycle applies save-gated next-attack Disadvantage, failed-save Strength D20 Test Disadvantage, repeat-save cleanup, and Concentration cleanup"
-              }
-            ],
-            "profileId": "spell.invocation-ray-of-enfeeblement-d20-lifecycle",
-            "profileKind": "spell-invocation"
-          },
-          {
-            "joinStatus": "covered",
-            "obligations": [
-              {
-                "obligationId": "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY",
-                "runtime": "battle",
-                "status": "covered",
-                "title": "Battle Ray of Enfeeblement failed-save source damage-roll penalty subtracts 1d8 from supported damage rolls before target-side damage handling"
-              }
-            ],
-            "profileId": "spell.invocation-ray-of-enfeeblement-damage-penalty",
-            "profileKind": "spell-invocation"
-          }
-        ],
-        "unitId": "ray_of_enfeeblement"
       },
       {
         "joinStatus": "covered",
@@ -7808,25 +5696,6 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
-                "runtime": "battle",
-                "status": "covered",
-                "title": "Battle independent spell attack sequences for beam and ray count, per-attack target choice, attack rolls, hit-gated damage rolls, object targets, and action or slot spend"
-              }
-            ],
-            "profileId": "spell.invocation-independent-attack-sequence",
-            "profileKind": "spell-invocation"
-          }
-        ],
-        "unitId": "scorching_ray"
-      },
-      {
-        "joinStatus": "covered",
-        "profiles": [
-          {
-            "joinStatus": "covered",
-            "obligations": [
-              {
                 "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
                 "runtime": "battle",
                 "status": "covered",
@@ -7838,56 +5707,6 @@
           }
         ],
         "unitId": "searing_smite"
-      },
-      {
-        "joinStatus": "covered",
-        "profiles": [
-          {
-            "joinStatus": "covered",
-            "obligations": [
-              {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
-                "runtime": "battle",
-                "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
-              },
-              {
-                "obligationId": "BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT",
-                "runtime": "battle",
-                "status": "covered",
-                "title": "Battle See Invisibility self observer-sight effect reveals visible Invisible creatures, caller-witnessed Invisible objects, and caller-witnessed Ethereal targets without mutating target state"
-              }
-            ],
-            "profileId": "spell.invocation-see-invisible-observer-sight",
-            "profileKind": "spell-invocation"
-          }
-        ],
-        "unitId": "see_invisibility"
-      },
-      {
-        "joinStatus": "covered",
-        "profiles": [
-          {
-            "joinStatus": "covered",
-            "obligations": [
-              {
-                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
-                "runtime": "battle",
-                "status": "covered",
-                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
-              },
-              {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
-                "runtime": "battle",
-                "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
-              }
-            ],
-            "profileId": "spell.invocation-damage-save-or-attack",
-            "profileKind": "spell-invocation"
-          }
-        ],
-        "unitId": "shatter"
       },
       {
         "joinStatus": "covered",
@@ -7951,25 +5770,6 @@
           }
         ],
         "unitId": "shillelagh"
-      },
-      {
-        "joinStatus": "covered",
-        "profiles": [
-          {
-            "joinStatus": "covered",
-            "obligations": [
-              {
-                "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
-                "runtime": "battle",
-                "status": "covered",
-                "title": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup"
-              }
-            ],
-            "profileId": "spell.invocation-after-hit-damage-illumination",
-            "profileKind": "spell-invocation"
-          }
-        ],
-        "unitId": "shining_smite"
       },
       {
         "joinStatus": "covered",
@@ -8117,44 +5917,6 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
-                "runtime": "battle",
-                "status": "covered",
-                "title": "Battle spell scalar buffs for Armor Class, Speed, special speeds, Hit Point maximum, and Temporary Hit Point effects"
-              }
-            ],
-            "profileId": "spell.scalar-buff",
-            "profileKind": "spell-invocation"
-          }
-        ],
-        "unitId": "spider_climb"
-      },
-      {
-        "joinStatus": "covered",
-        "profiles": [
-          {
-            "joinStatus": "covered",
-            "obligations": [
-              {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
-                "runtime": "battle",
-                "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
-              }
-            ],
-            "profileId": "spell.invocation-spiritual-weapon-attack-proxy",
-            "profileKind": "spell-invocation"
-          }
-        ],
-        "unitId": "spiritual_weapon"
-      },
-      {
-        "joinStatus": "covered",
-        "profiles": [
-          {
-            "joinStatus": "covered",
-            "obligations": [
-              {
                 "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
                 "runtime": "battle",
                 "status": "covered",
@@ -8268,25 +6030,6 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING",
-                "runtime": "battle",
-                "status": "covered",
-                "title": "Battle linked spell effects for Warding Bond defenses, all-damage Resistance, same-amount damage sharing, and source-zero, separation, recast, or duration cleanup"
-              }
-            ],
-            "profileId": "spell.invocation-warding-bond-linked-effect",
-            "profileKind": "spell-invocation"
-          }
-        ],
-        "unitId": "warding_bond"
-      },
-      {
-        "joinStatus": "covered",
-        "profiles": [
-          {
-            "joinStatus": "covered",
-            "obligations": [
-              {
                 "obligationId": "CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE",
                 "runtime": "character-creation",
                 "status": "covered",
@@ -8330,25 +6073,6 @@
           }
         ],
         "unitId": "warlock_magical_cunning"
-      },
-      {
-        "joinStatus": "covered",
-        "profiles": [
-          {
-            "joinStatus": "covered",
-            "obligations": [
-              {
-                "obligationId": "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE",
-                "runtime": "battle",
-                "status": "covered",
-                "title": "Battle Web area hazard state, entry/start-turn restraint saves, escape cleanup, difficult-terrain projection, obscurement, and duration cleanup"
-              }
-            ],
-            "profileId": "spell.invocation-web-restraint-hazard",
-            "profileKind": "spell-invocation"
-          }
-        ],
-        "unitId": "web"
       },
       {
         "joinStatus": "covered",
@@ -8418,29 +6142,12 @@
       "level-1",
       "level-2",
       "spell-level-0",
-      "spell-level-1",
-      "spell-level-2"
+      "spell-level-1"
     ],
-    "title": "Level 1-2"
+    "title": "Character Levels 1-2"
   },
   "selectedIdentityReadiness": {
     "blockingRows": [
-      {
-        "claimTag": "profile-subset-supported",
-        "reason": "The location knowledge, Hidden prevention, and observer-scoped Invisible benefit denial are table/perception knowledge facts outside promoted battle-runtime replay.",
-        "selectedIdentityStatus": "missing-witness-deferred-not-applicable",
-        "sourceRecordPath": "packages/surface/content/mind_spike.json",
-        "status": "closed-runtime-detached-table-adjudication",
-        "unitId": "mind_spike"
-      },
-      {
-        "claimTag": "supported-profile",
-        "reason": "The Unit has no selected-identity-mbt evidence.",
-        "selectedIdentityStatus": "missing-witness",
-        "sourceRecordPath": "packages/surface/content/shining_smite.json",
-        "status": "supported-profile",
-        "unitId": "shining_smite"
-      },
       {
         "claimTag": "profile-subset-supported",
         "reason": "The non-Booming minor wonders are presentation/environment adjudication and have no production replay boundary that can bind a selected Unit identity.",
@@ -8451,22 +6158,20 @@
       }
     ],
     "blockingRowsByStatus": {
-      "missing-witness": 1,
-      "missing-witness-deferred-not-applicable": 2
+      "missing-witness-deferred-not-applicable": 1
     },
     "metrics": {
-      "denominator": 142,
-      "numerator": 139,
-      "percent": "97.9%"
+      "denominator": 104,
+      "numerator": 103,
+      "percent": "99%"
     },
     "readyRowsByStatus": {
-      "witness-present": 139
+      "witness-present": 103
     },
     "rowsByStatus": {
-      "missing-witness": 1,
-      "missing-witness-deferred-not-applicable": 2,
-      "not-required": 29,
-      "witness-present": 139
+      "missing-witness-deferred-not-applicable": 1,
+      "not-required": 11,
+      "witness-present": 103
     }
   },
   "sourceArtifacts": {
@@ -9345,22 +7050,21 @@
     "openBlockerCount": 0
   },
   "summary": {
-    "candidateUnitIdsBeforeExclusions": 197,
+    "candidateUnitIdsBeforeExclusions": 141,
     "groupsByClaimTag": {
-      "profile-subset-supported": 26,
-      "supported-profile": 116,
-      "unsupported-profile": 29
+      "profile-subset-supported": 13,
+      "supported-profile": 91,
+      "unsupported-profile": 11
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 6,
+      "blocked-follow-up-split": 2,
       "closed-character-fact-and-runtime-detached-split": 3,
-      "closed-companion-control-boundary": 2,
+      "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
-      "closed-outside-battle-runtime-boundary": 4,
-      "closed-runtime-detached-table-adjudication": 34,
-      "supported-profile": 116
+      "closed-runtime-detached-table-adjudication": 12,
+      "supported-profile": 91
     },
-    "nonSupportedFrontier": 55,
-    "strictDenominator": 171
+    "nonSupportedFrontier": 24,
+    "strictDenominator": 115
   }
 }

@@ -1,7 +1,7 @@
 {
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "sourceCorpus": ".references/srd-5.2.1/Classes",
-  "scope": "SRD 5.2.1 class-derived Unit/catalog backlog rows, prioritized around level 1, level 2, cantrip/level-1/level-2 spell-list pressure, with separately reported level-3 class/subclass and spell-list pressure seeds.",
+  "scope": "SRD 5.2.1 class-derived Unit/catalog backlog rows, prioritized by character level. Character levels 1-2 include cantrips and spell-level-1 pressure; character level 3 adds class/subclass level-3 rows and spell-level-2 pressure. Spell-level-3 pressure is reported separately as a later character-level-5 frontier seed.",
   "evidenceArtifacts": {
     "characterCreationOwnerEvidence": {
       "schema": "dnd.srd-character-creation-owner-evidence.v1",
@@ -213,13 +213,24 @@
       }
     },
     "levelOneTwoBattleReadiness": {
-      "denominator": 556,
-      "numerator": 538,
-      "percent": "96.8%",
+      "denominator": 400,
+      "numerator": 397,
+      "percent": "99.3%",
       "rowsByStatus": {
-        "accepted": 391,
-        "accepted-no-battle-effect": 147,
+        "accepted": 297,
+        "accepted-no-battle-effect": 100,
         "owner-evidence-required": 2,
+        "partial-battle-runtime": 1
+      }
+    },
+    "levelOneThreeBattleReadiness": {
+      "denominator": 607,
+      "numerator": 573,
+      "percent": "94.4%",
+      "rowsByStatus": {
+        "accepted": 412,
+        "accepted-no-battle-effect": 161,
+        "owner-evidence-required": 18,
         "partial-battle-runtime": 11,
         "battle-runtime-required": 5
       }

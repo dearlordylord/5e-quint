@@ -15,6 +15,7 @@ const {
   hasVariantMagicMechanics,
 } = require("./unit-profile-coverage-discovery.cjs");
 const {
+  characterLevelBands,
   buildSrdAuthoredProductReadiness,
 } = require("./level1-full-support-report.cjs");
 const { fail, toRepoPath } = require("./unit-profile-coverage-io.cjs");
@@ -160,6 +161,32 @@ function assertAuthoredReadinessBlocked(readiness, expected) {
 }
 
 function runSelfTest(root) {
+  const levelTwoBands = characterLevelBands(2);
+  if (
+    JSON.stringify(levelTwoBands) !==
+    JSON.stringify(["level-1", "level-2", "spell-level-0", "spell-level-1"])
+  ) {
+    fail(
+      `Self-test failed: expected character level 2 bands to exclude spell-level-2, got ${JSON.stringify(levelTwoBands)}`,
+    );
+  }
+  const levelThreeBands = characterLevelBands(3);
+  if (
+    JSON.stringify(levelThreeBands) !==
+    JSON.stringify([
+      "level-1",
+      "level-2",
+      "level-3",
+      "spell-level-0",
+      "spell-level-1",
+      "spell-level-2",
+    ])
+  ) {
+    fail(
+      `Self-test failed: expected character level 3 bands to include spell-level-2 and exclude spell-level-3, got ${JSON.stringify(levelThreeBands)}`,
+    );
+  }
+
   const tempDir = fs.mkdtempSync(
     path.join(os.tmpdir(), "unit-profile-coverage-self-test-"),
   );

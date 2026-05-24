@@ -9,10 +9,13 @@ mechanics profiles, which installed Units are explicitly unsupported or need
 widening, which authored Surface Units are not yet admitted to the Unit catalog,
 and which QNT/runtime/verification owners cover each supported profile.
 
-The current executable backlog for SRD level 1 plus level 2 full-support claim
-closure is `plans/LEVEL1_2_FULL_SUPPORT_BACKLOG.md`. Older Ralph lane files for
-level-2 expansion and background catalog admission were removed after their
-implemented work landed or their task lists became stale.
+The current executable backlog for SRD character levels 1-2 full-support claim
+closure is `plans/LEVEL1_2_FULL_SUPPORT_BACKLOG.md`. Character level and spell
+level are separate axes: character levels 1-2 include cantrips and spell-level-1
+spells; character level 3 is the first frontier that includes spell-level-2
+spells; spell-level-3 spells belong to the later character-level-5 frontier.
+The generated reports currently include `LEVEL1_FULL_SUPPORT.md`,
+`LEVEL1_2_FULL_SUPPORT.md`, and `LEVEL1_3_FULL_SUPPORT.md`.
 
 This lane is the authored-content breadth layer. It does not by itself prove
 that reducer-owned semantics are fully connected to the rules kernel. For any
