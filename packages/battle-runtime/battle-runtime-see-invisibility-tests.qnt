@@ -5,6 +5,7 @@ module battleRuntimeSeeInvisibilityTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
   import battleRuntimeSeeInvisibility.* from "./battle-runtime-see-invisibility"
+  import battleRuntimeSeeInvisibilityConstants.* from "./battle-runtime-see-invisibility-constants"
   import battleRuntimeSanctuary.* from "./battle-runtime-sanctuary"
   import battleRuntimeSpellAttack.* from "./battle-runtime-spell-attack"
 
