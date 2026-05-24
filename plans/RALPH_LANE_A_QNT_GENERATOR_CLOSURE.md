@@ -110,7 +110,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 17,
       "id": "A17-CHECKER-REGRESSION-TEST",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Add generator-readiness regression coverage"
     },
     {
@@ -197,7 +197,7 @@ Lane A must not:
 | 14 | A14-QNT-OWNER-ROLE-REFRESH - Refresh owner roles for new semantic cores | done | A2-A13,A20-A23 | Generated role closure. |
 | 15 | A15-GENERATOR-SUBSET-TOKEN-AUDIT - Audit generator subset tokens for spell cores | done | A2-A13,A20-A23 | Row vocabulary is exact for the split spell semantic cores. |
 | 16 | A16-FIXTURE-BOUND-STATUS-CLOSURE - Close spell procedure fixture-bound readiness row | done | A14,A15 | Only if blockers are actually gone. |
-| 17 | A17-CHECKER-REGRESSION-TEST - Add generator-readiness regression coverage | ready-for-implementation-after-light-research | none | Ordered after A16 in this plan; prevent silent fallback to fixture-bound. |
+| 17 | A17-CHECKER-REGRESSION-TEST - Add generator-readiness regression coverage | done | none | Ordered after A16 in this plan; prevent silent fallback to fixture-bound. |
 | 18 | A18-END-TO-END-QNT-VERIFICATION - Run and document lane A verification | ready-for-implementation-after-light-research | none | Ordered after A17 in this plan; coverage, examples, typecheck if touched. |
 | 19 | A19-RECURSIVE-NEXT-BATCH - Mine next QNT generator-readiness batch | ready-for-research | none | Ordered after A18 in this plan; must append >=12 tasks or prove exhaustion. |
 | 20 | A20-DIRECT-SPELL-DAMAGE-CORE - Split direct spell damage projection core | done | none | Magic Missile fixture split. |
@@ -370,7 +370,7 @@ Acceptance: generated report shows no fixture-bound generator-readiness rows.
 
 ### Task 17 - A17-CHECKER-REGRESSION-TEST - Add generator-readiness regression coverage
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: add or extend self-test coverage so a semantic-core readiness row fails
 when it contains proof/example files, fixture-world coupling, or omitted array
