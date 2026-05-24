@@ -106,13 +106,13 @@ identity evidence or an explicit non-applicable classification.
     {
       "number": 16,
       "id": "B16-MCP-SCENARIO-IDENTITY-SMOKE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Add MCP selected-identity smoke coverage"
     },
     {
       "number": 17,
       "id": "B17-END-TO-END-UNIT-VERIFICATION",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Run and document lane B verification"
     },
     {
@@ -187,8 +187,8 @@ Lane B must not:
 | 13 | B13-PROFILE-SUBSET-IDENTITY-DISPOSITIONS - Classify subset-supported identity expectations | done | none | Explicit non-applicable rows. |
 | 14 | B14-FULL-SUPPORT-REPORT-PROJECTION - Project selected-identity gate into full-support reports | done | B1-B13 | Report-level metric. |
 | 15 | B15-UNIT-REPORT-HONESTY-PASS - Refresh Unit report wording and metrics | done | B14 | Generated denominator audit for Unit/profile-fact group counts. |
-| 16 | B16-MCP-SCENARIO-IDENTITY-SMOKE - Add MCP selected-identity smoke coverage | ready-for-implementation-after-light-research | B14 | One narrow smoke scenario. |
-| 17 | B17-END-TO-END-UNIT-VERIFICATION - Run and document lane B verification | blocked | B15,B16 | Unit coverage and typecheck. |
+| 16 | B16-MCP-SCENARIO-IDENTITY-SMOKE - Add MCP selected-identity smoke coverage | done | B14 | One narrow smoke scenario. |
+| 17 | B17-END-TO-END-UNIT-VERIFICATION - Run and document lane B verification | ready-for-implementation-after-light-research | B15,B16 | Unit coverage and typecheck. |
 | 18 | B18-RECURSIVE-NEXT-BATCH - Mine next selected-identity batch | blocked | B17 | Must append >=12 tasks or prove exhaustion. |
 | 19 | L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION - Reconcile Acid Arrow RAW corpus | blocked | owner RAW decision | Resolve the local SRD damage-timing contradiction before modeling Acid Arrow executable behavior. |
 | 20 | L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE - Repair Acid Arrow Surface damage shape | blocked | L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION | Make the approved Acid Arrow damage timing, miss branch, delayed damage, and slot scaling executable in Surface content/schema. |
@@ -413,16 +413,20 @@ Units, profile facts, and selected-identity replay witnesses.
 
 ### Task 16 - B16-MCP-SCENARIO-IDENTITY-SMOKE - Add MCP selected-identity smoke coverage
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: add one focused MCP acceptance smoke that creates a supported SRD level
 1-2 character and proves selected Unit identity reaches battle or sheet output.
 
 Acceptance: MCP typecheck and focused test pass.
 
+Result: MCP vertical acceptance now creates a level-1 Wizard with selected
+`light`, starts a battle, fills the Light object target hole, and proves the
+selected spell identity reaches emitted battle light output.
+
 ### Task 17 - B17-END-TO-END-UNIT-VERIFICATION - Run and document lane B verification
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Output: run unit-profile write/check, checker self-test when changed, focused
 tests added by this lane, `pnpm typecheck` when TypeScript changed, and

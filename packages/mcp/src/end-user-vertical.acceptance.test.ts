@@ -1067,6 +1067,84 @@ describe("end-user MCP vertical", () => {
       ]),
     );
   });
+
+  test("threads selected Light identity from MCP character creation into battle output", () => {
+    const root = createMcpCompositionRoot();
+    const wizardDraftId = "draft:mcp-selected-light-wizard-one";
+    const wizardCombatantId = "wizard";
+    const goblinCombatantId = "goblin";
+    const selectedSpellId = "light";
+    const lightObjectId = "wizard-spellbook";
+
+    const wizard = createAndFinalizeWizardOne(root, wizardDraftId);
+    expect(wizard.finalization).toMatchObject({
+      tag: "ready",
+      build: {
+        spellcasting: {
+          sources: [
+            expect.objectContaining({
+              cantrips: expect.arrayContaining([selectedSpellId]),
+            }),
+          ],
+        },
+      },
+    });
+
+    const started = callTool(root, "start_battle", {
+      battleId: "battle:mcp-selected-light-identity",
+      initialCombatants: [
+        characterCombatant(wizardDraftId, wizardCombatantId, 18),
+        statBlockCombatant(goblinCombatantId, "stat_block_goblin_warrior", 7),
+      ],
+    });
+    expect(started.snapshot).toMatchObject({
+      currentActorId: wizardCombatantId,
+      turnOrder: [wizardCombatantId, goblinCombatantId],
+    });
+
+    const lightAct = requireSpellAct(root, wizardCombatantId, selectedSpellId);
+    expect(lightAct.subject).toEqual(
+      cantripSubject(wizardCombatantId, selectedSpellId, "objectLight"),
+    );
+    const objectTarget = requireHole(
+      lightAct.initialHoles,
+      "objectTargetChoice",
+    );
+
+    const resolved = callTool(root, "fill_battle_hole", {
+      subject: lightAct.subject,
+      fill: {
+        kind: "objectTargetChoice",
+        holeId: objectTarget.holeId,
+        value: lightObjectId,
+        spatialFacts: [
+          {
+            kind: "spellObjectLightTarget",
+            casterId: wizardCombatantId,
+            objectId: lightObjectId,
+            spellId: selectedSpellId,
+            size: "tiny",
+            wornOrCarried: { kind: "caster" },
+          },
+        ],
+      },
+    });
+
+    expect(resolved.result.tag).toBe("resolved");
+    expect(resolved.snapshot.lightEmitters).toEqual([
+      expect.objectContaining({
+        sourceSpellId: selectedSpellId,
+        sourceCombatantId: wizardCombatantId,
+        attachment: { kind: "object", objectId: lightObjectId },
+        emission: {
+          kind: "brightAndDim",
+          brightRadiusFeet: 20,
+          dimAdditionalFeet: 20,
+        },
+        expiresAt: { kind: "duration", durationTicks: 600 },
+      }),
+    ]);
+  });
 });
 
 function testCharacterId(draftId: string) {
