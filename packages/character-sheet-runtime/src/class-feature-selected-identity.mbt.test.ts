@@ -6,6 +6,9 @@
 // UNIT-IDENTITY-MBT-REPLAY: B5-CLASS-FEATURE-IDENTITY-BATCH-2 paladin_oath_of_devotion_spells doProjectPaladinOathDevotionSpells
 // UNIT-IDENTITY-MBT-REPLAY: B5-CLASS-FEATURE-IDENTITY-BATCH-2 paladin_paladins_smite doProjectPaladinsSmite
 // UNIT-IDENTITY-MBT-REPLAY: B5-CLASS-FEATURE-IDENTITY-BATCH-2 ranger_favored_enemy doProjectRangerFavoredEnemy
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B6-CLASS-FEATURE-IDENTITY-BATCH-3 sorcerer_draconic_spells warlock_fiend_spells
+// UNIT-IDENTITY-MBT-REPLAY: B6-CLASS-FEATURE-IDENTITY-BATCH-3 sorcerer_draconic_spells doProjectSorcererDraconicSpells
+// UNIT-IDENTITY-MBT-REPLAY: B6-CLASS-FEATURE-IDENTITY-BATCH-3 warlock_fiend_spells doProjectWarlockFiendSpells
 import * as path from "node:path";
 
 import {
@@ -41,12 +44,16 @@ const PALADIN_OATH_DEVOTION_SPELLS_UNIT_ID =
   "paladin_oath_of_devotion_spells";
 const PALADIN_PALADINS_SMITE_UNIT_ID = "paladin_paladins_smite";
 const RANGER_FAVORED_ENEMY_UNIT_ID = "ranger_favored_enemy";
+const SORCERER_DRACONIC_SPELLS_UNIT_ID = "sorcerer_draconic_spells";
+const WARLOCK_FIEND_SPELLS_UNIT_ID = "warlock_fiend_spells";
 const CLERIC_LIFE_DOMAIN_LEVEL_3_EXPECTED_SPELL_ID = "aid";
 const DRUID_CIRCLE_LAND_TEMPERATE_EXPECTED_SPELL_ID = "misty_step";
 const PALADIN_OATH_DEVOTION_EXPECTED_SPELL_ID =
   "protection_from_evil_and_good";
 const PALADINS_SMITE_EXPECTED_SPELL_ID = "divine_smite";
 const RANGER_FAVORED_ENEMY_EXPECTED_SPELL_ID = "hunters_mark";
+const SORCERER_DRACONIC_EXPECTED_SPELL_ID = "alter_self";
+const WARLOCK_FIEND_EXPECTED_SPELL_ID = "burning_hands";
 const DRUID_WILD_SHAPE_KNOWN_FORM_STAT_BLOCK_IDS = [
   "stat_block_rat",
   "stat_block_riding_horse",
@@ -62,6 +69,8 @@ const classFeatureSelectedIdentityResults = [
   "paladin-oath-devotion-spells",
   "paladins-smite",
   "ranger-favored-enemy",
+  "sorcerer-draconic-spells",
+  "warlock-fiend-spells",
 ] as const;
 type ClassFeatureSelectedIdentityResult =
   (typeof classFeatureSelectedIdentityResults)[number];
@@ -71,7 +80,9 @@ type ClassFeatureSelectedIdentityUnitId =
   | typeof DRUID_CIRCLE_LAND_SPELLS_UNIT_ID
   | typeof PALADIN_OATH_DEVOTION_SPELLS_UNIT_ID
   | typeof PALADIN_PALADINS_SMITE_UNIT_ID
-  | typeof RANGER_FAVORED_ENEMY_UNIT_ID;
+  | typeof RANGER_FAVORED_ENEMY_UNIT_ID
+  | typeof SORCERER_DRACONIC_SPELLS_UNIT_ID
+  | typeof WARLOCK_FIEND_SPELLS_UNIT_ID;
 type ClassFeatureSelectedIdentityProjection = {
   readonly lastResult: ClassFeatureSelectedIdentityResult;
   readonly featureUnitId: ClassFeatureSelectedIdentityUnitId | "none";
@@ -92,7 +103,10 @@ type SelectedUnitIdentityReplaySequence = {
   readonly expected: ClassFeatureSelectedIdentityProjection;
 };
 type SelectedUnitIdentityReplay = {
-  readonly taskId: typeof TASK_ID_B4 | typeof TASK_ID_B5;
+  readonly taskId:
+    | typeof TASK_ID_B4
+    | typeof TASK_ID_B5
+    | "B6-CLASS-FEATURE-IDENTITY-BATCH-3";
   readonly unitId: ClassFeatureSelectedIdentityUnitId;
   readonly actions: readonly ClassFeatureSelectedIdentityDriverAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
@@ -106,6 +120,8 @@ const classFeatureSelectedIdentityDriverSchema = {
   doProjectPaladinOathDevotionSpells: {},
   doProjectPaladinsSmite: {},
   doProjectRangerFavoredEnemy: {},
+  doProjectSorcererDraconicSpells: {},
+  doProjectWarlockFiendSpells: {},
   step: {},
 } as const;
 
@@ -189,6 +205,30 @@ const selectedUnitIdentityReplays = [
         name: "selected-ranger-favored-enemy-projects-hunters-mark-access",
         actions: ["doProjectRangerFavoredEnemy"],
         expected: rangerFavoredEnemyProjection(),
+      },
+    ],
+  },
+  {
+    taskId: "B6-CLASS-FEATURE-IDENTITY-BATCH-3",
+    unitId: "sorcerer_draconic_spells",
+    actions: ["doProjectSorcererDraconicSpells"],
+    sequences: [
+      {
+        name: "selected-sorcerer-draconic-spells-project-prepared-access",
+        actions: ["doProjectSorcererDraconicSpells"],
+        expected: sorcererDraconicSpellsProjection(),
+      },
+    ],
+  },
+  {
+    taskId: "B6-CLASS-FEATURE-IDENTITY-BATCH-3",
+    unitId: "warlock_fiend_spells",
+    actions: ["doProjectWarlockFiendSpells"],
+    sequences: [
+      {
+        name: "selected-warlock-fiend-spells-project-prepared-access",
+        actions: ["doProjectWarlockFiendSpells"],
+        expected: warlockFiendSpellsProjection(),
       },
     ],
   },
@@ -278,6 +318,12 @@ function createClassFeatureSelectedIdentityDriver() {
       },
       doProjectRangerFavoredEnemy: () => {
         projection = rangerFavoredEnemyProjection();
+      },
+      doProjectSorcererDraconicSpells: () => {
+        projection = sorcererDraconicSpellsProjection();
+      },
+      doProjectWarlockFiendSpells: () => {
+        projection = warlockFiendSpellsProjection();
       },
       step: () => {},
       getState: () => projection,
@@ -445,6 +491,52 @@ function rangerFavoredEnemyProjection(): ClassFeatureSelectedIdentityProjection 
     access,
     expectedUnitId: RANGER_FAVORED_ENEMY_UNIT_ID,
     expectedSpellId: RANGER_FAVORED_ENEMY_EXPECTED_SPELL_ID,
+  });
+}
+
+function sorcererDraconicSpellsProjection(): ClassFeatureSelectedIdentityProjection {
+  const access = requiredPreparedSpellAccess(
+    classBuild({
+      startingClass: "class_sorcerer",
+      totalLevel: 3,
+      features: [
+        {
+          kind: "selectedClassChoice",
+          selectedFromUnitId: "class_sorcerer",
+          unitId: "subclass_sorcerer_draconic_sorcery",
+        },
+      ],
+    }),
+    SORCERER_DRACONIC_SPELLS_UNIT_ID,
+  );
+  return preparedSpellAccessProjection({
+    lastResult: "sorcerer-draconic-spells",
+    access,
+    expectedUnitId: SORCERER_DRACONIC_SPELLS_UNIT_ID,
+    expectedSpellId: SORCERER_DRACONIC_EXPECTED_SPELL_ID,
+  });
+}
+
+function warlockFiendSpellsProjection(): ClassFeatureSelectedIdentityProjection {
+  const access = requiredPreparedSpellAccess(
+    classBuild({
+      startingClass: "class_warlock",
+      totalLevel: 3,
+      features: [
+        {
+          kind: "selectedClassChoice",
+          selectedFromUnitId: "class_warlock",
+          unitId: "subclass_warlock_fiend_patron",
+        },
+      ],
+    }),
+    WARLOCK_FIEND_SPELLS_UNIT_ID,
+  );
+  return preparedSpellAccessProjection({
+    lastResult: "warlock-fiend-spells",
+    access,
+    expectedUnitId: WARLOCK_FIEND_SPELLS_UNIT_ID,
+    expectedSpellId: WARLOCK_FIEND_EXPECTED_SPELL_ID,
   });
 }
 
@@ -624,7 +716,9 @@ function resultField(raw: unknown): ClassFeatureSelectedIdentityResult {
     raw === "druid-circle-land-spells" ||
     raw === "paladin-oath-devotion-spells" ||
     raw === "paladins-smite" ||
-    raw === "ranger-favored-enemy"
+    raw === "ranger-favored-enemy" ||
+    raw === "sorcerer-draconic-spells" ||
+    raw === "warlock-fiend-spells"
   ) {
     return raw;
   }
@@ -641,7 +735,9 @@ function featureUnitIdField(
     raw === DRUID_CIRCLE_LAND_SPELLS_UNIT_ID ||
     raw === PALADIN_OATH_DEVOTION_SPELLS_UNIT_ID ||
     raw === PALADIN_PALADINS_SMITE_UNIT_ID ||
-    raw === RANGER_FAVORED_ENEMY_UNIT_ID
+    raw === RANGER_FAVORED_ENEMY_UNIT_ID ||
+    raw === SORCERER_DRACONIC_SPELLS_UNIT_ID ||
+    raw === WARLOCK_FIEND_SPELLS_UNIT_ID
   ) {
     return raw;
   }

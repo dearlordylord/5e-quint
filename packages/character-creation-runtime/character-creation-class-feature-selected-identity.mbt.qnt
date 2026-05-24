@@ -81,6 +81,21 @@ module characterCreationClassFeatureSelectedIdentityMbt {
     recordProjection("ranger-fighting-style", "ranger_fighting_style", "guidance", 3, 0, 0, 0, false, true),
   }
 
+  action doProjectWarlockPactMagic = all {
+    qLastResult == "init",
+    recordProjection("warlock-pact-magic", "warlock_pact_magic", "class_warlock", 4, 1, 1, 1, true, true),
+  }
+
+  action doSelectWizardScholar = all {
+    qLastResult == "init",
+    recordProjection("wizard-scholar", "wizard_scholar", "none", 1, 0, 0, 0, false, true),
+  }
+
+  action doSelectWizardEvocationSavant = all {
+    qLastResult == "init",
+    recordProjection("wizard-evocation-savant", "wizard_evocation_savant", "shatter", 2, 0, 0, 0, false, true),
+  }
+
   action step = any {
     doSelectBardExpertise,
     doProjectClericChannelDivinity,
@@ -91,5 +106,8 @@ module characterCreationClassFeatureSelectedIdentityMbt {
     doSelectPaladinFightingStyle,
     doSelectRangerDeftExplorer,
     doSelectRangerFightingStyle,
+    doProjectWarlockPactMagic,
+    doSelectWizardScholar,
+    doSelectWizardEvocationSavant,
   }
 }

@@ -9,6 +9,10 @@
 // UNIT-IDENTITY-MBT-REPLAY: B5-CLASS-FEATURE-IDENTITY-BATCH-2 paladin_fighting_style doSelectPaladinFightingStyle
 // UNIT-IDENTITY-MBT-REPLAY: B5-CLASS-FEATURE-IDENTITY-BATCH-2 ranger_deft_explorer doSelectRangerDeftExplorer
 // UNIT-IDENTITY-MBT-REPLAY: B5-CLASS-FEATURE-IDENTITY-BATCH-2 ranger_fighting_style doSelectRangerFightingStyle
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B6-CLASS-FEATURE-IDENTITY-BATCH-3 warlock_pact_magic wizard_scholar wizard_evocation_savant
+// UNIT-IDENTITY-MBT-REPLAY: B6-CLASS-FEATURE-IDENTITY-BATCH-3 warlock_pact_magic doProjectWarlockPactMagic
+// UNIT-IDENTITY-MBT-REPLAY: B6-CLASS-FEATURE-IDENTITY-BATCH-3 wizard_scholar doSelectWizardScholar
+// UNIT-IDENTITY-MBT-REPLAY: B6-CLASS-FEATURE-IDENTITY-BATCH-3 wizard_evocation_savant doSelectWizardEvocationSavant
 import * as path from "node:path";
 
 import {
@@ -54,10 +58,14 @@ import {
   CLASS_FEATURE_FEAT_CHOICE_KEY,
   CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
   CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
+  CLASS_PREPARED_SPELL_CHOICE_KEY,
   CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
+  CLASS_SUBCLASS_CHOICE_KEY,
   PALADIN_FIGHTING_STYLE_CHOICE_KEY,
   progressionOptionId,
   RANGER_FIGHTING_STYLE_CHOICE_KEY,
+  WIZARD_PREPARED_SPELL_CHOICE_KEY,
+  WIZARD_SPELLBOOK_CHOICE_KEY,
 } from "./phase1-manifest.ts";
 import { supportedHoleOptionIds } from "./support-gates.ts";
 
@@ -72,10 +80,15 @@ const MONK_UNCANNY_METABOLISM_UNIT_ID = "monk_uncanny_metabolism";
 const PALADIN_FIGHTING_STYLE_UNIT_ID = "paladin_fighting_style";
 const RANGER_DEFT_EXPLORER_UNIT_ID = "ranger_deft_explorer";
 const RANGER_FIGHTING_STYLE_UNIT_ID = "ranger_fighting_style";
+const WARLOCK_PACT_MAGIC_UNIT_ID = "warlock_pact_magic";
+const WIZARD_SCHOLAR_UNIT_ID = "wizard_scholar";
+const WIZARD_EVOCATION_SAVANT_UNIT_ID = "wizard_evocation_savant";
 const BARD_CLASS_UNIT_ID = "class_bard";
 const MONK_CLASS_UNIT_ID = "class_monk";
 const PALADIN_CLASS_UNIT_ID = "class_paladin";
 const RANGER_CLASS_UNIT_ID = "class_ranger";
+const WARLOCK_CLASS_UNIT_ID = "class_warlock";
+const WIZARD_CLASS_UNIT_ID = "class_wizard";
 const BARD_SKILL_PROFICIENCIES = [
   "athletics",
   "intimidation",
@@ -102,6 +115,9 @@ const classFeatureSelectedIdentityResults = [
   "paladin-fighting-style",
   "ranger-deft-explorer",
   "ranger-fighting-style",
+  "warlock-pact-magic",
+  "wizard-scholar",
+  "wizard-evocation-savant",
 ] as const;
 type ClassFeatureSelectedIdentityResult =
   (typeof classFeatureSelectedIdentityResults)[number];
@@ -114,7 +130,10 @@ type ClassFeatureSelectedIdentityUnitId =
   | typeof MONK_UNCANNY_METABOLISM_UNIT_ID
   | typeof PALADIN_FIGHTING_STYLE_UNIT_ID
   | typeof RANGER_DEFT_EXPLORER_UNIT_ID
-  | typeof RANGER_FIGHTING_STYLE_UNIT_ID;
+  | typeof RANGER_FIGHTING_STYLE_UNIT_ID
+  | typeof WARLOCK_PACT_MAGIC_UNIT_ID
+  | typeof WIZARD_SCHOLAR_UNIT_ID
+  | typeof WIZARD_EVOCATION_SAVANT_UNIT_ID;
 type ClassFeatureSelectedIdentityProjection = {
   readonly lastResult: ClassFeatureSelectedIdentityResult;
   readonly featureUnitId: ClassFeatureSelectedIdentityUnitId | "none";
@@ -136,7 +155,10 @@ type SelectedUnitIdentityReplaySequence = {
   readonly expected: ClassFeatureSelectedIdentityProjection;
 };
 type SelectedUnitIdentityReplay = {
-  readonly taskId: typeof TASK_ID_B4 | typeof TASK_ID_B5;
+  readonly taskId:
+    | typeof TASK_ID_B4
+    | typeof TASK_ID_B5
+    | "B6-CLASS-FEATURE-IDENTITY-BATCH-3";
   readonly unitId: ClassFeatureSelectedIdentityUnitId;
   readonly actions: readonly ClassFeatureSelectedIdentityDriverAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
@@ -153,6 +175,9 @@ const classFeatureSelectedIdentityDriverSchema = {
   doSelectPaladinFightingStyle: {},
   doSelectRangerDeftExplorer: {},
   doSelectRangerFightingStyle: {},
+  doProjectWarlockPactMagic: {},
+  doSelectWizardScholar: {},
+  doSelectWizardEvocationSavant: {},
   step: {},
 } as const;
 
@@ -275,6 +300,42 @@ const selectedUnitIdentityReplays = [
       },
     ],
   },
+  {
+    taskId: "B6-CLASS-FEATURE-IDENTITY-BATCH-3",
+    unitId: "warlock_pact_magic",
+    actions: ["doProjectWarlockPactMagic"],
+    sequences: [
+      {
+        name: "selected-warlock-pact-magic-projects-owned-pact-slots",
+        actions: ["doProjectWarlockPactMagic"],
+        expected: warlockPactMagicProjection(),
+      },
+    ],
+  },
+  {
+    taskId: "B6-CLASS-FEATURE-IDENTITY-BATCH-3",
+    unitId: "wizard_scholar",
+    actions: ["doSelectWizardScholar"],
+    sequences: [
+      {
+        name: "selected-wizard-scholar-finalizes-owned-skill-expertise",
+        actions: ["doSelectWizardScholar"],
+        expected: wizardScholarProjection(),
+      },
+    ],
+  },
+  {
+    taskId: "B6-CLASS-FEATURE-IDENTITY-BATCH-3",
+    unitId: "wizard_evocation_savant",
+    actions: ["doSelectWizardEvocationSavant"],
+    sequences: [
+      {
+        name: "selected-wizard-evocation-savant-finalizes-spellbook-grants",
+        actions: ["doSelectWizardEvocationSavant"],
+        expected: wizardEvocationSavantProjection(),
+      },
+    ],
+  },
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
 const classFeatureSelectedIdentityStateCheck = stateCheck(
@@ -370,6 +431,15 @@ function createClassFeatureSelectedIdentityDriver() {
       },
       doSelectRangerFightingStyle: () => {
         projection = rangerFightingStyleProjection();
+      },
+      doProjectWarlockPactMagic: () => {
+        projection = warlockPactMagicProjection();
+      },
+      doSelectWizardScholar: () => {
+        projection = wizardScholarProjection();
+      },
+      doSelectWizardEvocationSavant: () => {
+        projection = wizardEvocationSavantProjection();
       },
       step: () => {},
       getState: () => projection,
@@ -527,6 +597,24 @@ function completeRangerFightingStyleDraft(): CharacterDraft {
   });
 }
 
+function completeWarlockPactMagicDraft(): CharacterDraft {
+  return completeClassFeatureDraft({
+    draftId: "warlock-pact-magic-selected-identity",
+    progression: classProgression(WARLOCK_CLASS_UNIT_ID, 1),
+    preferredOptionIdsBySource: {
+      [choiceSourceKey(WARLOCK_CLASS_UNIT_ID, CLASS_CANTRIP_CHOICE_KEY)]: [
+        creationChoiceOptionId("eldritch_blast"),
+        creationChoiceOptionId("poison_spray"),
+      ],
+      [choiceSourceKey(WARLOCK_CLASS_UNIT_ID, CLASS_PREPARED_SPELL_CHOICE_KEY)]:
+        [
+          creationChoiceOptionId("charm_person"),
+          creationChoiceOptionId("hellish_rebuke"),
+        ],
+    },
+  });
+}
+
 function rangerDeftExplorerOptionIds(): PreferredOptionIdsBySource {
   return {
     [choiceSourceKey(RANGER_CLASS_UNIT_ID, CLASS_SKILL_PROFICIENCY_CHOICE_KEY)]:
@@ -540,6 +628,65 @@ function rangerDeftExplorerOptionIds(): PreferredOptionIdsBySource {
       CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
     )]: [creationChoiceOptionId("Elvish"), creationChoiceOptionId("Gnomish")],
   };
+}
+
+function completeWizardScholarDraft(): CharacterDraft {
+  return completeClassFeatureDraft({
+    draftId: "wizard-scholar-selected-identity",
+    progression: classProgression(WIZARD_CLASS_UNIT_ID, 2),
+    preferredOptionIdsBySource: {
+      [choiceSourceKey(WIZARD_CLASS_UNIT_ID, CLASS_SKILL_PROFICIENCY_CHOICE_KEY)]:
+        [creationChoiceOptionId("insight"), creationChoiceOptionId("arcana")],
+      [choiceSourceKey(
+        WIZARD_SCHOLAR_UNIT_ID,
+        CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
+      )]: [creationChoiceOptionId("arcana")],
+    },
+  });
+}
+
+function completeWizardEvocationSavantDraft(): CharacterDraft {
+  return completeClassFeatureDraft({
+    draftId: "wizard-evocation-savant-selected-identity",
+    progression: classProgression(WIZARD_CLASS_UNIT_ID, 3),
+    preferredOptionIdsBySource: {
+      [choiceSourceKey(WIZARD_CLASS_UNIT_ID, CLASS_SKILL_PROFICIENCY_CHOICE_KEY)]:
+        [creationChoiceOptionId("insight"), creationChoiceOptionId("arcana")],
+      [choiceSourceKey(WIZARD_SCHOLAR_UNIT_ID, CLASS_FEATURE_PROFICIENCY_CHOICE_KEY)]:
+        [creationChoiceOptionId("arcana")],
+      [choiceSourceKey(WIZARD_CLASS_UNIT_ID, CLASS_SUBCLASS_CHOICE_KEY)]: [
+        creationChoiceOptionId("subclass_wizard_evoker"),
+      ],
+      [choiceSourceKey(WIZARD_CLASS_UNIT_ID, WIZARD_SPELLBOOK_CHOICE_KEY)]: [
+        creationChoiceOptionId("detect_magic"),
+        creationChoiceOptionId("feather_fall"),
+        creationChoiceOptionId("mage_armor"),
+        creationChoiceOptionId("magic_missile"),
+        creationChoiceOptionId("shield"),
+        creationChoiceOptionId("sleep"),
+        creationChoiceOptionId("thunderwave"),
+        creationChoiceOptionId("chromatic_orb"),
+        creationChoiceOptionId("mirror_image"),
+        creationChoiceOptionId("misty_step"),
+      ],
+      [choiceSourceKey(
+        WIZARD_EVOCATION_SAVANT_UNIT_ID,
+        WIZARD_SPELLBOOK_CHOICE_KEY,
+      )]: [
+        creationChoiceOptionId("continual_flame"),
+        creationChoiceOptionId("shatter"),
+      ],
+      [choiceSourceKey(WIZARD_CLASS_UNIT_ID, WIZARD_PREPARED_SPELL_CHOICE_KEY)]:
+        [
+          creationChoiceOptionId("magic_missile"),
+          creationChoiceOptionId("shield"),
+          creationChoiceOptionId("thunderwave"),
+          creationChoiceOptionId("chromatic_orb"),
+          creationChoiceOptionId("continual_flame"),
+          creationChoiceOptionId("shatter"),
+        ],
+    },
+  });
 }
 
 function completeClassFeatureDraft(input: {
@@ -846,6 +993,131 @@ function rangerFightingStyleProjection(): ClassFeatureSelectedIdentityProjection
   };
 }
 
+function wizardScholarProjection(): ClassFeatureSelectedIdentityProjection {
+  const draft = completeWizardScholarDraft();
+  const selectedExpertise = selectedSkillsFromChoice(
+    draft,
+    WIZARD_SCHOLAR_UNIT_ID,
+    CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
+  );
+  if (!sameSkillList(selectedExpertise, ["arcana"])) {
+    throw new Error("Expected Wizard Scholar Arcana Expertise.");
+  }
+  const finalized = finalizeReadyBuild(draft, WIZARD_SCHOLAR_UNIT_ID);
+  const proficiencies = requireRight(
+    characterBuildProficiencies(finalized, unitLibrary),
+  );
+  if (!sameSkillList(proficiencies.expertise, ["arcana"])) {
+    throw new Error("Expected Wizard Scholar Expertise projection.");
+  }
+  return {
+    lastResult: "wizard-scholar",
+    featureUnitId: requiredSelectedChoiceFeatureUnitId(
+      draft,
+      WIZARD_SCHOLAR_UNIT_ID,
+      CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
+    ),
+    linkedUnitId: "none",
+    choiceCount: selectedExpertise.length,
+    resourceMaximum: 0,
+    knownFormCount: 0,
+    shortRestRefill: 0,
+    longRestRefillsAll: false,
+    accepted: true,
+  };
+}
+
+function wizardEvocationSavantProjection(): ClassFeatureSelectedIdentityProjection {
+  const draft = completeWizardEvocationSavantDraft();
+  const selectedSpellbookSpells = selectedChoiceOptionIds(
+    draft,
+    WIZARD_EVOCATION_SAVANT_UNIT_ID,
+    WIZARD_SPELLBOOK_CHOICE_KEY,
+  );
+  if (selectedSpellbookSpells.join(",") !== "continual_flame,shatter") {
+    throw new Error("Expected Wizard Evocation Savant spellbook selections.");
+  }
+  const finalized = finalizeReadyBuild(draft, WIZARD_EVOCATION_SAVANT_UNIT_ID);
+  const spellbook =
+    finalized.spellcasting?.sources.find(
+      (source) => source.sourceUnitId === WIZARD_CLASS_UNIT_ID,
+    )?.spellbook ?? [];
+  if (!spellbook.includes("continual_flame") || !spellbook.includes("shatter")) {
+    throw new Error("Expected Evocation Savant spells in Wizard spellbook.");
+  }
+  return {
+    lastResult: "wizard-evocation-savant",
+    featureUnitId: requiredSelectedChoiceFeatureUnitId(
+      draft,
+      WIZARD_EVOCATION_SAVANT_UNIT_ID,
+      WIZARD_SPELLBOOK_CHOICE_KEY,
+    ),
+    linkedUnitId: "shatter",
+    choiceCount: selectedSpellbookSpells.length,
+    resourceMaximum: 0,
+    knownFormCount: 0,
+    shortRestRefill: 0,
+    longRestRefillsAll: false,
+    accepted: true,
+  };
+}
+
+function warlockPactMagicProjection(): ClassFeatureSelectedIdentityProjection {
+  const draft = completeWarlockPactMagicDraft();
+  const selectedCantrips = selectedChoiceOptionIds(
+    draft,
+    WARLOCK_CLASS_UNIT_ID,
+    CLASS_CANTRIP_CHOICE_KEY,
+  );
+  const selectedPreparedSpells = selectedChoiceOptionIds(
+    draft,
+    WARLOCK_CLASS_UNIT_ID,
+    CLASS_PREPARED_SPELL_CHOICE_KEY,
+  );
+  if (selectedCantrips.join(",") !== "eldritch_blast,poison_spray") {
+    throw new Error("Expected Warlock Pact Magic cantrip selections.");
+  }
+  if (selectedPreparedSpells.join(",") !== "charm_person,hellish_rebuke") {
+    throw new Error("Expected Warlock Pact Magic prepared spell selections.");
+  }
+
+  const finalized = finalizeReadyBuild(draft, WARLOCK_PACT_MAGIC_UNIT_ID);
+  const warlockSource = finalized.spellcasting?.sources.find(
+    (source) => source.sourceUnitId === WARLOCK_CLASS_UNIT_ID,
+  );
+  if (
+    warlockSource === undefined ||
+    warlockSource.spellcastingAbility !== "cha" ||
+    warlockSource.spellcastingFocuses.join(",") !== "arcane_focus"
+  ) {
+    throw new Error("Expected Warlock Pact Magic spellcasting source.");
+  }
+  const pactMagic = finalized.spellcasting?.slotPools.pactMagic;
+  if (
+    pactMagic === undefined ||
+    pactMagic.kind !== "pactMagic" ||
+    pactMagic.count !== 1 ||
+    pactMagic.slotLevel !== 1
+  ) {
+    throw new Error("Expected level-1 Warlock Pact Magic slot pool.");
+  }
+
+  return {
+    lastResult: "warlock-pact-magic",
+    featureUnitId: requiredBuildFeatureUnitId(
+      finalized,
+      WARLOCK_PACT_MAGIC_UNIT_ID,
+    ),
+    linkedUnitId: warlockSource.sourceUnitId,
+    choiceCount: selectedCantrips.length + selectedPreparedSpells.length,
+    resourceMaximum: pactMagic.count,
+    knownFormCount: pactMagic.slotLevel,
+    shortRestRefill: pactMagic.count,
+    longRestRefillsAll: true,
+    accepted: true,
+  };
+}
+
 function finalizeReadyBuild(
   draft: CharacterDraft,
   unitId: ClassFeatureSelectedIdentityUnitId,
@@ -862,7 +1134,7 @@ function finalizeReadyBuild(
 
 function classProgression(
   classUnitIdValue: UnitRecord["id"],
-  totalLevel: 2,
+  totalLevel: 1 | 2 | 3,
 ): CharacterProgression {
   return {
     startingClass: classUnitId(classUnitIdValue),
@@ -1144,7 +1416,10 @@ function resultField(raw: unknown): ClassFeatureSelectedIdentityResult {
     raw === "monk-uncanny-metabolism" ||
     raw === "paladin-fighting-style" ||
     raw === "ranger-deft-explorer" ||
-    raw === "ranger-fighting-style"
+    raw === "ranger-fighting-style" ||
+    raw === "warlock-pact-magic" ||
+    raw === "wizard-scholar" ||
+    raw === "wizard-evocation-savant"
   ) {
     return raw;
   }
@@ -1164,7 +1439,10 @@ function featureUnitIdField(
     raw === MONK_UNCANNY_METABOLISM_UNIT_ID ||
     raw === PALADIN_FIGHTING_STYLE_UNIT_ID ||
     raw === RANGER_DEFT_EXPLORER_UNIT_ID ||
-    raw === RANGER_FIGHTING_STYLE_UNIT_ID
+    raw === RANGER_FIGHTING_STYLE_UNIT_ID ||
+    raw === WARLOCK_PACT_MAGIC_UNIT_ID ||
+    raw === WIZARD_SCHOLAR_UNIT_ID ||
+    raw === WIZARD_EVOCATION_SAVANT_UNIT_ID
   ) {
     return raw;
   }

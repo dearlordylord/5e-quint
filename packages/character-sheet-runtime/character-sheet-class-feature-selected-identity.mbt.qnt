@@ -63,6 +63,16 @@ module characterSheetClassFeatureSelectedIdentityMbt {
     recordProjection("ranger-favored-enemy", "ranger_favored_enemy", "none", true, 1, 0, "none", true),
   }
 
+  action doProjectSorcererDraconicSpells = all {
+    qLastResult == "init",
+    recordProjection("sorcerer-draconic-spells", "sorcerer_draconic_spells", "none", true, 4, 0, "none", true),
+  }
+
+  action doProjectWarlockFiendSpells = all {
+    qLastResult == "init",
+    recordProjection("warlock-fiend-spells", "warlock_fiend_spells", "none", true, 4, 0, "none", true),
+  }
+
   action step = any {
     doProjectBardJackOfAllTrades,
     doProjectClericLifeDomainSpells,
@@ -70,5 +80,7 @@ module characterSheetClassFeatureSelectedIdentityMbt {
     doProjectPaladinOathDevotionSpells,
     doProjectPaladinsSmite,
     doProjectRangerFavoredEnemy,
+    doProjectSorcererDraconicSpells,
+    doProjectWarlockFiendSpells,
   }
 }

@@ -1,3 +1,6 @@
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B6-CLASS-FEATURE-IDENTITY-BATCH-3 sorcerer_font_of_magic sorcerer_metamagic
+// UNIT-IDENTITY-MBT-REPLAY: B6-CLASS-FEATURE-IDENTITY-BATCH-3 sorcerer_font_of_magic doProjectSorcererFontAndMetamagic
+// UNIT-IDENTITY-MBT-REPLAY: B6-CLASS-FEATURE-IDENTITY-BATCH-3 sorcerer_metamagic doProjectSorcererFontAndMetamagic
 // KERNEL-COVERAGE: parity-witness CREATION.CLASS_FEATURE_RESOURCE.PROJECTION CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION
 import * as path from "node:path";
 
@@ -78,6 +81,48 @@ const driverSchema = {
   doProjectSorcererFontAndMetamagic: {},
   step: {},
 } as const;
+type ClassFeatureProjectionDriverAction = Exclude<
+  keyof typeof driverSchema,
+  "init" | "step"
+>;
+type SelectedUnitIdentityReplaySequence = {
+  readonly name: string;
+  readonly actions: readonly ClassFeatureProjectionDriverAction[];
+  readonly expected: ClassFeatureProjection;
+};
+type SelectedUnitIdentityReplay = {
+  readonly taskId: "B6-CLASS-FEATURE-IDENTITY-BATCH-3";
+  readonly unitId: "sorcerer_font_of_magic" | "sorcerer_metamagic";
+  readonly actions: readonly ClassFeatureProjectionDriverAction[];
+  readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
+};
+
+const selectedUnitIdentityReplays = [
+  {
+    taskId: "B6-CLASS-FEATURE-IDENTITY-BATCH-3",
+    unitId: "sorcerer_font_of_magic",
+    actions: ["doProjectSorcererFontAndMetamagic"],
+    sequences: [
+      {
+        name: "selected-sorcerer-font-projects-shared-point-pool",
+        actions: ["doProjectSorcererFontAndMetamagic"],
+        expected: projectSorcererFontAndMetamagic(),
+      },
+    ],
+  },
+  {
+    taskId: "B6-CLASS-FEATURE-IDENTITY-BATCH-3",
+    unitId: "sorcerer_metamagic",
+    actions: ["doProjectSorcererFontAndMetamagic"],
+    sequences: [
+      {
+        name: "selected-sorcerer-metamagic-projects-option-facts",
+        actions: ["doProjectSorcererFontAndMetamagic"],
+        expected: projectSorcererFontAndMetamagic(),
+      },
+    ],
+  },
+] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
 function createClassFeatureProjectionDriver() {
   return defineDriver(driverSchema, () => {
@@ -107,6 +152,39 @@ const classFeatureProjectionStateCheck = stateCheck(
 );
 
 describe("Character Creation class-feature resource and source fact deterministic QNT replay", () => {
+  it("replays selected Unit identities deterministically", async () => {
+    for (const replay of selectedUnitIdentityReplays) {
+      const replayedActions = new Set<ClassFeatureProjectionDriverAction>();
+
+      for (const sequence of replay.sequences) {
+        const driver = createClassFeatureProjectionDriver()();
+
+        for (const actionName of sequence.actions) {
+          replayedActions.add(actionName);
+          const action = driver.actions[actionName];
+          if (action === undefined) {
+            throw new Error(
+              `Missing Character Creation class-feature projection action ${actionName}.`,
+            );
+          }
+          await action.handler({});
+        }
+
+        const runtime = driver.getState?.();
+        if (runtime === undefined) {
+          throw new Error(
+            "Character Creation class-feature projection driver must expose getState.",
+          );
+        }
+        expect(runtime, `${replay.unitId}:${sequence.name}`).toEqual(
+          sequence.expected,
+        );
+      }
+
+      expect(replayedActions).toEqual(new Set(replay.actions));
+    }
+  });
+
   it("replays class-feature resource and source fact projections", async () => {
     await run({
       spec: path.resolve(

@@ -108,8 +108,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 142,
-      "numerator": 117,
-      "percent": "82.4%"
+      "numerator": 120,
+      "percent": "84.5%"
     },
     "supportedProfileCoverage": {
       "denominator": 210,
@@ -9203,120 +9203,8 @@
       ],
       "evidenceTag": "selected-identity-mbt"
     },
-    "rowCount": 52,
+    "rowCount": 44,
     "rows": [
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "class_feature",
-        "sourceRecordPath": "packages/surface/content/sorcerer_draconic_spells.json",
-        "support": {
-          "profileIds": [
-            "character-sheet.class-feature-prepared-spell-access"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "sorcerer_draconic_spells"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "class_feature",
-        "sourceRecordPath": "packages/surface/content/sorcerer_font_of_magic.json",
-        "support": {
-          "profileIds": [
-            "character-creation.class-feature-resource-projection",
-            "character-sheet.class-feature-point-pool-resource",
-            "character-sheet.font-of-magic-slot-to-sorcery-points",
-            "character-sheet.font-of-magic-sorcery-points-to-spell-slot",
-            "character-sheet.metamagic-battle-resource-bridge"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "sorcerer_font_of_magic"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "class_feature",
-        "sourceRecordPath": "packages/surface/content/sorcerer_metamagic.json",
-        "support": {
-          "profileIds": [
-            "character-creation.class-feature-option-projection",
-            "character-creation.class-feature-source-fact-projection",
-            "character-creation.class-feature-advancement-replacement",
-            "character-sheet.metamagic-battle-resource-bridge",
-            "unit-feature.metamagic-cast-governor-quickened"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "sorcerer_metamagic"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "class_feature",
-        "sourceRecordPath": "packages/surface/content/warlock_fiend_spells.json",
-        "support": {
-          "profileIds": [
-            "character-sheet.class-feature-prepared-spell-access"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "warlock_fiend_spells"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "class_feature",
-        "sourceRecordPath": "packages/surface/content/warlock_magical_cunning.json",
-        "support": {
-          "profileIds": [
-            "character-sheet.pact-slot-recovery"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "warlock_magical_cunning"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "class_feature",
-        "sourceRecordPath": "packages/surface/content/warlock_pact_magic.json",
-        "support": {
-          "profileIds": [
-            "character-creation.warlock-pact-magic-advancement"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "warlock_pact_magic"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "class_feature",
-        "sourceRecordPath": "packages/surface/content/wizard_evocation_savant.json",
-        "support": {
-          "profileIds": [
-            "character-creation.wizard-spellbook-learning-choice"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "wizard_evocation_savant"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "class_feature",
-        "sourceRecordPath": "packages/surface/content/wizard_scholar.json",
-        "support": {
-          "profileIds": [
-            "character-creation.skill-expertise-choice"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "wizard_scholar"
-      },
       {
         "catalogAdmissionStatus": "installed",
         "collectionId": "srd-5.2.1",
@@ -16168,6 +16056,11 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
+          "ownerPath": "packages/character-creation-runtime/src/class-feature-projections.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B6-CLASS-FEATURE-IDENTITY-BATCH-3"
+        },
+        {
           "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS"
@@ -16386,6 +16279,11 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
+          "ownerPath": "packages/character-creation-runtime/src/class-feature-projections.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B6-CLASS-FEATURE-IDENTITY-BATCH-3"
+        },
+        {
           "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS"
@@ -16555,7 +16453,13 @@
         "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B6-CLASS-FEATURE-IDENTITY-BATCH-3"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
       "profiles": [
@@ -16700,6 +16604,11 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
+          "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B6-CLASS-FEATURE-IDENTITY-BATCH-3"
+        },
+        {
           "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12FS-WARLOCK-PACT-MAGIC-RETAINED-GRANT"
@@ -16751,6 +16660,11 @@
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B6-CLASS-FEATURE-IDENTITY-BATCH-3"
+        },
         {
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
@@ -16816,7 +16730,13 @@
         "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B6-CLASS-FEATURE-IDENTITY-BATCH-3"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
       "profiles": [
@@ -16971,6 +16891,11 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
+          "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B6-CLASS-FEATURE-IDENTITY-BATCH-3"
+        },
+        {
           "ownerPath": "packages/character-creation-runtime/src/wizard-scholar.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-CLASS-WIZARD-SCHOLAR"
@@ -17034,6 +16959,11 @@
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B6-CLASS-FEATURE-IDENTITY-BATCH-3"
+        },
         {
           "ownerPath": "packages/character-creation-runtime/src/wizard-scholar.test.ts",
           "tag": "deterministic-admission-projection",

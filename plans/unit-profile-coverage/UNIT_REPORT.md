@@ -26,7 +26,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Rules-kernel covered profile coverage | 127/132 | 96.2% |
 | Supported Unit rules-kernel chain coverage | 143/144 | 99.3% |
 | Deterministic admission/projection coverage | 142/142 | 100% |
-| Selected identity replay coverage | 117/142 | 82.4% |
+| Selected identity replay coverage | 120/142 | 84.5% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -1008,8 +1008,11 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `rogue_sneak_attack` | `unit-feature.attack-damage-rider` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `sorcerer_innate_sorcery` | `unit-feature.innate-sorcery-activation` | L1D2-SORCERER-INNATE-SORCERY | `packages/battle-runtime/src/feature-selected-identity.mbt.test.ts` |
 | `warlock_eldritch_invocations` | `character-creation.eldritch-invocation-choice`, `character-creation.warlock-pact-magic-advancement` | L1D2-WARLOCK-ELDRITCH-INVOCATIONS | `packages/character-creation-runtime/src/warlock-eldritch-invocations-selected-identity.mbt.test.ts` |
+| `warlock_pact_magic` | `character-creation.warlock-pact-magic-advancement` | B6-CLASS-FEATURE-IDENTITY-BATCH-3 | `packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts` |
+| `warlock_magical_cunning` | `character-sheet.pact-slot-recovery` | B6-CLASS-FEATURE-IDENTITY-BATCH-3 | `packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts` |
 | `wizard_ritual_adept` | `character-sheet.spellbook-ritual-invocation` | spellbook-ritual-invocation | `packages/character-sheet-runtime/src/spellbook-ritual-selected-identity.mbt.test.ts` |
 | `wizard_arcane_recovery` | `character-sheet.short-rest-spell-slot-recovery` | short-rest-spell-slot-recovery | `packages/character-sheet-runtime/src/arcane-recovery-selected-identity.mbt.test.ts` |
+| `wizard_scholar` | `character-creation.skill-expertise-choice` | B6-CLASS-FEATURE-IDENTITY-BATCH-3 | `packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts` |
 | `feat_archery` | `unit-feature.passive-ranged-attack-roll-bonus` | passive-and-zero-hp-features | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `feat_boon_of_combat_prowess` | `unit-feature.attack-roll-miss-to-hit-replacement` | L1H-BOON-COMBAT-PROWESS | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `defense` | `unit-feature.passive-armor-class-bonus` | passive-and-zero-hp-features | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
@@ -1104,14 +1107,6 @@ This generated view lists `profile-subset-supported` and `supported-profile` Uni
 
 | Unit | Claim | Catalog | Collection | Kind | Profiles | Source |
 | --- | --- | --- | --- | --- | --- | --- |
-| `sorcerer_draconic_spells` | profile-subset-supported | installed | srd-5.2.1 | class_feature | `character-sheet.class-feature-prepared-spell-access` | `packages/surface/content/sorcerer_draconic_spells.json` |
-| `sorcerer_font_of_magic` | profile-subset-supported | installed | srd-5.2.1 | class_feature | `character-creation.class-feature-resource-projection`, `character-sheet.class-feature-point-pool-resource`, `character-sheet.font-of-magic-slot-to-sorcery-points`, `character-sheet.font-of-magic-sorcery-points-to-spell-slot`, `character-sheet.metamagic-battle-resource-bridge` | `packages/surface/content/sorcerer_font_of_magic.json` |
-| `sorcerer_metamagic` | profile-subset-supported | installed | srd-5.2.1 | class_feature | `character-creation.class-feature-option-projection`, `character-creation.class-feature-source-fact-projection`, `character-creation.class-feature-advancement-replacement`, `character-sheet.metamagic-battle-resource-bridge`, `unit-feature.metamagic-cast-governor-quickened` | `packages/surface/content/sorcerer_metamagic.json` |
-| `warlock_fiend_spells` | profile-subset-supported | installed | srd-5.2.1 | class_feature | `character-sheet.class-feature-prepared-spell-access` | `packages/surface/content/warlock_fiend_spells.json` |
-| `warlock_magical_cunning` | supported-profile | installed | srd-5.2.1 | class_feature | `character-sheet.pact-slot-recovery` | `packages/surface/content/warlock_magical_cunning.json` |
-| `warlock_pact_magic` | supported-profile | installed | srd-5.2.1 | class_feature | `character-creation.warlock-pact-magic-advancement` | `packages/surface/content/warlock_pact_magic.json` |
-| `wizard_evocation_savant` | profile-subset-supported | installed | srd-5.2.1 | class_feature | `character-creation.wizard-spellbook-learning-choice` | `packages/surface/content/wizard_evocation_savant.json` |
-| `wizard_scholar` | supported-profile | installed | srd-5.2.1 | class_feature | `character-creation.skill-expertise-choice` | `packages/surface/content/wizard_scholar.json` |
 | `alert` | supported-profile | installed | srd-5.2.1 | feat | `unit-feature.initiative-proficiency-and-swap` | `packages/surface/content/alert.json` |
 | `aid` | supported-profile | installed | srd-5.2.1 | spell | `spell.scalar-buff` | `packages/surface/content/aid.json` |
 | `alter_self` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-self-transformation-mode` | `packages/surface/content/alter_self.json` |

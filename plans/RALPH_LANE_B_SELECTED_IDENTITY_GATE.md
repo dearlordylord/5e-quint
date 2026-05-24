@@ -46,7 +46,7 @@ identity evidence or an explicit non-applicable classification.
     {
       "number": 6,
       "id": "B6-CLASS-FEATURE-IDENTITY-BATCH-3",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Backfill class-feature identity evidence batch 3"
     },
     {
@@ -159,7 +159,7 @@ Lane B must not:
 | 3 | B3-HARD-GATE-SELF-TEST - Add hard-gate self-test for missing identity evidence | done | none | Proves checker can fail on missing selected-identity evidence. |
 | 4 | B4-CLASS-FEATURE-IDENTITY-BATCH-1 - Backfill class-feature identity evidence batch 1 | done | none | Barbarian/Bard/Cleric/Druid. |
 | 5 | B5-CLASS-FEATURE-IDENTITY-BATCH-2 - Backfill class-feature identity evidence batch 2 | done | none | Monk/Ranger/Paladin. |
-| 6 | B6-CLASS-FEATURE-IDENTITY-BATCH-3 - Backfill class-feature identity evidence batch 3 | ready-for-implementation-after-light-research | none | Sorcerer/Warlock/Wizard. |
+| 6 | B6-CLASS-FEATURE-IDENTITY-BATCH-3 - Backfill class-feature identity evidence batch 3 | done | none | Sorcerer/Warlock/Wizard. |
 | 7 | B7-FEAT-IDENTITY-BATCH - Backfill feat identity evidence | ready-for-implementation-after-light-research | none | Alert and Origin feat reachability. |
 | 8 | B8-LEVEL1-SPELL-IDENTITY-BATCH - Backfill level-1 spell identity evidence | ready-for-implementation-after-light-research | none | Any remaining level-1 supported spell ids. |
 | 9 | B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH - Backfill level-2 damage spell identity evidence | ready-for-implementation-after-light-research | none | Damage/attack spells. |
@@ -245,13 +245,18 @@ Result: selected-identity evidence now covers `monk_monks_focus`,
 
 ### Task 6 - B6-CLASS-FEATURE-IDENTITY-BATCH-3 - Backfill class-feature identity evidence batch 3
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: cover Sorcerer, Warlock, and Wizard supported class-feature Units
 currently missing selected identity evidence.
 
 Acceptance: gap report count decreases; spell-slot/access state is not
 duplicated.
+
+Result: selected-identity evidence now covers `sorcerer_draconic_spells`,
+`sorcerer_font_of_magic`, `sorcerer_metamagic`, `warlock_fiend_spells`,
+`warlock_magical_cunning`, `warlock_pact_magic`, `wizard_evocation_savant`,
+and `wizard_scholar`.
 
 ### Task 7 - B7-FEAT-IDENTITY-BATCH - Backfill feat identity evidence
 
