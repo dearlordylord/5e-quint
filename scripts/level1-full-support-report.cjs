@@ -1131,6 +1131,12 @@ function renderReadinessGroupRows(groups) {
   });
 }
 
+function renderProductReadinessStatusRows(metric) {
+  return Object.entries(metric.rowsByStatus).map(
+    ([status, count]) => `| ${md(status)} | ${count} |`,
+  );
+}
+
 function renderReadinessBlockerRows(rows) {
   if (rows.length === 0) {
     return ["| _none_ | _none_ | _none_ | _none_ | _none_ |"];
@@ -1162,6 +1168,14 @@ function renderStrictFullSupport(report, scope) {
     `| Supported Unit rules-kernel chain | ${renderMetric(report.metrics.rulesKernelSupportedUnitCoverage)} |`,
     "",
     "These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.",
+    "",
+    "### Product Readiness Accounting",
+    "",
+    "Product readiness is diagnostic lower-layer accounting. Rows in statuses other than `accepted` or `accepted-no-battle-effect` stay visible here, but they do not block the full-support claim unless they also appear in SRD-authored readiness blockers.",
+    "",
+    "| Status | Rows |",
+    "| --- | ---: |",
+    ...renderProductReadinessStatusRows(report.metrics.productReadiness),
     "",
     "## Full-Support Claim Gate",
     "",

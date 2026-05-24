@@ -13,19 +13,16 @@ Generated reports remain the measurement source of truth:
 
 ## Current Claim State
 
-The strict runtime/profile target is closed:
+The strict runtime/profile target and SRD-authored full-support claim gate are
+closed:
 
 - Level 1 strict target closure: `94/94 (100%)`.
 - Level 1-2 strict target closure: `171/171 (100%)`.
 - Level 1 rules-kernel joins: `58/58 (100%)`.
 - Level 1-2 rules-kernel joins: `90/90 (100%)`.
-
-That is not enough for a full product support claim. The full-support gate is
-currently blocked by SRD authored product readiness:
-
-- Level 1 authored product readiness: `57/58 (98.3%)`.
-- Level 1-2 authored product readiness: `75/76 (98.7%)`.
-- Blocking rows: 1.
+- Level 1 authored product readiness: `58/58 (100%)`.
+- Level 1-2 authored product readiness: `76/76 (100%)`.
+- Full-support claim gate: pass for both generated reports.
 
 ## Active Backlog
 
@@ -54,7 +51,7 @@ currently blocked by SRD authored product readiness:
     {
       "number": 4,
       "id": "L12FS-FULL-SUPPORT-GATE-REFRESH",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Refresh Level 1 And Level 1-2 Full-Support Gate"
     },
     {
@@ -183,7 +180,7 @@ Acceptance:
 
 ### Task 4 - L12FS-FULL-SUPPORT-GATE-REFRESH - Refresh Level 1 And Level 1-2 Full-Support Gate
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 

@@ -18,6 +18,15 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
+### Product Readiness Accounting
+
+Product readiness is diagnostic lower-layer accounting. Rows in statuses other than `accepted` or `accepted-no-battle-effect` stay visible here, but they do not block the full-support claim unless they also appear in SRD-authored readiness blockers.
+
+| Status | Rows |
+| --- | ---: |
+| accepted | 279 |
+| accepted-no-battle-effect | 88 |
+
 ## Full-Support Claim Gate
 
 | Gate | Status | Blocking issue |

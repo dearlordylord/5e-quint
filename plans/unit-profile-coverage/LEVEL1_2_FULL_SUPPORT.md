@@ -18,6 +18,18 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
+### Product Readiness Accounting
+
+Product readiness is diagnostic lower-layer accounting. Rows in statuses other than `accepted` or `accepted-no-battle-effect` stay visible here, but they do not block the full-support claim unless they also appear in SRD-authored readiness blockers.
+
+| Status | Rows |
+| --- | ---: |
+| accepted | 391 |
+| accepted-no-battle-effect | 147 |
+| battle-runtime-required | 5 |
+| owner-evidence-required | 2 |
+| partial-battle-runtime | 11 |
+
 ## Full-Support Claim Gate
 
 | Gate | Status | Blocking issue |
