@@ -23,6 +23,7 @@
     "test:mbt:find-familiar-companion-lifecycle": "vitest run src/find-familiar-companion-lifecycle.mbt.test.ts",
     "test:mbt:gust-of-wind-line-lifecycle": "vitest run src/gust-of-wind-line-lifecycle.mbt.test.ts",
     "test:mbt:heat-metal-object-contact": "vitest run src/heat-metal-object-contact.mbt.test.ts",
+    "test:mbt:magical-darkness-point-origin-lifecycle": "vitest run src/magical-darkness-point-origin-lifecycle.mbt.test.ts",
     "test:mbt:mirror-image-hit-interception": "vitest run src/mirror-image-hit-interception.mbt.test.ts",
     "test:mbt:moonbeam-movable-zone": "vitest run src/moonbeam-movable-zone.mbt.test.ts",
     "test:mbt:quickened-spell-governor": "vitest run src/quickened-spell-governor.mbt.test.ts",

@@ -878,6 +878,12 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-darkness.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/magical-darkness-point-origin-lifecycle.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-magical-darkness-point-origin-lifecycle.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [

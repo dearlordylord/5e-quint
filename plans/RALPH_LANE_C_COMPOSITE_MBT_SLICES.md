@@ -586,7 +586,7 @@ typecheck when TS changes, and `git diff --check`.
 
 ### Task 24 - C24-DARKNESS-POINT-ORIGIN-SLICE - Add Darkness point-origin lifecycle focused MBT
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: add a focused `*.mbt.qnt` plus `src/*.mbt.test.ts` witness and package
 script for `BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE`.
