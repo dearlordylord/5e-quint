@@ -210,6 +210,10 @@
 {"unitId":"jump","evidence":{"tag":"selected-identity-mbt","taskId":"level1-spatial-witness","ownerPath":"packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts"}}
 {"unitId":"feather_fall","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV56A","ownerPath":"packages/battle-runtime/src/feather-fall-reaction-spell.test.ts"}}
 {"unitId":"feather_fall","evidence":{"tag":"selected-identity-mbt","taskId":"level1-spatial-witness","ownerPath":"packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts"}}
+{"unitId":"alter_self","evidence":{"tag":"selected-identity-mbt","taskId":"B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH","ownerPath":"packages/battle-runtime/src/level2-mobility-spell-selected-identity.mbt.test.ts"}}
+{"unitId":"fly","evidence":{"tag":"selected-identity-mbt","taskId":"B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH","ownerPath":"packages/battle-runtime/src/level2-mobility-spell-selected-identity.mbt.test.ts"}}
+{"unitId":"misty_step","evidence":{"tag":"selected-identity-mbt","taskId":"B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH","ownerPath":"packages/battle-runtime/src/level2-mobility-spell-selected-identity.mbt.test.ts"}}
+{"unitId":"spider_climb","evidence":{"tag":"selected-identity-mbt","taskId":"B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH","ownerPath":"packages/battle-runtime/src/level2-mobility-spell-selected-identity.mbt.test.ts"}}
 {"unitId":"hellish_rebuke","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV69B","ownerPath":"packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"}}
 {"unitId":"hellish_rebuke","evidence":{"tag":"selected-identity-mbt","taskId":"reaction-interruption","ownerPath":"packages/battle-runtime/src/reaction-spell-selected-identity.mbt.test.ts"}}
 {"unitId":"thunderwave","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV51","ownerPath":"packages/battle-runtime/src/unit-profile-admission-forced-movement-spells.test.ts"}}

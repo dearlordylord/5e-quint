@@ -108,8 +108,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 142,
-      "numerator": 130,
-      "percent": "91.5%"
+      "numerator": 133,
+      "percent": "93.7%"
     },
     "supportedProfileCoverage": {
       "denominator": 210,
@@ -9203,7 +9203,7 @@
       ],
       "evidenceTag": "selected-identity-mbt"
     },
-    "rowCount": 24,
+    "rowCount": 20,
     "rows": [
       {
         "catalogAdmissionStatus": "installed",
@@ -9217,19 +9217,6 @@
           "tag": "supported-profile"
         },
         "unitId": "aid"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "sourceRecordPath": "packages/surface/content/alter_self.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-self-transformation-mode"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "alter_self"
       },
       {
         "catalogAdmissionStatus": "installed",
@@ -9365,19 +9352,6 @@
         "catalogAdmissionStatus": "installed",
         "collectionId": "srd-5.2.1",
         "kind": "spell",
-        "sourceRecordPath": "packages/surface/content/fly.json",
-        "support": {
-          "profileIds": [
-            "spell.scalar-buff"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "fly"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
         "sourceRecordPath": "packages/surface/content/lightning_bolt.json",
         "support": {
           "profileIds": [
@@ -9430,19 +9404,6 @@
         "catalogAdmissionStatus": "installed",
         "collectionId": "srd-5.2.1",
         "kind": "spell",
-        "sourceRecordPath": "packages/surface/content/misty_step.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-self-teleport"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "misty_step"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
         "sourceRecordPath": "packages/surface/content/pass_without_trace.json",
         "support": {
           "profileIds": [
@@ -9477,19 +9438,6 @@
           "tag": "supported-profile"
         },
         "unitId": "shining_smite"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "sourceRecordPath": "packages/surface/content/spider_climb.json",
-        "support": {
-          "profileIds": [
-            "spell.scalar-buff"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "spider_climb"
       },
       {
         "catalogAdmissionStatus": "installed",
@@ -18567,6 +18515,11 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
+          "ownerPath": "packages/battle-runtime/src/level2-mobility-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH"
+        },
+        {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-alter-self.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME"
@@ -23164,6 +23117,11 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
+          "ownerPath": "packages/battle-runtime/src/level2-mobility-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH"
+        },
+        {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-misty-step.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-SPELL-MISTY-STEP"
@@ -26375,6 +26333,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L3-FOLLOWUP-FLY-END-FALL-WITNESS"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level2-mobility-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH"
         }
       ],
       "executableMechanics": true,
@@ -26441,6 +26404,11 @@
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/level2-mobility-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH"
+        },
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
           "tag": "deterministic-admission-projection",
