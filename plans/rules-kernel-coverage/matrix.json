@@ -5602,7 +5602,6 @@
     },
     {
       "blockedBy": [
-        "run-block-coupled",
         "unsupported-construct"
       ],
       "generatorSubset": [
@@ -5626,7 +5625,8 @@
       ],
       "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
       "proofOnly": [
-        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration-inductive.qnt"
+        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration-inductive.qnt",
+        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration-examples.qnt"
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"

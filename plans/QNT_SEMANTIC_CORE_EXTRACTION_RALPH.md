@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "QNTSEM-REACTION-RUN-BLOCK-EXTRACTION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Extract Reaction Semantic-Core Run Blocks"
     },
     {
@@ -106,7 +106,7 @@ Acceptance:
 
 ### Task 2 - QNTSEM-REACTION-RUN-BLOCK-EXTRACTION - Extract Reaction Semantic-Core Run Blocks
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
