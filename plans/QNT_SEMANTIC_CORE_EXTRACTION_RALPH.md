@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "QNTSEM-MOVEMENT-RUN-BLOCK-EXTRACTION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Extract Movement Semantic-Core Run Blocks"
     },
     {
@@ -81,7 +81,7 @@ MBT harness.
 
 ### Task 1 - QNTSEM-MOVEMENT-RUN-BLOCK-EXTRACTION - Extract Movement Semantic-Core Run Blocks
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
