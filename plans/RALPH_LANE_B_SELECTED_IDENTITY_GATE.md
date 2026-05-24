@@ -82,7 +82,7 @@ identity evidence or an explicit non-applicable classification.
     {
       "number": 12,
       "id": "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Backfill level-2 protection spell identity evidence"
     },
     {
@@ -183,7 +183,7 @@ Lane B must not:
 | 9 | B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH - Backfill level-2 damage spell identity evidence | done | none | Level-2 damage spell identity evidence added; Acid Arrow split to RAW/Surface/runtime follow-ups. |
 | 10 | B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH - Backfill level-2 control spell identity evidence | done | none | Control/condition spells. |
 | 11 | B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH - Backfill level-2 mobility spell identity evidence | done | none | Mobility/position spells. |
-| 12 | B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH - Backfill level-2 protection spell identity evidence | ready-for-implementation-after-light-research | none | Protection/restoration/buff spells. |
+| 12 | B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH - Backfill level-2 protection spell identity evidence | done | none | Protection/restoration/buff spells. |
 | 13 | B13-PROFILE-SUBSET-IDENTITY-DISPOSITIONS - Classify subset-supported identity expectations | ready-for-implementation-after-light-research | none | Explicit non-applicable rows. |
 | 14 | B14-FULL-SUPPORT-REPORT-PROJECTION - Project selected-identity gate into full-support reports | blocked | B1-B13 | Report-level metric. |
 | 15 | B15-UNIT-REPORT-HONESTY-PASS - Refresh Unit report wording and metrics | blocked | B14 | No inflated 100% language. |
@@ -355,7 +355,7 @@ Result: selected-identity replay evidence added for `alter_self`, `fly`,
 
 ### Task 12 - B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH - Backfill level-2 protection spell identity evidence
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: cover supported protection/restoration/buff spell Units such as Aid,
 Barkskin, Blur, Enhance Ability, Enlarge/Reduce, Magic Weapon, Mirror Image,
