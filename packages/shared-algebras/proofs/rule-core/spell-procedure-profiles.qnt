@@ -15,6 +15,7 @@ module spellProcedureProfiles {
   import spellInvocationActionSlotCore.* from "./spell-invocation-action-slot-core"
   import spellInvocationTargetCardinalityCore.* from "./spell-invocation-target-cardinality-core"
   import spellDamageProjectionCore.* from "./spell-damage-projection-core"
+  import spellAttackDamageProjectionCore.* from "./spell-attack-damage-projection-core"
   import spellSaveDamageProjectionCore.* from "./spell-save-damage-projection-core"
   import reactionsContinuationsConcentration.* from "./reactions-continuations-concentration"
 
@@ -27,25 +28,6 @@ module spellProcedureProfiles {
   // - Spells/Descriptions-M-P.md: Mage Armor, Magic Missile, Mass Cure
   //   Wounds, Mass Healing Word, and Mind Spike.
   // - Spells/Descriptions-Q-R.md: Ray of Frost.
-
-  type SpellAttackDamageProfile =
-    | RayOfFrostSpellAttackProfile
-    | PoisonSpraySpellAttackProfile
-    | ChillTouchSpellAttackProfile
-    | StarryWispSpellAttackProfile
-    | FireBoltSpellAttackProfile
-    | ShockingGraspSpellAttackProfile
-    | GuidingBoltSpellAttackProfile
-    | RayOfSicknessSpellAttackProfile
-    | ProduceFlameHurlSpellAttackProfile
-
-  type SpellAttackDamageHitEffect =
-    | RayOfFrostSpeedReductionHitEffect
-    | ChillTouchHitPointRegainPreventionHitEffect
-    | StarryWispInvisibleBenefitDeniedHitEffect
-    | ShockingGraspOpportunityAttackDeniedHitEffect
-    | GuidingBoltNextAttackAdvantageHitEffect
-    | RayOfSicknessPoisonedHitEffect
 
   type ScalarBuffSpellProfile =
     | FalseLifeScalarBuffProfile
@@ -260,35 +242,6 @@ module spellProcedureProfiles {
     if (profile == MassCureWoundsSpellProfile) MassCureWoundsPointOriginSphereArea else NoSpellAreaProfile
 
   val massCureWoundsPointOriginSphereRadiusFeet = 30
-
-  pure def spellAttackDamageProfileDamageType(profile: SpellAttackDamageProfile): RuleDamageType =
-    match profile {
-      | RayOfFrostSpellAttackProfile => ColdDamage
-      | PoisonSpraySpellAttackProfile => PoisonDamage
-      | ChillTouchSpellAttackProfile => NecroticDamage
-      | StarryWispSpellAttackProfile => RadiantDamage
-      | FireBoltSpellAttackProfile => FireDamage
-      | ShockingGraspSpellAttackProfile => LightningDamage
-      | GuidingBoltSpellAttackProfile => RadiantDamage
-      | RayOfSicknessSpellAttackProfile => PoisonDamage
-      | ProduceFlameHurlSpellAttackProfile => FireDamage
-    }
-
-  pure def spellAttackDamageProfileHitEffects(profile: SpellAttackDamageProfile): Set[SpellAttackDamageHitEffect] =
-    match profile {
-      | RayOfFrostSpellAttackProfile => Set(RayOfFrostSpeedReductionHitEffect)
-      | PoisonSpraySpellAttackProfile => Set()
-      | ChillTouchSpellAttackProfile => Set(ChillTouchHitPointRegainPreventionHitEffect)
-      | StarryWispSpellAttackProfile => Set(StarryWispInvisibleBenefitDeniedHitEffect)
-      | FireBoltSpellAttackProfile => Set()
-      | ShockingGraspSpellAttackProfile => Set(ShockingGraspOpportunityAttackDeniedHitEffect)
-      | GuidingBoltSpellAttackProfile => Set(GuidingBoltNextAttackAdvantageHitEffect)
-      | RayOfSicknessSpellAttackProfile => Set(RayOfSicknessPoisonedHitEffect)
-      | ProduceFlameHurlSpellAttackProfile => Set()
-    }
-
-  pure def spellAttackDamageProfileSupportsObjectTarget(profile: SpellAttackDamageProfile): bool =
-    profile == StarryWispSpellAttackProfile or profile == FireBoltSpellAttackProfile or profile == ProduceFlameHurlSpellAttackProfile
 
   pure def scalarBuffSpellAction(profile: ScalarBuffSpellProfile): SpellInvocationAction =
     if (profile == ShieldOfFaithScalarBuffProfile or profile == BarkskinScalarBuffProfile) BonusActionSpellInvocation else ActionTimeSpellInvocation

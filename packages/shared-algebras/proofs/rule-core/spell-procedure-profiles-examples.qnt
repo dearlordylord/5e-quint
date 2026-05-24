@@ -12,6 +12,7 @@ module spellProcedureProfilesExamples {
   import spellInvocationResourceCore.* from "./spell-invocation-resource-core"
   import spellInvocationActionSlotCore.* from "./spell-invocation-action-slot-core"
   import spellInvocationTargetCardinalityCore.* from "./spell-invocation-target-cardinality-core"
+  import spellAttackDamageProjectionCore.* from "./spell-attack-damage-projection-core"
   import spellSaveDamageProjectionCore.* from "./spell-save-damage-projection-core"
   import spellSaveConditionProjectionCore.* from "./spell-save-condition-projection-core"
   import spellProcedureProfiles.* from "./spell-procedure-profiles"
@@ -79,6 +80,7 @@ module spellProcedureProfilesExamples {
       assert(spellAttackDamageProfileHitEffects(GuidingBoltSpellAttackProfile) == Set(GuidingBoltNextAttackAdvantageHitEffect)),
       assert(spellAttackDamageProfileHitEffects(RayOfSicknessSpellAttackProfile) == Set(RayOfSicknessPoisonedHitEffect)),
       assert(spellAttackDamageProfileHitEffects(StarryWispSpellAttackProfile) == Set(StarryWispInvisibleBenefitDeniedHitEffect)),
+      assert(spellAttackDamageProfileSupportsObjectTarget(ChillTouchSpellAttackProfile)),
       assert(spellAttackDamageProfileSupportsObjectTarget(StarryWispSpellAttackProfile)),
       assert(spellAttackDamageProfileSupportsObjectTarget(FireBoltSpellAttackProfile)),
       assert(spellAttackDamageProfileSupportsObjectTarget(ProduceFlameHurlSpellAttackProfile)),

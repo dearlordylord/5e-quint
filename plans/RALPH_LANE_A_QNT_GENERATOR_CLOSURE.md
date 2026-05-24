@@ -44,7 +44,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 6,
       "id": "A6-SPELL-ATTACK-DAMAGE-CORE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Split spell attack damage projection core"
     },
     {
@@ -186,7 +186,7 @@ Lane A must not:
 | 3 | A3-INVOCATION-ACTION-SLOT-CORE - Extract invocation action and slot mapping core | done | none | Preserved slot-expenditure atom. |
 | 4 | A4-SAVE-DAMAGE-PROJECTION-CORE - Split save-gated damage projection core | done | none | Pure profile facts only. |
 | 5 | A5-SAVE-CONDITION-PROJECTION-CORE - Split save-gated condition projection core | done | none | Pure profile facts only. |
-| 6 | A6-SPELL-ATTACK-DAMAGE-CORE - Split spell attack damage projection core | ready-for-implementation-after-light-research | none | Pure profile facts only. |
+| 6 | A6-SPELL-ATTACK-DAMAGE-CORE - Split spell attack damage projection core | done | none | Pure profile facts only. |
 | 7 | A7-SCALAR-BUFF-CORE - Split scalar buff projection core | ready-for-implementation-after-light-research | none | Pure profile facts only. |
 | 8 | A8-DAMAGE-RIDER-CORE - Split damage rider projection core | ready-for-implementation-after-light-research | none | Pure profile facts only. |
 | 9 | A9-CHAINED-ATTACK-CORE - Split chained attack projection core | ready-for-implementation-after-light-research | none | Pure profile facts only. |
@@ -265,7 +265,7 @@ Charm Person, Blindness/Deafness, Hold Person, and Faerie Fire.
 
 ### Task 6 - A6-SPELL-ATTACK-DAMAGE-CORE - Split spell attack damage projection core
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: pure semantic-core file for spell attack damage types, hit effects, and
 object-target support.

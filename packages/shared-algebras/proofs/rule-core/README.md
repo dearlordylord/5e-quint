@@ -374,11 +374,14 @@ definitions.
 into target shape, successful-save damage policy, Damage Type, Spell Slot and
 Concentration flags, and failed-save rider effects.
 
+`spell-attack-damage-projection-core.qnt` projects spell attack damage
+profiles into Damage Type, hit-applied effects, and object-target support.
+
 `spell-procedure-profiles.qnt` models projection-shaped Spell Invocation facts
 and Spell Effects for the production spell procedures without importing Spell
 Definition records, Spell Access lists, Unit ids, or Surface authored ids. It
-projects supported profiles into the invocation resource core and spell damage
-projection core.
+projects supported profiles into the invocation resource core, spell damage
+projection core, and attack-damage projection core.
 
 Scope:
 
