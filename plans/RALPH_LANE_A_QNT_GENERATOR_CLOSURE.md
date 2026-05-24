@@ -140,7 +140,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 22,
       "id": "A22-READIED-SPELL-RESPONSE-CORE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Split Readied Spell Response core"
     },
     {
@@ -202,7 +202,7 @@ Lane A must not:
 | 19 | A19-RECURSIVE-NEXT-BATCH - Mine next QNT generator-readiness batch | blocked | A18 | Must append >=12 tasks or prove exhaustion. |
 | 20 | A20-DIRECT-SPELL-DAMAGE-CORE - Split direct spell damage projection core | done | none | Magic Missile fixture split. |
 | 21 | A21-DEFENSIVE-SPELL-EFFECT-CORE - Split defensive spell effect projection core | done | none | Mage Armor fixture split. |
-| 22 | A22-READIED-SPELL-RESPONSE-CORE - Split Readied Spell Response core | ready-for-implementation-after-light-research | none | Ready spell hold/release split. |
+| 22 | A22-READIED-SPELL-RESPONSE-CORE - Split Readied Spell Response core | done | none | Ready spell hold/release split. |
 | 23 | A23-ATTACK-BURST-SAVE-DAMAGE-CORE - Split attack-burst save damage core | ready-for-implementation-after-light-research | none | Ice Knife fixture split. |
 
 ## Task Details
@@ -426,7 +426,7 @@ facts remain in `spell-procedure-profiles.qnt`.
 
 ### Task 22 - A22-READIED-SPELL-RESPONSE-CORE - Split Readied Spell Response core
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: pure semantic-core file for Readied Spell Response hold/release facts:
 action-time spell admission, resource expenditure at the hold boundary,
