@@ -189,6 +189,16 @@
 {"unitId":"scorching_ray","evidence":{"tag":"selected-identity-mbt","taskId":"B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH","ownerPath":"packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts"}}
 {"unitId":"shatter","evidence":{"tag":"selected-identity-mbt","taskId":"B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH","ownerPath":"packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts"}}
 {"unitId":"spiritual_weapon","evidence":{"tag":"selected-identity-mbt","taskId":"B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH","ownerPath":"packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts"}}
+{"unitId":"calm_emotions","evidence":{"tag":"selected-identity-mbt","taskId":"B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH","ownerPath":"packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts"}}
+{"unitId":"charm_person","evidence":{"tag":"selected-identity-mbt","taskId":"B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH","ownerPath":"packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts"}}
+{"unitId":"darkness","evidence":{"tag":"selected-identity-mbt","taskId":"B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH","ownerPath":"packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts"}}
+{"unitId":"enthrall","evidence":{"tag":"selected-identity-mbt","taskId":"B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH","ownerPath":"packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts"}}
+{"unitId":"gust_of_wind","evidence":{"tag":"selected-identity-mbt","taskId":"B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH","ownerPath":"packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts"}}
+{"unitId":"invisibility","evidence":{"tag":"selected-identity-mbt","taskId":"B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH","ownerPath":"packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts"}}
+{"unitId":"levitate","evidence":{"tag":"selected-identity-mbt","taskId":"B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH","ownerPath":"packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts"}}
+{"unitId":"see_invisibility","evidence":{"tag":"selected-identity-mbt","taskId":"B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH","ownerPath":"packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts"}}
+{"unitId":"spike_growth","evidence":{"tag":"selected-identity-mbt","taskId":"B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH","ownerPath":"packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts"}}
+{"unitId":"web","evidence":{"tag":"selected-identity-mbt","taskId":"B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH","ownerPath":"packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts"}}
 {"unitId":"grease","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV40","ownerPath":"packages/battle-runtime/src/unit-profile-admission-grease-ground-hazard.test.ts"}}
 {"unitId":"grease","evidence":{"tag":"selected-identity-mbt","taskId":"level1-spatial-witness","ownerPath":"packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts"}}
 {"unitId":"fog_cloud","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84E","ownerPath":"packages/battle-runtime/src/battle-runtime-test-support.ts"}}

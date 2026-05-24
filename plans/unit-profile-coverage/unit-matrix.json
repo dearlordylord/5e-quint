@@ -108,8 +108,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 142,
-      "numerator": 127,
-      "percent": "89.4%"
+      "numerator": 130,
+      "percent": "91.5%"
     },
     "supportedProfileCoverage": {
       "denominator": 210,
@@ -9203,7 +9203,7 @@
       ],
       "evidenceTag": "selected-identity-mbt"
     },
-    "rowCount": 34,
+    "rowCount": 24,
     "rows": [
       {
         "catalogAdmissionStatus": "installed",
@@ -9274,32 +9274,6 @@
         "catalogAdmissionStatus": "installed",
         "collectionId": "srd-5.2.1",
         "kind": "spell",
-        "sourceRecordPath": "packages/surface/content/calm_emotions.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-save-gated-condition-immunity"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "calm_emotions"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "sourceRecordPath": "packages/surface/content/charm_person.json",
-        "support": {
-          "profileIds": [
-            "spell.creature-type-protection-and-charm"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "charm_person"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
         "sourceRecordPath": "packages/surface/content/continual_flame.json",
         "support": {
           "profileIds": [
@@ -9321,19 +9295,6 @@
           "tag": "supported-profile"
         },
         "unitId": "counterspell"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "sourceRecordPath": "packages/surface/content/darkness.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-magical-darkness-point-origin"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "darkness"
       },
       {
         "catalogAdmissionStatus": "installed",
@@ -9378,19 +9339,6 @@
         "catalogAdmissionStatus": "installed",
         "collectionId": "srd-5.2.1",
         "kind": "spell",
-        "sourceRecordPath": "packages/surface/content/enthrall.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-roll-modifier"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "enthrall"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
         "sourceRecordPath": "packages/surface/content/find_familiar.json",
         "support": {
           "profileIds": [
@@ -9425,45 +9373,6 @@
           "tag": "profile-subset-supported"
         },
         "unitId": "fly"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "sourceRecordPath": "packages/surface/content/gust_of_wind.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-gust-of-wind-line"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "gust_of_wind"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "sourceRecordPath": "packages/surface/content/invisibility.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-direct-condition"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "invisibility"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "sourceRecordPath": "packages/surface/content/levitate.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-levitated-creature"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "levitate"
       },
       {
         "catalogAdmissionStatus": "installed",
@@ -9560,19 +9469,6 @@
         "catalogAdmissionStatus": "installed",
         "collectionId": "srd-5.2.1",
         "kind": "spell",
-        "sourceRecordPath": "packages/surface/content/see_invisibility.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-see-invisible-observer-sight"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "see_invisibility"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
         "sourceRecordPath": "packages/surface/content/shining_smite.json",
         "support": {
           "profileIds": [
@@ -9599,19 +9495,6 @@
         "catalogAdmissionStatus": "installed",
         "collectionId": "srd-5.2.1",
         "kind": "spell",
-        "sourceRecordPath": "packages/surface/content/spike_growth.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-spike-growth-movement-hazard"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "spike_growth"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
         "sourceRecordPath": "packages/surface/content/thaumaturgy.json",
         "support": {
           "profileIds": [
@@ -9633,19 +9516,6 @@
           "tag": "supported-profile"
         },
         "unitId": "warding_bond"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "sourceRecordPath": "packages/surface/content/web.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-web-restraint-hazard"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "web"
       }
     ]
   },
@@ -19440,6 +19310,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-calm-emotions.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-MISSING-CALM-EMOTIONS"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH"
         }
       ],
       "executableMechanics": true,
@@ -20220,6 +20095,11 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
+          "ownerPath": "packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH"
+        },
+        {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-darkness.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME"
@@ -20928,6 +20808,11 @@
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH"
+        },
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
           "tag": "deterministic-admission-projection",
@@ -22090,6 +21975,11 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
+          "ownerPath": "packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH"
+        },
+        {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gust-of-wind.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME"
@@ -22668,6 +22558,11 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
+          "ownerPath": "packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH"
+        },
+        {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-invisibility.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-SPELL-INVISIBILITY"
@@ -22842,6 +22737,11 @@
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH"
+        },
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-levitate.test.ts",
           "tag": "deterministic-admission-projection",
@@ -24423,6 +24323,11 @@
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH"
+        },
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-see-invisibility.test.ts",
           "tag": "deterministic-admission-projection",
@@ -26618,6 +26523,11 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
+          "ownerPath": "packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH"
+        },
+        {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-spike-growth-movement-hazard.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME"
@@ -27085,6 +26995,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-creature-charm-spells.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV37"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH"
         }
       ],
       "executableMechanics": true,
@@ -27425,6 +27340,11 @@
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH"
+        },
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-web-restraint-hazard.test.ts",
           "tag": "deterministic-admission-projection",

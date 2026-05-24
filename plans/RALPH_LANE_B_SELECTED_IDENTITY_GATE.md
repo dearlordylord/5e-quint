@@ -70,7 +70,7 @@ identity evidence or an explicit non-applicable classification.
     {
       "number": 10,
       "id": "B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Backfill level-2 control spell identity evidence"
     },
     {
@@ -181,7 +181,7 @@ Lane B must not:
 | 7 | B7-FEAT-IDENTITY-BATCH - Backfill feat identity evidence | done | none | Alert and Origin feat reachability. |
 | 8 | B8-LEVEL1-SPELL-IDENTITY-BATCH - Backfill level-1 spell identity evidence | done | none | Remaining level-1 supported spell id was already covered by `light` selected-identity evidence. |
 | 9 | B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH - Backfill level-2 damage spell identity evidence | done | none | Level-2 damage spell identity evidence added; Acid Arrow split to RAW/Surface/runtime follow-ups. |
-| 10 | B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH - Backfill level-2 control spell identity evidence | ready-for-implementation-after-light-research | none | Control/condition spells. |
+| 10 | B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH - Backfill level-2 control spell identity evidence | done | none | Control/condition spells. |
 | 11 | B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH - Backfill level-2 mobility spell identity evidence | ready-for-implementation-after-light-research | none | Mobility/position spells. |
 | 12 | B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH - Backfill level-2 protection spell identity evidence | ready-for-implementation-after-light-research | none | Protection/restoration/buff spells. |
 | 13 | B13-PROFILE-SUBSET-IDENTITY-DISPOSITIONS - Classify subset-supported identity expectations | ready-for-implementation-after-light-research | none | Explicit non-applicable rows. |
@@ -326,7 +326,7 @@ support.
 
 ### Task 10 - B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH - Backfill level-2 control spell identity evidence
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: cover level-2 control/condition spell Units such as Calm Emotions,
 Darkness, Enthrall, Gust of Wind, Levitate, Spike Growth, Web, Charm Person, and
@@ -334,6 +334,11 @@ See Invisibility where missing.
 
 Acceptance: gap report count decreases; table-owned adjudication remains
 classified, not modeled as reducer state.
+
+Result: selected-identity replay evidence added for `calm_emotions`,
+`charm_person`, `darkness`, `enthrall`, `gust_of_wind`, `invisibility`,
+`levitate`, `see_invisibility`, `spike_growth`, and `web`; the selected-identity
+gap report dropped from 34 to 24 rows.
 
 ### Task 11 - B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH - Backfill level-2 mobility spell identity evidence
 
