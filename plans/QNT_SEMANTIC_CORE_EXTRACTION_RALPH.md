@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "QNTSEM-SPELL-DAMAGE-PROJECTION-CORE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Split Spell Damage Projection Core"
     },
     {
@@ -289,7 +289,7 @@ Acceptance:
 
 ### Task 7 - QNTSEM-SPELL-DAMAGE-PROJECTION-CORE - Split Spell Damage Projection Core
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: Task 6
 
