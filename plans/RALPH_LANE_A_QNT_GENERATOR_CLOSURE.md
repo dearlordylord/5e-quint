@@ -92,13 +92,13 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 14,
       "id": "A14-QNT-OWNER-ROLE-REFRESH",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Refresh owner roles for new semantic cores"
     },
     {
       "number": 15,
       "id": "A15-GENERATOR-SUBSET-TOKEN-AUDIT",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Audit generator subset tokens for spell cores"
     },
     {
@@ -146,7 +146,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 23,
       "id": "A23-ATTACK-BURST-SAVE-DAMAGE-CORE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Split attack-burst save damage core"
     }
   ]
@@ -194,8 +194,8 @@ Lane A must not:
 | 11 | A11-SPELL-TURN-HOOK-CORE - Split spell turn hook semantic core | done | none | Temporary HP, duration, once-per-turn facts. |
 | 12 | A12-OBJECT-HP-DAMAGE-CORE - Split object hit point damage core | done | none | Keep object state minimal. |
 | 13 | A13-SLEEP-LIFECYCLE-CORE - Split Sleep repeat-save lifecycle core | done | none | No table adjudication expansion. |
-| 14 | A14-QNT-OWNER-ROLE-REFRESH - Refresh owner roles for new semantic cores | blocked | A2-A13,A20-A23 | Generated role closure. |
-| 15 | A15-GENERATOR-SUBSET-TOKEN-AUDIT - Audit generator subset tokens for spell cores | blocked | A2-A13,A20-A23 | Ensure row vocabulary is exact. |
+| 14 | A14-QNT-OWNER-ROLE-REFRESH - Refresh owner roles for new semantic cores | ready-for-implementation-after-light-research | A2-A13,A20-A23 | Generated role closure. |
+| 15 | A15-GENERATOR-SUBSET-TOKEN-AUDIT - Audit generator subset tokens for spell cores | ready-for-implementation-after-light-research | A2-A13,A20-A23 | Ensure row vocabulary is exact. |
 | 16 | A16-FIXTURE-BOUND-STATUS-CLOSURE - Close spell procedure fixture-bound readiness row | blocked | A14,A15 | Only if blockers are actually gone. |
 | 17 | A17-CHECKER-REGRESSION-TEST - Add generator-readiness regression coverage | blocked | A16 | Prevent silent fallback to fixture-bound. |
 | 18 | A18-END-TO-END-QNT-VERIFICATION - Run and document lane A verification | blocked | A17 | Coverage, examples, typecheck if touched. |
@@ -203,7 +203,7 @@ Lane A must not:
 | 20 | A20-DIRECT-SPELL-DAMAGE-CORE - Split direct spell damage projection core | done | none | Magic Missile fixture split. |
 | 21 | A21-DEFENSIVE-SPELL-EFFECT-CORE - Split defensive spell effect projection core | done | none | Mage Armor fixture split. |
 | 22 | A22-READIED-SPELL-RESPONSE-CORE - Split Readied Spell Response core | done | none | Ready spell hold/release split. |
-| 23 | A23-ATTACK-BURST-SAVE-DAMAGE-CORE - Split attack-burst save damage core | ready-for-implementation-after-light-research | none | Ice Knife fixture split. |
+| 23 | A23-ATTACK-BURST-SAVE-DAMAGE-CORE - Split attack-burst save damage core | done | none | Ice Knife fixture split. |
 
 ## Task Details
 
@@ -341,7 +341,7 @@ Acceptance: examples and coverage check pass.
 
 ### Task 14 - A14-QNT-OWNER-ROLE-REFRESH - Refresh owner roles for new semantic cores
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Output: update `qnt-owner-roles.jsonl` for every new semantic-core owner and
 remove stale role rows only when the path is no longer an owner.
@@ -350,7 +350,7 @@ Acceptance: `pnpm rules-kernel-coverage:check -- --write` then check pass.
 
 ### Task 15 - A15-GENERATOR-SUBSET-TOKEN-AUDIT - Audit generator subset tokens for spell cores
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Output: update the spell procedure generator-readiness row so
 `generatorSubset` exactly matches the remaining semantic-core constructs. Add
@@ -439,7 +439,7 @@ fixture facts remain in `spell-procedure-profiles.qnt`.
 
 ### Task 23 - A23-ATTACK-BURST-SAVE-DAMAGE-CORE - Split attack-burst save damage core
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: pure semantic-core file for Ice Knife attack-burst save damage facts:
 slot requirement, attack damage type, burst damage type, slot-scaled burst dice,
@@ -525,10 +525,10 @@ fixture facts remain in `spell-procedure-profiles.qnt`.
     resource expenditure at the hold boundary, Concentration, reaction-window
     offer, Reaction spend, dissipation, and release projection remain closed
     Readied Spell fixture facts; A22 owns the Readied Spell Response core.
-  - Ice Knife attack-burst save damage remains a closed attack-burst fixture
-    over slot requirement, attack damage type, burst damage type, slot-scaled
-    burst dice, and successful-save burst policy; A23 owns the attack-burst
-    save damage core.
+  - Ice Knife attack-burst save damage now lives in
+    `spell-attack-burst-save-damage-core.qnt` over slot requirement, Piercing
+    attack damage, Cold burst damage, slot-scaled burst dice, and
+    successful-save burst policy; A23 is complete.
 - Direct hit point restoration definitions in
   `spell-procedure-profiles.qnt` are co-owned by
   `BATTLE.SPELL.HIT_POINT_RESTORATION` rather than a remaining
@@ -536,7 +536,7 @@ fixture facts remain in `spell-procedure-profiles.qnt`.
   for this lane. A16 must still verify that any residual hit-point restoration
   definitions are either outside the procedure readiness row's generator input
   or separately owned before closing the fixture-bound status.
-- After A2-A13 and A20-A23 split the semantic cores, A14 must refresh
+- With A2-A13 and A20-A23 split into semantic cores, A14 must refresh
   `qnt-owner-roles.jsonl`, A15 must audit the generator-subset tokens against
   the new cores, and A16 is the first task allowed to change
   `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` out of `fixture-bound`. A17 should

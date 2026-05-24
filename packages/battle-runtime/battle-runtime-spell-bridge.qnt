@@ -12,6 +12,7 @@ module battleRuntimeSpellBridge {
   import spellScalarBuffProjectionCore.* from "../shared-algebras/proofs/rule-core/spell-scalar-buff-projection-core"
   import spellDamageRiderProjectionCore.* from "../shared-algebras/proofs/rule-core/spell-damage-rider-projection-core"
   import spellChainedAttackDamageProjectionCore.* from "../shared-algebras/proofs/rule-core/spell-chained-attack-damage-projection-core"
+  import spellAttackBurstSaveDamageCore.* from "../shared-algebras/proofs/rule-core/spell-attack-burst-save-damage-core"
   import spellIndependentAttackSequenceCore.* from "../shared-algebras/proofs/rule-core/spell-independent-attack-sequence-core"
   import spellTurnHookCore.* from "../shared-algebras/proofs/rule-core/spell-turn-hook-core"
   import spellObjectHitPointDamageCore.* from "../shared-algebras/proofs/rule-core/spell-object-hit-point-damage-core"
@@ -626,8 +627,16 @@ module battleRuntimeSpellBridge {
   pure def battleRuntimeAttackBurstSaveDamageBurstDice(profile: BattleRuntimeAttackBurstSaveDamageProfile, slotLevel: int): int =
     attackBurstSaveDamageBurstDice(battleRuntimeAttackBurstSaveDamageProfile(profile), slotLevel)
 
-  pure def battleRuntimeAttackBurstSaveDamageBurstAmount(damageRoll: int, savingThrowSucceeded: bool): int =
-    attackBurstSaveDamageBurstAmount(damageRoll, savingThrowSucceeded)
+  pure def battleRuntimeAttackBurstSaveDamageBurstAmount(
+    profile: BattleRuntimeAttackBurstSaveDamageProfile,
+    damageRoll: int,
+    savingThrowSucceeded: bool
+  ): int =
+    attackBurstSaveDamageProfileBurstAmount(
+      battleRuntimeAttackBurstSaveDamageProfile(profile),
+      damageRoll,
+      savingThrowSucceeded,
+    )
 
   pure def battleRuntimeSpellAttackSequenceProfile(
     profile: BattleRuntimeSpellAttackSequenceProfile
@@ -995,8 +1004,8 @@ module battleRuntimeSpellBridge {
       assert(battleRuntimeAttackBurstSaveDamageAttackType(BattleRuntimeIceKnifeAttackBurstSaveDamage) == PiercingDamage),
       assert(battleRuntimeAttackBurstSaveDamageBurstType(BattleRuntimeIceKnifeAttackBurstSaveDamage) == ColdDamage),
       assert(battleRuntimeAttackBurstSaveDamageBurstDice(BattleRuntimeIceKnifeAttackBurstSaveDamage, 3) == 4),
-      assert(battleRuntimeAttackBurstSaveDamageBurstAmount(6, false) == 6),
-      assert(battleRuntimeAttackBurstSaveDamageBurstAmount(6, true) == 0),
+      assert(battleRuntimeAttackBurstSaveDamageBurstAmount(BattleRuntimeIceKnifeAttackBurstSaveDamage, 6, false) == 6),
+      assert(battleRuntimeAttackBurstSaveDamageBurstAmount(BattleRuntimeIceKnifeAttackBurstSaveDamage, 6, true) == 0),
     }
   }
 

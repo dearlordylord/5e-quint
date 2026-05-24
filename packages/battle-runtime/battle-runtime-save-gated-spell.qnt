@@ -1340,7 +1340,11 @@ module battleRuntimeSaveGatedSpell {
     concentrationSaveSucceeded: bool,
   ): Combatant = {
     val burstDamage = adjustedAttackBurstSaveDamage(
-      battleRuntimeAttackBurstSaveDamageBurstAmount(burstDamageRoll, savingThrowSucceeded),
+      battleRuntimeAttackBurstSaveDamageBurstAmount(
+        battleRuntimeAttackBurstSaveDamageProfileForInvocation(IceKnifeAttackBurstSaveDamage),
+        burstDamageRoll,
+        savingThrowSucceeded,
+      ),
       attackBurstSaveDamageBurstType(IceKnifeAttackBurstSaveDamage),
     )
     applyIceKnifeDamageWithSingleConcentrationCheck(target, 0, burstDamage, concentrationSaveSucceeded)
@@ -1426,10 +1430,14 @@ module battleRuntimeSaveGatedSpell {
           else
             0
         val burstDamage =
-          if (goblinSavingThrowSucceeded)
-            0
-          else
-            adjustedAttackBurstSaveDamage(burstDamageRoll, attackBurstSaveDamageBurstType(IceKnifeAttackBurstSaveDamage))
+          adjustedAttackBurstSaveDamage(
+            battleRuntimeAttackBurstSaveDamageBurstAmount(
+              battleRuntimeAttackBurstSaveDamageProfileForInvocation(IceKnifeAttackBurstSaveDamage),
+              burstDamageRoll,
+              goblinSavingThrowSucceeded,
+            ),
+            attackBurstSaveDamageBurstType(IceKnifeAttackBurstSaveDamage),
+          )
         val damagedGoblin = applyIceKnifeDamageWithSingleConcentrationCheck(
           attackResolvedGoblin,
           attackDamage,
