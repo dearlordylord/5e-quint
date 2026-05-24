@@ -70,6 +70,7 @@ const generatorSubsetVocabulary = {
   bool: "Boolean literals or typed Boolean fields.",
   comparison: "Equality or ordering comparisons.",
   "constant-def": "Zero-argument pure definitions used as constants.",
+  "constant-val": "Top-level `val` bindings used as module constants.",
   filter: "Collection `.filter(...)`.",
   fold: "Collection `.fold(...)`.",
   "if-expression": "Conditional expressions.",
