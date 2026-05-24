@@ -166,7 +166,7 @@ identity evidence or an explicit non-applicable classification.
     {
       "number": 26,
       "id": "B23-FIREBALL-IDENTITY-WITNESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Backfill Fireball selected identity witness"
     },
     {
@@ -287,7 +287,7 @@ Lane B must not:
 | 23 | B20-COUNTERSPELL-IDENTITY-WITNESS - Backfill Counterspell selected identity witness | done | none | Added selected-identity MBT evidence for `counterspell`; generated selected-identity gaps no longer list it. |
 | 24 | B21-DISPEL-MAGIC-IDENTITY-WITNESS - Backfill Dispel Magic selected identity witness | done | none | Added selected-identity MBT evidence for `dispel_magic`; generated selected-identity gaps no longer list it. |
 | 25 | B22-FIND-FAMILIAR-IDENTITY-WITNESS - Backfill Find Familiar selected identity witness | done | none | Added focused selected-identity MBT evidence for `find_familiar`; generated selected-identity gaps no longer list it. |
-| 26 | B23-FIREBALL-IDENTITY-WITNESS - Backfill Fireball selected identity witness | ready-for-research | none | Gap row: `fireball`, profile-subset-supported `spell.invocation-damage-save-or-attack`, installed Surface record. |
+| 26 | B23-FIREBALL-IDENTITY-WITNESS - Backfill Fireball selected identity witness | done | none | Gap row: `fireball`, profile-subset-supported `spell.invocation-damage-save-or-attack`, installed Surface record. |
 | 27 | B24-LIGHTNING-BOLT-IDENTITY-WITNESS - Backfill Lightning Bolt selected identity witness | ready-for-research | none | Gap row: `lightning_bolt`, supported-profile `spell.invocation-damage-save-or-attack`, installed Surface record. |
 | 28 | B25-SHINING-SMITE-IDENTITY-WITNESS - Backfill Shining Smite selected identity witness | ready-for-research | none | Gap row: `shining_smite`, supported-profile `spell.invocation-after-hit-damage-illumination`, installed Surface record. |
 | 29 | B26-DEFERRED-IDENTITY-GAP-SEMANTICS - Clarify deferred selected identity gap semantics | ready-for-research | none | Gap rows: `mind_spike` and `thaumaturgy` have deferred-portion non-applicable dispositions but still appear as selected identity gaps; decide whether the generated view needs a separate deferred-visible bucket or whole-claim non-applicable classification. |
@@ -704,7 +704,7 @@ gap report no longer lists `find_familiar`.
 
 ### Task 26 - B23-FIREBALL-IDENTITY-WITNESS - Backfill Fireball selected identity witness
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: prove selected `fireball` identity reaches the damage save-or-attack
 runtime entrypoint through existing or focused promoted runtime coverage.
