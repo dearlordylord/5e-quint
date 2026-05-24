@@ -50,6 +50,7 @@ const generatorReadinessSubsetStatuses = new Set([
   "generation-subset-clean",
 ]);
 const generatorReadinessBlockerStatuses = new Set(["fixture-bound", "blocked"]);
+const semanticCoreRunBlockBlocker = "run-block-coupled";
 
 function isRecord(value) {
   return value != null && typeof value === "object" && !Array.isArray(value);
@@ -78,6 +79,101 @@ function readJsonl(rootPath, filePath) {
 
 function readTextIfExists(filePath) {
   return fs.existsSync(filePath) ? fs.readFileSync(filePath, "utf8") : "";
+}
+
+function stripCommentsPreserveLines(text) {
+  let output = "";
+  let quote = null;
+  let escaped = false;
+  let lineComment = false;
+  let blockComment = false;
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index];
+    const next = text[index + 1];
+    if (lineComment) {
+      if (char === "\n") {
+        lineComment = false;
+        output += "\n";
+      } else {
+        output += " ";
+      }
+      continue;
+    }
+    if (blockComment) {
+      if (char === "*" && next === "/") {
+        blockComment = false;
+        output += "  ";
+        index += 1;
+      } else {
+        output += char === "\n" ? "\n" : " ";
+      }
+      continue;
+    }
+    if (quote !== null) {
+      output += char;
+      if (escaped) {
+        escaped = false;
+      } else if (char === "\\") {
+        escaped = true;
+      } else if (char === quote) {
+        quote = null;
+      }
+      continue;
+    }
+    if (char === "/" && next === "/") {
+      lineComment = true;
+      output += "  ";
+      index += 1;
+      continue;
+    }
+    if (char === "/" && next === "*") {
+      blockComment = true;
+      output += "  ";
+      index += 1;
+      continue;
+    }
+    if (char === '"' || char === "'") {
+      quote = char;
+    }
+    output += char;
+  }
+  return output;
+}
+
+function lineNumberAt(text, offset) {
+  return text.slice(0, offset).split("\n").length;
+}
+
+function findQntRunBlockLines(text) {
+  const source = stripCommentsPreserveLines(text);
+  const lines = [];
+  const runBlockPattern = /^[ \t]*run[ \t]+[A-Za-z_][A-Za-z0-9_]*[ \t]*=/gm;
+  for (
+    let match = runBlockPattern.exec(source);
+    match !== null;
+    match = runBlockPattern.exec(source)
+  ) {
+    lines.push(lineNumberAt(source, match.index));
+  }
+  return lines;
+}
+
+function scanSemanticCoreRunBlocks(rootPath, qntOwnerRoleRows) {
+  const runBlocksByPath = new Map();
+  for (const row of qntOwnerRoleRows) {
+    if (
+      !isRecord(row) ||
+      row.role !== "semantic-core" ||
+      typeof row.ownerPath !== "string"
+    ) {
+      continue;
+    }
+    const ownerAbsolutePath = path.join(rootPath, row.ownerPath);
+    if (!fs.existsSync(ownerAbsolutePath)) continue;
+    const lines = findQntRunBlockLines(fs.readFileSync(ownerAbsolutePath, "utf8"));
+    if (lines.length > 0) runBlocksByPath.set(row.ownerPath, lines);
+  }
+  return runBlocksByPath;
 }
 
 function stable(value) {
@@ -723,6 +819,7 @@ function validateGeneratorReadiness(
   rootPath,
   obligationsById,
   qntOwnerRolesByPath,
+  semanticCoreRunBlocksByPath,
 ) {
   const issues = [];
   const context = `generator-readiness row ${index + 1}`;
@@ -817,6 +914,26 @@ function validateGeneratorReadiness(
   }
   if (readiness.status === "blocked" && semanticCore.length > 0) {
     issues.push(`${context}.blocked must not declare semanticCore.`);
+  }
+  const semanticCoreWithRunBlocks = semanticCore.filter(
+    (ownerPath) => (semanticCoreRunBlocksByPath.get(ownerPath) ?? []).length > 0,
+  );
+  if (
+    semanticCoreWithRunBlocks.length > 0 &&
+    !generatorReadinessBlockerStatuses.has(readiness.status)
+  ) {
+    issues.push(
+      `${context}.${readiness.status} cannot include semanticCore path(s) with run blocks (${semanticCoreWithRunBlocks.join(", ")}); split the run blocks out or classify with run-block-coupled.`,
+    );
+  }
+  if (
+    semanticCoreWithRunBlocks.length > 0 &&
+    generatorReadinessBlockerStatuses.has(readiness.status) &&
+    !blockedBy.includes(semanticCoreRunBlockBlocker)
+  ) {
+    issues.push(
+      `${context}.${readiness.status} has semanticCore path(s) with run blocks (${semanticCoreWithRunBlocks.join(", ")}) and must include blockedBy ${semanticCoreRunBlockBlocker}.`,
+    );
   }
   for (const field of ["semanticCore", "proofOnly"]) {
     for (const ownerPath of stringArrayOrEmpty(readiness[field])) {
@@ -1272,6 +1389,41 @@ function buildGeneratorReadinessBacklog(
   });
 }
 
+function buildSemanticCoreRunBlockFindings(
+  obligations,
+  generatorReadiness,
+  qntOwnerRolesByPath,
+  semanticCoreRunBlocksByPath,
+) {
+  const readinessByObligationId = new Map(
+    generatorReadiness
+      .filter(
+        (readiness) =>
+          isRecord(readiness) && typeof readiness.obligationId === "string",
+      )
+      .map((readiness) => [readiness.obligationId, readiness]),
+  );
+  return obligations.flatMap((obligation) => {
+    if (!coveredStatuses.has(obligation.status)) return [];
+    const owners = semanticCoreOwnerPaths(obligation, qntOwnerRolesByPath)
+      .map((ownerPath) => ({
+        lines: semanticCoreRunBlocksByPath.get(ownerPath) ?? [],
+        ownerPath,
+      }))
+      .filter((owner) => owner.lines.length > 0);
+    if (owners.length === 0) return [];
+    return [
+      stable({
+        blocker: semanticCoreRunBlockBlocker,
+        obligationId: obligation.id,
+        owners,
+        readinessStatus:
+          readinessByObligationId.get(obligation.id)?.status ?? "missing",
+      }),
+    ];
+  });
+}
+
 function buildMatrix(rootPath) {
   const paths = coveragePaths(rootPath);
   const obligations = readJsonl(rootPath, paths.obligations);
@@ -1283,6 +1435,10 @@ function buildMatrix(rootPath) {
   const profiles = readJsonl(rootPath, paths.unitProfiles);
   const profileIdsByObligation = profilesByObligation(profileObligations);
   const qntOwnerRolesByPath = qntOwnerRoleMap(qntOwnerRoleRows);
+  const semanticCoreRunBlocksByPath = scanSemanticCoreRunBlocks(
+    rootPath,
+    qntOwnerRoleRows,
+  );
   const obligationIdsByQntOwner = new Map();
   for (const obligation of obligations) {
     if (!coveredStatuses.has(obligation.status)) continue;
@@ -1322,6 +1478,12 @@ function buildMatrix(rootPath) {
       obligations,
       generatorReadiness,
       qntOwnerRolesByPath,
+    ),
+    semanticCoreRunBlockFindings: buildSemanticCoreRunBlockFindings(
+      obligations,
+      generatorReadiness,
+      qntOwnerRolesByPath,
+      semanticCoreRunBlocksByPath,
     ),
     kernelIrBoundaries: kernelIrBoundaries.map((boundary) =>
       stable(boundary),
@@ -1470,6 +1632,30 @@ function renderReport(matrix, issues) {
         .join("<br>");
       lines.push(
         `| \`${backlogRow.obligationId}\` | ${backlogRow.status} | ${owners} | ${ownerRoles} |`,
+      );
+    }
+  }
+  lines.push("");
+  lines.push("### Semantic-Core Run Block Findings");
+  lines.push("");
+  lines.push(
+    "Rows here are derived from semantic-core QNT owners that still contain Quint `run` blocks. Assessed readiness rows must split those tests out or classify the generator blocker as `run-block-coupled`.",
+  );
+  lines.push("");
+  if (matrix.semanticCoreRunBlockFindings.length === 0) {
+    lines.push("No semantic-core QNT owners contain run blocks.");
+  } else {
+    lines.push("| Obligation | Readiness status | Blocker | Semantic-core run blocks |");
+    lines.push("| --- | --- | --- | --- |");
+    for (const finding of matrix.semanticCoreRunBlockFindings) {
+      const owners = finding.owners
+        .map(
+          (owner) =>
+            `\`${owner.ownerPath}\`: lines ${owner.lines.map((line) => `\`${line}\``).join(", ")}`,
+        )
+        .join("<br>");
+      lines.push(
+        `| \`${finding.obligationId}\` | ${finding.readinessStatus} | \`${finding.blocker}\` | ${owners} |`,
       );
     }
   }
@@ -1682,6 +1868,10 @@ function buildKernelCoverage({ root: rootPath }) {
       issues.push(`qnt-owner-roles is missing QNT owner ${ownerPath}.`);
     }
   }
+  const semanticCoreRunBlocksByPath = scanSemanticCoreRunBlocks(
+    rootPath,
+    qntOwnerRoleRows,
+  );
 
   const derivedProfilesByObligation = profilesByObligation(profileObligations);
   const readinessObligationIds = new Set();
@@ -1701,6 +1891,7 @@ function buildKernelCoverage({ root: rootPath }) {
         rootPath,
         obligationsById,
         qntOwnerRolesByPath,
+        semanticCoreRunBlocksByPath,
       ),
     );
   }

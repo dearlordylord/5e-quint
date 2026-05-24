@@ -211,6 +211,7 @@ function runSelfTest() {
   assert.equal(result.matrix.qntOwnerRoles.length, 3);
   assert.equal(result.matrix.generatorReadiness.length, 1);
   assert.equal(result.matrix.generatorReadinessBacklog.length, 0);
+  assert.equal(result.matrix.semanticCoreRunBlockFindings.length, 0);
   assert.equal(result.matrix.kernelIrBoundaries.length, 8);
 
   const sampleQntOwnerRolesPath = path.join(
@@ -260,6 +261,74 @@ function runSelfTest() {
     sampleGeneratorReadinessPath,
     "utf8",
   );
+  const sampleQntPath = path.join(root, "sample.qnt");
+  const initialSampleQntText = fs.readFileSync(sampleQntPath, "utf8");
+  writeFile(
+    sampleQntPath,
+    [
+      "// KERNEL-COVERAGE: qnt-owner BATTLE.SAMPLE",
+      "// run commented_out = true",
+      "module sample {",
+      "",
+      "  run sample_run_block = true",
+      "}",
+    ].join("\n") + "\n",
+  );
+  const semanticCoreCandidateRunBlockResult = buildKernelCoverage({ root });
+  assert.ok(
+    semanticCoreCandidateRunBlockResult.issues.includes(
+      "generator-readiness row 1.semantic-core-candidate cannot include semanticCore path(s) with run blocks (sample.qnt); split the run blocks out or classify with run-block-coupled.",
+    ),
+    `Expected semantic-core run-block candidate issue, got ${JSON.stringify(semanticCoreCandidateRunBlockResult.issues)}`,
+  );
+  assert.deepEqual(
+    semanticCoreCandidateRunBlockResult.matrix.semanticCoreRunBlockFindings,
+    [
+      {
+        blocker: "run-block-coupled",
+        obligationId: "BATTLE.SAMPLE",
+        owners: [{ lines: [5], ownerPath: "sample.qnt" }],
+        readinessStatus: "semantic-core-candidate",
+      },
+    ],
+  );
+  assert.match(
+    semanticCoreCandidateRunBlockResult.report,
+    /\| `BATTLE\.SAMPLE` \| semantic-core-candidate \| `run-block-coupled` \| `sample\.qnt`: lines `5` \|/,
+  );
+  writeFile(
+    sampleGeneratorReadinessPath,
+    JSON.stringify({
+      obligationId: "BATTLE.SAMPLE",
+      status: "fixture-bound",
+      semanticCore: ["sample.qnt"],
+      proofOnly: [],
+      generatorSubset: ["record"],
+      blockedBy: ["fixture-world-coupled"],
+    }) + "\n",
+  );
+  const fixtureBoundMissingRunBlockResult = buildKernelCoverage({ root });
+  assert.ok(
+    fixtureBoundMissingRunBlockResult.issues.includes(
+      "generator-readiness row 1.fixture-bound has semanticCore path(s) with run blocks (sample.qnt) and must include blockedBy run-block-coupled.",
+    ),
+    `Expected fixture-bound run-block blocker issue, got ${JSON.stringify(fixtureBoundMissingRunBlockResult.issues)}`,
+  );
+  writeFile(
+    sampleGeneratorReadinessPath,
+    JSON.stringify({
+      obligationId: "BATTLE.SAMPLE",
+      status: "fixture-bound",
+      semanticCore: ["sample.qnt"],
+      proofOnly: [],
+      generatorSubset: ["record"],
+      blockedBy: ["run-block-coupled"],
+    }) + "\n",
+  );
+  const fixtureBoundRunBlockResult = buildKernelCoverage({ root });
+  assert.deepEqual(fixtureBoundRunBlockResult.issues, []);
+  writeFile(sampleQntPath, initialSampleQntText);
+  writeFile(sampleGeneratorReadinessPath, initialGeneratorReadinessText);
   writeFile(sampleGeneratorReadinessPath, "");
   const missingGeneratorReadinessResult = buildKernelCoverage({ root });
   assert.ok(

@@ -483,6 +483,27 @@ Rows here are derived from covered obligations with semantic-core QNT owners who
 | `BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION` | not-assessed | `packages/battle-runtime/battle-runtime.qnt` | `packages/battle-runtime/battle-runtime.qnt`: semantic-core |
 | `BATTLE.ATTACK.MINIMAL_RESOLUTION` | not-assessed | `packages/battle-runtime/creature-attack.qnt` | `packages/battle-runtime/creature-attack.qnt`: semantic-core |
 
+### Semantic-Core Run Block Findings
+
+Rows here are derived from semantic-core QNT owners that still contain Quint `run` blocks. Assessed readiness rows must split those tests out or classify the generator blocker as `run-block-coupled`.
+
+| Obligation | Readiness status | Blocker | Semantic-core run blocks |
+| --- | --- | --- | --- |
+| `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY` | not-assessed | `run-block-coupled` | `packages/shared-algebras/proofs/rule-core/shove-outcome.qnt`: lines `128`, `138`, `148`, `164`, `183` |
+| `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` | not-assessed | `run-block-coupled` | `packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt`: lines `1385`, `1401`, `1411`, `1439`, `1471`, `1492`, `1511`, `1537`, `1570`, `1589`, `1624`, `1658`, `1681`, `1713`, `1755`, `1797`, `1823`, `1840`, `1857`, `1879`, `1900`, `1943`, `1958`, `1994`, `2018`, `2047`, `2070`, `2115`, `2134`, `2152`, `2183`, `2204`, `2220`, `2239`, `2257`, `2296`, `2347`, `2371`, `2389`, `2404`, `2419`<br>`packages/battle-runtime/battle-runtime-monk-focus.qnt`: lines `134`, `140`, `149`, `159`, `168`, `178`, `199` |
+| `BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE` | not-assessed | `run-block-coupled` | `packages/battle-runtime/battle-runtime-gust-of-wind.qnt`: lines `163` |
+| `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` | not-assessed | `run-block-coupled` | `packages/battle-runtime/battle-runtime-metamagic.qnt`: lines `337`, `363`, `378`, `393`, `416`, `488`, `509`, `545` |
+| `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` | not-assessed | `run-block-coupled` | `packages/battle-runtime/battle-runtime-direct-condition-removal.qnt`: lines `137`, `163`, `183`, `196`, `220`<br>`packages/battle-runtime/battle-runtime-protection-from-poison.qnt`: lines `101`, `116`, `126` |
+| `BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING` | not-assessed | `run-block-coupled` | `packages/battle-runtime/battle-runtime-warding-bond.qnt`: lines `187`, `205`, `217`, `228` |
+| `BATTLE.STAT_BLOCK.ATTACK_CONTROL` | not-assessed | `run-block-coupled` | `packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt`: lines `502`, `510`, `533`, `548`, `556`, `571`, `594`, `610`, `621`, `643` |
+| `BATTLE.DAMAGE.ATTACK_BRANCHES` | not-assessed | `run-block-coupled` | `packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt`: lines `180`, `193`, `206`, `219`, `227`, `237`, `272`, `302`, `327`, `357`<br>`packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt`: lines `1385`, `1401`, `1411`, `1439`, `1471`, `1492`, `1511`, `1537`, `1570`, `1589`, `1624`, `1658`, `1681`, `1713`, `1755`, `1797`, `1823`, `1840`, `1857`, `1879`, `1900`, `1943`, `1958`, `1994`, `2018`, `2047`, `2070`, `2115`, `2134`, `2152`, `2183`, `2204`, `2220`, `2239`, `2257`, `2296`, `2347`, `2371`, `2389`, `2404`, `2419` |
+| `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES` | not-assessed | `run-block-coupled` | `packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt`: lines `1385`, `1401`, `1411`, `1439`, `1471`, `1492`, `1511`, `1537`, `1570`, `1589`, `1624`, `1658`, `1681`, `1713`, `1755`, `1797`, `1823`, `1840`, `1857`, `1879`, `1900`, `1943`, `1958`, `1994`, `2018`, `2047`, `2070`, `2115`, `2134`, `2152`, `2183`, `2204`, `2220`, `2239`, `2257`, `2296`, `2347`, `2371`, `2389`, `2404`, `2419` |
+| `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` | not-assessed | `run-block-coupled` | `packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt`: lines `355`, `369`, `373`, `381`, `392`, `404`, `419` |
+| `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | not-assessed | `run-block-coupled` | `packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt`: lines `180`, `193`, `206`, `219`, `227`, `237`, `272`, `302`, `327`, `357`<br>`packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt`: lines `1385`, `1401`, `1411`, `1439`, `1471`, `1492`, `1511`, `1537`, `1570`, `1589`, `1624`, `1658`, `1681`, `1713`, `1755`, `1797`, `1823`, `1840`, `1857`, `1879`, `1900`, `1943`, `1958`, `1994`, `2018`, `2047`, `2070`, `2115`, `2134`, `2152`, `2183`, `2204`, `2220`, `2239`, `2257`, `2296`, `2347`, `2371`, `2389`, `2404`, `2419` |
+| `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY` | not-assessed | `run-block-coupled` | `packages/character-creation-runtime/character-creation-runtime-slice.qnt`: lines `578`, `582`, `595`, `603`, `619`, `633`, `653`, `669`, `682`, `695`, `719`, `741` |
+| `CREATION.CHOICE_DISCOVERY_CARDINALITY` | not-assessed | `run-block-coupled` | `packages/character-creation-runtime/character-creation-runtime-slice.qnt`: lines `578`, `582`, `595`, `603`, `619`, `633`, `653`, `669`, `682`, `695`, `719`, `741` |
+| `SHEET.HP_REST_HIT_DICE.TRANSITIONS` | not-assessed | `run-block-coupled` | `packages/shared-algebras/proofs/rule-core/hit-point-recovery.qnt`: lines `140`, `169`, `192`, `210`, `238`, `260`, `279`, `302` |
+
 ## Kernel IR Boundaries
 
 | Boundary | Obligations | Runtime Paths | Summary |
