@@ -1,7 +1,7 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield
-// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS BATTLE.SPELL.HIT_POINT_RESTORATION
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.HIT_POINT_RESTORATION
 
 module spellProcedureProfiles {
   import hitPointDamage.* from "./hit-point-damage"

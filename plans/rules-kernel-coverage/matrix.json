@@ -222,7 +222,6 @@
         "packages/shared-algebras/proofs/rule-core/spell-object-hit-point-damage-core.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-sleep-repeat-save-lifecycle-core.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-attack-burst-save-damage-core.qnt",
-        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
       ],
       "runtime": "battle",
@@ -5649,10 +5648,9 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "evidence": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt remains the BATTLE.SPELL.HIT_POINT_RESTORATION semantic owner; spell procedure-profile semantics now use the split semantic-core files.",
       "obligationIds": [
-        "BATTLE.SPELL.HIT_POINT_RESTORATION",
-        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+        "BATTLE.SPELL.HIT_POINT_RESTORATION"
       ],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
       "role": "semantic-core"
@@ -5842,9 +5840,7 @@
       "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "fixture-world-coupled"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -5890,10 +5886,9 @@
         "packages/shared-algebras/proofs/rule-core/spell-object-hit-point-damage-core.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-sleep-repeat-save-lifecycle-core.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-attack-burst-save-damage-core.qnt",
-        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     }
   ],
   "kernelIrBoundaries": [
