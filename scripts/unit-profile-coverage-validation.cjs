@@ -22,6 +22,73 @@ function isRecord(value) {
   return value != null && typeof value === "object" && !Array.isArray(value);
 }
 
+function isNonEmptyString(value) {
+  return typeof value === "string" && value.length > 0;
+}
+
+const unitEvidenceRowFields = new Set(["unitId", "evidence"]);
+const unitEvidenceFields = new Set(["tag", "taskId", "ownerPath"]);
+
+function unexpectedFieldIssues(value, allowedFields, context) {
+  return Object.keys(value)
+    .filter((field) => !allowedFields.has(field))
+    .map(
+      (field) =>
+        `${context} must not include unsupported field ${field}; Unit evidence rows have no optional fields.`,
+    );
+}
+
+function unitEvidenceRowSchemaIssues(row, index) {
+  const context = `Unit evidence row ${index + 1}`;
+  const issues = [];
+  if (!isRecord(row)) {
+    return [`${context} must be an object.`];
+  }
+  issues.push(...unexpectedFieldIssues(row, unitEvidenceRowFields, context));
+  if (!isNonEmptyString(row.unitId)) {
+    issues.push(`${context}.unitId must be a non-empty string.`);
+  }
+  if (!isRecord(row.evidence)) {
+    issues.push(`${context}.evidence must be an object.`);
+    return issues;
+  }
+  issues.push(
+    ...unexpectedFieldIssues(
+      row.evidence,
+      unitEvidenceFields,
+      `${context}.evidence`,
+    ),
+  );
+  for (const field of unitEvidenceFields) {
+    if (!isNonEmptyString(row.evidence[field])) {
+      issues.push(`${context}.evidence.${field} must be a non-empty string.`);
+    }
+  }
+  return issues;
+}
+
+function isUsableUnitEvidenceRow(row) {
+  return (
+    isRecord(row) &&
+    isRecord(row.evidence) &&
+    isNonEmptyString(row.unitId) &&
+    isNonEmptyString(row.evidence.tag) &&
+    isNonEmptyString(row.evidence.taskId) &&
+    isNonEmptyString(row.evidence.ownerPath)
+  );
+}
+
+function repoRelativePathIssue(ownerPath, context) {
+  if (
+    path.isAbsolute(ownerPath) ||
+    ownerPath.includes("\\") ||
+    ownerPath.split("/").includes("..")
+  ) {
+    return `${context} ownerPath must be a repo-relative source path.`;
+  }
+  return undefined;
+}
+
 function battleReadinessClosureIssues(unitId, closure, context) {
   const issues = [];
   if (!isRecord(closure)) {
@@ -419,14 +486,24 @@ function validateUnitEvidence(
   evidenceRows,
   unitClaims,
   scannedUnitEvidence,
+  claimableUnits,
 ) {
   const issues = [];
+  const claimableUnitsById = new Map(
+    claimableUnits.map((unit) => [unit.unitId, unit]),
+  );
   const claimsByUnit = new Map(
     unitClaims.map((claim) => [claim.unitId, claim]),
   );
   const seen = new Set();
 
-  for (const row of evidenceRows) {
+  for (const [index, row] of evidenceRows.entries()) {
+    const rowSchemaIssues = unitEvidenceRowSchemaIssues(row, index);
+    issues.push(...rowSchemaIssues);
+    if (rowSchemaIssues.length > 0) {
+      continue;
+    }
+
     const rowKey = `${row.unitId}\u0000${row.evidence?.tag}\u0000${row.evidence?.ownerPath}`;
     if (seen.has(rowKey)) {
       issues.push(
@@ -435,9 +512,15 @@ function validateUnitEvidence(
     }
     seen.add(rowKey);
 
+    if (!claimableUnitsById.has(row.unitId)) {
+      issues.push(`Unit evidence references unknown Unit id ${row.unitId}.`);
+      continue;
+    }
     const claim = claimsByUnit.get(row.unitId);
     if (claim === undefined) {
-      issues.push(`Unit evidence references unknown Unit claim ${row.unitId}.`);
+      issues.push(
+        `Unit evidence for ${row.unitId} has no profile disposition claim.`,
+      );
       continue;
     }
     if (
@@ -456,17 +539,21 @@ function validateUnitEvidence(
       );
       continue;
     }
-    if (
-      typeof row.evidence.taskId !== "string" ||
-      row.evidence.taskId.length === 0
-    ) {
-      issues.push(`Unit evidence for ${row.unitId} requires taskId.`);
+    const ownerPathIssue = repoRelativePathIssue(
+      row.evidence.ownerPath,
+      `Unit evidence for ${row.unitId}`,
+    );
+    if (ownerPathIssue !== undefined) {
+      issues.push(ownerPathIssue);
+      continue;
     }
     if (
-      typeof row.evidence.ownerPath !== "string" ||
-      row.evidence.ownerPath.length === 0
+      row.evidence.tag === selectedIdentityMbtEvidenceTag &&
+      !row.evidence.ownerPath.endsWith(".mbt.test.ts")
     ) {
-      issues.push(`Unit evidence for ${row.unitId} requires ownerPath.`);
+      issues.push(
+        `Selected identity MBT evidence for ${row.unitId} ownerPath must be a repo-relative .mbt.test.ts source test path.`,
+      );
       continue;
     }
     if (!fs.existsSync(path.join(root, row.evidence.ownerPath))) {
@@ -584,8 +671,11 @@ function validateOwnerClaims(
 ) {
   const issues = [];
   const profileIds = new Set(profiles.map((profile) => profile.id));
+  const usableUnitEvidenceRows = unitEvidenceRows.filter(
+    isUsableUnitEvidenceRow,
+  );
   const unitEvidenceRowsByMarker = new Set(
-    unitEvidenceRows.map((row) =>
+    usableUnitEvidenceRows.map((row) =>
       unitEvidenceRowKey(
         row.evidence?.ownerPath,
         row.evidence?.tag,
@@ -595,7 +685,7 @@ function validateOwnerClaims(
     ),
   );
   const selectedUnitEvidenceRowsByMarker = new Set(
-    unitEvidenceRows
+    usableUnitEvidenceRows
       .filter((row) => row.evidence?.tag === selectedIdentityMbtEvidenceTag)
       .map((row) =>
         unitEvidenceRowKey(
@@ -954,7 +1044,10 @@ function validateCoverageInputs({
       authoredSurfaceUnits,
       profiles,
     ),
-    ...validateUnitEvidence(root, unitEvidence, unitClaims, scannedClaims),
+    ...validateUnitEvidence(root, unitEvidence, unitClaims, scannedClaims, [
+      ...inventory,
+      ...authoredSurfaceUnits,
+    ]),
     ...validateOwnerClaims(
       profiles,
       taskClaims,
