@@ -349,7 +349,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `range`, `map`, `set-operators`, `membership` |  |  |
 | `BATTLE.REACTION.OFFER_DECLINE_RESUME` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `map`, `set-operators`, `membership` |  |  |
 | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `constant-val`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `membership` |  |  |
-| `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY` | not-assessed |  |  |  |
+| `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY` | generation-subset-clean | `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `comparison`, `pattern-match` |  |  |
 | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` | not-assessed |  |  |  |
 | `BATTLE.SPELL.HIT_POINT_RESTORATION` | fixture-bound | `import`, `variant`, `record`, `pure-def`, `constant-def`, `constant-val`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `set`, `membership` | `fixture-world-coupled` | `A36-HIT-POINT-RESTORATION-SEMANTIC-CORE` |
 | `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE` | not-assessed |  |  |  |
@@ -419,7 +419,6 @@ Rows here are derived from covered obligations with semantic-core QNT owners who
 
 | Obligation | Status | Semantic-core owners | Owner roles |
 | --- | --- | --- | --- |
-| `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY` | not-assessed | `packages/shared-algebras/proofs/rule-core/shove-outcome.qnt` | `packages/shared-algebras/proofs/rule-core/shove-outcome.qnt`: semantic-core |
 | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` | not-assessed | `packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt`, `packages/battle-runtime/battle-runtime.qnt`, `packages/battle-runtime/battle-runtime-monk-focus.qnt` | `packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-monk-focus.qnt`: semantic-core |
 | `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime.qnt`, `packages/battle-runtime/battle-runtime-sanctuary.qnt`, `packages/battle-runtime/battle-runtime-concentration.qnt`, `packages/battle-runtime/battle-runtime-timed-effects.qnt` | `packages/battle-runtime/battle-runtime.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-sanctuary.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-concentration.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-timed-effects.qnt`: semantic-core |
 | `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime-save-gated-spell.qnt`, `packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt` | `packages/battle-runtime/battle-runtime-save-gated-spell.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt`: semantic-core |
@@ -485,7 +484,6 @@ Rows here are derived from semantic-core QNT owners that still contain Quint `ru
 
 | Obligation | Readiness status | Blocker | Semantic-core run blocks |
 | --- | --- | --- | --- |
-| `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY` | not-assessed | `run-block-coupled` | `packages/shared-algebras/proofs/rule-core/shove-outcome.qnt`: lines `128`, `138`, `148`, `164`, `183` |
 | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` | not-assessed | `run-block-coupled` | `packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt`: lines `1385`, `1401`, `1411`, `1439`, `1471`, `1492`, `1511`, `1537`, `1570`, `1589`, `1624`, `1658`, `1681`, `1713`, `1755`, `1797`, `1823`, `1840`, `1857`, `1879`, `1900`, `1943`, `1958`, `1994`, `2018`, `2047`, `2070`, `2115`, `2134`, `2152`, `2183`, `2204`, `2220`, `2239`, `2257`, `2296`, `2347`, `2371`, `2389`, `2404`, `2419`<br>`packages/battle-runtime/battle-runtime-monk-focus.qnt`: lines `134`, `140`, `149`, `159`, `168`, `178`, `199` |
 | `BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE` | not-assessed | `run-block-coupled` | `packages/battle-runtime/battle-runtime-gust-of-wind.qnt`: lines `163` |
 | `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` | not-assessed | `run-block-coupled` | `packages/battle-runtime/battle-runtime-metamagic.qnt`: lines `337`, `363`, `378`, `393`, `416`, `488`, `509`, `545` |

@@ -5910,11 +5910,24 @@
     },
     {
       "blockedBy": [],
-      "generatorSubset": [],
+      "generatorSubset": [
+        "variant",
+        "record",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "comparison",
+        "pattern-match"
+      ],
       "obligationId": "BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY",
-      "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/shove-outcome-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/shove-outcome.qnt"
+      ],
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -6529,16 +6542,6 @@
     }
   ],
   "generatorReadinessBacklog": [
-    {
-      "obligationId": "BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/shared-algebras/proofs/rule-core/shove-outcome.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
     {
       "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
       "ownerRoles": [
@@ -7233,23 +7236,6 @@
     }
   ],
   "semanticCoreRunBlockFindings": [
-    {
-      "blocker": "run-block-coupled",
-      "obligationId": "BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY",
-      "owners": [
-        {
-          "lines": [
-            128,
-            138,
-            148,
-            164,
-            183
-          ],
-          "ownerPath": "packages/shared-algebras/proofs/rule-core/shove-outcome.qnt"
-        }
-      ],
-      "readinessStatus": "not-assessed"
-    },
     {
       "blocker": "run-block-coupled",
       "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",

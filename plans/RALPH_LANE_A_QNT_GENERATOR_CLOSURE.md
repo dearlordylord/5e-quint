@@ -194,7 +194,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 31,
       "id": "A31-SHOVE-OUTCOME-READINESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Assess shove outcome generator readiness"
     },
     {
@@ -289,7 +289,7 @@ Lane A must not:
 | 28 | A28-HIT-POINT-RESTORATION-READINESS - Assess hit point restoration generator readiness | done | A24 | Classified as fixture-bound; A36 owns the semantic-core split. |
 | 29 | A29-ATTACK-DAMAGE-COMPOSITION-READINESS - Assess attack damage composition generator readiness | done | A24,A26 | Classified as fixture-bound; attack examples moved out; A34 owns the remaining unit-feature run-block split. |
 | 30 | A30-DAMAGE-ADJUSTMENTS-READINESS - Assess damage adjustment generator readiness | done | A24,A26 | Classified as generation-subset-clean; examples moved to proof-only owner. |
-| 31 | A31-SHOVE-OUTCOME-READINESS - Assess shove outcome generator readiness | ready-for-research | A24,A26 | `shove-outcome.qnt` currently includes run blocks. |
+| 31 | A31-SHOVE-OUTCOME-READINESS - Assess shove outcome generator readiness | done | A24,A26 | Classified as generation-subset-clean; examples moved to proof-only owner. |
 | 32 | A32-STAT-BLOCK-CONTROLS-READINESS - Assess stat block controls generator readiness | ready-for-research | A24,A26 | Shared algebra owner needs subset/blocker classification. |
 | 33 | A33-HIT-POINT-RECOVERY-READINESS - Assess hit point recovery generator readiness | ready-for-research | A24,A26 | Sheet HP/rest owner needs subset/blocker classification. |
 | 34 | A34-UNIT-FEATURE-PROCEDURE-SURVEY - Survey unit feature procedure readiness split | ready-for-research | A24,A26 | Large shared algebra owner must be split into runnable follow-ups before readiness closure. |
@@ -664,7 +664,7 @@ Result: `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` is
 
 ### Task 31 - A31-SHOVE-OUTCOME-READINESS - Assess shove outcome generator readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY`,
 `packages/shared-algebras/proofs/rule-core/shove-outcome.qnt`, and A26 scanner
@@ -676,6 +676,11 @@ the checked blocker.
 
 Acceptance: checker passes and the readiness row distinguishes executable
 shove outcome definitions from example/test coupling.
+
+Result: `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY` is
+`generation-subset-clean`. Run examples moved from the semantic-core owner to
+`shove-outcome-examples.qnt`, leaving `shove-outcome.qnt` as the
+generator-facing semantic core.
 
 ### Task 32 - A32-STAT-BLOCK-CONTROLS-READINESS - Assess stat block controls generator readiness
 
