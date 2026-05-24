@@ -423,6 +423,10 @@ Scope:
   Damage Type, object-target support, Cantrip Upgrade or higher-slot attack
   counts, and the next required sequence step without importing authored Spell
   Definition records;
+- spell turn-hook facts live in `spell-turn-hook-core.qnt`; they project
+  turn-start Temporary Hit Points, once-per-turn reset, one-round Shield expiry,
+  and timed duration ticking without importing authored Spell Definition
+  records;
 - Readied Spell Response holds only action-time spell profiles as a readied
   spell held effect, expends the spell's casting resources at the hold
   boundary, starts Concentration while held, opens QCORE8's Readied Spell

@@ -19,6 +19,7 @@ module spellProcedureProfilesExamples {
   import spellDamageRiderProjectionCore.* from "./spell-damage-rider-projection-core"
   import spellChainedAttackDamageProjectionCore.* from "./spell-chained-attack-damage-projection-core"
   import spellIndependentAttackSequenceCore.* from "./spell-independent-attack-sequence-core"
+  import spellTurnHookCore.* from "./spell-turn-hook-core"
   import spellProcedureProfiles.* from "./spell-procedure-profiles"
 
   run test_magic_missile_profile_spends_slot_and_allocates_darts = {

@@ -256,25 +256,6 @@ module spellProcedureProfiles {
     }
   }
 
-  pure def turnStartTemporaryHitPoints(
-    existingTemporaryHitPoints: int,
-    grantedTemporaryHitPoints: int
-  ): int =
-    if (existingTemporaryHitPoints > grantedTemporaryHitPoints)
-      existingTemporaryHitPoints
-    else
-      grantedTemporaryHitPoints
-
-  pure def oncePerTurnSpellEffectUsedAtTurnStart: bool = false
-
-  pure def oneRoundShieldArmorClassBonusExpiresAtStartOfNextTurn: bool = true
-
-  pure def timedSpellEffectDurationAfterRoundTick(durationTicks: int): int =
-    durationTicks - 1
-
-  pure def timedSpellEffectRemainsActive(durationTicks: int): bool =
-    durationTicks > 0
-
   pure def rayOfFrostMaximumBaseDamageDice: int = 4
 
   pure def magicMissileDirectDamageFacts(

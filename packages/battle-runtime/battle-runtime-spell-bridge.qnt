@@ -13,6 +13,7 @@ module battleRuntimeSpellBridge {
   import spellDamageRiderProjectionCore.* from "../shared-algebras/proofs/rule-core/spell-damage-rider-projection-core"
   import spellChainedAttackDamageProjectionCore.* from "../shared-algebras/proofs/rule-core/spell-chained-attack-damage-projection-core"
   import spellIndependentAttackSequenceCore.* from "../shared-algebras/proofs/rule-core/spell-independent-attack-sequence-core"
+  import spellTurnHookCore.* from "../shared-algebras/proofs/rule-core/spell-turn-hook-core"
   import spellProcedureProfiles.* from "../shared-algebras/proofs/rule-core/spell-procedure-profiles"
 
   type BattleRuntimeDirectHitPointRestorationProfile =
