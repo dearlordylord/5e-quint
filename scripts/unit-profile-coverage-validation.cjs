@@ -22,6 +22,114 @@ function isRecord(value) {
   return value != null && typeof value === "object" && !Array.isArray(value);
 }
 
+function isNonEmptyString(value) {
+  return typeof value === "string" && value.length > 0;
+}
+
+const unitEvidenceRowFields = new Set(["unitId", "evidence"]);
+const unitEvidenceFields = new Set(["tag", "taskId", "ownerPath"]);
+const selectedIdentityEvidenceDispositionFields = new Set([
+  "tag",
+  "owner",
+  "reason",
+]);
+const selectedIdentityNonApplicableDispositionTag = "not-applicable";
+
+function unexpectedFieldIssues(value, allowedFields, context) {
+  return Object.keys(value)
+    .filter((field) => !allowedFields.has(field))
+    .map(
+      (field) =>
+        `${context} must not include unsupported field ${field}; Unit evidence rows have no optional fields.`,
+    );
+}
+
+function unitEvidenceRowSchemaIssues(row, index) {
+  const context = `Unit evidence row ${index + 1}`;
+  const issues = [];
+  if (!isRecord(row)) {
+    return [`${context} must be an object.`];
+  }
+  issues.push(...unexpectedFieldIssues(row, unitEvidenceRowFields, context));
+  if (!isNonEmptyString(row.unitId)) {
+    issues.push(`${context}.unitId must be a non-empty string.`);
+  }
+  if (!isRecord(row.evidence)) {
+    issues.push(`${context}.evidence must be an object.`);
+    return issues;
+  }
+  issues.push(
+    ...unexpectedFieldIssues(
+      row.evidence,
+      unitEvidenceFields,
+      `${context}.evidence`,
+    ),
+  );
+  for (const field of unitEvidenceFields) {
+    if (!isNonEmptyString(row.evidence[field])) {
+      issues.push(`${context}.evidence.${field} must be a non-empty string.`);
+    }
+  }
+  return issues;
+}
+
+function selectedIdentityEvidenceDispositionIssues(unitId, disposition) {
+  if (disposition === undefined) return [];
+  const context = `Unit ${unitId} selectedIdentityEvidenceDisposition`;
+  const issues = [];
+  if (!isRecord(disposition)) {
+    return [`${context} must be an object.`];
+  }
+  for (const field of Object.keys(disposition).filter(
+    (field) => !selectedIdentityEvidenceDispositionFields.has(field),
+  )) {
+    issues.push(`${context} must not include unsupported field ${field}.`);
+  }
+  if (disposition.tag !== selectedIdentityNonApplicableDispositionTag) {
+    issues.push(
+      `${context}.tag must be ${selectedIdentityNonApplicableDispositionTag}.`,
+    );
+  }
+  for (const field of ["owner", "reason"]) {
+    if (!isNonEmptyString(disposition[field])) {
+      issues.push(`${context}.${field} must be a non-empty string.`);
+    }
+  }
+  return issues;
+}
+
+function hasSelectedIdentityNonApplicableDisposition(claim) {
+  const disposition = claim?.claim?.selectedIdentityEvidenceDisposition;
+  return (
+    isRecord(disposition) &&
+    disposition.tag === selectedIdentityNonApplicableDispositionTag &&
+    isNonEmptyString(disposition.owner) &&
+    isNonEmptyString(disposition.reason)
+  );
+}
+
+function isUsableUnitEvidenceRow(row) {
+  return (
+    isRecord(row) &&
+    isRecord(row.evidence) &&
+    isNonEmptyString(row.unitId) &&
+    isNonEmptyString(row.evidence.tag) &&
+    isNonEmptyString(row.evidence.taskId) &&
+    isNonEmptyString(row.evidence.ownerPath)
+  );
+}
+
+function repoRelativePathIssue(ownerPath, context) {
+  if (
+    path.isAbsolute(ownerPath) ||
+    ownerPath.includes("\\") ||
+    ownerPath.split("/").includes("..")
+  ) {
+    return `${context} ownerPath must be a repo-relative source path.`;
+  }
+  return undefined;
+}
+
 function battleReadinessClosureIssues(unitId, closure, context) {
   const issues = [];
   if (!isRecord(closure)) {
@@ -297,6 +405,21 @@ function validateUnitClaims(claims, inventory, authoredSurfaceUnits, profiles) {
       );
       continue;
     }
+    issues.push(
+      ...selectedIdentityEvidenceDispositionIssues(
+        claim.unitId,
+        claim.claim.selectedIdentityEvidenceDisposition,
+      ),
+    );
+    if (
+      claim.claim.selectedIdentityEvidenceDisposition !== undefined &&
+      claim.claim.tag !== "supported-profile" &&
+      claim.claim.tag !== "profile-subset-supported"
+    ) {
+      issues.push(
+        `Unit ${claim.unitId} selectedIdentityEvidenceDisposition requires a supported-profile or profile-subset-supported claim.`,
+      );
+    }
     if (
       claim.claim.tag === "supported-profile" ||
       claim.claim.tag === "profile-subset-supported"
@@ -419,14 +542,24 @@ function validateUnitEvidence(
   evidenceRows,
   unitClaims,
   scannedUnitEvidence,
+  claimableUnits,
 ) {
   const issues = [];
+  const claimableUnitsById = new Map(
+    claimableUnits.map((unit) => [unit.unitId, unit]),
+  );
   const claimsByUnit = new Map(
     unitClaims.map((claim) => [claim.unitId, claim]),
   );
   const seen = new Set();
 
-  for (const row of evidenceRows) {
+  for (const [index, row] of evidenceRows.entries()) {
+    const rowSchemaIssues = unitEvidenceRowSchemaIssues(row, index);
+    issues.push(...rowSchemaIssues);
+    if (rowSchemaIssues.length > 0) {
+      continue;
+    }
+
     const rowKey = `${row.unitId}\u0000${row.evidence?.tag}\u0000${row.evidence?.ownerPath}`;
     if (seen.has(rowKey)) {
       issues.push(
@@ -435,9 +568,15 @@ function validateUnitEvidence(
     }
     seen.add(rowKey);
 
+    if (!claimableUnitsById.has(row.unitId)) {
+      issues.push(`Unit evidence references unknown Unit id ${row.unitId}.`);
+      continue;
+    }
     const claim = claimsByUnit.get(row.unitId);
     if (claim === undefined) {
-      issues.push(`Unit evidence references unknown Unit claim ${row.unitId}.`);
+      issues.push(
+        `Unit evidence for ${row.unitId} has no profile disposition claim.`,
+      );
       continue;
     }
     if (
@@ -456,17 +595,21 @@ function validateUnitEvidence(
       );
       continue;
     }
-    if (
-      typeof row.evidence.taskId !== "string" ||
-      row.evidence.taskId.length === 0
-    ) {
-      issues.push(`Unit evidence for ${row.unitId} requires taskId.`);
+    const ownerPathIssue = repoRelativePathIssue(
+      row.evidence.ownerPath,
+      `Unit evidence for ${row.unitId}`,
+    );
+    if (ownerPathIssue !== undefined) {
+      issues.push(ownerPathIssue);
+      continue;
     }
     if (
-      typeof row.evidence.ownerPath !== "string" ||
-      row.evidence.ownerPath.length === 0
+      row.evidence.tag === selectedIdentityMbtEvidenceTag &&
+      !row.evidence.ownerPath.endsWith(".mbt.test.ts")
     ) {
-      issues.push(`Unit evidence for ${row.unitId} requires ownerPath.`);
+      issues.push(
+        `Selected identity MBT evidence for ${row.unitId} ownerPath must be a repo-relative .mbt.test.ts source test path.`,
+      );
       continue;
     }
     if (!fs.existsSync(path.join(root, row.evidence.ownerPath))) {
@@ -584,8 +727,11 @@ function validateOwnerClaims(
 ) {
   const issues = [];
   const profileIds = new Set(profiles.map((profile) => profile.id));
+  const usableUnitEvidenceRows = unitEvidenceRows.filter(
+    isUsableUnitEvidenceRow,
+  );
   const unitEvidenceRowsByMarker = new Set(
-    unitEvidenceRows.map((row) =>
+    usableUnitEvidenceRows.map((row) =>
       unitEvidenceRowKey(
         row.evidence?.ownerPath,
         row.evidence?.tag,
@@ -595,7 +741,7 @@ function validateOwnerClaims(
     ),
   );
   const selectedUnitEvidenceRowsByMarker = new Set(
-    unitEvidenceRows
+    usableUnitEvidenceRows
       .filter((row) => row.evidence?.tag === selectedIdentityMbtEvidenceTag)
       .map((row) =>
         unitEvidenceRowKey(
@@ -933,6 +1079,40 @@ function taskClaimIncludesProfile(taskClaims, taskId, profileId) {
   );
 }
 
+function validateSelectedIdentityHardGate({
+  inventory,
+  unitClaims,
+  unitEvidence,
+}) {
+  const selectedIdentityEvidenceUnitIds = new Set(
+    unitEvidence
+      .filter((row) => row.evidence?.tag === selectedIdentityMbtEvidenceTag)
+      .map((row) => row.unitId),
+  );
+  const claimsByUnitId = new Map(
+    unitClaims.map((claim) => [claim.unitId, claim]),
+  );
+  const issues = [];
+
+  for (const unit of inventory) {
+    if (unit.executableMechanics !== true) continue;
+    const claim = claimsByUnitId.get(unit.unitId);
+    if (
+      claim?.claim?.tag !== "supported-profile" &&
+      claim?.claim?.tag !== "profile-subset-supported"
+    ) {
+      continue;
+    }
+    if (selectedIdentityEvidenceUnitIds.has(unit.unitId)) continue;
+    if (hasSelectedIdentityNonApplicableDisposition(claim)) continue;
+    issues.push(
+      `Supported executable Unit ${unit.unitId} has no ${selectedIdentityMbtEvidenceTag} evidence and no selectedIdentityEvidenceDisposition not-applicable classification.`,
+    );
+  }
+
+  return issues;
+}
+
 function validateCoverageInputs({
   root,
   collections,
@@ -943,8 +1123,8 @@ function validateCoverageInputs({
   taskClaims,
   authoredSurfaceUnits,
   scannedClaims,
-}) {
-  return [
+}, options = {}) {
+  const issues = [
     ...rulesKernelProfileKindClassificationIssues(),
     ...validateCollections(collections.collections, inventory),
     ...validateProfiles(profiles),
@@ -954,7 +1134,10 @@ function validateCoverageInputs({
       authoredSurfaceUnits,
       profiles,
     ),
-    ...validateUnitEvidence(root, unitEvidence, unitClaims, scannedClaims),
+    ...validateUnitEvidence(root, unitEvidence, unitClaims, scannedClaims, [
+      ...inventory,
+      ...authoredSurfaceUnits,
+    ]),
     ...validateOwnerClaims(
       profiles,
       taskClaims,
@@ -963,6 +1146,16 @@ function validateCoverageInputs({
       unitEvidence,
     ),
   ];
+  if (options.selectedIdentityHardGate === true) {
+    issues.push(
+      ...validateSelectedIdentityHardGate({
+        inventory,
+        unitClaims,
+        unitEvidence,
+      }),
+    );
+  }
+  return issues;
 }
 
 module.exports = {

@@ -13,24 +13,114 @@ identity evidence or an explicit non-applicable classification.
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    { "number": 1, "id": "B1-SELECTED-IDENTITY-GAP-REPORT", "status": "ready-for-research", "title": "Generate selected-identity gap report" },
-    { "number": 2, "id": "B2-EVIDENCE-SCHEMA-CHECK", "status": "ready-for-implementation-after-light-research", "title": "Tighten selected-identity evidence validation" },
-    { "number": 3, "id": "B3-HARD-GATE-SELF-TEST", "status": "ready-for-implementation-after-light-research", "title": "Add hard-gate self-test for missing identity evidence" },
-    { "number": 4, "id": "B4-CLASS-FEATURE-IDENTITY-BATCH-1", "status": "ready-for-implementation-after-light-research", "title": "Backfill class-feature identity evidence batch 1" },
-    { "number": 5, "id": "B5-CLASS-FEATURE-IDENTITY-BATCH-2", "status": "ready-for-implementation-after-light-research", "title": "Backfill class-feature identity evidence batch 2" },
-    { "number": 6, "id": "B6-CLASS-FEATURE-IDENTITY-BATCH-3", "status": "ready-for-implementation-after-light-research", "title": "Backfill class-feature identity evidence batch 3" },
-    { "number": 7, "id": "B7-FEAT-IDENTITY-BATCH", "status": "ready-for-implementation-after-light-research", "title": "Backfill feat identity evidence" },
-    { "number": 8, "id": "B8-LEVEL1-SPELL-IDENTITY-BATCH", "status": "ready-for-implementation-after-light-research", "title": "Backfill level-1 spell identity evidence" },
-    { "number": 9, "id": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH", "status": "ready-for-implementation-after-light-research", "title": "Backfill level-2 damage spell identity evidence" },
-    { "number": 10, "id": "B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH", "status": "ready-for-implementation-after-light-research", "title": "Backfill level-2 control spell identity evidence" },
-    { "number": 11, "id": "B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH", "status": "ready-for-implementation-after-light-research", "title": "Backfill level-2 mobility spell identity evidence" },
-    { "number": 12, "id": "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH", "status": "ready-for-implementation-after-light-research", "title": "Backfill level-2 protection spell identity evidence" },
-    { "number": 13, "id": "B13-PROFILE-SUBSET-IDENTITY-DISPOSITIONS", "status": "ready-for-implementation-after-light-research", "title": "Classify subset-supported identity expectations" },
-    { "number": 14, "id": "B14-FULL-SUPPORT-REPORT-PROJECTION", "status": "blocked", "title": "Project selected-identity gate into full-support reports" },
-    { "number": 15, "id": "B15-UNIT-REPORT-HONESTY-PASS", "status": "blocked", "title": "Refresh Unit report wording and metrics" },
-    { "number": 16, "id": "B16-MCP-SCENARIO-IDENTITY-SMOKE", "status": "blocked", "title": "Add MCP selected-identity smoke coverage" },
-    { "number": 17, "id": "B17-END-TO-END-UNIT-VERIFICATION", "status": "blocked", "title": "Run and document lane B verification" },
-    { "number": 18, "id": "B18-RECURSIVE-NEXT-BATCH", "status": "blocked", "title": "Mine next selected-identity batch" }
+    {
+      "number": 1,
+      "id": "B1-SELECTED-IDENTITY-GAP-REPORT",
+      "status": "done",
+      "title": "Generate selected-identity gap report"
+    },
+    {
+      "number": 2,
+      "id": "B2-EVIDENCE-SCHEMA-CHECK",
+      "status": "done",
+      "title": "Tighten selected-identity evidence validation"
+    },
+    {
+      "number": 3,
+      "id": "B3-HARD-GATE-SELF-TEST",
+      "status": "done",
+      "title": "Add hard-gate self-test for missing identity evidence"
+    },
+    {
+      "number": 4,
+      "id": "B4-CLASS-FEATURE-IDENTITY-BATCH-1",
+      "status": "done",
+      "title": "Backfill class-feature identity evidence batch 1"
+    },
+    {
+      "number": 5,
+      "id": "B5-CLASS-FEATURE-IDENTITY-BATCH-2",
+      "status": "done",
+      "title": "Backfill class-feature identity evidence batch 2"
+    },
+    {
+      "number": 6,
+      "id": "B6-CLASS-FEATURE-IDENTITY-BATCH-3",
+      "status": "done",
+      "title": "Backfill class-feature identity evidence batch 3"
+    },
+    {
+      "number": 7,
+      "id": "B7-FEAT-IDENTITY-BATCH",
+      "status": "done",
+      "title": "Backfill feat identity evidence"
+    },
+    {
+      "number": 8,
+      "id": "B8-LEVEL1-SPELL-IDENTITY-BATCH",
+      "status": "done",
+      "title": "Backfill level-1 spell identity evidence"
+    },
+    {
+      "number": 9,
+      "id": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Backfill level-2 damage spell identity evidence"
+    },
+    {
+      "number": 10,
+      "id": "B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Backfill level-2 control spell identity evidence"
+    },
+    {
+      "number": 11,
+      "id": "B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Backfill level-2 mobility spell identity evidence"
+    },
+    {
+      "number": 12,
+      "id": "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Backfill level-2 protection spell identity evidence"
+    },
+    {
+      "number": 13,
+      "id": "B13-PROFILE-SUBSET-IDENTITY-DISPOSITIONS",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Classify subset-supported identity expectations"
+    },
+    {
+      "number": 14,
+      "id": "B14-FULL-SUPPORT-REPORT-PROJECTION",
+      "status": "blocked",
+      "title": "Project selected-identity gate into full-support reports"
+    },
+    {
+      "number": 15,
+      "id": "B15-UNIT-REPORT-HONESTY-PASS",
+      "status": "blocked",
+      "title": "Refresh Unit report wording and metrics"
+    },
+    {
+      "number": 16,
+      "id": "B16-MCP-SCENARIO-IDENTITY-SMOKE",
+      "status": "blocked",
+      "title": "Add MCP selected-identity smoke coverage"
+    },
+    {
+      "number": 17,
+      "id": "B17-END-TO-END-UNIT-VERIFICATION",
+      "status": "blocked",
+      "title": "Run and document lane B verification"
+    },
+    {
+      "number": 18,
+      "id": "B18-RECURSIVE-NEXT-BATCH",
+      "status": "blocked",
+      "title": "Mine next selected-identity batch"
+    }
   ]
 }
 -->
@@ -64,14 +154,14 @@ Lane B must not:
 
 | # | Task | Status | Depends | Notes |
 |---:|---|---|---|---|
-| 1 | B1-SELECTED-IDENTITY-GAP-REPORT - Generate selected-identity gap report | ready-for-research | none | Compute current missing list from generated matrix. |
-| 2 | B2-EVIDENCE-SCHEMA-CHECK - Tighten selected-identity evidence validation | ready-for-implementation-after-light-research | none | Validate rows before hard gate. |
-| 3 | B3-HARD-GATE-SELF-TEST - Add hard-gate self-test for missing identity evidence | ready-for-implementation-after-light-research | none | Prove checker can fail. |
-| 4 | B4-CLASS-FEATURE-IDENTITY-BATCH-1 - Backfill class-feature identity evidence batch 1 | ready-for-implementation-after-light-research | none | Barbarian/Bard/Cleric/Druid. |
-| 5 | B5-CLASS-FEATURE-IDENTITY-BATCH-2 - Backfill class-feature identity evidence batch 2 | ready-for-implementation-after-light-research | none | Monk/Ranger/Paladin. |
-| 6 | B6-CLASS-FEATURE-IDENTITY-BATCH-3 - Backfill class-feature identity evidence batch 3 | ready-for-implementation-after-light-research | none | Sorcerer/Warlock/Wizard. |
-| 7 | B7-FEAT-IDENTITY-BATCH - Backfill feat identity evidence | ready-for-implementation-after-light-research | none | Alert and Origin feat reachability. |
-| 8 | B8-LEVEL1-SPELL-IDENTITY-BATCH - Backfill level-1 spell identity evidence | ready-for-implementation-after-light-research | none | Any remaining level-1 supported spell ids. |
+| 1 | B1-SELECTED-IDENTITY-GAP-REPORT - Generate selected-identity gap report | done | none | Generated matrix view `selectedIdentityReplayGaps` and `UNIT_REPORT.md` table. |
+| 2 | B2-EVIDENCE-SCHEMA-CHECK - Tighten selected-identity evidence validation | done | none | Validate rows before hard gate. |
+| 3 | B3-HARD-GATE-SELF-TEST - Add hard-gate self-test for missing identity evidence | done | none | Proves checker can fail on missing selected-identity evidence. |
+| 4 | B4-CLASS-FEATURE-IDENTITY-BATCH-1 - Backfill class-feature identity evidence batch 1 | done | none | Barbarian/Bard/Cleric/Druid. |
+| 5 | B5-CLASS-FEATURE-IDENTITY-BATCH-2 - Backfill class-feature identity evidence batch 2 | done | none | Monk/Ranger/Paladin. |
+| 6 | B6-CLASS-FEATURE-IDENTITY-BATCH-3 - Backfill class-feature identity evidence batch 3 | done | none | Sorcerer/Warlock/Wizard. |
+| 7 | B7-FEAT-IDENTITY-BATCH - Backfill feat identity evidence | done | none | Alert and Origin feat reachability. |
+| 8 | B8-LEVEL1-SPELL-IDENTITY-BATCH - Backfill level-1 spell identity evidence | done | none | Remaining level-1 supported spell id was already covered by `light` selected-identity evidence. |
 | 9 | B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH - Backfill level-2 damage spell identity evidence | ready-for-implementation-after-light-research | none | Damage/attack spells. |
 | 10 | B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH - Backfill level-2 control spell identity evidence | ready-for-implementation-after-light-research | none | Control/condition spells. |
 | 11 | B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH - Backfill level-2 mobility spell identity evidence | ready-for-implementation-after-light-research | none | Mobility/position spells. |
@@ -87,7 +177,7 @@ Lane B must not:
 
 ### Task 1 - B1-SELECTED-IDENTITY-GAP-REPORT - Generate selected-identity gap report
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: add a generated or checker-owned view that lists supported and
 profile-subset-supported Units lacking selected-identity evidence. Use it to
@@ -95,9 +185,12 @@ drive later tasks. Do not hand-maintain the list in prose.
 
 Acceptance: `pnpm unit-profile-coverage:check -- --write` and check pass.
 
+Result: `unit-matrix.json` owns the `selectedIdentityReplayGaps` view, and
+`UNIT_REPORT.md` renders it as "Selected Identity Replay Gaps".
+
 ### Task 2 - B2-EVIDENCE-SCHEMA-CHECK - Tighten selected-identity evidence validation
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: validate selected-identity evidence rows for real Unit ids, real source
 test paths, and recognized evidence tags. Missing optional fields must not have
@@ -107,7 +200,7 @@ Acceptance: checker self-test covers malformed rows.
 
 ### Task 3 - B3-HARD-GATE-SELF-TEST - Add hard-gate self-test for missing identity evidence
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: add a self-test fixture proving the checker fails when a supported
 executable Unit has neither selected-identity evidence nor an explicit
@@ -115,9 +208,13 @@ non-applicable disposition.
 
 Acceptance: `pnpm unit-profile-coverage:check:self-test` passes.
 
+Result: checker self-test covers a supported executable Unit with missing
+`selected-identity-mbt` evidence and accepts the explicit
+`selectedIdentityEvidenceDisposition: not-applicable` classification.
+
 ### Task 4 - B4-CLASS-FEATURE-IDENTITY-BATCH-1 - Backfill class-feature identity evidence batch 1
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: cover Barbarian, Bard, Cleric, and Druid supported class-feature Units
 currently missing selected identity evidence. Prefer existing focused runtime
@@ -125,9 +222,14 @@ tests; add narrow tests only when no real reachability witness exists.
 
 Acceptance: gap report count decreases and no new runtime behavior is invented.
 
+Result: selected-identity evidence now covers `barbarian_danger_sense`,
+`bard_expertise`, `bard_jack_of_all_trades`, `cleric_channel_divinity`,
+`cleric_life_domain_spells`, `druid_circle_of_the_land_spells`,
+`druid_wild_companion`, and `druid_wild_shape`.
+
 ### Task 5 - B5-CLASS-FEATURE-IDENTITY-BATCH-2 - Backfill class-feature identity evidence batch 2
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: cover Monk, Ranger, and Paladin supported class-feature Units currently
 missing selected identity evidence.
@@ -135,9 +237,15 @@ missing selected identity evidence.
 Acceptance: gap report count decreases; profile-subset rows keep explicit
 subset rationale.
 
+Result: selected-identity evidence now covers `monk_monks_focus`,
+`monk_unarmored_movement`, `monk_uncanny_metabolism`,
+`paladin_fighting_style`, `paladin_oath_of_devotion_spells`,
+`paladin_paladins_smite`, `ranger_deft_explorer`, `ranger_favored_enemy`, and
+`ranger_fighting_style`.
+
 ### Task 6 - B6-CLASS-FEATURE-IDENTITY-BATCH-3 - Backfill class-feature identity evidence batch 3
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: cover Sorcerer, Warlock, and Wizard supported class-feature Units
 currently missing selected identity evidence.
@@ -145,9 +253,14 @@ currently missing selected identity evidence.
 Acceptance: gap report count decreases; spell-slot/access state is not
 duplicated.
 
+Result: selected-identity evidence now covers `sorcerer_draconic_spells`,
+`sorcerer_font_of_magic`, `sorcerer_metamagic`, `warlock_fiend_spells`,
+`warlock_magical_cunning`, `warlock_pact_magic`, `wizard_evocation_savant`,
+and `wizard_scholar`.
+
 ### Task 7 - B7-FEAT-IDENTITY-BATCH - Backfill feat identity evidence
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: cover Alert and SRD Origin feat reachability through catalog admission,
 character creation, and any runtime handoff they already own.
@@ -155,14 +268,21 @@ character creation, and any runtime handoff they already own.
 Acceptance: evidence proves identity reaches the typed owner; no runtime code
 branches on authored feat id for mechanics.
 
+Result: selected-identity evidence now covers `alert` through SRD Origin feat
+selection, Character Creation build refs, and the existing Character Battle
+Initiative Proficiency handoff.
+
 ### Task 8 - B8-LEVEL1-SPELL-IDENTITY-BATCH - Backfill level-1 spell identity evidence
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: cover any remaining level-1 supported spell Units in the selected
 identity gap report.
 
 Acceptance: no level-1 supported spell remains missing identity evidence.
+
+Result: no remaining level-1 supported spell Unit is missing selected-identity
+evidence; `light` is covered by the existing level-1 spatial witness replay.
 
 ### Task 9 - B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH - Backfill level-2 damage spell identity evidence
 

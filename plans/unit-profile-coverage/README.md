@@ -55,8 +55,11 @@ and `verification-owner:runtime-test`.
 
 `unit-evidence.jsonl` records concrete Unit identity evidence. The evidence row
 does not restate profile ids; the checker derives those from `unit-claims.jsonl`
-so profile classification stays single-source. Evidence owners must also carry
-a matching marker:
+so profile classification stays single-source. Rows use exactly `unitId` plus
+`evidence.tag`, `evidence.taskId`, and `evidence.ownerPath`; there are no
+optional evidence fields. Evidence owner paths are repo-relative source paths;
+`selected-identity-mbt` owners must be `.mbt.test.ts` source tests. Evidence
+owners must also carry a matching marker:
 
 ```text
 UNIT-IDENTITY-EVIDENCE marker fields:

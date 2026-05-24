@@ -1,3 +1,5 @@
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B6-CLASS-FEATURE-IDENTITY-BATCH-3 warlock_magical_cunning
+// UNIT-IDENTITY-MBT-REPLAY: B6-CLASS-FEATURE-IDENTITY-BATCH-3 warlock_magical_cunning doMagicalCunningRecoversPactSlots doRejectMagicalCunningWithoutExpendedPactSlots
 // KERNEL-COVERAGE: parity-witness SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS
 import * as path from "node:path";
 
@@ -87,6 +89,18 @@ const driverSchema = {
   doRejectArcaneRecoveryPactSlotRefund: {},
   step: {},
 } as const;
+type SlotDriverAction = Exclude<keyof typeof driverSchema, "init" | "step">;
+type SelectedUnitIdentityReplaySequence = {
+  readonly name: string;
+  readonly actions: readonly SlotDriverAction[];
+  readonly expected: SlotProjection;
+};
+type SelectedUnitIdentityReplay = {
+  readonly taskId: "B6-CLASS-FEATURE-IDENTITY-BATCH-3";
+  readonly unitId: "warlock_magical_cunning";
+  readonly actions: readonly SlotDriverAction[];
+  readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
+};
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -100,7 +114,63 @@ const unitLibrary = unitCatalogResult.catalog;
 
 const slotStateCheck = stateCheck(normalizeSlotQuintState, compareSlotState);
 
+const selectedUnitIdentityReplays = [
+  {
+    taskId: "B6-CLASS-FEATURE-IDENTITY-BATCH-3",
+    unitId: "warlock_magical_cunning",
+    actions: [
+      "doMagicalCunningRecoversPactSlots",
+      "doRejectMagicalCunningWithoutExpendedPactSlots",
+    ],
+    sequences: [
+      {
+        name: "selected-warlock-magical-cunning-recovers-pact-slots",
+        actions: ["doMagicalCunningRecoversPactSlots"],
+        expected: magicalCunningRecoversPactSlotsProjection(),
+      },
+      {
+        name: "selected-warlock-magical-cunning-rejects-fresh-pact-slots",
+        actions: ["doRejectMagicalCunningWithoutExpendedPactSlots"],
+        expected: rejectMagicalCunningWithoutExpendedPactSlotsProjection(),
+      },
+    ],
+  },
+] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
+
 describe("Character Sheet Spell Slot/Pact Slot deterministic QNT replay", () => {
+  it("replays selected Unit identities deterministically", async () => {
+    for (const replay of selectedUnitIdentityReplays) {
+      const replayedActions = new Set<SlotDriverAction>();
+
+      for (const sequence of replay.sequences) {
+        const driver = createSlotDriver()();
+
+        for (const actionName of sequence.actions) {
+          replayedActions.add(actionName);
+          const action = driver.actions[actionName];
+          if (action === undefined) {
+            throw new Error(
+              `Missing Character Sheet Spell Slot/Pact Slot action ${actionName}.`,
+            );
+          }
+          await action.handler({});
+        }
+
+        const runtime = driver.getState?.();
+        if (runtime === undefined) {
+          throw new Error(
+            "Character Sheet Spell Slot/Pact Slot driver must expose getState.",
+          );
+        }
+        expect(runtime, `${replay.unitId}:${sequence.name}`).toEqual(
+          sequence.expected,
+        );
+      }
+
+      expect(replayedActions).toEqual(new Set(replay.actions));
+    }
+  });
+
   it("replays slot capacity, current state, rest outcomes, and feature recovery", async () => {
     await run({
       spec: path.resolve(

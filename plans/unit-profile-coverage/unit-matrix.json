@@ -108,8 +108,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 142,
-      "numerator": 109,
-      "percent": "76.8%"
+      "numerator": 121,
+      "percent": "85.2%"
     },
     "supportedProfileCoverage": {
       "denominator": 210,
@@ -9195,6 +9195,579 @@
       ]
     }
   },
+  "selectedIdentityReplayGaps": {
+    "criteria": {
+      "claimTags": [
+        "profile-subset-supported",
+        "supported-profile"
+      ],
+      "evidenceTag": "selected-identity-mbt"
+    },
+    "rowCount": 43,
+    "rows": [
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/aid.json",
+        "support": {
+          "profileIds": [
+            "spell.scalar-buff"
+          ],
+          "tag": "supported-profile"
+        },
+        "unitId": "aid"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/alter_self.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-self-transformation-mode"
+          ],
+          "tag": "supported-profile"
+        },
+        "unitId": "alter_self"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/antimagic_field.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-antimagic-field-ongoing-spell-suppression"
+          ],
+          "tag": "profile-subset-supported"
+        },
+        "unitId": "antimagic_field"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/barkskin.json",
+        "support": {
+          "profileIds": [
+            "spell.scalar-buff"
+          ],
+          "tag": "supported-profile"
+        },
+        "unitId": "barkskin"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/blur.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-blur-attack-roll-defense"
+          ],
+          "tag": "supported-profile"
+        },
+        "unitId": "blur"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/calm_emotions.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-save-gated-condition-immunity"
+          ],
+          "tag": "profile-subset-supported"
+        },
+        "unitId": "calm_emotions"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/charm_person.json",
+        "support": {
+          "profileIds": [
+            "spell.creature-type-protection-and-charm"
+          ],
+          "tag": "profile-subset-supported"
+        },
+        "unitId": "charm_person"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/continual_flame.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-object-light"
+          ],
+          "tag": "profile-subset-supported"
+        },
+        "unitId": "continual_flame"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/counterspell.json",
+        "support": {
+          "profileIds": [
+            "spell.reaction-counterspell"
+          ],
+          "tag": "supported-profile"
+        },
+        "unitId": "counterspell"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/darkness.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-magical-darkness-point-origin"
+          ],
+          "tag": "profile-subset-supported"
+        },
+        "unitId": "darkness"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/dispel_magic.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-ongoing-spell-ending"
+          ],
+          "tag": "profile-subset-supported"
+        },
+        "unitId": "dispel_magic"
+      },
+      {
+        "catalogAdmissionStatus": "not-in-unit-catalog",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/dragons_breath.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-dragons-breath-initial",
+            "spell.invocation-dragons-breath-granted-action"
+          ],
+          "tag": "supported-profile"
+        },
+        "unitId": "dragons_breath"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/enhance_ability.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-roll-modifier"
+          ],
+          "tag": "profile-subset-supported"
+        },
+        "unitId": "enhance_ability"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/enlarge_reduce.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-creature-size-change"
+          ],
+          "tag": "profile-subset-supported"
+        },
+        "unitId": "enlarge_reduce"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/enthrall.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-roll-modifier"
+          ],
+          "tag": "profile-subset-supported"
+        },
+        "unitId": "enthrall"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/find_familiar.json",
+        "support": {
+          "profileIds": [
+            "spell.find-familiar-lifecycle"
+          ],
+          "tag": "profile-subset-supported"
+        },
+        "unitId": "find_familiar"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/fireball.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-damage-save-or-attack"
+          ],
+          "tag": "profile-subset-supported"
+        },
+        "unitId": "fireball"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/flame_blade.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-spell-created-held-object"
+          ],
+          "tag": "supported-profile"
+        },
+        "unitId": "flame_blade"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/flaming_sphere.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-flaming-sphere-hazard-ram"
+          ],
+          "tag": "supported-profile"
+        },
+        "unitId": "flaming_sphere"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/fly.json",
+        "support": {
+          "profileIds": [
+            "spell.scalar-buff"
+          ],
+          "tag": "profile-subset-supported"
+        },
+        "unitId": "fly"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/gust_of_wind.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-gust-of-wind-line"
+          ],
+          "tag": "profile-subset-supported"
+        },
+        "unitId": "gust_of_wind"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/heat_metal.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-object-contact-damage"
+          ],
+          "tag": "supported-profile"
+        },
+        "unitId": "heat_metal"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/invisibility.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-direct-condition"
+          ],
+          "tag": "supported-profile"
+        },
+        "unitId": "invisibility"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/levitate.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-levitated-creature"
+          ],
+          "tag": "profile-subset-supported"
+        },
+        "unitId": "levitate"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/lightning_bolt.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-damage-save-or-attack"
+          ],
+          "tag": "supported-profile"
+        },
+        "unitId": "lightning_bolt"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/magic_weapon.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-magic-weapon-enhancement"
+          ],
+          "tag": "supported-profile"
+        },
+        "unitId": "magic_weapon"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/mind_spike.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-damage-save-or-attack"
+          ],
+          "tag": "profile-subset-supported"
+        },
+        "unitId": "mind_spike"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/mirror_image.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-mirror-image-hit-interception"
+          ],
+          "tag": "supported-profile"
+        },
+        "unitId": "mirror_image"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/misty_step.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-self-teleport"
+          ],
+          "tag": "supported-profile"
+        },
+        "unitId": "misty_step"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/moonbeam.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-moonbeam-movable-zone"
+          ],
+          "tag": "profile-subset-supported"
+        },
+        "unitId": "moonbeam"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/pass_without_trace.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-roll-modifier"
+          ],
+          "tag": "profile-subset-supported"
+        },
+        "unitId": "pass_without_trace"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/prayer_of_healing.json",
+        "support": {
+          "profileIds": [
+            "character-sheet.spell-rest-benefit-application"
+          ],
+          "tag": "profile-subset-supported"
+        },
+        "unitId": "prayer_of_healing"
+      },
+      {
+        "catalogAdmissionStatus": "not-in-unit-catalog",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/ray_of_enfeeblement.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-ray-of-enfeeblement-d20-lifecycle",
+            "spell.invocation-ray-of-enfeeblement-damage-penalty"
+          ],
+          "tag": "supported-profile"
+        },
+        "unitId": "ray_of_enfeeblement"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/scorching_ray.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-independent-attack-sequence"
+          ],
+          "tag": "supported-profile"
+        },
+        "unitId": "scorching_ray"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/see_invisibility.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-see-invisible-observer-sight"
+          ],
+          "tag": "supported-profile"
+        },
+        "unitId": "see_invisibility"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/shatter.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-damage-save-or-attack"
+          ],
+          "tag": "supported-profile"
+        },
+        "unitId": "shatter"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/shining_smite.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-after-hit-damage-illumination"
+          ],
+          "tag": "supported-profile"
+        },
+        "unitId": "shining_smite"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/spider_climb.json",
+        "support": {
+          "profileIds": [
+            "spell.scalar-buff"
+          ],
+          "tag": "supported-profile"
+        },
+        "unitId": "spider_climb"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/spike_growth.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-spike-growth-movement-hazard"
+          ],
+          "tag": "profile-subset-supported"
+        },
+        "unitId": "spike_growth"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/spiritual_weapon.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-spiritual-weapon-attack-proxy"
+          ],
+          "tag": "supported-profile"
+        },
+        "unitId": "spiritual_weapon"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/thaumaturgy.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-self-ability-check-advantage"
+          ],
+          "tag": "profile-subset-supported"
+        },
+        "unitId": "thaumaturgy"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/warding_bond.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-warding-bond-linked-effect"
+          ],
+          "tag": "supported-profile"
+        },
+        "unitId": "warding_bond"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "sourceRecordPath": "packages/surface/content/web.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-web-restraint-hazard"
+          ],
+          "tag": "supported-profile"
+        },
+        "unitId": "web"
+      }
+    ]
+  },
   "taskClaims": [
     {
       "claimKind": "qnt-proof",
@@ -13153,6 +13726,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-danger-sense.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-CLASS-BARBARIAN-DANGER-SENSE"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/danger-sense-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B4-CLASS-FEATURE-IDENTITY-BATCH-1"
         }
       ],
       "executableMechanics": true,
@@ -13560,6 +14138,11 @@
           "ownerPath": "packages/character-creation-runtime/src/bard-expertise.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-AUTHOR-BARD-EXPERTISE"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B4-CLASS-FEATURE-IDENTITY-BATCH-1"
         }
       ],
       "executableMechanics": true,
@@ -13613,6 +14196,11 @@
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-CLASS-BARD-JACK-OF-ALL-TRADES"
+        },
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B4-CLASS-FEATURE-IDENTITY-BATCH-1"
         }
       ],
       "executableMechanics": true,
@@ -13668,6 +14256,11 @@
           "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B4-CLASS-FEATURE-IDENTITY-BATCH-1"
         }
       ],
       "executableMechanics": true,
@@ -13789,7 +14382,13 @@
         "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B4-CLASS-FEATURE-IDENTITY-BATCH-1"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
       "profiles": [
@@ -13847,6 +14446,11 @@
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-FOLLOWUP-DRUID-CIRCLE-LAND-SPELL-ACCESS"
+        },
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B4-CLASS-FEATURE-IDENTITY-BATCH-1"
         }
       ],
       "executableMechanics": true,
@@ -14018,6 +14622,11 @@
           "ownerPath": "packages/battle-runtime/src/battle-runtime-druid-wild-shape.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B4-CLASS-FEATURE-IDENTITY-BATCH-1"
         }
       ],
       "executableMechanics": true,
@@ -14153,7 +14762,13 @@
         "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B4-CLASS-FEATURE-IDENTITY-BATCH-1"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
       "profiles": [
@@ -14309,6 +14924,11 @@
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B5-CLASS-FEATURE-IDENTITY-BATCH-2"
         },
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
@@ -14509,6 +15129,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-AUTHOR-MONK-UNARMORED-MOVEMENT"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B5-CLASS-FEATURE-IDENTITY-BATCH-2"
         }
       ],
       "executableMechanics": true,
@@ -14575,6 +15200,11 @@
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B5-CLASS-FEATURE-IDENTITY-BATCH-2"
         },
         {
           "ownerPath": "packages/character-battle-runtime/src/index.test.ts",
@@ -14744,6 +15374,11 @@
           "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-AUTHOR-RANGER-FIGHTING-STYLE"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B5-CLASS-FEATURE-IDENTITY-BATCH-2"
         }
       ],
       "executableMechanics": true,
@@ -14810,6 +15445,11 @@
           "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV87C"
+        },
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B5-CLASS-FEATURE-IDENTITY-BATCH-2"
         }
       ],
       "executableMechanics": true,
@@ -14895,6 +15535,11 @@
           "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-AUTHOR-RANGER-FIGHTING-STYLE"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B5-CLASS-FEATURE-IDENTITY-BATCH-2"
         }
       ],
       "executableMechanics": true,
@@ -15398,6 +16043,11 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
+          "ownerPath": "packages/character-creation-runtime/src/class-feature-projections.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B6-CLASS-FEATURE-IDENTITY-BATCH-3"
+        },
+        {
           "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS"
@@ -15616,6 +16266,11 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
+          "ownerPath": "packages/character-creation-runtime/src/class-feature-projections.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B6-CLASS-FEATURE-IDENTITY-BATCH-3"
+        },
+        {
           "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS"
@@ -15785,7 +16440,13 @@
         "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B6-CLASS-FEATURE-IDENTITY-BATCH-3"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
       "profiles": [
@@ -15930,6 +16591,11 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
+          "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B6-CLASS-FEATURE-IDENTITY-BATCH-3"
+        },
+        {
           "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12FS-WARLOCK-PACT-MAGIC-RETAINED-GRANT"
@@ -15981,6 +16647,11 @@
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B6-CLASS-FEATURE-IDENTITY-BATCH-3"
+        },
         {
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
@@ -16046,7 +16717,13 @@
         "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B6-CLASS-FEATURE-IDENTITY-BATCH-3"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
       "profiles": [
@@ -16201,6 +16878,11 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
+          "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B6-CLASS-FEATURE-IDENTITY-BATCH-3"
+        },
+        {
           "ownerPath": "packages/character-creation-runtime/src/wizard-scholar.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-CLASS-WIZARD-SCHOLAR"
@@ -16264,6 +16946,11 @@
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B6-CLASS-FEATURE-IDENTITY-BATCH-3"
+        },
         {
           "ownerPath": "packages/character-creation-runtime/src/wizard-scholar.test.ts",
           "tag": "deterministic-admission-projection",
@@ -16532,6 +17219,11 @@
           "ownerPath": "packages/character-battle-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/character-battle-runtime/src/origin-feat-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B7-FEAT-IDENTITY-BATCH"
         }
       ],
       "executableMechanics": true,
@@ -16767,6 +17459,11 @@
           "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-CLASS-PALADIN-FIGHTING-STYLE"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B5-CLASS-FEATURE-IDENTITY-BATCH-2"
         }
       ],
       "executableMechanics": true,
@@ -16841,6 +17538,11 @@
           "ownerPath": "packages/battle-runtime/src/battle-runtime-favored-enemy.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-CLASS-PALADINS-SMITE"
+        },
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B5-CLASS-FEATURE-IDENTITY-BATCH-2"
         }
       ],
       "executableMechanics": true,
@@ -16907,7 +17609,13 @@
         "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B5-CLASS-FEATURE-IDENTITY-BATCH-2"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
       "profiles": [

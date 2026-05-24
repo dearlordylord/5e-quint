@@ -42,6 +42,9 @@ const {
 const root = process.env.UNIT_PROFILE_COVERAGE_ROOT ?? process.cwd();
 const write = process.argv.includes("--write");
 const selfTest = process.argv.includes("--self-test");
+const selectedIdentityHardGate = process.argv.includes(
+  "--selected-identity-hard-gate",
+);
 const paths = coveragePaths(root);
 
 function main() {
@@ -74,17 +77,20 @@ function main() {
     sharedAlgebraOwnerEvidence,
   });
   const scannedClaims = scanClaimFiles(root);
-  const issues = validateCoverageInputs({
-    root,
-    collections,
-    inventory,
-    authoredSurfaceUnits,
-    profiles,
-    unitClaims,
-    unitEvidence,
-    taskClaims,
-    scannedClaims,
-  });
+  const issues = validateCoverageInputs(
+    {
+      root,
+      collections,
+      inventory,
+      authoredSurfaceUnits,
+      profiles,
+      unitClaims,
+      unitEvidence,
+      taskClaims,
+      scannedClaims,
+    },
+    { selectedIdentityHardGate },
+  );
   issues.push(
     ...buildKernelCoverage({ root }).issues.map(
       (issue) => `rules-kernel: ${issue}`,

@@ -1,9 +1,11 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt movement-forced-movement dissonant_whispers command expeditious_retreat ranger_roving barbarian_fast_movement
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B5-CLASS-FEATURE-IDENTITY-BATCH-2 monk_unarmored_movement
 // UNIT-IDENTITY-MBT-REPLAY: movement-forced-movement dissonant_whispers doDissonantWhispersForcedReactionMovement
 // UNIT-IDENTITY-MBT-REPLAY: movement-forced-movement command doCommandFleeTargetTurn
 // UNIT-IDENTITY-MBT-REPLAY: movement-forced-movement expeditious_retreat doExpeditiousRetreatImmediateDash
 // UNIT-IDENTITY-MBT-REPLAY: movement-forced-movement ranger_roving doRangerRovingClimbSwimMovement
 // UNIT-IDENTITY-MBT-REPLAY: movement-forced-movement barbarian_fast_movement doBarbarianFastMovementDash
+// UNIT-IDENTITY-MBT-REPLAY: B5-CLASS-FEATURE-IDENTITY-BATCH-2 monk_unarmored_movement doMonkUnarmoredMovementDash
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE
 import * as path from "node:path";
 
@@ -59,6 +61,7 @@ const movementForcedMovementSelectedIdentityDriverSchema = {
   doExpeditiousRetreatImmediateDash: {},
   doRangerRovingClimbSwimMovement: {},
   doBarbarianFastMovementDash: {},
+  doMonkUnarmoredMovementDash: {},
   step: {},
 } as const;
 type MovementForcedMovementSelectedIdentityDriverAction = Exclude<
@@ -76,6 +79,7 @@ type MovementForcedMovementSpellId =
 const movementForcedMovementFeatureIds = [
   "ranger_roving",
   "barbarian_fast_movement",
+  "monk_unarmored_movement",
 ] as const;
 type MovementForcedMovementFeatureId =
   (typeof movementForcedMovementFeatureIds)[number];
@@ -107,7 +111,8 @@ type MovementForcedMovementSelectedIdentityProjection = {
     | "commandFlee"
     | "expeditiousRetreat"
     | "rangerRoving"
-    | "barbarianFastMovement";
+    | "barbarianFastMovement"
+    | "monkUnarmoredMovement";
 };
 type SelectedUnitIdentityReplaySequence = {
   readonly name: string;
@@ -115,7 +120,9 @@ type SelectedUnitIdentityReplaySequence = {
   readonly expected: MovementForcedMovementSelectedIdentityProjection;
 };
 type SelectedUnitIdentityReplay = {
-  readonly taskId: "movement-forced-movement";
+  readonly taskId:
+    | "movement-forced-movement"
+    | "B5-CLASS-FEATURE-IDENTITY-BATCH-2";
   readonly unitId: MovementForcedMovementUnitId;
   readonly actions: readonly MovementForcedMovementSelectedIdentityDriverAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
@@ -250,6 +257,24 @@ const selectedUnitIdentityReplays = [
           casterDashBonusFeet: 40,
           level1SlotsRemaining: 0,
           lastResult: "barbarianFastMovement",
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "B5-CLASS-FEATURE-IDENTITY-BATCH-2",
+    unitId: "monk_unarmored_movement",
+    actions: ["doMonkUnarmoredMovementDash"],
+    sequences: [
+      {
+        name: "passive-unarmored-movement-increases-dash-movement-budget",
+        actions: ["doMonkUnarmoredMovementDash"],
+        expected: expectedProjection({
+          casterSpeedFeet: 40,
+          casterRemainingFeet: 80,
+          casterDashBonusFeet: 40,
+          level1SlotsRemaining: 0,
+          lastResult: "monkUnarmoredMovement",
         }),
       },
     ],
@@ -401,6 +426,13 @@ function createMovementForcedMovementSelectedIdentityDriver() {
           recordResolvedResult(
             resolveBarbarianFastMovementDash(state),
             "barbarianFastMovement",
+          );
+        },
+        doMonkUnarmoredMovementDash: () => {
+          state = monkUnarmoredMovementBattle();
+          recordResolvedResult(
+            resolveMonkUnarmoredMovementDash(state),
+            "monkUnarmoredMovement",
           );
         },
         step: () => {},
@@ -607,6 +639,21 @@ function resolveBarbarianFastMovementDash(
   });
 }
 
+function resolveMonkUnarmoredMovementDash(
+  state: BattleState,
+): BattleResolutionResult {
+  return resolveBattleSubject({
+    state,
+    subject: {
+      tag: "action",
+      actorId: casterId,
+      action: "dash",
+      speedKind: "walk",
+    },
+    fills: [],
+  });
+}
+
 function movementForcedMovementSpellBattle(
   input: {
     readonly sourceClassName?: "bard" | "cleric" | "wizard";
@@ -649,6 +696,17 @@ function fastMovementBattle(): BattleState {
       displayName: "Fast Barbarian",
       characterUnitRefs: [featureBattleUnitRef("barbarian_fast_movement")],
       classLevels: [{ className: "barbarian", level: 5 }],
+    },
+  });
+}
+
+function monkUnarmoredMovementBattle(): BattleState {
+  return movementForcedMovementBattle({
+    battleName: "monk-unarmored-movement",
+    caster: {
+      displayName: "Unarmored Monk",
+      characterUnitRefs: [featureBattleUnitRef("monk_unarmored_movement")],
+      classLevels: [{ className: "monk", level: 2 }],
     },
   });
 }
@@ -1225,7 +1283,8 @@ function mbtLastResult(
     raw === "commandFlee" ||
     raw === "expeditiousRetreat" ||
     raw === "rangerRoving" ||
-    raw === "barbarianFastMovement"
+    raw === "barbarianFastMovement" ||
+    raw === "monkUnarmoredMovement"
   ) {
     return raw;
   }

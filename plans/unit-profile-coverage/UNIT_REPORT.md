@@ -26,7 +26,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Rules-kernel covered profile coverage | 127/132 | 96.2% |
 | Supported Unit rules-kernel chain coverage | 143/144 | 99.3% |
 | Deterministic admission/projection coverage | 142/142 | 100% |
-| Selected identity replay coverage | 109/142 | 76.8% |
+| Selected identity replay coverage | 121/142 | 85.2% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -986,14 +986,21 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `barbarian_rage` | `unit-feature.bonus-action-ongoing-rage` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `barbarian_unarmored_defense` | `character-sheet.armor-class-base-formula` | armor-class-base-formula | `packages/character-sheet-runtime/src/armor-class-base-selected-identity.mbt.test.ts` |
 | `barbarian_reckless_attack` | `unit-feature.first-attack-roll-reckless-advantage` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `barbarian_danger_sense` | `unit-feature.passive-saving-throw-roll-mode` | B4-CLASS-FEATURE-IDENTITY-BATCH-1 | `packages/battle-runtime/src/danger-sense-selected-identity.mbt.test.ts` |
 | `barbarian_fast_movement` | `unit-feature.passive-speed-bonus` | movement-forced-movement | `packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts` |
 | `bard_bardic_inspiration` | `unit-feature.bardic-inspiration-grant`, `unit-feature.bardic-inspiration-failed-d20-test` | L1D2-BARDIC-INSPIRATION-SCALING | `packages/battle-runtime/src/bardic-inspiration-selected-identity.mbt.test.ts` |
 | `bard_cutting_words` | `unit-feature.reaction-roll-or-damage-reduction` | reaction-interruption | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `bard_jack_of_all_trades` | `character-sheet.ability-check-proficiency-bonus` | B4-CLASS-FEATURE-IDENTITY-BATCH-1 | `packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts` |
+| `cleric_channel_divinity` | `character-creation.class-feature-resource-projection` | B4-CLASS-FEATURE-IDENTITY-BATCH-1 | `packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts` |
 | `cleric_divine_order` | `character-creation.class-feature-option-projection` | L1D2-CLERIC-DRUID-ORDER | `packages/character-creation-runtime/src/cleric-druid-order-selected-identity.mbt.test.ts` |
+| `druid_circle_of_the_land_spells` | `character-sheet.druid-circle-land-spell-access` | B4-CLASS-FEATURE-IDENTITY-BATCH-1 | `packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts` |
 | `druid_primal_order` | `character-creation.class-feature-option-projection` | L1D2-CLERIC-DRUID-ORDER | `packages/character-creation-runtime/src/cleric-druid-order-selected-identity.mbt.test.ts` |
 | `monk_martial_arts` | `unit-feature.martial-arts-attack-projection` | L1D2-MONK-MARTIAL-ARTS-SCALING | `packages/battle-runtime/src/monk-martial-arts-selected-identity.mbt.test.ts` |
 | `monk_unarmored_defense` | `character-sheet.armor-class-base-formula` | armor-class-base-formula | `packages/character-sheet-runtime/src/armor-class-base-selected-identity.mbt.test.ts` |
+| `monk_unarmored_movement` | `unit-feature.passive-speed-bonus` | B5-CLASS-FEATURE-IDENTITY-BATCH-2 | `packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts` |
+| `monk_uncanny_metabolism` | `character-creation.class-feature-source-fact-projection`, `character-sheet.class-feature-long-rest-use-state`, `character-sheet.monk-uncanny-metabolism-initiative-recovery` | B5-CLASS-FEATURE-IDENTITY-BATCH-2 | `packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts` |
 | `monk_deflect_attacks` | `unit-feature.attack-damage-reduction-zero-damage-redirect` | reaction-interruption | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `ranger_deft_explorer` | `character-creation.skill-expertise-choice` | B5-CLASS-FEATURE-IDENTITY-BATCH-2 | `packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts` |
 | `rogue_cunning_action` | `unit-feature.alternate-action-cost` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `rogue_evasion` | `unit-feature.save-damage-replacement` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `rogue_uncanny_dodge` | `unit-feature.reaction-roll-or-damage-reduction` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
@@ -1001,13 +1008,18 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `rogue_sneak_attack` | `unit-feature.attack-damage-rider` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `sorcerer_innate_sorcery` | `unit-feature.innate-sorcery-activation` | L1D2-SORCERER-INNATE-SORCERY | `packages/battle-runtime/src/feature-selected-identity.mbt.test.ts` |
 | `warlock_eldritch_invocations` | `character-creation.eldritch-invocation-choice`, `character-creation.warlock-pact-magic-advancement` | L1D2-WARLOCK-ELDRITCH-INVOCATIONS | `packages/character-creation-runtime/src/warlock-eldritch-invocations-selected-identity.mbt.test.ts` |
+| `warlock_pact_magic` | `character-creation.warlock-pact-magic-advancement` | B6-CLASS-FEATURE-IDENTITY-BATCH-3 | `packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts` |
+| `warlock_magical_cunning` | `character-sheet.pact-slot-recovery` | B6-CLASS-FEATURE-IDENTITY-BATCH-3 | `packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts` |
 | `wizard_ritual_adept` | `character-sheet.spellbook-ritual-invocation` | spellbook-ritual-invocation | `packages/character-sheet-runtime/src/spellbook-ritual-selected-identity.mbt.test.ts` |
 | `wizard_arcane_recovery` | `character-sheet.short-rest-spell-slot-recovery` | short-rest-spell-slot-recovery | `packages/character-sheet-runtime/src/arcane-recovery-selected-identity.mbt.test.ts` |
+| `wizard_scholar` | `character-creation.skill-expertise-choice` | B6-CLASS-FEATURE-IDENTITY-BATCH-3 | `packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts` |
 | `feat_archery` | `unit-feature.passive-ranged-attack-roll-bonus` | passive-and-zero-hp-features | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `feat_boon_of_combat_prowess` | `unit-feature.attack-roll-miss-to-hit-replacement` | L1H-BOON-COMBAT-PROWESS | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `defense` | `unit-feature.passive-armor-class-bonus` | passive-and-zero-hp-features | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `alert` | `unit-feature.initiative-proficiency-and-swap` | B7-FEAT-IDENTITY-BATCH | `packages/character-battle-runtime/src/origin-feat-selected-identity.mbt.test.ts` |
 | `feat_savage_attacker` | `unit-feature.weapon-damage-dice-roll-choice` | QMBT31 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `paladin_lay_on_hands` | `character-sheet.healing-resource-action` | healing-stabilization | `packages/character-sheet-runtime/src/healing-resource-selected-identity.mbt.test.ts` |
+| `paladin_paladins_smite` | `spell.invocation-after-hit-damage` | B5-CLASS-FEATURE-IDENTITY-BATCH-2 | `packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts` |
 | `paladin_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | extra-attack-count-scaling | `packages/battle-runtime/src/battle-runtime.mbt.test.ts` |
 | `paladin_weapon_mastery` | `character-creation.weapon-mastery-choice`, `character-sheet.weapon-mastery-reselection` | L1D2-WEAPON-MASTERY-CONTAINERS | `packages/character-creation-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts` |
 | `paladin_weapon_mastery` | `character-creation.weapon-mastery-choice`, `character-sheet.weapon-mastery-reselection` | L1D2-WEAPON-MASTERY-CONTAINERS | `packages/character-sheet-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts` |
@@ -1089,6 +1101,56 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `hold_person` | `spell.invocation-condition-save` | condition-saving-throw-lifecycle | `packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts` |
 | `mycelium_step` | `unit-feature.alternate-action-cost` | L1H-MYCELIUM-STEP | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `mycelium_step` | `unit-feature.alternate-action-cost` | L1D2-MYCELIUM-STEP | `packages/battle-runtime/src/mycelium-step-feature-selected-identity.mbt.test.ts` |
+
+## Selected Identity Replay Gaps
+
+This generated view lists `profile-subset-supported` and `supported-profile` Units that have no `selected-identity-mbt` evidence row.
+
+| Unit | Claim | Catalog | Collection | Kind | Profiles | Source |
+| --- | --- | --- | --- | --- | --- | --- |
+| `aid` | supported-profile | installed | srd-5.2.1 | spell | `spell.scalar-buff` | `packages/surface/content/aid.json` |
+| `alter_self` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-self-transformation-mode` | `packages/surface/content/alter_self.json` |
+| `antimagic_field` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-antimagic-field-ongoing-spell-suppression` | `packages/surface/content/antimagic_field.json` |
+| `barkskin` | supported-profile | installed | srd-5.2.1 | spell | `spell.scalar-buff` | `packages/surface/content/barkskin.json` |
+| `blur` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-blur-attack-roll-defense` | `packages/surface/content/blur.json` |
+| `calm_emotions` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-save-gated-condition-immunity` | `packages/surface/content/calm_emotions.json` |
+| `charm_person` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.creature-type-protection-and-charm` | `packages/surface/content/charm_person.json` |
+| `continual_flame` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-object-light` | `packages/surface/content/continual_flame.json` |
+| `counterspell` | supported-profile | installed | srd-5.2.1 | spell | `spell.reaction-counterspell` | `packages/surface/content/counterspell.json` |
+| `darkness` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-magical-darkness-point-origin` | `packages/surface/content/darkness.json` |
+| `dispel_magic` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-ongoing-spell-ending` | `packages/surface/content/dispel_magic.json` |
+| `dragons_breath` | supported-profile | not-in-unit-catalog | srd-5.2.1 | spell | `spell.invocation-dragons-breath-initial`, `spell.invocation-dragons-breath-granted-action` | `packages/surface/content/dragons_breath.json` |
+| `enhance_ability` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-roll-modifier` | `packages/surface/content/enhance_ability.json` |
+| `enlarge_reduce` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-creature-size-change` | `packages/surface/content/enlarge_reduce.json` |
+| `enthrall` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-roll-modifier` | `packages/surface/content/enthrall.json` |
+| `find_familiar` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.find-familiar-lifecycle` | `packages/surface/content/find_familiar.json` |
+| `fireball` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-damage-save-or-attack` | `packages/surface/content/fireball.json` |
+| `flame_blade` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-spell-created-held-object` | `packages/surface/content/flame_blade.json` |
+| `flaming_sphere` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-flaming-sphere-hazard-ram` | `packages/surface/content/flaming_sphere.json` |
+| `fly` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.scalar-buff` | `packages/surface/content/fly.json` |
+| `gust_of_wind` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-gust-of-wind-line` | `packages/surface/content/gust_of_wind.json` |
+| `heat_metal` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-object-contact-damage` | `packages/surface/content/heat_metal.json` |
+| `invisibility` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-direct-condition` | `packages/surface/content/invisibility.json` |
+| `levitate` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-levitated-creature` | `packages/surface/content/levitate.json` |
+| `lightning_bolt` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-damage-save-or-attack` | `packages/surface/content/lightning_bolt.json` |
+| `magic_weapon` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-magic-weapon-enhancement` | `packages/surface/content/magic_weapon.json` |
+| `mind_spike` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-damage-save-or-attack` | `packages/surface/content/mind_spike.json` |
+| `mirror_image` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-mirror-image-hit-interception` | `packages/surface/content/mirror_image.json` |
+| `misty_step` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-self-teleport` | `packages/surface/content/misty_step.json` |
+| `moonbeam` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-moonbeam-movable-zone` | `packages/surface/content/moonbeam.json` |
+| `pass_without_trace` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-roll-modifier` | `packages/surface/content/pass_without_trace.json` |
+| `prayer_of_healing` | profile-subset-supported | installed | srd-5.2.1 | spell | `character-sheet.spell-rest-benefit-application` | `packages/surface/content/prayer_of_healing.json` |
+| `ray_of_enfeeblement` | supported-profile | not-in-unit-catalog | srd-5.2.1 | spell | `spell.invocation-ray-of-enfeeblement-d20-lifecycle`, `spell.invocation-ray-of-enfeeblement-damage-penalty` | `packages/surface/content/ray_of_enfeeblement.json` |
+| `scorching_ray` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-independent-attack-sequence` | `packages/surface/content/scorching_ray.json` |
+| `see_invisibility` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-see-invisible-observer-sight` | `packages/surface/content/see_invisibility.json` |
+| `shatter` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-damage-save-or-attack` | `packages/surface/content/shatter.json` |
+| `shining_smite` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-after-hit-damage-illumination` | `packages/surface/content/shining_smite.json` |
+| `spider_climb` | supported-profile | installed | srd-5.2.1 | spell | `spell.scalar-buff` | `packages/surface/content/spider_climb.json` |
+| `spike_growth` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-spike-growth-movement-hazard` | `packages/surface/content/spike_growth.json` |
+| `spiritual_weapon` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-spiritual-weapon-attack-proxy` | `packages/surface/content/spiritual_weapon.json` |
+| `thaumaturgy` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-self-ability-check-advantage` | `packages/surface/content/thaumaturgy.json` |
+| `warding_bond` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-warding-bond-linked-effect` | `packages/surface/content/warding_bond.json` |
+| `web` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-web-restraint-hazard` | `packages/surface/content/web.json` |
 
 ## Unsupported And Widening Pressure
 
