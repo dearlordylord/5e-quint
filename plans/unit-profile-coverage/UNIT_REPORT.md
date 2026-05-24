@@ -26,7 +26,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Rules-kernel covered profile coverage | 127/132 | 96.2% |
 | Supported Unit rules-kernel chain coverage | 143/144 | 99.3% |
 | Deterministic admission/projection coverage | 142/142 | 100% |
-| Selected identity replay coverage | 141/142 | 99.3% |
+| Selected identity replay coverage | 142/142 | 100% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -59,7 +59,7 @@ Background, feat, spell, and class-feature groups are counted from installed Uni
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | Background Units | 4 | 0 | 0 | 0 | 4 | 0 | 0/0 | 0 |
 | Feat Units | 8 | 8 | 5 | 0 | 3 | 5 | 5/5 | 0 |
-| Spell Units | 124 | 124 | 86 | 20 | 18 | 127 | 104/106 | 2 |
+| Spell Units | 124 | 124 | 86 | 20 | 18 | 127 | 105/106 | 1 |
 | Class-feature Units | 63 | 63 | 45 | 16 | 2 | 85 | 61/61 | 0 |
 
 | Denominator | Rule |
@@ -1128,6 +1128,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `shield_of_faith` | `spell.scalar-buff` | roll-modifier-buff | `packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts` |
 | `shatter` | `spell.invocation-damage-save-or-attack` | B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH | `packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts` |
 | `shillelagh` | `spell.invocation-weapon-attack-override` | L1E-SHILLELAGH | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
+| `shining_smite` | `spell.invocation-after-hit-damage-illumination` | B25-SHINING-SMITE-IDENTITY-WITNESS | `packages/battle-runtime/src/shining-smite-selected-identity.mbt.test.ts` |
 | `sleep` | `spell.invocation-sleep-target-admission`, `spell.invocation-sleep-repeat-save-lifecycle` | condition-saving-throw-lifecycle | `packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts` |
 | `spider_climb` | `spell.scalar-buff` | B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH | `packages/battle-runtime/src/level2-mobility-spell-selected-identity.mbt.test.ts` |
 | `spiritual_weapon` | `spell.invocation-spiritual-weapon-attack-proxy` | B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH | `packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts` |
@@ -1149,7 +1150,6 @@ This generated view lists `profile-subset-supported` and `supported-profile` Uni
 | Unit | Claim | Selected identity | Catalog | Collection | Kind | Profiles | Source |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `mind_spike` | profile-subset-supported | missing-witness-deferred-not-applicable | installed | srd-5.2.1 | spell | `spell.invocation-damage-save-or-attack` | `packages/surface/content/mind_spike.json` |
-| `shining_smite` | supported-profile | missing-witness | installed | srd-5.2.1 | spell | `spell.invocation-after-hit-damage-illumination` | `packages/surface/content/shining_smite.json` |
 
 ## Unsupported And Widening Pressure
 

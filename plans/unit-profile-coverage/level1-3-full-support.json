@@ -1,7 +1,7 @@
 {
   "claimGate": {
     "authoredReadinessBlockerCount": 0,
-    "selectedIdentityBlockerCount": 2,
+    "selectedIdentityBlockerCount": 1,
     "status": "blocked",
     "strictTargetOpenCount": 0
   },
@@ -9328,33 +9328,23 @@
         "sourceRecordPath": "packages/surface/content/mind_spike.json",
         "status": "closed-runtime-detached-table-adjudication",
         "unitId": "mind_spike"
-      },
-      {
-        "claimTag": "supported-profile",
-        "reason": "The Unit has no selected-identity-mbt evidence.",
-        "selectedIdentityStatus": "missing-witness",
-        "sourceRecordPath": "packages/surface/content/shining_smite.json",
-        "status": "supported-profile",
-        "unitId": "shining_smite"
       }
     ],
     "blockingRowsByStatus": {
-      "missing-witness": 1,
       "missing-witness-deferred-not-applicable": 1
     },
     "metrics": {
       "denominator": 152,
-      "numerator": 150,
-      "percent": "98.7%"
+      "numerator": 151,
+      "percent": "99.3%"
     },
     "readyRowsByStatus": {
-      "witness-present": 150
+      "witness-present": 151
     },
     "rowsByStatus": {
-      "missing-witness": 1,
       "missing-witness-deferred-not-applicable": 1,
       "not-required": 30,
-      "witness-present": 150
+      "witness-present": 151
     }
   },
   "sourceArtifacts": {

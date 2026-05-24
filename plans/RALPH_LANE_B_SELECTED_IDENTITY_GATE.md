@@ -178,7 +178,7 @@ identity evidence or an explicit non-applicable classification.
     {
       "number": 28,
       "id": "B25-SHINING-SMITE-IDENTITY-WITNESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Backfill Shining Smite selected identity witness"
     },
     {
@@ -289,7 +289,7 @@ Lane B must not:
 | 25 | B22-FIND-FAMILIAR-IDENTITY-WITNESS - Backfill Find Familiar selected identity witness | done | none | Added focused selected-identity MBT evidence for `find_familiar`; generated selected-identity gaps no longer list it. |
 | 26 | B23-FIREBALL-IDENTITY-WITNESS - Backfill Fireball selected identity witness | done | none | Gap row: `fireball`, profile-subset-supported `spell.invocation-damage-save-or-attack`, installed Surface record. |
 | 27 | B24-LIGHTNING-BOLT-IDENTITY-WITNESS - Backfill Lightning Bolt selected identity witness | done | none | Gap row: `lightning_bolt`, supported-profile `spell.invocation-damage-save-or-attack`, installed Surface record. |
-| 28 | B25-SHINING-SMITE-IDENTITY-WITNESS - Backfill Shining Smite selected identity witness | ready-for-research | none | Gap row: `shining_smite`, supported-profile `spell.invocation-after-hit-damage-illumination`, installed Surface record. |
+| 28 | B25-SHINING-SMITE-IDENTITY-WITNESS - Backfill Shining Smite selected identity witness | done | none | Added selected-identity MBT evidence for `shining_smite`; generated selected-identity gaps no longer list it. |
 | 29 | B26-DEFERRED-IDENTITY-GAP-SEMANTICS - Clarify deferred selected identity gap semantics | ready-for-research | none | Gap rows: `mind_spike` and `thaumaturgy` have deferred-portion non-applicable dispositions but still appear as selected identity gaps; decide whether the generated view needs a separate deferred-visible bucket or whole-claim non-applicable classification. |
 | 30 | B27-CREATURE-SIZE-RULES-KERNEL-MAPPING - Map creature size change profile to rules-kernel obligations | ready-for-research | none | Metric-honesty gap: `spell.invocation-creature-size-change` is unmapped in `rulesKernelProfileJoin`. |
 | 31 | B28-WIZARD-SPELLBOOK-LEARNING-RULES-KERNEL-MAPPING - Map Wizard spellbook learning profile to rules-kernel obligations | ready-for-research | none | Metric-honesty gap: `character-creation.wizard-spellbook-learning-choice` is unmapped in `rulesKernelProfileJoin`. |
@@ -725,7 +725,7 @@ evidence tied to a focused or existing promoted runtime test.
 
 ### Task 28 - B25-SHINING-SMITE-IDENTITY-WITNESS - Backfill Shining Smite selected identity witness
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: prove selected `shining_smite` identity reaches the after-hit damage
 and illumination rider runtime entrypoint.
@@ -733,6 +733,12 @@ and illumination rider runtime entrypoint.
 Acceptance: `shining_smite` has checker-readable `selected-identity-mbt`
 evidence; no new smite reducer behavior is added unless a separate promoted
 runtime task owns it.
+
+Result: selected-identity evidence now covers `shining_smite` through
+`packages/battle-runtime/src/shining-smite-selected-identity.mbt.test.ts`, where
+the selected spell identity reaches the after-hit damage rider and illumination
+emitter runtime entrypoint. The generated selected-identity gap report no longer
+lists `shining_smite`.
 
 ### Task 29 - B26-DEFERRED-IDENTITY-GAP-SEMANTICS - Clarify deferred selected identity gap semantics
 

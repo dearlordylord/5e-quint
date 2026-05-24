@@ -108,8 +108,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 142,
-      "numerator": 141,
-      "percent": "99.3%"
+      "numerator": 142,
+      "percent": "100%"
     },
     "supportedProfileCoverage": {
       "denominator": 210,
@@ -9243,7 +9243,7 @@
       ],
       "evidenceTag": "selected-identity-mbt"
     },
-    "rowCount": 2,
+    "rowCount": 1,
     "rows": [
       {
         "catalogAdmissionStatus": "installed",
@@ -9262,23 +9262,6 @@
           "tag": "profile-subset-supported"
         },
         "unitId": "mind_spike"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-mbt evidence.",
-          "status": "missing-witness"
-        },
-        "sourceRecordPath": "packages/surface/content/shining_smite.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-after-hit-damage-illumination"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "shining_smite"
       }
     ]
   },
@@ -11947,8 +11930,8 @@
         "profileFactDenominator": 127,
         "profileSubsetSupportedUnits": 20,
         "selectedIdentityReplayDenominator": 106,
-        "selectedIdentityReplayGapUnits": 2,
-        "selectedIdentityReplayWitnessUnits": 104,
+        "selectedIdentityReplayGapUnits": 1,
+        "selectedIdentityReplayWitnessUnits": 105,
         "supportedProfileUnits": 86,
         "unsupportedOrOtherUnits": 18
       },
@@ -26157,6 +26140,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-SPELL-SHINING-SMITE"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/shining-smite-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B25-SHINING-SMITE-IDENTITY-WITNESS"
         }
       ],
       "executableMechanics": true,
