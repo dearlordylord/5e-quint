@@ -11972,6 +11972,81 @@
       "taskId": "L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME"
     }
   ],
+  "unitGroupDenominatorAudit": {
+    "criteria": {
+      "kinds": [
+        "background",
+        "feat",
+        "spell",
+        "class_feature"
+      ],
+      "profileClaimTags": [
+        "profile-subset-supported",
+        "supported-profile"
+      ],
+      "selectedIdentityEvidenceTag": "selected-identity-mbt"
+    },
+    "denominatorRules": {
+      "executableUnitDenominator": "installed Unit records in the group whose authored mechanics are executable",
+      "installedUnitDenominator": "installed Unit records in the group; each Unit identity counts once",
+      "profileFactDenominator": "sum of profileIds on supported-profile and profile-subset-supported Unit claims; one Unit can carry multiple profile facts",
+      "selectedIdentityReplayDenominator": "supported-profile and profile-subset-supported Unit identities in the group, excluding only whole-claim selected-identity not-applicable dispositions"
+    },
+    "rows": [
+      {
+        "executableUnitDenominator": 0,
+        "installedUnitDenominator": 4,
+        "kind": "background",
+        "label": "Background Units",
+        "profileFactDenominator": 0,
+        "profileSubsetSupportedUnits": 0,
+        "selectedIdentityReplayDenominator": 0,
+        "selectedIdentityReplayGapUnits": 0,
+        "selectedIdentityReplayWitnessUnits": 0,
+        "supportedProfileUnits": 0,
+        "unsupportedOrOtherUnits": 4
+      },
+      {
+        "executableUnitDenominator": 8,
+        "installedUnitDenominator": 8,
+        "kind": "feat",
+        "label": "Feat Units",
+        "profileFactDenominator": 5,
+        "profileSubsetSupportedUnits": 0,
+        "selectedIdentityReplayDenominator": 5,
+        "selectedIdentityReplayGapUnits": 0,
+        "selectedIdentityReplayWitnessUnits": 5,
+        "supportedProfileUnits": 5,
+        "unsupportedOrOtherUnits": 3
+      },
+      {
+        "executableUnitDenominator": 124,
+        "installedUnitDenominator": 124,
+        "kind": "spell",
+        "label": "Spell Units",
+        "profileFactDenominator": 127,
+        "profileSubsetSupportedUnits": 20,
+        "selectedIdentityReplayDenominator": 106,
+        "selectedIdentityReplayGapUnits": 9,
+        "selectedIdentityReplayWitnessUnits": 97,
+        "supportedProfileUnits": 86,
+        "unsupportedOrOtherUnits": 18
+      },
+      {
+        "executableUnitDenominator": 63,
+        "installedUnitDenominator": 63,
+        "kind": "class_feature",
+        "label": "Class-feature Units",
+        "profileFactDenominator": 85,
+        "profileSubsetSupportedUnits": 16,
+        "selectedIdentityReplayDenominator": 61,
+        "selectedIdentityReplayGapUnits": 0,
+        "selectedIdentityReplayWitnessUnits": 61,
+        "supportedProfileUnits": 45,
+        "unsupportedOrOtherUnits": 2
+      }
+    ]
+  },
   "units": [
     {
       "authoredSurfaceDuplicateIdCount": 1,

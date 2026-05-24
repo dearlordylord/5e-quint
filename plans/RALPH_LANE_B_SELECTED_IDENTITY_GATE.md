@@ -186,7 +186,7 @@ Lane B must not:
 | 12 | B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH - Backfill level-2 protection spell identity evidence | done | none | Protection/restoration/buff spells. |
 | 13 | B13-PROFILE-SUBSET-IDENTITY-DISPOSITIONS - Classify subset-supported identity expectations | done | none | Explicit non-applicable rows. |
 | 14 | B14-FULL-SUPPORT-REPORT-PROJECTION - Project selected-identity gate into full-support reports | done | B1-B13 | Report-level metric. |
-| 15 | B15-UNIT-REPORT-HONESTY-PASS - Refresh Unit report wording and metrics | ready-for-implementation-after-light-research | B14 | No inflated 100% language. |
+| 15 | B15-UNIT-REPORT-HONESTY-PASS - Refresh Unit report wording and metrics | done | B14 | Generated denominator audit for Unit/profile-fact group counts. |
 | 16 | B16-MCP-SCENARIO-IDENTITY-SMOKE - Add MCP selected-identity smoke coverage | ready-for-implementation-after-light-research | B14 | One narrow smoke scenario. |
 | 17 | B17-END-TO-END-UNIT-VERIFICATION - Run and document lane B verification | blocked | B15,B16 | Unit coverage and typecheck. |
 | 18 | B18-RECURSIVE-NEXT-BATCH - Mine next selected-identity batch | blocked | B17 | Must append >=12 tasks or prove exhaustion. |
@@ -399,12 +399,17 @@ SRD authored product readiness.
 
 ### Task 15 - B15-UNIT-REPORT-HONESTY-PASS - Refresh Unit report wording and metrics
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: revise `UNIT_REPORT.md` wording so background/feat/spell/class-feature
 groups are counted by Units and profile facts, not by arbitrary prose weight.
 
 Acceptance: generated report makes denominator semantics explicit.
+
+Result: `unit-matrix.json` now includes `unitGroupDenominatorAudit`, and
+`UNIT_REPORT.md` renders explicit background/feat/spell/class-feature
+denominators for installed Units, executable Units, supported/profile-subset
+Units, profile facts, and selected-identity replay witnesses.
 
 ### Task 16 - B16-MCP-SCENARIO-IDENTITY-SMOKE - Add MCP selected-identity smoke coverage
 

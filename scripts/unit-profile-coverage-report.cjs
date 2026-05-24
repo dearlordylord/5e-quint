@@ -21,6 +21,18 @@ const selectedIdentityStatus = Object.freeze({
   witnessPresent: "witness-present",
 });
 
+const unitGroupDenominatorAuditKinds = Object.freeze([
+  { kind: "background", label: "Background Units" },
+  { kind: "feat", label: "Feat Units" },
+  { kind: "spell", label: "Spell Units" },
+  { kind: "class_feature", label: "Class-feature Units" },
+]);
+
+const profileClaimTags = new Set([
+  "profile-subset-supported",
+  "supported-profile",
+]);
+
 function stable(value) {
   if (Array.isArray(value)) return value.map(stable);
   if (value && typeof value === "object") {
@@ -492,24 +504,16 @@ function assertCatalogAdmissionDisposition(disposition) {
 }
 
 function claimProfiles(claim, profileMap) {
-  if (
-    claim?.tag !== "supported-profile" &&
-    claim?.tag !== "profile-subset-supported"
-  ) {
+  if (!profileClaimTags.has(claim?.tag)) {
     return [];
   }
   return claim.profileIds.map((profileId) => profileMap.get(profileId));
 }
 
-const selectedIdentityReplayGapClaimTags = [
-  "profile-subset-supported",
-  "supported-profile",
-];
+const selectedIdentityReplayGapClaimTags = Array.from(profileClaimTags);
 
 function isSelectedIdentityReplayGapClaim(claim) {
-  return (
-    claim !== undefined && selectedIdentityReplayGapClaimTags.includes(claim.tag)
-  );
+  return claim !== undefined && profileClaimTags.has(claim.tag);
 }
 
 function selectedIdentityReplayGapSupport(claim) {
@@ -561,6 +565,75 @@ function buildSelectedIdentityReplayGapReport({
       claimTags: selectedIdentityReplayGapClaimTags,
     },
     rowCount: rows.length,
+    rows,
+  });
+}
+
+function buildUnitGroupDenominatorAudit({
+  selectedIdentityMbtEvidenceTag,
+  units,
+}) {
+  const installedUnits = units.filter(
+    (unit) => unit.catalogAdmission?.status === "installed",
+  );
+  const rows = unitGroupDenominatorAuditKinds.map(({ kind, label }) => {
+    const groupUnits = installedUnits.filter((unit) => unit.kind === kind);
+    const profileClaimUnits = groupUnits.filter((unit) =>
+      profileClaimTags.has(unit.claim?.tag),
+    );
+    const selectedIdentityScopedUnits = profileClaimUnits.filter(
+      (unit) =>
+        selectedIdentityEvidenceStatus(unit, selectedIdentityMbtEvidenceTag)
+          .status !== selectedIdentityStatus.notApplicable,
+    );
+    const selectedIdentityWitnessUnits = selectedIdentityScopedUnits.filter(
+      (unit) =>
+        selectedIdentityEvidenceStatus(unit, selectedIdentityMbtEvidenceTag)
+          .status === selectedIdentityStatus.witnessPresent,
+    );
+    return {
+      kind,
+      label,
+      installedUnitDenominator: groupUnits.length,
+      executableUnitDenominator: groupUnits.filter(
+        (unit) => unit.executableMechanics,
+      ).length,
+      supportedProfileUnits: groupUnits.filter(
+        (unit) => unit.claim?.tag === "supported-profile",
+      ).length,
+      profileSubsetSupportedUnits: groupUnits.filter(
+        (unit) => unit.claim?.tag === "profile-subset-supported",
+      ).length,
+      unsupportedOrOtherUnits:
+        groupUnits.length - profileClaimUnits.length,
+      profileFactDenominator: profileClaimUnits.reduce(
+        (count, unit) => count + unit.claim.profileIds.length,
+        0,
+      ),
+      selectedIdentityReplayDenominator: selectedIdentityScopedUnits.length,
+      selectedIdentityReplayWitnessUnits:
+        selectedIdentityWitnessUnits.length,
+      selectedIdentityReplayGapUnits:
+        selectedIdentityScopedUnits.length - selectedIdentityWitnessUnits.length,
+    };
+  });
+
+  return stable({
+    criteria: {
+      kinds: unitGroupDenominatorAuditKinds.map((entry) => entry.kind),
+      profileClaimTags: selectedIdentityReplayGapClaimTags,
+      selectedIdentityEvidenceTag: selectedIdentityMbtEvidenceTag,
+    },
+    denominatorRules: {
+      installedUnitDenominator:
+        "installed Unit records in the group; each Unit identity counts once",
+      executableUnitDenominator:
+        "installed Unit records in the group whose authored mechanics are executable",
+      profileFactDenominator:
+        "sum of profileIds on supported-profile and profile-subset-supported Unit claims; one Unit can carry multiple profile facts",
+      selectedIdentityReplayDenominator:
+        "supported-profile and profile-subset-supported Unit identities in the group, excluding only whole-claim selected-identity not-applicable dispositions",
+    },
     rows,
   });
 }
@@ -679,6 +752,10 @@ function buildMatrix(
     selectedIdentityMbtEvidenceTag,
     units,
   });
+  const unitGroupDenominatorAudit = buildUnitGroupDenominatorAudit({
+    selectedIdentityMbtEvidenceTag,
+    units,
+  });
   return stable({
     generatedBy: "scripts/unit-profile-coverage-check.cjs",
     collectionBoundaryNote:
@@ -688,6 +765,7 @@ function buildMatrix(
     metrics: matrixMetrics,
     metricSemantics: metricDefinitions,
     selectedIdentityReplayGaps,
+    unitGroupDenominatorAudit,
     rulesKernelProfileJoin: {
       ...rulesKernelProfileJoin,
       supportedUnitJoin: rulesKernelSupportedUnitJoin,
@@ -710,6 +788,10 @@ function renderMetricSemantics(definition) {
   const measure =
     definition.kind === "count" ? definition.value : definition.numerator;
   return `| ${definition.label} | ${definition.planningQuestion} | ${measure} | ${definition.denominator} |`;
+}
+
+function renderUnitGroupDenominatorAuditRow(row) {
+  return `| ${row.label} | ${row.installedUnitDenominator} | ${row.executableUnitDenominator} | ${row.supportedProfileUnits} | ${row.profileSubsetSupportedUnits} | ${row.unsupportedOrOtherUnits} | ${row.profileFactDenominator} | ${row.selectedIdentityReplayWitnessUnits}/${row.selectedIdentityReplayDenominator} | ${row.selectedIdentityReplayGapUnits} |`;
 }
 
 function groupAuthoredNotInCatalogByDisposition(units) {
@@ -966,9 +1048,27 @@ function renderReport(
     "",
     "## Metric Semantics",
     "",
+    "Coverage rows are denominator-specific gates, not weighted completion scores. Unit-scoped denominators count distinct Unit identities; profile-scoped denominators count profile records or per-Unit profile facts as stated. Prose length, deferred-mechanics text, and source-row narrative weight do not add hidden denominator weight.",
+    "",
     "| Metric | Planning question | Measure | Denominator |",
     "| --- | --- | --- | --- |",
     ...matrix.metricSemantics.map(renderMetricSemantics),
+    "",
+    "## Unit Group Denominator Audit",
+    "",
+    "Background, feat, spell, and class-feature groups are counted from installed Unit identities and supported profile facts. The selected-identity replay column is scoped to Unit identities that need replay evidence; it excludes only whole-claim non-applicable dispositions.",
+    "",
+    "| Group | Installed Unit denominator | Executable Unit denominator | Supported-profile Units | Profile-subset Units | Unsupported/other Units | Profile fact denominator | Selected-identity replay witnesses/denominator | Selected-identity replay gaps |",
+    "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+    ...matrix.unitGroupDenominatorAudit.rows.map(
+      renderUnitGroupDenominatorAuditRow,
+    ),
+    "",
+    "| Denominator | Rule |",
+    "| --- | --- |",
+    ...Object.entries(matrix.unitGroupDenominatorAudit.denominatorRules).map(
+      ([denominator, rule]) => `| ${denominator} | ${rule} |`,
+    ),
     "",
     "## Rules-Kernel Join",
     "",

@@ -31,6 +31,8 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 ## Metric Semantics
 
+Coverage rows are denominator-specific gates, not weighted completion scores. Unit-scoped denominators count distinct Unit identities; profile-scoped denominators count profile records or per-Unit profile facts as stated. Prose length, deferred-mechanics text, and source-row narrative weight do not add hidden denominator weight.
+
 | Metric | Planning question | Measure | Denominator |
 | --- | --- | --- | --- |
 | Installed collection inventory count | How many Unit records did the checker discover in the configured installed coverage collections? | installed Unit records discovered from configured collections | n/a; no independent expected-inventory boundary exists |
@@ -48,6 +50,24 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Deterministic admission/projection coverage | Which supported Unit identities have deterministic production catalog/support/projection evidence? | supported Unit ids with deterministic-admission-projection evidence | installed Units with supported-profile claims |
 | Selected identity replay coverage | Which supported Unit identities have intentionally selected concrete identity replay evidence? | supported Unit ids with selected-identity-mbt evidence | installed Units with supported-profile claims |
 | Classic non-SRD expression gate | Did every installed Classic non-SRD mechanics-only Unit pass the public-expression gate? | installed Classic non-SRD records passing validation | installed Classic non-SRD records |
+
+## Unit Group Denominator Audit
+
+Background, feat, spell, and class-feature groups are counted from installed Unit identities and supported profile facts. The selected-identity replay column is scoped to Unit identities that need replay evidence; it excludes only whole-claim non-applicable dispositions.
+
+| Group | Installed Unit denominator | Executable Unit denominator | Supported-profile Units | Profile-subset Units | Unsupported/other Units | Profile fact denominator | Selected-identity replay witnesses/denominator | Selected-identity replay gaps |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Background Units | 4 | 0 | 0 | 0 | 4 | 0 | 0/0 | 0 |
+| Feat Units | 8 | 8 | 5 | 0 | 3 | 5 | 5/5 | 0 |
+| Spell Units | 124 | 124 | 86 | 20 | 18 | 127 | 97/106 | 9 |
+| Class-feature Units | 63 | 63 | 45 | 16 | 2 | 85 | 61/61 | 0 |
+
+| Denominator | Rule |
+| --- | --- |
+| executableUnitDenominator | installed Unit records in the group whose authored mechanics are executable |
+| installedUnitDenominator | installed Unit records in the group; each Unit identity counts once |
+| profileFactDenominator | sum of profileIds on supported-profile and profile-subset-supported Unit claims; one Unit can carry multiple profile facts |
+| selectedIdentityReplayDenominator | supported-profile and profile-subset-supported Unit identities in the group, excluding only whole-claim selected-identity not-applicable dispositions |
 
 ## Rules-Kernel Join
 
