@@ -1090,6 +1090,82 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `mycelium_step` | `unit-feature.alternate-action-cost` | L1H-MYCELIUM-STEP | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `mycelium_step` | `unit-feature.alternate-action-cost` | L1D2-MYCELIUM-STEP | `packages/battle-runtime/src/mycelium-step-feature-selected-identity.mbt.test.ts` |
 
+## Selected Identity Replay Gaps
+
+This generated view lists `profile-subset-supported` and `supported-profile` Units that have no `selected-identity-mbt` evidence row.
+
+| Unit | Claim | Catalog | Collection | Kind | Profiles | Source |
+| --- | --- | --- | --- | --- | --- | --- |
+| `barbarian_danger_sense` | supported-profile | installed | srd-5.2.1 | class_feature | `unit-feature.passive-saving-throw-roll-mode` | `packages/surface/content/barbarian_danger_sense.json` |
+| `bard_expertise` | profile-subset-supported | installed | srd-5.2.1 | class_feature | `character-creation.skill-expertise-choice` | `packages/surface/content/bard_expertise.json` |
+| `bard_jack_of_all_trades` | supported-profile | installed | srd-5.2.1 | class_feature | `character-sheet.ability-check-proficiency-bonus` | `packages/surface/content/bard_jack_of_all_trades.json` |
+| `cleric_channel_divinity` | supported-profile | installed | srd-5.2.1 | class_feature | `character-creation.class-feature-resource-projection` | `packages/surface/content/cleric_channel_divinity.json` |
+| `cleric_life_domain_spells` | profile-subset-supported | installed | srd-5.2.1 | class_feature | `character-sheet.class-feature-prepared-spell-access` | `packages/surface/content/cleric_life_domain_spells.json` |
+| `druid_circle_of_the_land_spells` | supported-profile | installed | srd-5.2.1 | class_feature | `character-sheet.druid-circle-land-spell-access` | `packages/surface/content/druid_circle_of_the_land_spells.json` |
+| `druid_wild_companion` | profile-subset-supported | installed | srd-5.2.1 | class_feature | `character-creation.class-feature-source-fact-projection` | `packages/surface/content/druid_wild_companion.json` |
+| `druid_wild_shape` | profile-subset-supported | installed | srd-5.2.1 | class_feature | `character-creation.class-feature-resource-projection`, `character-sheet.class-feature-use-count-resource`, `unit-feature.druid-wild-shape-known-form` | `packages/surface/content/druid_wild_shape.json` |
+| `monk_monks_focus` | profile-subset-supported | installed | srd-5.2.1 | class_feature | `character-creation.class-feature-resource-projection`, `character-sheet.class-feature-use-count-resource`, `unit-feature.monk-focus-battle-options` | `packages/surface/content/monk_monks_focus.json` |
+| `monk_unarmored_movement` | supported-profile | installed | srd-5.2.1 | class_feature | `unit-feature.passive-speed-bonus` | `packages/surface/content/monk_unarmored_movement.json` |
+| `monk_uncanny_metabolism` | supported-profile | installed | srd-5.2.1 | class_feature | `character-creation.class-feature-source-fact-projection`, `character-sheet.class-feature-long-rest-use-state`, `character-sheet.monk-uncanny-metabolism-initiative-recovery` | `packages/surface/content/monk_uncanny_metabolism.json` |
+| `paladin_fighting_style` | profile-subset-supported | installed | srd-5.2.1 | class_feature | `character-creation.class-feature-feat-choice`, `character-creation.class-feature-option-projection` | `packages/surface/content/paladin_fighting_style.json` |
+| `paladin_oath_of_devotion_spells` | profile-subset-supported | installed | srd-5.2.1 | class_feature | `character-sheet.class-feature-prepared-spell-access` | `packages/surface/content/paladin_oath_of_devotion_spells.json` |
+| `paladin_paladins_smite` | supported-profile | installed | srd-5.2.1 | class_feature | `spell.invocation-after-hit-damage` | `packages/surface/content/paladin_paladins_smite.json` |
+| `ranger_deft_explorer` | supported-profile | installed | srd-5.2.1 | class_feature | `character-creation.skill-expertise-choice` | `packages/surface/content/ranger_deft_explorer.json` |
+| `ranger_favored_enemy` | profile-subset-supported | installed | srd-5.2.1 | class_feature | `spell.invocation-marked-damage-rider` | `packages/surface/content/ranger_favored_enemy.json` |
+| `ranger_fighting_style` | profile-subset-supported | installed | srd-5.2.1 | class_feature | `character-creation.class-feature-feat-choice`, `character-creation.class-feature-option-projection` | `packages/surface/content/ranger_fighting_style.json` |
+| `sorcerer_draconic_spells` | profile-subset-supported | installed | srd-5.2.1 | class_feature | `character-sheet.class-feature-prepared-spell-access` | `packages/surface/content/sorcerer_draconic_spells.json` |
+| `sorcerer_font_of_magic` | profile-subset-supported | installed | srd-5.2.1 | class_feature | `character-creation.class-feature-resource-projection`, `character-sheet.class-feature-point-pool-resource`, `character-sheet.font-of-magic-slot-to-sorcery-points`, `character-sheet.font-of-magic-sorcery-points-to-spell-slot`, `character-sheet.metamagic-battle-resource-bridge` | `packages/surface/content/sorcerer_font_of_magic.json` |
+| `sorcerer_metamagic` | profile-subset-supported | installed | srd-5.2.1 | class_feature | `character-creation.class-feature-option-projection`, `character-creation.class-feature-source-fact-projection`, `character-creation.class-feature-advancement-replacement`, `character-sheet.metamagic-battle-resource-bridge`, `unit-feature.metamagic-cast-governor-quickened` | `packages/surface/content/sorcerer_metamagic.json` |
+| `warlock_fiend_spells` | profile-subset-supported | installed | srd-5.2.1 | class_feature | `character-sheet.class-feature-prepared-spell-access` | `packages/surface/content/warlock_fiend_spells.json` |
+| `warlock_magical_cunning` | supported-profile | installed | srd-5.2.1 | class_feature | `character-sheet.pact-slot-recovery` | `packages/surface/content/warlock_magical_cunning.json` |
+| `warlock_pact_magic` | supported-profile | installed | srd-5.2.1 | class_feature | `character-creation.warlock-pact-magic-advancement` | `packages/surface/content/warlock_pact_magic.json` |
+| `wizard_evocation_savant` | profile-subset-supported | installed | srd-5.2.1 | class_feature | `character-creation.wizard-spellbook-learning-choice` | `packages/surface/content/wizard_evocation_savant.json` |
+| `wizard_scholar` | supported-profile | installed | srd-5.2.1 | class_feature | `character-creation.skill-expertise-choice` | `packages/surface/content/wizard_scholar.json` |
+| `alert` | supported-profile | installed | srd-5.2.1 | feat | `unit-feature.initiative-proficiency-and-swap` | `packages/surface/content/alert.json` |
+| `aid` | supported-profile | installed | srd-5.2.1 | spell | `spell.scalar-buff` | `packages/surface/content/aid.json` |
+| `alter_self` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-self-transformation-mode` | `packages/surface/content/alter_self.json` |
+| `antimagic_field` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-antimagic-field-ongoing-spell-suppression` | `packages/surface/content/antimagic_field.json` |
+| `barkskin` | supported-profile | installed | srd-5.2.1 | spell | `spell.scalar-buff` | `packages/surface/content/barkskin.json` |
+| `blur` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-blur-attack-roll-defense` | `packages/surface/content/blur.json` |
+| `calm_emotions` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-save-gated-condition-immunity` | `packages/surface/content/calm_emotions.json` |
+| `charm_person` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.creature-type-protection-and-charm` | `packages/surface/content/charm_person.json` |
+| `continual_flame` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-object-light` | `packages/surface/content/continual_flame.json` |
+| `counterspell` | supported-profile | installed | srd-5.2.1 | spell | `spell.reaction-counterspell` | `packages/surface/content/counterspell.json` |
+| `darkness` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-magical-darkness-point-origin` | `packages/surface/content/darkness.json` |
+| `dispel_magic` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-ongoing-spell-ending` | `packages/surface/content/dispel_magic.json` |
+| `dragons_breath` | supported-profile | not-in-unit-catalog | srd-5.2.1 | spell | `spell.invocation-dragons-breath-initial`, `spell.invocation-dragons-breath-granted-action` | `packages/surface/content/dragons_breath.json` |
+| `enhance_ability` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-roll-modifier` | `packages/surface/content/enhance_ability.json` |
+| `enlarge_reduce` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-creature-size-change` | `packages/surface/content/enlarge_reduce.json` |
+| `enthrall` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-roll-modifier` | `packages/surface/content/enthrall.json` |
+| `find_familiar` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.find-familiar-lifecycle` | `packages/surface/content/find_familiar.json` |
+| `fireball` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-damage-save-or-attack` | `packages/surface/content/fireball.json` |
+| `flame_blade` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-spell-created-held-object` | `packages/surface/content/flame_blade.json` |
+| `flaming_sphere` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-flaming-sphere-hazard-ram` | `packages/surface/content/flaming_sphere.json` |
+| `fly` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.scalar-buff` | `packages/surface/content/fly.json` |
+| `gust_of_wind` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-gust-of-wind-line` | `packages/surface/content/gust_of_wind.json` |
+| `heat_metal` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-object-contact-damage` | `packages/surface/content/heat_metal.json` |
+| `invisibility` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-direct-condition` | `packages/surface/content/invisibility.json` |
+| `levitate` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-levitated-creature` | `packages/surface/content/levitate.json` |
+| `lightning_bolt` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-damage-save-or-attack` | `packages/surface/content/lightning_bolt.json` |
+| `magic_weapon` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-magic-weapon-enhancement` | `packages/surface/content/magic_weapon.json` |
+| `mind_spike` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-damage-save-or-attack` | `packages/surface/content/mind_spike.json` |
+| `mirror_image` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-mirror-image-hit-interception` | `packages/surface/content/mirror_image.json` |
+| `misty_step` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-self-teleport` | `packages/surface/content/misty_step.json` |
+| `moonbeam` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-moonbeam-movable-zone` | `packages/surface/content/moonbeam.json` |
+| `pass_without_trace` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-roll-modifier` | `packages/surface/content/pass_without_trace.json` |
+| `prayer_of_healing` | profile-subset-supported | installed | srd-5.2.1 | spell | `character-sheet.spell-rest-benefit-application` | `packages/surface/content/prayer_of_healing.json` |
+| `ray_of_enfeeblement` | supported-profile | not-in-unit-catalog | srd-5.2.1 | spell | `spell.invocation-ray-of-enfeeblement-d20-lifecycle`, `spell.invocation-ray-of-enfeeblement-damage-penalty` | `packages/surface/content/ray_of_enfeeblement.json` |
+| `scorching_ray` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-independent-attack-sequence` | `packages/surface/content/scorching_ray.json` |
+| `see_invisibility` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-see-invisible-observer-sight` | `packages/surface/content/see_invisibility.json` |
+| `shatter` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-damage-save-or-attack` | `packages/surface/content/shatter.json` |
+| `shining_smite` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-after-hit-damage-illumination` | `packages/surface/content/shining_smite.json` |
+| `spider_climb` | supported-profile | installed | srd-5.2.1 | spell | `spell.scalar-buff` | `packages/surface/content/spider_climb.json` |
+| `spike_growth` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-spike-growth-movement-hazard` | `packages/surface/content/spike_growth.json` |
+| `spiritual_weapon` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-spiritual-weapon-attack-proxy` | `packages/surface/content/spiritual_weapon.json` |
+| `thaumaturgy` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-self-ability-check-advantage` | `packages/surface/content/thaumaturgy.json` |
+| `warding_bond` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-warding-bond-linked-effect` | `packages/surface/content/warding_bond.json` |
+| `web` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-web-restraint-hazard` | `packages/surface/content/web.json` |
+
 ## Unsupported And Widening Pressure
 
 | Unit | Disposition | Detail |

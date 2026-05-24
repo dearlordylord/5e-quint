@@ -443,6 +443,63 @@ function claimProfiles(claim, profileMap) {
   return claim.profileIds.map((profileId) => profileMap.get(profileId));
 }
 
+const selectedIdentityReplayGapClaimTags = [
+  "profile-subset-supported",
+  "supported-profile",
+];
+
+function isSelectedIdentityReplayGapClaim(claim) {
+  return (
+    claim !== undefined && selectedIdentityReplayGapClaimTags.includes(claim.tag)
+  );
+}
+
+function selectedIdentityReplayGapSupport(claim) {
+  if (isSelectedIdentityReplayGapClaim(claim))
+    return {
+      profileIds: claim.profileIds,
+      tag: claim.tag,
+    };
+  fail(
+    `Unsupported selected identity gap claim tag: ${claim?.tag ?? "missing"}`,
+  );
+}
+
+function buildSelectedIdentityReplayGapReport({
+  selectedIdentityMbtEvidenceTag,
+  units,
+}) {
+  const rows = units
+    .filter((unit) => isSelectedIdentityReplayGapClaim(unit.claim))
+    .filter(
+      (unit) =>
+        !(unit.evidence ?? []).some(
+          (evidence) => evidence.tag === selectedIdentityMbtEvidenceTag,
+        ),
+    )
+    .map((unit) => ({
+      catalogAdmissionStatus: unit.catalogAdmission.status,
+      collectionId: unit.collectionId,
+      kind: unit.kind,
+      sourceRecordPath: unit.sourceRecordPath,
+      support: selectedIdentityReplayGapSupport(unit.claim),
+      unitId: unit.unitId,
+    }))
+    .sort(
+      (left, right) =>
+        left.kind.localeCompare(right.kind) ||
+        left.unitId.localeCompare(right.unitId),
+    );
+  return stable({
+    criteria: {
+      evidenceTag: selectedIdentityMbtEvidenceTag,
+      claimTags: selectedIdentityReplayGapClaimTags,
+    },
+    rowCount: rows.length,
+    rows,
+  });
+}
+
 function buildMatrix(
   {
     collections,
@@ -551,6 +608,10 @@ function buildMatrix(
     selectedIdentityMbtEvidenceTag,
   });
   assertMetricDefinitionCoverage(matrixMetrics);
+  const selectedIdentityReplayGaps = buildSelectedIdentityReplayGapReport({
+    selectedIdentityMbtEvidenceTag,
+    units,
+  });
   return stable({
     generatedBy: "scripts/unit-profile-coverage-check.cjs",
     collectionBoundaryNote:
@@ -559,6 +620,7 @@ function buildMatrix(
     derivedViews: collections.derivedViews,
     metrics: matrixMetrics,
     metricSemantics: metricDefinitions,
+    selectedIdentityReplayGaps,
     rulesKernelProfileJoin: {
       ...rulesKernelProfileJoin,
       supportedUnitJoin: rulesKernelSupportedUnitJoin,
@@ -1004,6 +1066,23 @@ function renderReport(
           ({ unit, evidence }) =>
             `| \`${unit.unitId}\` | ${unit.claim.profileIds.map((id) => `\`${id}\``).join(", ")} | ${evidence.taskId} | \`${evidence.ownerPath}\` |`,
         )),
+    "",
+    "## Selected Identity Replay Gaps",
+    "",
+    `This generated view lists ${selectedIdentityReplayGapClaimTags
+      .map((tag) => `\`${tag}\``)
+      .join(" and ")} Units that have no \`${selectedIdentityMbtEvidenceTag}\` evidence row.`,
+    "",
+    "| Unit | Claim | Catalog | Collection | Kind | Profiles | Source |",
+    "| --- | --- | --- | --- | --- | --- | --- |",
+    ...(matrix.selectedIdentityReplayGaps.rows.length === 0
+      ? ["| _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ |"]
+      : matrix.selectedIdentityReplayGaps.rows.map((row) => {
+          const profiles = row.support.profileIds
+            .map((id) => `\`${id}\``)
+            .join(", ");
+          return `| \`${row.unitId}\` | ${row.support.tag} | ${row.catalogAdmissionStatus} | ${row.collectionId} | ${row.kind} | ${profiles} | \`${row.sourceRecordPath}\` |`;
+        })),
     "",
     "## Unsupported And Widening Pressure",
     "",

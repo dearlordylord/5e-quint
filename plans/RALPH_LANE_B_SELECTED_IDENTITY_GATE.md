@@ -13,7 +13,7 @@ identity evidence or an explicit non-applicable classification.
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    { "number": 1, "id": "B1-SELECTED-IDENTITY-GAP-REPORT", "status": "ready-for-research", "title": "Generate selected-identity gap report" },
+    { "number": 1, "id": "B1-SELECTED-IDENTITY-GAP-REPORT", "status": "done", "title": "Generate selected-identity gap report" },
     { "number": 2, "id": "B2-EVIDENCE-SCHEMA-CHECK", "status": "ready-for-implementation-after-light-research", "title": "Tighten selected-identity evidence validation" },
     { "number": 3, "id": "B3-HARD-GATE-SELF-TEST", "status": "ready-for-implementation-after-light-research", "title": "Add hard-gate self-test for missing identity evidence" },
     { "number": 4, "id": "B4-CLASS-FEATURE-IDENTITY-BATCH-1", "status": "ready-for-implementation-after-light-research", "title": "Backfill class-feature identity evidence batch 1" },
@@ -64,7 +64,7 @@ Lane B must not:
 
 | # | Task | Status | Depends | Notes |
 |---:|---|---|---|---|
-| 1 | B1-SELECTED-IDENTITY-GAP-REPORT - Generate selected-identity gap report | ready-for-research | none | Compute current missing list from generated matrix. |
+| 1 | B1-SELECTED-IDENTITY-GAP-REPORT - Generate selected-identity gap report | done | none | Generated matrix view `selectedIdentityReplayGaps` and `UNIT_REPORT.md` table. |
 | 2 | B2-EVIDENCE-SCHEMA-CHECK - Tighten selected-identity evidence validation | ready-for-implementation-after-light-research | none | Validate rows before hard gate. |
 | 3 | B3-HARD-GATE-SELF-TEST - Add hard-gate self-test for missing identity evidence | ready-for-implementation-after-light-research | none | Prove checker can fail. |
 | 4 | B4-CLASS-FEATURE-IDENTITY-BATCH-1 - Backfill class-feature identity evidence batch 1 | ready-for-implementation-after-light-research | none | Barbarian/Bard/Cleric/Druid. |
@@ -87,13 +87,16 @@ Lane B must not:
 
 ### Task 1 - B1-SELECTED-IDENTITY-GAP-REPORT - Generate selected-identity gap report
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: add a generated or checker-owned view that lists supported and
 profile-subset-supported Units lacking selected-identity evidence. Use it to
 drive later tasks. Do not hand-maintain the list in prose.
 
 Acceptance: `pnpm unit-profile-coverage:check -- --write` and check pass.
+
+Result: `unit-matrix.json` owns the `selectedIdentityReplayGaps` view, and
+`UNIT_REPORT.md` renders it as "Selected Identity Replay Gaps".
 
 ### Task 2 - B2-EVIDENCE-SCHEMA-CHECK - Tighten selected-identity evidence validation
 
