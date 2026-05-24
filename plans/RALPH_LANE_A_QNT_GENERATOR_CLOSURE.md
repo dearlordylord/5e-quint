@@ -206,7 +206,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 33,
       "id": "A33-HIT-POINT-RECOVERY-READINESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Assess hit point recovery generator readiness"
     },
     {
@@ -291,7 +291,7 @@ Lane A must not:
 | 30 | A30-DAMAGE-ADJUSTMENTS-READINESS - Assess damage adjustment generator readiness | done | A24,A26 | Classified as generation-subset-clean; examples moved to proof-only owner. |
 | 31 | A31-SHOVE-OUTCOME-READINESS - Assess shove outcome generator readiness | done | A24,A26 | Classified as generation-subset-clean; examples moved to proof-only owner. |
 | 32 | A32-STAT-BLOCK-CONTROLS-READINESS - Assess stat block controls generator readiness | done | A24,A26 | Shared algebra owner needs subset/blocker classification. |
-| 33 | A33-HIT-POINT-RECOVERY-READINESS - Assess hit point recovery generator readiness | ready-for-research | A24,A26 | Sheet HP/rest owner needs subset/blocker classification. |
+| 33 | A33-HIT-POINT-RECOVERY-READINESS - Assess hit point recovery generator readiness | done | A24,A26 | Sheet HP/rest owner needs subset/blocker classification. |
 | 34 | A34-UNIT-FEATURE-PROCEDURE-SURVEY - Survey unit feature procedure readiness split | ready-for-research | A24,A26 | Large shared algebra owner must be split into runnable follow-ups before readiness closure. |
 | 35 | A35-BATTLE-RUNTIME-MEGA-OWNER-SURVEY - Survey battle-runtime mega-owner readiness split | ready-for-research | A24,A25 | `battle-runtime.qnt` owns many covered obligations; classify split candidates without reducer changes. |
 | 36 | A36-HIT-POINT-RESTORATION-SEMANTIC-CORE - Split hit point restoration semantic core | ready-for-research | A28 | Extract reusable direct Hit Point restoration facts from the spell procedure fixture world. |
@@ -698,7 +698,7 @@ readiness status for stat block controls.
 
 ### Task 33 - A33-HIT-POINT-RECOVERY-READINESS - Assess hit point recovery generator readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `SHEET.HP_REST_HIT_DICE.TRANSITIONS`,
 `packages/shared-algebras/proofs/rule-core/hit-point-recovery.qnt`, and
