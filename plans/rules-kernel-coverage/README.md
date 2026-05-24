@@ -123,6 +123,12 @@ harness coupling, proof-helper coupling, fixture-world coupling, bridge
 projection coupling, selected-identity coupling, or an unsupported construct;
 they are not migration history labels.
 
+Checker-produced generator-readiness blocker findings must also declare their
+token in `generatorReadinessScannerBlockers` in
+`scripts/rules-kernel-coverage-config.cjs`. The checker fails if a scanner
+blocker is not present in the documented blocker vocabulary, so adding a new
+scanner blocker requires adding its catalog description in the same file.
+
 Generator-readiness statuses are:
 
 - `not-assessed`: the obligation has no C-lane classification claim yet.

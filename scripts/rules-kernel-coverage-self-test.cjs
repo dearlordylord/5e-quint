@@ -5,6 +5,12 @@ const os = require("node:os");
 const path = require("node:path");
 
 const { buildKernelCoverage } = require("./rules-kernel-coverage-check.cjs");
+const {
+  generatorReadinessBlockerCatalogIssues,
+  generatorReadinessScannerBlockers,
+} = require("./rules-kernel-coverage-config.cjs");
+
+const runBlockBlocker = generatorReadinessScannerBlockers.semanticCoreRunBlock;
 
 function writeFile(filePath, text) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -277,7 +283,7 @@ function runSelfTest() {
   const semanticCoreCandidateRunBlockResult = buildKernelCoverage({ root });
   assert.ok(
     semanticCoreCandidateRunBlockResult.issues.includes(
-      "generator-readiness row 1.semantic-core-candidate cannot include semanticCore path(s) with run blocks (sample.qnt); split the run blocks out or classify with run-block-coupled.",
+      `generator-readiness row 1.semantic-core-candidate cannot include semanticCore path(s) with run blocks (sample.qnt); split the run blocks out or classify with ${runBlockBlocker}.`,
     ),
     `Expected semantic-core run-block candidate issue, got ${JSON.stringify(semanticCoreCandidateRunBlockResult.issues)}`,
   );
@@ -285,16 +291,17 @@ function runSelfTest() {
     semanticCoreCandidateRunBlockResult.matrix.semanticCoreRunBlockFindings,
     [
       {
-        blocker: "run-block-coupled",
+        blocker: runBlockBlocker,
         obligationId: "BATTLE.SAMPLE",
         owners: [{ lines: [5], ownerPath: "sample.qnt" }],
         readinessStatus: "semantic-core-candidate",
       },
     ],
   );
-  assert.match(
-    semanticCoreCandidateRunBlockResult.report,
-    /\| `BATTLE\.SAMPLE` \| semantic-core-candidate \| `run-block-coupled` \| `sample\.qnt`: lines `5` \|/,
+  assert.ok(
+    semanticCoreCandidateRunBlockResult.report.includes(
+      `| \`BATTLE.SAMPLE\` | semantic-core-candidate | \`${runBlockBlocker}\` | \`sample.qnt\`: lines \`5\` |`,
+    ),
   );
   writeFile(
     sampleGeneratorReadinessPath,
@@ -310,7 +317,7 @@ function runSelfTest() {
   const fixtureBoundMissingRunBlockResult = buildKernelCoverage({ root });
   assert.ok(
     fixtureBoundMissingRunBlockResult.issues.includes(
-      "generator-readiness row 1.fixture-bound has semanticCore path(s) with run blocks (sample.qnt) and must include blockedBy run-block-coupled.",
+      `generator-readiness row 1.fixture-bound has semanticCore path(s) with run blocks (sample.qnt) and must include blockedBy ${runBlockBlocker}.`,
     ),
     `Expected fixture-bound run-block blocker issue, got ${JSON.stringify(fixtureBoundMissingRunBlockResult.issues)}`,
   );
@@ -322,7 +329,7 @@ function runSelfTest() {
       semanticCore: ["sample.qnt"],
       proofOnly: [],
       generatorSubset: ["record"],
-      blockedBy: ["run-block-coupled"],
+      blockedBy: [runBlockBlocker],
     }) + "\n",
   );
   const fixtureBoundRunBlockResult = buildKernelCoverage({ root });
@@ -449,6 +456,33 @@ function runSelfTest() {
       "generator-readiness row 1.generatorSubset has unknown generation-subset construct unknown-construct.",
     ),
     `Expected generator-readiness unknown subset issue, got ${JSON.stringify(unknownGeneratorSubsetResult.issues)}`,
+  );
+  writeFile(
+    sampleGeneratorReadinessPath,
+    JSON.stringify({
+      obligationId: "BATTLE.SAMPLE",
+      status: "fixture-bound",
+      semanticCore: ["sample.qnt"],
+      proofOnly: [],
+      generatorSubset: ["record"],
+      blockedBy: ["run-block-coupledd"],
+    }) + "\n",
+  );
+  const misspelledBlockerResult = buildKernelCoverage({ root });
+  assert.ok(
+    misspelledBlockerResult.issues.includes(
+      "generator-readiness row 1.blockedBy has unknown generator-readiness blocker run-block-coupledd.",
+    ),
+    `Expected generator-readiness misspelled blocker issue, got ${JSON.stringify(misspelledBlockerResult.issues)}`,
+  );
+  assert.deepEqual(
+    generatorReadinessBlockerCatalogIssues({
+      blockerVocabulary: { "fixture-world-coupled": "fixture blocker" },
+      scannerBlockers: { semanticCoreRunBlock: "run-block-coupled" },
+    }),
+    [
+      "generator-readiness scanner blocker semanticCoreRunBlock uses undocumented blocker token run-block-coupled.",
+    ],
   );
   writeFile(sampleGeneratorReadinessPath, initialGeneratorReadinessText);
 

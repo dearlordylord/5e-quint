@@ -8,7 +8,9 @@ const {
   battleFrontierSubjects,
   coveragePaths,
   coveredStatuses,
+  generatorReadinessBlockerCatalogIssues,
   generatorReadinessBlockers,
+  generatorReadinessScannerBlockers,
   generatorReadinessStatuses,
   generatorSubsetConstructs,
   kernelIrBoundaryKinds,
@@ -50,7 +52,8 @@ const generatorReadinessSubsetStatuses = new Set([
   "generation-subset-clean",
 ]);
 const generatorReadinessBlockerStatuses = new Set(["fixture-bound", "blocked"]);
-const semanticCoreRunBlockBlocker = "run-block-coupled";
+const semanticCoreRunBlockBlocker =
+  generatorReadinessScannerBlockers.semanticCoreRunBlock;
 
 function isRecord(value) {
   return value != null && typeof value === "object" && !Array.isArray(value);
@@ -923,7 +926,7 @@ function validateGeneratorReadiness(
     !generatorReadinessBlockerStatuses.has(readiness.status)
   ) {
     issues.push(
-      `${context}.${readiness.status} cannot include semanticCore path(s) with run blocks (${semanticCoreWithRunBlocks.join(", ")}); split the run blocks out or classify with run-block-coupled.`,
+      `${context}.${readiness.status} cannot include semanticCore path(s) with run blocks (${semanticCoreWithRunBlocks.join(", ")}); split the run blocks out or classify with ${semanticCoreRunBlockBlocker}.`,
     );
   }
   if (
@@ -1639,7 +1642,7 @@ function renderReport(matrix, issues) {
   lines.push("### Semantic-Core Run Block Findings");
   lines.push("");
   lines.push(
-    "Rows here are derived from semantic-core QNT owners that still contain Quint `run` blocks. Assessed readiness rows must split those tests out or classify the generator blocker as `run-block-coupled`.",
+    `Rows here are derived from semantic-core QNT owners that still contain Quint \`run\` blocks. Assessed readiness rows must split those tests out or classify the generator blocker as \`${semanticCoreRunBlockBlocker}\`.`,
   );
   lines.push("");
   if (matrix.semanticCoreRunBlockFindings.length === 0) {
@@ -1750,6 +1753,7 @@ function buildKernelCoverage({ root: rootPath }) {
   const scanned = scanClaimFiles(rootPath);
   const markerIndex = buildMarkerIndex(scanned.markers);
   const issues = [];
+  issues.push(...generatorReadinessBlockerCatalogIssues());
   issues.push(...rulesKernelProfileKindClassificationIssues());
   const obligationIds = new Set();
   const obligationsById = new Map();
