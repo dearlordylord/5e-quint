@@ -10,6 +10,7 @@ module spellProcedureProfilesExamples {
   import reactionsContinuationsConcentration.* from "./reactions-continuations-concentration"
   import spellDefinitionProfiles.* from "./spell-definition-profiles"
   import spellInvocationResourceCore.* from "./spell-invocation-resource-core"
+  import spellInvocationActionSlotCore.* from "./spell-invocation-action-slot-core"
   import spellInvocationTargetCardinalityCore.* from "./spell-invocation-target-cardinality-core"
   import spellProcedureProfiles.* from "./spell-procedure-profiles"
 

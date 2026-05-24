@@ -140,42 +140,12 @@ module spellInvocationResourceCore {
     legalSpellInvocationTargetCardinality(facts.targetCardinality, facts.targetCount),
   }
 
-  pure def canSpendSpellSlot(
-    ledger: SpellSlotLedger,
-    facts: SpellInvocationResourceFacts,
-    slotSpellCastThisTurn: bool
-  ): bool =
-    canExpendSpellSlot(
-      {
-        slotLedger: ledger,
-        slotSpellCastThisTurn: slotSpellCastThisTurn,
-      },
-      spellInvocationExpenditureRequest(facts)
-    )
-
-  pure def spendSpellSlot(
-    ledger: SpellSlotLedger,
-    facts: SpellInvocationResourceFacts
-  ): SpellSlotLedger =
-    spellSlotExpenditureResultState(
-      {
-        slotLedger: ledger,
-        slotSpellCastThisTurn: false,
-      },
-      applySpellSlotExpenditure(
-        {
-          slotLedger: ledger,
-          slotSpellCastThisTurn: false,
-        },
-        spellInvocationExpenditureRequest(facts)
-      )
-    ).slotLedger
-
-  pure def resolveSpellInvocationResource(
+  pure def resolveSpellInvocationResourceWithActionCost(
     state: SpellcastingProcedureState,
-    facts: SpellInvocationResourceFacts
+    facts: SpellInvocationResourceFacts,
+    actionCost: ActionCost
   ): SpellInvocationResult = {
-    val spentTurn = spendActionCost(state.turn, spellActionCost(facts.invocationAction))
+    val spentTurn = spendActionCost(state.turn, actionCost)
     val slotExpenditureState = spellInvocationExpenditureState(state)
     val slotExpenditure = applySpellSlotExpenditure(
       slotExpenditureState,
@@ -202,6 +172,16 @@ module spellInvocationResourceCore {
       slotExpended: slotExpended,
     }
   }
+
+  pure def resolveSpellInvocationResource(
+    state: SpellcastingProcedureState,
+    facts: SpellInvocationResourceFacts
+  ): SpellInvocationResult =
+    resolveSpellInvocationResourceWithActionCost(
+      state,
+      facts,
+      spellActionCost(facts.invocationAction)
+    )
 
   pure def spellInvocationResourceCanAffectTargets(
     invocation: SpellInvocationResult,

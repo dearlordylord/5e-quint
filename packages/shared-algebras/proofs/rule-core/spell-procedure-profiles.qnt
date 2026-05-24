@@ -12,6 +12,7 @@ module spellProcedureProfiles {
   import actionTurnProcedures.* from "./action-turn-procedures"
   import spellDefinitionProfiles.* from "./spell-definition-profiles"
   import spellInvocationResourceCore.* from "./spell-invocation-resource-core"
+  import spellInvocationActionSlotCore.* from "./spell-invocation-action-slot-core"
   import spellInvocationTargetCardinalityCore.* from "./spell-invocation-target-cardinality-core"
   import spellDamageProjectionCore.* from "./spell-damage-projection-core"
   import reactionsContinuationsConcentration.* from "./reactions-continuations-concentration"
@@ -195,14 +196,6 @@ module spellProcedureProfiles {
     | ReadiedAcidSplashSpellProfile
     | ReadiedMageArmorSpellProfile
 
-  type SpellInvocationFacts = {
-    profile: SpellDefinitionProfile,
-    hasSpellAccess: bool,
-    selectedSlotLevel: int,
-    targetCount: int,
-    targetsAreValid: bool,
-  }
-
   type MagicMissileEffectFacts = {
     slotLevel: int,
     allocatedDarts: int,
@@ -317,29 +310,10 @@ module spellProcedureProfiles {
       ReleasedMageArmorSpell
     ))
 
-  pure def spellProfileAction(profile: SpellDefinitionProfile): SpellInvocationAction =
-    if (profile == HealingWordSpellProfile or profile == MassHealingWordSpellProfile) BonusActionSpellInvocation
-    else ActionTimeSpellInvocation
-
-  pure def spellProfileMinimumSlotLevel(profile: SpellDefinitionProfile): int =
-    if (profile == RayOfFrostSpellProfile or profile == AcidSplashSpellProfile) 0
-    else if (profile == MassHealingWordSpellProfile) 3
-    else if (profile == MassCureWoundsSpellProfile) 5
-    else 1
-
   pure def spellProfileArea(profile: SpellDefinitionProfile): SpellAreaProfile =
     if (profile == MassCureWoundsSpellProfile) MassCureWoundsPointOriginSphereArea else NoSpellAreaProfile
 
   val massCureWoundsPointOriginSphereRadiusFeet = 30
-
-  pure def spellProfileSlotSpend(profile: SpellDefinitionProfile): SpellInvocationSlotSpend = {
-    val minimumSlot = spellProfileMinimumSlotLevel(profile)
-    if (minimumSlot == 0) SpellInvocationWithoutSlot
-    else SpellInvocationWithSlot({ minimumSlotLevel: minimumSlot })
-  }
-
-  pure def spellProfileRequiresSlot(profile: SpellDefinitionProfile): bool =
-    spellInvocationSlotSpendRequiresSlot(spellProfileSlotSpend(profile))
 
   pure def spellAttackDamageProfileDamageType(profile: SpellAttackDamageProfile): RuleDamageType =
     match profile {
@@ -869,36 +843,6 @@ module spellProcedureProfiles {
   pure def timedSpellEffectRemainsActive(durationTicks: int): bool =
     durationTicks > 0
 
-  pure def spellInvocationResourceFacts(
-    facts: SpellInvocationFacts
-  ): SpellInvocationResourceFacts = {
-    invocationAction: spellProfileAction(facts.profile),
-    hasSpellAccess: facts.hasSpellAccess,
-    slotSpend: spellProfileSlotSpend(facts.profile),
-    selectedSlotLevel: facts.selectedSlotLevel,
-    targetCount: facts.targetCount,
-    targetCardinality: spellInvocationTargetCardinality(facts.profile, facts.selectedSlotLevel),
-    targetsAreValid: facts.targetsAreValid,
-  }
-
-  pure def legalSpellInvocationFacts(facts: SpellInvocationFacts): bool =
-    legalSpellInvocationResourceFacts(spellInvocationResourceFacts(facts))
-
-  pure def resolveSpellInvocation(
-    state: SpellcastingProcedureState,
-    facts: SpellInvocationFacts
-  ): SpellInvocationResult =
-    resolveSpellInvocationResource(state, spellInvocationResourceFacts(facts))
-
-  pure def spellInvocationCanAffectTargets(
-    invocation: SpellInvocationResult,
-    facts: SpellInvocationFacts
-  ): bool =
-    spellInvocationResourceCanAffectTargets(
-      invocation,
-      spellInvocationResourceFacts(facts)
-    )
-
   pure def rayOfFrostMaximumBaseDamageDice: int = 4
 
   pure def magicMissileDirectDamageFacts(
@@ -1084,33 +1028,29 @@ module spellProcedureProfiles {
   ): ReadiedSpellHoldResult = {
     val held = asReadiedSpellProfile(facts.profile)
     val resourceFacts = spellInvocationResourceFacts(facts)
-    val spent = spendActionCost(spellcasting.turn, StandardActionCost(ReadyAction))
+    val invocation = resolveSpellInvocationResourceWithActionCost(
+      spellcasting,
+      resourceFacts,
+      StandardActionCost(ReadyAction)
+    )
     val admitted = all {
       triggerSelected,
       canConcentrate,
       isHeldReadiedSpellEffect(held),
-      facts.hasSpellAccess,
-      legalSpellInvocationFacts(facts),
-      legalSpellcastingProcedureState(spellcasting),
-      spent != spellcasting.turn,
-      canSpendSpellSlot(spellcasting.slotLedger, resourceFacts, spellcasting.slotSpellCastThisTurn),
+      invocation.admitted,
     }
-    val slotExpended = admitted and spellInvocationResourceRequiresSlot(resourceFacts)
+    val slotExpended = admitted and invocation.slotExpended
     if (not(admitted)) {
       spellcasting: spellcasting,
       readiedSpell: state,
       held: false,
       slotExpended: false,
     } else {
-      spellcasting: {
-        turn: spent,
-        slotLedger: spendSpellSlot(spellcasting.slotLedger, resourceFacts),
-        slotSpellCastThisTurn: spellcasting.slotSpellCastThisTurn or slotExpended,
-      },
+      spellcasting: invocation.state,
       readiedSpell: {
         reaction: state.reaction.with(
           "reactor",
-          state.reaction.reactor.with("turn", spent)
+          state.reaction.reactor.with("turn", invocation.state.turn)
         ).with(
           "concentration",
           startConcentration(state.reaction.concentration, Reactor, canConcentrate)

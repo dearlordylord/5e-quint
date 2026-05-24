@@ -362,6 +362,10 @@ turn is rejected.
 Magic Action or Bonus Action cost, Spell Slot expenditure through the reusable
 atom, one slot-spell per turn, access admission, and target cardinality facts.
 
+`spell-invocation-action-slot-core.qnt` projects Spell Definition profiles into
+resource-facing Spell Invocation action costs, Spell Slot spend requirements,
+access admission facts, and target cardinality facts.
+
 `spell-damage-projection-core.qnt` models reusable spell damage projection
 facts used by Spell Procedure Profiles without importing authored spell
 definitions.

@@ -26,7 +26,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 3,
       "id": "A3-INVOCATION-ACTION-SLOT-CORE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Extract invocation action and slot mapping core"
     },
     {
@@ -183,7 +183,7 @@ Lane A must not:
 |---:|---|---|---|---|
 | 1 | A1-SPELL-FIXTURE-BOUND-SURVEY - Survey spell procedure generator blockers | done | none | Established exact blocker list. |
 | 2 | A2-INVOCATION-CARDINALITY-CORE - Extract invocation target cardinality core | done | none | Pure projection split. |
-| 3 | A3-INVOCATION-ACTION-SLOT-CORE - Extract invocation action and slot mapping core | ready-for-implementation-after-light-research | none | Preserve slot-expenditure atom. |
+| 3 | A3-INVOCATION-ACTION-SLOT-CORE - Extract invocation action and slot mapping core | done | none | Preserved slot-expenditure atom. |
 | 4 | A4-SAVE-DAMAGE-PROJECTION-CORE - Split save-gated damage projection core | ready-for-implementation-after-light-research | none | Pure profile facts only. |
 | 5 | A5-SAVE-CONDITION-PROJECTION-CORE - Split save-gated condition projection core | ready-for-implementation-after-light-research | none | Pure profile facts only. |
 | 6 | A6-SPELL-ATTACK-DAMAGE-CORE - Split spell attack damage projection core | ready-for-implementation-after-light-research | none | Pure profile facts only. |
@@ -234,7 +234,7 @@ Acceptance: spell procedure examples pass; coverage check passes.
 
 ### Task 3 - A3-INVOCATION-ACTION-SLOT-CORE - Extract invocation action and slot mapping core
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: isolate action-cost, slot-spend, one-slot-spell-per-turn, and access
 admission mapping while continuing to use `spell-slot-expenditure.qnt` as the
