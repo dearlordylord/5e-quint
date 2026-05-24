@@ -83,13 +83,13 @@
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 132,
-      "numerator": 130,
-      "percent": "98.5%"
+      "numerator": 131,
+      "percent": "99.2%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 132,
-      "numerator": 130,
-      "percent": "98.5%"
+      "numerator": 131,
+      "percent": "99.2%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 144,
@@ -3900,13 +3900,13 @@
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 132,
-        "numerator": 130,
-        "percent": "98.5%"
+        "numerator": 131,
+        "percent": "99.2%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 132,
-        "numerator": 130,
-        "percent": "98.5%"
+        "numerator": 131,
+        "percent": "99.2%"
       }
     },
     "profileKinds": [
@@ -5746,8 +5746,15 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
+            "runtime": "character-sheet",
+            "status": "covered",
+            "title": "Character Sheet projects retained class-feature always-prepared Spell Access without duplicating class prepared-spell state"
+          }
+        ],
         "profileId": "character-sheet.class-feature-prepared-spell-access",
         "profileKind": "character-sheet"
       },

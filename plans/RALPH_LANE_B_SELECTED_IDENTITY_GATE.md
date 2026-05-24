@@ -208,7 +208,7 @@ identity evidence or an explicit non-applicable classification.
     {
       "number": 33,
       "id": "B30-CLASS-FEATURE-PREPARED-SPELL-ACCESS-RULES-KERNEL-MAPPING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Map class feature prepared spell access profile to rules-kernel obligations"
     },
     {
@@ -294,7 +294,7 @@ Lane B must not:
 | 30 | B27-CREATURE-SIZE-RULES-KERNEL-MAPPING - Map creature size change profile to rules-kernel obligations | done | none | Mapped `spell.invocation-creature-size-change` to `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE`; generated rules-kernel profile join gaps no longer list it. |
 | 31 | B28-WIZARD-SPELLBOOK-LEARNING-RULES-KERNEL-MAPPING - Map Wizard spellbook learning profile to rules-kernel obligations | done | none | Mapped `character-creation.wizard-spellbook-learning-choice` to `CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION`; generated rules-kernel profile join gaps no longer list it. |
 | 32 | B29-LEVITATED-CREATURE-RULES-KERNEL-MAPPING - Map levitated creature profile to rules-kernel obligations | done | none | Mapped `spell.invocation-levitated-creature` to `BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE`; generated rules-kernel profile join gaps no longer list it. |
-| 33 | B30-CLASS-FEATURE-PREPARED-SPELL-ACCESS-RULES-KERNEL-MAPPING - Map class feature prepared spell access profile to rules-kernel obligations | ready-for-research | none | Metric-honesty gap: `character-sheet.class-feature-prepared-spell-access` is unmapped in `rulesKernelProfileJoin`. |
+| 33 | B30-CLASS-FEATURE-PREPARED-SPELL-ACCESS-RULES-KERNEL-MAPPING - Map class feature prepared spell access profile to rules-kernel obligations | done | none | Mapped `character-sheet.class-feature-prepared-spell-access` to `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION`; generated rules-kernel profile join gaps no longer list it. |
 | 34 | B31-DRUID-CIRCLE-LAND-SPELL-ACCESS-RULES-KERNEL-MAPPING - Map Druid Circle Land spell access profile to rules-kernel obligations | ready-for-research | none | Metric-honesty gap: `character-sheet.druid-circle-land-spell-access` is unmapped and leaves `druid_circle_of_the_land_spells` uncovered in `rulesKernelSupportedUnitCoverage`. |
 | 35 | B32-DRAGONS-BREATH-CATALOG-ADMISSION - Repair Dragon's Breath catalog admission | ready-for-research | none | Metric-honesty gap: `dragons_breath` is supported-profile but remains `not-in-unit-catalog`; repair the catalog boundary without treating support as admission. |
 | 36 | B33-RAY-OF-ENFEEBLEMENT-CATALOG-ADMISSION - Repair Ray of Enfeeblement catalog admission | ready-for-research | none | Metric-honesty gap: `ray_of_enfeeblement` is supported-profile but remains `not-in-unit-catalog`; repair the catalog boundary without treating support as admission. |
@@ -813,7 +813,7 @@ longer list `spell.invocation-levitated-creature`.
 
 ### Task 33 - B30-CLASS-FEATURE-PREPARED-SPELL-ACCESS-RULES-KERNEL-MAPPING - Map class feature prepared spell access profile to rules-kernel obligations
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: map `character-sheet.class-feature-prepared-spell-access` to the
 character-sheet spell-access rules-kernel obligation after checking the
@@ -822,6 +822,11 @@ class-feature prepared-spell source shape.
 Acceptance: `rulesKernelProfileJoinCoverage` no longer lists
 `character-sheet.class-feature-prepared-spell-access` as unmapped, and the
 mapping does not duplicate per-class spell access state.
+
+Result: mapped to `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION`, owned
+by the existing class-feature selected-identity QNT/runtime/test evidence.
+Generated rules-kernel profile join gaps no longer list
+`character-sheet.class-feature-prepared-spell-access`.
 
 ### Task 34 - B31-DRUID-CIRCLE-LAND-SPELL-ACCESS-RULES-KERNEL-MAPPING - Map Druid Circle Land spell access profile to rules-kernel obligations
 

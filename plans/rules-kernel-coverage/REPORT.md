@@ -4,14 +4,14 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Summary
 
-- Total obligations: 96
-- Covered obligations: 90
+- Total obligations: 97
+- Covered obligations: 91
 - Open transitional obligations: 0
 - Boundary or unsupported obligations: 6
 
 | Status | Count |
 | --- | ---: |
-| covered | 90 |
+| covered | 91 |
 | needs-qnt-owner | 0 |
 | needs-parity-witness | 0 |
 | needs-surface-evidence | 0 |
@@ -23,7 +23,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | shared-algebras | 1 |
 | battle | 71 |
 | character-creation | 13 |
-| character-sheet | 8 |
+| character-sheet | 9 |
 | character-battle | 3 |
 
 ## Obligations
@@ -123,6 +123,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS` | character-sheet | covered | `character-sheet.pact-slot-recovery`, `character-sheet.short-rest-spell-slot-recovery` |
 | `SHEET.WEAPON_MASTERY.RESELECTION` | character-sheet | covered | `character-sheet.weapon-mastery-reselection` |
 | `SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION` | character-sheet | covered | `character-sheet.spellbook-ritual-invocation` |
+| `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION` | character-sheet | covered | `character-sheet.class-feature-prepared-spell-access` |
 | `BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE` | battle | covered | `spell.invocation-dragons-breath-initial` |
 | `BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION` | battle | covered | `spell.invocation-dragons-breath-granted-action` |
 | `BATTLE.ATTACK.MINIMAL_RESOLUTION` | battle | covered | _direct reducer entrypoint_ |
@@ -308,6 +309,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt` | selected-identity-trace | `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION` |
 | `packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt` | mbt-fixture | `SHEET.ABILITY_CHECK.PROFICIENCY_BONUS` |
 | `packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt` | selected-identity-trace | `SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE` |
+| `packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt` | selected-identity-trace | `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION` |
 | `packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt` | mbt-fixture | `SHEET.HP_REST_HIT_DICE.TRANSITIONS` |
 | `packages/character-sheet-runtime/character-sheet-spell-rest-benefit-application.mbt.qnt` | mbt-fixture | `SHEET.SPELL_REST_BENEFIT.APPLICATION` |
 | `packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt` | mbt-fixture | `SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS` |
