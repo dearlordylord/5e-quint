@@ -118,7 +118,7 @@ identity evidence or an explicit non-applicable classification.
     {
       "number": 18,
       "id": "B18-RECURSIVE-NEXT-BATCH",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Mine next selected-identity batch"
     },
     {
@@ -189,8 +189,8 @@ Lane B must not:
 | 15 | B15-UNIT-REPORT-HONESTY-PASS - Refresh Unit report wording and metrics | done | B14 | Generated denominator audit for Unit/profile-fact group counts. |
 | 16 | B16-MCP-SCENARIO-IDENTITY-SMOKE - Add MCP selected-identity smoke coverage | done | B14 | One narrow smoke scenario. |
 | 17 | B17-END-TO-END-UNIT-VERIFICATION - Run and document lane B verification | done | B15,B16 | Unit coverage and typecheck. |
-| 18 | B18-RECURSIVE-NEXT-BATCH - Mine next selected-identity batch | blocked | B17 | Must append >=12 tasks or prove exhaustion. |
-| 19 | L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION - Reconcile Acid Arrow RAW corpus | blocked | owner RAW decision | Resolve the local SRD damage-timing contradiction before modeling Acid Arrow executable behavior. |
+| 18 | B18-RECURSIVE-NEXT-BATCH - Mine next selected-identity batch | ready-for-research | none | Must append >=12 tasks or prove exhaustion. |
+| 19 | L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION - Reconcile Acid Arrow RAW corpus | blocked | none | Owner-decision blocker: resolve the local SRD damage-timing contradiction before modeling Acid Arrow executable behavior. |
 | 20 | L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE - Repair Acid Arrow Surface damage shape | blocked | L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION | Make the approved Acid Arrow damage timing, miss branch, delayed damage, and slot scaling executable in Surface content/schema. |
 | 21 | L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT - Promote Acid Arrow delayed runtime support | blocked | L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION,L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE | Add promoted Quint/runtime parity for the approved Acid Arrow behavior. |
 
@@ -437,7 +437,7 @@ findings.
 
 ### Task 18 - B18-RECURSIVE-NEXT-BATCH - Mine next selected-identity batch
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Output: append at least 12 new atomic tasks for any remaining selected-identity
 or metric-honesty gaps. If fewer than 12 remain, split by Unit group only when
@@ -449,6 +449,11 @@ or the generated gap report proves exhaustion.
 ### Task 19 - L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION - Reconcile Acid Arrow RAW corpus
 
 Status: `blocked`
+
+Blocker Type: `owner-decision`
+
+Blocker Detail: owner must approve an Acid Arrow RAW corpus correction or an
+`ASSUMPTIONS.md` entry that resolves the local damage-timing contradiction.
 
 Output: resolve the local SRD Acid Arrow damage contradiction by either
 correcting the local corpus or adding an owner-approved `ASSUMPTIONS.md` entry
