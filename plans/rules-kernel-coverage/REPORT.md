@@ -349,6 +349,160 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `range`, `map`, `set-operators`, `membership` |
 | `BATTLE.REACTION.OFFER_DECLINE_RESUME` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `map`, `set-operators`, `membership` |
 | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `constant-val`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `membership` |
+| `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY` | not-assessed |  |
+| `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` | not-assessed |  |
+| `BATTLE.SPELL.HIT_POINT_RESTORATION` | not-assessed |  |
+| `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE` | not-assessed |  |
+| `BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT` | not-assessed |  |
+| `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY` | not-assessed |  |
+| `BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE` | not-assessed |  |
+| `BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING` | not-assessed |  |
+| `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` | not-assessed |  |
+| `BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION` | not-assessed |  |
+| `BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.MAKE_STABLE_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS` | not-assessed |  |
+| `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` | not-assessed |  |
+| `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION` | not-assessed |  |
+| `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS` | not-assessed |  |
+| `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` | not-assessed |  |
+| `BATTLE.SPELL.SELF_TRANSFORMATION_MODE` | not-assessed |  |
+| `BATTLE.SPELL.REACTION_CASTING_TIME` | not-assessed |  |
+| `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` | not-assessed |  |
+| `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` | not-assessed |  |
+| `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` | not-assessed |  |
+| `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE` | not-assessed |  |
+| `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE` | not-assessed |  |
+| `BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION` | not-assessed |  |
+| `BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING` | not-assessed |  |
+| `BATTLE.SANCTUARY.TARGETING_INTERDICTION` | not-assessed |  |
+| `BATTLE.STAT_BLOCK.ATTACK_CONTROL` | not-assessed |  |
+| `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` | not-assessed |  |
+| `BATTLE.COMMAND.OPTION_AND_NEXT_TURN` | not-assessed |  |
+| `BATTLE.DAMAGE.ATTACK_BRANCHES` | not-assessed |  |
+| `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES` | not-assessed |  |
+| `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` | not-assessed |  |
+| `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | not-assessed |  |
+| `BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE` | not-assessed |  |
+| `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY` | not-assessed |  |
+| `CREATION.CHOICE_DISCOVERY_CARDINALITY` | not-assessed |  |
+| `SHEET.HP_REST_HIT_DICE.TRANSITIONS` | not-assessed |  |
+| `BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE` | not-assessed |  |
+| `BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION` | not-assessed |  |
+| `BATTLE.ATTACK.MINIMAL_RESOLUTION` | not-assessed |  |
+
+### Generator Readiness Backlog
+
+Rows here are derived from covered obligations with semantic-core QNT owners whose generator-readiness row is either omitted or still `not-assessed`.
+
+| Obligation | Status | Semantic-core owners | Owner roles |
+| --- | --- | --- | --- |
+| `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY` | not-assessed | `packages/shared-algebras/proofs/rule-core/shove-outcome.qnt` | `packages/shared-algebras/proofs/rule-core/shove-outcome.qnt`: semantic-core |
+| `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` | not-assessed | `packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt`, `packages/battle-runtime/battle-runtime.qnt`, `packages/battle-runtime/battle-runtime-monk-focus.qnt` | `packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-monk-focus.qnt`: semantic-core |
+| `BATTLE.SPELL.HIT_POINT_RESTORATION` | not-assessed | `packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt` | `packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt`: semantic-core |
+| `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime.qnt`, `packages/battle-runtime/battle-runtime-sanctuary.qnt`, `packages/battle-runtime/battle-runtime-concentration.qnt`, `packages/battle-runtime/battle-runtime-timed-effects.qnt` | `packages/battle-runtime/battle-runtime.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-sanctuary.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-concentration.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-timed-effects.qnt`: semantic-core |
+| `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime-save-gated-spell.qnt`, `packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt` | `packages/battle-runtime/battle-runtime-save-gated-spell.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt`: semantic-core |
+| `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE` | not-assessed | `packages/battle-runtime/battle-runtime-save-gated-spell.qnt`, `packages/battle-runtime/battle-runtime-spell-attack.qnt` | `packages/battle-runtime/battle-runtime-save-gated-spell.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-spell-attack.qnt`: semantic-core |
+| `BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT` | not-assessed | `packages/battle-runtime/battle-runtime-see-invisibility.qnt` | `packages/battle-runtime/battle-runtime-see-invisibility.qnt`: semantic-core |
+| `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime-save-gated-spell.qnt`, `packages/battle-runtime/battle-runtime-spell-attack.qnt`, `packages/battle-runtime/battle-runtime-timed-effects.qnt`, `packages/battle-runtime/battle-runtime-concentration.qnt` | `packages/battle-runtime/battle-runtime-save-gated-spell.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-spell-attack.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-timed-effects.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-concentration.qnt`: semantic-core |
+| `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY` | not-assessed | `packages/battle-runtime/battle-runtime-save-gated-spell.qnt` | `packages/battle-runtime/battle-runtime-save-gated-spell.qnt`: semantic-core |
+| `BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime.qnt` | `packages/battle-runtime/battle-runtime.qnt`: semantic-core |
+| `BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime.qnt` | `packages/battle-runtime/battle-runtime.qnt`: semantic-core |
+| `BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime.qnt` | `packages/battle-runtime/battle-runtime.qnt`: semantic-core |
+| `BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime.qnt` | `packages/battle-runtime/battle-runtime.qnt`: semantic-core |
+| `BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime-gust-of-wind.qnt` | `packages/battle-runtime/battle-runtime-gust-of-wind.qnt`: semantic-core |
+| `BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING` | not-assessed | `packages/battle-runtime/battle-runtime.qnt` | `packages/battle-runtime/battle-runtime.qnt`: semantic-core |
+| `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` | not-assessed | `packages/battle-runtime/battle-runtime-metamagic.qnt` | `packages/battle-runtime/battle-runtime-metamagic.qnt`: semantic-core |
+| `BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION` | not-assessed | `packages/battle-runtime/battle-runtime.qnt` | `packages/battle-runtime/battle-runtime.qnt`: semantic-core |
+| `BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt` | `packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt`: semantic-core |
+| `BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime.qnt` | `packages/battle-runtime/battle-runtime.qnt`: semantic-core |
+| `BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime.qnt` | `packages/battle-runtime/battle-runtime.qnt`: semantic-core |
+| `BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime.qnt` | `packages/battle-runtime/battle-runtime.qnt`: semantic-core |
+| `BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime.qnt` | `packages/battle-runtime/battle-runtime.qnt`: semantic-core |
+| `BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime.qnt` | `packages/battle-runtime/battle-runtime.qnt`: semantic-core |
+| `BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime.qnt` | `packages/battle-runtime/battle-runtime.qnt`: semantic-core |
+| `BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime.qnt` | `packages/battle-runtime/battle-runtime.qnt`: semantic-core |
+| `BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime.qnt` | `packages/battle-runtime/battle-runtime.qnt`: semantic-core |
+| `BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime.qnt` | `packages/battle-runtime/battle-runtime.qnt`: semantic-core |
+| `BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime.qnt` | `packages/battle-runtime/battle-runtime.qnt`: semantic-core |
+| `BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime.qnt` | `packages/battle-runtime/battle-runtime.qnt`: semantic-core |
+| `BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime.qnt` | `packages/battle-runtime/battle-runtime.qnt`: semantic-core |
+| `BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime.qnt` | `packages/battle-runtime/battle-runtime.qnt`: semantic-core |
+| `BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime.qnt` | `packages/battle-runtime/battle-runtime.qnt`: semantic-core |
+| `BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime.qnt` | `packages/battle-runtime/battle-runtime.qnt`: semantic-core |
+| `BATTLE.SPELL.MAKE_STABLE_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime-hit-points.qnt` | `packages/battle-runtime/battle-runtime-hit-points.qnt`: semantic-core |
+| `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS` | not-assessed | `packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt`, `packages/battle-runtime/battle-runtime-thaumaturgy.qnt` | `packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-thaumaturgy.qnt`: semantic-core |
+| `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` | not-assessed | `packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt` | `packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt`: semantic-core |
+| `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION` | not-assessed | `packages/battle-runtime/battle-runtime-creature-type-protection.qnt` | `packages/battle-runtime/battle-runtime-creature-type-protection.qnt`: semantic-core |
+| `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS` | not-assessed | `packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt`, `packages/battle-runtime/battle-runtime-timed-effects.qnt`, `packages/battle-runtime/battle-runtime-concentration.qnt` | `packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-timed-effects.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-concentration.qnt`: semantic-core |
+| `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` | not-assessed | `packages/battle-runtime/battle-runtime-direct-condition-removal.qnt`, `packages/battle-runtime/battle-runtime-protection-from-poison.qnt` | `packages/battle-runtime/battle-runtime-direct-condition-removal.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-protection-from-poison.qnt`: semantic-core |
+| `BATTLE.SPELL.SELF_TRANSFORMATION_MODE` | not-assessed | `packages/battle-runtime/battle-runtime-self-transformation.qnt` | `packages/battle-runtime/battle-runtime-self-transformation.qnt`: semantic-core |
+| `BATTLE.SPELL.REACTION_CASTING_TIME` | not-assessed | `packages/battle-runtime/battle-runtime-reaction-window.qnt`, `packages/battle-runtime/battle-runtime-spell-invocation.qnt` | `packages/battle-runtime/battle-runtime-reaction-window.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-spell-invocation.qnt`: semantic-core |
+| `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` | not-assessed | `packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt`, `packages/battle-runtime/battle-runtime-spell-invocation.qnt`, `packages/battle-runtime/battle-runtime-concentration.qnt` | `packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-spell-invocation.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-concentration.qnt`: semantic-core |
+| `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` | not-assessed | `packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt`, `packages/battle-runtime/battle-runtime-weapon-attacks.qnt`, `packages/battle-runtime/battle-runtime-light.qnt`, `packages/battle-runtime/battle-runtime-spell-invocation.qnt` | `packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-weapon-attacks.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-light.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-spell-invocation.qnt`: semantic-core |
+| `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` | not-assessed | `packages/battle-runtime/battle-runtime-marked-riders.qnt`, `packages/battle-runtime/battle-runtime-marked-spells.qnt`, `packages/battle-runtime/battle-runtime-concentration.qnt` | `packages/battle-runtime/battle-runtime-marked-riders.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-marked-spells.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-concentration.qnt`: semantic-core |
+| `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE` | not-assessed | `packages/battle-runtime/battle-runtime-chained-spell-attack.qnt`, `packages/battle-runtime/battle-runtime-spell-attack.qnt`, `packages/battle-runtime/battle-runtime-spell-invocation.qnt` | `packages/battle-runtime/battle-runtime-chained-spell-attack.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-spell-attack.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-spell-invocation.qnt`: semantic-core |
+| `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE` | not-assessed | `packages/battle-runtime/battle-runtime-spell-attack.qnt`, `packages/battle-runtime/battle-runtime-spell-invocation.qnt` | `packages/battle-runtime/battle-runtime-spell-attack.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-spell-invocation.qnt`: semantic-core |
+| `BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION` | not-assessed | `packages/battle-runtime/battle-runtime-mirror-image.qnt` | `packages/battle-runtime/battle-runtime-mirror-image.qnt`: semantic-core |
+| `BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING` | not-assessed | `packages/battle-runtime/battle-runtime-warding-bond.qnt` | `packages/battle-runtime/battle-runtime-warding-bond.qnt`: semantic-core |
+| `BATTLE.SANCTUARY.TARGETING_INTERDICTION` | not-assessed | `packages/battle-runtime/battle-runtime-sanctuary.qnt` | `packages/battle-runtime/battle-runtime-sanctuary.qnt`: semantic-core |
+| `BATTLE.STAT_BLOCK.ATTACK_CONTROL` | not-assessed | `packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt` | `packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt`: semantic-core |
+| `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` | not-assessed | `packages/battle-runtime/battle-runtime.qnt`, `packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt` | `packages/battle-runtime/battle-runtime.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt`: semantic-core |
+| `BATTLE.COMMAND.OPTION_AND_NEXT_TURN` | not-assessed | `packages/battle-runtime/battle-runtime-ground-command.qnt`, `packages/battle-runtime/battle-runtime-command-choice.qnt` | `packages/battle-runtime/battle-runtime-ground-command.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-command-choice.qnt`: semantic-core |
+| `BATTLE.DAMAGE.ATTACK_BRANCHES` | not-assessed | `packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt`, `packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt` | `packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt`: semantic-core<br>`packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt`: semantic-core |
+| `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES` | not-assessed | `packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt`, `packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt` | `packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt`: semantic-core<br>`packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt`: semantic-core |
+| `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` | not-assessed | `packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt`, `packages/battle-runtime/battle-runtime-damage-adjustments.qnt` | `packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-damage-adjustments.qnt`: semantic-core |
+| `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | not-assessed | `packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt`, `packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt` | `packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt`: semantic-core<br>`packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt`: semantic-core |
+| `BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime-hit-points.qnt` | `packages/battle-runtime/battle-runtime-hit-points.qnt`: semantic-core |
+| `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY` | not-assessed | `packages/character-creation-runtime/character-creation-runtime-slice.qnt` | `packages/character-creation-runtime/character-creation-runtime-slice.qnt`: semantic-core |
+| `CREATION.CHOICE_DISCOVERY_CARDINALITY` | not-assessed | `packages/character-creation-runtime/character-creation-runtime-slice.qnt` | `packages/character-creation-runtime/character-creation-runtime-slice.qnt`: semantic-core |
+| `SHEET.HP_REST_HIT_DICE.TRANSITIONS` | not-assessed | `packages/shared-algebras/proofs/rule-core/hit-point-recovery.qnt` | `packages/shared-algebras/proofs/rule-core/hit-point-recovery.qnt`: semantic-core |
+| `BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE` | not-assessed | `packages/battle-runtime/battle-runtime.qnt` | `packages/battle-runtime/battle-runtime.qnt`: semantic-core |
+| `BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION` | not-assessed | `packages/battle-runtime/battle-runtime.qnt` | `packages/battle-runtime/battle-runtime.qnt`: semantic-core |
+| `BATTLE.ATTACK.MINIMAL_RESOLUTION` | not-assessed | `packages/battle-runtime/creature-attack.qnt` | `packages/battle-runtime/creature-attack.qnt`: semantic-core |
+
+### Semantic-Core Run Block Findings
+
+Rows here are derived from semantic-core QNT owners that still contain Quint `run` blocks. Assessed readiness rows must split those tests out or classify the generator blocker as `run-block-coupled`.
+
+| Obligation | Readiness status | Blocker | Semantic-core run blocks |
+| --- | --- | --- | --- |
+| `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY` | not-assessed | `run-block-coupled` | `packages/shared-algebras/proofs/rule-core/shove-outcome.qnt`: lines `128`, `138`, `148`, `164`, `183` |
+| `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` | not-assessed | `run-block-coupled` | `packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt`: lines `1385`, `1401`, `1411`, `1439`, `1471`, `1492`, `1511`, `1537`, `1570`, `1589`, `1624`, `1658`, `1681`, `1713`, `1755`, `1797`, `1823`, `1840`, `1857`, `1879`, `1900`, `1943`, `1958`, `1994`, `2018`, `2047`, `2070`, `2115`, `2134`, `2152`, `2183`, `2204`, `2220`, `2239`, `2257`, `2296`, `2347`, `2371`, `2389`, `2404`, `2419`<br>`packages/battle-runtime/battle-runtime-monk-focus.qnt`: lines `134`, `140`, `149`, `159`, `168`, `178`, `199` |
+| `BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE` | not-assessed | `run-block-coupled` | `packages/battle-runtime/battle-runtime-gust-of-wind.qnt`: lines `163` |
+| `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` | not-assessed | `run-block-coupled` | `packages/battle-runtime/battle-runtime-metamagic.qnt`: lines `337`, `363`, `378`, `393`, `416`, `488`, `509`, `545` |
+| `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` | not-assessed | `run-block-coupled` | `packages/battle-runtime/battle-runtime-direct-condition-removal.qnt`: lines `137`, `163`, `183`, `196`, `220`<br>`packages/battle-runtime/battle-runtime-protection-from-poison.qnt`: lines `101`, `116`, `126` |
+| `BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING` | not-assessed | `run-block-coupled` | `packages/battle-runtime/battle-runtime-warding-bond.qnt`: lines `187`, `205`, `217`, `228` |
+| `BATTLE.STAT_BLOCK.ATTACK_CONTROL` | not-assessed | `run-block-coupled` | `packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt`: lines `502`, `510`, `533`, `548`, `556`, `571`, `594`, `610`, `621`, `643` |
+| `BATTLE.DAMAGE.ATTACK_BRANCHES` | not-assessed | `run-block-coupled` | `packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt`: lines `180`, `193`, `206`, `219`, `227`, `237`, `272`, `302`, `327`, `357`<br>`packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt`: lines `1385`, `1401`, `1411`, `1439`, `1471`, `1492`, `1511`, `1537`, `1570`, `1589`, `1624`, `1658`, `1681`, `1713`, `1755`, `1797`, `1823`, `1840`, `1857`, `1879`, `1900`, `1943`, `1958`, `1994`, `2018`, `2047`, `2070`, `2115`, `2134`, `2152`, `2183`, `2204`, `2220`, `2239`, `2257`, `2296`, `2347`, `2371`, `2389`, `2404`, `2419` |
+| `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES` | not-assessed | `run-block-coupled` | `packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt`: lines `1385`, `1401`, `1411`, `1439`, `1471`, `1492`, `1511`, `1537`, `1570`, `1589`, `1624`, `1658`, `1681`, `1713`, `1755`, `1797`, `1823`, `1840`, `1857`, `1879`, `1900`, `1943`, `1958`, `1994`, `2018`, `2047`, `2070`, `2115`, `2134`, `2152`, `2183`, `2204`, `2220`, `2239`, `2257`, `2296`, `2347`, `2371`, `2389`, `2404`, `2419` |
+| `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` | not-assessed | `run-block-coupled` | `packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt`: lines `355`, `369`, `373`, `381`, `392`, `404`, `419` |
+| `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | not-assessed | `run-block-coupled` | `packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt`: lines `180`, `193`, `206`, `219`, `227`, `237`, `272`, `302`, `327`, `357`<br>`packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt`: lines `1385`, `1401`, `1411`, `1439`, `1471`, `1492`, `1511`, `1537`, `1570`, `1589`, `1624`, `1658`, `1681`, `1713`, `1755`, `1797`, `1823`, `1840`, `1857`, `1879`, `1900`, `1943`, `1958`, `1994`, `2018`, `2047`, `2070`, `2115`, `2134`, `2152`, `2183`, `2204`, `2220`, `2239`, `2257`, `2296`, `2347`, `2371`, `2389`, `2404`, `2419` |
+| `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY` | not-assessed | `run-block-coupled` | `packages/character-creation-runtime/character-creation-runtime-slice.qnt`: lines `578`, `582`, `595`, `603`, `619`, `633`, `653`, `669`, `682`, `695`, `719`, `741` |
+| `CREATION.CHOICE_DISCOVERY_CARDINALITY` | not-assessed | `run-block-coupled` | `packages/character-creation-runtime/character-creation-runtime-slice.qnt`: lines `578`, `582`, `595`, `603`, `619`, `633`, `653`, `669`, `682`, `695`, `719`, `741` |
+| `SHEET.HP_REST_HIT_DICE.TRANSITIONS` | not-assessed | `run-block-coupled` | `packages/shared-algebras/proofs/rule-core/hit-point-recovery.qnt`: lines `140`, `169`, `192`, `210`, `238`, `260`, `279`, `302` |
 
 ## Kernel IR Boundaries
 

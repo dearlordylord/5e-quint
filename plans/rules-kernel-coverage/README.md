@@ -95,7 +95,9 @@ generated Rust exists.
 real obligation id and must explicitly declare `semanticCore`, `proofOnly`,
 `generatorSubset`, and `blockedBy`; omitted arrays are invalid because empty and
 unknown are different states. If present, `dryRun` points at a checked manual
-dry-run artifact.
+dry-run artifact. The checker requires a row for every covered obligation with
+at least one QNT owner role classified as `semantic-core`; use `not-assessed`
+with empty arrays until the C-lane classification is known.
 
 - `semanticCore`: QNT owner files intended to supply executable rule semantics
   for the obligation. Every path must also be declared by the obligation's QNT
@@ -120,6 +122,12 @@ name concrete generator-cleanliness blockers such as run-block coupling, MBT
 harness coupling, proof-helper coupling, fixture-world coupling, bridge
 projection coupling, selected-identity coupling, or an unsupported construct;
 they are not migration history labels.
+
+Checker-produced generator-readiness blocker findings must also declare their
+token in `generatorReadinessScannerBlockers` in
+`scripts/rules-kernel-coverage-config.cjs`. The checker fails if a scanner
+blocker is not present in the documented blocker vocabulary, so adding a new
+scanner blocker requires adding its catalog description in the same file.
 
 Generator-readiness statuses are:
 

@@ -116,6 +116,33 @@ const generatorReadinessBlockers = new Set(
   Object.keys(generatorReadinessBlockerVocabulary),
 );
 
+const generatorReadinessScannerBlockers = {
+  semanticCoreRunBlock: "run-block-coupled",
+};
+
+function generatorReadinessBlockerCatalogIssues({
+  blockerVocabulary = generatorReadinessBlockerVocabulary,
+  scannerBlockers = generatorReadinessScannerBlockers,
+} = {}) {
+  const issues = [];
+  const blockerTokens = new Set(Object.keys(blockerVocabulary));
+  for (const [token, description] of Object.entries(blockerVocabulary)) {
+    if (typeof description !== "string" || description.trim().length === 0) {
+      issues.push(
+        `generator-readiness blocker ${token} must have a non-empty catalog description.`,
+      );
+    }
+  }
+  for (const [scannerName, token] of Object.entries(scannerBlockers)) {
+    if (!blockerTokens.has(token)) {
+      issues.push(
+        `generator-readiness scanner blocker ${scannerName} uses undocumented blocker token ${token}.`,
+      );
+    }
+  }
+  return issues;
+}
+
 const qntOwnerRoles = new Set([
   "semantic-core",
   "proof-only",
@@ -182,7 +209,9 @@ module.exports = {
   battleFrontierSubjects,
   coveragePaths,
   coveredStatuses,
+  generatorReadinessBlockerCatalogIssues,
   generatorReadinessBlockers,
+  generatorReadinessScannerBlockers,
   generatorReadinessStatuses,
   generatorSubsetConstructs,
   kernelIrBoundaryKinds,

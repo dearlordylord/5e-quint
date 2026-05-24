@@ -5889,6 +5889,1722 @@
         "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
       ],
       "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.HIT_POINT_RESTORATION",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.MAKE_STABLE_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.SELF_TRANSFORMATION_MODE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.REACTION_CASTING_TIME",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SANCTUARY.TARGETING_INTERDICTION",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.STAT_BLOCK.ATTACK_CONTROL",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.DAMAGE.ATTACK_BRANCHES",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "CREATION.CHOICE_DISCOVERY_CARDINALITY",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "SHEET.HP_REST_HIT_DICE.TRANSITIONS",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.ATTACK.MINIMAL_RESOLUTION",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    }
+  ],
+  "generatorReadinessBacklog": [
+    {
+      "obligationId": "BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/shove-outcome.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.HIT_POINT_RESTORATION",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-sanctuary.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-concentration.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-timed-effects.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-see-invisibility.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-timed-effects.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-concentration.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-gust-of-wind.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.MAKE_STABLE_LIFECYCLE",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-hit-points.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-thaumaturgy.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-creature-type-protection.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-timed-effects.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-concentration.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-direct-condition-removal.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-protection-from-poison.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.SELF_TRANSFORMATION_MODE",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-self-transformation.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.REACTION_CASTING_TIME",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-concentration.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-light.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-marked-riders.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-marked-spells.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-concentration.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-chained-spell-attack.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-mirror-image.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-warding-bond.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SANCTUARY.TARGETING_INTERDICTION",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-sanctuary.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.STAT_BLOCK.ATTACK_CONTROL",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-ground-command.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-command-choice.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.DAMAGE.ATTACK_BRANCHES",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-damage-adjustments.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-hit-points.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/character-creation-runtime/character-creation-runtime-slice.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "CREATION.CHOICE_DISCOVERY_CARDINALITY",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/character-creation-runtime/character-creation-runtime-slice.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "SHEET.HP_REST_HIT_DICE.TRANSITIONS",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/hit-point-recovery.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.ATTACK.MINIMAL_RESOLUTION",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/creature-attack.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    }
+  ],
+  "semanticCoreRunBlockFindings": [
+    {
+      "blocker": "run-block-coupled",
+      "obligationId": "BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY",
+      "owners": [
+        {
+          "lines": [
+            128,
+            138,
+            148,
+            164,
+            183
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/shove-outcome.qnt"
+        }
+      ],
+      "readinessStatus": "not-assessed"
+    },
+    {
+      "blocker": "run-block-coupled",
+      "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+      "owners": [
+        {
+          "lines": [
+            1385,
+            1401,
+            1411,
+            1439,
+            1471,
+            1492,
+            1511,
+            1537,
+            1570,
+            1589,
+            1624,
+            1658,
+            1681,
+            1713,
+            1755,
+            1797,
+            1823,
+            1840,
+            1857,
+            1879,
+            1900,
+            1943,
+            1958,
+            1994,
+            2018,
+            2047,
+            2070,
+            2115,
+            2134,
+            2152,
+            2183,
+            2204,
+            2220,
+            2239,
+            2257,
+            2296,
+            2347,
+            2371,
+            2389,
+            2404,
+            2419
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        },
+        {
+          "lines": [
+            134,
+            140,
+            149,
+            159,
+            168,
+            178,
+            199
+          ],
+          "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt"
+        }
+      ],
+      "readinessStatus": "not-assessed"
+    },
+    {
+      "blocker": "run-block-coupled",
+      "obligationId": "BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE",
+      "owners": [
+        {
+          "lines": [
+            163
+          ],
+          "ownerPath": "packages/battle-runtime/battle-runtime-gust-of-wind.qnt"
+        }
+      ],
+      "readinessStatus": "not-assessed"
+    },
+    {
+      "blocker": "run-block-coupled",
+      "obligationId": "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
+      "owners": [
+        {
+          "lines": [
+            337,
+            363,
+            378,
+            393,
+            416,
+            488,
+            509,
+            545
+          ],
+          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        }
+      ],
+      "readinessStatus": "not-assessed"
+    },
+    {
+      "blocker": "run-block-coupled",
+      "obligationId": "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
+      "owners": [
+        {
+          "lines": [
+            137,
+            163,
+            183,
+            196,
+            220
+          ],
+          "ownerPath": "packages/battle-runtime/battle-runtime-direct-condition-removal.qnt"
+        },
+        {
+          "lines": [
+            101,
+            116,
+            126
+          ],
+          "ownerPath": "packages/battle-runtime/battle-runtime-protection-from-poison.qnt"
+        }
+      ],
+      "readinessStatus": "not-assessed"
+    },
+    {
+      "blocker": "run-block-coupled",
+      "obligationId": "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING",
+      "owners": [
+        {
+          "lines": [
+            187,
+            205,
+            217,
+            228
+          ],
+          "ownerPath": "packages/battle-runtime/battle-runtime-warding-bond.qnt"
+        }
+      ],
+      "readinessStatus": "not-assessed"
+    },
+    {
+      "blocker": "run-block-coupled",
+      "obligationId": "BATTLE.STAT_BLOCK.ATTACK_CONTROL",
+      "owners": [
+        {
+          "lines": [
+            502,
+            510,
+            533,
+            548,
+            556,
+            571,
+            594,
+            610,
+            621,
+            643
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
+        }
+      ],
+      "readinessStatus": "not-assessed"
+    },
+    {
+      "blocker": "run-block-coupled",
+      "obligationId": "BATTLE.DAMAGE.ATTACK_BRANCHES",
+      "owners": [
+        {
+          "lines": [
+            180,
+            193,
+            206,
+            219,
+            227,
+            237,
+            272,
+            302,
+            327,
+            357
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt"
+        },
+        {
+          "lines": [
+            1385,
+            1401,
+            1411,
+            1439,
+            1471,
+            1492,
+            1511,
+            1537,
+            1570,
+            1589,
+            1624,
+            1658,
+            1681,
+            1713,
+            1755,
+            1797,
+            1823,
+            1840,
+            1857,
+            1879,
+            1900,
+            1943,
+            1958,
+            1994,
+            2018,
+            2047,
+            2070,
+            2115,
+            2134,
+            2152,
+            2183,
+            2204,
+            2220,
+            2239,
+            2257,
+            2296,
+            2347,
+            2371,
+            2389,
+            2404,
+            2419
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        }
+      ],
+      "readinessStatus": "not-assessed"
+    },
+    {
+      "blocker": "run-block-coupled",
+      "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+      "owners": [
+        {
+          "lines": [
+            1385,
+            1401,
+            1411,
+            1439,
+            1471,
+            1492,
+            1511,
+            1537,
+            1570,
+            1589,
+            1624,
+            1658,
+            1681,
+            1713,
+            1755,
+            1797,
+            1823,
+            1840,
+            1857,
+            1879,
+            1900,
+            1943,
+            1958,
+            1994,
+            2018,
+            2047,
+            2070,
+            2115,
+            2134,
+            2152,
+            2183,
+            2204,
+            2220,
+            2239,
+            2257,
+            2296,
+            2347,
+            2371,
+            2389,
+            2404,
+            2419
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        }
+      ],
+      "readinessStatus": "not-assessed"
+    },
+    {
+      "blocker": "run-block-coupled",
+      "obligationId": "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
+      "owners": [
+        {
+          "lines": [
+            355,
+            369,
+            373,
+            381,
+            392,
+            404,
+            419
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt"
+        }
+      ],
+      "readinessStatus": "not-assessed"
+    },
+    {
+      "blocker": "run-block-coupled",
+      "obligationId": "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
+      "owners": [
+        {
+          "lines": [
+            180,
+            193,
+            206,
+            219,
+            227,
+            237,
+            272,
+            302,
+            327,
+            357
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt"
+        },
+        {
+          "lines": [
+            1385,
+            1401,
+            1411,
+            1439,
+            1471,
+            1492,
+            1511,
+            1537,
+            1570,
+            1589,
+            1624,
+            1658,
+            1681,
+            1713,
+            1755,
+            1797,
+            1823,
+            1840,
+            1857,
+            1879,
+            1900,
+            1943,
+            1958,
+            1994,
+            2018,
+            2047,
+            2070,
+            2115,
+            2134,
+            2152,
+            2183,
+            2204,
+            2220,
+            2239,
+            2257,
+            2296,
+            2347,
+            2371,
+            2389,
+            2404,
+            2419
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        }
+      ],
+      "readinessStatus": "not-assessed"
+    },
+    {
+      "blocker": "run-block-coupled",
+      "obligationId": "CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY",
+      "owners": [
+        {
+          "lines": [
+            578,
+            582,
+            595,
+            603,
+            619,
+            633,
+            653,
+            669,
+            682,
+            695,
+            719,
+            741
+          ],
+          "ownerPath": "packages/character-creation-runtime/character-creation-runtime-slice.qnt"
+        }
+      ],
+      "readinessStatus": "not-assessed"
+    },
+    {
+      "blocker": "run-block-coupled",
+      "obligationId": "CREATION.CHOICE_DISCOVERY_CARDINALITY",
+      "owners": [
+        {
+          "lines": [
+            578,
+            582,
+            595,
+            603,
+            619,
+            633,
+            653,
+            669,
+            682,
+            695,
+            719,
+            741
+          ],
+          "ownerPath": "packages/character-creation-runtime/character-creation-runtime-slice.qnt"
+        }
+      ],
+      "readinessStatus": "not-assessed"
+    },
+    {
+      "blocker": "run-block-coupled",
+      "obligationId": "SHEET.HP_REST_HIT_DICE.TRANSITIONS",
+      "owners": [
+        {
+          "lines": [
+            140,
+            169,
+            192,
+            210,
+            238,
+            260,
+            279,
+            302
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/hit-point-recovery.qnt"
+        }
+      ],
+      "readinessStatus": "not-assessed"
     }
   ],
   "kernelIrBoundaries": [
