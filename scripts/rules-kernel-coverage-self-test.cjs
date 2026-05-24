@@ -26,7 +26,11 @@ function runSelfTest() {
         runtime: "battle",
         kind: "state-transition",
         status: "covered",
-        qntOwners: ["sample.qnt"],
+        qntOwners: [
+          "sample.qnt",
+          "sample-inductive.qnt",
+          "sample-examples.qnt",
+        ],
         runtimeOwners: ["sample.ts"],
         parityWitnesses: [
           {
@@ -99,11 +103,24 @@ function runSelfTest() {
       "rules-kernel-coverage",
       "qnt-owner-roles.jsonl",
     ),
-    JSON.stringify({
-      ownerPath: "sample.qnt",
-      role: "semantic-core",
-      evidence: "sample.qnt is the qnt-owner marker source for BATTLE.SAMPLE.",
-    }) + "\n",
+    [
+      JSON.stringify({
+        ownerPath: "sample.qnt",
+        role: "semantic-core",
+        evidence:
+          "sample.qnt is the qnt-owner marker source for BATTLE.SAMPLE.",
+      }),
+      JSON.stringify({
+        ownerPath: "sample-inductive.qnt",
+        role: "proof-only",
+        evidence: "sample-inductive.qnt is proof-only sample evidence.",
+      }),
+      JSON.stringify({
+        ownerPath: "sample-examples.qnt",
+        role: "proof-only",
+        evidence: "sample-examples.qnt is example-only sample evidence.",
+      }),
+    ].join("\n") + "\n",
   );
   writeFile(
     path.join(
@@ -116,7 +133,7 @@ function runSelfTest() {
       obligationId: "BATTLE.SAMPLE",
       status: "semantic-core-candidate",
       semanticCore: ["sample.qnt"],
-      proofOnly: [],
+      proofOnly: ["sample-inductive.qnt", "sample-examples.qnt"],
       generatorSubset: ["record", "pure-def"],
       blockedBy: [],
       dryRun: "plans/rules-kernel-coverage/SAMPLE_DRY_RUN.md",
@@ -158,6 +175,14 @@ function runSelfTest() {
     "// KERNEL-COVERAGE: qnt-owner BATTLE.SAMPLE\nmodule sample {}\n",
   );
   writeFile(
+    path.join(root, "sample-inductive.qnt"),
+    "// KERNEL-COVERAGE: qnt-owner BATTLE.SAMPLE\nmodule sampleInductive {}\n",
+  );
+  writeFile(
+    path.join(root, "sample-examples.qnt"),
+    "// KERNEL-COVERAGE: qnt-owner BATTLE.SAMPLE\nmodule sampleExamples {}\n",
+  );
+  writeFile(
     path.join(root, "sample.ts"),
     "// KERNEL-COVERAGE: runtime-owner BATTLE.SAMPLE\nexport const sample = true;\n",
   );
@@ -183,7 +208,7 @@ function runSelfTest() {
   assert.deepEqual(result.issues, []);
   assert.equal(result.matrix.summary.byStatus.covered, 1);
   assert.equal(result.matrix.summary.byStatus["boundary-only"], 1);
-  assert.equal(result.matrix.qntOwnerRoles.length, 1);
+  assert.equal(result.matrix.qntOwnerRoles.length, 3);
   assert.equal(result.matrix.generatorReadiness.length, 1);
   assert.equal(result.matrix.kernelIrBoundaries.length, 8);
 
@@ -205,21 +230,23 @@ function runSelfTest() {
     ),
     `Expected missing qnt-owner role issue, got ${JSON.stringify(missingQntOwnerRoleResult.issues)}`,
   );
-  writeFile(
-    sampleQntOwnerRolesPath,
-    JSON.stringify({
-      ownerPath: "sample.qnt",
-      role: "mbt-fixture",
-      evidence: "sample invalid role for readiness semanticCore check.",
-    }) + "\n",
-  );
-  const wrongSemanticCoreRoleResult = buildKernelCoverage({ root });
-  assert.ok(
-    wrongSemanticCoreRoleResult.issues.includes(
-      "generator-readiness row 1.semanticCore path sample.qnt has QNT owner role mbt-fixture; expected semantic-core.",
-    ),
-    `Expected semanticCore role issue, got ${JSON.stringify(wrongSemanticCoreRoleResult.issues)}`,
-  );
+  for (const role of ["proof-only", "mbt-fixture"]) {
+    writeFile(
+      sampleQntOwnerRolesPath,
+      JSON.stringify({
+        ownerPath: "sample.qnt",
+        role,
+        evidence: `sample invalid ${role} role for readiness semanticCore check.`,
+      }) + "\n",
+    );
+    const wrongSemanticCoreRoleResult = buildKernelCoverage({ root });
+    assert.ok(
+      wrongSemanticCoreRoleResult.issues.includes(
+        `generator-readiness row 1.semanticCore path sample.qnt has QNT owner role ${role}; expected semantic-core.`,
+      ),
+      `Expected semanticCore ${role} role issue, got ${JSON.stringify(wrongSemanticCoreRoleResult.issues)}`,
+    );
+  }
   writeFile(sampleQntOwnerRolesPath, initialQntOwnerRolesText);
 
   const sampleGeneratorReadinessPath = path.join(
@@ -232,11 +259,31 @@ function runSelfTest() {
     sampleGeneratorReadinessPath,
     "utf8",
   );
+  for (const proofFile of ["sample-inductive.qnt", "sample-examples.qnt"]) {
+    writeFile(
+      sampleGeneratorReadinessPath,
+      JSON.stringify({
+        obligationId: "BATTLE.SAMPLE",
+        status: "semantic-core-candidate",
+        semanticCore: [proofFile],
+        proofOnly: [],
+        generatorSubset: ["record"],
+        blockedBy: [],
+      }) + "\n",
+    );
+    const proofFileSemanticCoreResult = buildKernelCoverage({ root });
+    assert.ok(
+      proofFileSemanticCoreResult.issues.includes(
+        `generator-readiness row 1.semanticCore path ${proofFile} has QNT owner role proof-only; expected semantic-core.`,
+      ),
+      `Expected proof/example semanticCore issue, got ${JSON.stringify(proofFileSemanticCoreResult.issues)}`,
+    );
+  }
   writeFile(
     sampleGeneratorReadinessPath,
     JSON.stringify({
       obligationId: "BATTLE.SAMPLE",
-      status: "not-assessed",
+      status: "generation-subset-clean",
     }) + "\n",
   );
   const missingGeneratorArrayResult = buildKernelCoverage({ root });
@@ -276,6 +323,24 @@ function runSelfTest() {
       `Expected generator-readiness issue ${issue}, got ${JSON.stringify(invalidGeneratorSemanticsResult.issues)}`,
     );
   }
+  writeFile(
+    sampleGeneratorReadinessPath,
+    JSON.stringify({
+      obligationId: "BATTLE.SAMPLE",
+      status: "semantic-core-candidate",
+      semanticCore: ["sample.qnt"],
+      proofOnly: [],
+      generatorSubset: ["record"],
+      blockedBy: ["fixture-world-coupled"],
+    }) + "\n",
+  );
+  const fixtureCoupledSemanticCoreResult = buildKernelCoverage({ root });
+  assert.ok(
+    fixtureCoupledSemanticCoreResult.issues.includes(
+      "generator-readiness row 1.semantic-core-candidate must have empty blockedBy.",
+    ),
+    `Expected fixture-world-coupled semanticCore issue, got ${JSON.stringify(fixtureCoupledSemanticCoreResult.issues)}`,
+  );
   writeFile(
     sampleGeneratorReadinessPath,
     JSON.stringify({
