@@ -61,6 +61,10 @@ import type {
 } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 import { abilityModifier } from "@dnd/shared/types";
+import {
+  grappleDragCostExempt,
+  targetIsNoMoreThanOneSizeLarger,
+} from "./battle-reducer/movement-speed.ts";
 
 describe("battle runtime: movement, Grapple, and Hide", () => {
   test("generic combat actions spend the Action and expose typed battle state", () => {
@@ -542,6 +546,82 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     );
   });
 
+  test("Stand from Prone requires positive Speed and enough remaining Movement", () => {
+    const state = fighterVsGoblinBattle();
+    const subject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: fighterId,
+      command: "move",
+    };
+    const hole = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "movement",
+    );
+    const moved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          movementFill(hole, {
+            movementCostFeet: 20,
+            provokedOpportunityAttacks: [],
+          }),
+        ],
+      }),
+    ).state;
+    const movedFighter = moved.combatants.get(fighterId)!;
+    const proneWithoutBudget: BattleState = {
+      ...moved,
+      combatants: new Map(moved.combatants).set(
+        fighterId,
+        testBattleCreatureStateWithConditions(
+          movedFighter,
+          applyCondition(movedFighter.conditions, "prone"),
+        ),
+      ),
+    };
+
+    expect(
+      resolveBattleSubject({
+        state: proneWithoutBudget,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: fighterId,
+          command: "standFromProne",
+        },
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+
+    const grappled = fighterGrapplesGoblin(fighterVsGoblinBattle()).state;
+    const goblinTurn = requireResolved(
+      endTurn({ state: grappled, actorId: fighterId }),
+    ).state;
+    const goblin = goblinTurn.combatants.get(goblinId)!;
+    const proneGrappledTarget: BattleState = {
+      ...goblinTurn,
+      combatants: new Map(goblinTurn.combatants).set(
+        goblinId,
+        testBattleCreatureStateWithConditions(
+          goblin,
+          applyCondition(goblin.conditions, "prone"),
+        ),
+      ),
+    };
+
+    expect(
+      resolveBattleSubject({
+        state: proneGrappledTarget,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: goblinId,
+          command: "standFromProne",
+        },
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+  });
+
   test("discoverBattleActs omits attack when the current character is Unconscious at 0 HP", () => {
     const acts = discoverBattleActs(
       startBattleRight({
@@ -604,6 +684,55 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     if (moved.tag !== "resolved") {
       throw new Error(`Expected resolved, got ${moved.tag}.`);
     }
+  });
+
+  test("Dash extends the Movement budget without resetting spent Movement", () => {
+    const state = fighterVsGoblinBattle();
+    const moveSubject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: fighterId,
+      command: "move",
+    };
+    const hole = requireHole(
+      resolveBattleSubject({ state, subject: moveSubject, fills: [] }),
+      "movement",
+    );
+    const moved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: moveSubject,
+        fills: [
+          movementFill(hole, {
+            movementCostFeet: 20,
+            provokedOpportunityAttacks: [],
+          }),
+        ],
+      }),
+    ).state;
+
+    const dashed = requireResolved(
+      resolveBattleSubject({
+        state: moved,
+        subject: {
+          tag: "action",
+          actorId: fighterId,
+          action: "dash",
+          speedKind: "walk",
+        },
+        fills: [],
+      }),
+    );
+
+    expect(dashed.snapshot.turn.dashMovementBonusFeet).toBe(30);
+    expect(dashed.snapshot.combatants).toContainEqual(
+      expect.objectContaining({
+        combatantId: fighterId,
+        movement: expect.objectContaining({
+          spentFeet: movementFeet(20),
+          remainingFeet: movementFeet(40),
+        }),
+      }),
+    );
   });
 
   test("movement cost cannot exceed the derived remaining Movement budget", () => {
@@ -760,6 +889,141 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     ]);
   });
 
+  test("Grapple admission requires a free hand, size limit, and failed save", () => {
+    const grappleSubject: BattleSubject = {
+      tag: "action",
+      actorId: fighterId,
+      action: "grapple",
+    };
+    const shielded = startBattleRight({
+      battleId: battleId("battle-grapple-no-free-hand"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          selectedLoadout: {
+            shield: "equipment_shield",
+            weapon: {
+              itemId: "main:weapon_longsword",
+              unitId: "weapon_longsword",
+              grip: "one_handed",
+            },
+          },
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const shieldedTarget = requireHole(
+      resolveBattleSubject({
+        state: shielded,
+        subject: grappleSubject,
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    expect(
+      resolveBattleSubject({
+        state: shielded,
+        subject: grappleSubject,
+        fills: [targetFill(shieldedTarget, goblinId)],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: "Grapple requires a free hand.",
+    });
+
+    const baseTarget = statBlockRecord();
+    const hugeTargetId = combatantId("huge-grapple-target");
+    const hugeTarget = startBattleRight({
+      battleId: battleId("battle-grapple-target-too-large"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        statBlockCreatureInit({
+          combatantId: hugeTargetId,
+          displayName: "Huge Grapple Target",
+          initiative: 10,
+          statBlock: {
+            ...baseTarget,
+            id: "stat_block_huge_grapple_target",
+            name: "Huge Grapple Target",
+            statBlock: {
+              ...baseTarget.statBlock,
+              displayName: "Huge Grapple Target",
+              size: "huge",
+            },
+          },
+        }),
+      ],
+    });
+    const hugeTargetHole = requireHole(
+      resolveBattleSubject({
+        state: hugeTarget,
+        subject: grappleSubject,
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    expect(
+      resolveBattleSubject({
+        state: hugeTarget,
+        subject: grappleSubject,
+        fills: [targetFill(hugeTargetHole, hugeTargetId)],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: "Grapple target cannot be more than one size larger.",
+    });
+
+    const state = fighterVsGoblinBattle();
+    const target = requireHole(
+      resolveBattleSubject({ state, subject: grappleSubject, fills: [] }),
+      "targetChoice",
+    );
+    const outcome = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: grappleSubject,
+        fills: [targetFill(target, goblinId)],
+      }),
+      "grappleOutcome",
+    );
+    expect(outcome).toMatchObject({ dc: 13 });
+    const saved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: grappleSubject,
+        fills: [
+          targetFill(target, goblinId),
+          grappleOutcomeFill(outcome, true),
+        ],
+      }),
+    );
+    expect(saved.state.grapples).toEqual([]);
+
+    const grappled = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: grappleSubject,
+        fills: [
+          targetFill(target, goblinId),
+          grappleOutcomeFill(outcome, false),
+        ],
+      }),
+    );
+    expect(grappled.state.grapples).toEqual([
+      expect.objectContaining({ targetId: goblinId, escapeDc: 13 }),
+    ]);
+  });
+
+  test("Grapple size helpers match size limit and drag-cost exceptions", () => {
+    expect(targetIsNoMoreThanOneSizeLarger("medium", "large")).toBe(true);
+    expect(targetIsNoMoreThanOneSizeLarger("medium", "huge")).toBe(false);
+    expect(grappleDragCostExempt("medium", "medium")).toBe(false);
+    expect(grappleDragCostExempt("large", "tiny")).toBe(true);
+    expect(grappleDragCostExempt("huge", "medium")).toBe(true);
+  });
+
   test("Shove resolves the Unarmed Strike save and prone failure effect", () => {
     const state = fighterVsGoblinBattle();
     const subject: BattleSubject = {
@@ -903,6 +1167,16 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       resolveBattleSubject({ state: goblinTurn, subject, fills: [] }),
       "grappleOutcome",
     );
+    const failed = requireResolved(
+      resolveBattleSubject({
+        state: goblinTurn,
+        subject,
+        fills: [grappleOutcomeFill(escape, false)],
+      }),
+    );
+    expect(failed.state.grapples).toHaveLength(1);
+    expect(failed.snapshot.turn.actionResources).toEqual([]);
+
     const escaped = requireResolved(
       resolveBattleSubject({
         state: goblinTurn,
@@ -1023,8 +1297,20 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       }),
       "attackRoll",
     );
+    const rollAgainstGrappler = requireHole(
+      resolveBattleSubject({
+        state: goblinTurn,
+        subject,
+        fills: [targetFill(target, fighterId)],
+      }),
+      "attackRoll",
+    );
 
     expect(roll).toMatchObject({ rollMode: "disadvantage" });
+    if (rollAgainstGrappler.kind !== "attackRoll") {
+      throw new Error("Expected attack roll hole against grappler.");
+    }
+    expect(rollAgainstGrappler.rollMode ?? "normal").toBe("normal");
     expect(
       resolveBattleSubject({
         state: goblinTurn,
