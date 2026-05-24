@@ -21,7 +21,7 @@ slice candidates remain.
     { "number": 5, "id": "C5-RAY-ENFEEBLEMENT-SLICE", "status": "done", "title": "Add Ray of Enfeeblement lifecycle slice" },
     { "number": 6, "id": "C6-WEB-RESTRAINT-SLICE", "status": "done", "title": "Add Web restraint hazard slice" },
     { "number": 7, "id": "C7-HEAT-METAL-SLICE", "status": "done", "title": "Add Heat Metal object-contact slice" },
-    { "number": 8, "id": "C8-GUST-OF-WIND-SLICE", "status": "ready-for-implementation-after-light-research", "title": "Add Gust of Wind line lifecycle slice" },
+    { "number": 8, "id": "C8-GUST-OF-WIND-SLICE", "status": "done", "title": "Add Gust of Wind line lifecycle slice" },
     { "number": 9, "id": "C9-ANTIMAGIC-SUPPRESSION-SLICE", "status": "ready-for-implementation-after-light-research", "title": "Add Antimagic Field suppression slice" },
     { "number": 10, "id": "C10-SPIKE-GROWTH-SLICE", "status": "ready-for-implementation-after-light-research", "title": "Add Spike Growth movement hazard slice" },
     { "number": 11, "id": "C11-DRAGONS-BREATH-INITIAL-SLICE", "status": "ready-for-implementation-after-light-research", "title": "Add Dragon's Breath initial-effect slice" },
@@ -73,7 +73,7 @@ Lane C must not:
 | 5 | C5-RAY-ENFEEBLEMENT-SLICE - Add Ray of Enfeeblement lifecycle slice | done | none | D20 and damage-penalty lifecycle. |
 | 6 | C6-WEB-RESTRAINT-SLICE - Add Web restraint hazard slice | done | none | Focused Web restraint/hazard lifecycle MBT added. |
 | 7 | C7-HEAT-METAL-SLICE - Add Heat Metal object-contact slice | done | none | Object contact and repeat damage. |
-| 8 | C8-GUST-OF-WIND-SLICE - Add Gust of Wind line lifecycle slice | ready-for-implementation-after-light-research | none | Line effect and movement interaction. |
+| 8 | C8-GUST-OF-WIND-SLICE - Add Gust of Wind line lifecycle slice | done | none | Line effect and movement interaction. |
 | 9 | C9-ANTIMAGIC-SUPPRESSION-SLICE - Add Antimagic Field suppression slice | ready-for-implementation-after-light-research | none | Suppression active-effect state. |
 | 10 | C10-SPIKE-GROWTH-SLICE - Add Spike Growth movement hazard slice | ready-for-implementation-after-light-research | none | Movement hazard only; recognition remains table-owned. |
 | 11 | C11-DRAGONS-BREATH-INITIAL-SLICE - Add Dragon's Breath initial-effect slice | ready-for-implementation-after-light-research | none | Initial grant state. |
@@ -168,12 +168,16 @@ Witnesses:
 
 ### Task 8 - C8-GUST-OF-WIND-SLICE - Add Gust of Wind line lifecycle slice
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: focused slice for line lifecycle and table-supplied line interaction
 facts.
 
 Acceptance: route/geometry remains table-owned.
+
+Witnesses:
+`packages/battle-runtime/battle-runtime-gust-of-wind-line-lifecycle.mbt.qnt`
+and `packages/battle-runtime/src/gust-of-wind-line-lifecycle.mbt.test.ts`.
 
 ### Task 9 - C9-ANTIMAGIC-SUPPRESSION-SLICE - Add Antimagic Field suppression slice
 
