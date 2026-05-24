@@ -1058,6 +1058,19 @@ function wizardCreature(input: {
       characterId: characterId(`${input.combatantId}-character`),
       characterUnitRefs: [],
       classLevels: [{ className: "wizard", level: 5 }],
+      d20Statistics: {
+        abilityScores: {
+          str: 8,
+          dex: 14,
+          con: 14,
+          int: 18,
+          wis: 12,
+          cha: 10
+        },
+        savingThrowProficiencies: ["int", "wis"],
+        skillProficiencies: ["arcana", "history"],
+        skillExpertise: []
+      },
       armorClass: defaultArmorClassState(),
       size: "medium",
       speed: { walkFeet: movementFeet(wizardWalkFeet) },

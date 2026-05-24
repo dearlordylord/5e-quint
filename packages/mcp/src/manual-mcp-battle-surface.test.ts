@@ -1007,6 +1007,19 @@ function character(
       classLevels: input.classLevels ?? [
         { className: input.spellcasting?.sourceClassName ?? "fighter", level: 1 },
       ],
+      d20Statistics: {
+        abilityScores: {
+          str: 16,
+          dex: 14,
+          con: 14,
+          int: 10,
+          wis: 12,
+          cha: 10,
+        },
+        savingThrowProficiencies: ["str", "con"],
+        skillProficiencies: [],
+        skillExpertise: [],
+      },
       armorClass: ac,
       size: "medium",
       speed: { walkFeet: movementFeet(30) },
