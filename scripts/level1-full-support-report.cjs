@@ -3,8 +3,14 @@ const path = require("node:path");
 const { fail } = require("./unit-profile-coverage-io.cjs");
 const {
   battleReadinessClosureKind,
+  selectedIdentityMbtEvidenceTag,
 } = require("./unit-profile-coverage-config.cjs");
-const { percent, stable } = require("./unit-profile-coverage-report.cjs");
+const {
+  percent,
+  selectedIdentityEvidenceStatus,
+  selectedIdentityStatus,
+  stable,
+} = require("./unit-profile-coverage-report.cjs");
 const {
   buildRulesKernelSupportedUnitJoin,
   rulesKernelUnitJoin,
@@ -821,6 +827,10 @@ function rowForStrictUnit(unit, sourceRows, rulesKernelProfileJoin) {
     collectionId: unit.collectionId,
     executableMechanics: unit.executableMechanics,
     kind: unit.kind,
+    selectedIdentity: selectedIdentityEvidenceStatus(
+      unit,
+      selectedIdentityMbtEvidenceTag,
+    ),
     sourceRecordPath: unit.sourceRecordPath,
     closureKinds: closureKindsForClaim(unit.claim),
     rulesKernel:
@@ -863,6 +873,54 @@ function groupRowsByClaimTag(rows) {
       }, new Map()),
     ).sort(([a], [b]) => a.localeCompare(b)),
   );
+}
+
+function groupRowsBySelectedIdentityStatus(rows) {
+  return Object.fromEntries(
+    Array.from(
+      rows.reduce((counts, row) => {
+        counts.set(
+          row.selectedIdentity.status,
+          (counts.get(row.selectedIdentity.status) ?? 0) + 1,
+        );
+        return counts;
+      }, new Map()),
+    ).sort(([a], [b]) => a.localeCompare(b)),
+  );
+}
+
+const selectedIdentityReadyStatuses = new Set([
+  selectedIdentityStatus.notApplicable,
+  selectedIdentityStatus.witnessPresent,
+]);
+
+function buildSelectedIdentityReadiness(rows) {
+  const applicableRows = rows.filter(
+    (row) => row.selectedIdentity.status !== selectedIdentityStatus.notRequired,
+  );
+  const readyRows = applicableRows.filter((row) =>
+    selectedIdentityReadyStatuses.has(row.selectedIdentity.status),
+  );
+  const blockingRows = applicableRows.filter(
+    (row) => !selectedIdentityReadyStatuses.has(row.selectedIdentity.status),
+  );
+
+  return stable({
+    blockingRows: blockingRows
+      .map((row) => ({
+        claimTag: row.claimTag,
+        reason: row.selectedIdentity.reason,
+        selectedIdentityStatus: row.selectedIdentity.status,
+        sourceRecordPath: row.sourceRecordPath,
+        status: row.status,
+        unitId: row.unitId,
+      }))
+      .sort((a, b) => a.unitId.localeCompare(b.unitId)),
+    blockingRowsByStatus: groupRowsBySelectedIdentityStatus(blockingRows),
+    metrics: countCoverage(readyRows.length, applicableRows.length),
+    readyRowsByStatus: groupRowsBySelectedIdentityStatus(readyRows),
+    rowsByStatus: groupRowsBySelectedIdentityStatus(rows),
+  });
 }
 
 function outsideRow(unitId, sourceRows, extra = {}) {
@@ -1007,6 +1065,11 @@ function buildStrictFullSupport(matrix, srdUnitInventory, scope, options = {}) {
   const strictTargetClosure = strictRows.filter(
     (row) => row.strictTargetClosed,
   );
+  const strictTargetClosureMetric = countCoverage(
+    strictTargetClosure.length,
+    strictRows.length,
+  );
+  const selectedIdentityReadiness = buildSelectedIdentityReadiness(strictRows);
   const frontierRows = strictRows.filter(
     (row) => row.status !== "supported-profile",
   );
@@ -1044,10 +1107,7 @@ function buildStrictFullSupport(matrix, srdUnitInventory, scope, options = {}) {
         strictRuntimeProfileSupport.length,
         strictRows.length,
       ),
-      strictTargetClosure: countCoverage(
-        strictTargetClosure.length,
-        strictRows.length,
-      ),
+      strictTargetClosure: strictTargetClosureMetric,
       productReadiness,
       rulesKernelProfileJoin: countCoverage(
         rulesKernelMappedProfileIds.size,
@@ -1060,6 +1120,7 @@ function buildStrictFullSupport(matrix, srdUnitInventory, scope, options = {}) {
       rulesKernelSupportedUnitCoverage:
         rulesKernelSupportedUnitJoin.metrics.rulesKernelSupportedUnitCoverage,
     },
+    selectedIdentityReadiness,
     srdAuthoredProductReadiness,
     srdAuthoredCharacterCreationReadiness:
       buildSrdAuthoredCharacterCreationReadiness(matrixUnitsById),
@@ -1150,6 +1211,12 @@ function renderProductReadinessStatusRows(metric) {
   );
 }
 
+function renderSelectedIdentityStatusRows(groupsBySelectedIdentityStatus) {
+  return Object.entries(groupsBySelectedIdentityStatus).map(
+    ([status, count]) => `| ${md(status)} | ${count} |`,
+  );
+}
+
 function renderReadinessBlockerRows(rows) {
   if (rows.length === 0) {
     return ["| _none_ | _none_ | _none_ | _none_ | _none_ |"];
@@ -1158,6 +1225,39 @@ function renderReadinessBlockerRows(rows) {
     (row) =>
       `| ${row.group} | \`${row.ownerUnitId ?? "_root_"}\` | ${md(row.relation ?? "self")} | \`${row.unitId}\` | ${md(row.status)} |`,
   );
+}
+
+function gateStatus(metric) {
+  return metric.numerator === metric.denominator ? "pass" : "blocked";
+}
+
+function blockingIssue(count, description) {
+  return count === 0 ? "_none_" : `${count} ${description}`;
+}
+
+function renderFullSupportGateRows(report) {
+  const strictTargetOpenCount =
+    report.metrics.strictTargetClosure.denominator -
+    report.metrics.strictTargetClosure.numerator;
+  const selectedIdentityBlockerCount =
+    report.selectedIdentityReadiness.blockingRows.length;
+  const authoredReadinessBlockerCount =
+    report.srdAuthoredProductReadiness.openBlockerCount;
+
+  return [
+    `| Strict runtime/profile closure | ${gateStatus(report.metrics.strictTargetClosure)} | ${renderMetric(report.metrics.strictTargetClosure)} | ${blockingIssue(strictTargetOpenCount, "strict denominator row(s) still open")} |`,
+    `| Selected identity readiness | ${gateStatus(report.selectedIdentityReadiness.metrics)} | ${renderMetric(report.selectedIdentityReadiness.metrics)} | ${blockingIssue(selectedIdentityBlockerCount, "selected-identity blocker row(s)")} |`,
+    `| SRD authored product readiness | ${authoredReadinessBlockerCount === 0 ? "pass" : "blocked"} | ${renderMetric(report.srdAuthoredProductReadiness.metrics)} | ${blockingIssue(authoredReadinessBlockerCount, "unresolved authored readiness row(s)")} |`,
+  ];
+}
+
+function renderSelectedIdentityBlockerRows(rows) {
+  return rows.length === 0
+    ? ["| _none_ | _none_ | _none_ | _none_ | _none_ |"]
+    : rows.map(
+        (row) =>
+          `| \`${row.unitId}\` | ${row.status} | ${row.claimTag} | ${row.selectedIdentityStatus} | ${md(row.reason)} |`,
+      );
 }
 
 function renderStrictFullSupport(report, scope) {
@@ -1174,6 +1274,7 @@ function renderStrictFullSupport(report, scope) {
     "| --- | ---: |",
     `| Strict runtime/profile support | ${renderMetric(report.metrics.strictRuntimeProfileSupport)} |`,
     `| Strict target closure | ${renderMetric(report.metrics.strictTargetClosure)} |`,
+    `| Selected identity readiness | ${renderMetric(report.selectedIdentityReadiness.metrics)} |`,
     `| Product readiness | ${renderMetric(report.metrics.productReadiness)} |`,
     `| SRD authored product readiness | ${renderMetric(report.srdAuthoredProductReadiness.metrics)} |`,
     `| Rules-kernel profile join | ${renderMetric(report.metrics.rulesKernelProfileJoin)} |`,
@@ -1190,13 +1291,31 @@ function renderStrictFullSupport(report, scope) {
     "| --- | ---: |",
     ...renderProductReadinessStatusRows(report.metrics.productReadiness),
     "",
+    "### Selected Identity Replay Accounting",
+    "",
+    "This is the selected-identity gate layer for the strict denominator. `witness-present` means a concrete selected Unit identity reaches an MBT/QNT replay owner; `not-applicable` is an explicit whole-claim non-applicable disposition; `not-required` is outside this gate denominator rather than a green row. `missing-witness-deferred-not-applicable` means the claim still lacks a replay witness for its supported runtime portion while the deferred closed portion is explicitly outside selected-identity replay.",
+    "",
+    "| Selected identity status | Rows |",
+    "| --- | ---: |",
+    ...renderSelectedIdentityStatusRows(
+      report.selectedIdentityReadiness.rowsByStatus,
+    ),
+    "",
+    "### Selected Identity Blockers",
+    "",
+    "| Unit | Strict status | Claim | Selected identity status | Reason |",
+    "| --- | --- | --- | --- | --- |",
+    ...renderSelectedIdentityBlockerRows(
+      report.selectedIdentityReadiness.blockingRows,
+    ),
+    "",
     "## Full-Support Claim Gate",
     "",
-    "| Gate | Status | Blocking issue |",
-    "| --- | --- | --- |",
-    `| SRD authored product readiness | ${report.srdAuthoredProductReadiness.openBlockerCount === 0 ? "pass" : "blocked"} | ${report.srdAuthoredProductReadiness.openBlockerCount === 0 ? "_none_" : `${report.srdAuthoredProductReadiness.openBlockerCount} unresolved authored readiness row(s)`} |`,
+    "| Gate | Status | Result | Blocking issue |",
+    "| --- | --- | ---: | --- |",
+    ...renderFullSupportGateRows(report),
     "",
-    "A failed gate invalidates a full level-support claim without pretending to be a weighted completion percentage.",
+    "Every gate row must pass for a full level-support claim. A 100% result in one layer does not satisfy another layer, and failed gates are not combined into a weighted completion percentage.",
     "",
     "## SRD-Authored Product Readiness",
     "",
@@ -1291,11 +1410,11 @@ function renderStrictFullSupport(report, scope) {
     "",
     "## Non-Supported Frontier Detail",
     "",
-    "| Unit | Status | Claim | Catalog | Closure kinds | Reason |",
-    "| --- | --- | --- | --- | --- | --- |",
+    "| Unit | Status | Claim | Selected identity | Catalog | Closure kinds | Reason |",
+    "| --- | --- | --- | --- | --- | --- | --- |",
     ...report.frontierRows.map(
       (row) =>
-        `| \`${row.unitId}\` | ${row.status} | ${row.claimTag} | ${row.catalogStatus ?? "missing"} | ${row.closureKinds.length === 0 ? "_none_" : row.closureKinds.join(", ")} | ${md(row.reason)} |`,
+        `| \`${row.unitId}\` | ${row.status} | ${row.claimTag} | ${row.selectedIdentity.status} | ${row.catalogStatus ?? "missing"} | ${row.closureKinds.length === 0 ? "_none_" : row.closureKinds.join(", ")} | ${md(row.reason)} |`,
     ),
     "",
     "## Outside Denominator Pressure",

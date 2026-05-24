@@ -64,49 +64,49 @@ identity evidence or an explicit non-applicable classification.
     {
       "number": 9,
       "id": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Backfill level-2 damage spell identity evidence"
     },
     {
       "number": 10,
       "id": "B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Backfill level-2 control spell identity evidence"
     },
     {
       "number": 11,
       "id": "B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Backfill level-2 mobility spell identity evidence"
     },
     {
       "number": 12,
       "id": "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Backfill level-2 protection spell identity evidence"
     },
     {
       "number": 13,
       "id": "B13-PROFILE-SUBSET-IDENTITY-DISPOSITIONS",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Classify subset-supported identity expectations"
     },
     {
       "number": 14,
       "id": "B14-FULL-SUPPORT-REPORT-PROJECTION",
-      "status": "blocked",
+      "status": "done",
       "title": "Project selected-identity gate into full-support reports"
     },
     {
       "number": 15,
       "id": "B15-UNIT-REPORT-HONESTY-PASS",
-      "status": "blocked",
+      "status": "done",
       "title": "Refresh Unit report wording and metrics"
     },
     {
       "number": 16,
       "id": "B16-MCP-SCENARIO-IDENTITY-SMOKE",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Add MCP selected-identity smoke coverage"
     },
     {
@@ -120,6 +120,24 @@ identity evidence or an explicit non-applicable classification.
       "id": "B18-RECURSIVE-NEXT-BATCH",
       "status": "blocked",
       "title": "Mine next selected-identity batch"
+    },
+    {
+      "number": 19,
+      "id": "L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION",
+      "status": "blocked",
+      "title": "Reconcile Acid Arrow RAW corpus"
+    },
+    {
+      "number": 20,
+      "id": "L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE",
+      "status": "blocked",
+      "title": "Repair Acid Arrow Surface damage shape"
+    },
+    {
+      "number": 21,
+      "id": "L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT",
+      "status": "blocked",
+      "title": "Promote Acid Arrow delayed runtime support"
     }
   ]
 }
@@ -162,16 +180,19 @@ Lane B must not:
 | 6 | B6-CLASS-FEATURE-IDENTITY-BATCH-3 - Backfill class-feature identity evidence batch 3 | done | none | Sorcerer/Warlock/Wizard. |
 | 7 | B7-FEAT-IDENTITY-BATCH - Backfill feat identity evidence | done | none | Alert and Origin feat reachability. |
 | 8 | B8-LEVEL1-SPELL-IDENTITY-BATCH - Backfill level-1 spell identity evidence | done | none | Remaining level-1 supported spell id was already covered by `light` selected-identity evidence. |
-| 9 | B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH - Backfill level-2 damage spell identity evidence | ready-for-implementation-after-light-research | none | Damage/attack spells. |
-| 10 | B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH - Backfill level-2 control spell identity evidence | ready-for-implementation-after-light-research | none | Control/condition spells. |
-| 11 | B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH - Backfill level-2 mobility spell identity evidence | ready-for-implementation-after-light-research | none | Mobility/position spells. |
-| 12 | B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH - Backfill level-2 protection spell identity evidence | ready-for-implementation-after-light-research | none | Protection/restoration/buff spells. |
-| 13 | B13-PROFILE-SUBSET-IDENTITY-DISPOSITIONS - Classify subset-supported identity expectations | ready-for-implementation-after-light-research | none | Explicit non-applicable rows. |
-| 14 | B14-FULL-SUPPORT-REPORT-PROJECTION - Project selected-identity gate into full-support reports | blocked | B1-B13 | Report-level metric. |
-| 15 | B15-UNIT-REPORT-HONESTY-PASS - Refresh Unit report wording and metrics | blocked | B14 | No inflated 100% language. |
-| 16 | B16-MCP-SCENARIO-IDENTITY-SMOKE - Add MCP selected-identity smoke coverage | blocked | B14 | One narrow smoke scenario. |
+| 9 | B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH - Backfill level-2 damage spell identity evidence | done | none | Level-2 damage spell identity evidence added; Acid Arrow split to RAW/Surface/runtime follow-ups. |
+| 10 | B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH - Backfill level-2 control spell identity evidence | done | none | Control/condition spells. |
+| 11 | B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH - Backfill level-2 mobility spell identity evidence | done | none | Mobility/position spells. |
+| 12 | B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH - Backfill level-2 protection spell identity evidence | done | none | Protection/restoration/buff spells. |
+| 13 | B13-PROFILE-SUBSET-IDENTITY-DISPOSITIONS - Classify subset-supported identity expectations | done | none | Explicit non-applicable rows. |
+| 14 | B14-FULL-SUPPORT-REPORT-PROJECTION - Project selected-identity gate into full-support reports | done | B1-B13 | Report-level metric. |
+| 15 | B15-UNIT-REPORT-HONESTY-PASS - Refresh Unit report wording and metrics | done | B14 | Generated denominator audit for Unit/profile-fact group counts. |
+| 16 | B16-MCP-SCENARIO-IDENTITY-SMOKE - Add MCP selected-identity smoke coverage | ready-for-implementation-after-light-research | B14 | One narrow smoke scenario. |
 | 17 | B17-END-TO-END-UNIT-VERIFICATION - Run and document lane B verification | blocked | B15,B16 | Unit coverage and typecheck. |
 | 18 | B18-RECURSIVE-NEXT-BATCH - Mine next selected-identity batch | blocked | B17 | Must append >=12 tasks or prove exhaustion. |
+| 19 | L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION - Reconcile Acid Arrow RAW corpus | blocked | owner RAW decision | Resolve the local SRD damage-timing contradiction before modeling Acid Arrow executable behavior. |
+| 20 | L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE - Repair Acid Arrow Surface damage shape | blocked | L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION | Make the approved Acid Arrow damage timing, miss branch, delayed damage, and slot scaling executable in Surface content/schema. |
+| 21 | L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT - Promote Acid Arrow delayed runtime support | blocked | L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION,L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE | Add promoted Quint/runtime parity for the approved Acid Arrow behavior. |
 
 ## Task Details
 
@@ -286,7 +307,7 @@ evidence; `light` is covered by the existing level-1 spatial witness replay.
 
 ### Task 9 - B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH - Backfill level-2 damage spell identity evidence
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: cover level-2 damage/attack spell Units such as Acid Arrow, Flame
 Blade, Flaming Sphere, Heat Metal, Scorching Ray, Shatter, Moonbeam, Spiritual
@@ -295,9 +316,17 @@ Weapon, Dragon's Breath, and Ray of Enfeeblement where missing.
 Acceptance: gap report count decreases; evidence points to existing reducer or
 selected-identity tests.
 
+Result: selected-identity evidence now covers `dragons_breath`, `flame_blade`,
+`flaming_sphere`, `heat_metal`, `moonbeam`, `ray_of_enfeeblement`,
+`scorching_ray`, `shatter`, and `spiritual_weapon`; the selected-identity gap
+report dropped from 43 to 34 rows. Acid Arrow remains out of this evidence batch
+because the local SRD damage timing is contradictory and now has executable
+follow-up tasks for RAW reconciliation, Surface shape repair, and runtime
+support.
+
 ### Task 10 - B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH - Backfill level-2 control spell identity evidence
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: cover level-2 control/condition spell Units such as Calm Emotions,
 Darkness, Enthrall, Gust of Wind, Levitate, Spike Growth, Web, Charm Person, and
@@ -306,18 +335,27 @@ See Invisibility where missing.
 Acceptance: gap report count decreases; table-owned adjudication remains
 classified, not modeled as reducer state.
 
+Result: selected-identity replay evidence added for `calm_emotions`,
+`charm_person`, `darkness`, `enthrall`, `gust_of_wind`, `invisibility`,
+`levitate`, `see_invisibility`, `spike_growth`, and `web`; the selected-identity
+gap report dropped from 34 to 24 rows.
+
 ### Task 11 - B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH - Backfill level-2 mobility spell identity evidence
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: cover supported mobility/position spell Units such as Alter Self,
 Invisibility, Misty Step, Fly, and Spider Climb where missing.
 
 Acceptance: gap report count decreases; no geometry derivation is added.
 
+Result: selected-identity replay evidence added for `alter_self`, `fly`,
+`misty_step`, and `spider_climb`; `invisibility` was already covered by Task
+10. The selected-identity gap report dropped from 24 to 20 rows.
+
 ### Task 12 - B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH - Backfill level-2 protection spell identity evidence
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: cover supported protection/restoration/buff spell Units such as Aid,
 Barkskin, Blur, Enhance Ability, Enlarge/Reduce, Magic Weapon, Mirror Image,
@@ -328,7 +366,7 @@ Acceptance: gap report count decreases; runtime-detached parts stay explicit.
 
 ### Task 13 - B13-PROFILE-SUBSET-IDENTITY-DISPOSITIONS - Classify subset-supported identity expectations
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: for profile-subset-supported Units where selected-identity evidence is
 not meaningful for the closed/outside-runtime portion, add explicit
@@ -337,9 +375,15 @@ non-applicable disposition data instead of silently counting them green.
 Acceptance: full-support reports distinguish "has selected identity witness"
 from "identity witness not applicable to closed portion".
 
+Result: profile-subset-supported deferred mechanics can now declare
+`deferredMechanicsSelectedIdentityDisposition`, and generated full-support
+reports distinguish `witness-present` from
+`missing-witness-deferred-not-applicable` in selected-identity replay
+accounting.
+
 ### Task 14 - B14-FULL-SUPPORT-REPORT-PROJECTION - Project selected-identity gate into full-support reports
 
-Status: `blocked`
+Status: `done`
 
 Output: update `LEVEL1_FULL_SUPPORT.md` and `LEVEL1_2_FULL_SUPPORT.md` so their
 claim gate includes selected-identity readiness as a separate layer on top of
@@ -348,18 +392,28 @@ strict runtime/profile and authored product readiness.
 Acceptance: generated JSON exposes counts; prose does not flatten the layers
 into a single misleading 100%.
 
+Result: full-support JSON now exposes `selectedIdentityReadiness` counts and
+blocker rows, and the generated Level 1 / Level 1-2 reports render selected
+identity readiness as its own claim-gate layer separate from strict closure and
+SRD authored product readiness.
+
 ### Task 15 - B15-UNIT-REPORT-HONESTY-PASS - Refresh Unit report wording and metrics
 
-Status: `blocked`
+Status: `done`
 
 Output: revise `UNIT_REPORT.md` wording so background/feat/spell/class-feature
 groups are counted by Units and profile facts, not by arbitrary prose weight.
 
 Acceptance: generated report makes denominator semantics explicit.
 
+Result: `unit-matrix.json` now includes `unitGroupDenominatorAudit`, and
+`UNIT_REPORT.md` renders explicit background/feat/spell/class-feature
+denominators for installed Units, executable Units, supported/profile-subset
+Units, profile facts, and selected-identity replay witnesses.
+
 ### Task 16 - B16-MCP-SCENARIO-IDENTITY-SMOKE - Add MCP selected-identity smoke coverage
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Output: add one focused MCP acceptance smoke that creates a supported SRD level
 1-2 character and proves selected Unit identity reaches battle or sheet output.
@@ -387,6 +441,50 @@ that produces real independent work.
 
 Acceptance: do not mark done unless at least 12 new runnable tasks were added
 or the generated gap report proves exhaustion.
+
+### Task 19 - L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION - Reconcile Acid Arrow RAW corpus
+
+Status: `blocked`
+
+Output: resolve the local SRD Acid Arrow damage contradiction by either
+correcting the local corpus or adding an owner-approved `ASSUMPTIONS.md` entry
+that explicitly identifies whether initial hit damage exists, how miss-only half
+damage is derived, which damage occurs at the end of the target's next turn, and
+how slot scaling applies.
+
+Acceptance: owner-approved RAW corpus correction or `ASSUMPTIONS.md` entry makes
+the initial/later/miss damage relationship modelable without inference from
+contradictory prose.
+
+### Task 20 - L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE - Repair Acid Arrow Surface damage shape
+
+Status: `blocked`
+
+Output: after RAW reconciliation, replace Acid Arrow's lossy mechanics with a
+lossless SRD Surface shape for the approved damage timing, miss branch,
+end-of-target-next-turn damage, and slot scaling without storing miss damage as
+an independently fixed approximation.
+
+Acceptance: Acid Arrow Dhall/JSON content, and schema/tracer support if needed,
+represent the approved initial/later/miss damage relationships as executable
+facts that battle-runtime can project without duplicating or reinterpreting
+spell damage state.
+
+### Task 21 - L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT - Promote Acid Arrow delayed runtime support
+
+Status: `blocked`
+
+Output: after RAW reconciliation and Surface repair, promote Acid Arrow as a
+level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot,
+resolves a ranged Spell Attack, applies only approved immediate hit or miss
+damage, stores approved delayed Acid damage for the end of the target's next
+turn where sourced, scales approved damage amounts by slot level, and cleans up
+the Spell Effect occurrence.
+
+Acceptance: supported-profile Unit claim, deterministic admission/projection
+evidence, focused runtime tests, and promoted Quint/runtime parity cover the
+approved Acid Arrow hit, miss, delayed target-turn damage, slot scaling,
+resource spending, and cleanup behavior.
 
 ## Verification
 

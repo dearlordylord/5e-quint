@@ -135,6 +135,7 @@ const battleReadinessClosureKinds = new Set(
 const deterministicAdmissionProjectionEvidenceTag =
   "deterministic-admission-projection";
 const selectedIdentityMbtEvidenceTag = "selected-identity-mbt";
+const selectedIdentityNonApplicableDispositionTag = "not-applicable";
 const unitEvidenceTags = new Set([
   deterministicAdmissionProjectionEvidenceTag,
   selectedIdentityMbtEvidenceTag,
@@ -298,6 +299,7 @@ module.exports = {
   rulesKernelProfileKindClassifications,
   rulesKernelProfileKinds,
   selectedIdentityMbtEvidenceTag,
+  selectedIdentityNonApplicableDispositionTag,
   skippedClaimScanDirs,
   surfaceUnitKinds,
   unitEvidenceTags,

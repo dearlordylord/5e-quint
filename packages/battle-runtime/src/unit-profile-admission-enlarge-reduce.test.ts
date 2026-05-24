@@ -32,6 +32,7 @@ import {
   type SpellMarkedDamageRider,
 } from "./unit-profile-admission-test-support.ts";
 import {
+  enlargeReduceUnitId,
   type ActionSpellAct,
   spellCasterId,
   spellTargetId,
@@ -41,8 +42,6 @@ import { INITIAL_TURN_RESOURCES } from "./battle-reducer/battle-runtime-protocol
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
 import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
 import type { BattleSubject } from "./index.ts";
-
-const enlargeReduceUnitId = "enlarge_reduce";
 
 function creatureSizeAct(
   procedure: "creatureSizeIncrease" | "creatureSizeDecrease",

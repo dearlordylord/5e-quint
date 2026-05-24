@@ -13,6 +13,7 @@ const {
   protectedExpressionFields,
   rulesKernelProfileKindClassificationIssues,
   selectedIdentityMbtEvidenceTag,
+  selectedIdentityNonApplicableDispositionTag,
   unitEvidenceTags,
   unitProfileOwnerClaimKinds,
 } = require("./unit-profile-coverage-config.cjs");
@@ -33,7 +34,8 @@ const selectedIdentityEvidenceDispositionFields = new Set([
   "owner",
   "reason",
 ]);
-const selectedIdentityNonApplicableDispositionTag = "not-applicable";
+const deferredMechanicsSelectedIdentityDispositionFields =
+  selectedIdentityEvidenceDispositionFields;
 
 function unexpectedFieldIssues(value, allowedFields, context) {
   return Object.keys(value)
@@ -82,6 +84,34 @@ function selectedIdentityEvidenceDispositionIssues(unitId, disposition) {
   }
   for (const field of Object.keys(disposition).filter(
     (field) => !selectedIdentityEvidenceDispositionFields.has(field),
+  )) {
+    issues.push(`${context} must not include unsupported field ${field}.`);
+  }
+  if (disposition.tag !== selectedIdentityNonApplicableDispositionTag) {
+    issues.push(
+      `${context}.tag must be ${selectedIdentityNonApplicableDispositionTag}.`,
+    );
+  }
+  for (const field of ["owner", "reason"]) {
+    if (!isNonEmptyString(disposition[field])) {
+      issues.push(`${context}.${field} must be a non-empty string.`);
+    }
+  }
+  return issues;
+}
+
+function deferredMechanicsSelectedIdentityDispositionIssues(
+  unitId,
+  disposition,
+) {
+  if (disposition === undefined) return [];
+  const context = `Unit ${unitId} deferredMechanicsSelectedIdentityDisposition`;
+  const issues = [];
+  if (!isRecord(disposition)) {
+    return [`${context} must be an object.`];
+  }
+  for (const field of Object.keys(disposition).filter(
+    (field) => !deferredMechanicsSelectedIdentityDispositionFields.has(field),
   )) {
     issues.push(`${context} must not include unsupported field ${field}.`);
   }
@@ -411,6 +441,12 @@ function validateUnitClaims(claims, inventory, authoredSurfaceUnits, profiles) {
         claim.claim.selectedIdentityEvidenceDisposition,
       ),
     );
+    issues.push(
+      ...deferredMechanicsSelectedIdentityDispositionIssues(
+        claim.unitId,
+        claim.claim.deferredMechanicsSelectedIdentityDisposition,
+      ),
+    );
     if (
       claim.claim.selectedIdentityEvidenceDisposition !== undefined &&
       claim.claim.tag !== "supported-profile" &&
@@ -418,6 +454,22 @@ function validateUnitClaims(claims, inventory, authoredSurfaceUnits, profiles) {
     ) {
       issues.push(
         `Unit ${claim.unitId} selectedIdentityEvidenceDisposition requires a supported-profile or profile-subset-supported claim.`,
+      );
+    }
+    if (
+      claim.claim.selectedIdentityEvidenceDisposition !== undefined &&
+      claim.claim.deferredMechanicsSelectedIdentityDisposition !== undefined
+    ) {
+      issues.push(
+        `Unit ${claim.unitId} must not declare both selectedIdentityEvidenceDisposition and deferredMechanicsSelectedIdentityDisposition.`,
+      );
+    }
+    if (
+      claim.claim.deferredMechanicsSelectedIdentityDisposition !== undefined &&
+      claim.claim.tag !== "profile-subset-supported"
+    ) {
+      issues.push(
+        `Unit ${claim.unitId} deferredMechanicsSelectedIdentityDisposition requires a profile-subset-supported claim.`,
       );
     }
     if (

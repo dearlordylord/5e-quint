@@ -15,6 +15,10 @@
       "executableMechanics": true,
       "kind": "spell",
       "reason": "Alarm is an exploration/table procedure; promoted battle runtime does not own hidden monitoring, map patrol, or notification adjudication.",
+      "selectedIdentity": {
+        "reason": "Selected identity replay evidence is only required for supported profile claims.",
+        "status": "not-required"
+      },
       "sourceRecordPath": "packages/surface/content/alarm.json",
       "sourceRows": [
         {
@@ -56,6 +60,10 @@
       "executableMechanics": true,
       "kind": "class_feature",
       "reason": "The remaining Barbarian Weapon Mastery selected-weapon count increases occur only after level 1.",
+      "selectedIdentity": {
+        "reason": "The Unit has selected-identity-mbt evidence.",
+        "status": "witness-present"
+      },
       "sourceRecordPath": "packages/surface/content/barbarian_weapon_mastery.json",
       "sourceRows": [
         {
@@ -85,6 +93,10 @@
       "executableMechanics": true,
       "kind": "spell",
       "reason": "Friendly disposition, the Charmed condition's Social Advantage, social interaction adjudication, and target knowledge when the spell ends are social/knowledge facts outside promoted battle runtime state.",
+      "selectedIdentity": {
+        "reason": "The Unit has selected-identity-mbt evidence.",
+        "status": "witness-present"
+      },
       "sourceRecordPath": "packages/surface/content/charm_person.json",
       "sourceRows": [
         {
@@ -167,6 +179,10 @@
       "executableMechanics": true,
       "kind": "spell",
       "reason": "Language comprehension and secret-message adjudication are table-owned communication facts outside promoted battle runtime.",
+      "selectedIdentity": {
+        "reason": "Selected identity replay evidence is only required for supported profile claims.",
+        "status": "not-required"
+      },
       "sourceRecordPath": "packages/surface/content/comprehend_languages.json",
       "sourceRows": [
         {
@@ -232,6 +248,10 @@
       "executableMechanics": true,
       "kind": "spell",
       "reason": "Sensing, occlusion, and Hallow discovery are exploration/detection state outside promoted battle runtime.",
+      "selectedIdentity": {
+        "reason": "Selected identity replay evidence is only required for supported profile claims.",
+        "status": "not-required"
+      },
       "sourceRecordPath": "packages/surface/content/detect_evil_and_good.json",
       "sourceRows": [
         {
@@ -273,6 +293,10 @@
       "executableMechanics": true,
       "kind": "spell",
       "reason": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime.",
+      "selectedIdentity": {
+        "reason": "Selected identity replay evidence is only required for supported profile claims.",
+        "status": "not-required"
+      },
       "sourceRecordPath": "packages/surface/content/detect_magic.json",
       "sourceRows": [
         {
@@ -386,6 +410,10 @@
       "executableMechanics": true,
       "kind": "spell",
       "reason": "Poison, disease, creature-kind sensing, occlusion, and identification are exploration/detection state outside promoted battle runtime.",
+      "selectedIdentity": {
+        "reason": "Selected identity replay evidence is only required for supported profile claims.",
+        "status": "not-required"
+      },
       "sourceRecordPath": "packages/surface/content/detect_poison_and_disease.json",
       "sourceRows": [
         {
@@ -451,6 +479,10 @@
       "executableMechanics": true,
       "kind": "class_feature",
       "reason": "Druidic hidden-message spotting, Investigation adjudication, and deciphering are runtime-detached table adjudication outside promoted battle runtime; Druidic language and always-prepared Speak with Animals Spell Access remain character-owned CharacterBuild facts derived from authored Surface content.",
+      "selectedIdentity": {
+        "reason": "Selected identity replay evidence is only required for supported profile claims.",
+        "status": "not-required"
+      },
       "sourceRecordPath": "packages/surface/content/druid_druidic.json",
       "sourceRows": [
         {
@@ -480,6 +512,10 @@
       "executableMechanics": true,
       "kind": "class_feature",
       "reason": "The remaining Fighter Weapon Mastery selected-weapon count increases occur only after level 1.",
+      "selectedIdentity": {
+        "reason": "The Unit has selected-identity-mbt evidence.",
+        "status": "witness-present"
+      },
       "sourceRecordPath": "packages/surface/content/fighter_weapon_mastery.json",
       "sourceRows": [
         {
@@ -514,6 +550,10 @@
       "executableMechanics": true,
       "kind": "spell",
       "reason": "Identification facts are supplied by the table or item/knowledge owner; promoted battle runtime does not model discovery of hidden item or spell facts.",
+      "selectedIdentity": {
+        "reason": "Selected identity replay evidence is only required for supported profile claims.",
+        "status": "not-required"
+      },
       "sourceRecordPath": "packages/surface/content/identify.json",
       "sourceRows": [
         {
@@ -555,6 +595,10 @@
       "executableMechanics": true,
       "kind": "spell",
       "reason": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are illusion/exploration state outside promoted battle runtime.",
+      "selectedIdentity": {
+        "reason": "Selected identity replay evidence is only required for supported profile claims.",
+        "status": "not-required"
+      },
       "sourceRecordPath": "packages/surface/content/minor_illusion.json",
       "sourceRows": [
         {
@@ -620,6 +664,10 @@
       "executableMechanics": true,
       "kind": "class_feature",
       "reason": "The remaining Favored Enemy free-cast count changes occur only after level 1.",
+      "selectedIdentity": {
+        "reason": "The Unit has selected-identity-mbt evidence.",
+        "status": "witness-present"
+      },
       "sourceRecordPath": "packages/surface/content/ranger_favored_enemy.json",
       "sourceRows": [
         {
@@ -649,6 +697,10 @@
       "executableMechanics": true,
       "kind": "class_feature",
       "reason": "Thieves' Cant communication adjudication is runtime-detached table adjudication outside promoted battle runtime; Thieves' Cant and the additional Character Creation language choice remain character-owned CharacterBuild facts derived from authored Surface content.",
+      "selectedIdentity": {
+        "reason": "Selected identity replay evidence is only required for supported profile claims.",
+        "status": "not-required"
+      },
       "sourceRecordPath": "packages/surface/content/rogue_thieves_cant.json",
       "sourceRows": [
         {
@@ -683,6 +735,10 @@
       "executableMechanics": true,
       "kind": "spell",
       "reason": "Silent Image creates table-adjudicated illusion and presentation state; promoted battle runtime does not own image rendering or discovery adjudication.",
+      "selectedIdentity": {
+        "reason": "Selected identity replay evidence is only required for supported profile claims.",
+        "status": "not-required"
+      },
       "sourceRecordPath": "packages/surface/content/silent_image.json",
       "sourceRows": [
         {
@@ -741,6 +797,10 @@
       "executableMechanics": true,
       "kind": "spell",
       "reason": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes.",
+      "selectedIdentity": {
+        "reason": "Selected identity replay evidence is only required for supported profile claims.",
+        "status": "not-required"
+      },
       "sourceRecordPath": "packages/surface/content/speak_with_animals.json",
       "sourceRows": [
         {
@@ -806,6 +866,11 @@
       "executableMechanics": true,
       "kind": "spell",
       "reason": "Thaumaturgy's non-Booming minor wonders alter appearance, flames, doors/windows, sounds, and tremors; promoted battle runtime owns only Booming Voice's check Advantage and consumes total active-effect count witnesses for the shared cap.",
+      "selectedIdentity": {
+        "owner": "runtime-detached presentation/environment owner",
+        "reason": "The non-Booming minor wonders are presentation/environment adjudication and have no production replay boundary that can bind a selected Unit identity.",
+        "status": "missing-witness-deferred-not-applicable"
+      },
       "sourceRecordPath": "packages/surface/content/thaumaturgy.json",
       "sourceRows": [
         {
@@ -5355,6 +5420,34 @@
       "spell-level-1"
     ],
     "title": "Level 1"
+  },
+  "selectedIdentityReadiness": {
+    "blockingRows": [
+      {
+        "claimTag": "profile-subset-supported",
+        "reason": "The non-Booming minor wonders are presentation/environment adjudication and have no production replay boundary that can bind a selected Unit identity.",
+        "selectedIdentityStatus": "missing-witness-deferred-not-applicable",
+        "sourceRecordPath": "packages/surface/content/thaumaturgy.json",
+        "status": "closed-runtime-detached-table-adjudication",
+        "unitId": "thaumaturgy"
+      }
+    ],
+    "blockingRowsByStatus": {
+      "missing-witness-deferred-not-applicable": 1
+    },
+    "metrics": {
+      "denominator": 83,
+      "numerator": 82,
+      "percent": "98.8%"
+    },
+    "readyRowsByStatus": {
+      "witness-present": 82
+    },
+    "rowsByStatus": {
+      "missing-witness-deferred-not-applicable": 1,
+      "not-required": 11,
+      "witness-present": 82
+    }
   },
   "sourceArtifacts": {
     "srdUnitInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
