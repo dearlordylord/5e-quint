@@ -131,7 +131,7 @@ slice candidates remain.
     {
       "number": 20,
       "id": "C20-FIND-FAMILIAR-COMPANION-SLICE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Add Find Familiar companion lifecycle focused MBT"
     },
     {
@@ -252,7 +252,7 @@ Lane C must not:
 | 17 | C17-SLICE-SCRIPT-AND-REPORT-CLOSURE - Refresh package scripts and rules-kernel rows | done | none | Scripts and generated rows, including C1-discovered existing witness cleanup. C4-C12 and C16 are already done; do not keep done task ids as blocking dependencies. |
 | 18 | C18-END-TO-END-SLICE-VERIFICATION - Run and document lane C verification | done | none | Focused MBT-only closure documented in `plans/rules-kernel-coverage/C18_END_TO_END_SLICE_VERIFICATION.md`. |
 | 19 | C19-RECURSIVE-NEXT-BATCH - Mine next composite MBT slice batch | done | none | Appended 12 focused MBT slice tasks from covered battle obligations that lack focused witnesses; see `plans/rules-kernel-coverage/C19_RECURSIVE_NEXT_BATCH.md`. |
-| 20 | C20-FIND-FAMILIAR-COMPANION-SLICE - Add Find Familiar companion lifecycle focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; companion lifecycle, replacement, telepathy, touch delivery, and Pact reaction-attack state. |
+| 20 | C20-FIND-FAMILIAR-COMPANION-SLICE - Add Find Familiar companion lifecycle focused MBT | done | none | Runtime-test-only obligation; companion lifecycle, replacement, telepathy, touch delivery, and Pact reaction-attack state. |
 | 21 | C21-WILD-SHAPE-FORM-SLICE - Add Wild Shape form lifecycle focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; form statistics, Temporary Hit Points, spellcasting block, and supported reversion. |
 | 22 | C22-DISPEL-MAGIC-ONGOING-SLICE - Add Dispel Magic ongoing spell ending focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; target-scoped ending and higher-level ability-check gate for tracked ongoing spell effects. |
 | 23 | C23-QUICKENED-SPELL-GOVERNOR-SLICE - Add Quickened Spell governor focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; known selection, Sorcery Point affordability, action rewrite, and same-turn leveled-spell governor. |
@@ -529,7 +529,7 @@ Verification completed:
 
 ### Task 20 - C20-FIND-FAMILIAR-COMPANION-SLICE - Add Find Familiar companion lifecycle focused MBT
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: add a focused `*.mbt.qnt` plus `src/*.mbt.test.ts` witness and package
 script for `BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE`.
