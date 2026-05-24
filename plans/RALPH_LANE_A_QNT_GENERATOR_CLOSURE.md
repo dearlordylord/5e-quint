@@ -92,7 +92,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 14,
       "id": "A14-QNT-OWNER-ROLE-REFRESH",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Refresh owner roles for new semantic cores"
     },
     {
@@ -194,7 +194,7 @@ Lane A must not:
 | 11 | A11-SPELL-TURN-HOOK-CORE - Split spell turn hook semantic core | done | none | Temporary HP, duration, once-per-turn facts. |
 | 12 | A12-OBJECT-HP-DAMAGE-CORE - Split object hit point damage core | done | none | Keep object state minimal. |
 | 13 | A13-SLEEP-LIFECYCLE-CORE - Split Sleep repeat-save lifecycle core | done | none | No table adjudication expansion. |
-| 14 | A14-QNT-OWNER-ROLE-REFRESH - Refresh owner roles for new semantic cores | ready-for-implementation-after-light-research | A2-A13,A20-A23 | Generated role closure. |
+| 14 | A14-QNT-OWNER-ROLE-REFRESH - Refresh owner roles for new semantic cores | done | A2-A13,A20-A23 | Generated role closure. |
 | 15 | A15-GENERATOR-SUBSET-TOKEN-AUDIT - Audit generator subset tokens for spell cores | ready-for-implementation-after-light-research | A2-A13,A20-A23 | Ensure row vocabulary is exact. |
 | 16 | A16-FIXTURE-BOUND-STATUS-CLOSURE - Close spell procedure fixture-bound readiness row | blocked | A14,A15 | Only if blockers are actually gone. |
 | 17 | A17-CHECKER-REGRESSION-TEST - Add generator-readiness regression coverage | blocked | A16 | Prevent silent fallback to fixture-bound. |
@@ -341,7 +341,7 @@ Acceptance: examples and coverage check pass.
 
 ### Task 14 - A14-QNT-OWNER-ROLE-REFRESH - Refresh owner roles for new semantic cores
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: update `qnt-owner-roles.jsonl` for every new semantic-core owner and
 remove stale role rows only when the path is no longer an owner.
