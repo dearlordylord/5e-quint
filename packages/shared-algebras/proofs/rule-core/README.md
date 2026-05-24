@@ -111,6 +111,7 @@ Out of scope for QCORE3:
 - Stable 1d4-hour recovery;
 - broad battle action sequencing.
 
+`hit-point-recovery-examples.qnt` contains concrete SRD example checks.
 `hit-point-recovery-inductive.qnt` is the owned proof machine and shallow
 composition check with QCORE1/QCORE2. Its `step` action records the branch
 budget near the `any` action.

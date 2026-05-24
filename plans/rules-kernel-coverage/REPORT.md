@@ -408,7 +408,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE` | not-assessed |  |  |  |
 | `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY` | not-assessed |  |  |  |
 | `CREATION.CHOICE_DISCOVERY_CARDINALITY` | not-assessed |  |  |  |
-| `SHEET.HP_REST_HIT_DICE.TRANSITIONS` | not-assessed |  |  |  |
+| `SHEET.HP_REST_HIT_DICE.TRANSITIONS` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `implies`, `all-block` |  |  |
 | `BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE` | not-assessed |  |  |  |
 | `BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION` | not-assessed |  |  |  |
 | `BATTLE.ATTACK.MINIMAL_RESOLUTION` | not-assessed |  |  |  |
@@ -472,7 +472,6 @@ Rows here are derived from covered obligations with semantic-core QNT owners who
 | `BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime-hit-points.qnt` | `packages/battle-runtime/battle-runtime-hit-points.qnt`: semantic-core |
 | `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY` | not-assessed | `packages/character-creation-runtime/character-creation-runtime-slice.qnt` | `packages/character-creation-runtime/character-creation-runtime-slice.qnt`: semantic-core |
 | `CREATION.CHOICE_DISCOVERY_CARDINALITY` | not-assessed | `packages/character-creation-runtime/character-creation-runtime-slice.qnt` | `packages/character-creation-runtime/character-creation-runtime-slice.qnt`: semantic-core |
-| `SHEET.HP_REST_HIT_DICE.TRANSITIONS` | not-assessed | `packages/shared-algebras/proofs/rule-core/hit-point-recovery.qnt` | `packages/shared-algebras/proofs/rule-core/hit-point-recovery.qnt`: semantic-core |
 | `BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE` | not-assessed | `packages/battle-runtime/battle-runtime.qnt` | `packages/battle-runtime/battle-runtime.qnt`: semantic-core |
 | `BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION` | not-assessed | `packages/battle-runtime/battle-runtime.qnt` | `packages/battle-runtime/battle-runtime.qnt`: semantic-core |
 | `BATTLE.ATTACK.MINIMAL_RESOLUTION` | not-assessed | `packages/battle-runtime/creature-attack.qnt` | `packages/battle-runtime/creature-attack.qnt`: semantic-core |
@@ -493,7 +492,6 @@ Rows here are derived from semantic-core QNT owners that still contain Quint `ru
 | `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | fixture-bound | `run-block-coupled` | `packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt`: lines `1385`, `1401`, `1411`, `1439`, `1471`, `1492`, `1511`, `1537`, `1570`, `1589`, `1624`, `1658`, `1681`, `1713`, `1755`, `1797`, `1823`, `1840`, `1857`, `1879`, `1900`, `1943`, `1958`, `1994`, `2018`, `2047`, `2070`, `2115`, `2134`, `2152`, `2183`, `2204`, `2220`, `2239`, `2257`, `2296`, `2347`, `2371`, `2389`, `2404`, `2419` |
 | `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY` | not-assessed | `run-block-coupled` | `packages/character-creation-runtime/character-creation-runtime-slice.qnt`: lines `578`, `582`, `595`, `603`, `619`, `633`, `653`, `669`, `682`, `695`, `719`, `741` |
 | `CREATION.CHOICE_DISCOVERY_CARDINALITY` | not-assessed | `run-block-coupled` | `packages/character-creation-runtime/character-creation-runtime-slice.qnt`: lines `578`, `582`, `595`, `603`, `619`, `633`, `653`, `669`, `682`, `695`, `719`, `741` |
-| `SHEET.HP_REST_HIT_DICE.TRANSITIONS` | not-assessed | `run-block-coupled` | `packages/shared-algebras/proofs/rule-core/hit-point-recovery.qnt`: lines `140`, `169`, `192`, `210`, `238`, `260`, `279`, `302` |
 
 ## Kernel IR Boundaries
 

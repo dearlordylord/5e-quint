@@ -6533,11 +6533,30 @@
     },
     {
       "blockedBy": [],
-      "generatorSubset": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "implies",
+        "all-block"
+      ],
       "obligationId": "SHEET.HP_REST_HIT_DICE.TRANSITIONS",
-      "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/hit-point-recovery-inductive.qnt",
+        "packages/shared-algebras/proofs/rule-core/hit-point-recovery-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/hit-point-recovery.qnt"
+      ],
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -7208,16 +7227,6 @@
       "status": "not-assessed"
     },
     {
-      "obligationId": "SHEET.HP_REST_HIT_DICE.TRANSITIONS",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/shared-algebras/proofs/rule-core/hit-point-recovery.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
       "obligationId": "BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE",
       "ownerRoles": [
         {
@@ -7591,26 +7600,6 @@
             741
           ],
           "ownerPath": "packages/character-creation-runtime/character-creation-runtime-slice.qnt"
-        }
-      ],
-      "readinessStatus": "not-assessed"
-    },
-    {
-      "blocker": "run-block-coupled",
-      "obligationId": "SHEET.HP_REST_HIT_DICE.TRANSITIONS",
-      "owners": [
-        {
-          "lines": [
-            140,
-            169,
-            192,
-            210,
-            238,
-            260,
-            279,
-            302
-          ],
-          "ownerPath": "packages/shared-algebras/proofs/rule-core/hit-point-recovery.qnt"
         }
       ],
       "readinessStatus": "not-assessed"

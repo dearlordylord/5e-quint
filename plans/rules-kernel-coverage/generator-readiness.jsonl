@@ -61,7 +61,7 @@
 {"obligationId":"BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE","status":"not-assessed","semanticCore":[],"proofOnly":[],"generatorSubset":[],"blockedBy":[]}
 {"obligationId":"CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY","status":"not-assessed","semanticCore":[],"proofOnly":[],"generatorSubset":[],"blockedBy":[]}
 {"obligationId":"CREATION.CHOICE_DISCOVERY_CARDINALITY","status":"not-assessed","semanticCore":[],"proofOnly":[],"generatorSubset":[],"blockedBy":[]}
-{"obligationId":"SHEET.HP_REST_HIT_DICE.TRANSITIONS","status":"not-assessed","semanticCore":[],"proofOnly":[],"generatorSubset":[],"blockedBy":[]}
+{"obligationId":"SHEET.HP_REST_HIT_DICE.TRANSITIONS","status":"generation-subset-clean","semanticCore":["packages/shared-algebras/proofs/rule-core/hit-point-recovery.qnt"],"proofOnly":["packages/shared-algebras/proofs/rule-core/hit-point-recovery-inductive.qnt","packages/shared-algebras/proofs/rule-core/hit-point-recovery-examples.qnt"],"generatorSubset":["import","variant","record","pure-def","int","bool","if-expression","let-binding","arithmetic","comparison","boolean-connective","implies","all-block"],"blockedBy":[]}
 {"obligationId":"BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE","status":"not-assessed","semanticCore":[],"proofOnly":[],"generatorSubset":[],"blockedBy":[]}
 {"obligationId":"BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION","status":"not-assessed","semanticCore":[],"proofOnly":[],"generatorSubset":[],"blockedBy":[]}
 {"obligationId":"BATTLE.ATTACK.MINIMAL_RESOLUTION","status":"not-assessed","semanticCore":[],"proofOnly":[],"generatorSubset":[],"blockedBy":[]}
