@@ -119,7 +119,7 @@ slice candidates remain.
     {
       "number": 18,
       "id": "C18-END-TO-END-SLICE-VERIFICATION",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Run and document lane C verification"
     },
     {
@@ -178,7 +178,7 @@ Lane C must not:
 | 15 | C15-SANCTUARY-SLICE - Sanctuary targeting-interdiction slice already present | done | none | Existing selected-identity MBT found by C1; script/report cleanup remains in C17. |
 | 16 | C16-SPELL-SEQUENCING-INTEGRATION-MBT - Add bounded spell sequencing integration MBT | done | C4-C12 | Cross-slice bounded fixture over non-duplicate new slices only. |
 | 17 | C17-SLICE-SCRIPT-AND-REPORT-CLOSURE - Refresh package scripts and rules-kernel rows | done | none | Scripts and generated rows, including C1-discovered existing witness cleanup. C4-C12 and C16 are already done; do not keep done task ids as blocking dependencies. |
-| 18 | C18-END-TO-END-SLICE-VERIFICATION - Run and document lane C verification | ready-for-implementation-after-light-research | none | Focused MBT only. C17 is already done; do not keep done task ids as blocking dependencies. |
+| 18 | C18-END-TO-END-SLICE-VERIFICATION - Run and document lane C verification | done | none | Focused MBT-only closure documented in `plans/rules-kernel-coverage/C18_END_TO_END_SLICE_VERIFICATION.md`. |
 | 19 | C19-RECURSIVE-NEXT-BATCH - Mine next composite MBT slice batch | ready-for-research | none | Must append >=12 tasks or prove exhaustion. Runnable after C18 by queue order; no done-task dependency. |
 
 ## Task Details
@@ -388,13 +388,15 @@ Acceptance: `pnpm rules-kernel-coverage:check -- --write` then check pass.
 
 ### Task 18 - C18-END-TO-END-SLICE-VERIFICATION - Run and document lane C verification
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: run every new focused slice script once, run existing focused slice
 scripts retained for C1-discovered evidence once, rules-kernel coverage
 write/check, `git diff --check`, and package typecheck if TS changed.
 
 Acceptance: no broad MBT run is used unless the task explicitly justifies it.
+
+Findings: see `plans/rules-kernel-coverage/C18_END_TO_END_SLICE_VERIFICATION.md`.
 
 ### Task 19 - C19-RECURSIVE-NEXT-BATCH - Mine next composite MBT slice batch
 
