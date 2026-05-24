@@ -220,7 +220,7 @@ identity evidence or an explicit non-applicable classification.
     {
       "number": 35,
       "id": "B32-DRAGONS-BREATH-CATALOG-ADMISSION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Repair Dragon's Breath catalog admission"
     },
     {
@@ -296,7 +296,7 @@ Lane B must not:
 | 32 | B29-LEVITATED-CREATURE-RULES-KERNEL-MAPPING - Map levitated creature profile to rules-kernel obligations | done | none | Mapped `spell.invocation-levitated-creature` to `BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE`; generated rules-kernel profile join gaps no longer list it. |
 | 33 | B30-CLASS-FEATURE-PREPARED-SPELL-ACCESS-RULES-KERNEL-MAPPING - Map class feature prepared spell access profile to rules-kernel obligations | done | none | Mapped `character-sheet.class-feature-prepared-spell-access` to `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION`; generated rules-kernel profile join gaps no longer list it. |
 | 34 | B31-DRUID-CIRCLE-LAND-SPELL-ACCESS-RULES-KERNEL-MAPPING - Map Druid Circle Land spell access profile to rules-kernel obligations | done | none | Mapped `character-sheet.druid-circle-land-spell-access` to `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION`; generated rules-kernel profile and supported Unit join gaps no longer list `druid_circle_of_the_land_spells`. |
-| 35 | B32-DRAGONS-BREATH-CATALOG-ADMISSION - Repair Dragon's Breath catalog admission | ready-for-research | none | Metric-honesty gap: `dragons_breath` is supported-profile but remains `not-in-unit-catalog`; repair the catalog boundary without treating support as admission. |
+| 35 | B32-DRAGONS-BREATH-CATALOG-ADMISSION - Repair Dragon's Breath catalog admission | done | none | Metric-honesty gap: `dragons_breath` is supported-profile but remains `not-in-unit-catalog`; repair the catalog boundary without treating support as admission. |
 | 36 | B33-RAY-OF-ENFEEBLEMENT-CATALOG-ADMISSION - Repair Ray of Enfeeblement catalog admission | ready-for-research | none | Metric-honesty gap: `ray_of_enfeeblement` is supported-profile but remains `not-in-unit-catalog`; repair the catalog boundary without treating support as admission. |
 
 ## Task Details
@@ -848,7 +848,7 @@ Generated rules-kernel profile and supported Unit join gaps no longer list
 
 ### Task 35 - B32-DRAGONS-BREATH-CATALOG-ADMISSION - Repair Dragon's Breath catalog admission
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: repair the Unit catalog/admission boundary for `dragons_breath`, which
 is currently supported-profile but `not-in-unit-catalog`.
