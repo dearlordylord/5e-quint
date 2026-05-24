@@ -4,14 +4,14 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Summary
 
-- Total obligations: 92
-- Covered obligations: 86
+- Total obligations: 93
+- Covered obligations: 87
 - Open transitional obligations: 0
 - Boundary or unsupported obligations: 6
 
 | Status | Count |
 | --- | ---: |
-| covered | 86 |
+| covered | 87 |
 | needs-qnt-owner | 0 |
 | needs-parity-witness | 0 |
 | needs-surface-evidence | 0 |
@@ -21,7 +21,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | Runtime | Count |
 | --- | ---: |
 | shared-algebras | 1 |
-| battle | 68 |
+| battle | 69 |
 | character-creation | 12 |
 | character-sheet | 8 |
 | character-battle | 3 |
@@ -122,6 +122,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION` | character-sheet | covered | `character-sheet.spellbook-ritual-invocation` |
 | `BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE` | battle | covered | `spell.invocation-dragons-breath-initial` |
 | `BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION` | battle | covered | `spell.invocation-dragons-breath-granted-action` |
+| `BATTLE.ATTACK.MINIMAL_RESOLUTION` | battle | covered | _direct reducer entrypoint_ |
 
 ## Battle Hole Frontier
 
@@ -318,12 +319,13 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt` | semantic-core | `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES`, `BATTLE.SPELL.HIT_POINT_RESTORATION`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt` | semantic-core | `BATTLE.STAT_BLOCK.ATTACK_CONTROL` |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt` | semantic-core | `BATTLE.DAMAGE.ATTACK_BRANCHES`, `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP`, `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES`, `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/battle-runtime/creature-attack.qnt` | semantic-core | `BATTLE.ATTACK.MINIMAL_RESOLUTION` |
 
 ## Generator Readiness
 
 | Obligation | Status | Subset |
 | --- | --- | --- |
-| `SHARED.HIT_POINTS.POSITIVE_DAMAGE` | fixture-bound | `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `implies`, `all-block` |
+| `SHARED.HIT_POINTS.POSITIVE_DAMAGE` | generation-subset-clean | `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `implies`, `all-block` |
 | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` | fixture-bound | `import`, `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `range`, `set-operators`, `membership` |
 | `BATTLE.REACTION.OFFER_DECLINE_RESUME` | fixture-bound | `import`, `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `set-operators`, `membership` |
 | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | fixture-bound | `import`, `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `membership` |

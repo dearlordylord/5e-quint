@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 92,
-    "covered": 86,
+    "total": 93,
+    "covered": 87,
     "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 68,
+      "battle": 69,
       "character-creation": 12,
       "character-sheet": 8,
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 86,
+      "covered": 87,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -2839,6 +2839,29 @@
         ".references/srd-5.2.1/Rules-Glossary.md#Concentration"
       ],
       "title": "Battle Dragon's Breath target-granted Magic action resolves Cone save-for-half damage"
+    },
+    {
+      "id": "BATTLE.ATTACK.MINIMAL_RESOLUTION",
+      "kind": "composition",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/creature-attack.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/creature-attack.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/battle-runtime/creature-attack.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/creature-attack.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [],
+      "title": "Pilot slice - minimal creature-vs-creature attack interleaving with bounded HP state, per-action nondet damage and hit, and HP damage application via the SHARED.HIT_POINTS.POSITIVE_DAMAGE atomic"
     }
   ],
   "battleHoleFrontier": [
@@ -5507,13 +5530,19 @@
       ],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
       "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/creature-attack.qnt is the pilot composite slice QNT owner carrying executable creature-vs-creature attack resolution semantics by importing the shared hit-point-damage atomic.",
+      "obligationIds": [
+        "BATTLE.ATTACK.MINIMAL_RESOLUTION"
+      ],
+      "ownerPath": "packages/battle-runtime/creature-attack.qnt",
+      "role": "semantic-core"
     }
   ],
   "generatorReadiness": [
     {
-      "blockedBy": [
-        "run-block-coupled"
-      ],
+      "blockedBy": [],
       "dryRun": "plans/rules-kernel-coverage/HIT_POINT_DAMAGE_RUST_DRY_RUN.md",
       "generatorSubset": [
         "variant",
@@ -5536,7 +5565,7 @@
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/hit-point-damage.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [

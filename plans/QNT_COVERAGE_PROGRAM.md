@@ -4,7 +4,7 @@
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    { "number": 0, "id": "QCP-PILOT-SLICE", "status": "todo", "title": "Pilot slice (creature-attack) end-to-end" },
+    { "number": 0, "id": "QCP-PILOT-SLICE", "status": "done", "title": "Pilot slice (creature-attack) end-to-end" },
     { "number": 1, "id": "QCP-SEMCORE-EXTRACTION", "status": "todo", "title": "Semantic-core extraction (run blocks out of rule-core .qnt)" },
     { "number": 2, "id": "QCP-MISSING-ATOMICS", "status": "todo", "title": "Author missing atomic semantic-core rules" },
     { "number": 3, "id": "QCP-COMPOSITE-SLICES", "status": "todo", "title": "Author per-composite slice MBT" },
@@ -36,7 +36,7 @@ This plan rolls up the bounded program of work to reach the achievable 100% QNT 
 
 ## Pilot Slice — Task 0 (QCP-PILOT-SLICE)
 
-Status: `todo`
+Status: `done`
 
 Goal: prove the slice template end-to-end before the horizontal tasks below run in earnest.
 
@@ -125,4 +125,19 @@ Acceptance: checker enforces marker presence per active language; CI red on miss
 
 ## Findings
 
-(append as findings emerge during the work)
+### Pilot Slice (QCP-PILOT-SLICE)
+
+- **Run-block removal lost no coverage.** Existing `rule-core-hit-point-damage.mbt.qnt` already deterministically replays the same scenarios the run blocks asserted (HP=8 dmg=5 temp=3, monster-dies-at-zero, etc.), with the same inputs to `applyResolvedDamageToPositiveHitPoints`. TS-side parity makes the QNT values absolute by transitive enforcement. Future Task 1 extractions can rely on this: where an MBT replay or atomic-level unit test already covers a scenario, the run block can be deleted outright; otherwise extract to a TS unit test next to the TS mirror.
+- **Effect `Schema` is not StandardSchemaV1-compatible by default.** `quint-connect`'s `defineDriver` requires picks schemas implementing the StandardSchemaV1 `~standard.validate` protocol. Wrap Effect schemas with `Schema.standardSchemaV1(...)`. Bare `Schema.Number` fails at action dispatch with `Cannot read properties of undefined (reading 'validate')`.
+- **Quint emits int picks as JS BigInt.** Validation against `Schema.Number` fails with `Expected number, actual 3n`. Pattern that works (small helper, reusable across future slices):
+  ```ts
+  const QuintIntAsNumber = Schema.transform(
+    Schema.BigIntFromSelf,
+    Schema.Number,
+    { strict: true, decode: (n) => Number(n), encode: (n) => BigInt(n) },
+  );
+  // damage: Schema.standardSchemaV1(QuintIntAsNumber)
+  ```
+  Worth promoting to a shared helper when slice β lands.
+- **`qnt-owner-roles.jsonl` is a hard gate on every new obligation's QNT owner.** A covered obligation with an owner that has no role row fails the checker. Add the role row in the same commit as the new obligation.
+- **`matrix.json` and `REPORT.md` are checker-generated.** After adding/changing obligations, run `pnpm rules-kernel-coverage:check -- --write` to refresh, then `pnpm rules-kernel-coverage:check` to verify clean. Commit the refreshed artifacts.
