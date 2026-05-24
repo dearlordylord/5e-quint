@@ -9,6 +9,11 @@ mechanics profiles, which installed Units are explicitly unsupported or need
 widening, which authored Surface Units are not yet admitted to the Unit catalog,
 and which QNT/runtime/verification owners cover each supported profile.
 
+The current executable backlog for SRD level 1 plus level 2 full-support claim
+closure is `plans/LEVEL1_2_FULL_SUPPORT_BACKLOG.md`. Older Ralph lane files for
+level-2 expansion and background catalog admission were removed after their
+implemented work landed or their task lists became stale.
+
 This lane is the authored-content breadth layer. It does not by itself prove
 that reducer-owned semantics are fully connected to the rules kernel. For any
 supported profile whose `profileKind` carries reducer-owned behavior, the

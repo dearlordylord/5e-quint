@@ -1,7 +1,8 @@
 # Frontier Decision Artifacts
 
-This directory holds task-local decision artifacts for the larger level-1
-frontier described in `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
+This directory holds task-local decision artifacts for the level-support
+frontier now summarized by `plans/LEVEL1_2_FULL_SUPPORT_BACKLOG.md` and the
+generated reports in `plans/unit-profile-coverage/`.
 
 Use these artifacts for `AT-L1X-*` no-matrix spell expansion decisions and
 `AT-L1Y-*` non-executable class/profile expansion decisions. Each artifact
@@ -137,8 +138,8 @@ outcomes:
 
 Do not introduce support-status labels that have no checker, type, or runtime
 consequence. If a future decision needs a new vocabulary term, update this
-README and `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md` in the integration-owned
-task that adopts the term.
+README and the checker-owned unit-profile coverage artifacts in the
+integration-owned task that adopts the term.
 
 ## Scope Guardrails
 

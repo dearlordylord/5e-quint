@@ -8,7 +8,7 @@
     { "number": 1, "id": "QCP-SEMCORE-EXTRACTION", "status": "todo", "title": "Semantic-core extraction (run blocks out of rule-core .qnt)" },
     { "number": 2, "id": "QCP-MISSING-ATOMICS", "status": "todo", "title": "Author missing atomic semantic-core rules" },
     { "number": 3, "id": "QCP-COMPOSITE-SLICES", "status": "todo", "title": "Author per-composite slice MBT" },
-    { "number": 4, "id": "QCP-RESIDUAL-TRANSITIONAL", "status": "todo", "title": "Resolve 6 remaining transitional obligations" },
+    { "number": 4, "id": "QCP-NON-SEMANTIC-AUDIT", "status": "done", "title": "Confirm boundary and unsupported obligations are non-transitional" },
     { "number": 5, "id": "QCP-UNIT-IDENTITY-GATE", "status": "todo", "title": "Per-Unit selected-identity test as hard gate" },
     { "number": 6, "id": "QCP-INTEGRATION-MBT-PATTERNS", "status": "todo", "title": "Maintain integration MBT for high-value cross-slice sequencing" },
     { "number": 7, "id": "QCP-LANG-PARITY-MARKER", "status": "blocked", "title": "Language-target parity marker enforced per covered obligation" }
@@ -20,12 +20,35 @@ This plan rolls up the bounded program of work to reach the achievable 100% QNT 
 
 ## Source Of Truth
 
-- ADR-0001 — architectural framing for everything below.
+- `docs/adr/0001-forest-of-qnt-slices.md` — architectural framing for
+  slice-shaped QNT coverage. Read only the decision and consequences unless the
+  task changes architecture.
 - `plans/rules-kernel-coverage/README.md` — obligation/profile/marker/witness vocabulary.
-- `plans/rules-kernel-coverage/obligations.jsonl` — the obligation registry (92 today; 86 covered, 6 boundary/unsupported).
+- `plans/rules-kernel-coverage/obligations.jsonl` — the obligation registry
+  (93 today; 87 covered, 6 boundary/unsupported).
 - `plans/rules-kernel-coverage/generator-readiness.jsonl` — semantic-core status per obligation.
 - `plans/unit-profile-coverage/` — per-Unit support and selected-identity tracking.
-- `plans/MBT_RUST_MIGRATION_LANE_A.md` — closed precursor lane that produced the readiness inventory this plan now consumes.
+- `plans/rules-kernel-coverage/GENERATOR_READINESS_CLOSURE_REPORT.md` —
+  concise closeout for the deleted historical Rust-readiness Ralph lane.
+- `plans/rules-kernel-coverage/PRD_B_C_COVERAGE_AND_GENERATOR_READINESS.md` —
+  background rationale for B coverage closure versus C generator readiness. Do
+  not read this by default for ordinary slice tasks.
+
+## Context Budget Rules
+
+Ralph agents should not recursively read every linked historical plan. Use this
+file as the task entrypoint and then read only the source-of-truth rows needed
+for the current task:
+
+- For any task, read this file, `plans/rules-kernel-coverage/README.md`, and
+  the relevant rows in `obligations.jsonl`, `generator-readiness.jsonl`,
+  `qnt-owner-roles.jsonl`, and `kernel-ir-boundaries.jsonl`.
+- For a new slice, read the pilot source files listed in the handoff prompt
+  below, not the deleted pilot lane transcript.
+- Read the PRD or ADR only when changing the shape of the program, vocabulary,
+  checker contract, or architecture.
+- Never use deleted closed Ralph lanes as context. Their durable output has
+  been merged into checker-owned artifacts and the closure report.
 
 ## Working Discipline
 
@@ -59,7 +82,7 @@ For Task 5 (per-Unit gate): `pnpm unit-profile-coverage:check -- --write` then `
 ## Ordering and Parallelism
 
 - Task 0 (pilot): done — template for slice-shaped work.
-- Tasks 1, 2, 4, 5, 6: independent — can run in parallel worktrees.
+- Tasks 1, 2, 5, 6: independent — can run in parallel worktrees.
 - Task 3: per-slice dependency on Task 1 (the atomic the composite imports must be semantic-core) and Task 2 (the atomic must exist).
 - Task 7: blocked on first non-TS language target arriving.
 
@@ -71,10 +94,15 @@ Goal: prove the slice template end-to-end before the horizontal tasks below run 
 
 Output:
 
-- Sub-step of Task 1: extract `run test_*` blocks from `packages/shared-algebras/proofs/rule-core/hit-point-damage.qnt` to TS unit tests next to `damage-apply.ts`. Atomic file becomes pure semantic-core.
-- First instance of Task 3: new `packages/battle-runtime/creature-attack.qnt` (composite, imports `hit-point-damage`) + `packages/battle-runtime/creature-attack.mbt.qnt` (bounded MBT, state `{attackerHp, targetHp}` 0..20, ~3 actions, per-action `nondet damage`/`hit`) + `packages/battle-runtime/src/battle-reducer/creature-attack.ts` (composite pure function) + `packages/battle-runtime/src/creature-attack.mbt.test.ts` (parity test).
-- New obligation row in `obligations.jsonl` for the composite, with `KERNEL-COVERAGE` markers on all source files.
-- `generator-readiness.jsonl` row for `SHARED.HIT_POINTS.POSITIVE_DAMAGE` drops `run-block-coupled`.
+- Hit-point-damage `run test_*` blocks were extracted from the semantic-core
+  QNT owner.
+- Creature attack became the first composite slice:
+  `packages/battle-runtime/creature-attack.qnt`,
+  `packages/battle-runtime/creature-attack.mbt.qnt`,
+  `packages/battle-runtime/src/battle-reducer/creature-attack.ts`, and
+  `packages/battle-runtime/src/creature-attack.mbt.test.ts`.
+- The relevant obligation, owner-role, and generator-readiness rows were
+  updated in checker-owned artifacts.
 
 Acceptance: `pnpm rules-kernel-coverage:check` green; new parity test green; existing parity tests stay green.
 
@@ -112,13 +140,15 @@ Output: one composite slice per missing profile, following the pilot template. S
 
 Acceptance: new obligation row per slice; parity test green; checker green.
 
-### Task 4 - QCP-RESIDUAL-TRANSITIONAL
+### Task 4 - QCP-NON-SEMANTIC-AUDIT
 
-Status: `todo`
+Status: `done`
 
 Input: the 6 non-`covered` rows in `obligations.jsonl` (5 boundary-only, 1 unsupported-by-admission).
 
-Output: each row either re-classified permanently with rationale, or closed by adding the missing witness — no transitional remain.
+Output: each row is permanently classified with rationale rather than left as a
+transitional `needs-*` gap. The generated report currently shows zero open
+transitional obligations.
 
 Acceptance: checker reports 0 transitional.
 
@@ -190,8 +220,9 @@ findings with a concrete reason, and repeat until no reasonable findings
 remain.
 
 Pilot template for slice-shaped tasks (Tasks 0 and 3): the creature-attack
-pilot landed across commits `3d7cec0a`, `cfee3625`, and `888d9283`. Read
-those plus `packages/battle-runtime/creature-attack*.qnt`,
+pilot landed across commits `3d7cec0a`, `cfee3625`, and `888d9283`. Prefer
+reading the current files over historical diffs. Read
+`packages/battle-runtime/creature-attack*.qnt`,
 `packages/battle-runtime/src/battle-reducer/creature-attack.ts`, and
 `packages/battle-runtime/src/creature-attack.mbt.test.ts` before authoring
 a new slice.

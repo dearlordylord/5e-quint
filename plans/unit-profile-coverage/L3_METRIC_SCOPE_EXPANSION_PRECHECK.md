@@ -107,8 +107,10 @@ pressure counts. Do not widen `levelOneTwoBattleReadiness` or
 
 ## Concrete Follow-Up Task
 
-Task 30 in `plans/MBT_COVERAGE_LANE_D_PARITY.md` keeps the class/subclass Level
-3 slice executable rather than leaving it as prose backlog:
+The historical MBT coverage lane that carried this draft task has been deleted
+after completion/staleness cleanup. If Level 3 is reopened, seed the
+class/subclass slice from this section into a fresh Level 3 backlog instead of
+following the deleted lane.
 
 ### Task 30 - L3-CLASS-SUBCLASS-INVENTORY-SEED - Level 3 Class And Subclass Inventory Seed
 
