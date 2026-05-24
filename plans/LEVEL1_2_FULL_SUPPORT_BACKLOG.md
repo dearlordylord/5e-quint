@@ -48,7 +48,7 @@ currently blocked by SRD authored product readiness:
     {
       "number": 3,
       "id": "L12FS-WARLOCK-PACT-MAGIC-RETAINED-GRANT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve Warlock Pact Magic Level-1 Feature Grant"
     },
     {
@@ -155,7 +155,7 @@ Acceptance:
 
 ### Task 3 - L12FS-WARLOCK-PACT-MAGIC-RETAINED-GRANT - Resolve Warlock Pact Magic Level-1 Feature Grant
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
