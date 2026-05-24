@@ -665,6 +665,12 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/quickened-spell-governor.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
