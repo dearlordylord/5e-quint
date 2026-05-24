@@ -113,6 +113,7 @@
 {"profileId":"character-creation.skill-expertise-choice","obligationIds":["CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION"]}
 {"profileId":"character-creation.class-feature-resource-projection","obligationIds":["CREATION.CLASS_FEATURE_RESOURCE.PROJECTION"]}
 {"profileId":"character-creation.class-feature-source-fact-projection","obligationIds":["CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION"]}
+{"profileId":"character-creation.wizard-spellbook-learning-choice","obligationIds":["CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION"]}
 {"profileId":"spell.invocation-web-restraint-hazard","obligationIds":["BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE"]}
 {"profileId":"character-sheet.ability-check-proficiency-bonus","obligationIds":["SHEET.ABILITY_CHECK.PROFICIENCY_BONUS"]}
 {"profileId":"unit-feature.druid-wild-shape-known-form","obligationIds":["BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE"]}

@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 94,
-    "covered": 88,
+    "total": 95,
+    "covered": 89,
     "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
       "battle": 70,
-      "character-creation": 12,
+      "character-creation": 13,
       "character-sheet": 8,
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 88,
+      "covered": 89,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -2478,6 +2478,36 @@
         ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic"
       ],
       "title": "Character Creation projects retained class-feature source facts such as shared-resource links, Martial Arts die source, Metamagic option facts, and spell-use limits without duplicating source state"
+    },
+    {
+      "id": "CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "deterministicReplayRationale": "Character Creation Wizard spellbook learning replay is a fixed selected-identity fixture for Evocation Savant acquisition-time choices. The runtime discovers eligible Wizard Evocation Spell Definitions from existing Wizard spellbook Spell Access facts and finalizes selected spells into the build's spellbook list; random draft-fill interleavings are not the risk at this projection boundary.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "character-creation.wizard-spellbook-learning-choice"
+      ],
+      "qntOwners": [
+        "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt"
+      ],
+      "runtime": "character-creation",
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/discovery.ts",
+        "packages/character-creation-runtime/src/finalization.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Classes/Wizard.md#Level 1: Spellcasting",
+        ".references/srd-5.2.1/Classes/Wizard.md#Level 3: Evocation Savant"
+      ],
+      "title": "Character Creation finalizes Wizard spellbook learning choices from class-feature grants into existing spellbook Spell Access without adding a separate sheet spellbook roster"
     },
     {
       "id": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
@@ -5008,6 +5038,12 @@
     },
     {
       "obligationIds": [
+        "CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION"
+      ],
+      "profileId": "character-creation.wizard-spellbook-learning-choice"
+    },
+    {
+      "obligationIds": [
         "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE"
       ],
       "profileId": "spell.invocation-web-restraint-hazard"
@@ -5442,6 +5478,14 @@
       ],
       "ownerPath": "packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt",
       "role": "mbt-fixture"
+    },
+    {
+      "evidence": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt is a selected-identity replay owner for class-feature projections including Wizard Evocation Savant spellbook learning; it proves concrete selected catalog identity reaches creation finalization rather than supplying reusable generator input.",
+      "obligationIds": [
+        "CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION"
+      ],
+      "ownerPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
+      "role": "selected-identity-trace"
     },
     {
       "evidence": "packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt is a selected-identity replay owner; it proves concrete selected catalog identity reaches runtime behavior rather than supplying reusable generator input.",

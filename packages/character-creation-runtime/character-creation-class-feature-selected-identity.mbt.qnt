@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION
 
 module characterCreationClassFeatureSelectedIdentityMbt {
   var qLastResult: str

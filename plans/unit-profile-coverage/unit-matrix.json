@@ -83,13 +83,13 @@
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 132,
-      "numerator": 128,
-      "percent": "97%"
+      "numerator": 129,
+      "percent": "97.7%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 132,
-      "numerator": 128,
-      "percent": "97%"
+      "numerator": 129,
+      "percent": "97.7%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 144,
@@ -3900,13 +3900,13 @@
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 132,
-        "numerator": 128,
-        "percent": "97%"
+        "numerator": 129,
+        "percent": "97.7%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 132,
-        "numerator": 128,
-        "percent": "97%"
+        "numerator": 129,
+        "percent": "97.7%"
       }
     },
     "profileKinds": [
@@ -5254,8 +5254,15 @@
         "profileKind": "character-creation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION",
+            "runtime": "character-creation",
+            "status": "covered",
+            "title": "Character Creation finalizes Wizard spellbook learning choices from class-feature grants into existing spellbook Spell Access without adding a separate sheet spellbook roster"
+          }
+        ],
         "profileId": "character-creation.wizard-spellbook-learning-choice",
         "profileKind": "character-creation"
       },

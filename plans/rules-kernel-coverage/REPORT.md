@@ -4,14 +4,14 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Summary
 
-- Total obligations: 94
-- Covered obligations: 88
+- Total obligations: 95
+- Covered obligations: 89
 - Open transitional obligations: 0
 - Boundary or unsupported obligations: 6
 
 | Status | Count |
 | --- | ---: |
-| covered | 88 |
+| covered | 89 |
 | needs-qnt-owner | 0 |
 | needs-parity-witness | 0 |
 | needs-surface-evidence | 0 |
@@ -22,7 +22,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | --- | ---: |
 | shared-algebras | 1 |
 | battle | 70 |
-| character-creation | 12 |
+| character-creation | 13 |
 | character-sheet | 8 |
 | character-battle | 3 |
 
@@ -107,6 +107,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION` | character-creation | covered | `character-creation.skill-expertise-choice` |
 | `CREATION.CLASS_FEATURE_RESOURCE.PROJECTION` | character-creation | covered | `character-creation.class-feature-resource-projection` |
 | `CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION` | character-creation | covered | `character-creation.class-feature-source-fact-projection` |
+| `CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION` | character-creation | covered | `character-creation.wizard-spellbook-learning-choice` |
 | `SHEET.FEATURE_RESOURCES.TRANSITIONS` | character-sheet | covered | `character-sheet.class-feature-long-rest-use-state`, `character-sheet.class-feature-point-pool-resource`, `character-sheet.class-feature-use-count-resource`, `character-sheet.font-of-magic-slot-to-sorcery-points`, `character-sheet.font-of-magic-sorcery-points-to-spell-slot`, `character-sheet.healing-resource-action`, `character-sheet.metamagic-battle-resource-bridge`, `character-sheet.monk-uncanny-metabolism-initiative-recovery` |
 | `SHEET.ABILITY_CHECK.PROFICIENCY_BONUS` | character-sheet | covered | `character-sheet.ability-check-proficiency-bonus` |
 | `CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION` | character-battle | covered | _direct reducer entrypoint_ |
@@ -296,6 +297,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/character-battle-runtime/character-battle-settlement.mbt.qnt` | mbt-fixture | `CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS`, `CHARACTER.BATTLE.HANDOFF.SETTLEMENT` |
 | `packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt` | mbt-fixture | `SHEET.FEATURE_RESOURCES.TRANSITIONS` |
 | `packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt` | mbt-fixture | `CREATION.CLASS_FEATURE_RESOURCE.PROJECTION`, `CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION` |
+| `packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt` | selected-identity-trace | `CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION` |
 | `packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt` | selected-identity-trace | `CREATION.CLASS_FEATURE_OPTION.PROJECTION` |
 | `packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt` | selected-identity-trace | `CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT`, `CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION` |
 | `packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.mbt.qnt` | selected-identity-trace | `CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION` |

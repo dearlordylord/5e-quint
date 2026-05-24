@@ -196,7 +196,7 @@ identity evidence or an explicit non-applicable classification.
     {
       "number": 31,
       "id": "B28-WIZARD-SPELLBOOK-LEARNING-RULES-KERNEL-MAPPING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Map Wizard spellbook learning profile to rules-kernel obligations"
     },
     {
@@ -292,7 +292,7 @@ Lane B must not:
 | 28 | B25-SHINING-SMITE-IDENTITY-WITNESS - Backfill Shining Smite selected identity witness | done | none | Added selected-identity MBT evidence for `shining_smite`; generated selected-identity gaps no longer list it. |
 | 29 | B26-DEFERRED-IDENTITY-GAP-SEMANTICS - Clarify deferred selected identity gap semantics | done | none | Generated selected-identity reports now keep deferred-portion non-applicable rows visible in a separate bucket while excluding them from ordinary replay gaps; `mind_spike` is listed there, and `thaumaturgy` already has selected-identity MBT evidence. |
 | 30 | B27-CREATURE-SIZE-RULES-KERNEL-MAPPING - Map creature size change profile to rules-kernel obligations | done | none | Mapped `spell.invocation-creature-size-change` to `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE`; generated rules-kernel profile join gaps no longer list it. |
-| 31 | B28-WIZARD-SPELLBOOK-LEARNING-RULES-KERNEL-MAPPING - Map Wizard spellbook learning profile to rules-kernel obligations | ready-for-research | none | Metric-honesty gap: `character-creation.wizard-spellbook-learning-choice` is unmapped in `rulesKernelProfileJoin`. |
+| 31 | B28-WIZARD-SPELLBOOK-LEARNING-RULES-KERNEL-MAPPING - Map Wizard spellbook learning profile to rules-kernel obligations | done | none | Mapped `character-creation.wizard-spellbook-learning-choice` to `CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION`; generated rules-kernel profile join gaps no longer list it. |
 | 32 | B29-LEVITATED-CREATURE-RULES-KERNEL-MAPPING - Map levitated creature profile to rules-kernel obligations | ready-for-research | none | Metric-honesty gap: `spell.invocation-levitated-creature` is unmapped in `rulesKernelProfileJoin`. |
 | 33 | B30-CLASS-FEATURE-PREPARED-SPELL-ACCESS-RULES-KERNEL-MAPPING - Map class feature prepared spell access profile to rules-kernel obligations | ready-for-research | none | Metric-honesty gap: `character-sheet.class-feature-prepared-spell-access` is unmapped in `rulesKernelProfileJoin`. |
 | 34 | B31-DRUID-CIRCLE-LAND-SPELL-ACCESS-RULES-KERNEL-MAPPING - Map Druid Circle Land spell access profile to rules-kernel obligations | ready-for-research | none | Metric-honesty gap: `character-sheet.druid-circle-land-spell-access` is unmapped and leaves `druid_circle_of_the_land_spells` uncovered in `rulesKernelSupportedUnitCoverage`. |
@@ -778,7 +778,7 @@ needed; the profile remains a single source of membership for affected Units.
 
 ### Task 31 - B28-WIZARD-SPELLBOOK-LEARNING-RULES-KERNEL-MAPPING - Map Wizard spellbook learning profile to rules-kernel obligations
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: map `character-creation.wizard-spellbook-learning-choice` to a
 character-creation or character-sheet rules-kernel obligation after checking the
@@ -787,6 +787,12 @@ Wizard spellbook SRD text and ubiquitous language.
 Acceptance: `rulesKernelProfileJoinCoverage` no longer lists the Wizard
 spellbook learning profile as unmapped, and selected spellbook facts are not
 duplicated across creation and sheet owners.
+
+Result: mapped `character-creation.wizard-spellbook-learning-choice` to
+`CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION` using the existing
+character-creation discovery/finalization owners and selected-identity replay.
+No character-sheet spellbook roster or duplicated selected spellbook fact owner
+was added.
 
 ### Task 32 - B29-LEVITATED-CREATURE-RULES-KERNEL-MAPPING - Map levitated creature profile to rules-kernel obligations
 
