@@ -1,4 +1,6 @@
 // KERNEL-COVERAGE: parity-witness SHEET.SPELL_REST_BENEFIT.APPLICATION
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH prayer_of_healing
+// UNIT-IDENTITY-MBT-REPLAY: B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH prayer_of_healing doApplyPrayerOfHealingRestBenefit doRejectRecipientLongRestLockout
 import * as path from "node:path";
 
 import {
@@ -58,6 +60,49 @@ const driverSchema = {
   doRejectRecipientLongRestLockout: {},
   step: {},
 } as const;
+type SpellRestBenefitDriverAction = Exclude<
+  keyof typeof driverSchema,
+  "init" | "step"
+>;
+type SelectedUnitIdentityReplaySequence = {
+  readonly name: string;
+  readonly actions: readonly SpellRestBenefitDriverAction[];
+  readonly expected: SpellRestBenefitProjection;
+};
+type SelectedUnitIdentityReplay = {
+  readonly taskId: "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH";
+  readonly unitId: "prayer_of_healing";
+  readonly actions: readonly SpellRestBenefitDriverAction[];
+  readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
+};
+
+const selectedUnitIdentityReplays = [
+  {
+    taskId: "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH",
+    unitId: "prayer_of_healing",
+    actions: [
+      "doApplyPrayerOfHealingRestBenefit",
+      "doRejectRecipientLongRestLockout",
+    ],
+    sequences: [
+      {
+        name: "completed-cast-selected-rest-benefit-lockout",
+        actions: [
+          "doApplyPrayerOfHealingRestBenefit",
+          "doRejectRecipientLongRestLockout",
+        ],
+        expected: {
+          lastResult: "recipient-lockout-rejected",
+          slotSpent: false,
+          shortRestBenefitApplied: false,
+          healingApplied: false,
+          longRestLockoutStored: true,
+          replayIndex: 2,
+        },
+      },
+    ],
+  },
+] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
 function createSpellRestBenefitDriver() {
   return defineDriver(driverSchema, () => {
@@ -87,6 +132,39 @@ const spellRestBenefitStateCheck = stateCheck(
 );
 
 describe("Character Sheet Spell Rest Benefit deterministic QNT replay", () => {
+  it("replays selected Unit identities deterministically", async () => {
+    for (const replay of selectedUnitIdentityReplays) {
+      const replayedActions = new Set<SpellRestBenefitDriverAction>();
+
+      for (const sequence of replay.sequences) {
+        const driver = createSpellRestBenefitDriver()();
+
+        for (const actionName of sequence.actions) {
+          replayedActions.add(actionName);
+          const action = driver.actions[actionName];
+          if (action === undefined) {
+            throw new Error(
+              `Missing spell rest benefit selected identity driver action ${actionName}.`,
+            );
+          }
+          await action.handler({});
+        }
+
+        const runtime = driver.getState?.();
+        if (runtime === undefined) {
+          throw new Error(
+            "Spell Rest Benefit selected identity driver must expose getState.",
+          );
+        }
+        expect(runtime, `${replay.unitId}:${sequence.name}`).toEqual(
+          sequence.expected,
+        );
+      }
+
+      expect(replayedActions).toEqual(new Set(replay.actions));
+    }
+  });
+
   it("replays Prayer of Healing slot spend, Short Rest benefit, healing, and lockout", async () => {
     await run({
       spec: path.resolve(

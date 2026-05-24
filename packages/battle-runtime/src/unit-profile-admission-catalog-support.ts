@@ -117,6 +117,8 @@ export const eldritchBlastUnitId = "eldritch_blast";
 
 export const enhanceAbilityUnitId = "enhance_ability";
 
+export const enlargeReduceUnitId = "enlarge_reduce";
+
 export const enthrallUnitId = "enthrall";
 
 export const ensnaringStrikeUnitId = "ensnaring_strike";

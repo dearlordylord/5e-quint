@@ -108,8 +108,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 142,
-      "numerator": 133,
-      "percent": "93.7%"
+      "numerator": 139,
+      "percent": "97.9%"
     },
     "supportedProfileCoverage": {
       "denominator": 210,
@@ -9203,21 +9203,8 @@
       ],
       "evidenceTag": "selected-identity-mbt"
     },
-    "rowCount": 20,
+    "rowCount": 9,
     "rows": [
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "sourceRecordPath": "packages/surface/content/aid.json",
-        "support": {
-          "profileIds": [
-            "spell.scalar-buff"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "aid"
-      },
       {
         "catalogAdmissionStatus": "installed",
         "collectionId": "srd-5.2.1",
@@ -9230,45 +9217,6 @@
           "tag": "profile-subset-supported"
         },
         "unitId": "antimagic_field"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "sourceRecordPath": "packages/surface/content/barkskin.json",
-        "support": {
-          "profileIds": [
-            "spell.scalar-buff"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "barkskin"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "sourceRecordPath": "packages/surface/content/blur.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-blur-attack-roll-defense"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "blur"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "sourceRecordPath": "packages/surface/content/continual_flame.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-object-light"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "continual_flame"
       },
       {
         "catalogAdmissionStatus": "installed",
@@ -9295,32 +9243,6 @@
           "tag": "profile-subset-supported"
         },
         "unitId": "dispel_magic"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "sourceRecordPath": "packages/surface/content/enhance_ability.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-roll-modifier"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "enhance_ability"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "sourceRecordPath": "packages/surface/content/enlarge_reduce.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-creature-size-change"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "enlarge_reduce"
       },
       {
         "catalogAdmissionStatus": "installed",
@@ -9365,19 +9287,6 @@
         "catalogAdmissionStatus": "installed",
         "collectionId": "srd-5.2.1",
         "kind": "spell",
-        "sourceRecordPath": "packages/surface/content/magic_weapon.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-magic-weapon-enhancement"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "magic_weapon"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
         "sourceRecordPath": "packages/surface/content/mind_spike.json",
         "support": {
           "profileIds": [
@@ -9386,45 +9295,6 @@
           "tag": "profile-subset-supported"
         },
         "unitId": "mind_spike"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "sourceRecordPath": "packages/surface/content/mirror_image.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-mirror-image-hit-interception"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "mirror_image"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "sourceRecordPath": "packages/surface/content/pass_without_trace.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-roll-modifier"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "pass_without_trace"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "sourceRecordPath": "packages/surface/content/prayer_of_healing.json",
-        "support": {
-          "profileIds": [
-            "character-sheet.spell-rest-benefit-application"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "prayer_of_healing"
       },
       {
         "catalogAdmissionStatus": "installed",
@@ -9451,19 +9321,6 @@
           "tag": "profile-subset-supported"
         },
         "unitId": "thaumaturgy"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "sourceRecordPath": "packages/surface/content/warding_bond.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-warding-bond-linked-effect"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "warding_bond"
       }
     ]
   },
@@ -18448,6 +18305,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-SPELL-AID"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level2-protection-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH"
         }
       ],
       "executableMechanics": true,
@@ -18814,6 +18676,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-SPELL-BARKSKIN"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level2-protection-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH"
         }
       ],
       "executableMechanics": true,
@@ -19072,6 +18939,11 @@
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/level2-protection-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH"
+        },
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-blur.test.ts",
           "tag": "deterministic-admission-projection",
@@ -19787,6 +19659,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-object-light-spells.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-SPELL-CONTINUAL-FLAME"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level2-protection-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH"
         }
       ],
       "executableMechanics": true,
@@ -20485,6 +20362,11 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
+          "ownerPath": "packages/battle-runtime/src/level2-protection-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH"
+        },
+        {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-MISSING-ENHANCE-ABILITY"
@@ -20559,6 +20441,11 @@
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/level2-protection-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH"
+        },
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-enlarge-reduce.test.ts",
           "tag": "deterministic-admission-projection",
@@ -23194,6 +23081,11 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
+          "ownerPath": "packages/battle-runtime/src/level2-protection-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH"
+        },
+        {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-SPELL-PASS-WITHOUT-TRACE"
@@ -23377,6 +23269,11 @@
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/spell-rest-benefit-application.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH"
+        },
         {
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
@@ -25293,6 +25190,11 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
+          "ownerPath": "packages/battle-runtime/src/level2-protection-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH"
+        },
+        {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME"
@@ -25466,6 +25368,11 @@
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/level2-protection-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH"
+        },
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-mirror-image.test.ts",
           "tag": "deterministic-admission-projection",
@@ -27225,6 +27132,11 @@
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/level2-protection-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH"
+        },
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-warding-bond.test.ts",
           "tag": "deterministic-admission-projection",
