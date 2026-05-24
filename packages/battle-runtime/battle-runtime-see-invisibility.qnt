@@ -12,12 +12,7 @@ module battleRuntimeSeeInvisibility {
   import battleRuntimeSpellAttack.* from "./battle-runtime-spell-attack"
   import battleRuntimeSanctuary.* from "./battle-runtime-sanctuary"
   import battleRuntimeMovement.* from "./battle-runtime-movement"
-
-  type SeeInvisibleWitnessPlane =
-    | MaterialPlane
-    | EtherealPlane
-
-  pure def seeInvisibilityDurationTicks: int = 60 * 10
+  import battleRuntimeSeeInvisibilityConstants.* from "./battle-runtime-see-invisibility-constants"
 
   pure def seeInvisibleAndEtherealActiveEffect(
     source: Actor,

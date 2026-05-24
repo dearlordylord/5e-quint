@@ -17,7 +17,7 @@ slice candidates remain.
     { "number": 1, "id": "C1-SLICE-CANDIDATE-SURVEY", "status": "done", "title": "Survey composite MBT slice candidates" },
     { "number": 2, "id": "C2-DIRECT-CONDITION-SLICE", "status": "done", "title": "Direct condition lifecycle slice already present" },
     { "number": 3, "id": "C3-SAVE-CONDITION-SLICE", "status": "done", "title": "Save-gated condition lifecycle slice already present" },
-    { "number": 4, "id": "C4-SEE-INVISIBILITY-SLICE", "status": "ready-for-implementation-after-light-research", "title": "Add See Invisibility observer-sight slice" },
+    { "number": 4, "id": "C4-SEE-INVISIBILITY-SLICE", "status": "done", "title": "Add See Invisibility observer-sight slice" },
     { "number": 5, "id": "C5-RAY-ENFEEBLEMENT-SLICE", "status": "ready-for-implementation-after-light-research", "title": "Add Ray of Enfeeblement lifecycle slice" },
     { "number": 6, "id": "C6-WEB-RESTRAINT-SLICE", "status": "ready-for-implementation-after-light-research", "title": "Add Web restraint hazard slice" },
     { "number": 7, "id": "C7-HEAT-METAL-SLICE", "status": "ready-for-implementation-after-light-research", "title": "Add Heat Metal object-contact slice" },
@@ -69,7 +69,7 @@ Lane C must not:
 | 1 | C1-SLICE-CANDIDATE-SURVEY - Survey composite MBT slice candidates | done | none | Findings recorded in `plans/rules-kernel-coverage/C1_SLICE_CANDIDATE_SURVEY.md`. |
 | 2 | C2-DIRECT-CONDITION-SLICE - Direct condition lifecycle slice already present | done | none | Existing focused MBT and package script found by C1; no new slice work queued. |
 | 3 | C3-SAVE-CONDITION-SLICE - Save-gated condition lifecycle slice already present | done | none | Existing selected-identity MBT found by C1; script/report cleanup remains in C17. |
-| 4 | C4-SEE-INVISIBILITY-SLICE - Add See Invisibility observer-sight slice | ready-for-implementation-after-light-research | none | Observer sight fact only. |
+| 4 | C4-SEE-INVISIBILITY-SLICE - Add See Invisibility observer-sight slice | done | none | Observer sight fact only. |
 | 5 | C5-RAY-ENFEEBLEMENT-SLICE - Add Ray of Enfeeblement lifecycle slice | ready-for-implementation-after-light-research | none | D20 and damage-penalty lifecycle. |
 | 6 | C6-WEB-RESTRAINT-SLICE - Add Web restraint hazard slice | ready-for-implementation-after-light-research | none | Restraint and hazard lifecycle. |
 | 7 | C7-HEAT-METAL-SLICE - Add Heat Metal object-contact slice | ready-for-implementation-after-light-research | none | Object contact and repeat damage. |
@@ -126,7 +126,7 @@ package script or obligation-row witness cleanup is handled by C17.
 
 ### Task 4 - C4-SEE-INVISIBILITY-SLICE - Add See Invisibility observer-sight slice
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: focused slice for observer sight state created by See Invisibility.
 
