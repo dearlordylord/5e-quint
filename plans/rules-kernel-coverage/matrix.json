@@ -997,6 +997,12 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-flame-blade.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/spell-created-held-object-lifecycle.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-spell-created-held-object-lifecycle.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
