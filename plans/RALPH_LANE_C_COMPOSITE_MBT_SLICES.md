@@ -137,7 +137,7 @@ slice candidates remain.
     {
       "number": 21,
       "id": "C21-WILD-SHAPE-FORM-SLICE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Add Wild Shape form lifecycle focused MBT"
     },
     {
@@ -253,7 +253,7 @@ Lane C must not:
 | 18 | C18-END-TO-END-SLICE-VERIFICATION - Run and document lane C verification | done | none | Focused MBT-only closure documented in `plans/rules-kernel-coverage/C18_END_TO_END_SLICE_VERIFICATION.md`. |
 | 19 | C19-RECURSIVE-NEXT-BATCH - Mine next composite MBT slice batch | done | none | Appended 12 focused MBT slice tasks from covered battle obligations that lack focused witnesses; see `plans/rules-kernel-coverage/C19_RECURSIVE_NEXT_BATCH.md`. |
 | 20 | C20-FIND-FAMILIAR-COMPANION-SLICE - Add Find Familiar companion lifecycle focused MBT | done | none | Runtime-test-only obligation; companion lifecycle, replacement, telepathy, touch delivery, and Pact reaction-attack state. |
-| 21 | C21-WILD-SHAPE-FORM-SLICE - Add Wild Shape form lifecycle focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; form statistics, Temporary Hit Points, spellcasting block, and supported reversion. |
+| 21 | C21-WILD-SHAPE-FORM-SLICE - Add Wild Shape form lifecycle focused MBT | done | none | Runtime-test-only obligation; form statistics, Temporary Hit Points, spellcasting block, and supported reversion. |
 | 22 | C22-DISPEL-MAGIC-ONGOING-SLICE - Add Dispel Magic ongoing spell ending focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; target-scoped ending and higher-level ability-check gate for tracked ongoing spell effects. |
 | 23 | C23-QUICKENED-SPELL-GOVERNOR-SLICE - Add Quickened Spell governor focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; known selection, Sorcery Point affordability, action rewrite, and same-turn leveled-spell governor. |
 | 24 | C24-DARKNESS-POINT-ORIGIN-SLICE - Add Darkness point-origin lifecycle focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; point-origin magical Darkness area identity, witness consumption, Concentration, and cleanup. |
@@ -544,7 +544,7 @@ Verification: focused package script, `pnpm rules-kernel-coverage:check -- --wri
 
 ### Task 21 - C21-WILD-SHAPE-FORM-SLICE - Add Wild Shape form lifecycle focused MBT
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: add a focused `*.mbt.qnt` plus `src/*.mbt.test.ts` witness and package
 script for `BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE`.

@@ -517,6 +517,12 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-druid-wild-shape.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/druid-wild-shape-form-lifecycle.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
