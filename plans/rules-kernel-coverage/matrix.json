@@ -1711,13 +1711,20 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-warding-bond.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/warding-bond-damage-sharing.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-warding-bond-damage-sharing.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
         "spell.invocation-warding-bond-linked-effect"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-warding-bond.qnt"
+        "packages/battle-runtime/battle-runtime-warding-bond.qnt",
+        "packages/battle-runtime/battle-runtime-warding-bond-damage-sharing.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -5293,6 +5300,14 @@
         "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-warding-bond.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-warding-bond-damage-sharing.qnt is the bounded composite slice QNT owner carrying executable Warding Bond damage-sharing semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-warding-bond-damage-sharing.qnt",
       "role": "semantic-core"
     },
     {

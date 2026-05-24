@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "QNTSLICE-WARDING-BOND-DAMAGE-SHARING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add Warding Bond Damage Sharing Composite Slice"
     },
     {
@@ -407,7 +407,7 @@ Acceptance:
 
 ### Task 8 - QNTSLICE-WARDING-BOND-DAMAGE-SHARING - Add Warding Bond Damage Sharing Composite Slice
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -441,6 +441,16 @@ Output:
 - Not a whole-battle model: the slice does not model positioning, spell
   component ownership, target willingness, the full damage pipeline, or other
   active effects; it only verifies the linked damage and cleanup transition.
+
+Result:
+
+- Added a bounded Warding Bond damage-sharing composite QNT slice and sibling
+  MBT harness.
+- Reused the existing Warding Bond reducer owner for the production TypeScript
+  parity mirror covering post-Resistance target damage, same-amount source
+  damage, and source-zero/separation/recast cleanup.
+- Registered the new slice owner and focused MBT parity witness in
+  rules-kernel coverage rows.
 
 Acceptance:
 

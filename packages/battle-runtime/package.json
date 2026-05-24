@@ -15,6 +15,7 @@
     "test:mbt:flaming-sphere-hazard-ram": "vitest run src/flaming-sphere-hazard-ram.mbt.test.ts",
     "test:mbt:mirror-image-hit-interception": "vitest run src/mirror-image-hit-interception.mbt.test.ts",
     "test:mbt:moonbeam-movable-zone": "vitest run src/moonbeam-movable-zone.mbt.test.ts",
+    "test:mbt:warding-bond-damage-sharing": "vitest run src/warding-bond-damage-sharing.mbt.test.ts",
     "test:mbt:rule-core-hit-point-damage": "vitest run src/rule-core-hit-point-damage.mbt.test.ts",
     "test:mbt:rule-core-features": "vitest run src/rule-core-features.mbt.test.ts",
     "test:mbt:rule-core-movement": "vitest run src/rule-core-movement.mbt.test.ts",
