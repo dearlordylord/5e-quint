@@ -113,7 +113,7 @@ slice candidates remain.
     {
       "number": 17,
       "id": "C17-SLICE-SCRIPT-AND-REPORT-CLOSURE",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Refresh package scripts and rules-kernel rows"
     },
     {
@@ -177,7 +177,7 @@ Lane C must not:
 | 14 | C14-WARDING-BOND-SLICE - Warding Bond linked-effect slice already present | done | none | Existing focused MBT and package script found by C1; no new slice work queued. |
 | 15 | C15-SANCTUARY-SLICE - Sanctuary targeting-interdiction slice already present | done | none | Existing selected-identity MBT found by C1; script/report cleanup remains in C17. |
 | 16 | C16-SPELL-SEQUENCING-INTEGRATION-MBT - Add bounded spell sequencing integration MBT | done | C4-C12 | Cross-slice bounded fixture over non-duplicate new slices only. |
-| 17 | C17-SLICE-SCRIPT-AND-REPORT-CLOSURE - Refresh package scripts and rules-kernel rows | blocked | C4-C12,C16 | Scripts and generated rows, including C1-discovered existing witness cleanup. |
+| 17 | C17-SLICE-SCRIPT-AND-REPORT-CLOSURE - Refresh package scripts and rules-kernel rows | ready-for-implementation-after-light-research | none | Scripts and generated rows, including C1-discovered existing witness cleanup. C4-C12 and C16 are already done; do not keep done task ids as blocking dependencies. |
 | 18 | C18-END-TO-END-SLICE-VERIFICATION - Run and document lane C verification | blocked | C17 | Focused MBT only. |
 | 19 | C19-RECURSIVE-NEXT-BATCH - Mine next composite MBT slice batch | blocked | C18 | Must append >=12 tasks or prove exhaustion. |
 
@@ -372,12 +372,17 @@ Acceptance: documented scope and bounded runtime.
 
 ### Task 17 - C17-SLICE-SCRIPT-AND-REPORT-CLOSURE - Refresh package scripts and rules-kernel rows
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Output: add package scripts for new focused tests, add package scripts for
 C1-discovered existing MBT witnesses that lack scripts, update
 obligation/profile rows only where evidence changed or existing focused-MBT
 witnesses need row/report alignment, regenerate reports.
+
+Dependency repair: this task is intentionally runnable after C4-C12 and C16
+are done. The Ralph chooser removes done tasks from its active dependency
+index, so retaining those done ids as dependencies makes this closure task
+permanently blocked.
 
 Acceptance: `pnpm rules-kernel-coverage:check -- --write` then check pass.
 
