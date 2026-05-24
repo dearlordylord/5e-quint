@@ -52,7 +52,7 @@ identity evidence or an explicit non-applicable classification.
     {
       "number": 7,
       "id": "B7-FEAT-IDENTITY-BATCH",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Backfill feat identity evidence"
     },
     {
@@ -160,7 +160,7 @@ Lane B must not:
 | 4 | B4-CLASS-FEATURE-IDENTITY-BATCH-1 - Backfill class-feature identity evidence batch 1 | done | none | Barbarian/Bard/Cleric/Druid. |
 | 5 | B5-CLASS-FEATURE-IDENTITY-BATCH-2 - Backfill class-feature identity evidence batch 2 | done | none | Monk/Ranger/Paladin. |
 | 6 | B6-CLASS-FEATURE-IDENTITY-BATCH-3 - Backfill class-feature identity evidence batch 3 | done | none | Sorcerer/Warlock/Wizard. |
-| 7 | B7-FEAT-IDENTITY-BATCH - Backfill feat identity evidence | ready-for-implementation-after-light-research | none | Alert and Origin feat reachability. |
+| 7 | B7-FEAT-IDENTITY-BATCH - Backfill feat identity evidence | done | none | Alert and Origin feat reachability. |
 | 8 | B8-LEVEL1-SPELL-IDENTITY-BATCH - Backfill level-1 spell identity evidence | ready-for-implementation-after-light-research | none | Any remaining level-1 supported spell ids. |
 | 9 | B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH - Backfill level-2 damage spell identity evidence | ready-for-implementation-after-light-research | none | Damage/attack spells. |
 | 10 | B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH - Backfill level-2 control spell identity evidence | ready-for-implementation-after-light-research | none | Control/condition spells. |
@@ -260,13 +260,17 @@ and `wizard_scholar`.
 
 ### Task 7 - B7-FEAT-IDENTITY-BATCH - Backfill feat identity evidence
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: cover Alert and SRD Origin feat reachability through catalog admission,
 character creation, and any runtime handoff they already own.
 
 Acceptance: evidence proves identity reaches the typed owner; no runtime code
 branches on authored feat id for mechanics.
+
+Result: selected-identity evidence now covers `alert` through SRD Origin feat
+selection, Character Creation build refs, and the existing Character Battle
+Initiative Proficiency handoff.
 
 ### Task 8 - B8-LEVEL1-SPELL-IDENTITY-BATCH - Backfill level-1 spell identity evidence
 

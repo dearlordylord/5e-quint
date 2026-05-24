@@ -108,8 +108,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 142,
-      "numerator": 120,
-      "percent": "84.5%"
+      "numerator": 121,
+      "percent": "85.2%"
     },
     "supportedProfileCoverage": {
       "denominator": 210,
@@ -9203,21 +9203,8 @@
       ],
       "evidenceTag": "selected-identity-mbt"
     },
-    "rowCount": 44,
+    "rowCount": 43,
     "rows": [
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "feat",
-        "sourceRecordPath": "packages/surface/content/alert.json",
-        "support": {
-          "profileIds": [
-            "unit-feature.initiative-proficiency-and-swap"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "alert"
-      },
       {
         "catalogAdmissionStatus": "installed",
         "collectionId": "srd-5.2.1",
@@ -17232,6 +17219,11 @@
           "ownerPath": "packages/character-battle-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/character-battle-runtime/src/origin-feat-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B7-FEAT-IDENTITY-BATCH"
         }
       ],
       "executableMechanics": true,

@@ -26,7 +26,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Rules-kernel covered profile coverage | 127/132 | 96.2% |
 | Supported Unit rules-kernel chain coverage | 143/144 | 99.3% |
 | Deterministic admission/projection coverage | 142/142 | 100% |
-| Selected identity replay coverage | 120/142 | 84.5% |
+| Selected identity replay coverage | 121/142 | 85.2% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -1016,6 +1016,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `feat_archery` | `unit-feature.passive-ranged-attack-roll-bonus` | passive-and-zero-hp-features | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `feat_boon_of_combat_prowess` | `unit-feature.attack-roll-miss-to-hit-replacement` | L1H-BOON-COMBAT-PROWESS | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `defense` | `unit-feature.passive-armor-class-bonus` | passive-and-zero-hp-features | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `alert` | `unit-feature.initiative-proficiency-and-swap` | B7-FEAT-IDENTITY-BATCH | `packages/character-battle-runtime/src/origin-feat-selected-identity.mbt.test.ts` |
 | `feat_savage_attacker` | `unit-feature.weapon-damage-dice-roll-choice` | QMBT31 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `paladin_lay_on_hands` | `character-sheet.healing-resource-action` | healing-stabilization | `packages/character-sheet-runtime/src/healing-resource-selected-identity.mbt.test.ts` |
 | `paladin_paladins_smite` | `spell.invocation-after-hit-damage` | B5-CLASS-FEATURE-IDENTITY-BATCH-2 | `packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts` |
@@ -1107,7 +1108,6 @@ This generated view lists `profile-subset-supported` and `supported-profile` Uni
 
 | Unit | Claim | Catalog | Collection | Kind | Profiles | Source |
 | --- | --- | --- | --- | --- | --- | --- |
-| `alert` | supported-profile | installed | srd-5.2.1 | feat | `unit-feature.initiative-proficiency-and-swap` | `packages/surface/content/alert.json` |
 | `aid` | supported-profile | installed | srd-5.2.1 | spell | `spell.scalar-buff` | `packages/surface/content/aid.json` |
 | `alter_self` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-self-transformation-mode` | `packages/surface/content/alter_self.json` |
 | `antimagic_field` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-antimagic-field-ongoing-spell-suppression` | `packages/surface/content/antimagic_field.json` |
