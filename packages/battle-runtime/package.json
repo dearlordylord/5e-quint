@@ -12,6 +12,7 @@
   "scripts": {
     "test": "vitest run",
     "test:mbt:creature-attack": "vitest run src/creature-attack.mbt.test.ts",
+    "test:mbt:direct-condition-lifecycle": "vitest run src/direct-condition-lifecycle.mbt.test.ts",
     "test:mbt:flaming-sphere-hazard-ram": "vitest run src/flaming-sphere-hazard-ram.mbt.test.ts",
     "test:mbt:mirror-image-hit-interception": "vitest run src/mirror-image-hit-interception.mbt.test.ts",
     "test:mbt:moonbeam-movable-zone": "vitest run src/moonbeam-movable-zone.mbt.test.ts",

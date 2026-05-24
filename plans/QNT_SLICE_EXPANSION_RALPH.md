@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "QNTSLICE-DIRECT-CONDITION-LIFECYCLE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add Direct Condition Lifecycle Composite Slice"
     }
   ]
@@ -459,7 +459,7 @@ Acceptance:
 
 ### Task 9 - QNTSLICE-DIRECT-CONDITION-LIFECYCLE - Add Direct Condition Lifecycle Composite Slice
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -500,6 +500,18 @@ Output:
   adjudication, and the rest of the combat turn are outside this slice; it owns
   direct condition application, early end, concentration cleanup, and duration
   cleanup.
+
+Result:
+
+- Added a bounded direct condition lifecycle composite QNT slice and sibling
+  MBT harness for Invisibility-style direct condition application, target-action
+  early ending, Concentration cleanup, and duration cleanup.
+- Extracted the production TypeScript mirror in
+  `packages/battle-runtime/src/battle-reducer/direct-condition-lifecycle.ts`
+  so direct condition application and target-action cleanup share reducer
+  condition projection semantics.
+- Registered the new slice owner and focused MBT parity witness in
+  rules-kernel coverage rows.
 
 Acceptance:
 

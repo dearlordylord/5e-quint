@@ -18,6 +18,8 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
+export { applyDirectConditionSpellEffects } from "./direct-condition-lifecycle.ts";
+
 import { Match } from "effect";
 import {
   applyCondition,
@@ -1374,47 +1376,6 @@ export function applySelfTransformationModeEffect(input: {
       battleCreatureWithSpellActiveEffects(actor, activeEffects),
     ),
   };
-}
-
-export function applyDirectConditionSpellEffects(
-  state: BattleState,
-  actorId: CombatantId,
-  targetIds: readonly CombatantId[],
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "directCondition" }
-  >,
-): BattleState {
-  return targetIds.reduce<BattleState>((nextState, targetId) => {
-    const target = nextState.combatants.get(targetId);
-    if (target === undefined) {
-      return nextState;
-    }
-    const replacing = target.activeEffects.filter(
-      (effect) =>
-        effect.kind === "targetActionEndedSpellCondition" &&
-        effect.sourceSpellId === invocation.spell.id &&
-        effect.sourceCombatantId === actorId &&
-        effect.condition === invocation.activeEffect.condition,
-    );
-    const activeEffects = [
-      ...target.activeEffects.filter((effect) => !replacing.includes(effect)),
-      {
-        ...invocation.activeEffect,
-        conditionHadNonSpellSource: conditionHadNonSpellSourceBeforeSpellEffect(
-          target,
-          invocation.activeEffect.condition,
-        ),
-      },
-    ];
-    return {
-      ...nextState,
-      combatants: new Map(nextState.combatants).set(
-        targetId,
-        battleCreatureWithSpellActiveEffects(target, activeEffects),
-      ),
-    };
-  }, state);
 }
 
 export function applyFailedSaveSpellActiveEffects(
