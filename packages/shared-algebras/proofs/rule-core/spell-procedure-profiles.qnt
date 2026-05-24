@@ -1,7 +1,7 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell
-// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS BATTLE.SPELL.HIT_POINT_RESTORATION BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS BATTLE.SPELL.HIT_POINT_RESTORATION
 
 module spellProcedureProfiles {
   import hitPointDamage.* from "./hit-point-damage"
@@ -11,6 +11,7 @@ module spellProcedureProfiles {
   import attackDamageComposition.* from "./attack-damage-composition"
   import actionTurnProcedures.* from "./action-turn-procedures"
   import spellInvocationResourceCore.* from "./spell-invocation-resource-core"
+  import spellDamageProjectionCore.* from "./spell-damage-projection-core"
   import reactionsContinuationsConcentration.* from "./reactions-continuations-concentration"
 
   // RAW anchors:
@@ -937,61 +938,75 @@ module spellProcedureProfiles {
   pure def magicMissileDartCount(slotLevel: int): int =
     if (slotLevel <= 1) 3 else slotLevel + 2
 
+  pure def rayOfFrostMaximumBaseDamageDice: int = 4
+
+  pure def magicMissileDirectDamageFacts(
+    facts: MagicMissileEffectFacts
+  ): DirectSpellDamageFacts = {
+    damageType: ForceDamage,
+    instanceCount: facts.allocatedDarts,
+    damagePerInstance: facts.dartDamageRoll,
+    minimumInstanceCount: 1,
+    maximumInstanceCount: magicMissileDartCount(facts.slotLevel),
+    minimumDamagePerInstance: 2,
+    maximumDamagePerInstance: 5,
+  }
+
   pure def legalMagicMissileEffectFacts(facts: MagicMissileEffectFacts): bool = all {
     facts.slotLevel >= 1,
     facts.slotLevel <= 9,
-    facts.allocatedDarts >= 1,
-    facts.allocatedDarts <= magicMissileDartCount(facts.slotLevel),
-    facts.dartDamageRoll >= 2,
-    facts.dartDamageRoll <= 5,
+    legalDirectSpellDamageFacts(magicMissileDirectDamageFacts(facts)),
   }
 
-  pure def resolveMagicMissileDamage(facts: MagicMissileEffectFacts): DamageSpellEffectResult =
-    if (not(legalMagicMissileEffectFacts(facts))) {
+  pure def resolveMagicMissileDamage(facts: MagicMissileEffectFacts): DamageSpellEffectResult = {
+    val result = resolveDirectSpellDamage(magicMissileDirectDamageFacts(facts))
+    if (facts.slotLevel < 1 or facts.slotLevel > 9) {
       damageAmount: 0,
       damageType: ForceDamage,
       effect: NoSpellEffect,
     } else {
-      damageAmount: facts.allocatedDarts * facts.dartDamageRoll,
-      damageType: ForceDamage,
+      damageAmount: result.damageAmount,
+      damageType: result.damageType,
       effect: NoSpellEffect,
     }
+  }
 
   pure def resolveRayOfFrostEffect(facts: RayOfFrostEffectFacts): DamageSpellEffectResult = {
-    val outcome = resolveAttackRoll(facts.attackRoll)
-    val damageDiceMatch = damageDiceCountMatchesCritical(
-      facts.baseDamageDice,
-      facts.rolledDamageDiceCount,
-      outcome.critical
-    )
-    val legalDamageDice = all {
-      facts.baseDamageDice >= 1,
-      facts.baseDamageDice <= 4,
-      damageDiceMatch,
-      facts.damageRoll >= facts.rolledDamageDiceCount,
-      facts.damageRoll <= facts.rolledDamageDiceCount * 8,
-    }
-    if (not(legalAttackRollProcedureFacts(facts.attackRoll)) or not(legalDamageDice) or not(outcome.hits)) {
-      damageAmount: 0,
+    val result = resolveSpellAttackDamageBranch({
+      attackRoll: facts.attackRoll,
       damageType: ColdDamage,
-      effect: NoSpellEffect,
-    } else {
-      damageAmount: nonnegative(facts.damageRoll),
-      damageType: ColdDamage,
-      effect: RayOfFrostSpeedReductionEffect,
+      hitProjections: Set(SpellAttackSpeedReductionHitProjection),
+      baseDamageDice: facts.baseDamageDice,
+      maximumBaseDamageDice: rayOfFrostMaximumBaseDamageDice,
+      rolledDamageDiceCount: facts.rolledDamageDiceCount,
+      damageDieSize: 8,
+      damageRoll: facts.damageRoll,
+    })
+    {
+      damageAmount: result.damageAmount,
+      damageType: result.damageType,
+      effect:
+        if (result.hitProjections.contains(SpellAttackSpeedReductionHitProjection))
+          RayOfFrostSpeedReductionEffect
+        else
+          NoSpellEffect,
     }
   }
 
-  pure def resolveAcidSplashEffect(facts: SaveDamageSpellEffectFacts): DamageSpellEffectResult =
-    if (facts.savingThrowFailed) {
-      damageAmount: nonnegative(facts.damageRoll),
+  pure def resolveAcidSplashEffect(facts: SaveDamageSpellEffectFacts): DamageSpellEffectResult = {
+    val result = resolveSpellSaveDamageBranch({
       damageType: AcidDamage,
-      effect: NoSpellEffect,
-    } else {
-      damageAmount: 0,
-      damageType: AcidDamage,
+      successPolicy: SpellNoDamageOnSuccessfulSave,
+      failedSaveProjections: Set(),
+      savingThrowFailed: facts.savingThrowFailed,
+      damageRoll: facts.damageRoll,
+    })
+    {
+      damageAmount: result.damageAmount,
+      damageType: result.damageType,
       effect: NoSpellEffect,
     }
+  }
 
   pure def directHitPointRestorationDiceCount(
     profile: SpellDefinitionProfile,

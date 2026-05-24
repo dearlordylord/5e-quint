@@ -203,6 +203,7 @@
       ],
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
       ],
       "runtime": "battle",
@@ -1880,7 +1881,7 @@
         "spell.invocation-spell-created-held-object"
       ],
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
       ],
       "runtime": "battle",
@@ -5504,6 +5505,15 @@
       "role": "semantic-core"
     },
     {
+      "evidence": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt is the covered obligation QNT owner carrying typed Spell Invocation damage projection branches without SRD spell fixture profiles.",
+      "obligationIds": [
+        "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
+      "role": "semantic-core"
+    },
+    {
       "evidence": "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt is the covered obligation QNT owner carrying Spell Invocation resource semantics without SRD spell fixture profiles.",
       "obligationIds": [
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
@@ -5514,7 +5524,6 @@
     {
       "evidence": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
-        "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
         "BATTLE.SPELL.HIT_POINT_RESTORATION",
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
       ],
@@ -5671,6 +5680,7 @@
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
       ],
       "status": "fixture-bound"

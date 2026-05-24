@@ -424,6 +424,25 @@ module spellProcedureProfilesExamples {
     }
   }
 
+  run test_ray_of_frost_rejects_damage_dice_above_cantrip_cap = {
+    val result = resolveRayOfFrostEffect({
+      attackRoll: {
+        naturalD20: 12,
+        total: 17,
+        armorClass: 15,
+        criticalThreshold: 20,
+      },
+      baseDamageDice: rayOfFrostMaximumBaseDamageDice + 1,
+      rolledDamageDiceCount: rayOfFrostMaximumBaseDamageDice + 1,
+      damageRoll: 5,
+    })
+    all {
+      assert(result.damageAmount == 0),
+      assert(result.damageType == ColdDamage),
+      assert(result.effect == NoSpellEffect),
+    }
+  }
+
   run test_acid_splash_failed_dexterity_save_deals_acid_damage = {
     val result = resolveAcidSplashEffect({
       savingThrowFailed: true,
