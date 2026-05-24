@@ -54,6 +54,7 @@
 {"profileId":"spell.invocation-sleep-repeat-save-lifecycle","obligationIds":["BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE"]}
 {"profileId":"spell.invocation-make-stable","obligationIds":["BATTLE.SPELL.MAKE_STABLE_LIFECYCLE"]}
 {"profileId":"spell.invocation-roll-modifier","obligationIds":["BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS"]}
+{"profileId":"spell.invocation-levitated-creature","obligationIds":["BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE"]}
 {"profileId":"spell.invocation-ray-of-enfeeblement-d20-lifecycle","obligationIds":["BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE"]}
 {"profileId":"spell.invocation-ray-of-enfeeblement-damage-penalty","obligationIds":["BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY"]}
 {"profileId":"spell.creature-type-protection-and-charm","obligationIds":["BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION"]}

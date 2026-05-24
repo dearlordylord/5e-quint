@@ -4,14 +4,14 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Summary
 
-- Total obligations: 95
-- Covered obligations: 89
+- Total obligations: 96
+- Covered obligations: 90
 - Open transitional obligations: 0
 - Boundary or unsupported obligations: 6
 
 | Status | Count |
 | --- | ---: |
-| covered | 89 |
+| covered | 90 |
 | needs-qnt-owner | 0 |
 | needs-parity-witness | 0 |
 | needs-surface-evidence | 0 |
@@ -21,7 +21,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | Runtime | Count |
 | --- | ---: |
 | shared-algebras | 1 |
-| battle | 70 |
+| battle | 71 |
 | character-creation | 13 |
 | character-sheet | 8 |
 | character-battle | 3 |
@@ -48,6 +48,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE` | battle | covered | `spell.invocation-object-contact-damage` |
 | `BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE` | battle | covered | `spell.invocation-gust-of-wind-line` |
 | `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE` | battle | covered | `spell.invocation-creature-size-change` |
+| `BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE` | battle | covered | `spell.invocation-levitated-creature` |
 | `BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING` | battle | covered | `spell.invocation-ongoing-spell-ending` |
 | `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` | battle | covered | `unit-feature.metamagic-cast-governor-quickened` |
 | `SHEET.SPELL_REST_BENEFIT.APPLICATION` | character-sheet | covered | `character-sheet.spell-rest-benefit-application` |
@@ -270,6 +271,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-gust-of-wind.qnt` | semantic-core | `BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-hit-points.qnt` | semantic-core | `BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE`, `BATTLE.SPELL.MAKE_STABLE_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-light.qnt` | semantic-core | `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` |
+| `packages/battle-runtime/battle-runtime-levitate-creature.qnt` | semantic-core | `BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-marked-riders.qnt` | semantic-core | `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` |
 | `packages/battle-runtime/battle-runtime-marked-spells.qnt` | semantic-core | `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` |
 | `packages/battle-runtime/battle-runtime-metamagic.qnt` | semantic-core | `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` |
@@ -367,6 +369,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE` | not-assessed |  |
 | `BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE` | not-assessed |  |
 | `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE` | not-assessed |  |
+| `BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE` | not-assessed |  |
 | `BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING` | not-assessed |  |
 | `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` | not-assessed |  |
 | `BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION` | not-assessed |  |
@@ -438,6 +441,7 @@ Rows here are derived from covered obligations with semantic-core QNT owners who
 | `BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime.qnt` | `packages/battle-runtime/battle-runtime.qnt`: semantic-core |
 | `BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime-gust-of-wind.qnt` | `packages/battle-runtime/battle-runtime-gust-of-wind.qnt`: semantic-core |
 | `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime.qnt`, `packages/battle-runtime/battle-runtime-timed-effects.qnt` | `packages/battle-runtime/battle-runtime.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-timed-effects.qnt`: semantic-core |
+| `BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime-levitate-creature.qnt` | `packages/battle-runtime/battle-runtime-levitate-creature.qnt`: semantic-core |
 | `BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING` | not-assessed | `packages/battle-runtime/battle-runtime.qnt` | `packages/battle-runtime/battle-runtime.qnt`: semantic-core |
 | `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` | not-assessed | `packages/battle-runtime/battle-runtime-metamagic.qnt` | `packages/battle-runtime/battle-runtime-metamagic.qnt`: semantic-core |
 | `BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION` | not-assessed | `packages/battle-runtime/battle-runtime.qnt` | `packages/battle-runtime/battle-runtime.qnt`: semantic-core |
@@ -497,6 +501,7 @@ Rows here are derived from semantic-core QNT owners that still contain Quint `ru
 | `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY` | not-assessed | `run-block-coupled` | `packages/shared-algebras/proofs/rule-core/shove-outcome.qnt`: lines `128`, `138`, `148`, `164`, `183` |
 | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` | not-assessed | `run-block-coupled` | `packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt`: lines `1385`, `1401`, `1411`, `1439`, `1471`, `1492`, `1511`, `1537`, `1570`, `1589`, `1624`, `1658`, `1681`, `1713`, `1755`, `1797`, `1823`, `1840`, `1857`, `1879`, `1900`, `1943`, `1958`, `1994`, `2018`, `2047`, `2070`, `2115`, `2134`, `2152`, `2183`, `2204`, `2220`, `2239`, `2257`, `2296`, `2347`, `2371`, `2389`, `2404`, `2419`<br>`packages/battle-runtime/battle-runtime-monk-focus.qnt`: lines `134`, `140`, `149`, `159`, `168`, `178`, `199` |
 | `BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE` | not-assessed | `run-block-coupled` | `packages/battle-runtime/battle-runtime-gust-of-wind.qnt`: lines `163` |
+| `BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE` | not-assessed | `run-block-coupled` | `packages/battle-runtime/battle-runtime-levitate-creature.qnt`: lines `249`, `261`, `271`, `290`, `302`, `320`, `329` |
 | `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` | not-assessed | `run-block-coupled` | `packages/battle-runtime/battle-runtime-metamagic.qnt`: lines `337`, `363`, `378`, `393`, `416`, `488`, `509`, `545` |
 | `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` | not-assessed | `run-block-coupled` | `packages/battle-runtime/battle-runtime-direct-condition-removal.qnt`: lines `137`, `163`, `183`, `196`, `220`<br>`packages/battle-runtime/battle-runtime-protection-from-poison.qnt`: lines `101`, `116`, `126` |
 | `BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING` | not-assessed | `run-block-coupled` | `packages/battle-runtime/battle-runtime-warding-bond.qnt`: lines `187`, `205`, `217`, `228` |

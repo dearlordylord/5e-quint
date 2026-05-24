@@ -7,6 +7,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard spell.invocation-spike-growth-movement-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dragons-breath-granted-action
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE
 // Owns subject resolution, reaction windows, interrupted-procedure replay,
 // turn snapshots, and reaction-choice orchestration.
 

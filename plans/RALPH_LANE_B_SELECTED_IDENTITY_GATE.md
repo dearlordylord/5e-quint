@@ -202,7 +202,7 @@ identity evidence or an explicit non-applicable classification.
     {
       "number": 32,
       "id": "B29-LEVITATED-CREATURE-RULES-KERNEL-MAPPING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Map levitated creature profile to rules-kernel obligations"
     },
     {
@@ -293,7 +293,7 @@ Lane B must not:
 | 29 | B26-DEFERRED-IDENTITY-GAP-SEMANTICS - Clarify deferred selected identity gap semantics | done | none | Generated selected-identity reports now keep deferred-portion non-applicable rows visible in a separate bucket while excluding them from ordinary replay gaps; `mind_spike` is listed there, and `thaumaturgy` already has selected-identity MBT evidence. |
 | 30 | B27-CREATURE-SIZE-RULES-KERNEL-MAPPING - Map creature size change profile to rules-kernel obligations | done | none | Mapped `spell.invocation-creature-size-change` to `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE`; generated rules-kernel profile join gaps no longer list it. |
 | 31 | B28-WIZARD-SPELLBOOK-LEARNING-RULES-KERNEL-MAPPING - Map Wizard spellbook learning profile to rules-kernel obligations | done | none | Mapped `character-creation.wizard-spellbook-learning-choice` to `CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION`; generated rules-kernel profile join gaps no longer list it. |
-| 32 | B29-LEVITATED-CREATURE-RULES-KERNEL-MAPPING - Map levitated creature profile to rules-kernel obligations | ready-for-research | none | Metric-honesty gap: `spell.invocation-levitated-creature` is unmapped in `rulesKernelProfileJoin`. |
+| 32 | B29-LEVITATED-CREATURE-RULES-KERNEL-MAPPING - Map levitated creature profile to rules-kernel obligations | done | none | Mapped `spell.invocation-levitated-creature` to `BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE`; generated rules-kernel profile join gaps no longer list it. |
 | 33 | B30-CLASS-FEATURE-PREPARED-SPELL-ACCESS-RULES-KERNEL-MAPPING - Map class feature prepared spell access profile to rules-kernel obligations | ready-for-research | none | Metric-honesty gap: `character-sheet.class-feature-prepared-spell-access` is unmapped in `rulesKernelProfileJoin`. |
 | 34 | B31-DRUID-CIRCLE-LAND-SPELL-ACCESS-RULES-KERNEL-MAPPING - Map Druid Circle Land spell access profile to rules-kernel obligations | ready-for-research | none | Metric-honesty gap: `character-sheet.druid-circle-land-spell-access` is unmapped and leaves `druid_circle_of_the_land_spells` uncovered in `rulesKernelSupportedUnitCoverage`. |
 | 35 | B32-DRAGONS-BREATH-CATALOG-ADMISSION - Repair Dragon's Breath catalog admission | ready-for-research | none | Metric-honesty gap: `dragons_breath` is supported-profile but remains `not-in-unit-catalog`; repair the catalog boundary without treating support as admission. |
@@ -796,7 +796,7 @@ was added.
 
 ### Task 32 - B29-LEVITATED-CREATURE-RULES-KERNEL-MAPPING - Map levitated creature profile to rules-kernel obligations
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: map `spell.invocation-levitated-creature` to the existing movement,
 condition, or table-caller rules-kernel obligation, or document the missing
@@ -805,6 +805,11 @@ obligation as a new follow-up if no durable owner exists.
 Acceptance: `rulesKernelProfileJoinCoverage` no longer lists
 `spell.invocation-levitated-creature` as unmapped unless a new blocked owner
 task is added with concrete rationale.
+
+Result: mapped the profile to
+`BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE`, owned by the existing Levitate
+creature QNT/runtime/test evidence. Generated rules-kernel profile join gaps no
+longer list `spell.invocation-levitated-creature`.
 
 ### Task 33 - B30-CLASS-FEATURE-PREPARED-SPELL-ACCESS-RULES-KERNEL-MAPPING - Map class feature prepared spell access profile to rules-kernel obligations
 

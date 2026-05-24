@@ -83,13 +83,13 @@
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 132,
-      "numerator": 129,
-      "percent": "97.7%"
+      "numerator": 130,
+      "percent": "98.5%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 132,
-      "numerator": 129,
-      "percent": "97.7%"
+      "numerator": 130,
+      "percent": "98.5%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 144,
@@ -3900,13 +3900,13 @@
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 132,
-        "numerator": 129,
-        "percent": "97.7%"
+        "numerator": 130,
+        "percent": "98.5%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 132,
-        "numerator": 129,
-        "percent": "97.7%"
+        "numerator": 130,
+        "percent": "98.5%"
       }
     },
     "profileKinds": [
@@ -5597,8 +5597,15 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Levitate creature branch applies save-gated suspension, caller-selected altitude, caster Magic Action control, witnessed target movement, and cleanup"
+          }
+        ],
         "profileId": "spell.invocation-levitated-creature",
         "profileKind": "spell-invocation"
       },

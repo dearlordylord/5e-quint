@@ -1,5 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME levitate
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-levitated-creature
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE
 import { describe, expect, test } from "vitest";
 import {
   levitateUnitId,

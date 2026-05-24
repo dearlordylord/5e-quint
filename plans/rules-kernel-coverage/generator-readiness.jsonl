@@ -17,6 +17,7 @@
 {"obligationId":"BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE","status":"not-assessed","semanticCore":[],"proofOnly":[],"generatorSubset":[],"blockedBy":[]}
 {"obligationId":"BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE","status":"not-assessed","semanticCore":[],"proofOnly":[],"generatorSubset":[],"blockedBy":[]}
 {"obligationId":"BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE","status":"not-assessed","semanticCore":[],"proofOnly":[],"generatorSubset":[],"blockedBy":[]}
+{"obligationId":"BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE","status":"not-assessed","semanticCore":[],"proofOnly":[],"generatorSubset":[],"blockedBy":[]}
 {"obligationId":"BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING","status":"not-assessed","semanticCore":[],"proofOnly":[],"generatorSubset":[],"blockedBy":[]}
 {"obligationId":"BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR","status":"not-assessed","semanticCore":[],"proofOnly":[],"generatorSubset":[],"blockedBy":[]}
 {"obligationId":"BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION","status":"not-assessed","semanticCore":[],"proofOnly":[],"generatorSubset":[],"blockedBy":[]}

@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 95,
-    "covered": 89,
+    "total": 96,
+    "covered": 90,
     "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 70,
+      "battle": 71,
       "character-creation": 13,
       "character-sheet": 8,
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 89,
+      "covered": 90,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -664,6 +664,41 @@
         "UBIQUITOUS_LANGUAGE.md#Damage"
       ],
       "title": "Battle Enlarge/Reduce creature branch applies save-gated one-step Size projection, Strength D20 Test roll modes, attack-hit damage adjustment, Concentration cleanup, and duration cleanup"
+    },
+    {
+      "id": "BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-levitate.test.ts"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-levitated-creature"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-levitate-creature.qnt"
+      ],
+      "reason": "The reducer owns the creature-branch active effect, altitude scalar, action/resource spending, save outcome, caster control command, target movement altitude update, and concentration/duration cleanup. Caller/table facts still own target visibility, target range, fixed-object or surface reach, and map geometry.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/levitate-creature.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Levitate",
+        ".references/srd-5.2.1/Rules-Glossary.md#Climbing",
+        ".references/srd-5.2.1/Rules-Glossary.md#Concentration",
+        ".references/srd-5.2.1/Playing-the-Game.md#Movement and Position",
+        "UBIQUITOUS_LANGUAGE.md#Movement",
+        "UBIQUITOUS_LANGUAGE.md#Spellcasting"
+      ],
+      "title": "Battle Levitate creature branch applies save-gated suspension, caller-selected altitude, caster Magic Action control, witnessed target movement, and cleanup"
     },
     {
       "id": "BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING",
@@ -4681,6 +4716,12 @@
     },
     {
       "obligationIds": [
+        "BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE"
+      ],
+      "profileId": "spell.invocation-levitated-creature"
+    },
+    {
+      "obligationIds": [
         "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE"
       ],
       "profileId": "spell.invocation-ray-of-enfeeblement-d20-lifecycle"
@@ -5214,6 +5255,14 @@
         "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-light.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-levitate-creature.qnt is the covered obligation QNT owner carrying executable Levitate creature-branch altitude and lifecycle semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-levitate-creature.qnt",
       "role": "semantic-core"
     },
     {
@@ -6122,6 +6171,14 @@
     {
       "blockedBy": [],
       "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
       "obligationId": "BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING",
       "proofOnly": [],
       "semanticCore": [],
@@ -6702,6 +6759,16 @@
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-timed-effects.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-levitate-creature.qnt",
           "role": "semantic-core"
         }
       ],
@@ -7374,6 +7441,25 @@
             163
           ],
           "ownerPath": "packages/battle-runtime/battle-runtime-gust-of-wind.qnt"
+        }
+      ],
+      "readinessStatus": "not-assessed"
+    },
+    {
+      "blocker": "run-block-coupled",
+      "obligationId": "BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE",
+      "owners": [
+        {
+          "lines": [
+            249,
+            261,
+            271,
+            290,
+            302,
+            320,
+            329
+          ],
+          "ownerPath": "packages/battle-runtime/battle-runtime-levitate-creature.qnt"
         }
       ],
       "readinessStatus": "not-assessed"

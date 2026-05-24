@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE
 // Levitate creature-branch state and caller-witnessed altitude controls.
 
 import { movementFeet, type MovementFeet } from "@dnd/shared/types";
