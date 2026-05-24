@@ -11,7 +11,7 @@ or prove from checker-owned artifacts that no such work remains.
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    { "number": 1, "id": "A1-SPELL-FIXTURE-BOUND-SURVEY", "status": "ready-for-research", "title": "Survey spell procedure generator blockers" },
+    { "number": 1, "id": "A1-SPELL-FIXTURE-BOUND-SURVEY", "status": "done", "title": "Survey spell procedure generator blockers" },
     { "number": 2, "id": "A2-INVOCATION-CARDINALITY-CORE", "status": "ready-for-implementation-after-light-research", "title": "Extract invocation target cardinality core" },
     { "number": 3, "id": "A3-INVOCATION-ACTION-SLOT-CORE", "status": "ready-for-implementation-after-light-research", "title": "Extract invocation action and slot mapping core" },
     { "number": 4, "id": "A4-SAVE-DAMAGE-PROJECTION-CORE", "status": "ready-for-implementation-after-light-research", "title": "Split save-gated damage projection core" },
@@ -29,7 +29,11 @@ or prove from checker-owned artifacts that no such work remains.
     { "number": 16, "id": "A16-FIXTURE-BOUND-STATUS-CLOSURE", "status": "blocked", "title": "Close spell procedure fixture-bound readiness row" },
     { "number": 17, "id": "A17-CHECKER-REGRESSION-TEST", "status": "blocked", "title": "Add generator-readiness regression coverage" },
     { "number": 18, "id": "A18-END-TO-END-QNT-VERIFICATION", "status": "blocked", "title": "Run and document lane A verification" },
-    { "number": 19, "id": "A19-RECURSIVE-NEXT-BATCH", "status": "blocked", "title": "Mine next QNT generator-readiness batch" }
+    { "number": 19, "id": "A19-RECURSIVE-NEXT-BATCH", "status": "blocked", "title": "Mine next QNT generator-readiness batch" },
+    { "number": 20, "id": "A20-DIRECT-SPELL-DAMAGE-CORE", "status": "ready-for-implementation-after-light-research", "title": "Split direct spell damage projection core" },
+    { "number": 21, "id": "A21-DEFENSIVE-SPELL-EFFECT-CORE", "status": "ready-for-implementation-after-light-research", "title": "Split defensive spell effect projection core" },
+    { "number": 22, "id": "A22-READIED-SPELL-RESPONSE-CORE", "status": "ready-for-implementation-after-light-research", "title": "Split Readied Spell Response core" },
+    { "number": 23, "id": "A23-ATTACK-BURST-SAVE-DAMAGE-CORE", "status": "ready-for-implementation-after-light-research", "title": "Split attack-burst save damage core" }
   ]
 }
 -->
@@ -62,7 +66,7 @@ Lane A must not:
 
 | # | Task | Status | Depends | Notes |
 |---:|---|---|---|---|
-| 1 | A1-SPELL-FIXTURE-BOUND-SURVEY - Survey spell procedure generator blockers | ready-for-research | none | Establish exact blocker list. |
+| 1 | A1-SPELL-FIXTURE-BOUND-SURVEY - Survey spell procedure generator blockers | done | none | Established exact blocker list. |
 | 2 | A2-INVOCATION-CARDINALITY-CORE - Extract invocation target cardinality core | ready-for-implementation-after-light-research | none | Pure projection split. |
 | 3 | A3-INVOCATION-ACTION-SLOT-CORE - Extract invocation action and slot mapping core | ready-for-implementation-after-light-research | none | Preserve slot-expenditure atom. |
 | 4 | A4-SAVE-DAMAGE-PROJECTION-CORE - Split save-gated damage projection core | ready-for-implementation-after-light-research | none | Pure profile facts only. |
@@ -75,18 +79,22 @@ Lane A must not:
 | 11 | A11-SPELL-TURN-HOOK-CORE - Split spell turn hook semantic core | ready-for-implementation-after-light-research | none | Temporary HP, duration, once-per-turn facts. |
 | 12 | A12-OBJECT-HP-DAMAGE-CORE - Split object hit point damage core | ready-for-implementation-after-light-research | none | Keep object state minimal. |
 | 13 | A13-SLEEP-LIFECYCLE-CORE - Split Sleep repeat-save lifecycle core | ready-for-implementation-after-light-research | none | No table adjudication expansion. |
-| 14 | A14-QNT-OWNER-ROLE-REFRESH - Refresh owner roles for new semantic cores | blocked | A2-A13 | Generated role closure. |
-| 15 | A15-GENERATOR-SUBSET-TOKEN-AUDIT - Audit generator subset tokens for spell cores | blocked | A2-A13 | Ensure row vocabulary is exact. |
+| 14 | A14-QNT-OWNER-ROLE-REFRESH - Refresh owner roles for new semantic cores | blocked | A2-A13,A20-A23 | Generated role closure. |
+| 15 | A15-GENERATOR-SUBSET-TOKEN-AUDIT - Audit generator subset tokens for spell cores | blocked | A2-A13,A20-A23 | Ensure row vocabulary is exact. |
 | 16 | A16-FIXTURE-BOUND-STATUS-CLOSURE - Close spell procedure fixture-bound readiness row | blocked | A14,A15 | Only if blockers are actually gone. |
 | 17 | A17-CHECKER-REGRESSION-TEST - Add generator-readiness regression coverage | blocked | A16 | Prevent silent fallback to fixture-bound. |
 | 18 | A18-END-TO-END-QNT-VERIFICATION - Run and document lane A verification | blocked | A17 | Coverage, examples, typecheck if touched. |
 | 19 | A19-RECURSIVE-NEXT-BATCH - Mine next QNT generator-readiness batch | blocked | A18 | Must append >=12 tasks or prove exhaustion. |
+| 20 | A20-DIRECT-SPELL-DAMAGE-CORE - Split direct spell damage projection core | ready-for-implementation-after-light-research | none | Magic Missile fixture split. |
+| 21 | A21-DEFENSIVE-SPELL-EFFECT-CORE - Split defensive spell effect projection core | ready-for-implementation-after-light-research | none | Mage Armor fixture split. |
+| 22 | A22-READIED-SPELL-RESPONSE-CORE - Split Readied Spell Response core | ready-for-implementation-after-light-research | none | Ready spell hold/release split. |
+| 23 | A23-ATTACK-BURST-SAVE-DAMAGE-CORE - Split attack-burst save damage core | ready-for-implementation-after-light-research | none | Ice Knife fixture split. |
 
 ## Task Details
 
 ### Task 1 - A1-SPELL-FIXTURE-BOUND-SURVEY - Survey spell procedure generator blockers
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `plans/rules-kernel-coverage/generator-readiness.jsonl`,
 `packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt`, and
@@ -277,6 +285,54 @@ Acceptance: do not mark this task done unless either at least 12 new runnable
 tasks were added to the Ralph index, DAG, and task details, or the plan records
 a checker-backed proof that no such tasks remain.
 
+### Task 20 - A20-DIRECT-SPELL-DAMAGE-CORE - Split direct spell damage projection core
+
+Status: `ready-for-implementation-after-light-research`
+
+Output: pure semantic-core file for Magic Missile direct damage facts: dart
+count, Force damage type, allocated dart bounds, per-dart damage bounds, and
+slot-level legality, continuing to use `spell-damage-projection-core.qnt` as
+the reusable direct-damage atom.
+
+Acceptance: Magic Missile examples pass; no Magic Missile direct-damage
+fixture facts remain in `spell-procedure-profiles.qnt`.
+
+### Task 21 - A21-DEFENSIVE-SPELL-EFFECT-CORE - Split defensive spell effect projection core
+
+Status: `ready-for-implementation-after-light-research`
+
+Output: pure semantic-core file for Mage Armor defensive effect facts:
+willing-target admission, armor-wearing exclusion, Dexterity modifier bounds,
+base Armor Class calculation, active effect projection, and ending the effect
+when the target dons armor.
+
+Acceptance: Mage Armor examples pass; no Mage Armor defensive-effect fixture
+facts remain in `spell-procedure-profiles.qnt`.
+
+### Task 22 - A22-READIED-SPELL-RESPONSE-CORE - Split Readied Spell Response core
+
+Status: `ready-for-implementation-after-light-research`
+
+Output: pure semantic-core file for Readied Spell Response hold/release facts:
+action-time spell admission, resource expenditure at the hold boundary,
+Concentration while held, dissipation on broken Concentration, reaction-window
+offer, Reaction spend on release, held-effect clearing, and released-profile
+projection.
+
+Acceptance: Readied Spell Response examples pass; no Readied Spell Response
+fixture facts remain in `spell-procedure-profiles.qnt`.
+
+### Task 23 - A23-ATTACK-BURST-SAVE-DAMAGE-CORE - Split attack-burst save damage core
+
+Status: `ready-for-implementation-after-light-research`
+
+Output: pure semantic-core file for Ice Knife attack-burst save damage facts:
+slot requirement, attack damage type, burst damage type, slot-scaled burst dice,
+and successful-save burst damage policy.
+
+Acceptance: Ice Knife examples pass; no Ice Knife attack-burst save-damage
+fixture facts remain in `spell-procedure-profiles.qnt`.
+
 ## Verification
 
 - `pnpm --filter @dnd/shared-algebras exec quint test proofs/rule-core/spell-procedure-profiles-examples.qnt`
@@ -291,3 +347,80 @@ a checker-backed proof that no such tasks remain.
 - Previous recursive tasks failed because they could mark themselves done after
   adding too little follow-up work. This plan's recursive task has a minimum
   appended-task gate.
+- Task 1 survey: `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` remains
+  `fixture-bound` in `plans/rules-kernel-coverage/generator-readiness.jsonl`
+  because the semantic core still includes
+  `packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt`,
+  whose executable facts are organized around closed SRD spell profile case
+  tables. The checked blocker token is `fixture-world-coupled`; do not change
+  this row to `generation-subset-clean` until the later split tasks remove the
+  closed fixture-world coupling from every generator-input path.
+- Remaining fixture-bound causes and owners:
+  - Invocation target cardinality is still encoded as `SpellDefinitionProfile`
+    branches in `spellInvocationTargetCardinality` and
+    `legalSpellInvocationTargetCount`; A2 owns the target-cardinality core.
+  - Invocation action cost, minimum slot level, slot spend, one-slot-spell
+    admission, and access/target admission are still projected through
+    spell-profile branches in `spellProfileAction`,
+    `spellProfileMinimumSlotLevel`, `spellProfileSlotSpend`, and
+    `spellInvocationResourceFacts`; A3 owns the action/slot/admission core.
+  - Save-gated damage targeting, success policy, damage type,
+    slot/concentration flags, failed-save effects, and Acid Splash
+    save-damage effect resolution are still closed save-damage fixture facts;
+    A4 owns the save-damage projection core.
+  - Save-gated condition targeting, Saving Throw ability, max-target scaling,
+    failed-save condition effects, creature-type legality, and hostile-target
+    advantage are still one closed `SpellSaveGatedConditionProfile` table; A5
+    owns the save-condition projection core.
+  - Spell attack damage type, hit effects, object-target support, and Ray of
+    Frost spell-attack effect resolution are still closed attack-damage
+    fixture facts; A6 owns the spell attack damage core.
+  - Scalar buff action timing, max-target scaling, temporary HP, effect
+    projection, and Concentration flags are still one closed
+    `ScalarBuffSpellProfile` table; A7 owns the scalar buff core.
+  - Damage-rider action timing, Concentration flags, damage dice/types,
+    duration, range, light, and save-advantage facts remain closed around the
+    listed rider profiles; A8 owns the damage rider core.
+  - Chained spell attack damage choices, d8 face-count validation, duplicate
+    detection, and leap availability remain closed around the Chromatic Orb
+    profile; A9 owns the chained attack core.
+  - Independent attack sequence attack counts, object-target support, and
+    needs-targets/attack-roll/damage-roll/complete state projection remain
+    closed around Eldritch Blast and Scorching Ray profiles; A10 owns the
+    independent attack sequence core.
+  - Turn-start temporary HP, once-per-turn reset, one-round Shield expiry, and
+    timed duration ticking remain colocated with spell procedure fixture
+    profiles; A11 owns the spell turn-hook core.
+  - Object damage threshold, effective damage, next HP, and destruction
+    calculation remain colocated with spell procedure fixture profiles; A12
+    owns the object HP damage core.
+  - Sleep automatic save success, pending/unconscious lifecycle, and
+    damage/shake-awake ending facts remain colocated with spell procedure
+    fixture profiles; A13 owns the Sleep lifecycle core.
+  - Magic Missile direct damage remains a closed direct-damage fixture over
+    dart count, Force damage, allocated dart bounds, per-dart damage bounds,
+    and slot-level legality; A20 owns the direct spell damage core.
+  - Mage Armor effect admission, base Armor Class calculation, active effect
+    projection, and ending the effect when the target dons armor remain closed
+    defensive-effect fixture facts; A21 owns the defensive spell effect core.
+  - Readied Spell Response profile admission, held-effect projection,
+    resource expenditure at the hold boundary, Concentration, reaction-window
+    offer, Reaction spend, dissipation, and release projection remain closed
+    Readied Spell fixture facts; A22 owns the Readied Spell Response core.
+  - Ice Knife attack-burst save damage remains a closed attack-burst fixture
+    over slot requirement, attack damage type, burst damage type, slot-scaled
+    burst dice, and successful-save burst policy; A23 owns the attack-burst
+    save damage core.
+- Direct hit point restoration definitions in
+  `spell-procedure-profiles.qnt` are co-owned by
+  `BATTLE.SPELL.HIT_POINT_RESTORATION` rather than a remaining
+  `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` generator-input blocker family
+  for this lane. A16 must still verify that any residual hit-point restoration
+  definitions are either outside the procedure readiness row's generator input
+  or separately owned before closing the fixture-bound status.
+- After A2-A13 and A20-A23 split the semantic cores, A14 must refresh
+  `qnt-owner-roles.jsonl`, A15 must audit the generator-subset tokens against
+  the new cores, and A16 is the first task allowed to change
+  `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` out of `fixture-bound`. A17 should
+  then add regression coverage so proof/example files, fixture-world coupling,
+  or omitted readiness arrays cannot silently re-enter generator inputs.
