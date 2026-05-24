@@ -8,16 +8,16 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Metric | Value |
 | --- | ---: |
-| Installed collection inventory count | 255 Units |
+| Installed collection inventory count | 256 Units |
 
 ## Coverage Metrics
 
 | Metric | Covered | Percent |
 | --- | ---: | ---: |
-| Authored Surface Unit catalog admission | 254/492 | 51.6% |
-| Authored Surface executable catalog admission | 209/407 | 51.4% |
-| Installed Unit profile classification coverage | 255/255 | 100% |
-| Supported executable Unit coverage | 142/210 | 67.6% |
+| Authored Surface Unit catalog admission | 255/492 | 51.8% |
+| Authored Surface executable catalog admission | 210/407 | 51.6% |
+| Installed Unit profile classification coverage | 256/256 | 100% |
+| Supported executable Unit coverage | 143/211 | 67.8% |
 | QNT profile modeling coverage | 96/96 | 100% |
 | QNT proof coverage | 96/96 | 100% |
 | Runtime mapping coverage | 96/96 | 100% |
@@ -25,8 +25,8 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Rules-kernel profile join coverage | 132/132 | 100% |
 | Rules-kernel covered profile coverage | 132/132 | 100% |
 | Supported Unit rules-kernel chain coverage | 144/144 | 100% |
-| Deterministic admission/projection coverage | 142/142 | 100% |
-| Selected identity replay coverage | 142/142 | 100% |
+| Deterministic admission/projection coverage | 143/143 | 100% |
+| Selected identity replay coverage | 143/143 | 100% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -59,7 +59,7 @@ Background, feat, spell, and class-feature groups are counted from installed Uni
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | Background Units | 4 | 0 | 0 | 0 | 4 | 0 | 0/0 | 0 | 0 |
 | Feat Units | 8 | 8 | 5 | 0 | 3 | 5 | 5/5 | 0 | 0 |
-| Spell Units | 124 | 124 | 86 | 20 | 18 | 127 | 105/106 | 0 | 1 |
+| Spell Units | 125 | 125 | 87 | 20 | 18 | 129 | 106/107 | 0 | 1 |
 | Class-feature Units | 63 | 63 | 45 | 16 | 2 | 85 | 61/61 | 0 | 0 |
 
 | Denominator | Rule |
@@ -174,6 +174,7 @@ The Unit matrix owns authored-content breadth. `plans/rules-kernel-coverage/prof
 | `dissonant_whispers` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.invocation-forced-reaction-movement` |
 | `divine_favor` | srd-5.2.1 | `spell.invocation-weapon-damage-rider` |
 | `divine_smite` | srd-5.2.1 | `spell.invocation-after-hit-damage` |
+| `dragons_breath` | srd-5.2.1 | `spell.invocation-dragons-breath-initial`, `spell.invocation-dragons-breath-granted-action` |
 | `ensnaring_strike` | srd-5.2.1 | `spell.invocation-after-hit-restraint-turn-start-damage` |
 | `entangle` | srd-5.2.1 | `spell.invocation-condition-save` |
 | `expeditious_retreat` | srd-5.2.1 | `spell.invocation-expeditious-retreat-dash` |
@@ -289,7 +290,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Kind | Count | Units |
 | --- | ---: | --- |
-| spell | 96 | `acid_arrow`, `alarm`, `animal_shapes`, `animate_dead`, `animate_objects`, `antilife_shell`, `arcane_eye`, `arcane_lock`, `arcane_sword`, `aura_of_life`, `banishment`, `beacon_of_hope`, `blade_barrier`, `blight`, `call_lightning`, `chain_lightning`, `charm_monster`, `circle_of_death`, `clairvoyance`, `cloudkill`, `comprehend_languages`, `compulsion`, `cone_of_cold`, `conjure_minor_elementals`, `conjure_woodland_beings`, `create_food_and_water`, `create_undead`, `daylight`, `death_ward`, `dimension_door`, `disintegrate`, `dominate_beast`, `dominate_monster`, `dominate_person`, `dragons_breath`, `earthquake`, `fabricate`, `fear`, `find_steed`, `finger_of_death`, `fire_shield`, `fire_storm`, `flame_strike`, `flesh_to_stone`, `forcecage`, `freedom_of_movement`, `geas`, `gentle_repose`, `greater_invisibility`, `harm`, `heal`, `hold_monster`, `holy_aura`, `hypnotic_pattern`, `ice_storm`, `identify`, `incendiary_cloud`, `insect_plague`, `major_image`, `mass_suggestion`, `maze`, `meteor_swarm`, `mind_blank`, `polymorph`, `power_word_heal`, `power_word_kill`, `power_word_stun`, `prismatic_wall`, `protection_from_energy`, `ray_of_enfeeblement`, `reverse_gravity`, `sequester`, `silent_image`, `speak_with_animals`, `spirit_guardians`, `stinking_cloud`, `stoneskin`, `storm_of_vengeance`, `summon_dragon`, `sunbeam`, `sunburst`, `telekinesis`, `tongues`, `true_polymorph`, `true_seeing`, `tsunami`, `vampiric_touch`, `wall_of_fire`, `wall_of_force`, `wall_of_ice`, `wall_of_stone`, `wall_of_thorns`, `water_breathing`, `weird`, `wind_walk`, `wind_wall` |
+| spell | 95 | `acid_arrow`, `alarm`, `animal_shapes`, `animate_dead`, `animate_objects`, `antilife_shell`, `arcane_eye`, `arcane_lock`, `arcane_sword`, `aura_of_life`, `banishment`, `beacon_of_hope`, `blade_barrier`, `blight`, `call_lightning`, `chain_lightning`, `charm_monster`, `circle_of_death`, `clairvoyance`, `cloudkill`, `comprehend_languages`, `compulsion`, `cone_of_cold`, `conjure_minor_elementals`, `conjure_woodland_beings`, `create_food_and_water`, `create_undead`, `daylight`, `death_ward`, `dimension_door`, `disintegrate`, `dominate_beast`, `dominate_monster`, `dominate_person`, `earthquake`, `fabricate`, `fear`, `find_steed`, `finger_of_death`, `fire_shield`, `fire_storm`, `flame_strike`, `flesh_to_stone`, `forcecage`, `freedom_of_movement`, `geas`, `gentle_repose`, `greater_invisibility`, `harm`, `heal`, `hold_monster`, `holy_aura`, `hypnotic_pattern`, `ice_storm`, `identify`, `incendiary_cloud`, `insect_plague`, `major_image`, `mass_suggestion`, `maze`, `meteor_swarm`, `mind_blank`, `polymorph`, `power_word_heal`, `power_word_kill`, `power_word_stun`, `prismatic_wall`, `protection_from_energy`, `ray_of_enfeeblement`, `reverse_gravity`, `sequester`, `silent_image`, `speak_with_animals`, `spirit_guardians`, `stinking_cloud`, `stoneskin`, `storm_of_vengeance`, `summon_dragon`, `sunbeam`, `sunburst`, `telekinesis`, `tongues`, `true_polymorph`, `true_seeing`, `tsunami`, `vampiric_touch`, `wall_of_fire`, `wall_of_force`, `wall_of_ice`, `wall_of_stone`, `wall_of_thorns`, `water_breathing`, `weird`, `wind_walk`, `wind_wall` |
 | magic_item | 71 | `cloak_of_protection`, `magic_item_amulet_of_health`, `magic_item_bag_of_holding`, `magic_item_bracers_of_defense`, `magic_item_brazier_of_commanding_fire_elementals`, `magic_item_brooch_of_shielding`, `magic_item_censer_of_controlling_air_elementals`, `magic_item_chime_of_opening`, `magic_item_cloak_of_arachnida`, `magic_item_cloak_of_protection`, `magic_item_crystal_ball_of_mind_reading`, `magic_item_cube_of_force`, `magic_item_eyes_of_minute_seeing`, `magic_item_folding_boat`, `magic_item_gauntlets_of_ogre_power`, `magic_item_gem_of_seeing`, `magic_item_goggles_of_night`, `magic_item_hat_of_disguise`, `magic_item_headband_of_intellect`, `magic_item_helm_of_comprehending_languages`, `magic_item_helm_of_teleportation`, `magic_item_instant_fortress`, `magic_item_javelin_of_lightning`, `magic_item_manual_of_gainful_exercise`, `magic_item_manual_of_quickness_of_action`, `magic_item_medallion_of_thoughts`, `magic_item_necklace_of_fireballs`, `magic_item_periapt_of_proof_against_poison`, `magic_item_potion_of_animal_friendship`, `magic_item_potion_of_clairvoyance`, `magic_item_potion_of_climbing`, `magic_item_potion_of_flying`, `magic_item_potion_of_giant_strength`, `magic_item_potion_of_heroism`, `magic_item_potion_of_invisibility`, `magic_item_potion_of_invulnerability`, `magic_item_potion_of_water_breathing`, `potion_of_healing`, `magic_item_quarterstaff_of_the_acrobat`, `magic_item_ring_of_invisibility`, `magic_item_ring_of_jumping`, `magic_item_ring_of_protection`, `magic_item_ring_of_resistance`, `ring_of_swimming`, `ring_of_telekinesis`, `ring_of_three_wishes`, `magic_item_ring_of_warmth`, `magic_item_ring_of_water_walking`, `magic_item_robe_of_the_archmagi`, `magic_item_rod_of_alertness`, `magic_item_rod_of_resurrection`, `magic_item_rod_of_rulership`, `magic_item_slippers_of_spider_climbing`, `magic_item_sovereign_glue`, `magic_item_staff_of_charming`, `magic_item_staff_of_fire`, `magic_item_staff_of_healing`, `magic_item_staff_of_power`, `magic_item_staff_of_the_woodlands`, `magic_item_stone_of_controlling_earth_elementals`, `magic_item_stone_of_good_luck_luckstone`, `magic_item_tome_of_clear_thought`, `magic_item_tome_of_leadership_and_influence`, `magic_item_tome_of_understanding`, `magic_item_wand_of_fear`, `magic_item_wand_of_fireballs`, `magic_item_wand_of_lightning_bolts`, `magic_item_wand_of_magic_detection`, `magic_item_wand_of_magic_missiles`, `magic_item_wand_of_paralysis`, `magic_item_wand_of_polymorph` |
 | weapon | 29 | `weapon_battleaxe`, `weapon_blowgun`, `weapon_dart`, `weapon_glaive`, `weapon_greatclub`, `weapon_greatsword`, `weapon_halberd`, `weapon_hand_crossbow`, `weapon_handaxe`, `weapon_heavy_crossbow`, `weapon_javelin`, `weapon_lance`, `weapon_light_crossbow`, `weapon_light_hammer`, `weapon_longbow`, `weapon_mace`, `weapon_maul`, `weapon_morningstar`, `weapon_musket`, `weapon_pike`, `weapon_pistol`, `weapon_rapier`, `weapon_scimitar`, `weapon_sickle`, `weapon_sling`, `weapon_trident`, `weapon_war_pick`, `weapon_warhammer`, `weapon_whip` |
 | class_feature | 23 | `barbarian_ability_score_improvement_l4`, `barbarian_primal_champion`, `bard_ability_score_improvement_l4`, `bard_bonus_proficiencies`, `bard_epic_boon`, `bard_words_of_creation`, `cleric_ability_score_improvement_l4`, `cleric_epic_boon`, `druid_ability_score_improvement_l4`, `druid_epic_boon`, `druid_natures_ward`, `fighter_epic_boon`, `monk_ability_score_improvement_l4`, `monk_body_and_mind`, `monk_epic_boon`, `paladin_epic_boon`, `ranger_ability_score_improvement_l4`, `ranger_feral_senses`, `ranger_tireless`, `rogue_ability_score_improvement_l4`, `sorcerer_ability_score_improvement_l4`, `warlock_contact_patron`, `wizard_ability_score_improvement_l4` |
@@ -302,7 +303,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Disposition | Planning lane | Count | Kind counts | Reason |
 | --- | --- | ---: | --- | --- |
-| srd-candidate | QMBT14-QMBT16 | 96 | spell: 96 | SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane. |
+| srd-candidate | QMBT14-QMBT16 | 95 | spell: 95 | SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane. |
 | intentional-backlog | future magic item profile intake | 79 | magic_item: 71, armor_template: 3, weapon_template: 3, shield_template: 2 | SRD magic item mechanics are authored, but this QMBT lane is focused on Unit feature and spell admission. |
 | non-runtime-authored-data | no promoted runtime lane | 40 | weapon: 29, armor: 11 | Authored SRD data has no mechanics payload, so catalog absence is not promoted runtime execution pressure. |
 | unsupported-widening-pressure | QMBT18 | 23 | class_feature: 23 | Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice. |
@@ -363,7 +364,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `dominate_beast` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/dominate_beast.json` |
 | `dominate_monster` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/dominate_monster.json` |
 | `dominate_person` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/dominate_person.json` |
-| `dragons_breath` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/dragons_breath.json` |
 | `druid_ability_score_improvement_l4` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/druid_ability_score_improvement_l4.json` |
 | `druid_epic_boon` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/druid_epic_boon.json` |
 | `druid_natures_ward` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/druid_natures_ward.json` |
@@ -606,7 +606,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `dominate_beast` | spell | yes | `packages/surface/content/dominate_beast.json` |
 | `dominate_monster` | spell | yes | `packages/surface/content/dominate_monster.json` |
 | `dominate_person` | spell | yes | `packages/surface/content/dominate_person.json` |
-| `dragons_breath` | spell | yes | `packages/surface/content/dragons_breath.json` |
 | `druid_ability_score_improvement_l4` | class_feature | yes | `packages/surface/content/druid_ability_score_improvement_l4.json` |
 | `druid_epic_boon` | class_feature | yes | `packages/surface/content/druid_epic_boon.json` |
 | `druid_natures_ward` | class_feature | yes | `packages/surface/content/druid_natures_ward.json` |
@@ -876,6 +875,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `dissonant_whispers` | `spell.invocation-damage-save-or-attack`, `spell.invocation-forced-reaction-movement` | SRDINV52 | `packages/battle-runtime/src/unit-profile-admission-forced-movement-spells.test.ts` |
 | `divine_favor` | `spell.invocation-weapon-damage-rider` | SRDINV31A | `packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts` |
 | `divine_smite` | `spell.invocation-after-hit-damage` | SRDINV31C | `packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts` |
+| `dragons_breath` | `spell.invocation-dragons-breath-initial`, `spell.invocation-dragons-breath-granted-action` | L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST | `packages/battle-runtime/src/unit-profile-admission-dragons-breath.test.ts` |
 | `ensnaring_strike` | `spell.invocation-after-hit-restraint-turn-start-damage` | SRDINV31D | `packages/battle-runtime/src/unit-profile-admission-ensnaring-and-searing-smite.test.ts` |
 | `entangle` | `spell.invocation-condition-save` | SRDINV29C | `packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts` |
 | `expeditious_retreat` | `spell.invocation-expeditious-retreat-dash` | SRDINV49 | `packages/battle-runtime/src/unit-profile-admission-movement-buff-spells.test.ts` |
@@ -1070,6 +1070,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `dissonant_whispers` | `spell.invocation-damage-save-or-attack`, `spell.invocation-forced-reaction-movement` | movement-forced-movement | `packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts` |
 | `divine_favor` | `spell.invocation-weapon-damage-rider` | L1E-DIVINE-FAVOR | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
 | `divine_smite` | `spell.invocation-after-hit-damage` | L1E-DIVINE-SMITE | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
+| `dragons_breath` | `spell.invocation-dragons-breath-initial`, `spell.invocation-dragons-breath-granted-action` | B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH | `packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts` |
 | `ensnaring_strike` | `spell.invocation-after-hit-restraint-turn-start-damage` | L1E-ENSNARING-STRIKE | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
 | `entangle` | `spell.invocation-condition-save` | condition-saving-throw-lifecycle | `packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts` |
 | `expeditious_retreat` | `spell.invocation-expeditious-retreat-dash` | movement-forced-movement | `packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts` |

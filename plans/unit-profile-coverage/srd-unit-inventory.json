@@ -225,14 +225,14 @@
     },
     "levelOneThreeBattleReadiness": {
       "denominator": 607,
-      "numerator": 573,
-      "percent": "94.4%",
+      "numerator": 575,
+      "percent": "94.7%",
       "rowsByStatus": {
-        "accepted": 412,
+        "accepted": 414,
         "accepted-no-battle-effect": 161,
         "owner-evidence-required": 18,
         "partial-battle-runtime": 11,
-        "battle-runtime-required": 5
+        "battle-runtime-required": 3
       }
     },
     "levelThreeClassBattleReadiness": {
@@ -282,19 +282,19 @@
       "spell access/list pressure": 5
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 448,
+      "catalog-installed-owner-evidence-present": 450,
       "non-runtime": 36,
       "level-3-follow-up-required": 15,
       "catalog-installed-owner-evidence-required": 2,
-      "catalog-only/dead-for-now": 137,
+      "catalog-only/dead-for-now": 135,
       "missing-authored-record": 58,
       "catalog-authored-review-required": 33,
       "catalog-authored-executable-follow-up": 5,
       "catalog-installed-needs-owner-evidence": 1
     },
     "spellPressureRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 244,
-      "catalog-only/dead-for-now": 122,
+      "catalog-installed-owner-evidence-present": 246,
+      "catalog-only/dead-for-now": 120,
       "catalog-authored-executable-follow-up": 1
     },
     "levelThreeSpellPressureRowsByDisposition": {
@@ -24935,20 +24935,31 @@
         "sourceRecordPath": "packages/surface/content/dragons_breath.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "dragons_breath"
       },
       "unitProfileDisposition": "supported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "table-spatial-derivation",
         "owner": "table/spatial witness owner",
         "reason": "Promoted battle runtime owns the Dragon's Breath initial cast, target-attached granted-action state, Magic action discovery and spending, save-for-half damage, slot scaling, and cleanup. Automatic Cone geometry and affected-creature membership derivation remain caller/table spatial witnesses consumed by the runtime."
       },
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit dragons_breath is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST at packages/battle-runtime/src/unit-profile-admission-dragons-breath.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_enhance_ability",
@@ -32144,20 +32155,31 @@
         "sourceRecordPath": "packages/surface/content/dragons_breath.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "dragons_breath"
       },
       "unitProfileDisposition": "supported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "table-spatial-derivation",
         "owner": "table/spatial witness owner",
         "reason": "Promoted battle runtime owns the Dragon's Breath initial cast, target-attached granted-action state, Magic action discovery and spending, save-for-half damage, slot scaling, and cleanup. Automatic Cone geometry and affected-creature membership derivation remain caller/table spatial witnesses consumed by the runtime."
       },
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit dragons_breath is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST at packages/battle-runtime/src/unit-profile-admission-dragons-breath.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_enhance_ability",
