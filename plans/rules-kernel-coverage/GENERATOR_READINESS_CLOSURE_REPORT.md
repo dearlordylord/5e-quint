@@ -16,10 +16,9 @@ transitional obligations. The C-lane readiness artifacts now identify the
 semantic-core QNT owners, fixture or proof roles, generator-subset vocabulary,
 blocker vocabulary, kernel IR boundary inventory, and one manual Rust dry run.
 
-No covered obligation is certified as `generation-subset-clean` yet. The checked
-readiness rows for hit point damage, movement, reaction windows, and spell
-procedure profiles are all `fixture-bound`, so this lane stops before real Rust
-generation.
+Hit point damage, movement, and reaction windows are certified as
+`generation-subset-clean`. Spell procedure profiles remain `fixture-bound` on
+fixture-world coupling, so this lane still stops before real Rust generation.
 
 ## Generator-Ready Inputs
 
@@ -37,12 +36,12 @@ The next lane can start from checked inputs instead of redoing discovery:
   demonstrates the smallest QNT-to-Rust mapping slice without committing
   generated Rust.
 
-## Fixture-Bound Or Proof-Only Work
+## Remaining Fixture-Bound Or Proof-Only Work
 
-The checked readiness rows are blocked by run-block coupling, fixture-world
-coupling, and unsupported QNT constructs. Their semantic functions are useful as
-future generator inputs, but a generator must split executable definitions
-from run/assert blocks, bounded fixture worlds, and induction-only helpers.
+The remaining fixture-bound readiness row is blocked by fixture-world coupling.
+Its semantic functions are useful as future generator inputs, but a generator
+must split executable definitions from bounded fixture worlds and induction-only
+helpers.
 
 The role inventory and readiness rows also show QNT files that are intentionally
 not generator inputs: MBT fixtures exercise bounded replay or trace protocol,
@@ -54,10 +53,11 @@ implementation semantics.
 
 Before real Rust generation, open a focused generator-subset lane that:
 
-1. Selects one `fixture-bound` obligation, preferably the hit point damage dry
-   run, as the initial vertical.
-2. Splits semantic definitions from run/assert/proof fixtures or teaches the
-   generator to ignore those constructs through a checked module boundary.
+1. Selects one `generation-subset-clean` obligation, preferably the hit point
+   damage dry run, as the initial vertical.
+2. For remaining fixture-bound work, splits semantic definitions from bounded
+   fixture worlds or teaches the generator to ignore those constructs through a
+   checked module boundary.
 3. Defines a generator IR and ABI from the checked kernel IR boundary
    inventory, without duplicating runtime state.
 4. Either admits each needed QNT construct into a generator contract or rewrites

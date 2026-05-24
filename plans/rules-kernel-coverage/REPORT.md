@@ -262,11 +262,9 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-concentration.qnt` | semantic-core | `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS`, `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS`, `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE`, `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER`, `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-creature-type-protection.qnt` | semantic-core | `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION` |
 | `packages/battle-runtime/battle-runtime-damage-adjustments.qnt` | semantic-core | `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` |
-| `packages/battle-runtime/battle-runtime-direct-condition-lifecycle.qnt` | semantic-core | `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-direct-condition-removal.qnt` | semantic-core | `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` |
 | `packages/battle-runtime/battle-runtime-ground-command-tests.qnt` | mbt-fixture | `BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD` |
 | `packages/battle-runtime/battle-runtime-ground-command.qnt` | semantic-core | `BATTLE.COMMAND.OPTION_AND_NEXT_TURN` |
-| `packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt` | semantic-core | `BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-gust-of-wind.qnt` | semantic-core | `BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-hit-points.qnt` | semantic-core | `BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE`, `BATTLE.SPELL.MAKE_STABLE_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-light.qnt` | semantic-core | `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` |
@@ -274,8 +272,6 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-marked-spells.qnt` | semantic-core | `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` |
 | `packages/battle-runtime/battle-runtime-metamagic.qnt` | semantic-core | `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` |
 | `packages/battle-runtime/battle-runtime-mirror-image.qnt` | semantic-core | `BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION` |
-| `packages/battle-runtime/battle-runtime-mirror-image-hit-interception.qnt` | semantic-core | `BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION` |
-| `packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt` | semantic-core | `BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-monk-focus.qnt` | semantic-core | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/battle-runtime/battle-runtime-protection-from-poison.qnt` | semantic-core | `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` |
 | `packages/battle-runtime/battle-runtime-reaction-window.qnt` | semantic-core | `BATTLE.SPELL.REACTION_CASTING_TIME` |
@@ -292,7 +288,6 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-thaumaturgy.qnt` | semantic-core | `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS` |
 | `packages/battle-runtime/battle-runtime-timed-effects.qnt` | semantic-core | `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS`, `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE`, `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-warding-bond.qnt` | semantic-core | `BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING` |
-| `packages/battle-runtime/battle-runtime-warding-bond-damage-sharing.qnt` | semantic-core | `BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING` |
 | `packages/battle-runtime/battle-runtime-weapon-attacks.qnt` | semantic-core | `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` |
 | `packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt` | semantic-core | `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS`, `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` |
 | `packages/battle-runtime/battle-runtime.qnt` | semantic-core | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES`, `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE`, `BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION`, `BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE`, `BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE`, `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE`, `BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING`, `BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION`, `BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE`, `BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE`, `BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE`, `BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE`, `BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE`, `BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE`, `BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE`, `BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE`, `BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE`, `BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE`, `BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE`, `BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE`, `BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE`, `BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE`, `BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE`, `BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE`, `BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE` |
@@ -321,9 +316,9 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt` | semantic-core | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` |
 | `packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt` | semantic-core | `BATTLE.REACTION.OFFER_DECLINE_RESUME` |
 | `packages/shared-algebras/proofs/rule-core/shove-outcome.qnt` | semantic-core | `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY` |
-| `packages/shared-algebras/proofs/rule-core/spell-save-gate.qnt` | semantic-core | `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
-| `packages/shared-algebras/proofs/rule-core/spell-slot-expenditure.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
-| `packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt` | semantic-core | `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES`, `BATTLE.SPELL.HIT_POINT_RESTORATION`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt` | semantic-core | `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt` | semantic-core | `BATTLE.SPELL.HIT_POINT_RESTORATION`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt` | semantic-core | `BATTLE.STAT_BLOCK.ATTACK_CONTROL` |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt` | semantic-core | `BATTLE.DAMAGE.ATTACK_BRANCHES`, `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP`, `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES`, `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/battle-runtime/creature-attack.qnt` | semantic-core | `BATTLE.ATTACK.MINIMAL_RESOLUTION` |
@@ -333,9 +328,9 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | Obligation | Status | Subset |
 | --- | --- | --- |
 | `SHARED.HIT_POINTS.POSITIVE_DAMAGE` | generation-subset-clean | `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `implies`, `all-block` |
-| `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` | fixture-bound | `import`, `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `range`, `set-operators`, `membership` |
-| `BATTLE.REACTION.OFFER_DECLINE_RESUME` | fixture-bound | `import`, `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `set-operators`, `membership` |
-| `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | fixture-bound | `import`, `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `membership` |
+| `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `range`, `map`, `set-operators`, `membership` |
+| `BATTLE.REACTION.OFFER_DECLINE_RESUME` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `map`, `set-operators`, `membership` |
+| `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | fixture-bound | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `membership` |
 
 ## Kernel IR Boundaries
 

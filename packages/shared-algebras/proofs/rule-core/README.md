@@ -358,11 +358,19 @@ slotless casting leaves the ledger unchanged, leveled casting spends one
 matching available Spell Slot, and a second Spell Slot expenditure on the same
 turn is rejected.
 
+`spell-invocation-resource-core.qnt` models the Spell Invocation resource core:
+Magic Action or Bonus Action cost, Spell Slot expenditure through the reusable
+atom, one slot-spell per turn, access admission, and target cardinality facts.
+
+`spell-damage-projection-core.qnt` models reusable spell damage projection
+facts used by Spell Procedure Profiles without importing authored spell
+definitions.
+
 `spell-procedure-profiles.qnt` models projection-shaped Spell Invocation facts
 and Spell Effects for the production spell procedures without importing Spell
 Definition records, Spell Access lists, Unit ids, or Surface authored ids. It
-imports the Spell Slot expenditure atom rather than duplicating that ledger
-transition.
+projects supported profiles into the invocation resource core and spell damage
+projection core.
 
 Scope:
 
