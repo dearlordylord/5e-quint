@@ -62,7 +62,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 9,
       "id": "A9-CHAINED-ATTACK-CORE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Split chained attack projection core"
     },
     {
@@ -189,7 +189,7 @@ Lane A must not:
 | 6 | A6-SPELL-ATTACK-DAMAGE-CORE - Split spell attack damage projection core | done | none | Pure profile facts only. |
 | 7 | A7-SCALAR-BUFF-CORE - Split scalar buff projection core | done | none | Pure profile facts only. |
 | 8 | A8-DAMAGE-RIDER-CORE - Split damage rider projection core | done | none | Pure profile facts only. |
-| 9 | A9-CHAINED-ATTACK-CORE - Split chained attack projection core | ready-for-implementation-after-light-research | none | Pure profile facts only. |
+| 9 | A9-CHAINED-ATTACK-CORE - Split chained attack projection core | done | none | Pure profile facts only. |
 | 10 | A10-INDEPENDENT-ATTACK-SEQUENCE-CORE - Split independent attack sequence core | ready-for-implementation-after-light-research | none | Pure finite sequence facts. |
 | 11 | A11-SPELL-TURN-HOOK-CORE - Split spell turn hook semantic core | ready-for-implementation-after-light-research | none | Temporary HP, duration, once-per-turn facts. |
 | 12 | A12-OBJECT-HP-DAMAGE-CORE - Split object hit point damage core | ready-for-implementation-after-light-research | none | Keep object state minimal. |
@@ -295,7 +295,7 @@ Acceptance: examples and coverage check pass.
 
 ### Task 9 - A9-CHAINED-ATTACK-CORE - Split chained attack projection core
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: pure semantic-core file for Chromatic Orb chained attack damage choices,
 dice count, duplicate-face detection, and leap availability.
