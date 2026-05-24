@@ -154,7 +154,7 @@ identity evidence or an explicit non-applicable classification.
     {
       "number": 24,
       "id": "B21-DISPEL-MAGIC-IDENTITY-WITNESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Backfill Dispel Magic selected identity witness"
     },
     {
@@ -285,7 +285,7 @@ Lane B must not:
 | 21 | L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT - Promote Acid Arrow delayed runtime support | blocked | L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION,L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE | Add promoted Quint/runtime parity for the approved Acid Arrow behavior. |
 | 22 | B19-ANTIMAGIC-FIELD-IDENTITY-WITNESS - Backfill Antimagic Field selected identity witness | done | none | Added selected-identity MBT evidence for `antimagic_field`; generated selected-identity gaps no longer list it. |
 | 23 | B20-COUNTERSPELL-IDENTITY-WITNESS - Backfill Counterspell selected identity witness | done | none | Added selected-identity MBT evidence for `counterspell`; generated selected-identity gaps no longer list it. |
-| 24 | B21-DISPEL-MAGIC-IDENTITY-WITNESS - Backfill Dispel Magic selected identity witness | ready-for-research | none | Gap row: `dispel_magic`, profile-subset-supported `spell.invocation-ongoing-spell-ending`, installed Surface record. |
+| 24 | B21-DISPEL-MAGIC-IDENTITY-WITNESS - Backfill Dispel Magic selected identity witness | done | none | Added selected-identity MBT evidence for `dispel_magic`; generated selected-identity gaps no longer list it. |
 | 25 | B22-FIND-FAMILIAR-IDENTITY-WITNESS - Backfill Find Familiar selected identity witness | ready-for-research | none | Gap row: `find_familiar`, profile-subset-supported `spell.find-familiar-lifecycle`, installed Surface record. |
 | 26 | B23-FIREBALL-IDENTITY-WITNESS - Backfill Fireball selected identity witness | ready-for-research | none | Gap row: `fireball`, profile-subset-supported `spell.invocation-damage-save-or-attack`, installed Surface record. |
 | 27 | B24-LIGHTNING-BOLT-IDENTITY-WITNESS - Backfill Lightning Bolt selected identity witness | ready-for-research | none | Gap row: `lightning_bolt`, supported-profile `spell.invocation-damage-save-or-attack`, installed Surface record. |
@@ -667,7 +667,7 @@ window. The generated selected-identity gap report no longer lists
 
 ### Task 24 - B21-DISPEL-MAGIC-IDENTITY-WITNESS - Backfill Dispel Magic selected identity witness
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: prove selected `dispel_magic` identity reaches the ongoing-spell ending
 entrypoint, or explicitly classify the non-replayed table-owned portion without
@@ -676,6 +676,13 @@ claiming reducer support.
 Acceptance: `selectedIdentityReplayGaps` no longer reports `dispel_magic` as a
 plain missing witness, and any added evidence references an existing or focused
 test that exercises the selected Unit identity.
+
+Result: `dispel_magic` now has checker-readable `selected-identity-mbt`
+evidence tied to `dispel-magic-selected-identity.mbt.test.ts`, where the
+selected Dispel Magic Unit identity resolves the ongoing-spell ending entrypoint
+for object-attached spell light and selected magical-effect active-effect
+targets. The generated selected-identity gap report no longer lists
+`dispel_magic`.
 
 ### Task 25 - B22-FIND-FAMILIAR-IDENTITY-WITNESS - Backfill Find Familiar selected identity witness
 

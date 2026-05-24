@@ -9243,25 +9243,8 @@
       ],
       "evidenceTag": "selected-identity-mbt"
     },
-    "rowCount": 7,
+    "rowCount": 6,
     "rows": [
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-mbt evidence.",
-          "status": "missing-witness"
-        },
-        "sourceRecordPath": "packages/surface/content/dispel_magic.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-ongoing-spell-ending"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "dispel_magic"
-      },
       {
         "catalogAdmissionStatus": "installed",
         "collectionId": "srd-5.2.1",
@@ -12033,8 +12016,8 @@
         "profileFactDenominator": 127,
         "profileSubsetSupportedUnits": 20,
         "selectedIdentityReplayDenominator": 106,
-        "selectedIdentityReplayGapUnits": 7,
-        "selectedIdentityReplayWitnessUnits": 99,
+        "selectedIdentityReplayGapUnits": 6,
+        "selectedIdentityReplayWitnessUnits": 100,
         "supportedProfileUnits": 86,
         "unsupportedOrOtherUnits": 18
       },
@@ -20183,6 +20166,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dispel-magic.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/dispel-magic-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B21-DISPEL-MAGIC-IDENTITY-WITNESS"
         }
       ],
       "executableMechanics": true,
