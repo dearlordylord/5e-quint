@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "QNTSLICE-SLOT-EXPENDITURE-ATOMIC",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Author Slot Expenditure Atomic Rule"
     },
     {
@@ -139,7 +139,7 @@ Acceptance:
 
 ### Task 2 - QNTSLICE-SLOT-EXPENDITURE-ATOMIC - Author Slot Expenditure Atomic Rule
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -153,6 +153,13 @@ Output:
   equivalent already exists.
 - Add a TypeScript mirror and focused unit tests.
 - Add checker rows/markers required by rules-kernel coverage.
+
+Result:
+
+- Added `spell-slot-expenditure.qnt` as the reusable semantic-core Spell Slot
+  expenditure atom.
+- Added the TypeScript mirror and focused tests in `@dnd/shared-algebras`.
+- Registered the QNT owner in rules-kernel coverage rows.
 
 Acceptance:
 

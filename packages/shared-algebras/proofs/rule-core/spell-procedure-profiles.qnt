@@ -11,6 +11,7 @@ module spellProcedureProfiles {
   import attackDamageComposition.* from "./attack-damage-composition"
   import actionTurnProcedures.* from "./action-turn-procedures"
   import reactionsContinuationsConcentration.* from "./reactions-continuations-concentration"
+  import spellSlotExpenditure.* from "./spell-slot-expenditure"
 
   // RAW anchors:
   // - Spells/Gaining-and-Casting.md: Spell Slots, cantrips, Casting Time,
@@ -25,11 +26,6 @@ module spellProcedureProfiles {
   type SpellInvocationAction =
     | ActionTimeSpellInvocation
     | BonusActionSpellInvocation
-
-  type SpellSlotLedger = {
-    slotLevel: int,
-    slotsRemaining: int,
-  }
 
   type SpellDefinitionProfile =
     | MagicMissileSpellProfile
@@ -916,13 +912,6 @@ module spellProcedureProfiles {
     if (invocationAction == BonusActionSpellInvocation) BonusActionCost
     else StandardActionCost(MagicAction)
 
-  pure def legalSpellSlotLedger(ledger: SpellSlotLedger): bool = all {
-    ledger.slotLevel >= 1,
-    ledger.slotLevel <= 9,
-    ledger.slotsRemaining >= 0,
-    ledger.slotsRemaining <= 6,
-  }
-
   pure def legalSpellcastingProcedureState(state: SpellcastingProcedureState): bool = all {
     legalTurnProcedureState(state.turn),
     legalSpellSlotLedger(state.slotLedger),
@@ -942,45 +931,45 @@ module spellProcedureProfiles {
     }
   }
 
-  pure def canSpendSpellSlot(
-    ledger: SpellSlotLedger,
-    facts: SpellInvocationFacts,
-    slotSpellCastThisTurn: bool
-  ): bool =
-    if (not(spellProfileRequiresSlot(facts.profile))) true
-    else all {
-      not(slotSpellCastThisTurn),
-      facts.selectedSlotLevel == ledger.slotLevel,
-      ledger.slotsRemaining > 0,
-    }
-
-  pure def spendSpellSlot(
-    ledger: SpellSlotLedger,
+  pure def spellSlotExpenditureRequestForInvocationFacts(
     facts: SpellInvocationFacts
-  ): SpellSlotLedger =
-    if (not(spellProfileRequiresSlot(facts.profile))) ledger
-    else ledger.with("slotsRemaining", ledger.slotsRemaining - 1)
+  ): SpellSlotExpenditureRequest =
+    if (spellProfileRequiresSlot(facts.profile))
+      SpellSlotExpenditureRequired({ slotLevel: facts.selectedSlotLevel })
+    else
+      SpellSlotExpenditureNotRequired
+
+  pure def spellSlotExpenditureStateForSpellcasting(
+    state: SpellcastingProcedureState
+  ): SpellSlotExpenditureState = {
+    slotLedger: state.slotLedger,
+    slotSpellCastThisTurn: state.slotSpellCastThisTurn,
+  }
 
   pure def resolveSpellInvocation(
     state: SpellcastingProcedureState,
     facts: SpellInvocationFacts
   ): SpellInvocationResult = {
     val spentTurn = spendActionCost(state.turn, spellActionCost(spellProfileAction(facts.profile)))
+    val slotExpenditureState = spellSlotExpenditureStateForSpellcasting(state)
+    val slotExpenditureRequest = spellSlotExpenditureRequestForInvocationFacts(facts)
+    val slotExpenditure = applySpellSlotExpenditure(slotExpenditureState, slotExpenditureRequest)
+    val nextSlotExpenditureState = spellSlotExpenditureResultState(slotExpenditureState, slotExpenditure)
     val admitted = all {
       facts.hasSpellAccess,
       legalSpellInvocationFacts(facts),
       legalSpellcastingProcedureState(state),
       spentTurn != state.turn,
-      canSpendSpellSlot(state.slotLedger, facts, state.slotSpellCastThisTurn),
+      spellSlotExpenditureAccepted(slotExpenditure),
     }
-    val slotExpended = admitted and spellProfileRequiresSlot(facts.profile)
+    val slotExpended = admitted and spellSlotWasExpended(slotExpenditure)
     {
       state:
         if (not(admitted)) state
         else {
           turn: spentTurn,
-          slotLedger: spendSpellSlot(state.slotLedger, facts),
-          slotSpellCastThisTurn: state.slotSpellCastThisTurn or slotExpended,
+          slotLedger: nextSlotExpenditureState.slotLedger,
+          slotSpellCastThisTurn: nextSlotExpenditureState.slotSpellCastThisTurn,
         },
       admitted: admitted,
       slotExpended: slotExpended,
@@ -1167,6 +1156,10 @@ module spellProcedureProfiles {
   ): ReadiedSpellHoldResult = {
     val held = asReadiedSpellProfile(facts.profile)
     val spent = spendActionCost(spellcasting.turn, StandardActionCost(ReadyAction))
+    val slotExpenditureState = spellSlotExpenditureStateForSpellcasting(spellcasting)
+    val slotExpenditureRequest = spellSlotExpenditureRequestForInvocationFacts(facts)
+    val slotExpenditure = applySpellSlotExpenditure(slotExpenditureState, slotExpenditureRequest)
+    val nextSlotExpenditureState = spellSlotExpenditureResultState(slotExpenditureState, slotExpenditure)
     val admitted = all {
       triggerSelected,
       canConcentrate,
@@ -1175,9 +1168,9 @@ module spellProcedureProfiles {
       legalSpellInvocationFacts(facts),
       legalSpellcastingProcedureState(spellcasting),
       spent != spellcasting.turn,
-      canSpendSpellSlot(spellcasting.slotLedger, facts, spellcasting.slotSpellCastThisTurn),
+      spellSlotExpenditureAccepted(slotExpenditure),
     }
-    val slotExpended = admitted and spellProfileRequiresSlot(facts.profile)
+    val slotExpended = admitted and spellSlotWasExpended(slotExpenditure)
     if (not(admitted)) {
       spellcasting: spellcasting,
       readiedSpell: state,
@@ -1186,8 +1179,8 @@ module spellProcedureProfiles {
     } else {
       spellcasting: {
         turn: spent,
-        slotLedger: spendSpellSlot(spellcasting.slotLedger, facts),
-        slotSpellCastThisTurn: spellcasting.slotSpellCastThisTurn or slotExpended,
+        slotLedger: nextSlotExpenditureState.slotLedger,
+        slotSpellCastThisTurn: nextSlotExpenditureState.slotSpellCastThisTurn,
       },
       readiedSpell: {
         reaction: state.reaction.with(

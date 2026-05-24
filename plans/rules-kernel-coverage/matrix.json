@@ -202,6 +202,7 @@
         "spell.readied-action-time-spell"
       ],
       "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/spell-slot-expenditure.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
       ],
       "runtime": "battle",
@@ -5503,6 +5504,14 @@
       "role": "semantic-core"
     },
     {
+      "evidence": "packages/shared-algebras/proofs/rule-core/spell-slot-expenditure.qnt is the covered obligation QNT owner carrying executable Spell Slot expenditure semantics for spell procedures and later composite spell slices.",
+      "obligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-slot-expenditure.qnt",
+      "role": "semantic-core"
+    },
+    {
       "evidence": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
         "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
@@ -5663,6 +5672,7 @@
         "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
       ],
       "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/spell-slot-expenditure.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
       ],
       "status": "fixture-bound"

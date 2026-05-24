@@ -347,9 +347,16 @@ projection-shaped and Surface-free.
 
 ## QCORE10: Spell Procedure Profiles
 
+`spell-slot-expenditure.qnt` models the reusable Spell Slot expenditure atom:
+slotless casting leaves the ledger unchanged, leveled casting spends one
+matching available Spell Slot, and a second Spell Slot expenditure on the same
+turn is rejected.
+
 `spell-procedure-profiles.qnt` models projection-shaped Spell Invocation facts
 and Spell Effects for the production spell procedures without importing Spell
-Definition records, Spell Access lists, Unit ids, or Surface authored ids.
+Definition records, Spell Access lists, Unit ids, or Surface authored ids. It
+imports the Spell Slot expenditure atom rather than duplicating that ledger
+transition.
 
 Scope:
 

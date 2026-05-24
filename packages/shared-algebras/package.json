@@ -15,6 +15,7 @@
     "./stable-recovery-algebra": "./src/stable-recovery-algebra.ts",
     "./runtime-dice-algebra": "./src/runtime-dice-algebra.ts",
     "./runtime-hole-algebra": "./src/runtime-hole-algebra.ts",
+    "./spell-slot-expenditure-algebra": "./src/spell-slot-expenditure-algebra.ts",
     "./zero-hit-point-replacement-algebra": "./src/zero-hit-point-replacement-algebra.ts",
     "./validation-algebra": "./src/validation-algebra.ts",
     "./character-advancement-algebra": "./src/character-advancement-algebra.ts",
@@ -29,7 +30,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:deterministic": "vitest run src/ability-score-algebra.test.ts src/character-advancement-algebra.test.ts src/multiclass-prerequisite-algebra.test.ts src/movement-cost-algebra.test.ts src/reducer-algebras.test.ts src/speed-algebra.test.ts",
+    "test:deterministic": "vitest run src/ability-score-algebra.test.ts src/character-advancement-algebra.test.ts src/multiclass-prerequisite-algebra.test.ts src/movement-cost-algebra.test.ts src/reducer-algebras.test.ts src/spell-slot-expenditure-algebra.test.ts src/speed-algebra.test.ts",
     "test:mbt": "vitest run src/reducer-algebras.mbt.test.ts",
     "proof:multiclass": "pnpm exec quint test --match \"mc_\" proofs/multiclass-prerequisite-algebra.qnt",
     "proof:inductive": "export PATH=\"$HOME/.local/java/jdk-17.0.18+8-jre/bin:$PATH\"; pnpm exec quint verify proofs/action-economy-algebra-inductive.qnt --inductive-invariant invariant --invariant invariant --max-steps 1 --verbosity 1 && pnpm exec quint verify proofs/conditions-algebra-inductive.qnt --inductive-invariant invariant --invariant invariant --max-steps 1 --verbosity 1 && pnpm exec quint verify proofs/death-saves-algebra-inductive.qnt --inductive-invariant invariant --invariant invariant --max-steps 1 --verbosity 1",

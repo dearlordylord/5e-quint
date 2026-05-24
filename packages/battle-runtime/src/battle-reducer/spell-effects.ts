@@ -3,7 +3,8 @@
 // Cluster Q (spell_effects). Mechanical extraction — no behavior change.
 // Consumed by clusters L (spells_resolve) and P (spells_holes_fills).
 
-import { resourceCount, SpellSlotLevel } from "@dnd/shared/types";
+import { SpellSlotLevel } from "@dnd/shared/types";
+import { expendSpellSlotInCapacities } from "@dnd/shared-algebras/spell-slot-expenditure-algebra";
 import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
 import type { CombatantId } from "../identity.ts";
 import {
@@ -38,10 +39,9 @@ export function expendSpellSlot(
         ...actor.origin,
         spellcasting: {
           ...actor.origin.spellcasting,
-          spellSlots: actor.origin.spellcasting.spellSlots.map((slot) =>
-            slot.spellLevel === spellLevel && slot.expended < slot.count
-              ? { ...slot, expended: resourceCount(Number(slot.expended) + 1) }
-              : slot,
+          spellSlots: expendSpellSlotInCapacities(
+            actor.origin.spellcasting.spellSlots,
+            spellLevel,
           ),
         },
       },
