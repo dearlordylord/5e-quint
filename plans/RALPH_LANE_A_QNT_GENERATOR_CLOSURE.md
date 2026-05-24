@@ -68,7 +68,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 10,
       "id": "A10-INDEPENDENT-ATTACK-SEQUENCE-CORE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Split independent attack sequence core"
     },
     {
@@ -190,7 +190,7 @@ Lane A must not:
 | 7 | A7-SCALAR-BUFF-CORE - Split scalar buff projection core | done | none | Pure profile facts only. |
 | 8 | A8-DAMAGE-RIDER-CORE - Split damage rider projection core | done | none | Pure profile facts only. |
 | 9 | A9-CHAINED-ATTACK-CORE - Split chained attack projection core | done | none | Pure profile facts only. |
-| 10 | A10-INDEPENDENT-ATTACK-SEQUENCE-CORE - Split independent attack sequence core | ready-for-implementation-after-light-research | none | Pure finite sequence facts. |
+| 10 | A10-INDEPENDENT-ATTACK-SEQUENCE-CORE - Split independent attack sequence core | done | none | Pure finite sequence facts. |
 | 11 | A11-SPELL-TURN-HOOK-CORE - Split spell turn hook semantic core | ready-for-implementation-after-light-research | none | Temporary HP, duration, once-per-turn facts. |
 | 12 | A12-OBJECT-HP-DAMAGE-CORE - Split object hit point damage core | ready-for-implementation-after-light-research | none | Keep object state minimal. |
 | 13 | A13-SLEEP-LIFECYCLE-CORE - Split Sleep repeat-save lifecycle core | ready-for-implementation-after-light-research | none | No table adjudication expansion. |
@@ -304,7 +304,7 @@ Acceptance: examples preserve duplicate and non-duplicate face cases.
 
 ### Task 10 - A10-INDEPENDENT-ATTACK-SEQUENCE-CORE - Split independent attack sequence core
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: pure semantic-core file for Eldritch Blast and Scorching Ray sequence
 attack counts and step-state projection.
