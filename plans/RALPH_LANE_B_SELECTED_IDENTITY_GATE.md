@@ -58,7 +58,7 @@ identity evidence or an explicit non-applicable classification.
     {
       "number": 8,
       "id": "B8-LEVEL1-SPELL-IDENTITY-BATCH",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Backfill level-1 spell identity evidence"
     },
     {
@@ -161,7 +161,7 @@ Lane B must not:
 | 5 | B5-CLASS-FEATURE-IDENTITY-BATCH-2 - Backfill class-feature identity evidence batch 2 | done | none | Monk/Ranger/Paladin. |
 | 6 | B6-CLASS-FEATURE-IDENTITY-BATCH-3 - Backfill class-feature identity evidence batch 3 | done | none | Sorcerer/Warlock/Wizard. |
 | 7 | B7-FEAT-IDENTITY-BATCH - Backfill feat identity evidence | done | none | Alert and Origin feat reachability. |
-| 8 | B8-LEVEL1-SPELL-IDENTITY-BATCH - Backfill level-1 spell identity evidence | ready-for-implementation-after-light-research | none | Any remaining level-1 supported spell ids. |
+| 8 | B8-LEVEL1-SPELL-IDENTITY-BATCH - Backfill level-1 spell identity evidence | done | none | Remaining level-1 supported spell id was already covered by `light` selected-identity evidence. |
 | 9 | B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH - Backfill level-2 damage spell identity evidence | ready-for-implementation-after-light-research | none | Damage/attack spells. |
 | 10 | B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH - Backfill level-2 control spell identity evidence | ready-for-implementation-after-light-research | none | Control/condition spells. |
 | 11 | B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH - Backfill level-2 mobility spell identity evidence | ready-for-implementation-after-light-research | none | Mobility/position spells. |
@@ -274,12 +274,15 @@ Initiative Proficiency handoff.
 
 ### Task 8 - B8-LEVEL1-SPELL-IDENTITY-BATCH - Backfill level-1 spell identity evidence
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: cover any remaining level-1 supported spell Units in the selected
 identity gap report.
 
 Acceptance: no level-1 supported spell remains missing identity evidence.
+
+Result: no remaining level-1 supported spell Unit is missing selected-identity
+evidence; `light` is covered by the existing level-1 spatial witness replay.
 
 ### Task 9 - B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH - Backfill level-2 damage spell identity evidence
 
