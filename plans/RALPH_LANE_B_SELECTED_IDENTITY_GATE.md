@@ -100,7 +100,7 @@ identity evidence or an explicit non-applicable classification.
     {
       "number": 15,
       "id": "B15-UNIT-REPORT-HONESTY-PASS",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Refresh Unit report wording and metrics"
     },
     {
