@@ -1,6 +1,6 @@
 {
   "category": "origin",
-  "description": "Initiative Proficiency. When you roll Initiative, you can add your Proficiency Bonus to the roll. Initiative Swap. Immediately after you roll Initiative, you can swap your Initiative with the Initiative of one willing ally in the same combat. You can't make this swap if you or the ally has the Incapacitated condition.",
+  "description": "Initiative Proficiency: When you roll Initiative, you can add your Proficiency Bonus to the roll. Initiative Swap: Immediately after you roll Initiative, you can swap your Initiative with the Initiative of one willing ally in the same combat. You can't make this swap if you or the ally has the Incapacitated condition.",
   "id": "alert",
   "kind": "feat",
   "mechanics": {
@@ -8,13 +8,12 @@
     "grants": [
       {
         "delta": {
-          "dice": 2,
-          "dieSize": 1,
+          "kind": "proficiency_bonus",
           "sign": "+"
         },
         "kind": "modify_roll_numeric",
         "on": [
-          "ability_check"
+          "initiative"
         ]
       }
     ]
@@ -22,6 +21,6 @@
   "name": "Alert",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Feats#Alert"
+    "section": "Feats.md:23-31"
   }
 }

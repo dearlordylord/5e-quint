@@ -8,16 +8,16 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Metric | Value |
 | --- | ---: |
-| Installed collection inventory count | 253 Units |
+| Installed collection inventory count | 254 Units |
 
 ## Coverage Metrics
 
 | Metric | Covered | Percent |
 | --- | ---: | ---: |
-| Authored Surface Unit catalog admission | 252/492 | 51.2% |
-| Authored Surface executable catalog admission | 207/407 | 50.9% |
-| Installed Unit profile classification coverage | 253/253 | 100% |
-| Supported executable Unit coverage | 140/208 | 67.3% |
+| Authored Surface Unit catalog admission | 253/491 | 51.5% |
+| Authored Surface executable catalog admission | 208/406 | 51.2% |
+| Installed Unit profile classification coverage | 254/254 | 100% |
+| Supported executable Unit coverage | 140/209 | 67% |
 | QNT profile modeling coverage | 95/95 | 100% |
 | QNT proof coverage | 95/95 | 100% |
 | Runtime mapping coverage | 95/95 | 100% |
@@ -278,7 +278,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | armor | 11 | `armor_breastplate`, `armor_chain_shirt`, `armor_half_plate_armor`, `armor_hide_armor`, `armor_leather`, `armor_padded_armor`, `armor_plate`, `armor_ring_mail`, `armor_scale_mail`, `armor_splint_armor`, `armor_studded_leather_armor` |
 | armor_template | 3 | `magic_item_adamantine_armor`, `magic_item_armor_1_2_or_3`, `magic_item_mithral_armor` |
 | weapon_template | 3 | `magic_item_ammunition_1_2_or_3`, `magic_item_defender`, `magic_item_weapon_1_2_or_3` |
-| feat | 2 | `alert`, `alert` |
 | shield_template | 2 | `magic_item_sentinel_shield`, `magic_item_shield_1_2_or_3` |
 
 ## Authored Catalog Admission Triage
@@ -289,13 +288,11 @@ This raw inventory lists authored Surface records that are absent from the insta
 | intentional-backlog | future magic item profile intake | 79 | magic_item: 71, armor_template: 3, weapon_template: 3, shield_template: 2 | SRD magic item mechanics are authored, but this QMBT lane is focused on Unit feature and spell admission. |
 | non-runtime-authored-data | no promoted runtime lane | 40 | weapon: 29, armor: 11 | Authored SRD data has no mechanics payload, so catalog absence is not promoted runtime execution pressure. |
 | unsupported-widening-pressure | QMBT18 | 23 | class_feature: 23 | Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice. |
-| duplicate-content-issue | content cleanup | 2 | feat: 2 | More than one authored Surface record declares this Unit id; clean up the duplicate before treating it as catalog pressure. |
 
 | Unit | Disposition | Planning lane | Kind | Mechanics | Source |
 | --- | --- | --- | --- | --- | --- |
 | `acid_arrow` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/acid_arrow.json` |
 | `alarm` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/alarm.json` |
-| `alert` | duplicate-content-issue | content cleanup | feat | yes | `packages/surface/content/alert.json` |
 | `animal_shapes` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/animal_shapes.json` |
 | `animate_dead` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/animate_dead.json` |
 | `animate_objects` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/animate_objects.json` |
@@ -355,7 +352,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `earthquake` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/earthquake.json` |
 | `fabricate` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/fabricate.json` |
 | `fear` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/fear.json` |
-| `alert` | duplicate-content-issue | content cleanup | feat | yes | `packages/surface/content/feat_alert.json` |
 | `fighter_epic_boon` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/fighter_epic_boon.json` |
 | `find_steed` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/find_steed.json` |
 | `finger_of_death` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/finger_of_death.json` |
@@ -540,7 +536,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | --- | --- | --- | --- |
 | `acid_arrow` | spell | yes | `packages/surface/content/acid_arrow.json` |
 | `alarm` | spell | yes | `packages/surface/content/alarm.json` |
-| `alert` | feat | yes | `packages/surface/content/alert.json` |
 | `animal_shapes` | spell | yes | `packages/surface/content/animal_shapes.json` |
 | `animate_dead` | spell | yes | `packages/surface/content/animate_dead.json` |
 | `animate_objects` | spell | yes | `packages/surface/content/animate_objects.json` |
@@ -600,7 +595,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `earthquake` | spell | yes | `packages/surface/content/earthquake.json` |
 | `fabricate` | spell | yes | `packages/surface/content/fabricate.json` |
 | `fear` | spell | yes | `packages/surface/content/fear.json` |
-| `alert` | feat | yes | `packages/surface/content/feat_alert.json` |
 | `fighter_epic_boon` | class_feature | yes | `packages/surface/content/fighter_epic_boon.json` |
 | `find_steed` | spell | yes | `packages/surface/content/find_steed.json` |
 | `finger_of_death` | spell | yes | `packages/surface/content/finger_of_death.json` |
@@ -1146,6 +1140,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `warlock_fiend_spells` | profile-subset-supported | supported subset: Selected Warlock Fiend Patron subclass ownership retains the level-3 Fiend Spells class-feature Unit in CharacterBuild feature refs when the Warlock class level is 3 or higher; Character Sheet projects the level-3 Fiend Spells prepared spell access from installed Surface passive grant_spell_access facts; Book of Shadows selections are rejected when they duplicate spell access already granted by the retained subclass feature Unit; deferred: later Fiend Spells table rows gained at Warlock levels 5, 7, and 9 (closed: later-level-only) |
 | `wizard_evocation_savant` | profile-subset-supported | supported subset: Evocation Savant is installed as a level-3 Surface class-feature grant on subclass_wizard_evoker; Selected Wizard Evoker subclass ownership retains the level-3 Evocation Savant class-feature Unit in CharacterBuild Unit refs when Wizard class level is 3 or higher; Surface wizard_spellbook_learning represents the level-3 acquisition-time choice as exactly two Wizard Evocation spellbook spells of level 2 or lower; Character Creation discovers exactly two acquisition-time Wizard Evocation spellbook choices from installed Wizard Spell Access, spell school, and spell level facts without duplicating an Evoker spell roster; Character Creation finalizes selected Evocation Savant spells into the Wizard spellbook without duplicating spellbook state and rejects duplicate spellbook selections across class and feature grants; deferred: Later one-spell Wizard Evocation spellbook grant whenever Wizard gains access to a new Wizard Spell Slot level (L12G-FOLLOWUP-WIZARD-EVOKER-EVOCATION-SAVANT-LATER-SLOT-ACCESS) |
 | `feat_ability_score_improvement` | unsupported-profile | Character-creation ability score mutation is outside promoted battle Unit profile scope. |
+| `alert` | unsupported-profile | Alert is installed as the canonical SRD Origin feat identity for Criminal background selection. Its Initiative Proficiency and Initiative Swap benefits are battle-runtime-relevant Initiative setup behavior, but no promoted Initiative roll/turn-order profile is claimed in this catalog-readiness slice. Follow-up split: L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME: Promote Alert by projecting Proficiency Bonus on Initiative rolls and modeling the immediately-after-Initiative willing-ally Initiative Swap gate without authored-identity dispatch. (owner: battle-runtime Initiative setup and Character Battle admission owners; output: Supported-profile or profile-subset-supported Alert claim, focused runtime tests, promoted Quint/runtime parity for Initiative roll bonus and swap legality, and generated coverage artifacts.) |
 | `feat_magic_initiate_cleric` | unsupported-profile | Magic Initiate (Cleric) is an Origin feat spell-access selection source. Character creation retains the selected background and feat Unit refs; selected cantrips, level-1 spell access, and spellcasting ability choice belong to the character spell-access owner rather than promoted battle Unit execution. |
 | `feat_magic_initiate_wizard` | unsupported-profile | Magic Initiate (Wizard) is an Origin feat spell-access selection source. Character creation retains the selected background and feat Unit refs; selected cantrips, level-1 spell access, and spellcasting ability choice belong to the character spell-access owner rather than promoted battle Unit execution. |
 | `paladin_fighting_style` | profile-subset-supported | supported subset: Paladin Fighting Style is installed as a Surface class-feature acquisition choice between the Fighting Style feat branch and the Blessed Warrior branch; Character Creation admits a supported Paladin level-2 same-class progression, discovers the Paladin Fighting Style branch choice through the normal draft hole workflow, and fill/finalizes both supported branches end to end; Character Creation admits the Fighting Style feat branch, discovers exactly one supported Fighting Style feat choice, and finalizes the selected feat as a selected CharacterBuild class-choice ref with selectedFromUnitId paladin_fighting_style; Character Creation admits the Blessed Warrior branch, discovers exactly two Cleric cantrip choices from the selected branch, and projects selected cantrips as Paladin spellcasting cantrips using the Paladin Charisma spellcasting source; Selected Fighting Style feat Units and selected cantrip Spell Units own their executable behavior; the Paladin feature owns only the branch and grant selection container; deferred: Blessed Warrior cantrip replacement when later gaining Paladin levels after acquiring the feature (closed: later-level-only) |
@@ -1253,6 +1248,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | srd-5.2.1 | unassigned | profile-subset-supported | 31 | `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `bard_expertise`, `cleric_life_domain_spells`, `druid_wild_shape`, `druid_wild_companion`, `monk_monks_focus`, `ranger_favored_enemy`, `ranger_fighting_style`, `sorcerer_font_of_magic`, `sorcerer_metamagic`, `sorcerer_draconic_spells`, `warlock_fiend_spells`, `wizard_evocation_savant`, `paladin_fighting_style`, `paladin_oath_of_devotion_spells`, `calm_emotions`, `enlarge_reduce`, `enthrall`, `fireball`, `find_familiar`, `gust_of_wind`, `levitate`, `pass_without_trace`, `prayer_of_healing`, `thaumaturgy`, `mind_spike`, `moonbeam`, `fly`, `spike_growth`, `charm_person` |
 | srd-5.2.1 | no promoted runtime lane | non-runtime-authored-data | 11 | `armor_chain_mail`, `equipment_shield`, `weapon_club`, `weapon_dagger`, `weapon_greataxe`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `weapon_quarterstaff` |
 | srd-5.2.1 | Antimagic Field prevention boundaries plus broader ongoing Spell Effect occurrence model | profile-subset-supported | 1 | `antimagic_field` |
+| srd-5.2.1 | battle-runtime Initiative setup and turn-order owner | unsupported-profile | 1 | `alert` |
 | srd-5.2.1 | battle-runtime object-origin spell-area and opaque-cover witness boundary | profile-subset-supported | 1 | `darkness` |
 | srd-5.2.1 | battle-runtime spell invocation target-list ability-choice lifecycle plus promoted Quint parity | profile-subset-supported | 1 | `enhance_ability` |
 | srd-5.2.1 | broader ongoing Spell Effect occurrence model plus spell-specific dispel exception owner | profile-subset-supported | 1 | `dispel_magic` |

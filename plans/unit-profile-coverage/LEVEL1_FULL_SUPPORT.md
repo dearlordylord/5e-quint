@@ -11,7 +11,7 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | Strict runtime/profile support | 78/94 (83%) |
 | Strict target closure | 94/94 (100%) |
 | Product readiness | 367/367 (100%) |
-| SRD authored product readiness | 56/58 (96.6%) |
+| SRD authored product readiness | 57/58 (98.3%) |
 | Rules-kernel profile join | 58/58 (100%) |
 | Rules-kernel covered profile join | 58/58 (100%) |
 | Supported Unit rules-kernel chain | 78/78 (100%) |
@@ -22,7 +22,7 @@ These metrics are lower-layer accounting views. They are not, by themselves, a v
 
 | Gate | Status | Blocking issue |
 | --- | --- | --- |
-| SRD authored product readiness | blocked | 2 unresolved authored readiness row(s) |
+| SRD authored product readiness | blocked | 1 unresolved authored readiness row(s) |
 
 A failed gate invalidates a full level-support claim without pretending to be a weighted completion percentage.
 
@@ -33,7 +33,7 @@ This gate checks authored records and retained Unit references that must resolve
 | Group | Status | Ready | Meaning |
 | --- | --- | ---: | --- |
 | SRD background records | complete | 4/4 (100%) | Every SRD background selectable at character creation must be installed. |
-| SRD background origin feat refs | blocked | 3/4 (75%) | Every finalized background origin feat ref must resolve through the Unit catalog before character-to-battle admission can be claimed. |
+| SRD background origin feat refs | complete | 4/4 (100%) | Every finalized background origin feat ref must resolve through the Unit catalog before character-to-battle admission can be claimed. |
 | SRD background concrete equipment refs | complete | 4/4 (100%) | Every concrete Unit ref in SRD background starting equipment must resolve through the Unit catalog. |
 | SRD species records | complete | 6/6 (100%) | Every SRD species selectable at character creation must be installed. |
 | SRD species trait refs | complete | 11/11 (100%) | Every finalized species trait ref must resolve through the Unit catalog before character-to-battle admission can be claimed. |
@@ -45,7 +45,6 @@ This gate checks authored records and retained Unit references that must resolve
 
 | Group | Owner Unit | Relation | Blocking Unit | Status |
 | --- | --- | --- | --- | --- |
-| background-origin-feat-refs | `background_criminal` | background.originFeatId | `alert` | not-in-unit-catalog, not-in-unit-catalog |
 | level-scoped-class-feature-grants | `class_warlock` | class.featureGrants.level-1 | `warlock_pact_magic` | missing-authored-record |
 
 ## Legacy SRD-Authored Character Creation Catalog

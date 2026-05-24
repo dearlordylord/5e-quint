@@ -5415,17 +5415,6 @@
   "srdAuthoredProductReadiness": {
     "blockerRows": [
       {
-        "duplicateRowCount": 2,
-        "group": "background-origin-feat-refs",
-        "kind": "feat",
-        "ownerUnitId": "background_criminal",
-        "ready": false,
-        "relation": "background.originFeatId",
-        "sourceRecordPath": "packages/surface/content/alert.json",
-        "status": "not-in-unit-catalog, not-in-unit-catalog",
-        "unitId": "alert"
-      },
-      {
         "group": "level-scoped-class-feature-grants",
         "ownerUnitId": "class_warlock",
         "ready": false,
@@ -5434,7 +5423,7 @@
         "unitId": "warlock_pact_magic"
       }
     ],
-    "blockingGroupCount": 2,
+    "blockingGroupCount": 1,
     "groups": [
       {
         "blockerRows": [],
@@ -5482,26 +5471,15 @@
         }
       },
       {
-        "blockerRows": [
-          {
-            "duplicateRowCount": 2,
-            "kind": "feat",
-            "ownerUnitId": "background_criminal",
-            "ready": false,
-            "relation": "background.originFeatId",
-            "sourceRecordPath": "packages/surface/content/alert.json",
-            "status": "not-in-unit-catalog, not-in-unit-catalog",
-            "unitId": "alert"
-          }
-        ],
-        "complete": false,
+        "blockerRows": [],
+        "complete": true,
         "description": "Every finalized background origin feat ref must resolve through the Unit catalog before character-to-battle admission can be claimed.",
         "group": "background-origin-feat-refs",
         "label": "SRD background origin feat refs",
         "metrics": {
           "denominator": 4,
-          "numerator": 3,
-          "percent": "75%"
+          "numerator": 4,
+          "percent": "100%"
         },
         "rows": [
           {
@@ -5514,13 +5492,12 @@
             "unitId": "feat_magic_initiate_cleric"
           },
           {
-            "duplicateRowCount": 2,
             "kind": "feat",
             "ownerUnitId": "background_criminal",
-            "ready": false,
+            "ready": true,
             "relation": "background.originFeatId",
             "sourceRecordPath": "packages/surface/content/alert.json",
-            "status": "not-in-unit-catalog, not-in-unit-catalog",
+            "status": "installed",
             "unitId": "alert"
           },
           {
@@ -5543,8 +5520,7 @@
           }
         ],
         "rowsByStatus": {
-          "installed": 3,
-          "not-in-unit-catalog, not-in-unit-catalog": 1
+          "installed": 4
         }
       },
       {
@@ -6104,10 +6080,10 @@
     ],
     "metrics": {
       "denominator": 58,
-      "numerator": 56,
-      "percent": "96.6%"
+      "numerator": 57,
+      "percent": "98.3%"
     },
-    "openBlockerCount": 2
+    "openBlockerCount": 1
   },
   "summary": {
     "candidateUnitIdsBeforeExclusions": 120,

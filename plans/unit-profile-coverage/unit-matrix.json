@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 407,
-      "numerator": 207,
-      "percent": "50.9%"
+      "denominator": 406,
+      "numerator": 208,
+      "percent": "51.2%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 492,
-      "numerator": 252,
-      "percent": "51.2%"
+      "denominator": 491,
+      "numerator": 253,
+      "percent": "51.5%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 253
+      "value": 254
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 140,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 253,
-      "numerator": 253,
+      "denominator": 254,
+      "numerator": 254,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "77.9%"
     },
     "supportedProfileCoverage": {
-      "denominator": 208,
+      "denominator": 209,
       "numerator": 140,
-      "percent": "67.3%"
+      "percent": "67%"
     }
   },
   "metricSemantics": [
@@ -16352,6 +16352,34 @@
         "status": "installed"
       },
       "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME",
+            "mechanic": "Promote Alert by projecting Proficiency Bonus on Initiative rolls and modeling the immediately-after-Initiative willing-ally Initiative Swap gate without authored-identity dispatch.",
+            "owner": "battle-runtime Initiative setup and Character Battle admission owners",
+            "requiredOutput": "Supported-profile or profile-subset-supported Alert claim, focused runtime tests, promoted Quint/runtime parity for Initiative roll bonus and swap legality, and generated coverage artifacts.",
+            "title": "Alert Initiative Runtime Support"
+          }
+        ],
+        "futureProfileOwner": "battle-runtime Initiative setup and turn-order owner",
+        "reason": "Alert is installed as the canonical SRD Origin feat identity for Criminal background selection. Its Initiative Proficiency and Initiative Swap benefits are battle-runtime-relevant Initiative setup behavior, but no promoted Initiative roll/turn-order profile is claimed in this catalog-readiness slice.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "feat",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/alert.json",
+      "unitId": "alert"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "battleReadinessClosure": {
           "kind": "character-fact-and-runtime-detached-split",
           "owner": "character-creation-runtime and future character-sheet spell-access owner",
@@ -27030,24 +27058,6 @@
       "unitId": "alarm"
     },
     {
-      "authoredSurfaceDuplicateIdCount": 2,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "duplicate-content-issue",
-          "planningLane": "content cleanup",
-          "reason": "More than one authored Surface record declares this Unit id; clean up the duplicate before treating it as catalog pressure."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "feat",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/alert.json",
-      "unitId": "alert"
-    },
-    {
       "authoredSurfaceDuplicateIdCount": 1,
       "catalogAdmission": {
         "disposition": {
@@ -28335,24 +28345,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/fear.json",
       "unitId": "fear"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 2,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "duplicate-content-issue",
-          "planningLane": "content cleanup",
-          "reason": "More than one authored Surface record declares this Unit id; clean up the duplicate before treating it as catalog pressure."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "feat",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/feat_alert.json",
-      "unitId": "alert"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

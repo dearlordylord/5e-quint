@@ -5440,6 +5440,42 @@ describe("SRD Unit catalog boundary", () => {
     );
   });
 
+  test("authors Criminal's SRD Alert origin feat as one catalog identity", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    expect(result.catalog.requireUnit("background_criminal")).toMatchObject({
+      kind: "background",
+      originFeatId: "alert",
+    });
+    expect(result.catalog.requireUnit("alert")).toEqual(
+      expect.objectContaining({
+        category: "origin",
+        id: "alert",
+        kind: "feat",
+        mechanics: {
+          family: "passive",
+          grants: [
+            {
+              delta: {
+                kind: "proficiency_bonus",
+                sign: "+",
+              },
+              kind: "modify_roll_numeric",
+              on: ["initiative"],
+            },
+          ],
+        },
+        name: "Alert",
+      }),
+    );
+    expect(
+      result.catalog.listUnits().filter((unit) => unit.id === "alert"),
+    ).toHaveLength(1);
+  });
+
   test("rejects mismatched on-hit trigger and effect families", () => {
     const decode = Schema.decodeUnknownEither(OnHitTriggerMechanicsSchema);
     const addSneakAttackDice = {

@@ -4,6 +4,7 @@ import { Option } from "effect";
 // Keep authoring changes in Dhall, then regenerate JSON and trace output.
 import armorChainMailInput from "../../content/armor_chain_mail.json";
 import aidInput from "../../content/aid.json";
+import alertInput from "../../content/alert.json";
 import alterSelfInput from "../../content/alter_self.json";
 import animalFriendshipInput from "../../content/animal_friendship.json";
 import animalMessengerInput from "../../content/animal_messenger.json";
@@ -456,6 +457,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     featArcheryInput,
     featBoonOfCombatProwessInput,
     featDefenseInput,
+    alertInput,
     featMagicInitiateClericInput,
     featMagicInitiateWizardInput,
     featSavageAttackerInput,

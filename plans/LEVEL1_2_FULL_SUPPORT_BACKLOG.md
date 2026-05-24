@@ -23,9 +23,9 @@ The strict runtime/profile target is closed:
 That is not enough for a full product support claim. The full-support gate is
 currently blocked by SRD authored product readiness:
 
-- Level 1 authored product readiness: `56/58 (96.6%)`.
-- Level 1-2 authored product readiness: `74/76 (97.4%)`.
-- Blocking rows: 2.
+- Level 1 authored product readiness: `57/58 (98.3%)`.
+- Level 1-2 authored product readiness: `75/76 (98.7%)`.
+- Blocking rows: 1.
 
 ## Active Backlog
 
@@ -42,7 +42,7 @@ currently blocked by SRD authored product readiness:
     {
       "number": 2,
       "id": "L12FS-ALERT-ORIGIN-FEAT-CATALOG",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve Alert Origin Feat Catalog Identity"
     },
     {
@@ -68,6 +68,12 @@ currently blocked by SRD authored product readiness:
       "id": "L12FS-RECURSIVE-NEXT-TASKS",
       "status": "ready-for-research",
       "title": "Mine Remaining Level 1-2 Product Readiness Tasks"
+    },
+    {
+      "number": 7,
+      "id": "L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Alert Initiative Runtime Support"
     }
   ]
 }
@@ -120,7 +126,7 @@ Acceptance:
 
 ### Task 2 - L12FS-ALERT-ORIGIN-FEAT-CATALOG - Resolve Alert Origin Feat Catalog Identity
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -262,6 +268,42 @@ Acceptance:
 
 - Ralph does not stop with hidden level 1/2 product-readiness blockers.
 - New tasks are one-coding-session sized and do not duplicate QNT/MBT lanes.
+
+### Task 7 - L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME - Alert Initiative Runtime Support
+
+Status: `ready-for-research`
+
+This task is not a dependency of the level 1-2 authored product-readiness gate.
+Alert is installed as the canonical SRD Origin feat identity for Criminal, but
+its Initiative benefits remain an explicit runtime follow-up.
+
+Input:
+
+- `.references/srd-5.2.1/Feats.md`
+- `UBIQUITOUS_LANGUAGE.md`
+- `packages/surface/content/alert.json`
+- Current battle-runtime Initiative setup, turn-order, and Character Battle
+  admission owners.
+
+Output:
+
+- Promote Alert without authored-identity dispatch by projecting its typed
+  Initiative roll Proficiency Bonus and the immediately-after-Initiative
+  willing-ally Initiative Swap gate.
+- Update the authoritative promoted Quint/runtime model before runtime behavior
+  changes if Initiative setup or turn-order semantics change.
+- Keep Proficiency Bonus, Initiative order, ally willingness, and Incapacitated
+  state single-source; do not add duplicate runtime state beside existing
+  character sheet or battle state facts.
+- Regenerate Unit profile coverage artifacts so Alert moves from
+  `unsupported-profile` to a supported or profile-subset-supported claim.
+
+Acceptance:
+
+- Focused runtime tests cover the Alert Initiative roll bonus and swap legality.
+- Relevant promoted Quint/runtime parity verification passes if battle behavior
+  changes.
+- Coverage artifacts no longer report Alert as an unsupported profile.
 
 ## Follow-Up Splits Not Blocking The Current Claim Gate
 
