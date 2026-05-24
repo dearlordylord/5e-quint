@@ -5925,12 +5925,39 @@
       "status": "not-assessed"
     },
     {
-      "blockedBy": [],
-      "generatorSubset": [],
+      "blockedBy": [
+        "fixture-world-coupled"
+      ],
+      "followUpTaskIds": [
+        "A36-HIT-POINT-RESTORATION-SEMANTIC-CORE"
+      ],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "pure-def",
+        "constant-def",
+        "constant-val",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "set",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.HIT_POINT_RESTORATION",
-      "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+      ],
+      "status": "fixture-bound"
     },
     {
       "blockedBy": [],
@@ -6437,16 +6464,6 @@
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.SPELL.HIT_POINT_RESTORATION",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
           "role": "semantic-core"
         }
       ],

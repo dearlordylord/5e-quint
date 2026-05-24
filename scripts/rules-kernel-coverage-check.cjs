@@ -244,6 +244,56 @@ function validateRequiredStringArray(value, context) {
   return validateStringArray(value, context);
 }
 
+const ralphFollowUpTaskIdPattern = /^A[0-9]+-[A-Z0-9-]+$/;
+
+function validFollowUpTaskId(taskId) {
+  return (
+    /^RKBC-[A-Z0-9-]+$/.test(taskId) ||
+    ralphFollowUpTaskIdPattern.test(taskId)
+  );
+}
+
+function readKnownRalphTaskIds(rootPath) {
+  const planPath = path.join(
+    rootPath,
+    "plans",
+    "RALPH_LANE_A_QNT_GENERATOR_CLOSURE.md",
+  );
+  if (!fs.existsSync(planPath)) return undefined;
+  const taskIds = new Set();
+  const taskHeadingPattern =
+    /^### Task [0-9]+ - (A[0-9]+-[A-Z0-9-]+) - /gm;
+  const text = fs.readFileSync(planPath, "utf8");
+  for (
+    let match = taskHeadingPattern.exec(text);
+    match !== null;
+    match = taskHeadingPattern.exec(text)
+  ) {
+    taskIds.add(match[1]);
+  }
+  return taskIds;
+}
+
+function validateFollowUpTaskIds(taskIds, context, knownRalphTaskIds) {
+  const issues = [];
+  for (const taskId of taskIds) {
+    if (!validFollowUpTaskId(taskId)) {
+      issues.push(`${context}.followUpTaskIds has invalid task id ${taskId}.`);
+      continue;
+    }
+    if (
+      knownRalphTaskIds !== undefined &&
+      ralphFollowUpTaskIdPattern.test(taskId) &&
+      !knownRalphTaskIds.has(taskId)
+    ) {
+      issues.push(
+        `${context}.followUpTaskIds references unknown Ralph task id ${taskId}.`,
+      );
+    }
+  }
+  return issues;
+}
+
 function stringArrayOrEmpty(value) {
   return Array.isArray(value) ? value : [];
 }
@@ -605,7 +655,7 @@ function validateObligationShape(obligation) {
     }
     if (Array.isArray(obligation.followUpTaskIds)) {
       for (const taskId of obligation.followUpTaskIds) {
-        if (!/^RKBC-[A-Z0-9-]+$/.test(taskId)) {
+        if (!validFollowUpTaskId(taskId)) {
           issues.push(
             `${obligation.id}.followUpTaskIds has invalid task id ${taskId}.`,
           );
@@ -769,7 +819,7 @@ function validateBattleFrontierRow(
     }
   }
   for (const taskId of row.followUpTaskIds ?? []) {
-    if (!/^RKBC-[A-Z0-9-]+$/.test(taskId)) {
+    if (!validFollowUpTaskId(taskId)) {
       issues.push(`${context}.followUpTaskIds has invalid task id ${taskId}.`);
     }
   }
@@ -823,6 +873,7 @@ function validateGeneratorReadiness(
   obligationsById,
   qntOwnerRolesByPath,
   semanticCoreRunBlocksByPath,
+  knownRalphTaskIds,
 ) {
   const issues = [];
   const context = `generator-readiness row ${index + 1}`;
@@ -858,6 +909,25 @@ function validateGeneratorReadiness(
   const proofOnly = stringArrayOrEmpty(readiness.proofOnly);
   const generatorSubset = stringArrayOrEmpty(readiness.generatorSubset);
   const blockedBy = stringArrayOrEmpty(readiness.blockedBy);
+  const followUpTaskIds = stringArrayOrEmpty(readiness.followUpTaskIds);
+  if (Object.prototype.hasOwnProperty.call(readiness, "followUpTaskIds")) {
+    issues.push(
+      ...validateStringArray(
+        readiness.followUpTaskIds,
+        `${context}.followUpTaskIds`,
+      ),
+    );
+    for (const duplicate of duplicateStrings(readiness.followUpTaskIds)) {
+      issues.push(`${context}.followUpTaskIds repeats ${duplicate}.`);
+    }
+    issues.push(
+      ...validateFollowUpTaskIds(
+        followUpTaskIds,
+        context,
+        knownRalphTaskIds,
+      ),
+    );
+  }
   for (const construct of generatorSubset) {
     if (!generatorSubsetConstructs.has(construct)) {
       issues.push(
@@ -905,6 +975,12 @@ function validateGeneratorReadiness(
     blockedBy.length === 0
   ) {
     issues.push(`${context}.${readiness.status} requires blockedBy.`);
+  }
+  if (
+    generatorReadinessBlockerStatuses.has(readiness.status) &&
+    followUpTaskIds.length === 0
+  ) {
+    issues.push(`${context}.${readiness.status} requires followUpTaskIds.`);
   }
   if (readiness.status === "generation-subset-clean" && blockedBy.length > 0) {
     issues.push(`${context}.generation-subset-clean must not have blockedBy.`);
@@ -1603,11 +1679,11 @@ function renderReport(matrix, issues) {
   if (matrix.generatorReadiness.length === 0) {
     lines.push("No generator-readiness rows recorded yet.");
   } else {
-    lines.push("| Obligation | Status | Subset |");
-    lines.push("| --- | --- | --- |");
+    lines.push("| Obligation | Status | Subset | Blockers | Follow-up |");
+    lines.push("| --- | --- | --- | --- | --- |");
     for (const readiness of matrix.generatorReadiness) {
       lines.push(
-        `| \`${readiness.obligationId}\` | ${readiness.status} | ${(readiness.generatorSubset ?? []).map((entry) => `\`${entry}\``).join(", ")} |`,
+        `| \`${readiness.obligationId}\` | ${readiness.status} | ${(readiness.generatorSubset ?? []).map((entry) => `\`${entry}\``).join(", ")} | ${(readiness.blockedBy ?? []).map((entry) => `\`${entry}\``).join(", ")} | ${(readiness.followUpTaskIds ?? []).map((entry) => `\`${entry}\``).join(", ")} |`,
       );
     }
   }
@@ -1752,6 +1828,7 @@ function buildKernelCoverage({ root: rootPath }) {
   const expectedBattleFrontier = extractBattleFrontierSource(rootPath);
   const scanned = scanClaimFiles(rootPath);
   const markerIndex = buildMarkerIndex(scanned.markers);
+  const knownRalphTaskIds = readKnownRalphTaskIds(rootPath);
   const issues = [];
   issues.push(...generatorReadinessBlockerCatalogIssues());
   issues.push(...rulesKernelProfileKindClassificationIssues());
@@ -1896,6 +1973,7 @@ function buildKernelCoverage({ root: rootPath }) {
         obligationsById,
         qntOwnerRolesByPath,
         semanticCoreRunBlocksByPath,
+        knownRalphTaskIds,
       ),
     );
   }

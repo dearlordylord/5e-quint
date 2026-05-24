@@ -24,6 +24,16 @@ function runSelfTest() {
     '{"id":"spell.sample","profileKind":"spell-invocation"}\n',
   );
   writeFile(
+    path.join(root, "plans", "RALPH_LANE_A_QNT_GENERATOR_CLOSURE.md"),
+    [
+      "| 99 | A99-SAMPLE-FIXTURE-SPLIT - Split sample fixture | ready-for-research | none | Self-test follow-up. |",
+      "",
+      "### Task 99 - A99-SAMPLE-FIXTURE-SPLIT - Split sample fixture",
+      "",
+      "Status: `ready-for-research`",
+    ].join("\n") + "\n",
+  );
+  writeFile(
     path.join(root, "plans", "rules-kernel-coverage", "obligations.jsonl"),
     [
       JSON.stringify({
@@ -312,6 +322,7 @@ function runSelfTest() {
       proofOnly: [],
       generatorSubset: ["record"],
       blockedBy: ["fixture-world-coupled"],
+      followUpTaskIds: ["A99-SAMPLE-FIXTURE-SPLIT"],
     }) + "\n",
   );
   const fixtureBoundMissingRunBlockResult = buildKernelCoverage({ root });
@@ -330,6 +341,44 @@ function runSelfTest() {
       proofOnly: [],
       generatorSubset: ["record"],
       blockedBy: [runBlockBlocker],
+    }) + "\n",
+  );
+  const fixtureBoundMissingFollowUpResult = buildKernelCoverage({ root });
+  assert.ok(
+    fixtureBoundMissingFollowUpResult.issues.includes(
+      "generator-readiness row 1.fixture-bound requires followUpTaskIds.",
+    ),
+    `Expected fixture-bound follow-up issue, got ${JSON.stringify(fixtureBoundMissingFollowUpResult.issues)}`,
+  );
+  writeFile(
+    sampleGeneratorReadinessPath,
+    JSON.stringify({
+      obligationId: "BATTLE.SAMPLE",
+      status: "fixture-bound",
+      semanticCore: ["sample.qnt"],
+      proofOnly: [],
+      generatorSubset: ["record"],
+      blockedBy: [runBlockBlocker],
+      followUpTaskIds: ["A100-MISSING-FIXTURE-SPLIT"],
+    }) + "\n",
+  );
+  const fixtureBoundUnknownFollowUpResult = buildKernelCoverage({ root });
+  assert.ok(
+    fixtureBoundUnknownFollowUpResult.issues.includes(
+      "generator-readiness row 1.followUpTaskIds references unknown Ralph task id A100-MISSING-FIXTURE-SPLIT.",
+    ),
+    `Expected fixture-bound unknown follow-up issue, got ${JSON.stringify(fixtureBoundUnknownFollowUpResult.issues)}`,
+  );
+  writeFile(
+    sampleGeneratorReadinessPath,
+    JSON.stringify({
+      obligationId: "BATTLE.SAMPLE",
+      status: "fixture-bound",
+      semanticCore: ["sample.qnt"],
+      proofOnly: [],
+      generatorSubset: ["record"],
+      blockedBy: [runBlockBlocker],
+      followUpTaskIds: ["A99-SAMPLE-FIXTURE-SPLIT"],
     }) + "\n",
   );
   const fixtureBoundRunBlockResult = buildKernelCoverage({ root });
@@ -466,6 +515,7 @@ function runSelfTest() {
       proofOnly: [],
       generatorSubset: ["record"],
       blockedBy: ["run-block-coupledd"],
+      followUpTaskIds: ["A99-SAMPLE-FIXTURE-SPLIT"],
     }) + "\n",
   );
   const misspelledBlockerResult = buildKernelCoverage({ root });

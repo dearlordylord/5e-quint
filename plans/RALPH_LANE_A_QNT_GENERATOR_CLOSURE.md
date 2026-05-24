@@ -176,7 +176,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 28,
       "id": "A28-HIT-POINT-RESTORATION-READINESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Assess hit point restoration generator readiness"
     },
     {
@@ -220,6 +220,12 @@ or prove from checker-owned artifacts that no such work remains.
       "id": "A35-BATTLE-RUNTIME-MEGA-OWNER-SURVEY",
       "status": "ready-for-research",
       "title": "Survey battle-runtime mega-owner readiness split"
+    },
+    {
+      "number": 36,
+      "id": "A36-HIT-POINT-RESTORATION-SEMANTIC-CORE",
+      "status": "ready-for-research",
+      "title": "Split hit point restoration semantic core"
     }
   ]
 }
@@ -280,7 +286,7 @@ Lane A must not:
 | 25 | A25-READINESS-MISSING-ROW-REPORT - Report generator-readiness missing rows | done | A24 | Generated report should expose the readiness backlog without hand inspection. |
 | 26 | A26-SEMANTIC-CORE-RUN-BLOCK-SCANNER - Detect run blocks in semantic-core owners | done | A24 | Prevent semantic-core role rows from hiding run-test coupling outside readiness rows. |
 | 27 | A27-BLOCKER-TOKEN-CONTRACT-HARDENING - Harden generator blocker token contract | done | A24,A26 | Keep blocker vocabulary and scanner output coupled. |
-| 28 | A28-HIT-POINT-RESTORATION-READINESS - Assess hit point restoration generator readiness | ready-for-research | A24 | Current owner is `spell-procedure-profiles.qnt`; classify before future generator work. |
+| 28 | A28-HIT-POINT-RESTORATION-READINESS - Assess hit point restoration generator readiness | done | A24 | Classified as fixture-bound; A36 owns the semantic-core split. |
 | 29 | A29-ATTACK-DAMAGE-COMPOSITION-READINESS - Assess attack damage composition generator readiness | ready-for-research | A24,A26 | Shared algebra owner has run blocks and composition semantics. |
 | 30 | A30-DAMAGE-ADJUSTMENTS-READINESS - Assess damage adjustment generator readiness | ready-for-research | A24,A26 | Shared algebra owner needs subset/blocker classification. |
 | 31 | A31-SHOVE-OUTCOME-READINESS - Assess shove outcome generator readiness | ready-for-research | A24,A26 | `shove-outcome.qnt` currently includes run blocks. |
@@ -288,6 +294,7 @@ Lane A must not:
 | 33 | A33-HIT-POINT-RECOVERY-READINESS - Assess hit point recovery generator readiness | ready-for-research | A24,A26 | Sheet HP/rest owner needs subset/blocker classification. |
 | 34 | A34-UNIT-FEATURE-PROCEDURE-SURVEY - Survey unit feature procedure readiness split | ready-for-research | A24,A26 | Large shared algebra owner must be split into runnable follow-ups before readiness closure. |
 | 35 | A35-BATTLE-RUNTIME-MEGA-OWNER-SURVEY - Survey battle-runtime mega-owner readiness split | ready-for-research | A24,A25 | `battle-runtime.qnt` owns many covered obligations; classify split candidates without reducer changes. |
+| 36 | A36-HIT-POINT-RESTORATION-SEMANTIC-CORE - Split hit point restoration semantic core | ready-for-research | A28 | Extract reusable direct Hit Point restoration facts from the spell procedure fixture world. |
 
 ## Task Details
 
@@ -594,7 +601,7 @@ cannot be introduced without updating the documented token catalog.
 
 ### Task 28 - A28-HIT-POINT-RESTORATION-READINESS - Assess hit point restoration generator readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `BATTLE.SPELL.HIT_POINT_RESTORATION`,
 `packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt`, and
@@ -607,6 +614,11 @@ record blockers and split follow-up tasks instead of claiming clean readiness.
 Acceptance: coverage check passes and the report clearly classifies hit point
 restoration as `generation-subset-clean`, `semantic-core-candidate`, or blocked
 with concrete blockers.
+
+Result: `BATTLE.SPELL.HIT_POINT_RESTORATION` is fixture-bound. The reusable
+definitions remain in `spell-procedure-profiles.qnt` beside fixture-world spell
+profiles and proof/example files, so A36 owns the semantic-core split before
+this obligation can become generator-clean.
 
 ### Task 29 - A29-ATTACK-DAMAGE-COMPOSITION-READINESS - Assess attack damage composition generator readiness
 
@@ -711,6 +723,23 @@ atomic tasks. Keep production reducer behavior unchanged.
 Acceptance: append concrete follow-up tasks or record a checker-backed reason
 no further split is needed; checker passes.
 
+### Task 36 - A36-HIT-POINT-RESTORATION-SEMANTIC-CORE - Split hit point restoration semantic core
+
+Status: `ready-for-research`
+
+Input: `BATTLE.SPELL.HIT_POINT_RESTORATION`,
+`packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt`, and
+the corresponding proof/example files.
+
+Output: extract a focused hit point restoration semantic-core QNT owner for the
+direct restoration facts currently coupled to spell procedure fixture worlds.
+Update `qnt-owner-roles.jsonl`, `generator-readiness.jsonl`, generated matrix
+and report artifacts, and keep proof/example files classified as proof-only.
+
+Acceptance: `pnpm rules-kernel-coverage:check` passes, the hit point
+restoration readiness row no longer names `fixture-world-coupled`, and any
+remaining blocker is concrete and task-owned.
+
 ## Verification
 
 - `pnpm --filter @dnd/shared-algebras exec quint test proofs/rule-core/spell-procedure-profiles-examples.qnt`
@@ -793,28 +822,25 @@ no further split is needed; checker passes.
     attack damage, Cold burst damage, slot-scaled burst dice, and
     successful-save burst policy; A23 is complete.
 - Direct hit point restoration definitions in
-  `spell-procedure-profiles.qnt` are co-owned by
-  `BATTLE.SPELL.HIT_POINT_RESTORATION` rather than a remaining
-  `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` generator-input blocker family
-  for this lane. A16 must still verify that any residual hit-point restoration
-  definitions are either outside the procedure readiness row's generator input
-  or separately owned before closing the fixture-bound status.
+  `spell-procedure-profiles.qnt` are owned by
+  `BATTLE.SPELL.HIT_POINT_RESTORATION`, remain `fixture-world-coupled`, and are
+  tracked by A36 rather than the closed
+  `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` generator-input blocker family.
 - With A2-A13 and A20-A23 split into semantic cores, A14 has refreshed
   `qnt-owner-roles.jsonl`, A15 has audited the generator-subset tokens against
   the new cores, and A16 is the first task allowed to change
   `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` out of `fixture-bound`. A17 should
   then add regression coverage so proof/example files, fixture-world coupling,
   or omitted readiness arrays cannot silently re-enter generator inputs.
-- Task 19 recursive review: `generator-readiness.jsonl` now has four
-  `generation-subset-clean` rows and no row-level blockers, but
+- Task 19 recursive review plus A28: `generator-readiness.jsonl` now has four
+  `generation-subset-clean` rows and one task-owned `fixture-bound` row, but
   `QNT_COVERAGE_PROGRAM.md` still leaves QCP-SEMCORE-EXTRACTION,
   QCP-MISSING-ATOMICS, QCP-COMPOSITE-SLICES, QCP-UNIT-IDENTITY-GATE, and
   QCP-INTEGRATION-MBT-PATTERNS open. The generated `REPORT.md` also lists many
-  covered semantic-core QNT owners outside the four readiness rows, including
-  `spell-procedure-profiles.qnt` for hit point restoration,
+  covered semantic-core QNT owners outside the clean readiness rows, including
   `attack-damage-composition.qnt`, `damage-component-adjustments.qnt`,
   `shove-outcome.qnt`, `stat-block-controls.qnt`, `hit-point-recovery.qnt`,
   `unit-feature-procedure-profiles.qnt`, and the broad
-  `battle-runtime.qnt` owner. A24-A35 turn that discovery into checker and
-  readiness tasks instead of treating the clean four-row readiness file as
-  proof of generator-readiness exhaustion.
+  `battle-runtime.qnt` owner. A24-A36 turn that discovery into checker and
+  readiness tasks instead of treating the clean readiness rows as proof of
+  generator-readiness exhaustion.
