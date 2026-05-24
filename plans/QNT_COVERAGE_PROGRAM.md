@@ -30,9 +30,38 @@ This plan rolls up the bounded program of work to reach the achievable 100% QNT 
 ## Working Discipline
 
 - Tactical roll-up only; do not duplicate vocabulary or rules from the source-of-truth docs above.
-- Update this file as work reveals new findings — append a "Findings" subsection per task when something surprises, do not let it drift into commit history only.
+- Update this file as work reveals new findings — append to the Findings section only when a future author would otherwise re-discover the same gotcha. Not a work log.
 - Each task lands in its own commit (or small PR), with green checker + green parity.
 - The harness gains a minimal timing wrapper (~10 lines) as part of pilot-slice tooling; no dashboard, no aggregator.
+
+## Lane Rules
+
+- Do not modify ADR-0001 or other architecture decisions without explicit user approval.
+- Do not introduce production reducer wiring inside a slice task — slice composites stand alone; production integration is separate work.
+- Do not add a new obligation whose QNT owner is still `fixture-bound`; resolve the blocker under Task 1 first.
+- Add the `qnt-owner-roles.jsonl` row in the same commit as any new QNT owner — the checker fails on a missing row.
+- Add the `test:mbt:<slice-name>` script in `packages/<runtime>/package.json` in the same commit as a new slice.
+- If a composite slice would exceed ~50 lines of pure def, split into sub-slices.
+- Do not weaken the qnt⇄ts parity contract; new slices add coverage, never replace existing parity.
+
+## Verification
+
+Run after every task:
+
+- `pnpm rules-kernel-coverage:check -- --write` then `pnpm rules-kernel-coverage:check` — both green.
+- The slice's parity test (`pnpm --filter <pkg> test:mbt:<slice-name>`) — green.
+- For Task 1 extractions: the parity test for the atomic's existing obligation (e.g. `test:mbt:rule-core-hit-point-damage`) — green.
+- `git diff --check` — clean.
+- Reviewer-loop convergence (RAW traceability + ubiquitous-language + architecture/connascence + code-review) until no reasonable findings remain. Fix every reasonable finding; reject only with a concrete recorded reason.
+
+For Task 5 (per-Unit gate): `pnpm unit-profile-coverage:check -- --write` then `pnpm unit-profile-coverage:check`.
+
+## Ordering and Parallelism
+
+- Task 0 (pilot): done — template for slice-shaped work.
+- Tasks 1, 2, 4, 5, 6: independent — can run in parallel worktrees.
+- Task 3: per-slice dependency on Task 1 (the atomic the composite imports must be semantic-core) and Task 2 (the atomic must exist).
+- Task 7: blocked on first non-TS language target arriving.
 
 ## Pilot Slice — Task 0 (QCP-PILOT-SLICE)
 
@@ -145,3 +174,24 @@ Durable conventions for slice authors. Not a work log; entries are added only wh
 - **Name state fields by identity, not role, when roles swap.** If both actors can attack and be attacked, use `creatureAHp`/`creatureBHp`, not `attackerHp`/`targetHp` — role-named fields lie when the second actor takes the action.
 - **Document out-of-scope in the qnt header.** Future reviewers should see what a slice intentionally does not model without inferring from absences.
 - **Extracting `run` blocks (Task 1):** if the corresponding MBT replay or atomic-level test already covers the scenario, delete outright (no coverage lost); otherwise extract to a TS unit test next to the TS mirror.
+
+## Ralph Handoff Prompt
+
+Every Ralph prompt for this lane must include:
+
+> Before starting, run `git log --oneline -1 master` and verify your HEAD
+> matches. If not, run `git rebase master`.
+
+Ralph must run the implementer, reviewer, handback, and decider loop until
+`accept`. The reviewer loop must include RAW traceability,
+ubiquitous-language / domain-language, architecture / connascence, and
+code-review passes. Fix every reasonable finding, explicitly reject only
+findings with a concrete reason, and repeat until no reasonable findings
+remain.
+
+Pilot template for slice-shaped tasks (Tasks 0 and 3): the creature-attack
+pilot landed across commits `3d7cec0a`, `cfee3625`, and `888d9283`. Read
+those plus `packages/battle-runtime/creature-attack*.qnt`,
+`packages/battle-runtime/src/battle-reducer/creature-attack.ts`, and
+`packages/battle-runtime/src/creature-attack.mbt.test.ts` before authoring
+a new slice.
