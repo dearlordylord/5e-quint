@@ -8423,6 +8423,52 @@
     ],
     "title": "Level 1-2"
   },
+  "selectedIdentityReadiness": {
+    "blockingRows": [
+      {
+        "claimTag": "profile-subset-supported",
+        "reason": "The location knowledge, Hidden prevention, and observer-scoped Invisible benefit denial are table/perception knowledge facts outside promoted battle-runtime replay.",
+        "selectedIdentityStatus": "missing-witness-deferred-not-applicable",
+        "sourceRecordPath": "packages/surface/content/mind_spike.json",
+        "status": "closed-runtime-detached-table-adjudication",
+        "unitId": "mind_spike"
+      },
+      {
+        "claimTag": "supported-profile",
+        "reason": "The Unit has no selected-identity-mbt evidence.",
+        "selectedIdentityStatus": "missing-witness",
+        "sourceRecordPath": "packages/surface/content/shining_smite.json",
+        "status": "supported-profile",
+        "unitId": "shining_smite"
+      },
+      {
+        "claimTag": "profile-subset-supported",
+        "reason": "The non-Booming minor wonders are presentation/environment adjudication and have no production replay boundary that can bind a selected Unit identity.",
+        "selectedIdentityStatus": "missing-witness-deferred-not-applicable",
+        "sourceRecordPath": "packages/surface/content/thaumaturgy.json",
+        "status": "closed-runtime-detached-table-adjudication",
+        "unitId": "thaumaturgy"
+      }
+    ],
+    "blockingRowsByStatus": {
+      "missing-witness": 1,
+      "missing-witness-deferred-not-applicable": 2
+    },
+    "metrics": {
+      "denominator": 142,
+      "numerator": 139,
+      "percent": "97.9%"
+    },
+    "readyRowsByStatus": {
+      "witness-present": 139
+    },
+    "rowsByStatus": {
+      "missing-witness": 1,
+      "missing-witness-deferred-not-applicable": 2,
+      "not-required": 29,
+      "witness-present": 139
+    }
+  },
   "sourceArtifacts": {
     "srdUnitInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
     "unitMatrix": "plans/unit-profile-coverage/unit-matrix.json"
@@ -9304,12 +9350,6 @@
       "profile-subset-supported": 26,
       "supported-profile": 116,
       "unsupported-profile": 29
-    },
-    "groupsBySelectedIdentityStatus": {
-      "missing-witness": 1,
-      "missing-witness-deferred-not-applicable": 2,
-      "not-required": 29,
-      "witness-present": 139
     },
     "groupsByStatus": {
       "blocked-follow-up-split": 6,

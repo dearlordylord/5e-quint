@@ -5421,6 +5421,34 @@
     ],
     "title": "Level 1"
   },
+  "selectedIdentityReadiness": {
+    "blockingRows": [
+      {
+        "claimTag": "profile-subset-supported",
+        "reason": "The non-Booming minor wonders are presentation/environment adjudication and have no production replay boundary that can bind a selected Unit identity.",
+        "selectedIdentityStatus": "missing-witness-deferred-not-applicable",
+        "sourceRecordPath": "packages/surface/content/thaumaturgy.json",
+        "status": "closed-runtime-detached-table-adjudication",
+        "unitId": "thaumaturgy"
+      }
+    ],
+    "blockingRowsByStatus": {
+      "missing-witness-deferred-not-applicable": 1
+    },
+    "metrics": {
+      "denominator": 83,
+      "numerator": 82,
+      "percent": "98.8%"
+    },
+    "readyRowsByStatus": {
+      "witness-present": 82
+    },
+    "rowsByStatus": {
+      "missing-witness-deferred-not-applicable": 1,
+      "not-required": 11,
+      "witness-present": 82
+    }
+  },
   "sourceArtifacts": {
     "srdUnitInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
     "unitMatrix": "plans/unit-profile-coverage/unit-matrix.json"
@@ -6140,11 +6168,6 @@
       "profile-subset-supported": 5,
       "supported-profile": 78,
       "unsupported-profile": 11
-    },
-    "groupsBySelectedIdentityStatus": {
-      "missing-witness-deferred-not-applicable": 1,
-      "not-required": 11,
-      "witness-present": 82
     },
     "groupsByStatus": {
       "closed-character-fact-and-runtime-detached-split": 2,

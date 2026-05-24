@@ -94,19 +94,19 @@ identity evidence or an explicit non-applicable classification.
     {
       "number": 14,
       "id": "B14-FULL-SUPPORT-REPORT-PROJECTION",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Project selected-identity gate into full-support reports"
     },
     {
       "number": 15,
       "id": "B15-UNIT-REPORT-HONESTY-PASS",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Refresh Unit report wording and metrics"
     },
     {
       "number": 16,
       "id": "B16-MCP-SCENARIO-IDENTITY-SMOKE",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Add MCP selected-identity smoke coverage"
     },
     {
@@ -185,9 +185,9 @@ Lane B must not:
 | 11 | B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH - Backfill level-2 mobility spell identity evidence | done | none | Mobility/position spells. |
 | 12 | B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH - Backfill level-2 protection spell identity evidence | done | none | Protection/restoration/buff spells. |
 | 13 | B13-PROFILE-SUBSET-IDENTITY-DISPOSITIONS - Classify subset-supported identity expectations | done | none | Explicit non-applicable rows. |
-| 14 | B14-FULL-SUPPORT-REPORT-PROJECTION - Project selected-identity gate into full-support reports | ready-for-implementation-after-light-research | B1-B13 | Report-level metric. |
-| 15 | B15-UNIT-REPORT-HONESTY-PASS - Refresh Unit report wording and metrics | blocked | B14 | No inflated 100% language. |
-| 16 | B16-MCP-SCENARIO-IDENTITY-SMOKE - Add MCP selected-identity smoke coverage | blocked | B14 | One narrow smoke scenario. |
+| 14 | B14-FULL-SUPPORT-REPORT-PROJECTION - Project selected-identity gate into full-support reports | done | B1-B13 | Report-level metric. |
+| 15 | B15-UNIT-REPORT-HONESTY-PASS - Refresh Unit report wording and metrics | ready-for-implementation-after-light-research | B14 | No inflated 100% language. |
+| 16 | B16-MCP-SCENARIO-IDENTITY-SMOKE - Add MCP selected-identity smoke coverage | ready-for-implementation-after-light-research | B14 | One narrow smoke scenario. |
 | 17 | B17-END-TO-END-UNIT-VERIFICATION - Run and document lane B verification | blocked | B15,B16 | Unit coverage and typecheck. |
 | 18 | B18-RECURSIVE-NEXT-BATCH - Mine next selected-identity batch | blocked | B17 | Must append >=12 tasks or prove exhaustion. |
 | 19 | L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION - Reconcile Acid Arrow RAW corpus | blocked | owner RAW decision | Resolve the local SRD damage-timing contradiction before modeling Acid Arrow executable behavior. |
@@ -383,7 +383,7 @@ accounting.
 
 ### Task 14 - B14-FULL-SUPPORT-REPORT-PROJECTION - Project selected-identity gate into full-support reports
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: update `LEVEL1_FULL_SUPPORT.md` and `LEVEL1_2_FULL_SUPPORT.md` so their
 claim gate includes selected-identity readiness as a separate layer on top of
@@ -392,9 +392,14 @@ strict runtime/profile and authored product readiness.
 Acceptance: generated JSON exposes counts; prose does not flatten the layers
 into a single misleading 100%.
 
+Result: full-support JSON now exposes `selectedIdentityReadiness` counts and
+blocker rows, and the generated Level 1 / Level 1-2 reports render selected
+identity readiness as its own claim-gate layer separate from strict closure and
+SRD authored product readiness.
+
 ### Task 15 - B15-UNIT-REPORT-HONESTY-PASS - Refresh Unit report wording and metrics
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Output: revise `UNIT_REPORT.md` wording so background/feat/spell/class-feature
 groups are counted by Units and profile facts, not by arbitrary prose weight.
@@ -403,7 +408,7 @@ Acceptance: generated report makes denominator semantics explicit.
 
 ### Task 16 - B16-MCP-SCENARIO-IDENTITY-SMOKE - Add MCP selected-identity smoke coverage
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Output: add one focused MCP acceptance smoke that creates a supported SRD level
 1-2 character and proves selected Unit identity reaches battle or sheet output.

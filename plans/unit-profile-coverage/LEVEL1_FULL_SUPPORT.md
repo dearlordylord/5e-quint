@@ -10,6 +10,7 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | --- | ---: |
 | Strict runtime/profile support | 78/94 (83%) |
 | Strict target closure | 94/94 (100%) |
+| Selected identity readiness | 82/83 (98.8%) |
 | Product readiness | 367/367 (100%) |
 | SRD authored product readiness | 58/58 (100%) |
 | Rules-kernel profile join | 58/58 (100%) |
@@ -29,7 +30,7 @@ Product readiness is diagnostic lower-layer accounting. Rows in statuses other t
 
 ### Selected Identity Replay Accounting
 
-This is diagnostic for the strict denominator. `witness-present` means a concrete selected Unit identity reaches an MBT/QNT replay owner; `missing-witness-deferred-not-applicable` means the claim still lacks a replay witness for its supported runtime portion while the deferred closed portion is explicitly outside selected-identity replay.
+This is the selected-identity gate layer for the strict denominator. `witness-present` means a concrete selected Unit identity reaches an MBT/QNT replay owner; `not-applicable` is an explicit whole-claim non-applicable disposition; `not-required` is outside this gate denominator rather than a green row. `missing-witness-deferred-not-applicable` means the claim still lacks a replay witness for its supported runtime portion while the deferred closed portion is explicitly outside selected-identity replay.
 
 | Selected identity status | Rows |
 | --- | ---: |
@@ -37,13 +38,21 @@ This is diagnostic for the strict denominator. `witness-present` means a concret
 | not-required | 11 |
 | witness-present | 82 |
 
+### Selected Identity Blockers
+
+| Unit | Strict status | Claim | Selected identity status | Reason |
+| --- | --- | --- | --- | --- |
+| `thaumaturgy` | closed-runtime-detached-table-adjudication | profile-subset-supported | missing-witness-deferred-not-applicable | The non-Booming minor wonders are presentation/environment adjudication and have no production replay boundary that can bind a selected Unit identity. |
+
 ## Full-Support Claim Gate
 
-| Gate | Status | Blocking issue |
-| --- | --- | --- |
-| SRD authored product readiness | pass | _none_ |
+| Gate | Status | Result | Blocking issue |
+| --- | --- | ---: | --- |
+| Strict runtime/profile closure | pass | 94/94 (100%) | _none_ |
+| Selected identity readiness | blocked | 82/83 (98.8%) | 1 selected-identity blocker row(s) |
+| SRD authored product readiness | pass | 58/58 (100%) | _none_ |
 
-A failed gate invalidates a full level-support claim without pretending to be a weighted completion percentage.
+Every gate row must pass for a full level-support claim. A 100% result in one layer does not satisfy another layer, and failed gates are not combined into a weighted completion percentage.
 
 ## SRD-Authored Product Readiness
 
