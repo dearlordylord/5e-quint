@@ -377,12 +377,16 @@ Concentration flags, and failed-save rider effects.
 `spell-attack-damage-projection-core.qnt` projects spell attack damage
 profiles into Damage Type, hit-applied effects, and object-target support.
 
+`spell-independent-attack-sequence-core.qnt` projects independent spell attack
+sequence profiles into Damage Type, object-target support, attack counts, and
+needs-targets/needs-attack-roll/needs-damage-roll/complete step states.
+
 `spell-procedure-profiles.qnt` models projection-shaped Spell Invocation facts
 and Spell Effects for the production spell procedures without importing Spell
-Definition records, Spell Access lists, Unit ids, or Surface authored ids. It
-projects supported profiles into the invocation resource core, spell damage
-projection core, attack-damage projection core, and scalar-buff projection
-core, and damage-rider projection core.
+Definition records, Spell Access lists, Unit ids, or Surface authored ids. The
+QCORE10 spell procedure suite projects supported profiles into focused
+semantic cores for invocation resources, spell damage, attack damage, scalar
+buffs, damage riders, chained attacks, and independent attack sequences.
 
 Scope:
 
@@ -414,6 +418,11 @@ Scope:
   Concentration requirement, damage dice and Damage Types, durations, range,
   Bright Light radius, and save-advantage facts without importing authored
   Spell Definition records;
+- independent attack sequence profile facts for Eldritch Blast and Scorching
+  Ray live in `spell-independent-attack-sequence-core.qnt`; they project
+  Damage Type, object-target support, Cantrip Upgrade or higher-slot attack
+  counts, and the next required sequence step without importing authored Spell
+  Definition records;
 - Readied Spell Response holds only action-time spell profiles as a readied
   spell held effect, expends the spell's casting resources at the hold
   boundary, starts Concentration while held, opens QCORE8's Readied Spell

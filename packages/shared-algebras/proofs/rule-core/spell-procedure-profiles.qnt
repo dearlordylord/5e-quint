@@ -33,17 +33,6 @@ module spellProcedureProfiles {
   type AttackBurstSaveDamageProfile =
     | IceKnifeAttackBurstSaveDamageProfile
 
-  type SpellAttackSequenceProfile =
-    | EldritchBlastBeamSequenceProfile
-    | ScorchingRaySequenceProfile
-
-  type SpellAttackSequenceStep =
-    | SpellAttackSequenceUnavailable
-    | SpellAttackSequenceNeedsTargets
-    | SpellAttackSequenceNeedsAttackRoll
-    | SpellAttackSequenceNeedsDamageRoll
-    | SpellAttackSequenceComplete
-
   type SleepRepeatSaveLifecycle =
     | NoSleepRepeatSaveLifecycle
     | PendingSleepRepeatSaveLifecycle({ hadIncapacitated: bool })
@@ -216,65 +205,6 @@ module spellProcedureProfiles {
 
   pure def attackBurstSaveDamageBurstAmount(damageRoll: int, savingThrowSucceeded: bool): int =
     if (savingThrowSucceeded) 0 else damageRoll
-
-  pure def spellAttackSequenceDamageType(profile: SpellAttackSequenceProfile): RuleDamageType =
-    match profile {
-      | EldritchBlastBeamSequenceProfile => ForceDamage
-      | ScorchingRaySequenceProfile => FireDamage
-    }
-
-  pure def spellAttackSequenceSupportsObjectTargets(profile: SpellAttackSequenceProfile): bool =
-    match profile {
-      | EldritchBlastBeamSequenceProfile => true
-      | ScorchingRaySequenceProfile => true
-    }
-
-  pure def spellAttackSequenceAttackCount(profile: SpellAttackSequenceProfile, scalingLevel: int): int =
-    match profile {
-      | EldritchBlastBeamSequenceProfile =>
-          if (scalingLevel >= 17) 4
-          else if (scalingLevel >= 11) 3
-          else if (scalingLevel >= 5) 2
-          else 1
-      | ScorchingRaySequenceProfile =>
-          if (scalingLevel < 2) 0
-          else 3 + (scalingLevel - 2)
-    }
-
-  pure def spellAttackSequenceStepFromCounts(
-    canCastSpells: bool,
-    attackCount: int,
-    targetsFilled: int,
-    attackRollsFilled: int,
-    hits: int,
-    damageRollsFilled: int,
-  ): SpellAttackSequenceStep =
-    if (not(canCastSpells) or attackCount <= 0)
-      SpellAttackSequenceUnavailable
-    else if (targetsFilled < attackCount)
-      SpellAttackSequenceNeedsTargets
-    else if (attackRollsFilled < attackCount)
-      SpellAttackSequenceNeedsAttackRoll
-    else if (damageRollsFilled < hits)
-      SpellAttackSequenceNeedsDamageRoll
-    else
-      SpellAttackSequenceComplete
-
-  pure def spellAttackSequenceStep(
-    profile: SpellAttackSequenceProfile,
-    canCastSpells: bool,
-    attackCount: int,
-    targetsFilled: int,
-    attackRollsFilled: int,
-    hits: int,
-    damageRollsFilled: int,
-  ): SpellAttackSequenceStep =
-    match profile {
-      | EldritchBlastBeamSequenceProfile =>
-          spellAttackSequenceStepFromCounts(canCastSpells, attackCount, targetsFilled, attackRollsFilled, hits, damageRollsFilled)
-      | ScorchingRaySequenceProfile =>
-          spellAttackSequenceStepFromCounts(canCastSpells, attackCount, targetsFilled, attackRollsFilled, hits, damageRollsFilled)
-    }
 
   pure def sleepInitialSaveLifecycle(
     savingThrowSucceeded: bool,
