@@ -116,7 +116,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 18,
       "id": "A18-END-TO-END-QNT-VERIFICATION",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Run and document lane A verification"
     },
     {
@@ -198,7 +198,7 @@ Lane A must not:
 | 15 | A15-GENERATOR-SUBSET-TOKEN-AUDIT - Audit generator subset tokens for spell cores | done | A2-A13,A20-A23 | Row vocabulary is exact for the split spell semantic cores. |
 | 16 | A16-FIXTURE-BOUND-STATUS-CLOSURE - Close spell procedure fixture-bound readiness row | done | A14,A15 | Only if blockers are actually gone. |
 | 17 | A17-CHECKER-REGRESSION-TEST - Add generator-readiness regression coverage | done | none | Ordered after A16 in this plan; prevent silent fallback to fixture-bound. |
-| 18 | A18-END-TO-END-QNT-VERIFICATION - Run and document lane A verification | ready-for-implementation-after-light-research | none | Ordered after A17 in this plan; coverage, examples, typecheck if touched. |
+| 18 | A18-END-TO-END-QNT-VERIFICATION - Run and document lane A verification | done | none | Ordered after A17 in this plan; coverage, examples, typecheck if touched. |
 | 19 | A19-RECURSIVE-NEXT-BATCH - Mine next QNT generator-readiness batch | ready-for-research | none | Ordered after A18 in this plan; must append >=12 tasks or prove exhaustion. |
 | 20 | A20-DIRECT-SPELL-DAMAGE-CORE - Split direct spell damage projection core | done | none | Magic Missile fixture split. |
 | 21 | A21-DEFENSIVE-SPELL-EFFECT-CORE - Split defensive spell effect projection core | done | none | Mage Armor fixture split. |
@@ -380,7 +380,7 @@ Acceptance: `pnpm rules-kernel-coverage:check:self-test` and normal check pass.
 
 ### Task 18 - A18-END-TO-END-QNT-VERIFICATION - Run and document lane A verification
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: run focused spell examples, rules-kernel coverage write/check,
 `git diff --check`, and package typecheck if any TS checker code changed.
