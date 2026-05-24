@@ -26,7 +26,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Rules-kernel covered profile coverage | 127/132 | 96.2% |
 | Supported Unit rules-kernel chain coverage | 143/144 | 99.3% |
 | Deterministic admission/projection coverage | 142/142 | 100% |
-| Selected identity replay coverage | 121/142 | 85.2% |
+| Selected identity replay coverage | 127/142 | 89.4% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -1056,10 +1056,13 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `feather_fall` | `spell.invocation-feather-fall-mitigation` | level1-spatial-witness | `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts` |
 | `false_life` | `spell.scalar-buff` | L1E-FALSE-LIFE | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
 | `fire_bolt` | `spell.invocation-damage-save-or-attack` | attack-spell-shape | `packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts` |
+| `flame_blade` | `spell.invocation-spell-created-held-object` | B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH | `packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts` |
+| `flaming_sphere` | `spell.invocation-flaming-sphere-hazard-ram` | B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH | `packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts` |
 | `fog_cloud` | `spell.invocation-fog-cloud-obscurement` | level1-spatial-witness | `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts` |
 | `guidance` | `spell.invocation-roll-modifier` | roll-modifier-buff | `packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts` |
 | `grease` | `spell.invocation-grease-ground-hazard` | level1-spatial-witness | `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts` |
 | `guiding_bolt` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | attack-spell-shape | `packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts` |
+| `heat_metal` | `spell.invocation-object-contact-damage` | B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH | `packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts` |
 | `heroism` | `spell.invocation-condition-immunity-turn-start-temporary-hit-points` | L1E-HEROISM | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
 | `hex` | `spell.invocation-marked-damage-rider` | L1E-HEX | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
 | `hunters_mark` | `spell.invocation-marked-damage-rider` | L1E-HUNTERS-MARK | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
@@ -1078,6 +1081,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `resistance` | `spell.invocation-damage-reduction` | roll-modifier-buff | `packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts` |
 | `sacred_flame` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | level1-damage-spell-selected-identity | `packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts` |
 | `sanctuary` | `spell.invocation-sanctuary-targeting-interdiction` | L1H-SANCTUARY | `packages/battle-runtime/src/sanctuary-selected-identity.mbt.test.ts` |
+| `scorching_ray` | `spell.invocation-independent-attack-sequence` | B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH | `packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts` |
 | `searing_smite` | `spell.invocation-after-hit-timed-damage-save` | L1E-SEARING-SMITE | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
 | `shocking_grasp` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | attack-spell-shape | `packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts` |
 | `sorcerous_burst` | `spell.invocation-damage-save-or-attack` | level1-damage-spell-selected-identity | `packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts` |
@@ -1091,8 +1095,10 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `healing_word` | `spell.hit-point-restoration` | healing-stabilization | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
 | `shield` | `spell.reaction-shield` | reaction-interruption | `packages/battle-runtime/src/reaction-spell-selected-identity.mbt.test.ts` |
 | `shield_of_faith` | `spell.scalar-buff` | roll-modifier-buff | `packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts` |
+| `shatter` | `spell.invocation-damage-save-or-attack` | B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH | `packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts` |
 | `shillelagh` | `spell.invocation-weapon-attack-override` | L1E-SHILLELAGH | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
 | `sleep` | `spell.invocation-sleep-target-admission`, `spell.invocation-sleep-repeat-save-lifecycle` | condition-saving-throw-lifecycle | `packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts` |
+| `spiritual_weapon` | `spell.invocation-spiritual-weapon-attack-proxy` | B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH | `packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts` |
 | `thunderwave` | `spell.invocation-damage-save-or-attack` | level1-spatial-witness | `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts` |
 | `true_strike` | `spell.invocation-spell-hosted-weapon-attack` | L1E-TRUE-STRIKE | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
 | `eldritch_blast` | `spell.invocation-independent-attack-sequence` | L1H-ELDRITCH-BLAST | `packages/battle-runtime/src/beam-sequence-selected-identity.mbt.test.ts` |
@@ -1119,17 +1125,13 @@ This generated view lists `profile-subset-supported` and `supported-profile` Uni
 | `counterspell` | supported-profile | installed | srd-5.2.1 | spell | `spell.reaction-counterspell` | `packages/surface/content/counterspell.json` |
 | `darkness` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-magical-darkness-point-origin` | `packages/surface/content/darkness.json` |
 | `dispel_magic` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-ongoing-spell-ending` | `packages/surface/content/dispel_magic.json` |
-| `dragons_breath` | supported-profile | not-in-unit-catalog | srd-5.2.1 | spell | `spell.invocation-dragons-breath-initial`, `spell.invocation-dragons-breath-granted-action` | `packages/surface/content/dragons_breath.json` |
 | `enhance_ability` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-roll-modifier` | `packages/surface/content/enhance_ability.json` |
 | `enlarge_reduce` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-creature-size-change` | `packages/surface/content/enlarge_reduce.json` |
 | `enthrall` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-roll-modifier` | `packages/surface/content/enthrall.json` |
 | `find_familiar` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.find-familiar-lifecycle` | `packages/surface/content/find_familiar.json` |
 | `fireball` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-damage-save-or-attack` | `packages/surface/content/fireball.json` |
-| `flame_blade` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-spell-created-held-object` | `packages/surface/content/flame_blade.json` |
-| `flaming_sphere` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-flaming-sphere-hazard-ram` | `packages/surface/content/flaming_sphere.json` |
 | `fly` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.scalar-buff` | `packages/surface/content/fly.json` |
 | `gust_of_wind` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-gust-of-wind-line` | `packages/surface/content/gust_of_wind.json` |
-| `heat_metal` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-object-contact-damage` | `packages/surface/content/heat_metal.json` |
 | `invisibility` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-direct-condition` | `packages/surface/content/invisibility.json` |
 | `levitate` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-levitated-creature` | `packages/surface/content/levitate.json` |
 | `lightning_bolt` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-damage-save-or-attack` | `packages/surface/content/lightning_bolt.json` |
@@ -1137,17 +1139,12 @@ This generated view lists `profile-subset-supported` and `supported-profile` Uni
 | `mind_spike` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-damage-save-or-attack` | `packages/surface/content/mind_spike.json` |
 | `mirror_image` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-mirror-image-hit-interception` | `packages/surface/content/mirror_image.json` |
 | `misty_step` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-self-teleport` | `packages/surface/content/misty_step.json` |
-| `moonbeam` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-moonbeam-movable-zone` | `packages/surface/content/moonbeam.json` |
 | `pass_without_trace` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-roll-modifier` | `packages/surface/content/pass_without_trace.json` |
 | `prayer_of_healing` | profile-subset-supported | installed | srd-5.2.1 | spell | `character-sheet.spell-rest-benefit-application` | `packages/surface/content/prayer_of_healing.json` |
-| `ray_of_enfeeblement` | supported-profile | not-in-unit-catalog | srd-5.2.1 | spell | `spell.invocation-ray-of-enfeeblement-d20-lifecycle`, `spell.invocation-ray-of-enfeeblement-damage-penalty` | `packages/surface/content/ray_of_enfeeblement.json` |
-| `scorching_ray` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-independent-attack-sequence` | `packages/surface/content/scorching_ray.json` |
 | `see_invisibility` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-see-invisible-observer-sight` | `packages/surface/content/see_invisibility.json` |
-| `shatter` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-damage-save-or-attack` | `packages/surface/content/shatter.json` |
 | `shining_smite` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-after-hit-damage-illumination` | `packages/surface/content/shining_smite.json` |
 | `spider_climb` | supported-profile | installed | srd-5.2.1 | spell | `spell.scalar-buff` | `packages/surface/content/spider_climb.json` |
 | `spike_growth` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-spike-growth-movement-hazard` | `packages/surface/content/spike_growth.json` |
-| `spiritual_weapon` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-spiritual-weapon-attack-proxy` | `packages/surface/content/spiritual_weapon.json` |
 | `thaumaturgy` | profile-subset-supported | installed | srd-5.2.1 | spell | `spell.invocation-self-ability-check-advantage` | `packages/surface/content/thaumaturgy.json` |
 | `warding_bond` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-warding-bond-linked-effect` | `packages/surface/content/warding_bond.json` |
 | `web` | supported-profile | installed | srd-5.2.1 | spell | `spell.invocation-web-restraint-hazard` | `packages/surface/content/web.json` |

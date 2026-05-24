@@ -584,7 +584,9 @@ function buildMatrix(
               authoredUnitIdCounts.get(unit.unitId) ?? undefined,
             claim: claim?.claim,
             profiles: claimProfiles(claim?.claim, profileMap),
-            evidence: [],
+            evidence: (evidenceByUnit.get(unit.unitId) ?? []).map(
+              (row) => row.evidence,
+            ),
           });
       }),
     );

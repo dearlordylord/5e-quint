@@ -108,8 +108,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 142,
-      "numerator": 121,
-      "percent": "85.2%"
+      "numerator": 127,
+      "percent": "89.4%"
     },
     "supportedProfileCoverage": {
       "denominator": 210,
@@ -9203,7 +9203,7 @@
       ],
       "evidenceTag": "selected-identity-mbt"
     },
-    "rowCount": 43,
+    "rowCount": 34,
     "rows": [
       {
         "catalogAdmissionStatus": "installed",
@@ -9349,20 +9349,6 @@
         "unitId": "dispel_magic"
       },
       {
-        "catalogAdmissionStatus": "not-in-unit-catalog",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "sourceRecordPath": "packages/surface/content/dragons_breath.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-dragons-breath-initial",
-            "spell.invocation-dragons-breath-granted-action"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "dragons_breath"
-      },
-      {
         "catalogAdmissionStatus": "installed",
         "collectionId": "srd-5.2.1",
         "kind": "spell",
@@ -9431,32 +9417,6 @@
         "catalogAdmissionStatus": "installed",
         "collectionId": "srd-5.2.1",
         "kind": "spell",
-        "sourceRecordPath": "packages/surface/content/flame_blade.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-spell-created-held-object"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "flame_blade"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "sourceRecordPath": "packages/surface/content/flaming_sphere.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-flaming-sphere-hazard-ram"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "flaming_sphere"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
         "sourceRecordPath": "packages/surface/content/fly.json",
         "support": {
           "profileIds": [
@@ -9478,19 +9438,6 @@
           "tag": "profile-subset-supported"
         },
         "unitId": "gust_of_wind"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "sourceRecordPath": "packages/surface/content/heat_metal.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-object-contact-damage"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "heat_metal"
       },
       {
         "catalogAdmissionStatus": "installed",
@@ -9587,19 +9534,6 @@
         "catalogAdmissionStatus": "installed",
         "collectionId": "srd-5.2.1",
         "kind": "spell",
-        "sourceRecordPath": "packages/surface/content/moonbeam.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-moonbeam-movable-zone"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "moonbeam"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
         "sourceRecordPath": "packages/surface/content/pass_without_trace.json",
         "support": {
           "profileIds": [
@@ -9623,33 +9557,6 @@
         "unitId": "prayer_of_healing"
       },
       {
-        "catalogAdmissionStatus": "not-in-unit-catalog",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "sourceRecordPath": "packages/surface/content/ray_of_enfeeblement.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-ray-of-enfeeblement-d20-lifecycle",
-            "spell.invocation-ray-of-enfeeblement-damage-penalty"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "ray_of_enfeeblement"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "sourceRecordPath": "packages/surface/content/scorching_ray.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-independent-attack-sequence"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "scorching_ray"
-      },
-      {
         "catalogAdmissionStatus": "installed",
         "collectionId": "srd-5.2.1",
         "kind": "spell",
@@ -9661,19 +9568,6 @@
           "tag": "supported-profile"
         },
         "unitId": "see_invisibility"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "sourceRecordPath": "packages/surface/content/shatter.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-damage-save-or-attack"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "shatter"
       },
       {
         "catalogAdmissionStatus": "installed",
@@ -9713,19 +9607,6 @@
           "tag": "profile-subset-supported"
         },
         "unitId": "spike_growth"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "sourceRecordPath": "packages/surface/content/spiritual_weapon.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-spiritual-weapon-attack-proxy"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "spiritual_weapon"
       },
       {
         "catalogAdmissionStatus": "installed",
@@ -21589,6 +21470,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-flame-blade.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV95"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH"
         }
       ],
       "executableMechanics": true,
@@ -21775,6 +21661,11 @@
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH"
+        },
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-flaming-sphere.test.ts",
           "tag": "deterministic-admission-projection",
@@ -22268,6 +22159,11 @@
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH"
+        },
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-heat-metal.test.ts",
           "tag": "deterministic-admission-projection",
@@ -24445,6 +24341,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scorching-ray.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-SPELL-SCORCHING-RAY"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH"
         }
       ],
       "executableMechanics": true,
@@ -25802,6 +25703,11 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
+          "ownerPath": "packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH"
+        },
+        {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-moonbeam.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME"
@@ -26194,6 +26100,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV55"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH"
         }
       ],
       "executableMechanics": true,
@@ -26784,6 +26695,11 @@
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH"
+        },
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-spiritual-weapon.test.ts",
           "tag": "deterministic-admission-projection",
@@ -29051,7 +28967,18 @@
         "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dragons-breath.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [
@@ -31525,7 +31452,18 @@
         "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-ray-of-enfeeblement.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [

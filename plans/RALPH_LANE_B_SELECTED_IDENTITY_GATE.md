@@ -64,7 +64,7 @@ identity evidence or an explicit non-applicable classification.
     {
       "number": 9,
       "id": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Backfill level-2 damage spell identity evidence"
     },
     {
@@ -120,6 +120,24 @@ identity evidence or an explicit non-applicable classification.
       "id": "B18-RECURSIVE-NEXT-BATCH",
       "status": "blocked",
       "title": "Mine next selected-identity batch"
+    },
+    {
+      "number": 19,
+      "id": "L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION",
+      "status": "blocked",
+      "title": "Reconcile Acid Arrow RAW corpus"
+    },
+    {
+      "number": 20,
+      "id": "L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE",
+      "status": "blocked",
+      "title": "Repair Acid Arrow Surface damage shape"
+    },
+    {
+      "number": 21,
+      "id": "L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT",
+      "status": "blocked",
+      "title": "Promote Acid Arrow delayed runtime support"
     }
   ]
 }
@@ -162,7 +180,7 @@ Lane B must not:
 | 6 | B6-CLASS-FEATURE-IDENTITY-BATCH-3 - Backfill class-feature identity evidence batch 3 | done | none | Sorcerer/Warlock/Wizard. |
 | 7 | B7-FEAT-IDENTITY-BATCH - Backfill feat identity evidence | done | none | Alert and Origin feat reachability. |
 | 8 | B8-LEVEL1-SPELL-IDENTITY-BATCH - Backfill level-1 spell identity evidence | done | none | Remaining level-1 supported spell id was already covered by `light` selected-identity evidence. |
-| 9 | B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH - Backfill level-2 damage spell identity evidence | ready-for-implementation-after-light-research | none | Damage/attack spells. |
+| 9 | B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH - Backfill level-2 damage spell identity evidence | done | none | Level-2 damage spell identity evidence added; Acid Arrow split to RAW/Surface/runtime follow-ups. |
 | 10 | B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH - Backfill level-2 control spell identity evidence | ready-for-implementation-after-light-research | none | Control/condition spells. |
 | 11 | B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH - Backfill level-2 mobility spell identity evidence | ready-for-implementation-after-light-research | none | Mobility/position spells. |
 | 12 | B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH - Backfill level-2 protection spell identity evidence | ready-for-implementation-after-light-research | none | Protection/restoration/buff spells. |
@@ -172,6 +190,9 @@ Lane B must not:
 | 16 | B16-MCP-SCENARIO-IDENTITY-SMOKE - Add MCP selected-identity smoke coverage | blocked | B14 | One narrow smoke scenario. |
 | 17 | B17-END-TO-END-UNIT-VERIFICATION - Run and document lane B verification | blocked | B15,B16 | Unit coverage and typecheck. |
 | 18 | B18-RECURSIVE-NEXT-BATCH - Mine next selected-identity batch | blocked | B17 | Must append >=12 tasks or prove exhaustion. |
+| 19 | L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION - Reconcile Acid Arrow RAW corpus | blocked | owner RAW decision | Resolve the local SRD damage-timing contradiction before modeling Acid Arrow executable behavior. |
+| 20 | L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE - Repair Acid Arrow Surface damage shape | blocked | L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION | Make the approved Acid Arrow damage timing, miss branch, delayed damage, and slot scaling executable in Surface content/schema. |
+| 21 | L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT - Promote Acid Arrow delayed runtime support | blocked | L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION,L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE | Add promoted Quint/runtime parity for the approved Acid Arrow behavior. |
 
 ## Task Details
 
@@ -286,7 +307,7 @@ evidence; `light` is covered by the existing level-1 spatial witness replay.
 
 ### Task 9 - B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH - Backfill level-2 damage spell identity evidence
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: cover level-2 damage/attack spell Units such as Acid Arrow, Flame
 Blade, Flaming Sphere, Heat Metal, Scorching Ray, Shatter, Moonbeam, Spiritual
@@ -294,6 +315,14 @@ Weapon, Dragon's Breath, and Ray of Enfeeblement where missing.
 
 Acceptance: gap report count decreases; evidence points to existing reducer or
 selected-identity tests.
+
+Result: selected-identity evidence now covers `dragons_breath`, `flame_blade`,
+`flaming_sphere`, `heat_metal`, `moonbeam`, `ray_of_enfeeblement`,
+`scorching_ray`, `shatter`, and `spiritual_weapon`; the selected-identity gap
+report dropped from 43 to 34 rows. Acid Arrow remains out of this evidence batch
+because the local SRD damage timing is contradictory and now has executable
+follow-up tasks for RAW reconciliation, Surface shape repair, and runtime
+support.
 
 ### Task 10 - B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH - Backfill level-2 control spell identity evidence
 
@@ -387,6 +416,50 @@ that produces real independent work.
 
 Acceptance: do not mark done unless at least 12 new runnable tasks were added
 or the generated gap report proves exhaustion.
+
+### Task 19 - L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION - Reconcile Acid Arrow RAW corpus
+
+Status: `blocked`
+
+Output: resolve the local SRD Acid Arrow damage contradiction by either
+correcting the local corpus or adding an owner-approved `ASSUMPTIONS.md` entry
+that explicitly identifies whether initial hit damage exists, how miss-only half
+damage is derived, which damage occurs at the end of the target's next turn, and
+how slot scaling applies.
+
+Acceptance: owner-approved RAW corpus correction or `ASSUMPTIONS.md` entry makes
+the initial/later/miss damage relationship modelable without inference from
+contradictory prose.
+
+### Task 20 - L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE - Repair Acid Arrow Surface damage shape
+
+Status: `blocked`
+
+Output: after RAW reconciliation, replace Acid Arrow's lossy mechanics with a
+lossless SRD Surface shape for the approved damage timing, miss branch,
+end-of-target-next-turn damage, and slot scaling without storing miss damage as
+an independently fixed approximation.
+
+Acceptance: Acid Arrow Dhall/JSON content, and schema/tracer support if needed,
+represent the approved initial/later/miss damage relationships as executable
+facts that battle-runtime can project without duplicating or reinterpreting
+spell damage state.
+
+### Task 21 - L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT - Promote Acid Arrow delayed runtime support
+
+Status: `blocked`
+
+Output: after RAW reconciliation and Surface repair, promote Acid Arrow as a
+level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot,
+resolves a ranged Spell Attack, applies only approved immediate hit or miss
+damage, stores approved delayed Acid damage for the end of the target's next
+turn where sourced, scales approved damage amounts by slot level, and cleans up
+the Spell Effect occurrence.
+
+Acceptance: supported-profile Unit claim, deterministic admission/projection
+evidence, focused runtime tests, and promoted Quint/runtime parity cover the
+approved Acid Arrow hit, miss, delayed target-turn damage, slot scaling,
+resource spending, and cleanup behavior.
 
 ## Verification
 
