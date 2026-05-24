@@ -202,6 +202,7 @@
         "spell.readied-action-time-spell"
       ],
       "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
       ],
       "runtime": "battle",
@@ -5503,6 +5504,14 @@
       "role": "semantic-core"
     },
     {
+      "evidence": "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt is the covered obligation QNT owner carrying Spell Invocation resource semantics without SRD spell fixture profiles.",
+      "obligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
+      "role": "semantic-core"
+    },
+    {
       "evidence": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
         "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
@@ -5661,6 +5670,7 @@
         "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-examples.qnt"
       ],
       "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
       ],
       "status": "fixture-bound"

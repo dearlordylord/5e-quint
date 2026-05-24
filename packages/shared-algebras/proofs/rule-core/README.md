@@ -347,9 +347,13 @@ projection-shaped and Surface-free.
 
 ## QCORE10: Spell Procedure Profiles
 
-`spell-procedure-profiles.qnt` models projection-shaped Spell Invocation facts
-and Spell Effects for the production spell procedures without importing Spell
-Definition records, Spell Access lists, Unit ids, or Surface authored ids.
+`spell-invocation-resource-core.qnt` models the Spell Invocation resource core:
+Magic Action or Bonus Action cost, Spell Slot ledger spend, one slot-spell per
+turn, access admission, and target cardinality facts.
+`spell-procedure-profiles.qnt` projects supported spell profiles into that
+resource core and models Spell Effects for the production spell procedures
+without importing Spell Definition records, Spell Access lists, Unit ids, or
+Surface authored ids.
 
 Scope:
 

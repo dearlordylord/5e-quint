@@ -10,6 +10,7 @@ module spellProcedureProfiles {
   import damageComponentAdjustments.* from "./damage-component-adjustments"
   import attackDamageComposition.* from "./attack-damage-composition"
   import actionTurnProcedures.* from "./action-turn-procedures"
+  import spellInvocationResourceCore.* from "./spell-invocation-resource-core"
   import reactionsContinuationsConcentration.* from "./reactions-continuations-concentration"
 
   // RAW anchors:
@@ -21,15 +22,6 @@ module spellProcedureProfiles {
   // - Spells/Descriptions-M-P.md: Mage Armor, Magic Missile, Mass Cure
   //   Wounds, Mass Healing Word, and Mind Spike.
   // - Spells/Descriptions-Q-R.md: Ray of Frost.
-
-  type SpellInvocationAction =
-    | ActionTimeSpellInvocation
-    | BonusActionSpellInvocation
-
-  type SpellSlotLedger = {
-    slotLevel: int,
-    slotsRemaining: int,
-  }
 
   type SpellDefinitionProfile =
     | MagicMissileSpellProfile
@@ -218,18 +210,6 @@ module spellProcedureProfiles {
     targetsAreValid: bool,
   }
 
-  type SpellcastingProcedureState = {
-    turn: TurnProcedureState,
-    slotLedger: SpellSlotLedger,
-    slotSpellCastThisTurn: bool,
-  }
-
-  type SpellInvocationResult = {
-    state: SpellcastingProcedureState,
-    admitted: bool,
-    slotExpended: bool,
-  }
-
   type MagicMissileEffectFacts = {
     slotLevel: int,
     allocatedDarts: int,
@@ -305,17 +285,6 @@ module spellProcedureProfiles {
     slotExpended: bool,
   }
 
-  pure def initialSpellSlotLedger: SpellSlotLedger = {
-    slotLevel: 1,
-    slotsRemaining: 2,
-  }
-
-  pure def initialSpellcastingProcedureState: SpellcastingProcedureState = {
-    turn: initialTurnProcedureState,
-    slotLedger: initialSpellSlotLedger,
-    slotSpellCastThisTurn: false,
-  }
-
   pure def initialReadiedSpellProcedureState: ReadiedSpellProcedureState = {
     reaction: initialReactionProtocolState,
     heldEffect: NoReadiedSpellHeldEffect,
@@ -370,19 +339,24 @@ module spellProcedureProfiles {
     slotLevel: int,
     targetCount: int
   ): bool =
-    if (targetCount < 1) false
-    else if (profile == AcidSplashSpellProfile) true
-    else if (profile == MagicMissileSpellProfile) targetCount <= magicMissileDartCount(slotLevel)
-    else if (profile == MassHealingWordSpellProfile or profile == MassCureWoundsSpellProfile) targetCount <= 6
-    else targetCount == 1
+    legalSpellInvocationTargetCardinality(
+      spellInvocationTargetCardinality(profile, slotLevel),
+      targetCount
+    )
 
   pure def spellProfileArea(profile: SpellDefinitionProfile): SpellAreaProfile =
     if (profile == MassCureWoundsSpellProfile) MassCureWoundsPointOriginSphereArea else NoSpellAreaProfile
 
   val massCureWoundsPointOriginSphereRadiusFeet = 30
 
+  pure def spellProfileSlotSpend(profile: SpellDefinitionProfile): SpellInvocationSlotSpend = {
+    val minimumSlot = spellProfileMinimumSlotLevel(profile)
+    if (minimumSlot == 0) SpellInvocationWithoutSlot
+    else SpellInvocationWithSlot({ minimumSlotLevel: minimumSlot })
+  }
+
   pure def spellProfileRequiresSlot(profile: SpellDefinitionProfile): bool =
-    spellProfileMinimumSlotLevel(profile) > 0
+    spellInvocationSlotSpendRequiresSlot(spellProfileSlotSpend(profile))
 
   pure def spellAttackDamageProfileDamageType(profile: SpellAttackDamageProfile): RuleDamageType =
     match profile {
@@ -912,86 +886,53 @@ module spellProcedureProfiles {
   pure def timedSpellEffectRemainsActive(durationTicks: int): bool =
     durationTicks > 0
 
-  pure def spellActionCost(invocationAction: SpellInvocationAction): ActionCost =
-    if (invocationAction == BonusActionSpellInvocation) BonusActionCost
-    else StandardActionCost(MagicAction)
+  pure def spellInvocationTargetCardinality(
+    profile: SpellDefinitionProfile,
+    slotLevel: int
+  ): SpellInvocationTargetCardinality =
+    if (profile == AcidSplashSpellProfile) SpellInvocationOpenUpperTargets({ minimumTargetCount: 1 })
+    else if (profile == MagicMissileSpellProfile) SpellInvocationBoundedTargets({
+      minimumTargetCount: 1,
+      maximumTargetCount: magicMissileDartCount(slotLevel),
+    })
+    else if (profile == MassHealingWordSpellProfile or profile == MassCureWoundsSpellProfile) SpellInvocationBoundedTargets({
+      minimumTargetCount: 1,
+      maximumTargetCount: 6,
+    })
+    else SpellInvocationBoundedTargets({
+      minimumTargetCount: 1,
+      maximumTargetCount: 1,
+    })
 
-  pure def legalSpellSlotLedger(ledger: SpellSlotLedger): bool = all {
-    ledger.slotLevel >= 1,
-    ledger.slotLevel <= 9,
-    ledger.slotsRemaining >= 0,
-    ledger.slotsRemaining <= 6,
-  }
-
-  pure def legalSpellcastingProcedureState(state: SpellcastingProcedureState): bool = all {
-    legalTurnProcedureState(state.turn),
-    legalSpellSlotLedger(state.slotLedger),
-    state.slotSpellCastThisTurn.in(Set(true, false)),
-  }
-
-  pure def legalSpellInvocationFacts(facts: SpellInvocationFacts): bool = {
-    val minimumSlot = spellProfileMinimumSlotLevel(facts.profile)
-    all {
-      facts.hasSpellAccess.in(Set(true, false)),
-      facts.targetsAreValid.in(Set(true, false)),
-      facts.selectedSlotLevel >= minimumSlot,
-      facts.selectedSlotLevel <= 9,
-      if (minimumSlot == 0) facts.selectedSlotLevel == 0
-      else facts.selectedSlotLevel >= minimumSlot,
-      legalSpellInvocationTargetCount(facts.profile, facts.selectedSlotLevel, facts.targetCount),
-    }
-  }
-
-  pure def canSpendSpellSlot(
-    ledger: SpellSlotLedger,
-    facts: SpellInvocationFacts,
-    slotSpellCastThisTurn: bool
-  ): bool =
-    if (not(spellProfileRequiresSlot(facts.profile))) true
-    else all {
-      not(slotSpellCastThisTurn),
-      facts.selectedSlotLevel == ledger.slotLevel,
-      ledger.slotsRemaining > 0,
-    }
-
-  pure def spendSpellSlot(
-    ledger: SpellSlotLedger,
+  pure def spellInvocationResourceFacts(
     facts: SpellInvocationFacts
-  ): SpellSlotLedger =
-    if (not(spellProfileRequiresSlot(facts.profile))) ledger
-    else ledger.with("slotsRemaining", ledger.slotsRemaining - 1)
+  ): SpellInvocationResourceFacts = {
+    invocationAction: spellProfileAction(facts.profile),
+    hasSpellAccess: facts.hasSpellAccess,
+    slotSpend: spellProfileSlotSpend(facts.profile),
+    selectedSlotLevel: facts.selectedSlotLevel,
+    targetCount: facts.targetCount,
+    targetCardinality: spellInvocationTargetCardinality(facts.profile, facts.selectedSlotLevel),
+    targetsAreValid: facts.targetsAreValid,
+  }
+
+  pure def legalSpellInvocationFacts(facts: SpellInvocationFacts): bool =
+    legalSpellInvocationResourceFacts(spellInvocationResourceFacts(facts))
 
   pure def resolveSpellInvocation(
     state: SpellcastingProcedureState,
     facts: SpellInvocationFacts
-  ): SpellInvocationResult = {
-    val spentTurn = spendActionCost(state.turn, spellActionCost(spellProfileAction(facts.profile)))
-    val admitted = all {
-      facts.hasSpellAccess,
-      legalSpellInvocationFacts(facts),
-      legalSpellcastingProcedureState(state),
-      spentTurn != state.turn,
-      canSpendSpellSlot(state.slotLedger, facts, state.slotSpellCastThisTurn),
-    }
-    val slotExpended = admitted and spellProfileRequiresSlot(facts.profile)
-    {
-      state:
-        if (not(admitted)) state
-        else {
-          turn: spentTurn,
-          slotLedger: spendSpellSlot(state.slotLedger, facts),
-          slotSpellCastThisTurn: state.slotSpellCastThisTurn or slotExpended,
-        },
-      admitted: admitted,
-      slotExpended: slotExpended,
-    }
-  }
+  ): SpellInvocationResult =
+    resolveSpellInvocationResource(state, spellInvocationResourceFacts(facts))
 
   pure def spellInvocationCanAffectTargets(
     invocation: SpellInvocationResult,
     facts: SpellInvocationFacts
   ): bool =
-    invocation.admitted and facts.targetsAreValid
+    spellInvocationResourceCanAffectTargets(
+      invocation,
+      spellInvocationResourceFacts(facts)
+    )
 
   pure def magicMissileDartCount(slotLevel: int): int =
     if (slotLevel <= 1) 3 else slotLevel + 2
@@ -1166,6 +1107,7 @@ module spellProcedureProfiles {
     canConcentrate: bool
   ): ReadiedSpellHoldResult = {
     val held = asReadiedSpellProfile(facts.profile)
+    val resourceFacts = spellInvocationResourceFacts(facts)
     val spent = spendActionCost(spellcasting.turn, StandardActionCost(ReadyAction))
     val admitted = all {
       triggerSelected,
@@ -1175,9 +1117,9 @@ module spellProcedureProfiles {
       legalSpellInvocationFacts(facts),
       legalSpellcastingProcedureState(spellcasting),
       spent != spellcasting.turn,
-      canSpendSpellSlot(spellcasting.slotLedger, facts, spellcasting.slotSpellCastThisTurn),
+      canSpendSpellSlot(spellcasting.slotLedger, resourceFacts, spellcasting.slotSpellCastThisTurn),
     }
-    val slotExpended = admitted and spellProfileRequiresSlot(facts.profile)
+    val slotExpended = admitted and spellInvocationResourceRequiresSlot(resourceFacts)
     if (not(admitted)) {
       spellcasting: spellcasting,
       readiedSpell: state,
@@ -1186,7 +1128,7 @@ module spellProcedureProfiles {
     } else {
       spellcasting: {
         turn: spent,
-        slotLedger: spendSpellSlot(spellcasting.slotLedger, facts),
+        slotLedger: spendSpellSlot(spellcasting.slotLedger, resourceFacts),
         slotSpellCastThisTurn: spellcasting.slotSpellCastThisTurn or slotExpended,
       },
       readiedSpell: {

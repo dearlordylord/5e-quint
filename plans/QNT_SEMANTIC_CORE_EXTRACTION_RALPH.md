@@ -37,13 +37,13 @@
     {
       "number": 6,
       "id": "QNTSEM-SPELL-INVOCATION-RESOURCE-CORE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Split Spell Invocation Resource Core"
     },
     {
       "number": 7,
       "id": "QNTSEM-SPELL-DAMAGE-PROJECTION-CORE",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Split Spell Damage Projection Core"
     },
     {
@@ -248,7 +248,7 @@ Completed:
 
 ### Task 6 - QNTSEM-SPELL-INVOCATION-RESOURCE-CORE - Split Spell Invocation Resource Core
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -289,7 +289,7 @@ Acceptance:
 
 ### Task 7 - QNTSEM-SPELL-DAMAGE-PROJECTION-CORE - Split Spell Damage Projection Core
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: Task 6
 
