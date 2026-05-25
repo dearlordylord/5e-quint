@@ -1,6 +1,9 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeBlurAttackRollDefenseLifecycleMbt {
+  import battleRuntimeModel.* from "./battle-runtime-model"
+  import battleRuntimeBlurAttackRollDefense.* from "./battle-runtime-blur-attack-roll-defense"
+
   // RAW trace:
   // - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Blur:
   //   Blur is a level 2 Action spell with range Self and Concentration up to
@@ -27,22 +30,35 @@ module battleRuntimeBlurAttackRollDefenseLifecycleMbt {
   pure val advantageAttackRoll: str = "advantage"
   pure val disadvantageAttackRoll: str = "disadvantage"
 
+  pure def blurAttackRollDefenseWitnessCaster(
+    blurredEffectActive: bool,
+    casterConcentrating: bool,
+  ): Combatant = {
+    ...initialState.fighter,
+    activeEffects: if (blurredEffectActive) Set(blurAttackRollDefenseEffect) else Set(),
+    concentrating: casterConcentrating,
+  }
+
   pure def projectedAttackRollMode(
     blurredEffectActive: bool,
     attackerPerceivesWithBlindsight: bool,
     attackerPerceivesWithTruesight: bool,
     otherAttackAdvantage: bool,
   ): str = {
-    val blurDisadvantage =
-      blurredEffectActive
-      and not(attackerPerceivesWithBlindsight)
-      and not(attackerPerceivesWithTruesight)
-    if (blurDisadvantage and not(otherAttackAdvantage))
-      disadvantageAttackRoll
-    else if (otherAttackAdvantage and not(blurDisadvantage))
-      advantageAttackRoll
-    else
-      normalAttackRoll
+    val blurredTargetEffects =
+      if (blurredEffectActive) Set(blurAttackRollDefenseEffect) else Set()
+    val otherAdvantageTargetEffects =
+      if (otherAttackAdvantage) Set(GuidingBoltNextAttackAdvantage) else Set()
+    match blurAttackRollDefenseAttackRollMode(
+      Set(),
+      blurredTargetEffects.union(otherAdvantageTargetEffects),
+      true,
+      attackerPerceivesWithBlindsight or attackerPerceivesWithTruesight,
+    ) {
+      | NormalSpellAttackRoll => normalAttackRoll
+      | AdvantageSpellAttackRoll => advantageAttackRoll
+      | DisadvantageSpellAttackRoll => disadvantageAttackRoll
+    }
   }
 
   action recordBlurState(
@@ -91,13 +107,16 @@ module battleRuntimeBlurAttackRollDefenseLifecycleMbt {
   action doCastBlur = all {
     qActionAvailable,
     qSpellAvailable,
+    val casterAfterBlurCast = combatantWithBlurAttackRollDefenseApplied(
+      blurAttackRollDefenseWitnessCaster(qBlurredEffectActive, qCasterConcentrating)
+    )
     recordBlurState(
       false,
       false,
       1,
       true,
-      true,
-      true,
+      activeEffectsContainBlurAttackRollDefense(casterAfterBlurCast.activeEffects),
+      casterAfterBlurCast.concentrating,
       qAttackerPerceivesWithBlindsight,
       qAttackerPerceivesWithTruesight,
       qOtherAttackAdvantage,
@@ -172,13 +191,16 @@ module battleRuntimeBlurAttackRollDefenseLifecycleMbt {
 
   action doBreakConcentration = all {
     qCasterConcentrating,
+    val casterAfterConcentrationBreak = combatantWithBlurAttackRollDefenseConcentrationBroken(
+      blurAttackRollDefenseWitnessCaster(qBlurredEffectActive, qCasterConcentrating)
+    )
     recordBlurState(
       qActionAvailable,
       qSpellAvailable,
       qSpellSlotExpended,
       qSlotSpellCastThisTurn,
-      false,
-      false,
+      activeEffectsContainBlurAttackRollDefense(casterAfterConcentrationBreak.activeEffects),
+      casterAfterConcentrationBreak.concentrating,
       qAttackerPerceivesWithBlindsight,
       qAttackerPerceivesWithTruesight,
       qOtherAttackAdvantage,

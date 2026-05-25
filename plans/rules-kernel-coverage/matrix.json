@@ -1295,7 +1295,7 @@
         "spell.invocation-blur-attack-roll-defense"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -5298,6 +5298,14 @@
       "role": "semantic-core"
     },
     {
+      "evidence": "packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt is the focused QNT owner carrying Blur self Spell Effect, Blindsight/Truesight bypass, attack-roll mode projection, Concentration, and cleanup semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt",
+      "role": "semantic-core"
+    },
+    {
       "evidence": "packages/battle-runtime/battle-runtime-command-choice.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
         "BATTLE.COMMAND.OPTION_AND_NEXT_TURN"
@@ -5697,7 +5705,6 @@
       "obligationIds": [
         "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES",
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
-        "BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE",
         "BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
@@ -7058,41 +7065,27 @@
       "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B8-BATTLE-RUNTIME-BLUR-DEFENSE-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
-        "record",
         "record-update",
         "pure-def",
-        "constant-def",
-        "int",
+        "constant-val",
         "bool",
-        "if-expression",
         "let-binding",
-        "arithmetic",
-        "comparison",
         "boolean-connective",
-        "all-block",
         "pattern-match",
         "set",
-        "list",
-        "map",
-        "filter",
         "set-operators",
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],

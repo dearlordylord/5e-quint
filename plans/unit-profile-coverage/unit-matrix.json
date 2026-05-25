@@ -3059,7 +3059,7 @@
       "id": "spell.invocation-blur-attack-roll-defense",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts"
@@ -3072,7 +3072,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt"
         },
         {
           "kind": "focused-mbt",
@@ -19043,7 +19043,7 @@
           "id": "spell.invocation-blur-attack-roll-defense",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime.qnt"
+            "packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
@@ -19056,7 +19056,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt"
             },
             {
               "kind": "focused-mbt",

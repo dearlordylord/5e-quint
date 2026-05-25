@@ -59,7 +59,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 8,
       "id": "B8-BATTLE-RUNTIME-BLUR-DEFENSE-CORE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Split Blur attack-roll defense lifecycle core"
     },
     {
@@ -264,7 +264,7 @@ Acceptance: checker green; focused tests green.
 
 ### Task 8 - B8-BATTLE-RUNTIME-BLUR-DEFENSE-CORE - Split Blur attack-roll defense lifecycle core
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: Blur attack-roll defense readiness row and existing focused witness.
 
