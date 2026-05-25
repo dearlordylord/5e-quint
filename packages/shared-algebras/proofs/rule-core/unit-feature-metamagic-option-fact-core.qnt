@@ -84,10 +84,4 @@ module unitFeatureMetamagicOptionFactCore {
       battleRuntimeMetamagicOptionEffectKind(option)
     )
 
-  pure def selectedMetamagicSorceryPointCost(
-    selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
-  ): int =
-    selectedOptions
-      .map(option => battleRuntimeMetamagicOptionSorceryPointCost(option))
-      .fold(0, (total, cost) => total + cost)
 }

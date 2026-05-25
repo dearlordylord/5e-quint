@@ -16,13 +16,4 @@ module unitFeatureMetamagicOptionFactCoreExamples {
     }
   }
 
-  run test_metamagic_selected_sorcery_point_cost_sums_selected_options = {
-    all {
-      assert(selectedMetamagicSorceryPointCost(Set()) == 0),
-      assert(selectedMetamagicSorceryPointCost(Set(quickenedSpellMetamagicFact)) == 2),
-      assert(selectedMetamagicSorceryPointCost(
-        Set(quickenedSpellMetamagicFact, empoweredSpellMetamagicFact)
-      ) == 3),
-    }
-  }
 }

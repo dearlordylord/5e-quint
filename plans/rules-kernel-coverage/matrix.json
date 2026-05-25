@@ -740,6 +740,7 @@
       ],
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
         "packages/battle-runtime/battle-runtime-metamagic.qnt"
       ],
       "runtime": "battle",
@@ -753,6 +754,7 @@
       "status": "covered",
       "surfaceEvidence": [
         ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic",
+        ".references/srd-5.2.1/Classes/Sorcerer.md#Empowered Spell",
         ".references/srd-5.2.1/Classes/Sorcerer.md#Quickened Spell",
         "UBIQUITOUS_LANGUAGE.md#Action Lifecycle"
       ],
@@ -5530,6 +5532,14 @@
       "role": "semantic-core"
     },
     {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt is the covered obligation QNT owner carrying non-empty known-option, Sorcery Point affordability, and one-option-per-spell admission semantics without importing authored Unit catalog rows.",
+      "obligationIds": [
+        "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
+      "role": "semantic-core"
+    },
+    {
       "evidence": "packages/battle-runtime/battle-runtime-mirror-image.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
         "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION"
@@ -8973,14 +8983,14 @@
       "owners": [
         {
           "lines": [
-            293,
-            319,
-            334,
-            349,
-            372,
-            444,
-            465,
-            501
+            283,
+            309,
+            324,
+            339,
+            362,
+            434,
+            455,
+            491
           ],
           "ownerPath": "packages/battle-runtime/battle-runtime-metamagic.qnt"
         }
