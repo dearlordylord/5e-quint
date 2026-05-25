@@ -15,7 +15,8 @@ level are separate axes: character levels 1-2 include cantrips and spell-level-1
 spells; character level 3 is the first frontier that includes spell-level-2
 spells; spell-level-3 spells belong to the later character-level-5 frontier.
 The generated reports currently include `LEVEL1_FULL_SUPPORT.md`,
-`LEVEL1_2_FULL_SUPPORT.md`, and `LEVEL1_3_FULL_SUPPORT.md`.
+`LEVEL1_2_FULL_SUPPORT.md`, `LEVEL1_3_FULL_SUPPORT.md`, and
+`ULTRA_GOLDEN_GATE.md`.
 
 This lane is the authored-content breadth layer. It does not by itself prove
 that reducer-owned semantics are fully connected to the rules kernel. For any
@@ -255,6 +256,12 @@ denominators. A `supported-profile` Unit claim means the authored Unit is
 admitted to a typed support profile; it counts as full rules-kernel chain
 coverage only when every reducer-owned profile for that Unit maps to covered
 rules-kernel obligations.
+
+The generated ultra-golden gate is stricter than the full-support reports. It
+is a conjunctive aggregate over support completeness, QNT/generator readiness,
+MBT/parity evidence, and MCP scenario evidence. The checker does not publish a
+blended ultra-golden percentage; every layer must pass explicitly before the
+aggregate can pass.
 
 ## Done-State Gate
 

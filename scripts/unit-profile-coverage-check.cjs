@@ -32,6 +32,10 @@ const {
   renderSrdUnitInventory,
   validateSrdUnitInventory,
 } = require("./srd-unit-inventory.cjs");
+const {
+  buildUltraGoldenGate,
+  renderUltraGoldenGate,
+} = require("./ultra-golden-gate.cjs");
 const { scanClaimFiles } = require("./unit-profile-coverage-claim-scan.cjs");
 const { runSelfTest } = require("./unit-profile-coverage-self-test.cjs");
 const {
@@ -93,10 +97,9 @@ function main() {
     },
     { selectedIdentityHardGate },
   );
+  const rulesKernelCoverage = buildKernelCoverage({ root });
   issues.push(
-    ...buildKernelCoverage({ root }).issues.map(
-      (issue) => `rules-kernel: ${issue}`,
-    ),
+    ...rulesKernelCoverage.issues.map((issue) => `rules-kernel: ${issue}`),
   );
   issues.push(...validateSrdUnitInventory(srdUnitInventory));
   if (issues.length > 0) {
@@ -132,6 +135,11 @@ function main() {
   });
   const level13FullSupport = buildLevel13FullSupport(matrix, srdUnitInventory, {
     root,
+  });
+  const ultraGoldenGate = buildUltraGoldenGate({
+    level1FullSupport,
+    level12FullSupport,
+    rulesKernelMatrix: rulesKernelCoverage.matrix,
   });
   writeOrCompare(
     { root, write },
@@ -186,6 +194,16 @@ function main() {
     { root, write },
     paths.level13FullSupportReport,
     renderLevel13FullSupport(level13FullSupport),
+  );
+  writeOrCompare(
+    { root, write },
+    paths.ultraGoldenGate,
+    `${JSON.stringify(ultraGoldenGate, null, 2)}\n`,
+  );
+  writeOrCompare(
+    { root, write },
+    paths.ultraGoldenGateReport,
+    renderUltraGoldenGate(ultraGoldenGate),
   );
   console.log(
     `Unit profile coverage OK: ${inventory.length} Units, ${profiles.length} profiles.`,

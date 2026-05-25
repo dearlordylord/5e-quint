@@ -269,6 +269,8 @@ function coveragePaths(root) {
       coverageDir,
       "LEVEL1_3_FULL_SUPPORT.md",
     ),
+    ultraGoldenGate: path.join(coverageDir, "ultra-golden-gate.json"),
+    ultraGoldenGateReport: path.join(coverageDir, "ULTRA_GOLDEN_GATE.md"),
     rulesKernelObligations: path.join(
       root,
       "plans",
