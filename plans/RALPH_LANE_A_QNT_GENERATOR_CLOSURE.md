@@ -31,7 +31,7 @@ work remains.
     { "number": 10, "id": "A56-UNIT-FEATURE-OWNER-ROLE-CLOSURE", "status": "done", "title": "Refresh unit-feature owner roles after semantic-core splits" },
     { "number": 11, "id": "A57-UNIT-FEATURE-READINESS-ROW-CLOSURE", "status": "done", "title": "Close unit-feature generator-readiness row" },
     { "number": 12, "id": "A58-UNIT-FEATURE-PROFILE-JOIN-AUDIT", "status": "done", "title": "Audit supported feature profile to rules-kernel joins" },
-    { "number": 13, "id": "A59-UNIT-FEATURE-MBT-BRIDGE-AUDIT", "status": "ready-for-research", "title": "Audit unit-feature MBT bridge coverage" },
+    { "number": 13, "id": "A59-UNIT-FEATURE-MBT-BRIDGE-AUDIT", "status": "done", "title": "Audit unit-feature MBT bridge coverage" },
     { "number": 14, "id": "A60-UNIT-FEATURE-GENERATOR-SUBSET-AUDIT", "status": "ready-for-research", "title": "Audit unit-feature generator subset tokens" },
     { "number": 15, "id": "A61-UNIT-FEATURE-RUN-BLOCK-SCANNER-CLOSURE", "status": "ready-for-research", "title": "Close unit-feature run-block scanner findings" },
     { "number": 16, "id": "A62-UNIT-FEATURE-EXAMPLE-FILE-ROLE-CLOSURE", "status": "ready-for-research", "title": "Classify unit-feature example files as proof-only" },
@@ -228,12 +228,18 @@ profiles.
 
 ### Task 13 - A59-UNIT-FEATURE-MBT-BRIDGE-AUDIT - Audit unit-feature MBT bridge coverage
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: document any missing focused parity witness tasks in this plan or close
 the audit with checker evidence.
 
 Acceptance: no hidden MBT/parity gap for supported unit-feature procedure rows.
+
+Closed by checker evidence in
+`plans/unit-profile-coverage/A59_UNIT_FEATURE_MBT_BRIDGE_AUDIT.md`: the feature
+procedure QNT/MBT evidence gate is green for supported `unit-feature.` rows in
+the level-support scopes, and no missing focused parity witness follow-up task is
+required under the current checker policy.
 
 ### Task 14 - A60-UNIT-FEATURE-GENERATOR-SUBSET-AUDIT - Audit unit-feature generator subset tokens
 
