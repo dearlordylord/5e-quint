@@ -106,31 +106,31 @@ work remains.
     {
       "number": 15,
       "id": "A61-UNIT-FEATURE-RUN-BLOCK-SCANNER-CLOSURE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close unit-feature run-block scanner findings"
     },
     {
       "number": 16,
       "id": "A62-UNIT-FEATURE-EXAMPLE-FILE-ROLE-CLOSURE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Classify unit-feature example files as proof-only"
     },
     {
       "number": 17,
       "id": "A63-UNIT-FEATURE-SELECTED-IDENTITY-CHECK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Check selected-identity fallout from feature splits"
     },
     {
       "number": 18,
       "id": "A64-UNIT-FEATURE-END-TO-END-VERIFY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Verify unit-feature QNT core closure"
     },
     {
       "number": 19,
       "id": "A65-UNIT-FEATURE-STRICT-DENOMINATOR-AUDIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Audit strict level 1-2 denominator fallout"
     },
     {
@@ -302,7 +302,7 @@ Acceptance: checker green.
 
 Closed by checker evidence: current owner-role artifacts classify the split
 unit-feature semantic owners as `semantic-core`; example and inductive owners
-remain proof-only closure work under Task 16.
+are closed as proof-only readiness-row evidence by Task 16.
 
 ### Task 11 - A57-UNIT-FEATURE-READINESS-ROW-CLOSURE - Close unit-feature generator-readiness row
 
@@ -357,7 +357,7 @@ Acceptance: checker green; no unsupported construct hidden behind broad tokens.
 
 ### Task 15 - A61-UNIT-FEATURE-RUN-BLOCK-SCANNER-CLOSURE - Close unit-feature run-block scanner findings
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: scanner findings for unit-feature semantic-core owners are zero or have
 live follow-up tasks.
@@ -366,37 +366,60 @@ Acceptance: checker green.
 
 ### Task 16 - A62-UNIT-FEATURE-EXAMPLE-FILE-ROLE-CLOSURE - Classify unit-feature example files as proof-only
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: example/inductive files are proof-only and not generator input.
 
 Acceptance: checker green.
 
+Closed by checker evidence: the current generator-readiness rows classify the
+unit-feature example and inductive files in `proofOnly`, while
+`qnt-owner-roles.jsonl` remains limited to covered obligation QNT owners.
+
 ### Task 17 - A63-UNIT-FEATURE-SELECTED-IDENTITY-CHECK - Check selected-identity fallout from feature splits
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: selected-identity metrics remain green after unit-feature ownership
 changes, or gaps are assigned to Lane C.
 
 Acceptance: unit-profile check green.
 
+Closed by checker evidence: selected-identity replay coverage remains
+`144/144`, selected-identity replay gaps are zero, and all 37 supported
+`unit-feature.` Units carry `selected-identity-mbt` evidence. No Lane C
+selected-identity gap assignment is required for the current unit-feature split
+fallout.
+
 ### Task 18 - A64-UNIT-FEATURE-END-TO-END-VERIFY - Verify unit-feature QNT core closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: focused verification for the unit-feature closure set.
 
 Acceptance: checker green; focused QNT tests green; no stale generated files.
 
+Closed by checker and focused QNT evidence: rules-kernel coverage and
+unit-profile coverage checks are green, checker write passes produce no tracked
+diff, unit-feature semantic-core typechecks are green, focused unit-feature QNT
+examples plus Monk Focus tests are green, and no generated artifact staleness
+remains in the unit-feature closure set.
+
 ### Task 19 - A65-UNIT-FEATURE-STRICT-DENOMINATOR-AUDIT - Audit strict level 1-2 denominator fallout
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: level 1 and level 1-2 strict support gates remain green after ownership
 changes.
 
 Acceptance: `pnpm unit-profile-coverage:check` green.
+
+Closed by checker evidence in
+`plans/unit-profile-coverage/A65_UNIT_FEATURE_STRICT_DENOMINATOR_AUDIT.md`:
+level 1 and level 1-2 full-support claim gates remain `pass`, strict target
+open counts remain zero, selected-identity blocker counts remain zero, and no
+additional strict-denominator follow-up is required for the unit-feature split
+fallout. Task 20 still owns the broader rules-kernel report refresh.
 
 ### Task 20 - A66-UNIT-FEATURE-RULES-KERNEL-REPORT-CLOSURE - Refresh rules-kernel reports after unit-feature closure
 

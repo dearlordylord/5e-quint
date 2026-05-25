@@ -6928,6 +6928,9 @@
     },
     {
       "blockedBy": [],
+      "followUpTaskIds": [
+        "A67-RECURSIVE-NEXT-BATCH"
+      ],
       "generatorSubset": [],
       "obligationId": "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
       "proofOnly": [],
@@ -8309,6 +8312,7 @@
   "semanticCoreRunBlockFindings": [
     {
       "blocker": "run-block-coupled",
+      "followUpTaskIds": [],
       "obligationId": "BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE",
       "owners": [
         {
@@ -8328,6 +8332,9 @@
     },
     {
       "blocker": "run-block-coupled",
+      "followUpTaskIds": [
+        "A67-RECURSIVE-NEXT-BATCH"
+      ],
       "obligationId": "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
       "owners": [
         {
@@ -8348,6 +8355,7 @@
     },
     {
       "blocker": "run-block-coupled",
+      "followUpTaskIds": [],
       "obligationId": "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
       "owners": [
         {
@@ -8373,6 +8381,7 @@
     },
     {
       "blocker": "run-block-coupled",
+      "followUpTaskIds": [],
       "obligationId": "CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY",
       "owners": [
         {
@@ -8397,6 +8406,7 @@
     },
     {
       "blocker": "run-block-coupled",
+      "followUpTaskIds": [],
       "obligationId": "CREATION.CHOICE_DISCOVERY_CARDINALITY",
       "owners": [
         {

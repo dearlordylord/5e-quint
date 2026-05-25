@@ -400,7 +400,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `filter`, `exists`, `set-operators`, `membership` |  |  |
 | `BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE` | not-assessed |  |  |  |
 | `BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `filter`, `fold`, `exists`, `set-operators`, `membership` |  |  |
-| `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` | not-assessed |  |  |  |
+| `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` | not-assessed |  |  | `A67-RECURSIVE-NEXT-BATCH` |
 | `BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `filter`, `fold`, `exists`, `set-operators`, `membership` |  |  |
 | `BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `list`, `filter`, `exists`, `set-operators` |  |  |
 | `BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `filter`, `fold`, `exists`, `set-operators`, `membership` |  |  |
@@ -468,13 +468,13 @@ Rows here are derived from covered obligations with semantic-core QNT owners who
 
 Rows here are derived from semantic-core QNT owners that still contain Quint `run` blocks. Assessed readiness rows must split those tests out or classify the generator blocker as `run-block-coupled`.
 
-| Obligation | Readiness status | Blocker | Semantic-core run blocks |
-| --- | --- | --- | --- |
-| `BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE` | not-assessed | `run-block-coupled` | `packages/battle-runtime/battle-runtime-levitate-creature.qnt`: lines `249`, `261`, `271`, `290`, `302`, `320`, `329` |
-| `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` | not-assessed | `run-block-coupled` | `packages/battle-runtime/battle-runtime-metamagic.qnt`: lines `337`, `363`, `378`, `393`, `416`, `488`, `509`, `545` |
-| `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` | not-assessed | `run-block-coupled` | `packages/battle-runtime/battle-runtime-direct-condition-removal.qnt`: lines `137`, `163`, `183`, `196`, `220`<br>`packages/battle-runtime/battle-runtime-protection-from-poison.qnt`: lines `101`, `116`, `126` |
-| `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY` | not-assessed | `run-block-coupled` | `packages/character-creation-runtime/character-creation-runtime-slice.qnt`: lines `578`, `582`, `595`, `603`, `619`, `633`, `653`, `669`, `682`, `695`, `719`, `741` |
-| `CREATION.CHOICE_DISCOVERY_CARDINALITY` | not-assessed | `run-block-coupled` | `packages/character-creation-runtime/character-creation-runtime-slice.qnt`: lines `578`, `582`, `595`, `603`, `619`, `633`, `653`, `669`, `682`, `695`, `719`, `741` |
+| Obligation | Readiness status | Blocker | Follow-up | Semantic-core run blocks |
+| --- | --- | --- | --- | --- |
+| `BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE` | not-assessed | `run-block-coupled` | _none_ | `packages/battle-runtime/battle-runtime-levitate-creature.qnt`: lines `249`, `261`, `271`, `290`, `302`, `320`, `329` |
+| `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` | not-assessed | `run-block-coupled` | `A67-RECURSIVE-NEXT-BATCH` | `packages/battle-runtime/battle-runtime-metamagic.qnt`: lines `337`, `363`, `378`, `393`, `416`, `488`, `509`, `545` |
+| `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` | not-assessed | `run-block-coupled` | _none_ | `packages/battle-runtime/battle-runtime-direct-condition-removal.qnt`: lines `137`, `163`, `183`, `196`, `220`<br>`packages/battle-runtime/battle-runtime-protection-from-poison.qnt`: lines `101`, `116`, `126` |
+| `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY` | not-assessed | `run-block-coupled` | _none_ | `packages/character-creation-runtime/character-creation-runtime-slice.qnt`: lines `578`, `582`, `595`, `603`, `619`, `633`, `653`, `669`, `682`, `695`, `719`, `741` |
+| `CREATION.CHOICE_DISCOVERY_CARDINALITY` | not-assessed | `run-block-coupled` | _none_ | `packages/character-creation-runtime/character-creation-runtime-slice.qnt`: lines `578`, `582`, `595`, `603`, `619`, `633`, `653`, `669`, `682`, `695`, `719`, `741` |
 
 ## Kernel IR Boundaries
 

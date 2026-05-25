@@ -1782,6 +1782,8 @@ function buildSemanticCoreRunBlockFindings(
     return [
       stable({
         blocker: semanticCoreRunBlockBlocker,
+        followUpTaskIds:
+          readinessByObligationId.get(obligation.id)?.followUpTaskIds ?? [],
         obligationId: obligation.id,
         owners,
         readinessStatus:
@@ -2012,8 +2014,10 @@ function renderReport(matrix, issues) {
   if (matrix.semanticCoreRunBlockFindings.length === 0) {
     lines.push("No semantic-core QNT owners contain run blocks.");
   } else {
-    lines.push("| Obligation | Readiness status | Blocker | Semantic-core run blocks |");
-    lines.push("| --- | --- | --- | --- |");
+    lines.push(
+      "| Obligation | Readiness status | Blocker | Follow-up | Semantic-core run blocks |",
+    );
+    lines.push("| --- | --- | --- | --- | --- |");
     for (const finding of matrix.semanticCoreRunBlockFindings) {
       const owners = finding.owners
         .map(
@@ -2021,8 +2025,12 @@ function renderReport(matrix, issues) {
             `\`${owner.ownerPath}\`: lines ${owner.lines.map((line) => `\`${line}\``).join(", ")}`,
         )
         .join("<br>");
+      const followUp =
+        (finding.followUpTaskIds ?? [])
+          .map((taskId) => `\`${taskId}\``)
+          .join(", ") || "_none_";
       lines.push(
-        `| \`${finding.obligationId}\` | ${finding.readinessStatus} | \`${finding.blocker}\` | ${owners} |`,
+        `| \`${finding.obligationId}\` | ${finding.readinessStatus} | \`${finding.blocker}\` | ${followUp} | ${owners} |`,
       );
     }
   }
