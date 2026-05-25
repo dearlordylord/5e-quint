@@ -423,7 +423,7 @@ module battleRuntimeSpellFactsTests {
       assert(not(rayOfEnfeeblementD20LifecycleConcentratingAfterEffectsChange(rayAfterNextAttackEffects, Fighter, raySuccess.fighter.concentrating))),
       assert(rayFailure.fighter.concentrating),
       assert(rayFailure.goblin.activeEffects.contains(RayOfEnfeeblementD20Lifecycle({ source: Fighter, durationTicks: rayOfEnfeeblementD20LifecycleDurationTicks }))),
-      assert(rayFailedEffects == Set(RayOfEnfeeblementD20Lifecycle({ source: Fighter, durationTicks: rayOfEnfeeblementD20LifecycleDurationTicks }))),
+      assert(rayFailedEffects == rayOfEnfeeblementD20LifecycleFailedSaveActiveEffects(Fighter)),
       assert(raySuccessEffects == Set(RayOfEnfeeblementNextAttackDisadvantage({ source: Fighter }))),
       assert(rayOfEnfeeblementD20LifecycleAttackRollMode(rayFailure.goblin.activeEffects, StrAbility) == DisadvantageSpellAttackRoll),
       assert(rayOfEnfeeblementD20LifecycleAttackRollMode(rayFailure.goblin.activeEffects, DexAbility) == NormalSpellAttackRoll),
@@ -432,7 +432,7 @@ module battleRuntimeSpellFactsTests {
       assert(rayOfEnfeeblementD20LifecycleSavingThrowRollMode(rayFailure.goblin.activeEffects, StrAbility) == DisadvantageSavingThrow),
       assert(rayOfEnfeeblementD20LifecycleSavingThrowRollMode(rayFailure.goblin.activeEffects, DexAbility) == NormalSavingThrow),
       assert(rayFailure.goblin.activeEffects.contains(RayOfEnfeeblementDamageRollPenalty({ source: Fighter, durationTicks: rayOfEnfeeblementD20LifecycleDurationTicks }))),
-      assert(saveGatedDamageFailedSaveActiveEffects(RayOfEnfeeblementSaveGate) == Set(
+      assert(rayOfEnfeeblementD20LifecycleFailedSaveActiveEffects(Fighter) == Set(
         RayOfEnfeeblementD20Lifecycle({ source: Fighter, durationTicks: rayOfEnfeeblementD20LifecycleDurationTicks }),
         RayOfEnfeeblementDamageRollPenalty({ source: Fighter, durationTicks: rayOfEnfeeblementD20LifecycleDurationTicks }),
       )),

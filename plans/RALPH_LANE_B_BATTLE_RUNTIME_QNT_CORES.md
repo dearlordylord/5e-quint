@@ -107,7 +107,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 16,
       "id": "B16-BATTLE-RUNTIME-END-TO-END-VERIFY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Verify battle-runtime QNT core closure"
     },
     {
@@ -360,7 +360,7 @@ split.
 
 ### Task 16 - B16-BATTLE-RUNTIME-END-TO-END-VERIFY - Verify battle-runtime QNT core closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: completed B tasks.
 
@@ -368,6 +368,10 @@ Output: run and document the final B-lane verification commands in the plan
 Findings section only if a future Ralph needs the result.
 
 Acceptance: checker green; focused tests green; no untracked plan noise.
+
+Closure evidence: the rules-kernel checker passes with 97 obligations after
+`--write`, and the package-local battle-runtime QNT self-test passes on the
+integration result. No generated plan or matrix fallout remains for this task.
 
 ### Task 17 - B17-RECURSIVE-NEXT-BATCH - Mine next battle-runtime QNT core batch
 

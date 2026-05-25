@@ -610,7 +610,7 @@ module battleRuntimeHpArmorBuffSpatialTests {
       assert(stopped == FlyEndNoFall({ state: cleanedLaterCasterTurn, target: Fighter })),
       assert(grounded == FlyEndNoFall({ state: cleanedLaterCasterTurn, target: Fighter })),
       assert(invalidWithoutCleanup == FlyEndInvalid({ state: laterCasterTurn, target: Fighter })),
-      assert(pendingCleanup.interruptStack.contains(PendingFlySpeedGrantEndFallCleanup({ target: Fighter }))),
+      assert(stateHasFlySpeedGrantEndFallCleanupFrame(pendingCleanup, Fighter)),
       assert(fallsAfterBreak == FlyEndFalls({
         state: resolveFeatherFallSpell(cleanedLaterCasterTurn, Fighter, Set(Fighter), Set(Fighter), 1),
         target: Fighter,
