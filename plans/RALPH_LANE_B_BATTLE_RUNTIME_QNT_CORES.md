@@ -119,7 +119,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 18,
       "id": "B18-SEE-INVISIBILITY-READINESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Classify See Invisibility observer-sight generator readiness"
     },
     {
@@ -469,7 +469,7 @@ Poison owner responsibilities.
 
 ### Task 18 - B18-SEE-INVISIBILITY-READINESS - Classify See Invisibility observer-sight generator readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT` rows in
 `generator-readiness.jsonl`, `obligations.jsonl`, and `qnt-owner-roles.jsonl`;
