@@ -215,7 +215,7 @@ remains.
     {
       "number": 34,
       "id": "C34-GENERATOR-READINESS-BATCH-VERIFY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Verify generator-readiness classification batch"
     }
   ]
@@ -758,7 +758,7 @@ longer `not-assessed`.
 
 ### Task 34 - C34-GENERATOR-READINESS-BATCH-VERIFY - Verify generator-readiness classification batch
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: C18-C33 results, `plans/unit-profile-coverage/ULTRA_GOLDEN_GATE.md`,
 `plans/unit-profile-coverage/LEVEL1_2_ULTRA_GOLDEN_SUMMARY.md`,
@@ -773,3 +773,11 @@ support in this verification task.
 Acceptance: `pnpm unit-profile-coverage:check && pnpm rules-kernel-coverage:check`
 green; Task 34 result records whether QNT/generator readiness is complete or
 which non-C-lane follow-up remains.
+
+Result: checker-owned reports are current and both verification commands are
+green. The ultra-golden gate remains blocked only on QNT/generator readiness:
+level 1 and level 1-2 each have 11 scoped fixture-bound semantic-core rows
+(9 `bridge-projection-coupled`, 2 `run-block-coupled`). The durable owning
+follow-up surface is already recorded in `plans/rules-kernel-coverage/REPORT.md`
+and `plans/rules-kernel-coverage/generator-readiness.jsonl`: `A38`-`A46` plus
+`B2`, `B3`, and `B4`.
