@@ -1325,6 +1325,12 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/scalar-buff-active-effects.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
