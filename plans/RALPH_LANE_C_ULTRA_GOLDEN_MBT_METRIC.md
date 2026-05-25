@@ -262,7 +262,7 @@ Acceptance: focused MCP test green.
 
 ### Task 10 - C10-CHARACTER-SHEET-MCP-EVIDENCE - Add character-sheet MCP evidence rows
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: character sheet evidence rows for level 1-2 SRD flows.
 

@@ -67,6 +67,33 @@
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
       "taskId": "C9-CHARACTER-CREATION-MCP-EVIDENCE",
       "summary": "The protocol acceptance scenario creates and finalizes a supported level-2 Elf Soldier Wizard through returned cantrip, spellbook, prepared spell, equipment, loadout, and class-feature proficiency holes."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "character-sheet",
+      "scenarioId": "create-baseline-character",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
+      "summary": "The protocol acceptance scenario finalizes the supported level-1 Orc Soldier Fighter, reads the resulting Character Sheet through list_characters, and verifies durable Hit Points before and after battle handoff."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "character-sheet",
+      "scenarioId": "create-wizard-with-spells",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
+      "summary": "The protocol acceptance scenario finalizes a supported level-2 Elf Soldier Wizard, verifies the Character Sheet exposes level-1 Spell Slots and selected spells, and later observes the expended slot after battle handoff."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "character-sheet",
+      "scenarioId": "finish-battle-and-inspect-character-state",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
+      "summary": "The protocol acceptance scenario ends battle and inspects list_characters plus the session snapshot to prove durable Character Sheet Hit Points and Spell Slot expenditure remain visible to MCP callers."
     }
   ]
 }
