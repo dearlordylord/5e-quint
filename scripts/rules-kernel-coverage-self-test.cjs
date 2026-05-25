@@ -413,6 +413,7 @@ function runSelfTest() {
     [
       {
         blocker: runBlockBlocker,
+        followUpTaskIds: [],
         obligationId: "BATTLE.SAMPLE",
         owners: [{ lines: [5], ownerPath: "sample.qnt" }],
         readinessStatus: "semantic-core-candidate",
@@ -421,7 +422,7 @@ function runSelfTest() {
   );
   assert.ok(
     semanticCoreCandidateRunBlockResult.report.includes(
-      `| \`BATTLE.SAMPLE\` | semantic-core-candidate | \`${runBlockBlocker}\` | \`sample.qnt\`: lines \`5\` |`,
+      `| \`BATTLE.SAMPLE\` | semantic-core-candidate | \`${runBlockBlocker}\` | _none_ | \`sample.qnt\`: lines \`5\` |`,
     ),
   );
   writeFile(
