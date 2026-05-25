@@ -71,7 +71,7 @@ remains.
     {
       "number": 10,
       "id": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add character-sheet MCP evidence rows"
     },
     {
