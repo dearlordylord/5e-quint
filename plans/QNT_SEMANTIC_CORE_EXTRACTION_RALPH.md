@@ -93,10 +93,10 @@ Do not read deleted historical Ralph lanes or broad plan transcripts. Read
 `docs/adr/0001-forest-of-qnt-slices.md` or the QNT PRD only if changing the
 architecture, vocabulary, checker contract, or task plan shape.
 
-Every Ralph prompt must include:
-
-> Before starting, run `git log --oneline -1 master` and verify your HEAD
-> matches. If not, run `git rebase master`.
+Every Ralph task prompt must include its task-base check: compare the declared
+base ref and `HEAD`, then verify the declared Base SHA is an ancestor of
+`HEAD`. If the ancestor check fails, stop and report the branch-base mismatch.
+Do not use this lane plan as authority to rebase a task worktree.
 
 Run the reviewer loop until convergence: RAW traceability when modeled rules
 change, ubiquitous-language/domain-language, architecture/connascence, and code

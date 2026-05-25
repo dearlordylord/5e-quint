@@ -130,9 +130,15 @@ Assertions are only for facts already established at compile time or by an immed
 
 Do not write to the memory system unless explicitly asked.
 
-## Worktree agent bug
+## Ralph task-base check
 
-Worktree creation sometimes branches from a stale ref instead of master's HEAD. When launching a worktree agent, always include in the prompt: `"Before starting, run 'git log --oneline -1 master' and verify your HEAD matches. If not, run 'git rebase master'."` This costs one command and prevents silent divergence that causes unmergeable conflicts.
+Ralph task worktrees are based on the task Base SHA, not necessarily on
+`master`. When launching or reviewing a Ralph task agent, include the
+task-provided base check: log the declared base ref, log `HEAD`, and run
+`git merge-base --is-ancestor <Base SHA> HEAD`. If the ancestor check fails,
+the agent must stop and report the branch-base mismatch; the Ralph runner or
+decider owns branch repair. Do not ask task agents to repair branch state by
+rebasing against `master`.
 
 ## MBT tests are nondeterministic
 

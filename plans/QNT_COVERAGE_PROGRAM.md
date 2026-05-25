@@ -207,10 +207,11 @@ Durable conventions for slice authors. Not a work log; entries are added only wh
 
 ## Ralph Handoff Prompt
 
-Every Ralph prompt for this lane must include:
-
-> Before starting, run `git log --oneline -1 master` and verify your HEAD
-> matches. If not, run `git rebase master`.
+Every Ralph task prompt for this lane must include its task-base check: compare
+the declared base ref and `HEAD`, then verify the declared Base SHA is an
+ancestor of `HEAD`. If the ancestor check fails, stop and report the
+branch-base mismatch. Do not use this program plan as authority to rebase a
+task worktree.
 
 Ralph must run the implementer, reviewer, handback, and decider loop until
 `accept`. The reviewer loop must include RAW traceability,
