@@ -29,7 +29,7 @@ work remains.
     { "number": 8, "id": "A45-UNIT-FEATURE-ZERO-HP-CORE", "status": "done", "title": "Split zero-Hit-Point feature replacement core" },
     { "number": 9, "id": "A46-MONK-FOCUS-BATTLE-CORE", "status": "done", "title": "Split Monk Focus battle option core" },
     { "number": 10, "id": "A56-UNIT-FEATURE-OWNER-ROLE-CLOSURE", "status": "done", "title": "Refresh unit-feature owner roles after semantic-core splits" },
-    { "number": 11, "id": "A57-UNIT-FEATURE-READINESS-ROW-CLOSURE", "status": "ready-for-research", "title": "Close unit-feature generator-readiness row" },
+    { "number": 11, "id": "A57-UNIT-FEATURE-READINESS-ROW-CLOSURE", "status": "done", "title": "Close unit-feature generator-readiness row" },
     { "number": 12, "id": "A58-UNIT-FEATURE-PROFILE-JOIN-AUDIT", "status": "ready-for-research", "title": "Audit supported feature profile to rules-kernel joins" },
     { "number": 13, "id": "A59-UNIT-FEATURE-MBT-BRIDGE-AUDIT", "status": "ready-for-research", "title": "Audit unit-feature MBT bridge coverage" },
     { "number": 14, "id": "A60-UNIT-FEATURE-GENERATOR-SUBSET-AUDIT", "status": "ready-for-research", "title": "Audit unit-feature generator subset tokens" },
@@ -201,12 +201,16 @@ remain proof-only closure work under Task 16.
 
 ### Task 11 - A57-UNIT-FEATURE-READINESS-ROW-CLOSURE - Close unit-feature generator-readiness row
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: the `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` readiness row no
 longer carries stale blockers or stale follow-up ids.
 
 Acceptance: checker green; remaining blockers have live task ids.
+
+Closed by checker evidence: current `generator-readiness.jsonl` marks the row
+`generation-subset-clean`, has `blockedBy: []`, and carries no follow-up task
+ids.
 
 ### Task 12 - A58-UNIT-FEATURE-PROFILE-JOIN-AUDIT - Audit supported feature profile to rules-kernel joins
 
