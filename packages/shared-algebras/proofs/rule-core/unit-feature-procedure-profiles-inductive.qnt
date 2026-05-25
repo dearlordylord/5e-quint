@@ -17,7 +17,7 @@ module unitFeatureProcedureProfilesInductive {
   import unitFeatureSaveDamageCore.* from "./unit-feature-save-damage-core"
   import unitFeatureReactionReductionCore.* from "./unit-feature-reaction-reduction-core"
   import unitFeaturePassiveMovementDefenseCore.* from "./unit-feature-passive-movement-defense-core"
-  import unitFeatureProcedureProfiles.* from "./unit-feature-procedure-profiles"
+  import unitFeatureZeroHitPointCore.* from "./unit-feature-zero-hit-point-core"
 
   var qActionQuota: ActionQuota
   var qBonusActionAvailable: bool

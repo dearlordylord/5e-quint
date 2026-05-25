@@ -180,7 +180,7 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt",
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core.qnt",
         "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
         "packages/battle-runtime/battle-runtime-movement.qnt",
         "packages/battle-runtime/battle-runtime-monk-focus.qnt"
@@ -2165,7 +2165,8 @@
         "spell.invocation-spell-created-held-object"
       ],
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt"
+        "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -6231,11 +6232,12 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt is the covered obligation QNT owner carrying zero-Hit-Point replacement semantics until A45 splits that remaining profile.",
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core.qnt is the covered obligation QNT owner carrying Relentless Endurance-style zero-Hit-Point replacement semantics without importing authored Unit catalog rows.",
       "obligationIds": [
+        "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
-      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core.qnt",
       "role": "semantic-core"
     },
     {
@@ -6416,7 +6418,6 @@
         "run-block-coupled"
       ],
       "followUpTaskIds": [
-        "A45-UNIT-FEATURE-ZERO-HP-CORE",
         "A46-MONK-FOCUS-BATTLE-CORE"
       ],
       "generatorSubset": [
@@ -6450,6 +6451,7 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
       ],
       "semanticCore": [
@@ -6461,7 +6463,7 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt",
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core.qnt",
         "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
         "packages/battle-runtime/battle-runtime-movement.qnt",
         "packages/battle-runtime/battle-runtime-monk-focus.qnt"
@@ -7921,12 +7923,7 @@
       "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "run-block-coupled"
-      ],
-      "followUpTaskIds": [
-        "A45-UNIT-FEATURE-ZERO-HP-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -7950,12 +7947,14 @@
       "proofOnly": [
         "packages/shared-algebras/proofs/rule-core/attack-damage-composition-inductive.qnt",
         "packages/shared-algebras/proofs/rule-core/attack-damage-composition-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
       ],
       "semanticCore": [
-        "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt"
+        "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],

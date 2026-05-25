@@ -101,7 +101,7 @@
                 "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt",
-                "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+                "packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core.qnt"
               ],
               "readinessStatus": "fixture-bound",
               "runBlockOwners": [
@@ -387,7 +387,7 @@
                 "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt",
-                "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+                "packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core.qnt"
               ],
               "readinessStatus": "fixture-bound",
               "runBlockOwners": [

@@ -954,7 +954,7 @@
       "id": "unit-feature.zero-hit-point-replacement",
       "profileKind": "persistent-effect",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -18016,7 +18016,7 @@
           "id": "unit-feature.zero-hit-point-replacement",
           "profileKind": "persistent-effect",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",

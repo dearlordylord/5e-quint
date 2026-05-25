@@ -3,16 +3,15 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.zero-hit-point-replacement
 // KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP
 
-module unitFeatureProcedureProfiles {
+module unitFeatureZeroHitPointCore {
   import hitPointDamage.* from "./hit-point-damage"
   import zeroHitPointLifecycle.* from "./zero-hit-point-lifecycle"
   import unitFeaturePoolCostCore.* from "./unit-feature-pool-cost-core"
 
   // RAW anchors:
   // - Character-Origins.md: Orc Relentless Endurance.
-  // - Playing-the-Game.md: Bonus Actions, Damage Rolls, Dropping to 0 Hit
-  //   Points, Instant Death, Saving Throws and Damage, Resistance and
-  //   Vulnerability.
+  // - Playing-the-Game.md: Dropping to 0 Hit Points and Instant Death.
+  // - UBIQUITOUS_LANGUAGE.md: Hit Points and Death.
 
   type ZeroHitPointReplacementFacts = {
     incomingDamage: int,
@@ -53,6 +52,7 @@ module unitFeatureProcedureProfiles {
       damaged.vitals.hitPoints == 0,
       not(damageWouldKillOutright(before, damaged)),
       facts.choosesFeature,
+      legalFeatureUsePool(pool),
       pool.usesRemaining > 0,
     }
     {
