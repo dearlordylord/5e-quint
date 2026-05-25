@@ -1,15 +1,7 @@
 // -*- mode: Bluespec; -*-
 
-// KERNEL-COVERAGE: qnt-owner BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
-// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE
-// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION
-// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
-// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION
-// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-mirror-image-hit-interception
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-self-transformation-mode
-// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-dragons-breath-initial
-// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-dragons-breath-granted-action
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-ongoing-spell-ending
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-antimagic-field-ongoing-spell-suppression
@@ -17,13 +9,11 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-creature-size-change
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-creature-size-change
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-object-contact-damage
-// UNIT-PROFILE-COVERAGE: qnt-owner spell.creature-type-protection-and-charm spell.find-familiar-lifecycle spell.invocation-after-hit-damage spell.invocation-after-hit-damage-illumination spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-blur-attack-roll-defense spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-removal-protection spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-dancing-lights-movable-dim-light spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-flaming-sphere-hazard-ram spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-independent-attack-sequence spell.invocation-jump-movement-replacement spell.invocation-magical-darkness-point-origin spell.invocation-magic-weapon-enhancement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-save-gated-condition-immunity spell.invocation-self-ability-check-advantage spell.invocation-self-teleport spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-created-held-object spell.invocation-spike-growth-movement-hazard spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.scalar-buff unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-failed-d20-test unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.passive-saving-throw-roll-mode unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.creature-type-protection-and-charm spell.find-familiar-lifecycle spell.invocation-after-hit-damage spell.invocation-after-hit-damage-illumination spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-removal-protection spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-dancing-lights-movable-dim-light spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-flaming-sphere-hazard-ram spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-independent-attack-sequence spell.invocation-jump-movement-replacement spell.invocation-magical-darkness-point-origin spell.invocation-magic-weapon-enhancement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-save-gated-condition-immunity spell.invocation-self-ability-check-advantage spell.invocation-self-teleport spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-created-held-object spell.invocation-spike-growth-movement-hazard spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.scalar-buff unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-failed-d20-test unit-feature.bardic-inspiration-grant unit-feature.martial-arts-attack-projection unit-feature.passive-saving-throw-roll-mode unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.monk-focus-battle-options
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-mirror-image-hit-interception
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-direct-condition
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-dragons-breath-initial
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-dragons-breath-granted-action
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.druid-wild-shape-known-form
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
@@ -37,7 +27,6 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-condition-save
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.reaction-counterspell
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-independent-attack-sequence
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-blur-attack-roll-defense
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-direct-condition
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-damage-reduction
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-sleep-repeat-save-lifecycle
@@ -116,6 +105,7 @@ module battleRuntime {
   import battleRuntimeSanctuary.* from "./battle-runtime-sanctuary"
   import battleRuntimeFeatherFall.* from "./battle-runtime-feather-fall"
   import battleRuntimeJumpMovement.* from "./battle-runtime-jump-movement"
+  import battleRuntimeSelfTeleport.* from "./battle-runtime-self-teleport"
   import battleRuntimeWeaponHitSpellRiders.* from "./battle-runtime-weapon-hit-spell-riders"
   import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
@@ -902,151 +892,6 @@ module battleRuntime {
         target,
         combatantWithSanctuaryWard(targetCombatant, Fighter),
       )
-    }
-
-  pure def resolveJumpMovementReplacementSpell(state: BattleState, targets: Set[Actor], willingTargets: Set[Actor], slotLevel: int): BattleState =
-    if (
-      currentActor(state) == Fighter and
-      state.bonusActionAvailable and
-      canExpendSpellSlotThisTurn(state) and
-      not(state.fighter.unconscious) and
-      not(state.fighter.incapacitated) and
-      not(fighterHasRage(state)) and
-      targets.size() >= 1 and
-      targets.forall(target => willingTargets.contains(target)) and
-      targets.size() <= jumpMovementReplacementMaxTargets(slotLevel)
-    ) {
-      val effect = jumpMovementReplacementActiveEffect
-      commitActorSpellSlotUse({
-        ...state,
-        fighter: if (targets.contains(Fighter))
-          { ...state.fighter, activeEffects: state.fighter.activeEffects.union(Set(effect)) }
-        else
-          state.fighter,
-        goblin: if (targets.contains(Goblin))
-          { ...state.goblin, activeEffects: state.goblin.activeEffects.union(Set(effect)) }
-        else
-          state.goblin,
-        bonusActionAvailable: false,
-      }, Fighter)
-    } else {
-      state
-    }
-
-  pure def dragonsBreathDurationTicks(): int = 10
-
-  pure def dragonsBreathDamageTypeChoiceIsLegal(damageType: DamageType): bool =
-    Set(Acid, Cold, Fire, Lightning, Poison).contains(damageType)
-
-  pure def dragonsBreathInitialEffect(source: Actor, damageType: DamageType, slotLevel: int, spellSaveDc: int): ActiveEffect =
-    DragonsBreathEffect({
-      source: source,
-      damageType: damageType,
-      originalSlotLevel: slotLevel,
-      spellSaveDc: spellSaveDc,
-      durationTicks: dragonsBreathDurationTicks,
-    })
-
-  pure def activeEffectsWithoutDragonsBreathFrom(effects: Set[ActiveEffect], source: Actor): Set[ActiveEffect] =
-    effects.filter(effect => match effect {
-      | DragonsBreathEffect(data) => data.source != source
-      | _ => true
-    })
-
-  pure def combatantWithDragonsBreathEffect(target: Combatant, effect: ActiveEffect, source: Actor): Combatant =
-    { ...target, activeEffects: activeEffectsWithoutDragonsBreathFrom(target.activeEffects, source).union(Set(effect)) }
-
-  pure def resolveDragonsBreathInitialSpell(
-    state: BattleState,
-    target: Actor,
-    willingTargets: Set[Actor],
-    damageType: DamageType,
-    slotLevel: int,
-    spellSaveDc: int,
-  ): BattleState =
-    if (
-      currentActor(state) == Fighter and
-      state.bonusActionAvailable and
-      canExpendSpellSlotThisTurn(state) and
-      not(state.fighter.unconscious) and
-      not(state.fighter.incapacitated) and
-      not(fighterHasRage(state)) and
-      slotLevel >= 2 and
-      dragonsBreathDamageTypeChoiceIsLegal(damageType) and
-      willingTargets.contains(target) and
-      spellSaveDc > 0
-    ) {
-      val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
-      val effect = dragonsBreathInitialEffect(Fighter, damageType, slotLevel, spellSaveDc)
-      commitActorSpellSlotUse({
-        ...withoutPrior,
-        fighter: if (target == Fighter)
-          combatantWithDragonsBreathEffect(withoutPrior.fighter, effect, Fighter)
-        else
-          withoutPrior.fighter,
-        goblin: if (target == Goblin)
-          combatantWithDragonsBreathEffect(withoutPrior.goblin, effect, Fighter)
-        else
-          withoutPrior.goblin,
-        bonusActionAvailable: false,
-      }, Fighter)
-    } else {
-      state
-    }
-
-  pure def mistyStepMaxTeleportFeet(): int = 30
-
-  pure def mistyStepDestinationIsLegal(distanceFeet: int, unoccupiedVisibleDestination: bool): bool =
-    unoccupiedVisibleDestination and distanceFeet > 0 and distanceFeet <= mistyStepMaxTeleportFeet
-
-  pure def mistyStepTeleportSpendsMovement(): bool = false
-
-  pure def mistyStepTeleportProvokesOpportunityAttacks(): bool = false
-
-  pure def mistyStepTeleportTransportsWornAndCarriedEquipment(): bool = true
-
-  pure def resolveMistyStepSpell(state: BattleState, distanceFeet: int, unoccupiedVisibleDestination: bool): BattleState =
-    if (
-      currentActor(state) == Fighter and
-      state.bonusActionAvailable and
-      canExpendSpellSlotThisTurn(state) and
-      not(state.fighter.unconscious) and
-      not(state.fighter.incapacitated) and
-      not(fighterHasRage(state)) and
-      mistyStepDestinationIsLegal(distanceFeet, unoccupiedVisibleDestination)
-    ) {
-      val afterCasterEarlyEnd = battleStateAfterSanctuaryEarlyEndForActor(state, Fighter)
-      commitActorSpellSlotUse({ ...afterCasterEarlyEnd, bonusActionAvailable: false }, Fighter)
-    } else {
-      state
-    }
-
-  pure def jumpMovementReplacementFighter(
-    state: BattleState,
-    movementCost: int,
-    jumpDistance: int,
-    landing: JumpMovementLandingFact
-  ): BattleState =
-    if (
-      currentActor(state) == Fighter and
-      movementCost == 10 and
-      jumpDistance > 0 and
-      jumpDistance <= jumpMovementReplacementMaxDistanceFeet(state) and
-      jumpMovementReplacementLandingIsLegal(landing) and
-      activeEffectsContainAvailableJumpMovementReplacement(state.fighter.activeEffects) and
-      fighterCanMoveWithSpeedKind(state, WalkSpeedKind, movementCost)
-    ) {
-      val moved = applyFighterMovementWithSpeedKind(state, WalkSpeedKind, movementCost)
-      {
-        ...moved,
-        fighter: {
-          ...moved.fighter,
-          activeEffects: activeEffectsAfterJumpMovementReplacementUse(moved.fighter.activeEffects),
-          prone: moved.fighter.prone or jumpMovementReplacementLandingAppliesProne(landing),
-        },
-      }
-    } else {
-      state
     }
 
   pure def standFighterFromProne(state: BattleState): BattleState = {

@@ -72,11 +72,11 @@
           "status": "pass"
         },
         {
-          "blockingCount": 11,
+          "blockingCount": 1,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
               "denominator": 32,
-              "numerator": 21
+              "numerator": 31
             },
             "qntCoveredObligations": {
               "denominator": 44,
@@ -88,25 +88,18 @@
               "blockedBy": [
                 "run-block-coupled"
               ],
-              "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
-              "ownerPaths": [
-                "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
-                "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
-              ],
-              "readinessStatus": "fixture-bound",
-              "runBlockOwners": [
-                "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
-              ]
-            },
-            {
-              "blockedBy": [
-                "run-block-coupled"
-              ],
               "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
               "ownerPaths": [
+                "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
                 "packages/battle-runtime/battle-runtime-monk-focus.qnt",
-                "packages/battle-runtime/battle-runtime.qnt",
+                "packages/battle-runtime/battle-runtime-movement.qnt",
                 "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+                "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
+                "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
+                "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
+                "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
+                "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
+                "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
               ],
               "readinessStatus": "fixture-bound",
@@ -114,105 +107,6 @@
                 "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
                 "packages/battle-runtime/battle-runtime-monk-focus.qnt"
               ]
-            },
-            {
-              "blockedBy": [
-                "bridge-projection-coupled"
-              ],
-              "obligationId": "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime.qnt"
-              ],
-              "readinessStatus": "fixture-bound",
-              "runBlockOwners": []
-            },
-            {
-              "blockedBy": [
-                "bridge-projection-coupled"
-              ],
-              "obligationId": "BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime.qnt"
-              ],
-              "readinessStatus": "fixture-bound",
-              "runBlockOwners": []
-            },
-            {
-              "blockedBy": [
-                "bridge-projection-coupled"
-              ],
-              "obligationId": "BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime.qnt"
-              ],
-              "readinessStatus": "fixture-bound",
-              "runBlockOwners": []
-            },
-            {
-              "blockedBy": [
-                "bridge-projection-coupled"
-              ],
-              "obligationId": "BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime.qnt"
-              ],
-              "readinessStatus": "fixture-bound",
-              "runBlockOwners": []
-            },
-            {
-              "blockedBy": [
-                "bridge-projection-coupled"
-              ],
-              "obligationId": "BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime.qnt"
-              ],
-              "readinessStatus": "fixture-bound",
-              "runBlockOwners": []
-            },
-            {
-              "blockedBy": [
-                "bridge-projection-coupled"
-              ],
-              "obligationId": "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime.qnt"
-              ],
-              "readinessStatus": "fixture-bound",
-              "runBlockOwners": []
-            },
-            {
-              "blockedBy": [
-                "bridge-projection-coupled"
-              ],
-              "obligationId": "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime.qnt"
-              ],
-              "readinessStatus": "fixture-bound",
-              "runBlockOwners": []
-            },
-            {
-              "blockedBy": [
-                "bridge-projection-coupled"
-              ],
-              "obligationId": "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime.qnt"
-              ],
-              "readinessStatus": "fixture-bound",
-              "runBlockOwners": []
-            },
-            {
-              "blockedBy": [
-                "bridge-projection-coupled"
-              ],
-              "obligationId": "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime.qnt"
-              ],
-              "readinessStatus": "fixture-bound",
-              "runBlockOwners": []
             }
           ],
           "id": "qnt-generator-readiness",
@@ -464,11 +358,11 @@
           "status": "pass"
         },
         {
-          "blockingCount": 11,
+          "blockingCount": 1,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
               "denominator": 32,
-              "numerator": 21
+              "numerator": 31
             },
             "qntCoveredObligations": {
               "denominator": 47,
@@ -480,25 +374,18 @@
               "blockedBy": [
                 "run-block-coupled"
               ],
-              "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
-              "ownerPaths": [
-                "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
-                "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
-              ],
-              "readinessStatus": "fixture-bound",
-              "runBlockOwners": [
-                "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
-              ]
-            },
-            {
-              "blockedBy": [
-                "run-block-coupled"
-              ],
               "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
               "ownerPaths": [
+                "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
                 "packages/battle-runtime/battle-runtime-monk-focus.qnt",
-                "packages/battle-runtime/battle-runtime.qnt",
+                "packages/battle-runtime/battle-runtime-movement.qnt",
                 "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+                "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
+                "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
+                "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
+                "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
+                "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
+                "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
               ],
               "readinessStatus": "fixture-bound",
@@ -506,105 +393,6 @@
                 "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
                 "packages/battle-runtime/battle-runtime-monk-focus.qnt"
               ]
-            },
-            {
-              "blockedBy": [
-                "bridge-projection-coupled"
-              ],
-              "obligationId": "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime.qnt"
-              ],
-              "readinessStatus": "fixture-bound",
-              "runBlockOwners": []
-            },
-            {
-              "blockedBy": [
-                "bridge-projection-coupled"
-              ],
-              "obligationId": "BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime.qnt"
-              ],
-              "readinessStatus": "fixture-bound",
-              "runBlockOwners": []
-            },
-            {
-              "blockedBy": [
-                "bridge-projection-coupled"
-              ],
-              "obligationId": "BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime.qnt"
-              ],
-              "readinessStatus": "fixture-bound",
-              "runBlockOwners": []
-            },
-            {
-              "blockedBy": [
-                "bridge-projection-coupled"
-              ],
-              "obligationId": "BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime.qnt"
-              ],
-              "readinessStatus": "fixture-bound",
-              "runBlockOwners": []
-            },
-            {
-              "blockedBy": [
-                "bridge-projection-coupled"
-              ],
-              "obligationId": "BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime.qnt"
-              ],
-              "readinessStatus": "fixture-bound",
-              "runBlockOwners": []
-            },
-            {
-              "blockedBy": [
-                "bridge-projection-coupled"
-              ],
-              "obligationId": "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime.qnt"
-              ],
-              "readinessStatus": "fixture-bound",
-              "runBlockOwners": []
-            },
-            {
-              "blockedBy": [
-                "bridge-projection-coupled"
-              ],
-              "obligationId": "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime.qnt"
-              ],
-              "readinessStatus": "fixture-bound",
-              "runBlockOwners": []
-            },
-            {
-              "blockedBy": [
-                "bridge-projection-coupled"
-              ],
-              "obligationId": "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime.qnt"
-              ],
-              "readinessStatus": "fixture-bound",
-              "runBlockOwners": []
-            },
-            {
-              "blockedBy": [
-                "bridge-projection-coupled"
-              ],
-              "obligationId": "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime.qnt"
-              ],
-              "readinessStatus": "fixture-bound",
-              "runBlockOwners": []
             }
           ],
           "id": "qnt-generator-readiness",

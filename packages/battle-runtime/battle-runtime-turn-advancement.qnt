@@ -4,6 +4,7 @@ module battleRuntimeTurnAdvancement {
   import battleRuntimeMovementBridge.* from "./battle-runtime-movement-bridge"
   import battleRuntimeStatBlockBridge.* from "./battle-runtime-stat-block-bridge"
   import battleRuntimeFeatureBridge.* from "./battle-runtime-feature-bridge"
+  import battleRuntimeFeatureTurnEndEffects.* from "./battle-runtime-feature-turn-end-effects"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
   import battleRuntimeMovement.* from "./battle-runtime-movement"

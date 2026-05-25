@@ -34,6 +34,7 @@ module battleRuntimeHpArmorBuffSpatialTests {
   import battleRuntimeSanctuary.* from "./battle-runtime-sanctuary"
   import battleRuntimeFeatherFall.* from "./battle-runtime-feather-fall"
   import battleRuntimeJumpMovement.* from "./battle-runtime-jump-movement"
+  import battleRuntimeSelfTeleport.* from "./battle-runtime-self-teleport"
   import battleRuntimeWeaponHitSpellRiders.* from "./battle-runtime-weapon-hit-spell-riders"
   import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
@@ -43,6 +44,7 @@ module battleRuntimeHpArmorBuffSpatialTests {
   import battleRuntimeSleepHideousLaughter.* from "./battle-runtime-sleep-hideous-laughter"
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
   import battleRuntimeGroundCommand.* from "./battle-runtime-ground-command"
+  import battleRuntimeDragonsBreath.* from "./battle-runtime-dragons-breath"
   import battleRuntimeWeaponAttacks.* from "./battle-runtime-weapon-attacks"
   import battleRuntimeMirrorImage.* from "./battle-runtime-mirror-image"
   import battleRuntimeMonkFocus.* from "./battle-runtime-monk-focus"
@@ -1224,10 +1226,6 @@ module battleRuntimeHpArmorBuffSpatialTests {
     val result = resolveDragonsBreathExhale(
       goblinTurn,
       Goblin,
-      Fighter,
-      Fire,
-      2,
-      13,
       Set(Fighter),
       Set(),
       6,
@@ -1246,10 +1244,6 @@ module battleRuntimeHpArmorBuffSpatialTests {
     val result = resolveDragonsBreathExhale(
       goblinTurn,
       Goblin,
-      Fighter,
-      Cold,
-      3,
-      13,
       Set(Fighter),
       Set(Fighter),
       11,
@@ -1267,8 +1261,8 @@ module battleRuntimeHpArmorBuffSpatialTests {
     val cast = resolveDragonsBreathInitialSpell(initialState, Goblin, Set(Goblin), Lightning, 2, 13)
     val noAction = { ...endTurn(cast), actionAvailable: false }
     all {
-      assert(resolveDragonsBreathExhale(noEffect, Goblin, Fighter, Lightning, 2, 13, Set(Fighter), Set(), 6, true) == noEffect),
-      assert(resolveDragonsBreathExhale(noAction, Goblin, Fighter, Lightning, 2, 13, Set(Fighter), Set(), 6, true) == noAction),
+      assert(resolveDragonsBreathExhale(noEffect, Goblin, Set(Fighter), Set(), 6, true) == noEffect),
+      assert(resolveDragonsBreathExhale(noAction, Goblin, Set(Fighter), Set(), 6, true) == noAction),
     }
   }
 

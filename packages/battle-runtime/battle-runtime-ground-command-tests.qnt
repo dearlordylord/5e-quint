@@ -38,6 +38,7 @@ module battleRuntimeGroundCommandTests {
   import battleRuntimeSanctuary.* from "./battle-runtime-sanctuary"
   import battleRuntimeFeatherFall.* from "./battle-runtime-feather-fall"
   import battleRuntimeJumpMovement.* from "./battle-runtime-jump-movement"
+  import battleRuntimeAntimagicSuppression.* from "./battle-runtime-antimagic-suppression"
   import battleRuntimeWeaponHitSpellRiders.* from "./battle-runtime-weapon-hit-spell-riders"
   import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
@@ -501,6 +502,15 @@ module battleRuntimeGroundCommandTests {
     all {
       assert(areaDifficultTerrainMovementCost(resolved, webAreaId, 10, 5) == 15),
       assert(areaDifficultTerrainMovementCost(removedArea, webAreaId, 10, 5) == 0),
+    }
+  }
+
+  run test_web_area_sight_obscurement_uses_active_web_area = {
+    val resolved = resolveWeb(initialState, webAreaId, 2)
+    val removedArea = removeWebArea(resolved, webAreaId)
+    all {
+      assert(webRestraintHazardSightObscurement(resolved, webAreaId) == LightlyObscuredSight),
+      assert(webRestraintHazardSightObscurement(removedArea, webAreaId) == UnobscuredSight),
     }
   }
 

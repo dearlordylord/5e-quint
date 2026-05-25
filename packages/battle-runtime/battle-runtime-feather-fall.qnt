@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE
 
 module battleRuntimeFeatherFall {
   import battleRuntimeModel.* from "./battle-runtime-model"

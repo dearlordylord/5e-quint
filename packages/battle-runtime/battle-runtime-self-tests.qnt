@@ -10,8 +10,10 @@ module battleRuntimeSelfTests {
   import battleRuntimeSeeInvisibilityTests.* from "./battle-runtime-see-invisibility-tests"
   import battleRuntimeLightConcentrationMovementReactionTests.* from "./battle-runtime-light-concentration-movement-reaction-tests"
   import battleRuntimeSelfTransformationTests.* from "./battle-runtime-self-transformation-tests"
+  import battleRuntimeAntimagicSuppressionTests.* from "./battle-runtime-antimagic-suppression-tests"
   import battleRuntimeObjectContactDamageTests.* from "./battle-runtime-object-contact-damage-tests"
+  import battleRuntimeDragonsBreathTests.* from "./battle-runtime-dragons-breath-tests"
   import battleRuntimeMetamagic.* from "./battle-runtime-metamagic"
   import battleRuntimeShapeShifting.* from "./battle-runtime-shape-shifting"
-  import battleRuntimeDruidWildShape.* from "./battle-runtime-druid-wild-shape"
+  import battleRuntimeDruidWildShapeTests.* from "./battle-runtime-druid-wild-shape-tests"
 }

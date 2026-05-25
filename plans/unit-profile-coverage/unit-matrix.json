@@ -296,7 +296,7 @@
       "profileKind": "passive",
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -322,8 +322,7 @@
       "id": "unit-feature.martial-arts-attack-projection",
       "profileKind": "passive",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -364,7 +363,6 @@
       "id": "unit-feature.monk-focus-battle-options",
       "profileKind": "bonus-action",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt",
         "packages/battle-runtime/battle-runtime-monk-focus.qnt"
       ],
       "runtimeOwners": [
@@ -383,10 +381,6 @@
       ],
       "title": "Unit feature executes Monk's Focus battle options against the shared Focus Point resource",
       "verificationOwners": [
-        {
-          "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
-        },
         {
           "kind": "qnt-proof",
           "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt"
@@ -409,8 +403,7 @@
       "id": "unit-feature.attack-damage-reduction-zero-damage-redirect",
       "profileKind": "reaction",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -520,7 +513,7 @@
       "profileKind": "bonus-action",
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-movement.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -741,8 +734,7 @@
       "id": "unit-feature.passive-saving-throw-roll-mode",
       "profileKind": "passive",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -989,8 +981,7 @@
       "profileKind": "reaction",
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
-        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -1238,10 +1229,6 @@
         {
           "kind": "qnt-proof",
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
-        },
-        {
-          "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
         },
         {
           "kind": "focused-mbt",
@@ -3060,7 +3047,7 @@
       "id": "spell.invocation-blur-attack-roll-defense",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts"
@@ -3072,16 +3059,16 @@
       "title": "Spell invocation applies concentration attack-roll Disadvantage against the caster with Blindsight and Truesight bypass witnesses",
       "verificationOwners": [
         {
-          "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
-        },
-        {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/blur-attack-roll-defense-lifecycle.mbt.test.ts"
         },
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-blur.test.ts"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt"
         }
       ]
     },
@@ -3682,7 +3669,6 @@
       "id": "spell.invocation-ray-of-enfeeblement-d20-lifecycle",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt",
         "packages/battle-runtime/battle-runtime-model.qnt",
         "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
         "packages/battle-runtime/battle-runtime-spell-attack.qnt",
@@ -3773,7 +3759,7 @@
       "id": "spell.invocation-dragons-breath-initial",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-dragons-breath.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts",
@@ -3788,16 +3774,16 @@
       "title": "Spell invocation stores Dragon's Breath target-attached breath effect state",
       "verificationOwners": [
         {
-          "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
-        },
-        {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/dragons-breath-initial-effect.mbt.test.ts"
         },
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dragons-breath.test.ts"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-dragons-breath.qnt"
         }
       ]
     },
@@ -3805,7 +3791,7 @@
       "id": "spell.invocation-dragons-breath-granted-action",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-dragons-breath.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts",
@@ -3821,16 +3807,16 @@
       "title": "Spell invocation grants Dragon's Breath target Magic action with Cone save-for-half damage",
       "verificationOwners": [
         {
-          "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
-        },
-        {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/dragons-breath-granted-action.mbt.test.ts"
         },
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dragons-breath.test.ts"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-dragons-breath.qnt"
         }
       ]
     },
@@ -12953,7 +12939,7 @@
           "profileKind": "passive",
           "qntOwners": [
             "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-            "packages/battle-runtime/battle-runtime.qnt"
+            "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -13375,8 +13361,7 @@
           "id": "unit-feature.passive-saving-throw-roll-mode",
           "profileKind": "passive",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
-            "packages/battle-runtime/battle-runtime.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -13695,8 +13680,7 @@
           "profileKind": "reaction",
           "qntOwners": [
             "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
-            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
-            "packages/battle-runtime/battle-runtime.qnt"
+            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -14472,8 +14456,7 @@
           "id": "unit-feature.martial-arts-attack-projection",
           "profileKind": "passive",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
-            "packages/battle-runtime/battle-runtime.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -14641,7 +14624,6 @@
           "id": "unit-feature.monk-focus-battle-options",
           "profileKind": "bonus-action",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime.qnt",
             "packages/battle-runtime/battle-runtime-monk-focus.qnt"
           ],
           "runtimeOwners": [
@@ -14660,10 +14642,6 @@
           ],
           "title": "Unit feature executes Monk's Focus battle options against the shared Focus Point resource",
           "verificationOwners": [
-            {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
-            },
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt"
@@ -14953,8 +14931,7 @@
           "id": "unit-feature.attack-damage-reduction-zero-damage-redirect",
           "profileKind": "reaction",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
-            "packages/battle-runtime/battle-runtime.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -15380,8 +15357,7 @@
           "profileKind": "reaction",
           "qntOwners": [
             "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
-            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
-            "packages/battle-runtime/battle-runtime.qnt"
+            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -17315,7 +17291,7 @@
           "profileKind": "passive",
           "qntOwners": [
             "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-            "packages/battle-runtime/battle-runtime.qnt"
+            "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -17464,7 +17440,7 @@
           "profileKind": "passive",
           "qntOwners": [
             "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-            "packages/battle-runtime/battle-runtime.qnt"
+            "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -17952,7 +17928,7 @@
           "profileKind": "bonus-action",
           "qntOwners": [
             "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
-            "packages/battle-runtime/battle-runtime.qnt"
+            "packages/battle-runtime/battle-runtime-movement.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -18314,10 +18290,6 @@
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
-            },
-            {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
             },
             {
               "kind": "focused-mbt",
@@ -19046,7 +19018,7 @@
           "id": "spell.invocation-blur-attack-roll-defense",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime.qnt"
+            "packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
@@ -19058,16 +19030,16 @@
           "title": "Spell invocation applies concentration attack-roll Disadvantage against the caster with Blindsight and Truesight bypass witnesses",
           "verificationOwners": [
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
-            },
-            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/blur-attack-roll-defense-lifecycle.mbt.test.ts"
             },
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-blur.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt"
             }
           ]
         }
@@ -19139,10 +19111,6 @@
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
-            },
-            {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
             },
             {
               "kind": "focused-mbt",
@@ -19340,10 +19308,6 @@
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
-            },
-            {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
             },
             {
               "kind": "focused-mbt",
@@ -20263,10 +20227,6 @@
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
-            },
-            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
             },
@@ -20485,7 +20445,7 @@
           "id": "spell.invocation-dragons-breath-initial",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime.qnt"
+            "packages/battle-runtime/battle-runtime-dragons-breath.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts",
@@ -20500,16 +20460,16 @@
           "title": "Spell invocation stores Dragon's Breath target-attached breath effect state",
           "verificationOwners": [
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
-            },
-            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/dragons-breath-initial-effect.mbt.test.ts"
             },
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dragons-breath.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-dragons-breath.qnt"
             }
           ]
         },
@@ -20517,7 +20477,7 @@
           "id": "spell.invocation-dragons-breath-granted-action",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime.qnt"
+            "packages/battle-runtime/battle-runtime-dragons-breath.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts",
@@ -20533,16 +20493,16 @@
           "title": "Spell invocation grants Dragon's Breath target Magic action with Cone save-for-half damage",
           "verificationOwners": [
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
-            },
-            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/dragons-breath-granted-action.mbt.test.ts"
             },
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dragons-breath.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-dragons-breath.qnt"
             }
           ]
         }
@@ -21263,10 +21223,6 @@
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
-            },
-            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
             },
@@ -21365,10 +21321,6 @@
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
-            },
-            {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
             },
             {
               "kind": "focused-mbt",
@@ -21952,10 +21904,6 @@
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
-            },
-            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
             },
@@ -22480,10 +22428,6 @@
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
-            },
-            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
             },
@@ -22565,10 +22509,6 @@
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
-            },
-            {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
             },
             {
               "kind": "focused-mbt",
@@ -23020,10 +22960,6 @@
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
-            },
-            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
             },
@@ -23440,10 +23376,6 @@
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
-            },
-            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
             },
@@ -23782,10 +23714,6 @@
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
-            },
-            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
             },
@@ -23876,7 +23804,6 @@
           "id": "spell.invocation-ray-of-enfeeblement-d20-lifecycle",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime.qnt",
             "packages/battle-runtime/battle-runtime-model.qnt",
             "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
             "packages/battle-runtime/battle-runtime-spell-attack.qnt",
@@ -24033,10 +23960,6 @@
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
-            },
-            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
             },
@@ -24145,10 +24068,6 @@
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
-            },
-            {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
             },
             {
               "kind": "focused-mbt",
@@ -24341,10 +24260,6 @@
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
-            },
-            {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
             },
             {
               "kind": "focused-mbt",
@@ -24737,10 +24652,6 @@
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
-            },
-            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
             },
@@ -24856,10 +24767,6 @@
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
-            },
-            {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
             },
             {
               "kind": "focused-mbt",
@@ -25002,10 +24909,6 @@
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
-            },
-            {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
             },
             {
               "kind": "focused-mbt",
@@ -25170,10 +25073,6 @@
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
-            },
-            {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
             },
             {
               "kind": "focused-mbt",
@@ -25378,10 +25277,6 @@
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
-            },
-            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
             },
@@ -25490,10 +25385,6 @@
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
-            },
-            {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
             },
             {
               "kind": "focused-mbt",
@@ -25719,10 +25610,6 @@
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
-            },
-            {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
             },
             {
               "kind": "focused-mbt",
@@ -26318,10 +26205,6 @@
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
-            },
-            {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
             },
             {
               "kind": "focused-mbt",
@@ -27070,10 +26953,6 @@
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
-            },
-            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
             },
@@ -27426,10 +27305,6 @@
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
-            },
-            {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
             },
             {
               "kind": "focused-mbt",

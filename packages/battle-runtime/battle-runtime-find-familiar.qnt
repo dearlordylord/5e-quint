@@ -1,5 +1,19 @@
 // -*- mode: Bluespec; -*-
 
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
+//
+// Focused semantic core for SRD Find Familiar companion lifecycle state.
+// RAW anchors:
+// - .references/srd-5.2.1/Spells/Descriptions-E-L.md lines 305-315:
+//   chosen form and creature type, one-familiar replacement, own Initiative,
+//   no ordinary attacks, telepathy, shared senses, Touch spell delivery,
+//   temporary/permanent dismissal, 0-HP disappearance, and carried item drops.
+// - .references/srd-5.2.1/Classes/Warlock.md lines 280-286:
+//   Pact of the Chain Find Familiar access, special form choice, and owner
+//   Attack-action forgo/reaction familiar attack.
+// - UBIQUITOUS_LANGUAGE.md: Companion Control, Companion Execution, Magic
+//   Action, Bonus Action, Reaction, and Attack Roll.
+
 module battleRuntimeFindFamiliar {
   import battleRuntimeModel.* from "./battle-runtime-model"
 

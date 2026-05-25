@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING
 
 module battleRuntimeObjectContactDamage {
   import battleRuntimeModel.* from "./battle-runtime-model"
@@ -6,6 +7,7 @@ module battleRuntimeObjectContactDamage {
   import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
+  import battleRuntimeAntimagicSuppression.* from "./battle-runtime-antimagic-suppression"
   import battleRuntimeLight.* from "./battle-runtime-light"
   import battleRuntimeOngoingSpellDispel.* from "./battle-runtime-ongoing-spell-dispel"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"

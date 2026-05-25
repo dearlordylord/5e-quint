@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE
 
 module battleRuntimeCreatureSizeChange {
   import battleRuntimeModel.* from "./battle-runtime-model"

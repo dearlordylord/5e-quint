@@ -251,6 +251,12 @@ function createDriver() {
       projection = applyScenario(scenario);
     }
 
+    function replayNext(): void {
+      const scenario = scenarios[projection.replayIndex + 1];
+      if (scenario === undefined || scenario === "init") return;
+      replay(scenario);
+    }
+
     return {
       init: reset,
       doSearchFails: () => replay("search-fails"),
@@ -294,7 +300,7 @@ function createDriver() {
         replay("command-follow-flee-no-movement"),
       doCommandFollowFleeOpportunityAttack: () =>
         replay("command-follow-flee-opportunity-attack"),
-      step: () => {},
+      step: replayNext,
       getState: () => projection,
     };
   });

@@ -483,7 +483,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -904,7 +904,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -1212,7 +1212,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -1828,7 +1828,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -2044,7 +2044,7 @@
           ],
           "qntOwners": [
             {
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+              "ownerPath": "packages/battle-runtime/battle-runtime-movement.qnt",
               "role": "semantic-core"
             }
           ],
@@ -2341,7 +2341,7 @@
           ],
           "qntOwners": [
             {
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+              "ownerPath": "packages/battle-runtime/battle-runtime-movement.qnt",
               "role": "semantic-core"
             }
           ],
@@ -2489,7 +2489,7 @@
           ],
           "qntOwners": [
             {
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+              "ownerPath": "packages/battle-runtime/battle-runtime-feather-fall.qnt",
               "role": "semantic-core"
             }
           ],
@@ -2540,7 +2540,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -2721,7 +2721,7 @@
           ],
           "qntOwners": [
             {
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+              "ownerPath": "packages/battle-runtime/battle-runtime-ground-command.qnt",
               "role": "semantic-core"
             }
           ],
@@ -2811,7 +2811,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -3154,7 +3154,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -3492,7 +3492,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -3654,7 +3654,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -3981,7 +3981,7 @@
           ],
           "qntOwners": [
             {
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+              "ownerPath": "packages/battle-runtime/battle-runtime-jump-movement.qnt",
               "role": "semantic-core"
             }
           ],
@@ -4016,7 +4016,7 @@
           ],
           "qntOwners": [
             {
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+              "ownerPath": "packages/battle-runtime/battle-runtime-light.qnt",
               "role": "semantic-core"
             }
           ],
@@ -4106,7 +4106,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -4414,7 +4414,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -4722,7 +4722,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -5030,7 +5030,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -5176,7 +5176,7 @@
           ],
           "qntOwners": [
             {
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+              "ownerPath": "packages/battle-runtime/battle-runtime-light.qnt",
               "role": "semantic-core"
             }
           ],
@@ -5262,7 +5262,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -5570,7 +5570,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -5917,7 +5917,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -6393,7 +6393,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -6736,7 +6736,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -6933,7 +6933,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -7095,7 +7095,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -7304,7 +7304,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -8090,7 +8090,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -8511,7 +8511,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -8819,7 +8819,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -9435,7 +9435,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -9651,7 +9651,7 @@
           ],
           "qntOwners": [
             {
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+              "ownerPath": "packages/battle-runtime/battle-runtime-movement.qnt",
               "role": "semantic-core"
             }
           ],
@@ -9948,7 +9948,7 @@
           ],
           "qntOwners": [
             {
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+              "ownerPath": "packages/battle-runtime/battle-runtime-movement.qnt",
               "role": "semantic-core"
             }
           ],
@@ -10096,7 +10096,7 @@
           ],
           "qntOwners": [
             {
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+              "ownerPath": "packages/battle-runtime/battle-runtime-feather-fall.qnt",
               "role": "semantic-core"
             }
           ],
@@ -10147,7 +10147,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -10328,7 +10328,7 @@
           ],
           "qntOwners": [
             {
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+              "ownerPath": "packages/battle-runtime/battle-runtime-ground-command.qnt",
               "role": "semantic-core"
             }
           ],
@@ -10418,7 +10418,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -10761,7 +10761,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -11099,7 +11099,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -11261,7 +11261,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -11588,7 +11588,7 @@
           ],
           "qntOwners": [
             {
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+              "ownerPath": "packages/battle-runtime/battle-runtime-jump-movement.qnt",
               "role": "semantic-core"
             }
           ],
@@ -11623,7 +11623,7 @@
           ],
           "qntOwners": [
             {
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+              "ownerPath": "packages/battle-runtime/battle-runtime-light.qnt",
               "role": "semantic-core"
             }
           ],
@@ -11713,7 +11713,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -12021,7 +12021,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -12376,7 +12376,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -12684,7 +12684,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -12830,7 +12830,7 @@
           ],
           "qntOwners": [
             {
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+              "ownerPath": "packages/battle-runtime/battle-runtime-light.qnt",
               "role": "semantic-core"
             }
           ],
@@ -12916,7 +12916,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -13224,7 +13224,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -13571,7 +13571,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -14047,7 +14047,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -14390,7 +14390,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -14587,7 +14587,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -14749,7 +14749,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],
@@ -14958,7 +14958,7 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
               "role": "semantic-core"
             }
           ],

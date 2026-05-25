@@ -180,7 +180,8 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
-        "packages/battle-runtime/battle-runtime.qnt",
+        "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
+        "packages/battle-runtime/battle-runtime-movement.qnt",
         "packages/battle-runtime/battle-runtime-monk-focus.qnt"
       ],
       "runtime": "battle",
@@ -279,7 +280,7 @@
         "spell.invocation-direct-condition"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt",
+        "packages/battle-runtime/battle-runtime-direct-condition-lifecycle.qnt",
         "packages/battle-runtime/battle-runtime-sanctuary.qnt",
         "packages/battle-runtime/battle-runtime-concentration.qnt",
         "packages/battle-runtime/battle-runtime-timed-effects.qnt"
@@ -484,7 +485,7 @@
         "spell.find-familiar-lifecycle"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-find-familiar.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -516,7 +517,7 @@
         "spell.invocation-web-restraint-hazard"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-ground-command.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -552,7 +553,7 @@
         "unit-feature.druid-wild-shape-known-form"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-druid-wild-shape.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -586,7 +587,7 @@
         "spell.invocation-object-contact-damage"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-object-contact-damage.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -646,7 +647,8 @@
         "spell.invocation-creature-size-change"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt",
+        "packages/battle-runtime/battle-runtime-creature-size-change.qnt",
+        "packages/battle-runtime/battle-runtime-concentration.qnt",
         "packages/battle-runtime/battle-runtime-timed-effects.qnt"
       ],
       "runtime": "battle",
@@ -726,7 +728,9 @@
         "spell.invocation-ongoing-spell-ending"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-ongoing-spell-dispel.qnt",
+        "packages/battle-runtime/battle-runtime-light.qnt",
+        "packages/battle-runtime/battle-runtime-object-contact-damage.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -820,7 +824,7 @@
         "spell.invocation-antimagic-field-ongoing-spell-suppression"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-antimagic-suppression.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -909,7 +913,7 @@
         "spell.invocation-grease-ground-hazard"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-ground-command.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -938,7 +942,7 @@
         "spell.invocation-fog-cloud-obscurement"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-ground-command.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -971,7 +975,7 @@
         "spell.invocation-magical-darkness-point-origin"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-ground-command.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1001,7 +1005,7 @@
         "spell.invocation-object-light"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-light.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1021,13 +1025,19 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-flaming-sphere.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/flaming-sphere-hazard-ram.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
         "spell.invocation-flaming-sphere-hazard-ram"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1059,7 +1069,7 @@
         "spell.invocation-held-light-emitter"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-light.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1090,7 +1100,7 @@
         "spell.invocation-spell-created-held-object"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-light.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1119,7 +1129,7 @@
         "spell.invocation-dancing-lights-movable-dim-light"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-light.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1146,7 +1156,7 @@
         "spell.invocation-expeditious-retreat-dash"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-movement.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1173,7 +1183,7 @@
         "spell.invocation-feather-fall-mitigation"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-feather-fall.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1202,7 +1212,7 @@
         "spell.invocation-jump-movement-replacement"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-jump-movement.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1231,7 +1241,7 @@
         "spell.invocation-forced-reaction-movement"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-movement.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1262,7 +1272,7 @@
         "spell.invocation-self-teleport"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-self-teleport.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1293,7 +1303,7 @@
         "spell.invocation-blur-attack-roll-defense"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1312,13 +1322,19 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-moonbeam.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/moonbeam-movable-zone.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
         "spell.invocation-moonbeam-movable-zone"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1956,7 +1972,7 @@
       "kind": "hole-frontier",
       "parityWitnesses": [
         {
-          "deterministicReplayRationale": "Ability, skill, and Search replay is a closed fixture: Search fails and succeeds against a hidden target, Guidance stores the selected skill through the QNT roll-modifier owner, and Enhance Ability stores a selected ability for Ability Check Advantage. The same witness also includes Command so the Task 5 hole families are checked together without random branch exploration.",
+          "deterministicReplayRationale": "Ability, skill, and Search replay is a closed fixture advanced by a deterministic replay index: Search fails and succeeds against an admitted hidden target, Guidance stores the selected skill through the QNT roll-modifier owner, and Enhance Ability stores a selected ability for Ability Check Advantage. The same witness also includes Command so the Task 5 hole families are checked together without random branch exploration.",
           "kind": "deterministic-qnt-replay",
           "ownerPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
@@ -1965,7 +1981,7 @@
       ],
       "profiles": [],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt",
+        "packages/battle-runtime/battle-runtime-ability-check-search.qnt",
         "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt"
       ],
       "runtime": "battle",
@@ -1977,7 +1993,14 @@
         "packages/battle-runtime/src/battle-reducer/spells-resolve-target-selection.ts"
       ],
       "status": "covered",
-      "surfaceEvidence": [],
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Playing-the-Game.md#Ability Checks",
+        ".references/srd-5.2.1/Playing-the-Game.md#Actions",
+        ".references/srd-5.2.1/Rules-Glossary.md#Hide [Action]",
+        ".references/srd-5.2.1/Rules-Glossary.md#Search [Action]",
+        "UBIQUITOUS_LANGUAGE.md#D20 Rolls",
+        "UBIQUITOUS_LANGUAGE.md#Action Lifecycle"
+      ],
       "title": "Battle Search target and Ability Check holes plus spell skill and ability choices feed reducer legality and Ability Check state"
     },
     {
@@ -2137,8 +2160,7 @@
         "spell.invocation-spell-created-held-object"
       ],
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt",
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -3056,7 +3078,7 @@
         "spell.invocation-dragons-breath-initial"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-dragons-breath.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -3086,7 +3108,7 @@
         "spell.invocation-dragons-breath-granted-action"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-dragons-breath.qnt"
       ],
       "reason": "The target-attached Dragon's Breath effect grants the current target a Magic action. The reducer validates caller/table Cone membership facts, applies Dexterity save-for-half slot-scaled damage of the retained type, spends the target's Magic action, and reuses the shared damage lifecycle for Concentration and zero-Hit-Point follow-up holes.",
       "runtime": "battle",
@@ -3142,7 +3164,7 @@
       "followUpTaskIds": [],
       "holeKind": "targetChoice",
       "id": "BattleTargetChoiceHole",
-      "reason": "Target identity is a table decision, but accepted targets change reducer legality and downstream effects. Movement, feature target procedures including mastery, attack-projection, reaction, and bonus-action profiles, spell target procedures, attack target legality/resource branches, and Search target resolution are covered; table target-admission facts remain boundary evidence.",
+      "reason": "Target identity is a table decision, but accepted targets change reducer legality and downstream effects. Search target identity is semantic after the table supplies the hidden candidate set: the reducer compares the Ability Check total to the stored discovery DC and may reveal the target. Candidate discovery, vicinity, visibility, range, and other target-admission facts remain boundary evidence.",
       "subject": "battle-hole-family"
     },
     {
@@ -3405,7 +3427,7 @@
       "followUpTaskIds": [],
       "holeKind": "skillChoice",
       "id": "BattleSpellSkillChoiceHole",
-      "reason": "Skill choice changes which Ability Check specialization an effect modifies or grants, so it is reducer-visible state covered by the Ability Check and spell roll-modifier obligations.",
+      "reason": "Skill choice is generator-input semantics for roll-modifier spells: the selected Ability Check specialization becomes reducer-visible effect state, not display metadata.",
       "subject": "battle-hole-family"
     },
     {
@@ -3418,7 +3440,7 @@
       "followUpTaskIds": [],
       "holeKind": "abilityChoice",
       "id": "BattleSpellAbilityChoiceHole",
-      "reason": "Ability choice changes roll modifiers, marked-damage riders, or later checks and is covered by Ability Check, spell roll-modifier, and marked-damage rider obligations.",
+      "reason": "Ability choice is generator-input semantics when it selects later Ability Check roll mode or marked-rider state. The chosen ability is stored as reducer-visible active-effect data.",
       "subject": "battle-hole-family"
     },
     {
@@ -3430,7 +3452,7 @@
       "followUpTaskIds": [],
       "holeKind": "targetAbilityChoices",
       "id": "BattleSpellTargetAbilityChoicesHole",
-      "reason": "Per-target ability choices bind each selected target to the Ability Check Advantage ability for target-scaled roll-modifier spells, so the selected choices are reducer-visible spell roll-modifier and Ability Check semantics.",
+      "reason": "Per-target ability choices are generator-input semantics for target-scaled roll-modifier spells: each selected target receives reducer-visible Ability Check Advantage state for its chosen ability.",
       "subject": "battle-hole-family"
     },
     {
@@ -3718,7 +3740,7 @@
       "followUpTaskIds": [],
       "holeKind": "abilityCheck",
       "id": "BattleAbilityCheckHole",
-      "reason": "Ability Check fills resolve Hide, Search, spell-restraint escape, and similar reducer-visible checks; table prerequisites and spatial witnesses remain boundary facts.",
+      "reason": "Ability Check totals are caller roll facts, but total-vs-DC success and reducer consequences are semantic ownership for Hide, Search, spell-restraint escape, and similar checks. Table prerequisites, vicinity, and spatial witnesses remain boundary facts.",
       "subject": "battle-hole-family"
     },
     {
@@ -3857,7 +3879,7 @@
       "fillKind": "skillChoice",
       "followUpTaskIds": [],
       "id": "skillChoice",
-      "reason": "Skill choices determine which Ability Check specialization receives a modifier or advantage.",
+      "reason": "Skill-choice fills are generator-input semantics for Ability Check roll-modifier state; they determine which Ability Check specialization receives the stored modifier or advantage.",
       "subject": "battle-fill-kind"
     },
     {
@@ -3870,7 +3892,7 @@
       "fillKind": "abilityChoice",
       "followUpTaskIds": [],
       "id": "abilityChoice",
-      "reason": "Ability choices determine later roll modifiers, checks, or marked-damage semantics covered by Ability Check, spell roll-modifier, and marked-damage rider obligations.",
+      "reason": "Ability-choice fills are generator-input semantics when they determine later Ability Check roll modifiers, checks, or marked-damage rider state.",
       "subject": "battle-fill-kind"
     },
     {
@@ -3882,7 +3904,7 @@
       "fillKind": "targetAbilityChoices",
       "followUpTaskIds": [],
       "id": "targetAbilityChoices",
-      "reason": "Per-target ability-choice fills determine which Ability Check Advantage effect is attached to each selected target for target-scaled roll-modifier spells.",
+      "reason": "Per-target ability-choice fills are generator-input semantics for target-scaled roll-modifier spells; each target gets the chosen Ability Check Advantage effect.",
       "subject": "battle-fill-kind"
     },
     {
@@ -3952,7 +3974,7 @@
       "fillKind": "targetChoice",
       "followUpTaskIds": [],
       "id": "targetChoice",
-      "reason": "Target identity is a table decision, but accepted targets change reducer legality and downstream effects. Movement, feature target procedures including mastery, attack-projection, reaction, and bonus-action profiles, spell target procedures, attack target legality/resource branches, and Search target resolution are covered; table target-admission facts remain boundary evidence.",
+      "reason": "Target-choice fills are semantic after target-admission facts are supplied. For Search, the chosen hidden target plus Ability Check result can reveal the target; candidate discovery, vicinity, visibility, and range facts stay boundary-owned.",
       "subject": "battle-fill-kind"
     },
     {
@@ -4131,7 +4153,7 @@
       "fillKind": "abilityCheck",
       "followUpTaskIds": [],
       "id": "abilityCheck",
-      "reason": "Ability Check fills resolve reducer-visible checks such as Hide, Search, and escape attempts.",
+      "reason": "Ability Check fills supply the roll total; the reducer-owned semantic step is total-vs-DC success and state update for Hide, Search, escape attempts, and similar checks.",
       "subject": "battle-fill-kind"
     },
     {
@@ -5286,6 +5308,22 @@
       "role": "semantic-core"
     },
     {
+      "evidence": "packages/battle-runtime/battle-runtime-antimagic-suppression.qnt is the focused QNT owner carrying Antimagic Field ongoing-spell suppression state and suppressed-reference projection semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-antimagic-suppression.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt is the focused QNT owner carrying Blur self Spell Effect, Blindsight/Truesight bypass, attack-roll mode projection, Concentration, and cleanup semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt",
+      "role": "semantic-core"
+    },
+    {
       "evidence": "packages/battle-runtime/battle-runtime-command-choice.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
         "BATTLE.COMMAND.OPTION_AND_NEXT_TURN"
@@ -5298,11 +5336,20 @@
       "obligationIds": [
         "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
         "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
+        "BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE",
         "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
         "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
         "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-concentration.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-creature-size-change.qnt is the focused QNT owner carrying Enlarge/Reduce creature Size projection, Strength D20 Test roll modes, attack-hit damage adjustment, prior-Concentration replacement, and active-effect application semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-creature-size-change.qnt",
       "role": "semantic-core"
     },
     {
@@ -5322,11 +5369,43 @@
       "role": "semantic-core"
     },
     {
+      "evidence": "packages/battle-runtime/battle-runtime-direct-condition-lifecycle.qnt is the focused QNT owner carrying direct spell-owned condition lifecycle reducer semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-direct-condition-lifecycle.qnt",
+      "role": "semantic-core"
+    },
+    {
       "evidence": "packages/battle-runtime/battle-runtime-direct-condition-removal.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
         "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-direct-condition-removal.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt is the focused QNT owner carrying Flaming Sphere hazard and ram reducer semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-feather-fall.qnt is the focused QNT owner carrying Feather Fall Reaction mitigation, descent-rate projection, and landing cleanup semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-feather-fall.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt is the focused QNT owner carrying Unit feature turn-end attack-slot cleanup semantics without geometry ownership.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
       "role": "semantic-core"
     },
     {
@@ -5340,7 +5419,11 @@
     {
       "evidence": "packages/battle-runtime/battle-runtime-ground-command.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
-        "BATTLE.COMMAND.OPTION_AND_NEXT_TURN"
+        "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
+        "BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE",
+        "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
+        "BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE",
+        "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-ground-command.qnt",
       "role": "semantic-core"
@@ -5363,8 +5446,21 @@
       "role": "semantic-core"
     },
     {
+      "evidence": "packages/battle-runtime/battle-runtime-jump-movement.qnt is the focused QNT owner carrying Jump target admission, per-turn movement replacement, landing witness, and cleanup semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-jump-movement.qnt",
+      "role": "semantic-core"
+    },
+    {
       "evidence": "packages/battle-runtime/battle-runtime-light.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
+        "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
+        "BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING",
+        "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
+        "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
+        "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
         "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-light.qnt",
@@ -5419,6 +5515,41 @@
       "role": "semantic-core"
     },
     {
+      "evidence": "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt is the focused QNT owner carrying Moonbeam movable Cylinder reducer semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-movement.qnt is the focused QNT owner carrying Expeditious Retreat Dash, Dissonant Whispers forced Reaction movement, and Unit feature Bonus Action Dash Temporary Hit Points reducer semantics.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE",
+        "BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-movement.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-object-contact-damage.qnt is the focused QNT owner carrying Heat Metal object-contact occurrence, repeat damage, drop-or-penalty, and Dispel Magic object-contact ending semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING",
+        "BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-object-contact-damage.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-ongoing-spell-dispel.qnt is the focused QNT owner carrying Dispel Magic tracked ongoing spell ending and higher-level ability-check gate semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-ongoing-spell-dispel.qnt",
+      "role": "semantic-core"
+    },
+    {
       "evidence": "packages/battle-runtime/battle-runtime-protection-from-poison.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
         "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION"
@@ -5441,6 +5572,14 @@
         "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-ability-check-search.qnt carries the focused Ability Check total-vs-DC and Search hidden-target reveal semantics. Search vicinity, candidate discovery, and hidden-target existence remain caller/table facts at the hole boundary.",
+      "obligationIds": [
+        "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-ability-check-search.qnt",
       "role": "semantic-core"
     },
     {
@@ -5478,6 +5617,14 @@
         "BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-see-invisibility.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-self-teleport.qnt is the focused QNT owner carrying self-teleport destination witness, resource spend, and no-Movement/no-Opportunity-Attack projection semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-self-teleport.qnt",
       "role": "semantic-core"
     },
     {
@@ -5573,37 +5720,28 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "evidence": "packages/battle-runtime/battle-runtime-dragons-breath.qnt carries Dragon's Breath initial target-attached effect and target-granted Magic action reducer semantics.",
       "obligationIds": [
-        "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES",
-        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
-        "BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE",
-        "BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION",
-        "BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE",
-        "BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE",
-        "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
-        "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
-        "BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING",
         "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
-        "BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE",
-        "BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE",
-        "BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE",
-        "BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE",
-        "BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE",
-        "BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE",
-        "BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE",
-        "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
-        "BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE",
-        "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
-        "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
-        "BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE",
-        "BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE",
-        "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
-        "BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE",
-        "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
-        "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE"
+        "BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE"
       ],
-      "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+      "ownerPath": "packages/battle-runtime/battle-runtime-dragons-breath.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-druid-wild-shape.qnt carries focused Druid Wild Shape form lifecycle, projection, Temporary Hit Points, spellcasting gate, and reversion semantics without run-block coupling.",
+      "obligationIds": [
+        "BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-druid-wild-shape.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-find-familiar.qnt carries focused Find Familiar companion lifecycle, replacement, dismissal, telepathy, shared senses, touch delivery, and Pact reaction attack semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-find-familiar.qnt",
       "role": "semantic-core"
     },
     {
@@ -6071,7 +6209,6 @@
       "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
         "BATTLE.DAMAGE.ATTACK_BRANCHES",
-        "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
@@ -6300,8 +6437,9 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
-        "packages/battle-runtime/battle-runtime-monk-focus.qnt",
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
+        "packages/battle-runtime/battle-runtime-movement.qnt",
+        "packages/battle-runtime/battle-runtime-monk-focus.qnt"
       ],
       "status": "fixture-bound"
     },
@@ -6334,12 +6472,7 @@
       "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B1-BATTLE-RUNTIME-SLICE-OWNER-CLOSURE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -6354,21 +6487,14 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
-        "pattern-match",
-        "set",
-        "list",
-        "map",
-        "filter",
-        "set-operators",
-        "membership"
+        "pattern-match"
       ],
       "obligationId": "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-direct-condition-lifecycle.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -6455,12 +6581,7 @@
       "status": "not-assessed"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B7-BATTLE-RUNTIME-COMPANION-FORM-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -6475,29 +6596,21 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
         "pattern-match",
         "set",
-        "list",
         "map",
-        "filter",
         "set-operators",
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-find-familiar.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B3-BATTLE-RUNTIME-GROUND-HAZARD-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -6512,29 +6625,24 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
         "pattern-match",
         "set",
-        "list",
         "map",
         "filter",
+        "fold",
+        "exists",
         "set-operators",
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-ground-command.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B7-BATTLE-RUNTIME-COMPANION-FORM-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -6549,29 +6657,17 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
-        "pattern-match",
-        "set",
-        "list",
-        "map",
-        "filter",
-        "set-operators",
-        "membership"
+        "pattern-match"
       ],
       "obligationId": "BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-druid-wild-shape.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B5-BATTLE-RUNTIME-OBJECT-CONTACT-ENDING-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -6586,21 +6682,21 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
         "pattern-match",
         "set",
-        "list",
         "map",
         "filter",
+        "fold",
+        "exists",
         "set-operators",
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-object-contact-damage.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -6612,11 +6708,36 @@
     },
     {
       "blockedBy": [],
-      "generatorSubset": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "map",
+        "filter",
+        "exists",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-creature-size-change.qnt",
+        "packages/battle-runtime/battle-runtime-concentration.qnt",
+        "packages/battle-runtime/battle-runtime-timed-effects.qnt"
+      ],
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -6627,12 +6748,7 @@
       "status": "not-assessed"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B5-BATTLE-RUNTIME-OBJECT-CONTACT-ENDING-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -6647,21 +6763,23 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
         "pattern-match",
         "set",
-        "list",
         "map",
         "filter",
+        "fold",
+        "exists",
         "set-operators",
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-ongoing-spell-dispel.qnt",
+        "packages/battle-runtime/battle-runtime-light.qnt",
+        "packages/battle-runtime/battle-runtime-object-contact-damage.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -6672,12 +6790,7 @@
       "status": "not-assessed"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B5-BATTLE-RUNTIME-OBJECT-CONTACT-ENDING-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -6689,24 +6802,23 @@
         "bool",
         "if-expression",
         "let-binding",
-        "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
         "pattern-match",
         "set",
-        "list",
         "map",
         "filter",
+        "fold",
+        "exists",
         "set-operators",
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-antimagic-suppression.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -6739,12 +6851,7 @@
       "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B3-BATTLE-RUNTIME-GROUND-HAZARD-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -6759,29 +6866,24 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
         "pattern-match",
         "set",
-        "list",
         "map",
         "filter",
+        "fold",
+        "exists",
         "set-operators",
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-ground-command.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B3-BATTLE-RUNTIME-GROUND-HAZARD-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -6796,29 +6898,24 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
         "pattern-match",
         "set",
-        "list",
         "map",
         "filter",
+        "fold",
+        "exists",
         "set-operators",
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-ground-command.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B3-BATTLE-RUNTIME-GROUND-HAZARD-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -6833,29 +6930,24 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
         "pattern-match",
         "set",
-        "list",
         "map",
         "filter",
+        "fold",
+        "exists",
         "set-operators",
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-ground-command.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B2-BATTLE-RUNTIME-LIGHT-EMITTER-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -6870,29 +6962,24 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
         "pattern-match",
         "set",
-        "list",
         "map",
         "filter",
+        "fold",
+        "exists",
         "set-operators",
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-light.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B1-BATTLE-RUNTIME-SLICE-OWNER-CLOSURE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -6907,29 +6994,17 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
-        "pattern-match",
-        "set",
-        "list",
-        "map",
-        "filter",
-        "set-operators",
-        "membership"
+        "pattern-match"
       ],
       "obligationId": "BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B2-BATTLE-RUNTIME-LIGHT-EMITTER-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -6944,29 +7019,24 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
         "pattern-match",
         "set",
-        "list",
         "map",
         "filter",
+        "fold",
+        "exists",
         "set-operators",
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-light.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B2-BATTLE-RUNTIME-LIGHT-EMITTER-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -6981,29 +7051,24 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
         "pattern-match",
         "set",
-        "list",
         "map",
         "filter",
+        "fold",
+        "exists",
         "set-operators",
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-light.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B2-BATTLE-RUNTIME-LIGHT-EMITTER-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -7018,29 +7083,24 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
         "pattern-match",
         "set",
-        "list",
         "map",
         "filter",
+        "fold",
+        "exists",
         "set-operators",
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-light.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B4-BATTLE-RUNTIME-MOVEMENT-REACTION-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -7061,23 +7121,19 @@
         "list",
         "map",
         "filter",
+        "exists",
         "set-operators",
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-movement.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B4-BATTLE-RUNTIME-MOVEMENT-REACTION-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -7092,29 +7148,23 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
         "pattern-match",
         "set",
-        "list",
         "map",
         "filter",
+        "exists",
         "set-operators",
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-feather-fall.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B4-BATTLE-RUNTIME-MOVEMENT-REACTION-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -7129,29 +7179,21 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
         "pattern-match",
         "set",
-        "list",
         "map",
-        "filter",
         "set-operators",
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-jump-movement.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B4-BATTLE-RUNTIME-MOVEMENT-REACTION-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -7172,26 +7214,21 @@
         "list",
         "map",
         "filter",
+        "exists",
         "set-operators",
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-movement.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B4-BATTLE-RUNTIME-MOVEMENT-REACTION-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
-        "variant",
         "record",
         "record-update",
         "pure-def",
@@ -7200,69 +7237,41 @@
         "bool",
         "if-expression",
         "let-binding",
-        "arithmetic",
         "comparison",
-        "boolean-connective",
-        "all-block",
-        "pattern-match",
-        "set",
-        "list",
-        "map",
-        "filter",
-        "set-operators",
-        "membership"
+        "boolean-connective"
       ],
       "obligationId": "BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-self-teleport.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B8-BATTLE-RUNTIME-BLUR-DEFENSE-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
-        "record",
         "record-update",
         "pure-def",
-        "constant-def",
-        "int",
+        "constant-val",
         "bool",
-        "if-expression",
         "let-binding",
-        "arithmetic",
-        "comparison",
         "boolean-connective",
-        "all-block",
         "pattern-match",
         "set",
-        "list",
-        "map",
-        "filter",
         "set-operators",
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B1-BATTLE-RUNTIME-SLICE-OWNER-CLOSURE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -7277,21 +7286,14 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
-        "pattern-match",
-        "set",
-        "list",
-        "map",
-        "filter",
-        "set-operators",
-        "membership"
+        "pattern-match"
       ],
       "obligationId": "BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -7727,41 +7729,30 @@
       "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B9-BATTLE-RUNTIME-ABILITY-HOLE-CLOSURE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
         "record",
-        "record-update",
         "pure-def",
-        "constant-def",
         "int",
         "bool",
         "if-expression",
         "let-binding",
-        "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
         "pattern-match",
         "set",
-        "list",
         "map",
-        "filter",
-        "set-operators",
-        "membership"
+        "fold"
       ],
       "obligationId": "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-ability-check-search.qnt",
+        "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -7939,8 +7930,7 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
       ],
       "semanticCore": [
-        "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt",
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt"
       ],
       "status": "fixture-bound"
     },
@@ -7996,19 +7986,13 @@
       "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B6-BATTLE-RUNTIME-DRAGONS-BREATH-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
         "record",
         "record-update",
         "pure-def",
-        "constant-def",
         "int",
         "bool",
         "if-expression",
@@ -8016,36 +8000,28 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
         "pattern-match",
         "set",
-        "list",
-        "map",
         "filter",
+        "exists",
         "set-operators",
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-dragons-breath.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B6-BATTLE-RUNTIME-DRAGONS-BREATH-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
         "record",
         "record-update",
         "pure-def",
-        "constant-def",
         "int",
         "bool",
         "if-expression",
@@ -8053,21 +8029,19 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
         "pattern-match",
         "set",
-        "list",
-        "map",
         "filter",
+        "exists",
         "set-operators",
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-dragons-breath.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -8126,20 +8100,6 @@
       "ownerRoles": [
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-gust-of-wind.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
-          "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-timed-effects.qnt",
           "role": "semantic-core"
         }
       ],
@@ -8374,21 +8334,6 @@
     {
       "blocker": "run-block-coupled",
       "obligationId": "BATTLE.DAMAGE.ATTACK_BRANCHES",
-      "owners": [
-        {
-          "lines": [
-            200,
-            239,
-            290
-          ],
-          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
-        }
-      ],
-      "readinessStatus": "fixture-bound"
-    },
-    {
-      "blocker": "run-block-coupled",
-      "obligationId": "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
       "owners": [
         {
           "lines": [
