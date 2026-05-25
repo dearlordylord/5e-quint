@@ -273,7 +273,7 @@
         "spell.invocation-direct-condition"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt",
+        "packages/battle-runtime/battle-runtime-direct-condition-lifecycle.qnt",
         "packages/battle-runtime/battle-runtime-sanctuary.qnt",
         "packages/battle-runtime/battle-runtime-concentration.qnt",
         "packages/battle-runtime/battle-runtime-timed-effects.qnt"
@@ -1015,13 +1015,19 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-flaming-sphere.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/flaming-sphere-hazard-ram.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
         "spell.invocation-flaming-sphere-hazard-ram"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1306,13 +1312,19 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-moonbeam.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/moonbeam-movable-zone.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
         "spell.invocation-moonbeam-movable-zone"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -5312,11 +5324,27 @@
       "role": "semantic-core"
     },
     {
+      "evidence": "packages/battle-runtime/battle-runtime-direct-condition-lifecycle.qnt is the focused QNT owner carrying direct spell-owned condition lifecycle reducer semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-direct-condition-lifecycle.qnt",
+      "role": "semantic-core"
+    },
+    {
       "evidence": "packages/battle-runtime/battle-runtime-direct-condition-removal.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
         "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-direct-condition-removal.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt is the focused QNT owner carrying Flaming Sphere hazard and ram reducer semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt",
       "role": "semantic-core"
     },
     {
@@ -5406,6 +5434,14 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt is the focused QNT owner carrying Moonbeam movable Cylinder reducer semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt",
       "role": "semantic-core"
     },
     {
@@ -5572,14 +5608,12 @@
         "BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE",
         "BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE",
         "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
-        "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
         "BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING",
         "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
         "BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE",
         "BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE",
         "BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE",
         "BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE",
-        "BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE",
         "BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE",
         "BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE",
         "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
@@ -5587,7 +5621,6 @@
         "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
         "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
         "BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE",
-        "BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE",
         "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
         "BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE",
         "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
@@ -6266,12 +6299,7 @@
       "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B1-BATTLE-RUNTIME-SLICE-OWNER-CLOSURE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -6286,21 +6314,14 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
-        "pattern-match",
-        "set",
-        "list",
-        "map",
-        "filter",
-        "set-operators",
-        "membership"
+        "pattern-match"
       ],
       "obligationId": "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-direct-condition-lifecycle.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -6753,12 +6774,7 @@
       "status": "fixture-bound"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B1-BATTLE-RUNTIME-SLICE-OWNER-CLOSURE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -6773,21 +6789,14 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
-        "pattern-match",
-        "set",
-        "list",
-        "map",
-        "filter",
-        "set-operators",
-        "membership"
+        "pattern-match"
       ],
       "obligationId": "BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [
@@ -7123,12 +7132,7 @@
       "status": "fixture-bound"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B1-BATTLE-RUNTIME-SLICE-OWNER-CLOSURE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -7143,21 +7147,14 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
-        "pattern-match",
-        "set",
-        "list",
-        "map",
-        "filter",
-        "set-operators",
-        "membership"
+        "pattern-match"
       ],
       "obligationId": "BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
