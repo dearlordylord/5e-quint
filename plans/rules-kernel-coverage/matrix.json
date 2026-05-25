@@ -7225,11 +7225,37 @@
     },
     {
       "blockedBy": [],
-      "generatorSubset": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "filter",
+        "exists",
+        "map",
+        "fold",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
+        "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
+        "packages/battle-runtime/battle-runtime-concentration.qnt"
+      ],
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -7911,24 +7937,6 @@
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
-          "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
-          "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-concentration.qnt",
           "role": "semantic-core"
         }
       ],

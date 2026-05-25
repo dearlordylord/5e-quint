@@ -131,7 +131,7 @@ remains.
     {
       "number": 20,
       "id": "C20-GENERATOR-READINESS-AFTER-HIT-RIDERS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Classify after-hit damage rider generator readiness"
     },
     {
@@ -510,7 +510,7 @@ longer `not-assessed`.
 
 ### Task 20 - C20-GENERATOR-READINESS-AFTER-HIT-RIDERS - Classify after-hit damage rider generator readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 `plans/unit-profile-coverage/ultra-golden-gate.json`,
