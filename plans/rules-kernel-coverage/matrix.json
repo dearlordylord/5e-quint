@@ -179,6 +179,7 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
         "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
         "packages/battle-runtime/battle-runtime-movement.qnt",
@@ -2065,7 +2066,7 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -6221,9 +6222,17 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt is the covered obligation QNT owner carrying Martial Arts eligibility, die scaling, Dexterity substitution, Unarmed Strike Grapple/Shove DC, and Bonus Action Unarmed Strike facts without importing authored Unit catalog rows.",
       "obligationIds": [
         "BATTLE.DAMAGE.ATTACK_BRANCHES",
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt is the covered obligation QNT owner carrying zero-Hit-Point replacement semantics until A45 splits that remaining profile.",
+      "obligationIds": [
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
@@ -6407,7 +6416,6 @@
         "run-block-coupled"
       ],
       "followUpTaskIds": [
-        "A44-UNIT-FEATURE-MARTIAL-ARTS-CORE",
         "A45-UNIT-FEATURE-ZERO-HP-CORE",
         "A46-MONK-FOCUS-BATTLE-CORE"
       ],
@@ -6441,6 +6449,7 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
       ],
       "semanticCore": [
@@ -6451,6 +6460,7 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
         "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
         "packages/battle-runtime/battle-runtime-movement.qnt",
@@ -7801,12 +7811,7 @@
       "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "run-block-coupled"
-      ],
-      "followUpTaskIds": [
-        "A44-UNIT-FEATURE-MARTIAL-ARTS-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -7834,6 +7839,7 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
       ],
       "semanticCore": [
@@ -7842,9 +7848,9 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -8234,14 +8240,6 @@
       "owners": [
         {
           "lines": [
-            200,
-            239,
-            290
-          ],
-          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
-        },
-        {
-          "lines": [
             134,
             140,
             149,
@@ -8347,21 +8345,6 @@
         }
       ],
       "readinessStatus": "not-assessed"
-    },
-    {
-      "blocker": "run-block-coupled",
-      "obligationId": "BATTLE.DAMAGE.ATTACK_BRANCHES",
-      "owners": [
-        {
-          "lines": [
-            200,
-            239,
-            290
-          ],
-          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
-        }
-      ],
-      "readinessStatus": "fixture-bound"
     },
     {
       "blocker": "run-block-coupled",

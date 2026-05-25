@@ -322,7 +322,7 @@
       "id": "unit-feature.martial-arts-attack-projection",
       "profileKind": "passive",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -14456,7 +14456,7 @@
           "id": "unit-feature.martial-arts-attack-projection",
           "profileKind": "passive",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",

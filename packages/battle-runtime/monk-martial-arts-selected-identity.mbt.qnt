@@ -2,7 +2,7 @@
 
 module monkMartialArtsSelectedIdentityMbt {
   import battleRuntimeFeatureBridge.* from "./battle-runtime-feature-bridge"
-  import unitFeatureProcedureProfiles.* from "../shared-algebras/proofs/rule-core/unit-feature-procedure-profiles"
+  import unitFeatureMartialArtsCore.* from "../shared-algebras/proofs/rule-core/unit-feature-martial-arts-core"
 
   var qClassLevel: int
   var qDamageDieSize: int

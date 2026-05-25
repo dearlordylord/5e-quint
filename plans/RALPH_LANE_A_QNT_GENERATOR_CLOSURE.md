@@ -25,7 +25,7 @@ work remains.
     { "number": 4, "id": "A41-UNIT-FEATURE-SAVE-DAMAGE-CORE", "status": "done", "title": "Split unit feature Saving Throw and save-damage core" },
     { "number": 5, "id": "A42-UNIT-FEATURE-REACTION-REDUCTION-CORE", "status": "done", "title": "Split unit feature reaction reduction and redirect core" },
     { "number": 6, "id": "A43-UNIT-FEATURE-PASSIVE-MOVEMENT-DEFENSE-CORE", "status": "done", "title": "Split passive movement and defense feature core" },
-    { "number": 7, "id": "A44-UNIT-FEATURE-MARTIAL-ARTS-CORE", "status": "ready-for-research", "title": "Split Martial Arts projection core" },
+    { "number": 7, "id": "A44-UNIT-FEATURE-MARTIAL-ARTS-CORE", "status": "done", "title": "Split Martial Arts projection core" },
     { "number": 8, "id": "A45-UNIT-FEATURE-ZERO-HP-CORE", "status": "ready-for-research", "title": "Split zero-Hit-Point feature replacement core" },
     { "number": 9, "id": "A46-MONK-FOCUS-BATTLE-CORE", "status": "ready-for-research", "title": "Split Monk Focus battle option core" },
     { "number": 10, "id": "A56-UNIT-FEATURE-OWNER-ROLE-CLOSURE", "status": "ready-for-research", "title": "Refresh unit-feature owner roles after semantic-core splits" },
@@ -156,7 +156,7 @@ Acceptance: checker green; focused QNT checks green.
 
 ### Task 7 - A44-UNIT-FEATURE-MARTIAL-ARTS-CORE - Split Martial Arts projection core
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: Martial Arts eligibility, die scaling, ability modifier, DC, and Bonus
 Unarmed Strike facts.
