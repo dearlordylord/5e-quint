@@ -15,7 +15,9 @@ level are separate axes: character levels 1-2 include cantrips and spell-level-1
 spells; character level 3 is the first frontier that includes spell-level-2
 spells; spell-level-3 spells belong to the later character-level-5 frontier.
 The generated reports currently include `LEVEL1_FULL_SUPPORT.md`,
-`LEVEL1_2_FULL_SUPPORT.md`, and `LEVEL1_3_FULL_SUPPORT.md`.
+`LEVEL1_2_FULL_SUPPORT.md`, `LEVEL1_2_QNT_MBT_JOIN.md`,
+`LEVEL1_2_ULTRA_GOLDEN_SUMMARY.md`, `LEVEL1_3_FULL_SUPPORT.md`, and
+`ULTRA_GOLDEN_GATE.md`.
 
 This lane is the authored-content breadth layer. It does not by itself prove
 that reducer-owned semantics are fully connected to the rules kernel. For any
@@ -111,6 +113,16 @@ Current evidence tags are:
   into production runtime entrypoints, names the identity-bearing driver replay
   actions with `UNIT-IDENTITY-MBT-REPLAY`, executes deterministic replay rows
   for those actions, and compares QCORE-observable projections.
+
+Ultra-golden witness kinds are checked vocabulary, not prose labels:
+
+- `focused-mbt`: random-trace QNT/MBT reducer parity evidence.
+- `deterministic-qnt-replay`: closed-case QNT replay evidence; not MBT
+  coverage by itself.
+- `runtime-test`: profile-scoped runtime test evidence for a reducer path that
+  already has profile-level QNT proof ownership.
+- `mcp-scenario`: package-local MCP acceptance scenario evidence for
+  user-facing tool and workflow flows.
 
 Profile-subset claims may also classify selected-identity expectations for
 their deferred mechanics. Use
@@ -254,7 +266,14 @@ support and reducer-kernel coverage can be read together without merging their
 denominators. A `supported-profile` Unit claim means the authored Unit is
 admitted to a typed support profile; it counts as full rules-kernel chain
 coverage only when every reducer-owned profile for that Unit maps to covered
-rules-kernel obligations.
+rules-kernel obligations. Open profile-to-obligation gaps are reported with the
+owning `followUpTaskIds` from `profile-obligations.jsonl`.
+
+The generated ultra-golden gate is stricter than the full-support reports. It
+is a conjunctive aggregate over support completeness, QNT/generator readiness,
+MBT/parity evidence, and MCP scenario evidence. The checker does not publish a
+blended ultra-golden percentage; every layer must pass explicitly before the
+aggregate can pass.
 
 ## Done-State Gate
 

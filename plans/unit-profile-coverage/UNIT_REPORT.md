@@ -85,15 +85,15 @@ The Unit matrix owns authored-content breadth. `plans/rules-kernel-coverage/prof
 
 ### Rules-Kernel Profile Join Gaps
 
-| Profile | Kind | Status | Obligations |
-| --- | --- | --- | --- |
-| _none_ | _none_ | _none_ | _none_ |
+| Profile | Kind | Status | Follow-up tasks | Reason | Obligations |
+| --- | --- | --- | --- | --- | --- |
+| _none_ | _none_ | _none_ | _none_ | _none_ | _none_ |
 
 ### Supported Unit Rules-Kernel Chain Gaps
 
-| Unit | Status | Profiles |
-| --- | --- | --- |
-| _none_ | _none_ | _none_ |
+| Unit | Status | Profiles | Follow-up tasks |
+| --- | --- | --- | --- |
+| _none_ | _none_ | _none_ | _none_ |
 
 ## Supported Unit Claims
 

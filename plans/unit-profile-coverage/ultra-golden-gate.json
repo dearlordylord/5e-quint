@@ -1,0 +1,883 @@
+{
+  "blockedScopeIds": [
+    "level-1",
+    "level-1-2"
+  ],
+  "definition": {
+    "aggregateRule": "Ultra-golden passes only when every required layer passes for every scoped level report. The checker deliberately does not publish a blended ultra-golden percentage.",
+    "layers": [
+      {
+        "criterion": "The strict level-support claim has no open strict rows, selected-identity blockers, or SRD-authored product-readiness blockers.",
+        "id": "support-completeness",
+        "label": "Support completeness"
+      },
+      {
+        "criterion": "Every scoped reducer-semantic obligation is covered, and every scoped semantic-core QNT owner is generation-subset-clean with no run-block blocker.",
+        "id": "qnt-generator-readiness",
+        "label": "QNT/generator readiness"
+      },
+      {
+        "criterion": "Every scoped reducer-semantic obligation has at least one rules-kernel parity witness.",
+        "id": "mbt-parity-evidence",
+        "label": "MBT/parity evidence"
+      },
+      {
+        "criterion": "Every scoped user-facing MCP flow has checker-owned scenario evidence backed by the package-local MCP scenario evidence command.",
+        "id": "mcp-scenario-evidence",
+        "label": "MCP scenario evidence"
+      }
+    ],
+    "witnessKinds": {
+      "deterministic-qnt-replay": "Closed-case QNT replay evidence for fixed projections, scalar checks, or tiny named fixtures; not random MBT coverage.",
+      "focused-mbt": "Random-trace QNT/MBT parity evidence for reducer sequencing, holes, resources, active effects, reactions, or interleavings.",
+      "mcp-scenario": "Package-local MCP acceptance scenario evidence for user-facing tool and workflow flows.",
+      "runtime-test": "Focused runtime test evidence for a profile-scoped reducer path that already has profile-level QNT proof ownership."
+    }
+  },
+  "generatedBy": "scripts/unit-profile-coverage-check.cjs",
+  "scopes": [
+    {
+      "layerResult": {
+        "completeLayers": 3,
+        "totalLayers": 4
+      },
+      "layers": [
+        {
+          "blockers": [],
+          "blockingCount": 0,
+          "evidence": {
+            "claimGate": {
+              "authoredReadinessBlockerCount": 0,
+              "selectedIdentityBlockerCount": 0,
+              "status": "pass",
+              "strictTargetOpenCount": 0
+            },
+            "selectedIdentityReadiness": {
+              "denominator": 83,
+              "numerator": 83,
+              "percent": "100%"
+            },
+            "srdAuthoredProductReadiness": {
+              "denominator": 58,
+              "numerator": 58,
+              "percent": "100%"
+            },
+            "strictTargetClosure": {
+              "denominator": 94,
+              "numerator": 94,
+              "percent": "100%"
+            }
+          },
+          "id": "support-completeness",
+          "status": "pass"
+        },
+        {
+          "blockingCount": 11,
+          "evidence": {
+            "generatorReadySemanticCoreObligations": {
+              "denominator": 32,
+              "numerator": 21
+            },
+            "qntCoveredObligations": {
+              "denominator": 44,
+              "numerator": 44
+            }
+          },
+          "generatorBlockingRows": [
+            {
+              "blockedBy": [
+                "run-block-coupled"
+              ],
+              "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+              "ownerPaths": [
+                "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
+                "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+              ],
+              "readinessStatus": "fixture-bound",
+              "runBlockOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+              ]
+            },
+            {
+              "blockedBy": [
+                "run-block-coupled"
+              ],
+              "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+              "ownerPaths": [
+                "packages/battle-runtime/battle-runtime-monk-focus.qnt",
+                "packages/battle-runtime/battle-runtime.qnt",
+                "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+                "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+              ],
+              "readinessStatus": "fixture-bound",
+              "runBlockOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+                "packages/battle-runtime/battle-runtime-monk-focus.qnt"
+              ]
+            },
+            {
+              "blockedBy": [
+                "bridge-projection-coupled"
+              ],
+              "obligationId": "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
+              "ownerPaths": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ],
+              "readinessStatus": "fixture-bound",
+              "runBlockOwners": []
+            },
+            {
+              "blockedBy": [
+                "bridge-projection-coupled"
+              ],
+              "obligationId": "BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE",
+              "ownerPaths": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ],
+              "readinessStatus": "fixture-bound",
+              "runBlockOwners": []
+            },
+            {
+              "blockedBy": [
+                "bridge-projection-coupled"
+              ],
+              "obligationId": "BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE",
+              "ownerPaths": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ],
+              "readinessStatus": "fixture-bound",
+              "runBlockOwners": []
+            },
+            {
+              "blockedBy": [
+                "bridge-projection-coupled"
+              ],
+              "obligationId": "BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE",
+              "ownerPaths": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ],
+              "readinessStatus": "fixture-bound",
+              "runBlockOwners": []
+            },
+            {
+              "blockedBy": [
+                "bridge-projection-coupled"
+              ],
+              "obligationId": "BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE",
+              "ownerPaths": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ],
+              "readinessStatus": "fixture-bound",
+              "runBlockOwners": []
+            },
+            {
+              "blockedBy": [
+                "bridge-projection-coupled"
+              ],
+              "obligationId": "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
+              "ownerPaths": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ],
+              "readinessStatus": "fixture-bound",
+              "runBlockOwners": []
+            },
+            {
+              "blockedBy": [
+                "bridge-projection-coupled"
+              ],
+              "obligationId": "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
+              "ownerPaths": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ],
+              "readinessStatus": "fixture-bound",
+              "runBlockOwners": []
+            },
+            {
+              "blockedBy": [
+                "bridge-projection-coupled"
+              ],
+              "obligationId": "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
+              "ownerPaths": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ],
+              "readinessStatus": "fixture-bound",
+              "runBlockOwners": []
+            },
+            {
+              "blockedBy": [
+                "bridge-projection-coupled"
+              ],
+              "obligationId": "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
+              "ownerPaths": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ],
+              "readinessStatus": "fixture-bound",
+              "runBlockOwners": []
+            }
+          ],
+          "id": "qnt-generator-readiness",
+          "missingOrOpenObligations": [],
+          "status": "blocked"
+        },
+        {
+          "blockingCount": 0,
+          "evidence": {
+            "parityWitnessedObligations": {
+              "denominator": 44,
+              "numerator": 44
+            },
+            "witnessKinds": {
+              "deterministic-qnt-replay": 6,
+              "focused-mbt": 37,
+              "runtime-test": 14
+            }
+          },
+          "id": "mbt-parity-evidence",
+          "missingWitnessRows": [],
+          "status": "pass"
+        },
+        {
+          "blockingCount": 0,
+          "evidence": {
+            "check": {
+              "command": "pnpm --filter @dnd/mcp test:mcp-scenario-evidence",
+              "packageName": "@dnd/mcp",
+              "script": "test:mcp-scenario-evidence"
+            },
+            "scenarioEvidenceFlows": {
+              "denominator": 4,
+              "numerator": 4
+            },
+            "source": "plans/unit-profile-coverage/mcp-scenario-evidence.json",
+            "witnessKind": "mcp-scenario"
+          },
+          "evidenceRows": [
+            {
+              "flowId": "mcp-workflow-discovery",
+              "kind": "mcp-scenario",
+              "scenarioId": "discover-mcp-surface",
+              "taskId": "C3-MCP-LEVEL12-SCENARIO-GATE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-creation",
+              "kind": "mcp-scenario",
+              "scenarioId": "create-baseline-character",
+              "taskId": "C9-CHARACTER-CREATION-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-creation",
+              "kind": "mcp-scenario",
+              "scenarioId": "create-warrior-second-level",
+              "taskId": "C9-CHARACTER-CREATION-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-creation",
+              "kind": "mcp-scenario",
+              "scenarioId": "create-wizard-with-spells",
+              "taskId": "C9-CHARACTER-CREATION-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-sheet",
+              "kind": "mcp-scenario",
+              "scenarioId": "create-baseline-character",
+              "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-sheet",
+              "kind": "mcp-scenario",
+              "scenarioId": "create-wizard-with-spells",
+              "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-sheet",
+              "kind": "mcp-scenario",
+              "scenarioId": "finish-battle-and-inspect-character-state",
+              "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "battle",
+              "kind": "mcp-scenario",
+              "scenarioId": "select-monsters",
+              "taskId": "C11-BATTLE-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "battle",
+              "kind": "mcp-scenario",
+              "scenarioId": "start-battle-with-initiative",
+              "taskId": "C11-BATTLE-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "battle",
+              "kind": "mcp-scenario",
+              "scenarioId": "take-turns-and-resolve-attacks",
+              "taskId": "C11-BATTLE-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "battle",
+              "kind": "mcp-scenario",
+              "scenarioId": "use-action-surge",
+              "taskId": "C11-BATTLE-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "battle",
+              "kind": "mcp-scenario",
+              "scenarioId": "cast-cantrips-and-slotted-spells",
+              "taskId": "C11-BATTLE-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "battle",
+              "kind": "mcp-scenario",
+              "scenarioId": "finish-battle-and-inspect-character-state",
+              "taskId": "C11-BATTLE-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "battle",
+              "kind": "mcp-scenario",
+              "scenarioId": "recover-from-invalid-or-stale-actions",
+              "taskId": "C11-BATTLE-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            }
+          ],
+          "id": "mcp-scenario-evidence",
+          "missingEvidenceRows": [],
+          "requiredFlows": [
+            {
+              "description": "The MCP server exposes discoverable tool contracts, workflow guidance, catalogs, and structured result paths before a caller commits to a character or battle workflow.",
+              "flowId": "mcp-workflow-discovery",
+              "followUpTaskId": "C3-MCP-LEVEL12-SCENARIO-GATE"
+            },
+            {
+              "description": "The MCP surface admits an SRD character creation workflow through create, discover, fill, and finalize tools without relying on support-profile status as scenario evidence.",
+              "flowId": "character-creation",
+              "followUpTaskId": "C9-CHARACTER-CREATION-MCP-EVIDENCE"
+            },
+            {
+              "description": "The MCP surface exposes durable character sheet state and battle handoff results through list and session snapshot tools.",
+              "flowId": "character-sheet",
+              "followUpTaskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE"
+            },
+            {
+              "description": "The MCP surface admits an SRD battle flow through start, read, discover acts, fill battle holes, resolve acts, end turns, and end battle tools.",
+              "flowId": "battle",
+              "followUpTaskId": "C11-BATTLE-MCP-EVIDENCE"
+            }
+          ],
+          "status": "pass"
+        }
+      ],
+      "scopedObligationIds": [
+        "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
+        "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+        "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
+        "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+        "BATTLE.SANCTUARY.TARGETING_INTERDICTION",
+        "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
+        "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
+        "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
+        "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION",
+        "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
+        "BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE",
+        "BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE",
+        "BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE",
+        "BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE",
+        "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
+        "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
+        "BATTLE.SPELL.HIT_POINT_RESTORATION",
+        "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
+        "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
+        "BATTLE.SPELL.MAKE_STABLE_LIFECYCLE",
+        "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
+        "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.SPELL.REACTION_CASTING_TIME",
+        "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
+        "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
+        "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
+        "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
+        "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
+        "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
+        "CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT",
+        "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
+        "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
+        "CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE",
+        "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
+        "CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION",
+        "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
+        "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
+        "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+        "SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION",
+        "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS",
+        "SHEET.WEAPON_MASTERY.RESELECTION"
+      ],
+      "scopeId": "level-1",
+      "status": "blocked",
+      "title": "Character Level 1"
+    },
+    {
+      "layerResult": {
+        "completeLayers": 3,
+        "totalLayers": 4
+      },
+      "layers": [
+        {
+          "blockers": [],
+          "blockingCount": 0,
+          "evidence": {
+            "claimGate": {
+              "authoredReadinessBlockerCount": 0,
+              "selectedIdentityBlockerCount": 0,
+              "status": "pass",
+              "strictTargetOpenCount": 0
+            },
+            "selectedIdentityReadiness": {
+              "denominator": 104,
+              "numerator": 104,
+              "percent": "100%"
+            },
+            "srdAuthoredProductReadiness": {
+              "denominator": 76,
+              "numerator": 76,
+              "percent": "100%"
+            },
+            "strictTargetClosure": {
+              "denominator": 115,
+              "numerator": 115,
+              "percent": "100%"
+            }
+          },
+          "id": "support-completeness",
+          "status": "pass"
+        },
+        {
+          "blockingCount": 11,
+          "evidence": {
+            "generatorReadySemanticCoreObligations": {
+              "denominator": 32,
+              "numerator": 21
+            },
+            "qntCoveredObligations": {
+              "denominator": 47,
+              "numerator": 47
+            }
+          },
+          "generatorBlockingRows": [
+            {
+              "blockedBy": [
+                "run-block-coupled"
+              ],
+              "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+              "ownerPaths": [
+                "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
+                "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+              ],
+              "readinessStatus": "fixture-bound",
+              "runBlockOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+              ]
+            },
+            {
+              "blockedBy": [
+                "run-block-coupled"
+              ],
+              "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+              "ownerPaths": [
+                "packages/battle-runtime/battle-runtime-monk-focus.qnt",
+                "packages/battle-runtime/battle-runtime.qnt",
+                "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+                "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+              ],
+              "readinessStatus": "fixture-bound",
+              "runBlockOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+                "packages/battle-runtime/battle-runtime-monk-focus.qnt"
+              ]
+            },
+            {
+              "blockedBy": [
+                "bridge-projection-coupled"
+              ],
+              "obligationId": "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
+              "ownerPaths": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ],
+              "readinessStatus": "fixture-bound",
+              "runBlockOwners": []
+            },
+            {
+              "blockedBy": [
+                "bridge-projection-coupled"
+              ],
+              "obligationId": "BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE",
+              "ownerPaths": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ],
+              "readinessStatus": "fixture-bound",
+              "runBlockOwners": []
+            },
+            {
+              "blockedBy": [
+                "bridge-projection-coupled"
+              ],
+              "obligationId": "BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE",
+              "ownerPaths": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ],
+              "readinessStatus": "fixture-bound",
+              "runBlockOwners": []
+            },
+            {
+              "blockedBy": [
+                "bridge-projection-coupled"
+              ],
+              "obligationId": "BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE",
+              "ownerPaths": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ],
+              "readinessStatus": "fixture-bound",
+              "runBlockOwners": []
+            },
+            {
+              "blockedBy": [
+                "bridge-projection-coupled"
+              ],
+              "obligationId": "BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE",
+              "ownerPaths": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ],
+              "readinessStatus": "fixture-bound",
+              "runBlockOwners": []
+            },
+            {
+              "blockedBy": [
+                "bridge-projection-coupled"
+              ],
+              "obligationId": "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
+              "ownerPaths": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ],
+              "readinessStatus": "fixture-bound",
+              "runBlockOwners": []
+            },
+            {
+              "blockedBy": [
+                "bridge-projection-coupled"
+              ],
+              "obligationId": "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
+              "ownerPaths": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ],
+              "readinessStatus": "fixture-bound",
+              "runBlockOwners": []
+            },
+            {
+              "blockedBy": [
+                "bridge-projection-coupled"
+              ],
+              "obligationId": "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
+              "ownerPaths": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ],
+              "readinessStatus": "fixture-bound",
+              "runBlockOwners": []
+            },
+            {
+              "blockedBy": [
+                "bridge-projection-coupled"
+              ],
+              "obligationId": "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
+              "ownerPaths": [
+                "packages/battle-runtime/battle-runtime.qnt"
+              ],
+              "readinessStatus": "fixture-bound",
+              "runBlockOwners": []
+            }
+          ],
+          "id": "qnt-generator-readiness",
+          "missingOrOpenObligations": [],
+          "status": "blocked"
+        },
+        {
+          "blockingCount": 0,
+          "evidence": {
+            "parityWitnessedObligations": {
+              "denominator": 47,
+              "numerator": 47
+            },
+            "witnessKinds": {
+              "deterministic-qnt-replay": 9,
+              "focused-mbt": 37,
+              "runtime-test": 14
+            }
+          },
+          "id": "mbt-parity-evidence",
+          "missingWitnessRows": [],
+          "status": "pass"
+        },
+        {
+          "blockingCount": 0,
+          "evidence": {
+            "check": {
+              "command": "pnpm --filter @dnd/mcp test:mcp-scenario-evidence",
+              "packageName": "@dnd/mcp",
+              "script": "test:mcp-scenario-evidence"
+            },
+            "scenarioEvidenceFlows": {
+              "denominator": 4,
+              "numerator": 4
+            },
+            "source": "plans/unit-profile-coverage/mcp-scenario-evidence.json",
+            "witnessKind": "mcp-scenario"
+          },
+          "evidenceRows": [
+            {
+              "flowId": "mcp-workflow-discovery",
+              "kind": "mcp-scenario",
+              "scenarioId": "discover-mcp-surface",
+              "taskId": "C3-MCP-LEVEL12-SCENARIO-GATE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-creation",
+              "kind": "mcp-scenario",
+              "scenarioId": "create-baseline-character",
+              "taskId": "C9-CHARACTER-CREATION-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-creation",
+              "kind": "mcp-scenario",
+              "scenarioId": "create-warrior-second-level",
+              "taskId": "C9-CHARACTER-CREATION-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-creation",
+              "kind": "mcp-scenario",
+              "scenarioId": "create-wizard-with-spells",
+              "taskId": "C9-CHARACTER-CREATION-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-sheet",
+              "kind": "mcp-scenario",
+              "scenarioId": "create-baseline-character",
+              "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-sheet",
+              "kind": "mcp-scenario",
+              "scenarioId": "create-wizard-with-spells",
+              "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-sheet",
+              "kind": "mcp-scenario",
+              "scenarioId": "finish-battle-and-inspect-character-state",
+              "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "battle",
+              "kind": "mcp-scenario",
+              "scenarioId": "select-monsters",
+              "taskId": "C11-BATTLE-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "battle",
+              "kind": "mcp-scenario",
+              "scenarioId": "start-battle-with-initiative",
+              "taskId": "C11-BATTLE-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "battle",
+              "kind": "mcp-scenario",
+              "scenarioId": "take-turns-and-resolve-attacks",
+              "taskId": "C11-BATTLE-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "battle",
+              "kind": "mcp-scenario",
+              "scenarioId": "use-action-surge",
+              "taskId": "C11-BATTLE-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "battle",
+              "kind": "mcp-scenario",
+              "scenarioId": "cast-cantrips-and-slotted-spells",
+              "taskId": "C11-BATTLE-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "battle",
+              "kind": "mcp-scenario",
+              "scenarioId": "finish-battle-and-inspect-character-state",
+              "taskId": "C11-BATTLE-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "battle",
+              "kind": "mcp-scenario",
+              "scenarioId": "recover-from-invalid-or-stale-actions",
+              "taskId": "C11-BATTLE-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            }
+          ],
+          "id": "mcp-scenario-evidence",
+          "missingEvidenceRows": [],
+          "requiredFlows": [
+            {
+              "description": "The MCP server exposes discoverable tool contracts, workflow guidance, catalogs, and structured result paths before a caller commits to a character or battle workflow.",
+              "flowId": "mcp-workflow-discovery",
+              "followUpTaskId": "C3-MCP-LEVEL12-SCENARIO-GATE"
+            },
+            {
+              "description": "The MCP surface admits an SRD character creation workflow through create, discover, fill, and finalize tools without relying on support-profile status as scenario evidence.",
+              "flowId": "character-creation",
+              "followUpTaskId": "C9-CHARACTER-CREATION-MCP-EVIDENCE"
+            },
+            {
+              "description": "The MCP surface exposes durable character sheet state and battle handoff results through list and session snapshot tools.",
+              "flowId": "character-sheet",
+              "followUpTaskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE"
+            },
+            {
+              "description": "The MCP surface admits an SRD battle flow through start, read, discover acts, fill battle holes, resolve acts, end turns, and end battle tools.",
+              "flowId": "battle",
+              "followUpTaskId": "C11-BATTLE-MCP-EVIDENCE"
+            }
+          ],
+          "status": "pass"
+        }
+      ],
+      "scopedObligationIds": [
+        "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
+        "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+        "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
+        "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+        "BATTLE.SANCTUARY.TARGETING_INTERDICTION",
+        "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
+        "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
+        "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
+        "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION",
+        "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
+        "BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE",
+        "BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE",
+        "BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE",
+        "BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE",
+        "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
+        "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
+        "BATTLE.SPELL.HIT_POINT_RESTORATION",
+        "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
+        "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
+        "BATTLE.SPELL.MAKE_STABLE_LIFECYCLE",
+        "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
+        "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.SPELL.REACTION_CASTING_TIME",
+        "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
+        "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
+        "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
+        "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
+        "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
+        "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
+        "CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT",
+        "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
+        "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
+        "CREATION.CLASS_FEATURE_RESOURCE.PROJECTION",
+        "CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION",
+        "CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE",
+        "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
+        "CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION",
+        "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
+        "SHEET.ABILITY_CHECK.PROFICIENCY_BONUS",
+        "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
+        "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+        "SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION",
+        "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS",
+        "SHEET.WEAPON_MASTERY.RESELECTION"
+      ],
+      "scopeId": "level-1-2",
+      "status": "blocked",
+      "title": "Character Levels 1-2"
+    }
+  ],
+  "selectedIdentityEvidenceAudit": {
+    "criteria": {
+      "evidenceTag": "selected-identity-mbt",
+      "mcpScenarioJoin": "A selected-identity evidence row is joined to MCP when at least one required MCP flow inferred from its scoped supported profile has scenario evidence.",
+      "qntMbtJoin": "A selected-identity evidence row is joined to QNT/MBT when its ownerPath is also a rules-kernel parity witness for a scoped supported Unit profile.",
+      "rowPolicy": "Rows list scoped supported Units whose selected-identity evidence exists but has neither an exact QNT/MBT parity-witness owner join nor an MCP scenario-evidence flow join."
+    },
+    "scopes": [
+      {
+        "metrics": {
+          "auditedEvidenceRows": {
+            "denominator": 81,
+            "numerator": 81
+          },
+          "joinedEvidenceRows": {
+            "denominator": 81,
+            "numerator": 81
+          },
+          "missingJoinRows": {
+            "denominator": 81,
+            "numerator": 0
+          }
+        },
+        "rowCount": 0,
+        "rows": [],
+        "scopeId": "level-1"
+      },
+      {
+        "metrics": {
+          "auditedEvidenceRows": {
+            "denominator": 94,
+            "numerator": 94
+          },
+          "joinedEvidenceRows": {
+            "denominator": 94,
+            "numerator": 94
+          },
+          "missingJoinRows": {
+            "denominator": 94,
+            "numerator": 0
+          }
+        },
+        "rowCount": 0,
+        "rows": [],
+        "scopeId": "level-1-2"
+      }
+    ]
+  },
+  "sourceArtifacts": {
+    "level12FullSupport": "plans/unit-profile-coverage/level1-2-full-support.json",
+    "level1FullSupport": "plans/unit-profile-coverage/level1-full-support.json",
+    "mcpScenarioEvidence": "plans/unit-profile-coverage/mcp-scenario-evidence.json",
+    "rulesKernelMatrix": "plans/rules-kernel-coverage/matrix.json",
+    "unitMatrix": "plans/unit-profile-coverage/unit-matrix.json"
+  },
+  "status": "blocked"
+}

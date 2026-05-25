@@ -35,10 +35,10 @@ or prove from checker-owned artifacts that no such work remains.
 }
 -->
 
-Every Ralph prompt must include:
-
-> Before starting, run `git log --oneline -1 master` and verify your HEAD
-> matches. If not, run `git rebase master`.
+Every Ralph task prompt must include its task-base check: compare the declared
+base ref and `HEAD`, then verify the declared Base SHA is an ancestor of
+`HEAD`. If the ancestor check fails, stop and report the branch-base mismatch.
+Do not use this lane plan as authority to rebase a task worktree.
 
 Reviewer loop: RAW traceability, ubiquitous-language/domain-language,
 architecture/connascence, and code review. Repeat until no reasonable findings

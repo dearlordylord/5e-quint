@@ -923,6 +923,21 @@ function renderClaimPressureDetail(claim) {
   return claim?.reason ?? claim?.issue ?? claim?.assumptionId ?? "";
 }
 
+function profileFollowUpTaskIds(profile) {
+  return [
+    ...(profile.followUpTaskIds ?? []),
+    ...profile.obligations.flatMap(
+      (obligation) => obligation.followUpTaskIds ?? [],
+    ),
+  ];
+}
+
+function renderRulesKernelFollowUpTaskIds(taskIds) {
+  const uniqueTaskIds = Array.from(new Set(taskIds)).sort();
+  if (uniqueTaskIds.length === 0) return "_plan-update-required_";
+  return uniqueTaskIds.map((taskId) => `\`${taskId}\``).join(", ");
+}
+
 function renderReport(
   matrix,
   {
@@ -1132,10 +1147,10 @@ function renderReport(
     "",
     "### Rules-Kernel Profile Join Gaps",
     "",
-    "| Profile | Kind | Status | Obligations |",
-    "| --- | --- | --- | --- |",
+    "| Profile | Kind | Status | Follow-up tasks | Reason | Obligations |",
+    "| --- | --- | --- | --- | --- | --- |",
     ...(rulesKernelProfileGaps.length === 0
-      ? ["| _none_ | _none_ | _none_ | _none_ |"]
+      ? ["| _none_ | _none_ | _none_ | _none_ | _none_ | _none_ |"]
       : rulesKernelProfileGaps.map((row) => {
           const obligations =
             row.obligations.length === 0
@@ -1146,21 +1161,29 @@ function renderReport(
                       `\`${obligation.obligationId}\` (${obligation.status})`,
                   )
                   .join(", ");
-          return `| \`${row.profileId}\` | ${row.profileKind} | ${row.joinStatus} | ${obligations} |`;
+          const followUpTasks = renderRulesKernelFollowUpTaskIds(
+            profileFollowUpTaskIds(row),
+          );
+          return `| \`${row.profileId}\` | ${row.profileKind} | ${row.joinStatus} | ${followUpTasks} | ${md(row.gapReason ?? "_none_")} | ${obligations} |`;
         })),
     "",
     "### Supported Unit Rules-Kernel Chain Gaps",
     "",
-    "| Unit | Status | Profiles |",
-    "| --- | --- | --- |",
+    "| Unit | Status | Profiles | Follow-up tasks |",
+    "| --- | --- | --- | --- |",
     ...(rulesKernelUnitGaps.length === 0
-      ? ["| _none_ | _none_ | _none_ |"]
+      ? ["| _none_ | _none_ | _none_ | _none_ |"]
       : rulesKernelUnitGaps.map((row) => {
           const profiles = row.profiles
             .filter((profile) => profile.joinStatus !== "covered")
-            .map((profile) => `\`${profile.profileId}\` (${profile.joinStatus})`)
+            .map(
+              (profile) => `\`${profile.profileId}\` (${profile.joinStatus})`,
+            )
             .join(", ");
-          return `| \`${row.unitId}\` | ${row.joinStatus} | ${profiles} |`;
+          const followUpTasks = renderRulesKernelFollowUpTaskIds(
+            row.profiles.flatMap(profileFollowUpTaskIds),
+          );
+          return `| \`${row.unitId}\` | ${row.joinStatus} | ${profiles} | ${followUpTasks} |`;
         })),
     "",
     "## Supported Unit Claims",

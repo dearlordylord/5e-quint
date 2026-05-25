@@ -1,0 +1,162 @@
+{
+  "schema": "dnd.mcp-scenario-evidence.v1",
+  "ownerPackage": "@dnd/mcp",
+  "check": {
+    "packageName": "@dnd/mcp",
+    "script": "test:mcp-scenario-evidence"
+  },
+  "requiredFlows": [
+    {
+      "flowId": "mcp-workflow-discovery",
+      "scopeIds": ["level-1", "level-1-2"],
+      "followUpTaskId": "C3-MCP-LEVEL12-SCENARIO-GATE",
+      "description": "The MCP server exposes discoverable tool contracts, workflow guidance, catalogs, and structured result paths before a caller commits to a character or battle workflow."
+    },
+    {
+      "flowId": "character-creation",
+      "scopeIds": ["level-1", "level-1-2"],
+      "followUpTaskId": "C9-CHARACTER-CREATION-MCP-EVIDENCE",
+      "description": "The MCP surface admits an SRD character creation workflow through create, discover, fill, and finalize tools without relying on support-profile status as scenario evidence."
+    },
+    {
+      "flowId": "character-sheet",
+      "scopeIds": ["level-1", "level-1-2"],
+      "followUpTaskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
+      "description": "The MCP surface exposes durable character sheet state and battle handoff results through list and session snapshot tools."
+    },
+    {
+      "flowId": "battle",
+      "scopeIds": ["level-1", "level-1-2"],
+      "followUpTaskId": "C11-BATTLE-MCP-EVIDENCE",
+      "description": "The MCP surface admits an SRD battle flow through start, read, discover acts, fill battle holes, resolve acts, end turns, and end battle tools."
+    }
+  ],
+  "evidence": [
+    {
+      "kind": "mcp-scenario",
+      "flowId": "mcp-workflow-discovery",
+      "scenarioId": "discover-mcp-surface",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C3-MCP-LEVEL12-SCENARIO-GATE",
+      "summary": "The protocol acceptance scenario verifies the tool list, schema exposure, workflow guide result paths, catalog discovery, and stat block discovery that let a caller orient before entering a specific workflow."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "character-creation",
+      "scenarioId": "create-baseline-character",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C9-CHARACTER-CREATION-MCP-EVIDENCE",
+      "summary": "The protocol acceptance scenario creates and finalizes the supported level-1 Orc Soldier Fighter through create, discover, fill, and finalize tools while using returned hole ids, option ids, and draft revisions."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "character-creation",
+      "scenarioId": "create-warrior-second-level",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C9-CHARACTER-CREATION-MCP-EVIDENCE",
+      "summary": "The protocol acceptance scenario creates and finalizes a supported level-2 Fighter after the caller resolves the non-SRD synonym outside MCP and then follows returned progression, class choice, equipment, and loadout holes."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "character-creation",
+      "scenarioId": "create-wizard-with-spells",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C9-CHARACTER-CREATION-MCP-EVIDENCE",
+      "summary": "The protocol acceptance scenario creates and finalizes a supported level-2 Elf Soldier Wizard through returned cantrip, spellbook, prepared spell, equipment, loadout, and class-feature proficiency holes."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "character-sheet",
+      "scenarioId": "create-baseline-character",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
+      "summary": "The protocol acceptance scenario finalizes the supported level-1 Orc Soldier Fighter, reads the resulting Character Sheet through list_characters, and verifies durable Hit Points before and after battle handoff."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "character-sheet",
+      "scenarioId": "create-wizard-with-spells",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
+      "summary": "The protocol acceptance scenario finalizes a supported level-2 Elf Soldier Wizard, verifies the Character Sheet exposes level-1 Spell Slots and selected spells, and later observes the expended slot after battle handoff."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "character-sheet",
+      "scenarioId": "finish-battle-and-inspect-character-state",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
+      "summary": "The protocol acceptance scenario ends battle and inspects list_characters plus the session snapshot to prove durable Character Sheet Hit Points and Spell Slot expenditure remain visible to MCP callers."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "battle",
+      "scenarioId": "select-monsters",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C11-BATTLE-MCP-EVIDENCE",
+      "summary": "The protocol acceptance scenario selects SRD Stat Blocks for battle setup through select_stat_block after discovering valid Stat Block ids from list_stat_blocks."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "battle",
+      "scenarioId": "start-battle-with-initiative",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C11-BATTLE-MCP-EVIDENCE",
+      "summary": "The protocol acceptance scenario starts SRD battles from finalized Character Sheets and Stat Blocks, verifies the Initiative-derived turn order, and reads the current actor from the battle snapshot."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "battle",
+      "scenarioId": "take-turns-and-resolve-attacks",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C11-BATTLE-MCP-EVIDENCE",
+      "summary": "The protocol acceptance scenario discovers battle acts, fills targetChoice, attackRoll, and rolledDice battle holes for weapon attacks, verifies Hit Point changes, and advances turns in Initiative order."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "battle",
+      "scenarioId": "use-action-surge",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C11-BATTLE-MCP-EVIDENCE",
+      "summary": "The protocol acceptance scenario resolves the level-2 Fighter Action Surge feature through resolve_battle_act and then rediscovers battle acts before taking another attack."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "battle",
+      "scenarioId": "cast-cantrips-and-slotted-spells",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C11-BATTLE-MCP-EVIDENCE",
+      "summary": "The protocol acceptance scenario discovers action-time spell subjects for the level-2 Wizard, resolves Ray of Frost and Magic Missile through runtime-owned battle holes, and verifies Spell Slot expenditure."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "battle",
+      "scenarioId": "finish-battle-and-inspect-character-state",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C11-BATTLE-MCP-EVIDENCE",
+      "summary": "The protocol acceptance scenario ends active battles through end_battle after combat resolution and verifies the battle handoff updates available Character Sheet state."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "battle",
+      "scenarioId": "recover-from-invalid-or-stale-actions",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C11-BATTLE-MCP-EVIDENCE",
+      "summary": "The protocol acceptance scenario verifies battle workflow recovery by rejecting end_turn and end_battle while battle holes are pending, requiring callers to continue with the current subject or rediscover state."
+    }
+  ]
+}

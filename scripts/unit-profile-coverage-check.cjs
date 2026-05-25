@@ -32,14 +32,30 @@ const {
   renderSrdUnitInventory,
   validateSrdUnitInventory,
 } = require("./srd-unit-inventory.cjs");
+const {
+  buildUltraGoldenGate,
+  renderLevel12UltraGoldenSummary,
+  renderUltraGoldenGate,
+  validateMcpScenarioEvidence,
+} = require("./ultra-golden-gate.cjs");
+const {
+  buildLevel12QntMbtJoin,
+  renderLevel12QntMbtJoin,
+} = require("./level12-qnt-mbt-join-report.cjs");
+const {
+  buildSpellProcedureMbtEvidenceGate,
+  renderSpellProcedureMbtEvidenceGate,
+} = require("./spell-procedure-mbt-evidence-gate.cjs");
+const {
+  buildFeatureProcedureMbtEvidenceGate,
+  renderFeatureProcedureMbtEvidenceGate,
+} = require("./feature-procedure-mbt-evidence-gate.cjs");
 const { scanClaimFiles } = require("./unit-profile-coverage-claim-scan.cjs");
 const { runSelfTest } = require("./unit-profile-coverage-self-test.cjs");
 const {
   validateCoverageInputs,
 } = require("./unit-profile-coverage-validation.cjs");
-const {
-  buildKernelCoverage,
-} = require("./rules-kernel-coverage-check.cjs");
+const { buildKernelCoverage } = require("./rules-kernel-coverage-check.cjs");
 
 const root = process.env.UNIT_PROFILE_COVERAGE_ROOT ?? process.cwd();
 const write = process.argv.includes("--write");
@@ -67,6 +83,7 @@ function main() {
     paths.characterSheetOwnerEvidence,
   );
   const sharedAlgebraOwnerEvidence = readJson(paths.sharedAlgebraOwnerEvidence);
+  const mcpScenarioEvidence = readJson(paths.mcpScenarioEvidence);
   const inventory = discoverInventory(root, collections.collections);
   const authoredSurfaceUnits = discoverAuthoredSurfaceUnits(root);
   const srdUnitInventory = buildSrdUnitInventory({
@@ -93,12 +110,12 @@ function main() {
     },
     { selectedIdentityHardGate },
   );
+  const rulesKernelCoverage = buildKernelCoverage({ root });
   issues.push(
-    ...buildKernelCoverage({ root }).issues.map(
-      (issue) => `rules-kernel: ${issue}`,
-    ),
+    ...rulesKernelCoverage.issues.map((issue) => `rules-kernel: ${issue}`),
   );
   issues.push(...validateSrdUnitInventory(srdUnitInventory));
+  issues.push(...validateMcpScenarioEvidence(mcpScenarioEvidence, { root }));
   if (issues.length > 0) {
     for (const issue of issues)
       console.error(`unit-profile-coverage: ${issue}`);
@@ -132,6 +149,28 @@ function main() {
   });
   const level13FullSupport = buildLevel13FullSupport(matrix, srdUnitInventory, {
     root,
+  });
+  const ultraGoldenGate = buildUltraGoldenGate({
+    level1FullSupport,
+    level12FullSupport,
+    mcpScenarioEvidence,
+    rulesKernelMatrix: rulesKernelCoverage.matrix,
+    selectedIdentityMbtEvidenceTag,
+    unitMatrix: matrix,
+  });
+  const level12QntMbtJoin = buildLevel12QntMbtJoin({
+    level12FullSupport,
+    rulesKernelMatrix: rulesKernelCoverage.matrix,
+  });
+  const spellProcedureMbtEvidenceGate = buildSpellProcedureMbtEvidenceGate({
+    level1FullSupport,
+    level12FullSupport,
+    rulesKernelMatrix: rulesKernelCoverage.matrix,
+  });
+  const featureProcedureMbtEvidenceGate = buildFeatureProcedureMbtEvidenceGate({
+    level1FullSupport,
+    level12FullSupport,
+    rulesKernelMatrix: rulesKernelCoverage.matrix,
   });
   writeOrCompare(
     { root, write },
@@ -179,6 +218,45 @@ function main() {
   );
   writeOrCompare(
     { root, write },
+    paths.level12QntMbtJoin,
+    `${JSON.stringify(level12QntMbtJoin, null, 2)}\n`,
+  );
+  writeOrCompare(
+    { root, write },
+    paths.level12QntMbtJoinReport,
+    renderLevel12QntMbtJoin(level12QntMbtJoin),
+  );
+  writeOrCompare(
+    { root, write },
+    paths.level12UltraGoldenSummaryReport,
+    renderLevel12UltraGoldenSummary({
+      level12FullSupport,
+      level12QntMbtJoin,
+      ultraGoldenGate,
+    }),
+  );
+  writeOrCompare(
+    { root, write },
+    paths.spellProcedureMbtEvidenceGate,
+    `${JSON.stringify(spellProcedureMbtEvidenceGate, null, 2)}\n`,
+  );
+  writeOrCompare(
+    { root, write },
+    paths.spellProcedureMbtEvidenceGateReport,
+    renderSpellProcedureMbtEvidenceGate(spellProcedureMbtEvidenceGate),
+  );
+  writeOrCompare(
+    { root, write },
+    paths.featureProcedureMbtEvidenceGate,
+    `${JSON.stringify(featureProcedureMbtEvidenceGate, null, 2)}\n`,
+  );
+  writeOrCompare(
+    { root, write },
+    paths.featureProcedureMbtEvidenceGateReport,
+    renderFeatureProcedureMbtEvidenceGate(featureProcedureMbtEvidenceGate),
+  );
+  writeOrCompare(
+    { root, write },
     paths.level13FullSupport,
     `${JSON.stringify(level13FullSupport, null, 2)}\n`,
   );
@@ -186,6 +264,16 @@ function main() {
     { root, write },
     paths.level13FullSupportReport,
     renderLevel13FullSupport(level13FullSupport),
+  );
+  writeOrCompare(
+    { root, write },
+    paths.ultraGoldenGate,
+    `${JSON.stringify(ultraGoldenGate, null, 2)}\n`,
+  );
+  writeOrCompare(
+    { root, write },
+    paths.ultraGoldenGateReport,
+    renderUltraGoldenGate(ultraGoldenGate),
   );
   console.log(
     `Unit profile coverage OK: ${inventory.length} Units, ${profiles.length} profiles.`,

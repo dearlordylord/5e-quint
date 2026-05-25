@@ -47,8 +47,10 @@ replay, or a profile-scoped runtime test connects the modeled obligation to
 current TS behavior according to the witness-mode rules below.
 
 `profile-obligations.jsonl` is the single source of truth for the join from a
-Unit support profile to rules-kernel semantic obligations. Obligation rows do
-not duplicate their profile lists; generated reports derive those lists from
+Unit support profile to rules-kernel semantic obligations. A row either maps a
+profile to one or more obligation ids or, for an intentionally open profile
+join, names non-empty `followUpTaskIds` plus a `reason`. Obligation rows do not
+duplicate their profile lists; generated reports derive those lists from
 `profile-obligations.jsonl`.
 
 `battle-hole-frontier.jsonl` is the single source of truth for the current
@@ -90,6 +92,12 @@ Generator readiness is a per-obligation C-lane assessment of whether a covered
 obligation's QNT owner can act as a future implementation source. It does not
 change B-lane coverage, does not prove additional TS parity, and does not imply
 generated Rust exists.
+
+For runnable Rust migration or generator-readiness queue selection, start from
+`plans/QNT_COVERAGE_PROGRAM.md#rust--generator-readiness-entrypoints`. This
+README owns the row contract and vocabulary; it is not a historical task queue.
+Closed QNT/QMBT planning files redirect to that entrypoint because the durable
+facts now live in checked JSONL artifacts and the active A/B/C Ralph plans.
 
 `generator-readiness.jsonl` is obligation-centered. Each row must point to a
 real obligation id and must explicitly declare `semanticCore`, `proofOnly`,
@@ -235,6 +243,11 @@ New reducer semantics are QNT-first:
 7. Run `pnpm rules-kernel-coverage:check` and the relevant witness test.
 
 ## Parity Witness Modes
+
+Rules-kernel parity witness rows use the checked witness-kind vocabulary
+`focused-mbt`, `deterministic-qnt-replay`, and `runtime-test`. MCP scenario
+evidence uses `mcp-scenario` in `plans/unit-profile-coverage/`; it is an
+ultra-golden user-flow layer, not a rules-kernel parity witness.
 
 The default witness for reducer procedures is focused MBT with random traces.
 Use it for sequencing, holes, reactions, resources, active-effect lifecycle,

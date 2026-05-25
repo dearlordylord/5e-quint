@@ -273,20 +273,21 @@ before the Ralph chooser and model subprocesses are fully detached. The
 `setsid` wrapper gives the runner its own session and was the reliable launch
 shape for long-running worktree lanes.
 
-The script refuses to start unless the main worktree is clean and `HEAD` matches `master` (or the `--base` ref) at run start. Each implementer and reviewer prompt also includes the repo-specific branch-base check:
+The script refuses to start unless the main worktree is clean and `HEAD`
+matches `master` (or the `--base` ref) at run start. Each implementer and
+reviewer prompt also includes the repo-specific task-base check:
 
 ```bash
-git log --oneline -1 master
+git log --oneline -1 "$TASK_BASE_REF"
 git log --oneline -1 HEAD
+git merge-base --is-ancestor "$TASK_BASE_SHA" HEAD
 ```
 
-Agents treat this as an ancestor check, not an exact-match requirement. Earlier tasks may already have advanced the integration branch beyond `master`, which is expected. Only when `master` is no longer in the current branch history should the worktree be considered stale.
-
-If a worktree is stale, the agent is instructed to run:
-
-```bash
-git rebase master
-```
+Agents treat this as an ancestor check, not an exact-match requirement. Earlier
+tasks or review rounds may already have advanced the task worktree beyond the
+Base SHA, which is expected when the Base SHA remains an ancestor of `HEAD`.
+If the ancestor check fails, the agent stops and reports the branch-base
+mismatch; branch repair belongs to the runner or decider, not the task agent.
 
 ## Environment
 

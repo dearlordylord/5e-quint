@@ -1,4 +1,7 @@
 const path = require("node:path");
+const {
+  parityWitnessKinds,
+} = require("./evidence-witness-kind-config.cjs");
 
 const coverageDirName = "rules-kernel-coverage";
 
@@ -37,12 +40,6 @@ const obligationKinds = new Set([
   "boundary-protocol",
 ]);
 
-const parityWitnessKinds = new Set([
-  "focused-mbt",
-  "deterministic-qnt-replay",
-  "runtime-test",
-]);
-
 const battleFrontierSubjects = new Set([
   "battle-hole-family",
   "battle-fill-kind",
@@ -74,6 +71,7 @@ const generatorSubsetVocabulary = {
   exists: "Collection `.exists(...)` existential checks.",
   filter: "Collection `.filter(...)`.",
   fold: "Collection `.fold(...)`.",
+  forall: "Collection `.forall(...)` universal checks.",
   "if-expression": "Conditional expressions.",
   import: "Cross-module imports.",
   implies: "Implication expressions.",

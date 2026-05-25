@@ -1,4 +1,9 @@
 const path = require("node:path");
+const {
+  mcpScenarioWitnessKind,
+  ultraGoldenWitnessKinds,
+  witnessKindDescriptions,
+} = require("./evidence-witness-kind-config.cjs");
 
 const collectionIds = new Set(["srd-5.2.1", "classic-2024-non-srd-mechanics"]);
 const catalogAdmissionDispositionCategory = {
@@ -55,7 +60,8 @@ const rulesKernelProfileKindClassificationReasons = Object.freeze({
   action: "action profiles execute reducer-owned procedures",
   "bonus-action": "bonus-action profiles execute reducer-owned procedures",
   reaction: "reaction profiles execute reducer-owned continuations",
-  "spell-invocation": "spell invocation profiles execute reducer-owned procedures",
+  "spell-invocation":
+    "spell invocation profiles execute reducer-owned procedures",
   "persistent-effect":
     "persistent-effect profiles own active-effect lifecycle and table-state projection",
   "summoned-companion":
@@ -255,20 +261,42 @@ function coveragePaths(root) {
     srdUnitInventory: path.join(coverageDir, "srd-unit-inventory.json"),
     srdUnitInventoryReport: path.join(coverageDir, "SRD_UNIT_INVENTORY.md"),
     level1FullSupport: path.join(coverageDir, "level1-full-support.json"),
-    level1FullSupportReport: path.join(
-      coverageDir,
-      "LEVEL1_FULL_SUPPORT.md",
-    ),
+    level1FullSupportReport: path.join(coverageDir, "LEVEL1_FULL_SUPPORT.md"),
     level12FullSupport: path.join(coverageDir, "level1-2-full-support.json"),
     level12FullSupportReport: path.join(
       coverageDir,
       "LEVEL1_2_FULL_SUPPORT.md",
     ),
+    level12QntMbtJoin: path.join(coverageDir, "level1-2-qnt-mbt-join.json"),
+    level12QntMbtJoinReport: path.join(coverageDir, "LEVEL1_2_QNT_MBT_JOIN.md"),
+    level12UltraGoldenSummaryReport: path.join(
+      coverageDir,
+      "LEVEL1_2_ULTRA_GOLDEN_SUMMARY.md",
+    ),
+    spellProcedureMbtEvidenceGate: path.join(
+      coverageDir,
+      "spell-procedure-mbt-evidence-gate.json",
+    ),
+    spellProcedureMbtEvidenceGateReport: path.join(
+      coverageDir,
+      "SPELL_PROCEDURE_MBT_EVIDENCE_GATE.md",
+    ),
+    featureProcedureMbtEvidenceGate: path.join(
+      coverageDir,
+      "feature-procedure-mbt-evidence-gate.json",
+    ),
+    featureProcedureMbtEvidenceGateReport: path.join(
+      coverageDir,
+      "FEATURE_PROCEDURE_MBT_EVIDENCE_GATE.md",
+    ),
+    mcpScenarioEvidence: path.join(coverageDir, "mcp-scenario-evidence.json"),
     level13FullSupport: path.join(coverageDir, "level1-3-full-support.json"),
     level13FullSupportReport: path.join(
       coverageDir,
       "LEVEL1_3_FULL_SUPPORT.md",
     ),
+    ultraGoldenGate: path.join(coverageDir, "ultra-golden-gate.json"),
+    ultraGoldenGateReport: path.join(coverageDir, "ULTRA_GOLDEN_GATE.md"),
     rulesKernelObligations: path.join(
       root,
       "plans",
@@ -303,10 +331,13 @@ module.exports = {
   rulesKernelProfileKindClassificationReasons,
   rulesKernelProfileKindClassifications,
   rulesKernelProfileKinds,
+  mcpScenarioWitnessKind,
   selectedIdentityMbtEvidenceTag,
   selectedIdentityNonApplicableDispositionTag,
   skippedClaimScanDirs,
   surfaceUnitKinds,
   unitEvidenceTags,
   unitProfileOwnerClaimKinds,
+  ultraGoldenWitnessKinds,
+  witnessKindDescriptions,
 };

@@ -50,6 +50,48 @@ for the current task:
 - Never use deleted closed Ralph lanes as context. Their durable output has
   been merged into checker-owned artifacts and the closure report.
 
+## Rust / Generator Readiness Entrypoints
+
+Use this section as the compact queue map for future Rust migration and
+generator-readiness work. Do not start from historical QMBT or closed Ralph
+plans; they now redirect here because their durable output is represented in
+checked artifacts.
+
+Checked source-of-truth artifacts:
+
+- `plans/rules-kernel-coverage/README.md` defines the generator-readiness row
+  contract, owner-role vocabulary, blocker vocabulary, and kernel IR boundary
+  inventory.
+- `plans/rules-kernel-coverage/generator-readiness.jsonl` is the
+  obligation-centered readiness queue. It owns `semanticCore`, `proofOnly`,
+  `generatorSubset`, `blockedBy`, `followUpTaskIds`, and `dryRun` facts.
+- `plans/rules-kernel-coverage/qnt-owner-roles.jsonl` is the source of truth
+  for QNT owner roles. Do not infer generator ownership from filenames alone.
+- `plans/rules-kernel-coverage/kernel-ir-boundaries.jsonl` records the existing
+  runtime boundaries a future generator must target without adding parallel
+  runtime state.
+- `plans/rules-kernel-coverage/HIT_POINT_DAMAGE_RUST_DRY_RUN.md` is the current
+  manual Rust dry-run vertical.
+
+Active runnable queues:
+
+- `plans/RALPH_LANE_A_QNT_GENERATOR_CLOSURE.md` owns shared-algebra
+  unit-feature semantic-core cleanup and its readiness rows.
+- `plans/RALPH_LANE_B_BATTLE_RUNTIME_QNT_CORES.md` owns broad
+  battle-runtime QNT semantic-core splits and their readiness rows.
+- `plans/RALPH_LANE_C_ULTRA_GOLDEN_MBT_METRIC.md` owns aggregate
+  ultra-golden metric, MBT/MCP evidence accounting, and context-budget cleanup.
+
+Historical redirects:
+
+- `plans/QNT_SEMANTIC_CORE_EXTRACTION_RALPH.md`
+- `plans/QNT_SLICE_EXPANSION_RALPH.md`
+- `plans/QMBT1_QMBT5_PRE_RESEARCH.md`
+- `plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md`
+
+Those files are not task queues. Their durable findings have been folded into
+the checked artifacts above or into the active A/B/C lane plans.
+
 ## Working Discipline
 
 - Tactical roll-up only; do not duplicate vocabulary or rules from the source-of-truth docs above.
@@ -207,10 +249,11 @@ Durable conventions for slice authors. Not a work log; entries are added only wh
 
 ## Ralph Handoff Prompt
 
-Every Ralph prompt for this lane must include:
-
-> Before starting, run `git log --oneline -1 master` and verify your HEAD
-> matches. If not, run `git rebase master`.
+Every Ralph task prompt for this lane must include its task-base check: compare
+the declared base ref and `HEAD`, then verify the declared Base SHA is an
+ancestor of `HEAD`. If the ancestor check fails, stop and report the
+branch-base mismatch. Do not use this program plan as authority to rebase a
+task worktree.
 
 Ralph must run the implementer, reviewer, handback, and decider loop until
 `accept`. The reviewer loop must include RAW traceability,
