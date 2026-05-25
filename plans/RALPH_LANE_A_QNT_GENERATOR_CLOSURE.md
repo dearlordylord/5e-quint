@@ -27,7 +27,7 @@ work remains.
     { "number": 6, "id": "A43-UNIT-FEATURE-PASSIVE-MOVEMENT-DEFENSE-CORE", "status": "done", "title": "Split passive movement and defense feature core" },
     { "number": 7, "id": "A44-UNIT-FEATURE-MARTIAL-ARTS-CORE", "status": "done", "title": "Split Martial Arts projection core" },
     { "number": 8, "id": "A45-UNIT-FEATURE-ZERO-HP-CORE", "status": "done", "title": "Split zero-Hit-Point feature replacement core" },
-    { "number": 9, "id": "A46-MONK-FOCUS-BATTLE-CORE", "status": "ready-for-research", "title": "Split Monk Focus battle option core" },
+    { "number": 9, "id": "A46-MONK-FOCUS-BATTLE-CORE", "status": "done", "title": "Split Monk Focus battle option core" },
     { "number": 10, "id": "A56-UNIT-FEATURE-OWNER-ROLE-CLOSURE", "status": "ready-for-research", "title": "Refresh unit-feature owner roles after semantic-core splits" },
     { "number": 11, "id": "A57-UNIT-FEATURE-READINESS-ROW-CLOSURE", "status": "ready-for-research", "title": "Close unit-feature generator-readiness row" },
     { "number": 12, "id": "A58-UNIT-FEATURE-PROFILE-JOIN-AUDIT", "status": "ready-for-research", "title": "Audit supported feature profile to rules-kernel joins" },
@@ -177,7 +177,7 @@ Acceptance: checker green; focused QNT checks green.
 
 ### Task 9 - A46-MONK-FOCUS-BATTLE-CORE - Split Monk Focus battle option core
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: Flurry of Blows, Patient Defense, Step of the Wind, and Focus Point facts.
 

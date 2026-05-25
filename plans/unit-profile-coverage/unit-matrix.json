@@ -383,7 +383,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -14644,7 +14644,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus-tests.qnt"
             },
             {
               "kind": "runtime-test",
