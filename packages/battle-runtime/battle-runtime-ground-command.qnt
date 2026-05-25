@@ -3,6 +3,7 @@
 // KERNEL-COVERAGE: qnt-owner BATTLE.COMMAND.OPTION_AND_NEXT_TURN
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE
 module battleRuntimeGroundCommand {
+  import battleRuntimeAreaTriggerTiming.* from "./battle-runtime-area-trigger-timing"
   import battleRuntimeMovementBridge.* from "./battle-runtime-movement-bridge"
   import battleRuntimeCommandChoice.* from "./battle-runtime-command-choice"
   import battleRuntimeModel.* from "./battle-runtime-model"
@@ -39,6 +40,18 @@ module battleRuntimeGroundCommand {
   pure val webDurationTicks = 600
   pure val webAreaId = 4
   pure val webSideFeet = 20
+
+  type GreaseGroundHazardSaveTrigger =
+    | GreaseGroundHazardAppears
+    | GreaseGroundHazardCreatureEntersArea
+    | GreaseGroundHazardCreatureEndsTurnInArea
+
+  pure def greaseGroundHazardSaveTriggerTiming(trigger: GreaseGroundHazardSaveTrigger): AreaEffectTriggerTiming =
+    match trigger {
+      | GreaseGroundHazardAppears => AreaAppearsInSpace
+      | GreaseGroundHazardCreatureEntersArea => CreatureEntersArea
+      | GreaseGroundHazardCreatureEndsTurnInArea => CreatureEndsTurnInArea
+    }
 
   pure def activeEffectsWithoutGreaseGroundHazard(effects: Set[ActiveEffect], areaId: int): Set[ActiveEffect] =
     effects.filter(effect => match effect {
@@ -185,13 +198,19 @@ module battleRuntimeGroundCommand {
       moveFighter(state, movementCost, provokedByTable)
   }
 
-  pure def resolveGreaseGroundHazardSave(
+  pure def resolveGreaseGroundHazardSaveForTrigger(
     state: BattleState,
     targetActor: Actor,
     areaId: int,
+    trigger: GreaseGroundHazardSaveTrigger,
     savingThrowSucceeded: bool,
   ): BattleState =
-    if (not(greaseGroundHazardActive(state, areaId)))
+    if (not(areaEffectTriggerCanResolve(
+      greaseGroundHazardActive(state, areaId),
+      true,
+      GreaseGroundHazardEveryTriggerProfile,
+      greaseGroundHazardSaveTriggerTiming(trigger),
+    )))
       state
     else {
       match targetActor {
@@ -200,13 +219,21 @@ module battleRuntimeGroundCommand {
       }
     }
 
+  pure def resolveGreaseGroundHazardSave(
+    state: BattleState,
+    targetActor: Actor,
+    areaId: int,
+    savingThrowSucceeded: bool,
+  ): BattleState =
+    resolveGreaseGroundHazardSaveForTrigger(state, targetActor, areaId, GreaseGroundHazardCreatureEntersArea, savingThrowSucceeded)
+
   pure def endTurnWithGreaseGroundHazardSave(
     state: BattleState,
     targetActor: Actor,
     areaId: int,
     savingThrowSucceeded: bool,
   ): BattleState =
-    endTurn(resolveGreaseGroundHazardSave(state, targetActor, areaId, savingThrowSucceeded))
+    endTurn(resolveGreaseGroundHazardSaveForTrigger(state, targetActor, areaId, GreaseGroundHazardCreatureEndsTurnInArea, savingThrowSucceeded))
 
   pure def fogCloudRadiusFeet(slotLevel: int): int =
     fogCloudBaseRadiusFeet + ((slotLevel - 1) * fogCloudRadiusFeetPerSlotAboveFirst)
@@ -646,7 +673,12 @@ module battleRuntimeGroundCommand {
     rolledDamage: int,
     targetShapeShiftState: ShapeShiftedRuntimeState,
   ): MoonbeamShapeShiftRiderResult =
-    if (not(moonbeamActive(state, areaId)) or moonbeamSavedThisTurn(state, targetActor, areaId))
+    if (not(areaEffectTriggerCanResolve(
+      moonbeamActive(state, areaId),
+      true,
+      moonbeamOnceAcrossQualifiedTriggersProfile(moonbeamSavedThisTurn(state, targetActor, areaId)),
+      CreatureEndsTurnInArea,
+    )))
       { state: state, targetShapeShiftState: targetShapeShiftState }
     else {
       val marked = markMoonbeamSavedThisTurn(state, targetActor, areaId)
@@ -725,10 +757,19 @@ module battleRuntimeGroundCommand {
     })
 
   pure def webRestraintSaveAlreadyResolved(state: BattleState, targetActor: Actor, areaId: int, triggerIsEntry: bool): bool =
+    areaEffectTriggerAlreadyResolved(
+      webRestraintFirstEntryAndStartTurnProfile(
+        webEntrySaveAlreadyResolved(state, targetActor, areaId),
+        webStartTurnSaveAlreadyResolved(state, targetActor, areaId),
+      ),
+      webRestraintSaveTriggerTiming(triggerIsEntry),
+    )
+
+  pure def webRestraintSaveTriggerTiming(triggerIsEntry: bool): AreaEffectTriggerTiming =
     if (triggerIsEntry)
-      webEntrySaveAlreadyResolved(state, targetActor, areaId)
+      CreatureEntersArea
     else
-      webStartTurnSaveAlreadyResolved(state, targetActor, areaId)
+      CreatureStartsTurnInArea
 
   pure def markWebSavedThisTurn(state: BattleState, targetActor: Actor, areaId: int, triggerIsEntry: bool): BattleState =
     {
@@ -800,7 +841,15 @@ module battleRuntimeGroundCommand {
     triggerIsEntry: bool,
     savingThrowSucceeded: bool,
   ): BattleState =
-    if (not(webRestraintHazardActive(state, areaId)) or webRestraintSaveAlreadyResolved(state, targetActor, areaId, triggerIsEntry))
+    if (not(areaEffectTriggerCanResolve(
+      webRestraintHazardActive(state, areaId),
+      true,
+      webRestraintFirstEntryAndStartTurnProfile(
+        webEntrySaveAlreadyResolved(state, targetActor, areaId),
+        webStartTurnSaveAlreadyResolved(state, targetActor, areaId),
+      ),
+      webRestraintSaveTriggerTiming(triggerIsEntry),
+    )))
       state
     else {
       val marked = markWebSavedThisTurn(state, targetActor, areaId, triggerIsEntry)

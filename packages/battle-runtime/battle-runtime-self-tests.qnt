@@ -1,6 +1,7 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeSelfTests {
+  import battleRuntimeAreaTriggerTimingTests.* from "./battle-runtime-area-trigger-timing-tests"
   import battleRuntimeCoreCombatTests.* from "./battle-runtime-core-combat-tests"
   import battleRuntimeGroundCommandTests.* from "./battle-runtime-ground-command-tests"
   import battleRuntimeSpellFactsTests.* from "./battle-runtime-spell-facts-tests"

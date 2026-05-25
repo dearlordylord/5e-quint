@@ -2833,6 +2833,10 @@
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-ground-command.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
+          "role": "semantic-core"
         }
       ],
       "runtime": "battle",

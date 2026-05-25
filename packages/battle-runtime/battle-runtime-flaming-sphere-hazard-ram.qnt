@@ -23,6 +23,7 @@
 //   - initiative order, unrelated active effects, and reaction windows
 
 module battleRuntimeFlamingSphereHazardRam {
+  import battleRuntimeAreaTriggerTiming.* from "./battle-runtime-area-trigger-timing"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
   import spellSaveGate.* from "../shared-algebras/proofs/rule-core/spell-save-gate"
   import spellSlotExpenditure.* from "../shared-algebras/proofs/rule-core/spell-slot-expenditure"
@@ -74,6 +75,12 @@ module battleRuntimeFlamingSphereHazardRam {
 
   pure def flamingSphereDamageRollAccepted(rolledDamage: int, damageDice: int): bool =
     rolledDamage >= damageDice and rolledDamage <= damageDice * 6
+
+  pure def flamingSphereHazardRamTriggerTiming(entrypoint: FlamingSphereHazardRamEntrypoint): AreaEffectTriggerTiming =
+    match entrypoint {
+      | FlamingSphereEndWithinFiveFeet => CreatureEndsTurnNearArea
+      | FlamingSphereRam => AreaMovesIntoSpace
+    }
 
   pure def resolveFlamingSphereCast(
     state: FlamingSphereHazardRamState,
@@ -131,19 +138,27 @@ module battleRuntimeFlamingSphereHazardRam {
     match state.sphere {
       | FlamingSphereAbsent => state
       | FlamingSphereActive(sphere) =>
-        match entrypoint {
-          | FlamingSphereEndWithinFiveFeet =>
-            applyFlamingSphereHazardDamage(state, sphere.damageDice, fills.savingThrowSucceeded, fills.rolledDamage)
-          | FlamingSphereRam =>
-            if (
-              not(state.casterHasBonusAction) or
-              not(flamingSphereMoveDistanceAccepted(fills.moveFeet, sphere.ramMaxMoveFeet))
-            )
-              state
-            else {
-              val damaged = applyFlamingSphereHazardDamage(state, sphere.damageDice, fills.savingThrowSucceeded, fills.rolledDamage)
-              { ...damaged, casterHasBonusAction: false }
-            }
-        }
+        if (not(areaEffectTriggerCanResolve(
+          true,
+          true,
+          FlamingSphereHazardEveryTriggerProfile,
+          flamingSphereHazardRamTriggerTiming(entrypoint),
+        )))
+          state
+        else
+          match entrypoint {
+            | FlamingSphereEndWithinFiveFeet =>
+              applyFlamingSphereHazardDamage(state, sphere.damageDice, fills.savingThrowSucceeded, fills.rolledDamage)
+            | FlamingSphereRam =>
+              if (
+                not(state.casterHasBonusAction) or
+                not(flamingSphereMoveDistanceAccepted(fills.moveFeet, sphere.ramMaxMoveFeet))
+              )
+                state
+              else {
+                val damaged = applyFlamingSphereHazardDamage(state, sphere.damageDice, fills.savingThrowSucceeded, fills.rolledDamage)
+                { ...damaged, casterHasBonusAction: false }
+              }
+          }
     }
 }

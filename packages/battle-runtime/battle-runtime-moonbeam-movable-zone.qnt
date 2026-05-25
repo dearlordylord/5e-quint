@@ -29,6 +29,7 @@
 //   - initiative order, broad turn sequencing, and reaction windows
 
 module battleRuntimeMoonbeamMovableZone {
+  import battleRuntimeAreaTriggerTiming.* from "./battle-runtime-area-trigger-timing"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
   import spellSaveGate.* from "../shared-algebras/proofs/rule-core/spell-save-gate"
   import spellSlotExpenditure.* from "../shared-algebras/proofs/rule-core/spell-slot-expenditure"
@@ -92,6 +93,14 @@ module battleRuntimeMoonbeamMovableZone {
 
   pure def moonbeamMoveDistanceAccepted(moveFeet: int, maxMoveFeet: int): bool =
     moveFeet > 0 and moveFeet <= maxMoveFeet
+
+  pure def moonbeamSaveTriggerTiming(trigger: MoonbeamSaveTrigger): AreaEffectTriggerTiming =
+    match trigger {
+      | MoonbeamAppearsInArea => AreaAppearsInSpace
+      | MoonbeamAreaMovesIntoSpace => AreaMovesIntoSpace
+      | MoonbeamEntersArea => CreatureEntersArea
+      | MoonbeamEndsTurnInArea => CreatureEndsTurnInArea
+    }
 
   pure def resolveMoonbeamCast(
     state: MoonbeamMovableZoneState,
@@ -177,7 +186,15 @@ module battleRuntimeMoonbeamMovableZone {
     match state.zone {
       | MoonbeamZoneAbsent => state
       | MoonbeamZoneActive(zone) =>
-        if (zone.savedThisTurn or not(moonbeamDamageRollAccepted(fills.rolledDamage, zone.damageDice)))
+        if (
+          not(areaEffectTriggerCanResolve(
+            true,
+            true,
+            moonbeamOnceAcrossQualifiedTriggersProfile(zone.savedThisTurn),
+            moonbeamSaveTriggerTiming(trigger),
+          )) or
+          not(moonbeamDamageRollAccepted(fills.rolledDamage, zone.damageDice))
+        )
           state
         else {
           val damaged = applyMoonbeamDamage(state, zone.damageDice, fills.savingThrowSucceeded, fills.rolledDamage)
