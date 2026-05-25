@@ -13,7 +13,7 @@ The aggregate rule is conjunctive: every scope must pass every layer. The checke
 | support-completeness | Support completeness | The strict level-support claim has no open strict rows, selected-identity blockers, or SRD-authored product-readiness blockers. |
 | qnt-generator-readiness | QNT/generator readiness | Every scoped reducer-semantic obligation is covered, and every scoped semantic-core QNT owner is generation-subset-clean with no run-block blocker. |
 | mbt-parity-evidence | MBT/parity evidence | Every scoped reducer-semantic obligation has at least one rules-kernel parity witness. |
-| mcp-scenario-evidence | MCP scenario evidence | Every scoped user-facing MCP flow has checker-owned scenario evidence. The evidence source is intentionally absent until the MCP scenario gate lands. |
+| mcp-scenario-evidence | MCP scenario evidence | Every scoped user-facing MCP flow has checker-owned scenario evidence backed by the package-local MCP scenario evidence command. |
 
 ## Scope Summary
 
@@ -29,17 +29,23 @@ The aggregate rule is conjunctive: every scope must pass every layer. The checke
 | level-1 | support-completeness | pass | _none_ |
 | level-1 | qnt-generator-readiness | blocked | 27 blocker(s) |
 | level-1 | mbt-parity-evidence | pass | _none_ |
-| level-1 | mcp-scenario-evidence | blocked | 1 blocker(s) |
+| level-1 | mcp-scenario-evidence | blocked | 3 blocker(s) |
 | level-1-2 | support-completeness | pass | _none_ |
 | level-1-2 | qnt-generator-readiness | blocked | 27 blocker(s) |
 | level-1-2 | mbt-parity-evidence | pass | _none_ |
-| level-1-2 | mcp-scenario-evidence | blocked | 1 blocker(s) |
+| level-1-2 | mcp-scenario-evidence | blocked | 3 blocker(s) |
 
 ## MCP Scenario Evidence
 
-MCP scenario evidence is an explicit required layer and is currently blocked until checker-owned scenario evidence is admitted.
+MCP scenario evidence is an explicit required layer. Its manifest records required user-facing flows separately from support-profile claims, and the package-local command checks that admitted evidence stays tied to executable MCP scenario tests.
 
-| Scope | Follow-up tasks | Reason |
-| --- | --- | --- |
-| level-1 | `C3-MCP-LEVEL12-SCENARIO-GATE`, `C9-CHARACTER-CREATION-MCP-EVIDENCE`, `C10-CHARACTER-SHEET-MCP-EVIDENCE`, `C11-BATTLE-MCP-EVIDENCE` | No checker-owned MCP scenario evidence source has been admitted for this ultra-golden scope. |
-| level-1-2 | `C3-MCP-LEVEL12-SCENARIO-GATE`, `C9-CHARACTER-CREATION-MCP-EVIDENCE`, `C10-CHARACTER-SHEET-MCP-EVIDENCE`, `C11-BATTLE-MCP-EVIDENCE` | No checker-owned MCP scenario evidence source has been admitted for this ultra-golden scope. |
+| Scope | Flow | Status | Scenario evidence | Follow-up task |
+| --- | --- | --- | --- | --- |
+| level-1 | mcp-workflow-discovery | pass | `discover-mcp-surface` | _none_ |
+| level-1 | character-creation | blocked | _missing_ | `C9-CHARACTER-CREATION-MCP-EVIDENCE` |
+| level-1 | character-sheet | blocked | _missing_ | `C10-CHARACTER-SHEET-MCP-EVIDENCE` |
+| level-1 | battle | blocked | _missing_ | `C11-BATTLE-MCP-EVIDENCE` |
+| level-1-2 | mcp-workflow-discovery | pass | `discover-mcp-surface` | _none_ |
+| level-1-2 | character-creation | blocked | _missing_ | `C9-CHARACTER-CREATION-MCP-EVIDENCE` |
+| level-1-2 | character-sheet | blocked | _missing_ | `C10-CHARACTER-SHEET-MCP-EVIDENCE` |
+| level-1-2 | battle | blocked | _missing_ | `C11-BATTLE-MCP-EVIDENCE` |

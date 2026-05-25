@@ -7,7 +7,8 @@
     "lint": "eslint --no-inline-config -c eslint.config.mjs src && prettier --check src && jscpd src --threshold 2 --ignore \"**/*.test.ts\"",
     "circular": "madge --extensions ts --circular src",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:mcp-scenario-evidence": "vitest run src/mcp-scenario-evidence.test.ts src/mcp-protocol.test.ts"
   },
   "dependencies": {
     "@dnd/battle-runtime": "workspace:*",

@@ -38,6 +38,7 @@ const expectedTools = [
 
 const agentConversationScenarios = [
   {
+    id: "discover-mcp-surface",
     name: "Discover the MCP surface",
     userSays: "What can you do for DND character creation and battle?",
     agentReads:
@@ -49,6 +50,7 @@ const agentConversationScenarios = [
       "This is now discoverable through MCP. Every tool exposes codec-derived inputSchema and outputSchema, and responses include structuredContent.",
   },
   {
+    id: "create-warrior-second-level",
     name: "Create a warrior 2nd level",
     userSays: "Create a warrior 2nd level.",
     agentReads:
@@ -60,6 +62,7 @@ const agentConversationScenarios = [
       "The ambiguity is now explicit: a cold agent knows it should ask before mapping 'warrior' to Fighter.",
   },
   {
+    id: "create-baseline-character",
     name: "Create the baseline character",
     userSays: "Create the Orc Soldier Fighter we support.",
     agentReads:
@@ -71,6 +74,7 @@ const agentConversationScenarios = [
       "The input schema now exposes the fill union shapes. Cardinality and option meaning still correctly come from the returned runtime hole payload.",
   },
   {
+    id: "create-wizard-with-spells",
     name: "Create a Wizard with spells",
     userSays:
       "Create an Elf Soldier Wizard 2 with Ray of Frost, Shield, and Magic Missile.",
@@ -83,6 +87,7 @@ const agentConversationScenarios = [
       "Spell Unit ids are now catalog-discoverable, but legal prepared/cantrip choices still correctly come from creation holes.",
   },
   {
+    id: "select-monsters",
     name: "Select monsters",
     userSays: "Fight a Goblin Warrior, then fight a Skeleton.",
     agentReads:
@@ -94,6 +99,7 @@ const agentConversationScenarios = [
       "Stat Block ids are now discoverable through list_stat_blocks.",
   },
   {
+    id: "start-battle-with-initiative",
     name: "Start battle with Initiative",
     userSays: "Start battle with these characters and initiative scores.",
     agentReads:
@@ -106,6 +112,7 @@ const agentConversationScenarios = [
       "The schema now describes initialCombatants, characterId, statBlockId, and combatantId entries; list_characters exposes a formal outputSchema for characterId result rows.",
   },
   {
+    id: "take-turns-and-resolve-attacks",
     name: "Take turns and resolve attacks",
     userSays: "Run the battle round.",
     agentReads:
@@ -117,6 +124,7 @@ const agentConversationScenarios = [
       "Battle fill shapes are now schema-discoverable. The MCP still intentionally does not roll dice, so the agent needs user-provided rolls, an external roller, or a future dice tool.",
   },
   {
+    id: "use-action-surge",
     name: "Use Action Surge",
     userSays: "Use Action Surge and attack again.",
     agentReads:
@@ -128,6 +136,7 @@ const agentConversationScenarios = [
       "Only no-hole acts fit resolve_battle_act. If the agent tries resolve_battle_act for Attack or Magic, MCP returns a requires-holes error and the agent must switch to fill_battle_hole.",
   },
   {
+    id: "cast-cantrips-and-slotted-spells",
     name: "Cast cantrips and slotted spells",
     userSays: "Cast Ray of Frost, then Magic Missile.",
     agentReads:
@@ -139,6 +148,7 @@ const agentConversationScenarios = [
       "Tool metadata now describes fill shapes, while the exact per-spell fill sequence remains runtime-owned and discoverable from battle act holes.",
   },
   {
+    id: "finish-battle-and-inspect-character-state",
     name: "Finish battle and inspect durable character state",
     userSays: "End the battle and show the updated character list.",
     agentReads:
@@ -150,6 +160,7 @@ const agentConversationScenarios = [
       "Post-battle handoff currently rejects 0 HP characters; the first vertical cannot finish a battle where a character is at 0 HP.",
   },
   {
+    id: "recover-from-invalid-or-stale-actions",
     name: "Recover from invalid or stale actions",
     userSays: "Do the thing from earlier.",
     agentReads:
@@ -161,6 +172,7 @@ const agentConversationScenarios = [
       "Errors are structured enough to recover, but there is no single 'what should I do next?' field in every response.",
   },
   {
+    id: "navigate-result-payloads",
     name: "Navigate result payloads without repository context",
     userSays: "Use whatever the MCP returns to decide the next step.",
     agentReads:
@@ -173,6 +185,7 @@ const agentConversationScenarios = [
       "describe_mcp_workflow documents these result paths, and the runtime tools expose outputSchema plus structuredContent for machine readers.",
   },
   {
+    id: "distinguish-known-good-acceptance",
     name: "Distinguish known-good acceptance from autonomous discovery",
     userSays:
       "Can an LLM with only this MCP create and run the whole scenario?",
@@ -1193,7 +1206,11 @@ function get(value: unknown, path: string): unknown {
 
 export function verifyAgentConversationScenarios() {
   assert.equal(agentConversationScenarios.length, 13);
+  const scenarioIds = new Set<string>();
   for (const scenario of agentConversationScenarios) {
+    assert.match(scenario.id, /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/);
+    assert.equal(scenarioIds.has(scenario.id), false);
+    scenarioIds.add(scenario.id);
     assert.notEqual(scenario.name.trim(), "");
     assert.notEqual(scenario.userSays.trim(), "");
     assert.notEqual(scenario.agentReads.trim(), "");
@@ -1201,4 +1218,8 @@ export function verifyAgentConversationScenarios() {
     assert.notEqual(scenario.executableCoverage.trim(), "");
     assert.notEqual(scenario.insufficiency.trim(), "");
   }
+}
+
+export function mcpAcceptanceScenarioIds() {
+  return agentConversationScenarios.map((scenario) => scenario.id);
 }

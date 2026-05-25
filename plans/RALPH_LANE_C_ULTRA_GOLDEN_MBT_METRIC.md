@@ -29,7 +29,7 @@ remains.
     {
       "number": 3,
       "id": "C3-MCP-LEVEL12-SCENARIO-GATE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Gate level 1-2 MCP scenario evidence"
     },
     {
@@ -199,7 +199,7 @@ Acceptance: open gaps are explicit rows, not hidden percentages.
 
 ### Task 3 - C3-MCP-LEVEL12-SCENARIO-GATE - Gate level 1-2 MCP scenario evidence
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: MCP scenario evidence is represented as its own layer and checked by a
 focused package-local test command.

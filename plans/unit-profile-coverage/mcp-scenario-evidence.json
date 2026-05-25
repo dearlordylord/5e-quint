@@ -1,0 +1,44 @@
+{
+  "schema": "dnd.mcp-scenario-evidence.v1",
+  "ownerPackage": "@dnd/mcp",
+  "check": {
+    "packageName": "@dnd/mcp",
+    "script": "test:mcp-scenario-evidence"
+  },
+  "requiredFlows": [
+    {
+      "flowId": "mcp-workflow-discovery",
+      "scopeIds": ["level-1", "level-1-2"],
+      "followUpTaskId": "C3-MCP-LEVEL12-SCENARIO-GATE",
+      "description": "The MCP server exposes discoverable tool contracts, workflow guidance, catalogs, and structured result paths before a caller commits to a character or battle workflow."
+    },
+    {
+      "flowId": "character-creation",
+      "scopeIds": ["level-1", "level-1-2"],
+      "followUpTaskId": "C9-CHARACTER-CREATION-MCP-EVIDENCE",
+      "description": "The MCP surface admits an SRD character creation workflow through create, discover, fill, and finalize tools without relying on support-profile status as scenario evidence."
+    },
+    {
+      "flowId": "character-sheet",
+      "scopeIds": ["level-1", "level-1-2"],
+      "followUpTaskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
+      "description": "The MCP surface exposes durable character sheet state and battle handoff results through list and session snapshot tools."
+    },
+    {
+      "flowId": "battle",
+      "scopeIds": ["level-1", "level-1-2"],
+      "followUpTaskId": "C11-BATTLE-MCP-EVIDENCE",
+      "description": "The MCP surface admits an SRD battle flow through start, read, discover acts, fill battle holes, resolve acts, end turns, and end battle tools."
+    }
+  ],
+  "evidence": [
+    {
+      "flowId": "mcp-workflow-discovery",
+      "scenarioId": "discover-mcp-surface",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C3-MCP-LEVEL12-SCENARIO-GATE",
+      "summary": "The protocol acceptance scenario verifies the tool list, schema exposure, workflow guide result paths, catalog discovery, and stat block discovery that let a caller orient before entering a specific workflow."
+    }
+  ]
+}

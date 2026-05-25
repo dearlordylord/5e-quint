@@ -264,6 +264,7 @@ function coveragePaths(root) {
     ),
     level12QntMbtJoin: path.join(coverageDir, "level1-2-qnt-mbt-join.json"),
     level12QntMbtJoinReport: path.join(coverageDir, "LEVEL1_2_QNT_MBT_JOIN.md"),
+    mcpScenarioEvidence: path.join(coverageDir, "mcp-scenario-evidence.json"),
     level13FullSupport: path.join(coverageDir, "level1-3-full-support.json"),
     level13FullSupportReport: path.join(
       coverageDir,

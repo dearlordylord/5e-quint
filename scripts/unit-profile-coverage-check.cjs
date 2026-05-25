@@ -35,6 +35,7 @@ const {
 const {
   buildUltraGoldenGate,
   renderUltraGoldenGate,
+  validateMcpScenarioEvidence,
 } = require("./ultra-golden-gate.cjs");
 const {
   buildLevel12QntMbtJoin,
@@ -73,6 +74,7 @@ function main() {
     paths.characterSheetOwnerEvidence,
   );
   const sharedAlgebraOwnerEvidence = readJson(paths.sharedAlgebraOwnerEvidence);
+  const mcpScenarioEvidence = readJson(paths.mcpScenarioEvidence);
   const inventory = discoverInventory(root, collections.collections);
   const authoredSurfaceUnits = discoverAuthoredSurfaceUnits(root);
   const srdUnitInventory = buildSrdUnitInventory({
@@ -104,6 +106,7 @@ function main() {
     ...rulesKernelCoverage.issues.map((issue) => `rules-kernel: ${issue}`),
   );
   issues.push(...validateSrdUnitInventory(srdUnitInventory));
+  issues.push(...validateMcpScenarioEvidence(mcpScenarioEvidence, { root }));
   if (issues.length > 0) {
     for (const issue of issues)
       console.error(`unit-profile-coverage: ${issue}`);
@@ -141,6 +144,7 @@ function main() {
   const ultraGoldenGate = buildUltraGoldenGate({
     level1FullSupport,
     level12FullSupport,
+    mcpScenarioEvidence,
     rulesKernelMatrix: rulesKernelCoverage.matrix,
   });
   const level12QntMbtJoin = buildLevel12QntMbtJoin({

@@ -22,7 +22,7 @@
         "label": "MBT/parity evidence"
       },
       {
-        "criterion": "Every scoped user-facing MCP flow has checker-owned scenario evidence. The evidence source is intentionally absent until the MCP scenario gate lands.",
+        "criterion": "Every scoped user-facing MCP flow has checker-owned scenario evidence backed by the package-local MCP scenario evidence command.",
         "id": "mcp-scenario-evidence",
         "label": "MCP scenario evidence"
       }
@@ -392,23 +392,67 @@
           "status": "pass"
         },
         {
-          "blockers": [
+          "blockingCount": 3,
+          "evidence": {
+            "check": {
+              "command": "pnpm --filter @dnd/mcp test:mcp-scenario-evidence",
+              "packageName": "@dnd/mcp",
+              "script": "test:mcp-scenario-evidence"
+            },
+            "scenarioEvidenceFlows": {
+              "denominator": 4,
+              "numerator": 1
+            },
+            "source": "plans/unit-profile-coverage/mcp-scenario-evidence.json"
+          },
+          "evidenceRows": [
             {
-              "followUpTaskIds": [
-                "C3-MCP-LEVEL12-SCENARIO-GATE",
-                "C9-CHARACTER-CREATION-MCP-EVIDENCE",
-                "C10-CHARACTER-SHEET-MCP-EVIDENCE",
-                "C11-BATTLE-MCP-EVIDENCE"
-              ],
-              "reason": "No checker-owned MCP scenario evidence source has been admitted for this ultra-golden scope."
+              "flowId": "mcp-workflow-discovery",
+              "scenarioId": "discover-mcp-surface",
+              "taskId": "C3-MCP-LEVEL12-SCENARIO-GATE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
             }
           ],
-          "blockingCount": 1,
-          "evidence": {
-            "scopedStrictUnits": 94,
-            "source": "not-admitted"
-          },
           "id": "mcp-scenario-evidence",
+          "missingEvidenceRows": [
+            {
+              "description": "The MCP surface admits an SRD character creation workflow through create, discover, fill, and finalize tools without relying on support-profile status as scenario evidence.",
+              "flowId": "character-creation",
+              "followUpTaskId": "C9-CHARACTER-CREATION-MCP-EVIDENCE"
+            },
+            {
+              "description": "The MCP surface exposes durable character sheet state and battle handoff results through list and session snapshot tools.",
+              "flowId": "character-sheet",
+              "followUpTaskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE"
+            },
+            {
+              "description": "The MCP surface admits an SRD battle flow through start, read, discover acts, fill battle holes, resolve acts, end turns, and end battle tools.",
+              "flowId": "battle",
+              "followUpTaskId": "C11-BATTLE-MCP-EVIDENCE"
+            }
+          ],
+          "requiredFlows": [
+            {
+              "description": "The MCP server exposes discoverable tool contracts, workflow guidance, catalogs, and structured result paths before a caller commits to a character or battle workflow.",
+              "flowId": "mcp-workflow-discovery",
+              "followUpTaskId": "C3-MCP-LEVEL12-SCENARIO-GATE"
+            },
+            {
+              "description": "The MCP surface admits an SRD character creation workflow through create, discover, fill, and finalize tools without relying on support-profile status as scenario evidence.",
+              "flowId": "character-creation",
+              "followUpTaskId": "C9-CHARACTER-CREATION-MCP-EVIDENCE"
+            },
+            {
+              "description": "The MCP surface exposes durable character sheet state and battle handoff results through list and session snapshot tools.",
+              "flowId": "character-sheet",
+              "followUpTaskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE"
+            },
+            {
+              "description": "The MCP surface admits an SRD battle flow through start, read, discover acts, fill battle holes, resolve acts, end turns, and end battle tools.",
+              "flowId": "battle",
+              "followUpTaskId": "C11-BATTLE-MCP-EVIDENCE"
+            }
+          ],
           "status": "blocked"
         }
       ],
@@ -824,23 +868,67 @@
           "status": "pass"
         },
         {
-          "blockers": [
+          "blockingCount": 3,
+          "evidence": {
+            "check": {
+              "command": "pnpm --filter @dnd/mcp test:mcp-scenario-evidence",
+              "packageName": "@dnd/mcp",
+              "script": "test:mcp-scenario-evidence"
+            },
+            "scenarioEvidenceFlows": {
+              "denominator": 4,
+              "numerator": 1
+            },
+            "source": "plans/unit-profile-coverage/mcp-scenario-evidence.json"
+          },
+          "evidenceRows": [
             {
-              "followUpTaskIds": [
-                "C3-MCP-LEVEL12-SCENARIO-GATE",
-                "C9-CHARACTER-CREATION-MCP-EVIDENCE",
-                "C10-CHARACTER-SHEET-MCP-EVIDENCE",
-                "C11-BATTLE-MCP-EVIDENCE"
-              ],
-              "reason": "No checker-owned MCP scenario evidence source has been admitted for this ultra-golden scope."
+              "flowId": "mcp-workflow-discovery",
+              "scenarioId": "discover-mcp-surface",
+              "taskId": "C3-MCP-LEVEL12-SCENARIO-GATE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
             }
           ],
-          "blockingCount": 1,
-          "evidence": {
-            "scopedStrictUnits": 115,
-            "source": "not-admitted"
-          },
           "id": "mcp-scenario-evidence",
+          "missingEvidenceRows": [
+            {
+              "description": "The MCP surface admits an SRD character creation workflow through create, discover, fill, and finalize tools without relying on support-profile status as scenario evidence.",
+              "flowId": "character-creation",
+              "followUpTaskId": "C9-CHARACTER-CREATION-MCP-EVIDENCE"
+            },
+            {
+              "description": "The MCP surface exposes durable character sheet state and battle handoff results through list and session snapshot tools.",
+              "flowId": "character-sheet",
+              "followUpTaskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE"
+            },
+            {
+              "description": "The MCP surface admits an SRD battle flow through start, read, discover acts, fill battle holes, resolve acts, end turns, and end battle tools.",
+              "flowId": "battle",
+              "followUpTaskId": "C11-BATTLE-MCP-EVIDENCE"
+            }
+          ],
+          "requiredFlows": [
+            {
+              "description": "The MCP server exposes discoverable tool contracts, workflow guidance, catalogs, and structured result paths before a caller commits to a character or battle workflow.",
+              "flowId": "mcp-workflow-discovery",
+              "followUpTaskId": "C3-MCP-LEVEL12-SCENARIO-GATE"
+            },
+            {
+              "description": "The MCP surface admits an SRD character creation workflow through create, discover, fill, and finalize tools without relying on support-profile status as scenario evidence.",
+              "flowId": "character-creation",
+              "followUpTaskId": "C9-CHARACTER-CREATION-MCP-EVIDENCE"
+            },
+            {
+              "description": "The MCP surface exposes durable character sheet state and battle handoff results through list and session snapshot tools.",
+              "flowId": "character-sheet",
+              "followUpTaskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE"
+            },
+            {
+              "description": "The MCP surface admits an SRD battle flow through start, read, discover acts, fill battle holes, resolve acts, end turns, and end battle tools.",
+              "flowId": "battle",
+              "followUpTaskId": "C11-BATTLE-MCP-EVIDENCE"
+            }
+          ],
           "status": "blocked"
         }
       ],
@@ -901,6 +989,7 @@
   "sourceArtifacts": {
     "level12FullSupport": "plans/unit-profile-coverage/level1-2-full-support.json",
     "level1FullSupport": "plans/unit-profile-coverage/level1-full-support.json",
+    "mcpScenarioEvidence": "plans/unit-profile-coverage/mcp-scenario-evidence.json",
     "rulesKernelMatrix": "plans/rules-kernel-coverage/matrix.json"
   },
   "status": "blocked"
