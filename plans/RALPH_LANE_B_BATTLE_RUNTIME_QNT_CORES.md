@@ -143,7 +143,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 22,
       "id": "B22-GUST-OF-WIND-READINESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Classify Gust of Wind line lifecycle readiness"
     },
     {
@@ -527,7 +527,7 @@ classification changes depend on cleanup semantics.
 
 ### Task 22 - B22-GUST-OF-WIND-READINESS - Classify Gust of Wind line lifecycle readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE` rows; QNT owner
 `packages/battle-runtime/battle-runtime-gust-of-wind.qnt`; witness

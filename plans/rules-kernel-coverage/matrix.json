@@ -6826,11 +6826,30 @@
     },
     {
       "blockedBy": [],
-      "generatorSubset": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match"
+      ],
       "obligationId": "BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE",
-      "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-gust-of-wind-tests.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-gust-of-wind.qnt"
+      ],
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -8203,16 +8222,6 @@
   ],
   "generatorReadinessBacklog": [
     {
-      "obligationId": "BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-gust-of-wind.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
       "obligationId": "BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE",
       "ownerRoles": [
         {
@@ -8298,19 +8307,6 @@
     }
   ],
   "semanticCoreRunBlockFindings": [
-    {
-      "blocker": "run-block-coupled",
-      "obligationId": "BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE",
-      "owners": [
-        {
-          "lines": [
-            163
-          ],
-          "ownerPath": "packages/battle-runtime/battle-runtime-gust-of-wind.qnt"
-        }
-      ],
-      "readinessStatus": "not-assessed"
-    },
     {
       "blocker": "run-block-coupled",
       "obligationId": "BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE",
