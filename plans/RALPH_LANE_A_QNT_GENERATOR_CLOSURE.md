@@ -124,7 +124,7 @@ work remains.
     {
       "number": 18,
       "id": "A64-UNIT-FEATURE-END-TO-END-VERIFY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Verify unit-feature QNT core closure"
     },
     {
@@ -393,11 +393,17 @@ fallout.
 
 ### Task 18 - A64-UNIT-FEATURE-END-TO-END-VERIFY - Verify unit-feature QNT core closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: focused verification for the unit-feature closure set.
 
 Acceptance: checker green; focused QNT tests green; no stale generated files.
+
+Closed by checker and focused QNT evidence: rules-kernel coverage and
+unit-profile coverage checks are green, checker write passes produce no tracked
+diff, unit-feature semantic-core typechecks are green, focused unit-feature QNT
+examples plus Monk Focus tests are green, and no generated artifact staleness
+remains in the unit-feature closure set.
 
 ### Task 19 - A65-UNIT-FEATURE-STRICT-DENOMINATOR-AUDIT - Audit strict level 1-2 denominator fallout
 
