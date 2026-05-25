@@ -197,7 +197,7 @@ slice candidates remain.
     {
       "number": 31,
       "id": "C31-CHAINED-ATTACK-SEQUENCE-SLICE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Add chained attack sequence focused MBT"
     }
   ]
@@ -263,7 +263,7 @@ Lane C must not:
 | 28 | C28-SCALAR-BUFF-ACTIVE-EFFECTS-SLICE - Add scalar buff active effects focused MBT | done | none | Runtime-test-only obligation; scalar buffs for AC, Speed, special speeds, HP maximum, and Temporary Hit Points. |
 | 29 | C29-SELF-TRANSFORMATION-MODE-SLICE - Add self-transformation mode focused MBT | done | none | Runtime-test-only obligation; Alter Self mode choice/replacement, natural-weapon override, and Aquatic projections. |
 | 30 | C30-REACTION-CASTING-TIME-SLICE - Add reaction casting time focused MBT | done | none | Runtime-test-only obligation; Counterspell/Hellish Rebuke triggers, Reaction spend, Spell Slot ledger, interruption, and continuation resume. |
-| 31 | C31-CHAINED-ATTACK-SEQUENCE-SLICE - Add chained attack sequence focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; Chromatic Orb-style damage-type choice, target history, per-step rolls, and leap limits. |
+| 31 | C31-CHAINED-ATTACK-SEQUENCE-SLICE - Add chained attack sequence focused MBT | done | none | Runtime-test-only obligation; Chromatic Orb-style damage-type choice, target history, per-step rolls, and leap limits. |
 
 ## Task Details
 
@@ -684,7 +684,7 @@ typecheck when TS changes, and `git diff --check`.
 
 ### Task 31 - C31-CHAINED-ATTACK-SEQUENCE-SLICE - Add chained attack sequence focused MBT
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: add a focused `*.mbt.qnt` plus `src/*.mbt.test.ts` witness and package
 script for `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE`.
