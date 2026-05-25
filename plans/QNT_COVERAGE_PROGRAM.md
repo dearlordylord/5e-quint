@@ -86,7 +86,6 @@ Historical redirects:
 
 - `plans/QNT_SEMANTIC_CORE_EXTRACTION_RALPH.md`
 - `plans/QNT_SLICE_EXPANSION_RALPH.md`
-- `plans/QMBT1_QMBT5_PRE_RESEARCH.md`
 - `plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md`
 
 Those files are not task queues. Their durable findings have been folded into

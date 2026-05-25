@@ -2,9 +2,6 @@
 
 Plan: `/plans/CONTENT_SURFACE_SURVEY.md`.
 
-Temporary pipeline map:
-- [plans/CONTENT_SURFACE_DATA_FLOW_TEMP.md](/workspace/typescript/dnd/plans/CONTENT_SURFACE_DATA_FLOW_TEMP.md)
-
 This directory runs a parallelized per-unit encoding survey across SRD 5.2.1 (and a PHB-only research sample) to decide between Option A and Option B for the content surface's scaling-shape encoding.
 
 ## Not to be confused with `packages/surface/content/`

@@ -52,7 +52,6 @@ The source artifacts for implementation detail are:
 - [plans/unit-profile-coverage/README.md](/workspace/typescript/dnd/plans/unit-profile-coverage/README.md)
 - [plans/unit-profile-coverage/UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
 - [plans/UNIT_PROFILE_COVERAGE_MATRIX_PLAN.md](/workspace/typescript/dnd/plans/UNIT_PROFILE_COVERAGE_MATRIX_PLAN.md)
-- [plans/QMBT1_QMBT5_PRE_RESEARCH.md](/workspace/typescript/dnd/plans/QMBT1_QMBT5_PRE_RESEARCH.md)
 - [plans/ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
 
 The durable coverage lane spans these ownership layers, but the work can move
