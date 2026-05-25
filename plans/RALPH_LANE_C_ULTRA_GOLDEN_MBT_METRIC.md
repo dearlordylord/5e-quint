@@ -167,7 +167,7 @@ remains.
     {
       "number": 26,
       "id": "C26-GENERATOR-READINESS-REACTION-CASTING-TIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Classify reaction casting-time generator readiness"
     },
     {
@@ -618,7 +618,7 @@ longer `not-assessed`.
 
 ### Task 26 - C26-GENERATOR-READINESS-REACTION-CASTING-TIME - Classify reaction casting-time generator readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 `plans/unit-profile-coverage/ultra-golden-gate.json`,
