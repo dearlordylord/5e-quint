@@ -47,7 +47,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 6,
       "id": "B6-BATTLE-RUNTIME-DRAGONS-BREATH-CORE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Split Dragon's Breath effect and granted action core"
     },
     {
