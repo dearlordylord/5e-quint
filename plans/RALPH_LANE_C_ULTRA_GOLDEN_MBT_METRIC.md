@@ -125,7 +125,7 @@ remains.
     {
       "number": 19,
       "id": "C19-GENERATOR-READINESS-SANCTUARY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Classify Sanctuary targeting generator readiness"
     },
     {
@@ -493,7 +493,7 @@ longer `not-assessed`.
 
 ### Task 19 - C19-GENERATOR-READINESS-SANCTUARY - Classify Sanctuary targeting generator readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 `plans/unit-profile-coverage/ultra-golden-gate.json`,

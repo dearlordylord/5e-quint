@@ -72,11 +72,11 @@
           "status": "pass"
         },
         {
-          "blockingCount": 26,
+          "blockingCount": 25,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
               "denominator": 32,
-              "numerator": 6
+              "numerator": 7
             },
             "qntCoveredObligations": {
               "denominator": 44,
@@ -114,15 +114,6 @@
                 "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
                 "packages/battle-runtime/battle-runtime-monk-focus.qnt"
               ]
-            },
-            {
-              "blockedBy": [],
-              "obligationId": "BATTLE.SANCTUARY.TARGETING_INTERDICTION",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime-sanctuary.qnt"
-              ],
-              "readinessStatus": "not-assessed",
-              "runBlockOwners": []
             },
             {
               "blockedBy": [],
@@ -615,11 +606,11 @@
           "status": "pass"
         },
         {
-          "blockingCount": 26,
+          "blockingCount": 25,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
               "denominator": 32,
-              "numerator": 6
+              "numerator": 7
             },
             "qntCoveredObligations": {
               "denominator": 47,
@@ -657,15 +648,6 @@
                 "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
                 "packages/battle-runtime/battle-runtime-monk-focus.qnt"
               ]
-            },
-            {
-              "blockedBy": [],
-              "obligationId": "BATTLE.SANCTUARY.TARGETING_INTERDICTION",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime-sanctuary.qnt"
-              ],
-              "readinessStatus": "not-assessed",
-              "runBlockOwners": []
             },
             {
               "blockedBy": [],

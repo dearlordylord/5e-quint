@@ -407,7 +407,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE` | not-assessed |  |  |  |
 | `BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION` | not-assessed |  |  |  |
 | `BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING` | not-assessed |  |  |  |
-| `BATTLE.SANCTUARY.TARGETING_INTERDICTION` | not-assessed |  |  |  |
+| `BATTLE.SANCTUARY.TARGETING_INTERDICTION` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `filter`, `exists`, `map`, `fold`, `set-operators` |  |  |
 | `BATTLE.STAT_BLOCK.ATTACK_CONTROL` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `membership` |  |  |
 | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` | fixture-bound | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `list`, `map`, `filter`, `set-operators`, `membership` | `bridge-projection-coupled` | `B9-BATTLE-RUNTIME-ABILITY-HOLE-CLOSURE` |
 | `BATTLE.COMMAND.OPTION_AND_NEXT_TURN` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `filter`, `set-operators`, `membership` |  |  |
@@ -454,7 +454,6 @@ Rows here are derived from covered obligations with semantic-core QNT owners who
 | `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE` | not-assessed | `packages/battle-runtime/battle-runtime-spell-attack.qnt`, `packages/battle-runtime/battle-runtime-spell-invocation.qnt` | `packages/battle-runtime/battle-runtime-spell-attack.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-spell-invocation.qnt`: semantic-core |
 | `BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION` | not-assessed | `packages/battle-runtime/battle-runtime-mirror-image.qnt` | `packages/battle-runtime/battle-runtime-mirror-image.qnt`: semantic-core |
 | `BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING` | not-assessed | `packages/battle-runtime/battle-runtime-warding-bond.qnt` | `packages/battle-runtime/battle-runtime-warding-bond.qnt`: semantic-core |
-| `BATTLE.SANCTUARY.TARGETING_INTERDICTION` | not-assessed | `packages/battle-runtime/battle-runtime-sanctuary.qnt` | `packages/battle-runtime/battle-runtime-sanctuary.qnt`: semantic-core |
 | `BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime-hit-points.qnt` | `packages/battle-runtime/battle-runtime-hit-points.qnt`: semantic-core |
 | `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY` | not-assessed | `packages/character-creation-runtime/character-creation-runtime-slice.qnt` | `packages/character-creation-runtime/character-creation-runtime-slice.qnt`: semantic-core |
 | `CREATION.CHOICE_DISCOVERY_CARDINALITY` | not-assessed | `packages/character-creation-runtime/character-creation-runtime-slice.qnt` | `packages/character-creation-runtime/character-creation-runtime-slice.qnt`: semantic-core |
