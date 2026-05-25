@@ -478,7 +478,7 @@
         "spell.find-familiar-lifecycle"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-find-familiar.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -546,7 +546,7 @@
         "unit-feature.druid-wild-shape-known-form"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-druid-wild-shape.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -5677,14 +5677,28 @@
       "role": "semantic-core"
     },
     {
+      "evidence": "packages/battle-runtime/battle-runtime-druid-wild-shape.qnt carries focused Druid Wild Shape form lifecycle, projection, Temporary Hit Points, spellcasting gate, and reversion semantics without run-block coupling.",
+      "obligationIds": [
+        "BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-druid-wild-shape.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-find-familiar.qnt carries focused Find Familiar companion lifecycle, replacement, dismissal, telepathy, shared senses, touch delivery, and Pact reaction attack semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-find-familiar.qnt",
+      "role": "semantic-core"
+    },
+    {
       "evidence": "packages/battle-runtime/battle-runtime.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
         "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES",
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
-        "BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE",
         "BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE",
-        "BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE",
-        "BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE"
+        "BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
       "role": "semantic-core"
@@ -6424,12 +6438,7 @@
       "status": "not-assessed"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B7-BATTLE-RUNTIME-COMPANION-FORM-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -6444,21 +6453,18 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
         "pattern-match",
         "set",
-        "list",
         "map",
-        "filter",
         "set-operators",
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-find-familiar.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -6493,12 +6499,7 @@
       "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B7-BATTLE-RUNTIME-COMPANION-FORM-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -6513,21 +6514,14 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
-        "pattern-match",
-        "set",
-        "list",
-        "map",
-        "filter",
-        "set-operators",
-        "membership"
+        "pattern-match"
       ],
       "obligationId": "BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-druid-wild-shape.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],

@@ -53,7 +53,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 7,
       "id": "B7-BATTLE-RUNTIME-COMPANION-FORM-CORE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Split companion and form lifecycle core"
     },
     {
@@ -253,7 +253,7 @@ Acceptance: checker green; focused tests green.
 
 ### Task 7 - B7-BATTLE-RUNTIME-COMPANION-FORM-CORE - Split companion and form lifecycle core
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: Find Familiar companion lifecycle and Wild Shape form lifecycle rows.
 

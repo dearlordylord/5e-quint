@@ -1194,6 +1194,9 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
   model used by the canonical spec and focused QNT verification lanes.
 - `battle-runtime-find-familiar.qnt` - Find Familiar lifecycle and permission
   helpers imported by the canonical spec.
+- `battle-runtime-druid-wild-shape.qnt` - Druid Wild Shape form assumption,
+  replacement, Temporary Hit Points, Beast stat-block projection, spellcasting
+  gate, and reversion helpers imported by the canonical spec.
 - `battle-runtime-light.qnt` - light-source duration, illumination, sight
   obscurement, spell light projection, and Light/Dancing Lights/Produce
   Flame/Shillelagh reducers imported by the canonical spec.

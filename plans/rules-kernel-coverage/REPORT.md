@@ -306,7 +306,9 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-weapon-attacks.qnt` | semantic-core | `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` |
 | `packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt` | semantic-core | `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS`, `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` |
 | `packages/battle-runtime/battle-runtime-dragons-breath.qnt` | semantic-core | `BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION`, `BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE` |
-| `packages/battle-runtime/battle-runtime.qnt` | semantic-core | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES`, `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE`, `BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE`, `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE`, `BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime-druid-wild-shape.qnt` | semantic-core | `BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime-find-familiar.qnt` | semantic-core | `BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime.qnt` | semantic-core | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES`, `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE`, `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE` |
 | `packages/character-battle-runtime/character-battle-init-projection.mbt.qnt` | mbt-fixture | `CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS`, `CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION` |
 | `packages/character-battle-runtime/character-battle-settlement.mbt.qnt` | mbt-fixture | `CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS`, `CHARACTER.BATTLE.HANDOFF.SETTLEMENT` |
 | `packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt` | mbt-fixture | `SHEET.FEATURE_RESOURCES.TRANSITIONS` |
@@ -377,9 +379,9 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT` | not-assessed |  |  |  |
 | `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE` | not-assessed |  |  |  |
 | `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY` | not-assessed |  |  |  |
-| `BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE` | fixture-bound | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `list`, `map`, `filter`, `set-operators`, `membership` | `bridge-projection-coupled` | `B7-BATTLE-RUNTIME-COMPANION-FORM-CORE` |
+| `BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `set-operators`, `membership` |  |  |
 | `BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `filter`, `fold`, `exists`, `set-operators`, `membership` |  |  |
-| `BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE` | fixture-bound | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `list`, `map`, `filter`, `set-operators`, `membership` | `bridge-projection-coupled` | `B7-BATTLE-RUNTIME-COMPANION-FORM-CORE` |
+| `BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match` |  |  |
 | `BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `filter`, `fold`, `exists`, `set-operators`, `membership` |  |  |
 | `BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE` | not-assessed |  |  |  |
 | `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE` | not-assessed |  |  |  |

@@ -15,5 +15,5 @@ module battleRuntimeSelfTests {
   import battleRuntimeDragonsBreathTests.* from "./battle-runtime-dragons-breath-tests"
   import battleRuntimeMetamagic.* from "./battle-runtime-metamagic"
   import battleRuntimeShapeShifting.* from "./battle-runtime-shape-shifting"
-  import battleRuntimeDruidWildShape.* from "./battle-runtime-druid-wild-shape"
+  import battleRuntimeDruidWildShapeTests.* from "./battle-runtime-druid-wild-shape-tests"
 }
