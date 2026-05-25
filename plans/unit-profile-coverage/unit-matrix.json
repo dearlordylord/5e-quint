@@ -1804,6 +1804,10 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/reaction-casting-time.mbt.test.ts"
         }
       ]
     },
@@ -1831,6 +1835,10 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/counterspell-reaction-spell.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/reaction-casting-time.mbt.test.ts"
         }
       ]
     },
@@ -3065,6 +3073,10 @@
         {
           "kind": "qnt-proof",
           "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/blur-attack-roll-defense-lifecycle.mbt.test.ts"
         },
         {
           "kind": "runtime-test",
@@ -19047,6 +19059,10 @@
               "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
             },
             {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/blur-attack-roll-defense-lifecycle.mbt.test.ts"
+            },
+            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-blur.test.ts"
             }
@@ -19830,6 +19846,10 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/counterspell-reaction-spell.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/reaction-casting-time.mbt.test.ts"
             }
           ]
         }
@@ -27364,6 +27384,10 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/reaction-casting-time.mbt.test.ts"
             }
           ]
         },

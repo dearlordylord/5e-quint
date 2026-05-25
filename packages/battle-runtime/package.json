@@ -12,6 +12,7 @@
   "scripts": {
     "test": "vitest run",
     "test:mbt:antimagic-field-ongoing-suppression": "vitest run src/antimagic-field-ongoing-suppression.mbt.test.ts",
+    "test:mbt:blur-attack-roll-defense-lifecycle": "vitest run src/blur-attack-roll-defense-lifecycle.mbt.test.ts",
     "test:mbt:condition-saving-throw-selected-identity": "vitest run src/condition-saving-throw-selected-identity.mbt.test.ts",
     "test:mbt:creature-attack": "vitest run src/creature-attack.mbt.test.ts",
     "test:mbt:direct-condition-lifecycle": "vitest run src/direct-condition-lifecycle.mbt.test.ts",
@@ -23,11 +24,17 @@
     "test:mbt:find-familiar-companion-lifecycle": "vitest run src/find-familiar-companion-lifecycle.mbt.test.ts",
     "test:mbt:gust-of-wind-line-lifecycle": "vitest run src/gust-of-wind-line-lifecycle.mbt.test.ts",
     "test:mbt:heat-metal-object-contact": "vitest run src/heat-metal-object-contact.mbt.test.ts",
+    "test:mbt:magical-darkness-point-origin-lifecycle": "vitest run src/magical-darkness-point-origin-lifecycle.mbt.test.ts",
     "test:mbt:mirror-image-hit-interception": "vitest run src/mirror-image-hit-interception.mbt.test.ts",
     "test:mbt:moonbeam-movable-zone": "vitest run src/moonbeam-movable-zone.mbt.test.ts",
+    "test:mbt:quickened-spell-governor": "vitest run src/quickened-spell-governor.mbt.test.ts",
     "test:mbt:ray-of-enfeeblement-lifecycle": "vitest run src/ray-of-enfeeblement-lifecycle.mbt.test.ts",
+    "test:mbt:reaction-casting-time": "vitest run src/reaction-casting-time.mbt.test.ts",
     "test:mbt:sanctuary-selected-identity": "vitest run src/sanctuary-selected-identity.mbt.test.ts",
     "test:mbt:see-invisibility-observer-sight": "vitest run src/see-invisibility-observer-sight.mbt.test.ts",
+    "test:mbt:self-teleport-lifecycle": "vitest run src/self-teleport-lifecycle.mbt.test.ts",
+    "test:mbt:self-transformation-mode-lifecycle": "vitest run src/self-transformation-mode-lifecycle.mbt.test.ts",
+    "test:mbt:spell-created-held-object-lifecycle": "vitest run src/spell-created-held-object-lifecycle.mbt.test.ts",
     "test:mbt:spell-sequencing-integration": "vitest run src/spell-sequencing-integration.mbt.test.ts",
     "test:mbt:spike-growth-movement-hazard": "vitest run src/spike-growth-movement-hazard.mbt.test.ts",
     "test:mbt:warding-bond-damage-sharing": "vitest run src/warding-bond-damage-sharing.mbt.test.ts",
@@ -38,6 +45,7 @@
     "test:mbt:rule-core-reactions": "vitest run src/rule-core-reactions.mbt.test.ts",
     "test:mbt:rule-core-stat-block-controls": "vitest run src/rule-core-stat-block-controls.mbt.test.ts",
     "test:mbt:rule-core-spells": "vitest run src/rule-core-spells.mbt.test.ts",
+    "test:mbt:scalar-buff-active-effects": "vitest run src/scalar-buff-active-effects.mbt.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

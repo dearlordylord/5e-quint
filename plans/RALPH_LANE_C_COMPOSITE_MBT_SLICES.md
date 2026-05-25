@@ -149,49 +149,49 @@ slice candidates remain.
     {
       "number": 23,
       "id": "C23-QUICKENED-SPELL-GOVERNOR-SLICE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Add Quickened Spell governor focused MBT"
     },
     {
       "number": 24,
       "id": "C24-DARKNESS-POINT-ORIGIN-SLICE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Add Darkness point-origin lifecycle focused MBT"
     },
     {
       "number": 25,
       "id": "C25-SPELL-CREATED-HELD-OBJECT-SLICE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Add spell-created held object lifecycle focused MBT"
     },
     {
       "number": 26,
       "id": "C26-SELF-TELEPORT-SLICE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Add self-teleport lifecycle focused MBT"
     },
     {
       "number": 27,
       "id": "C27-BLUR-ATTACK-DEFENSE-SLICE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Add Blur attack-roll defense focused MBT"
     },
     {
       "number": 28,
       "id": "C28-SCALAR-BUFF-ACTIVE-EFFECTS-SLICE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Add scalar buff active effects focused MBT"
     },
     {
       "number": 29,
       "id": "C29-SELF-TRANSFORMATION-MODE-SLICE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Add self-transformation mode focused MBT"
     },
     {
       "number": 30,
       "id": "C30-REACTION-CASTING-TIME-SLICE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Add reaction casting time focused MBT"
     },
     {
@@ -255,14 +255,14 @@ Lane C must not:
 | 20 | C20-FIND-FAMILIAR-COMPANION-SLICE - Add Find Familiar companion lifecycle focused MBT | done | none | Runtime-test-only obligation; companion lifecycle, replacement, telepathy, touch delivery, and Pact reaction-attack state. |
 | 21 | C21-WILD-SHAPE-FORM-SLICE - Add Wild Shape form lifecycle focused MBT | done | none | Runtime-test-only obligation; form statistics, Temporary Hit Points, spellcasting block, and supported reversion. |
 | 22 | C22-DISPEL-MAGIC-ONGOING-SLICE - Add Dispel Magic ongoing spell ending focused MBT | done | none | Runtime-test-only obligation; target-scoped ending and higher-level ability-check gate for tracked ongoing spell effects. |
-| 23 | C23-QUICKENED-SPELL-GOVERNOR-SLICE - Add Quickened Spell governor focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; known selection, Sorcery Point affordability, action rewrite, and same-turn leveled-spell governor. |
-| 24 | C24-DARKNESS-POINT-ORIGIN-SLICE - Add Darkness point-origin lifecycle focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; point-origin magical Darkness area identity, witness consumption, Concentration, and cleanup. |
-| 25 | C25-SPELL-CREATED-HELD-OBJECT-SLICE - Add spell-created held object lifecycle focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; Flame Blade-style held object, hand occupancy, active-object attack, and cleanup. |
-| 26 | C26-SELF-TELEPORT-SLICE - Add self-teleport lifecycle focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; Misty Step-style destination witness, Bonus Action and Spell Slot spend, and no-OA projection. |
-| 27 | C27-BLUR-ATTACK-DEFENSE-SLICE - Add Blur attack-roll defense focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; self defense effect, Blindsight/Truesight bypass witnesses, roll-mode cancellation, and cleanup. |
-| 28 | C28-SCALAR-BUFF-ACTIVE-EFFECTS-SLICE - Add scalar buff active effects focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; scalar buffs for AC, Speed, special speeds, HP maximum, and Temporary Hit Points. |
-| 29 | C29-SELF-TRANSFORMATION-MODE-SLICE - Add self-transformation mode focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; Alter Self mode choice/replacement, natural-weapon override, and Aquatic projections. |
-| 30 | C30-REACTION-CASTING-TIME-SLICE - Add reaction casting time focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; Counterspell/Hellish Rebuke triggers, Reaction spend, Spell Slot ledger, interruption, and continuation resume. |
+| 23 | C23-QUICKENED-SPELL-GOVERNOR-SLICE - Add Quickened Spell governor focused MBT | done | none | Runtime-test-only obligation; known selection, Sorcery Point affordability, action rewrite, and same-turn leveled-spell governor. |
+| 24 | C24-DARKNESS-POINT-ORIGIN-SLICE - Add Darkness point-origin lifecycle focused MBT | done | none | Runtime-test-only obligation; point-origin magical Darkness area identity, witness consumption, Concentration, and cleanup. |
+| 25 | C25-SPELL-CREATED-HELD-OBJECT-SLICE - Add spell-created held object lifecycle focused MBT | done | none | Runtime-test-only obligation; Flame Blade-style held object, hand occupancy, active-object attack, and cleanup. |
+| 26 | C26-SELF-TELEPORT-SLICE - Add self-teleport lifecycle focused MBT | done | none | Runtime-test-only obligation; Misty Step-style destination witness, Bonus Action and Spell Slot spend, and no-OA projection. |
+| 27 | C27-BLUR-ATTACK-DEFENSE-SLICE - Add Blur attack-roll defense focused MBT | done | none | Runtime-test-only obligation; self defense effect, Blindsight/Truesight bypass witnesses, roll-mode cancellation, and cleanup. |
+| 28 | C28-SCALAR-BUFF-ACTIVE-EFFECTS-SLICE - Add scalar buff active effects focused MBT | done | none | Runtime-test-only obligation; scalar buffs for AC, Speed, special speeds, HP maximum, and Temporary Hit Points. |
+| 29 | C29-SELF-TRANSFORMATION-MODE-SLICE - Add self-transformation mode focused MBT | done | none | Runtime-test-only obligation; Alter Self mode choice/replacement, natural-weapon override, and Aquatic projections. |
+| 30 | C30-REACTION-CASTING-TIME-SLICE - Add reaction casting time focused MBT | done | none | Runtime-test-only obligation; Counterspell/Hellish Rebuke triggers, Reaction spend, Spell Slot ledger, interruption, and continuation resume. |
 | 31 | C31-CHAINED-ATTACK-SEQUENCE-SLICE - Add chained attack sequence focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; Chromatic Orb-style damage-type choice, target history, per-step rolls, and leap limits. |
 
 ## Task Details
@@ -572,7 +572,7 @@ typecheck when TS changes, and `git diff --check`.
 
 ### Task 23 - C23-QUICKENED-SPELL-GOVERNOR-SLICE - Add Quickened Spell governor focused MBT
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: add a focused `*.mbt.qnt` plus `src/*.mbt.test.ts` witness and package
 script for `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR`.
@@ -586,7 +586,7 @@ typecheck when TS changes, and `git diff --check`.
 
 ### Task 24 - C24-DARKNESS-POINT-ORIGIN-SLICE - Add Darkness point-origin lifecycle focused MBT
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: add a focused `*.mbt.qnt` plus `src/*.mbt.test.ts` witness and package
 script for `BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE`.
@@ -600,7 +600,7 @@ typecheck when TS changes, and `git diff --check`.
 
 ### Task 25 - C25-SPELL-CREATED-HELD-OBJECT-SLICE - Add spell-created held object lifecycle focused MBT
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: add a focused `*.mbt.qnt` plus `src/*.mbt.test.ts` witness and package
 script for `BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE`.
@@ -614,7 +614,7 @@ typecheck when TS changes, and `git diff --check`.
 
 ### Task 26 - C26-SELF-TELEPORT-SLICE - Add self-teleport lifecycle focused MBT
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: add a focused `*.mbt.qnt` plus `src/*.mbt.test.ts` witness and package
 script for `BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE`.
@@ -628,7 +628,7 @@ typecheck when TS changes, and `git diff --check`.
 
 ### Task 27 - C27-BLUR-ATTACK-DEFENSE-SLICE - Add Blur attack-roll defense focused MBT
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: add a focused `*.mbt.qnt` plus `src/*.mbt.test.ts` witness and package
 script for `BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE`.
@@ -642,7 +642,7 @@ typecheck when TS changes, and `git diff --check`.
 
 ### Task 28 - C28-SCALAR-BUFF-ACTIVE-EFFECTS-SLICE - Add scalar buff active effects focused MBT
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: add a focused `*.mbt.qnt` plus `src/*.mbt.test.ts` witness and package
 script for `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS`.
@@ -656,7 +656,7 @@ typecheck when TS changes, and `git diff --check`.
 
 ### Task 29 - C29-SELF-TRANSFORMATION-MODE-SLICE - Add self-transformation mode focused MBT
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: add a focused `*.mbt.qnt` plus `src/*.mbt.test.ts` witness and package
 script for `BATTLE.SPELL.SELF_TRANSFORMATION_MODE`.
@@ -670,7 +670,7 @@ typecheck when TS changes, and `git diff --check`.
 
 ### Task 30 - C30-REACTION-CASTING-TIME-SLICE - Add reaction casting time focused MBT
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: add a focused `*.mbt.qnt` plus `src/*.mbt.test.ts` witness and package
 script for `BATTLE.SPELL.REACTION_CASTING_TIME`.
