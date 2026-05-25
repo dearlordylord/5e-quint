@@ -7435,11 +7435,38 @@
     },
     {
       "blockedBy": [],
-      "generatorSubset": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "filter",
+        "exists",
+        "map",
+        "fold",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
+        "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
+        "packages/battle-runtime/battle-runtime-light.qnt",
+        "packages/battle-runtime/battle-runtime-spell-invocation.qnt"
+      ],
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -8061,28 +8088,6 @@
       "ownerRoles": [
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-self-transformation.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
-          "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
-          "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-light.qnt",
-          "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
           "role": "semantic-core"
         }
       ],
