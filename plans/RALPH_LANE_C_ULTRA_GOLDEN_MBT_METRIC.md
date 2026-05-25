@@ -107,7 +107,7 @@ remains.
     {
       "number": 16,
       "id": "C16-END-TO-END-ULTRA-GOLDEN-VERIFY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Verify ultra-golden gate and focused MCP/MBT checks"
     },
     {
@@ -330,12 +330,20 @@ Result:
 
 ### Task 16 - C16-END-TO-END-ULTRA-GOLDEN-VERIFY - Verify ultra-golden gate and focused MCP/MBT checks
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: run the focused commands required by changed checker/test files and
 record only durable findings.
 
 Acceptance: checker green; changed focused tests green.
+
+Result:
+
+- Verified the ultra-golden checker self-test, MCP scenario evidence tests, unit
+  profile coverage gate, and rules-kernel coverage gate are green at the Task 16
+  integration point.
+- No source, generated, runtime, Quint, or MBT behavior changes were needed for
+  this verification-only task.
 
 ### Task 17 - C17-RECURSIVE-NEXT-BATCH - Mine next ultra-golden metric or MBT batch
 
