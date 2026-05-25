@@ -83,13 +83,6 @@ Active runnable queues:
 - `plans/RALPH_LANE_B_BATTLE_RUNTIME_QNT_CORES.md` owns broad
   battle-runtime QNT semantic-core splits and their readiness rows.
 
-Historical redirects:
-
-- `plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md`
-
-That file is not a task queue. Its durable findings have been folded into the
-checked artifacts above or into the active A/B lane plans.
-
 ## Working Discipline
 
 - Tactical roll-up only; do not duplicate vocabulary or rules from the source-of-truth docs above.

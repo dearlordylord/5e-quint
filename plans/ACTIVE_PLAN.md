@@ -14,8 +14,6 @@ The recursive Ralph workflow has moved to the lane plans, each with its own
   semantic-core cleanup and readiness rows.
 - `plans/RALPH_LANE_B_BATTLE_RUNTIME_QNT_CORES.md` — broad battle-runtime QNT
   semantic-core splits and readiness rows.
-- `plans/RALPH_LANE_C_ULTRA_GOLDEN_MBT_METRIC.md` — aggregate ultra-golden
-  metric, MBT/MCP evidence accounting, context-budget cleanup.
 - `plans/LEVEL1_2_FULL_SUPPORT_BACKLOG.md` — character levels 1–2 full-support
   closure backlog.
 
