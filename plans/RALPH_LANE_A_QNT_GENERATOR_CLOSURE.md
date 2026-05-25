@@ -118,7 +118,7 @@ work remains.
     {
       "number": 17,
       "id": "A63-UNIT-FEATURE-SELECTED-IDENTITY-CHECK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Check selected-identity fallout from feature splits"
     },
     {
@@ -378,12 +378,18 @@ unit-feature example and inductive files in `proofOnly`, while
 
 ### Task 17 - A63-UNIT-FEATURE-SELECTED-IDENTITY-CHECK - Check selected-identity fallout from feature splits
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: selected-identity metrics remain green after unit-feature ownership
 changes, or gaps are assigned to Lane C.
 
 Acceptance: unit-profile check green.
+
+Closed by checker evidence: selected-identity replay coverage remains
+`144/144`, selected-identity replay gaps are zero, and all 37 supported
+`unit-feature.` Units carry `selected-identity-mbt` evidence. No Lane C
+selected-identity gap assignment is required for the current unit-feature split
+fallout.
 
 ### Task 18 - A64-UNIT-FEATURE-END-TO-END-VERIFY - Verify unit-feature QNT core closure
 
