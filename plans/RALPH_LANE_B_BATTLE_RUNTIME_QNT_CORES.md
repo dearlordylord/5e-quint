@@ -23,7 +23,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 2,
       "id": "B2-BATTLE-RUNTIME-LIGHT-EMITTER-CORE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Split light emitter and held object lifecycle core"
     },
     {
@@ -193,7 +193,7 @@ Acceptance: checker green; no new runtime behavior.
 
 ### Task 2 - B2-BATTLE-RUNTIME-LIGHT-EMITTER-CORE - Split light emitter and held object lifecycle core
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: OBJECT_LIGHT_EMITTER, HELD_LIGHT_EMITTER, SPELL_CREATED_HELD_OBJECT, and
 DANCING_LIGHTS readiness rows.

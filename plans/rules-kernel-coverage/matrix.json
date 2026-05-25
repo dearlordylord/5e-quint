@@ -995,7 +995,7 @@
         "spell.invocation-object-light"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-light.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1059,7 +1059,7 @@
         "spell.invocation-held-light-emitter"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-light.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1090,7 +1090,7 @@
         "spell.invocation-spell-created-held-object"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-light.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1119,7 +1119,7 @@
         "spell.invocation-dancing-lights-movable-dim-light"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-light.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -5383,6 +5383,10 @@
     {
       "evidence": "packages/battle-runtime/battle-runtime-light.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
+        "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
+        "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
+        "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
+        "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
         "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-light.qnt",
@@ -5607,7 +5611,6 @@
         "BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION",
         "BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE",
         "BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE",
-        "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
         "BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING",
         "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
         "BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE",
@@ -5618,12 +5621,9 @@
         "BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE",
         "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
         "BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE",
-        "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
         "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
         "BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE",
-        "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
         "BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE",
-        "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
         "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
@@ -6737,12 +6737,7 @@
       "status": "fixture-bound"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B2-BATTLE-RUNTIME-LIGHT-EMITTER-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -6757,21 +6752,21 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
         "pattern-match",
         "set",
-        "list",
         "map",
         "filter",
+        "fold",
+        "exists",
         "set-operators",
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-light.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -6799,12 +6794,7 @@
       "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B2-BATTLE-RUNTIME-LIGHT-EMITTER-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -6819,29 +6809,24 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
         "pattern-match",
         "set",
-        "list",
         "map",
         "filter",
+        "fold",
+        "exists",
         "set-operators",
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-light.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B2-BATTLE-RUNTIME-LIGHT-EMITTER-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -6856,29 +6841,24 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
         "pattern-match",
         "set",
-        "list",
         "map",
         "filter",
+        "fold",
+        "exists",
         "set-operators",
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-light.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B2-BATTLE-RUNTIME-LIGHT-EMITTER-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -6893,21 +6873,21 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
         "pattern-match",
         "set",
-        "list",
         "map",
         "filter",
+        "fold",
+        "exists",
         "set-operators",
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-light.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [
