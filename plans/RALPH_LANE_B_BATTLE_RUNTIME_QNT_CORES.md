@@ -65,7 +65,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 9,
       "id": "B9-BATTLE-RUNTIME-ABILITY-HOLE-CLOSURE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Classify ability-check and Search hole readiness"
     },
     {
@@ -274,7 +274,7 @@ Acceptance: checker green; focused tests green.
 
 ### Task 9 - B9-BATTLE-RUNTIME-ABILITY-HOLE-CLOSURE - Classify ability-check and Search hole readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: ability-check and Search battle-hole frontier rows.
 
