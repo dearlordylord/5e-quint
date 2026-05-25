@@ -6328,7 +6328,7 @@
         "bridge-projection-coupled"
       ],
       "followUpTaskIds": [
-        "A47-BATTLE-RUNTIME-SLICE-OWNER-CLOSURE"
+        "B1-BATTLE-RUNTIME-SLICE-OWNER-CLOSURE"
       ],
       "generatorSubset": [
         "import",
@@ -6405,7 +6405,7 @@
         "bridge-projection-coupled"
       ],
       "followUpTaskIds": [
-        "A53-BATTLE-RUNTIME-COMPANION-FORM-CORE"
+        "B7-BATTLE-RUNTIME-COMPANION-FORM-CORE"
       ],
       "generatorSubset": [
         "import",
@@ -6442,7 +6442,7 @@
         "bridge-projection-coupled"
       ],
       "followUpTaskIds": [
-        "A49-BATTLE-RUNTIME-GROUND-HAZARD-CORE"
+        "B3-BATTLE-RUNTIME-GROUND-HAZARD-CORE"
       ],
       "generatorSubset": [
         "import",
@@ -6479,7 +6479,7 @@
         "bridge-projection-coupled"
       ],
       "followUpTaskIds": [
-        "A53-BATTLE-RUNTIME-COMPANION-FORM-CORE"
+        "B7-BATTLE-RUNTIME-COMPANION-FORM-CORE"
       ],
       "generatorSubset": [
         "import",
@@ -6516,7 +6516,7 @@
         "bridge-projection-coupled"
       ],
       "followUpTaskIds": [
-        "A51-BATTLE-RUNTIME-OBJECT-CONTACT-ENDING-CORE"
+        "B5-BATTLE-RUNTIME-OBJECT-CONTACT-ENDING-CORE"
       ],
       "generatorSubset": [
         "import",
@@ -6577,7 +6577,7 @@
         "bridge-projection-coupled"
       ],
       "followUpTaskIds": [
-        "A51-BATTLE-RUNTIME-OBJECT-CONTACT-ENDING-CORE"
+        "B5-BATTLE-RUNTIME-OBJECT-CONTACT-ENDING-CORE"
       ],
       "generatorSubset": [
         "import",
@@ -6622,7 +6622,7 @@
         "bridge-projection-coupled"
       ],
       "followUpTaskIds": [
-        "A51-BATTLE-RUNTIME-OBJECT-CONTACT-ENDING-CORE"
+        "B5-BATTLE-RUNTIME-OBJECT-CONTACT-ENDING-CORE"
       ],
       "generatorSubset": [
         "import",
@@ -6667,7 +6667,7 @@
         "bridge-projection-coupled"
       ],
       "followUpTaskIds": [
-        "A49-BATTLE-RUNTIME-GROUND-HAZARD-CORE"
+        "B3-BATTLE-RUNTIME-GROUND-HAZARD-CORE"
       ],
       "generatorSubset": [
         "import",
@@ -6704,7 +6704,7 @@
         "bridge-projection-coupled"
       ],
       "followUpTaskIds": [
-        "A49-BATTLE-RUNTIME-GROUND-HAZARD-CORE"
+        "B3-BATTLE-RUNTIME-GROUND-HAZARD-CORE"
       ],
       "generatorSubset": [
         "import",
@@ -6741,7 +6741,7 @@
         "bridge-projection-coupled"
       ],
       "followUpTaskIds": [
-        "A49-BATTLE-RUNTIME-GROUND-HAZARD-CORE"
+        "B3-BATTLE-RUNTIME-GROUND-HAZARD-CORE"
       ],
       "generatorSubset": [
         "import",
@@ -6778,7 +6778,7 @@
         "bridge-projection-coupled"
       ],
       "followUpTaskIds": [
-        "A48-BATTLE-RUNTIME-LIGHT-EMITTER-CORE"
+        "B2-BATTLE-RUNTIME-LIGHT-EMITTER-CORE"
       ],
       "generatorSubset": [
         "import",
@@ -6815,7 +6815,7 @@
         "bridge-projection-coupled"
       ],
       "followUpTaskIds": [
-        "A47-BATTLE-RUNTIME-SLICE-OWNER-CLOSURE"
+        "B1-BATTLE-RUNTIME-SLICE-OWNER-CLOSURE"
       ],
       "generatorSubset": [
         "import",
@@ -6852,7 +6852,7 @@
         "bridge-projection-coupled"
       ],
       "followUpTaskIds": [
-        "A48-BATTLE-RUNTIME-LIGHT-EMITTER-CORE"
+        "B2-BATTLE-RUNTIME-LIGHT-EMITTER-CORE"
       ],
       "generatorSubset": [
         "import",
@@ -6889,7 +6889,7 @@
         "bridge-projection-coupled"
       ],
       "followUpTaskIds": [
-        "A48-BATTLE-RUNTIME-LIGHT-EMITTER-CORE"
+        "B2-BATTLE-RUNTIME-LIGHT-EMITTER-CORE"
       ],
       "generatorSubset": [
         "import",
@@ -6926,7 +6926,7 @@
         "bridge-projection-coupled"
       ],
       "followUpTaskIds": [
-        "A48-BATTLE-RUNTIME-LIGHT-EMITTER-CORE"
+        "B2-BATTLE-RUNTIME-LIGHT-EMITTER-CORE"
       ],
       "generatorSubset": [
         "import",
@@ -6963,7 +6963,7 @@
         "bridge-projection-coupled"
       ],
       "followUpTaskIds": [
-        "A50-BATTLE-RUNTIME-MOVEMENT-REACTION-CORE"
+        "B4-BATTLE-RUNTIME-MOVEMENT-REACTION-CORE"
       ],
       "generatorSubset": [
         "import",
@@ -7000,7 +7000,7 @@
         "bridge-projection-coupled"
       ],
       "followUpTaskIds": [
-        "A50-BATTLE-RUNTIME-MOVEMENT-REACTION-CORE"
+        "B4-BATTLE-RUNTIME-MOVEMENT-REACTION-CORE"
       ],
       "generatorSubset": [
         "import",
@@ -7037,7 +7037,7 @@
         "bridge-projection-coupled"
       ],
       "followUpTaskIds": [
-        "A50-BATTLE-RUNTIME-MOVEMENT-REACTION-CORE"
+        "B4-BATTLE-RUNTIME-MOVEMENT-REACTION-CORE"
       ],
       "generatorSubset": [
         "import",
@@ -7074,7 +7074,7 @@
         "bridge-projection-coupled"
       ],
       "followUpTaskIds": [
-        "A50-BATTLE-RUNTIME-MOVEMENT-REACTION-CORE"
+        "B4-BATTLE-RUNTIME-MOVEMENT-REACTION-CORE"
       ],
       "generatorSubset": [
         "import",
@@ -7111,7 +7111,7 @@
         "bridge-projection-coupled"
       ],
       "followUpTaskIds": [
-        "A50-BATTLE-RUNTIME-MOVEMENT-REACTION-CORE"
+        "B4-BATTLE-RUNTIME-MOVEMENT-REACTION-CORE"
       ],
       "generatorSubset": [
         "import",
@@ -7148,7 +7148,7 @@
         "bridge-projection-coupled"
       ],
       "followUpTaskIds": [
-        "A54-BATTLE-RUNTIME-BLUR-DEFENSE-CORE"
+        "B8-BATTLE-RUNTIME-BLUR-DEFENSE-CORE"
       ],
       "generatorSubset": [
         "import",
@@ -7185,7 +7185,7 @@
         "bridge-projection-coupled"
       ],
       "followUpTaskIds": [
-        "A47-BATTLE-RUNTIME-SLICE-OWNER-CLOSURE"
+        "B1-BATTLE-RUNTIME-SLICE-OWNER-CLOSURE"
       ],
       "generatorSubset": [
         "import",
@@ -7381,7 +7381,7 @@
         "bridge-projection-coupled"
       ],
       "followUpTaskIds": [
-        "A55-BATTLE-RUNTIME-ABILITY-HOLE-CLOSURE"
+        "B9-BATTLE-RUNTIME-ABILITY-HOLE-CLOSURE"
       ],
       "generatorSubset": [
         "import",
@@ -7629,7 +7629,7 @@
         "bridge-projection-coupled"
       ],
       "followUpTaskIds": [
-        "A52-BATTLE-RUNTIME-DRAGONS-BREATH-CORE"
+        "B6-BATTLE-RUNTIME-DRAGONS-BREATH-CORE"
       ],
       "generatorSubset": [
         "import",
@@ -7666,7 +7666,7 @@
         "bridge-projection-coupled"
       ],
       "followUpTaskIds": [
-        "A52-BATTLE-RUNTIME-DRAGONS-BREATH-CORE"
+        "B6-BATTLE-RUNTIME-DRAGONS-BREATH-CORE"
       ],
       "generatorSubset": [
         "import",

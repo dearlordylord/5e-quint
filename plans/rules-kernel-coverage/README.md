@@ -114,7 +114,8 @@ with empty arrays until the C-lane classification is known.
 - `followUpTaskIds`: optional Ralph or rules-kernel follow-up task ids that own
   blocker resolution. `fixture-bound` and `blocked` rows require at least one
   follow-up task id so blocker rows cannot leave future work untracked. Ralph
-  task ids are checked against `plans/RALPH_LANE_A_QNT_GENERATOR_CLOSURE.md`.
+  task ids are checked against the active A/B/C ultra-golden lane plans in
+  `plans/`.
 
 `generatorSubset` and `blockedBy` values are checked vocabularies documented in
 `scripts/rules-kernel-coverage-config.cjs`. Keep the token catalog there so
