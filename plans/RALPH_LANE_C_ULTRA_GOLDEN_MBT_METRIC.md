@@ -191,7 +191,7 @@ remains.
     {
       "number": 30,
       "id": "C30-GENERATOR-READINESS-SLEEP-REPEAT-SAVE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Classify Sleep repeat-save generator readiness"
     },
     {
@@ -687,7 +687,7 @@ longer `not-assessed`.
 
 ### Task 30 - C30-GENERATOR-READINESS-SLEEP-REPEAT-SAVE - Classify Sleep repeat-save generator readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 `plans/unit-profile-coverage/ultra-golden-gate.json`,

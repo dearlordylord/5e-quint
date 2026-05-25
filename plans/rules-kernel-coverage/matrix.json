@@ -6622,11 +6622,33 @@
     },
     {
       "blockedBy": [],
-      "generatorSubset": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "list",
+        "filter",
+        "exists",
+        "set-operators"
+      ],
       "obligationId": "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+      ],
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [
@@ -8015,16 +8037,6 @@
       "ownerRoles": [
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-metamagic.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
           "role": "semantic-core"
         }
       ],
