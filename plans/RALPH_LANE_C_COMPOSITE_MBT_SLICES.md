@@ -179,7 +179,7 @@ slice candidates remain.
     {
       "number": 28,
       "id": "C28-SCALAR-BUFF-ACTIVE-EFFECTS-SLICE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Add scalar buff active effects focused MBT"
     },
     {
@@ -260,7 +260,7 @@ Lane C must not:
 | 25 | C25-SPELL-CREATED-HELD-OBJECT-SLICE - Add spell-created held object lifecycle focused MBT | done | none | Runtime-test-only obligation; Flame Blade-style held object, hand occupancy, active-object attack, and cleanup. |
 | 26 | C26-SELF-TELEPORT-SLICE - Add self-teleport lifecycle focused MBT | done | none | Runtime-test-only obligation; Misty Step-style destination witness, Bonus Action and Spell Slot spend, and no-OA projection. |
 | 27 | C27-BLUR-ATTACK-DEFENSE-SLICE - Add Blur attack-roll defense focused MBT | done | none | Runtime-test-only obligation; self defense effect, Blindsight/Truesight bypass witnesses, roll-mode cancellation, and cleanup. |
-| 28 | C28-SCALAR-BUFF-ACTIVE-EFFECTS-SLICE - Add scalar buff active effects focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; scalar buffs for AC, Speed, special speeds, HP maximum, and Temporary Hit Points. |
+| 28 | C28-SCALAR-BUFF-ACTIVE-EFFECTS-SLICE - Add scalar buff active effects focused MBT | done | none | Runtime-test-only obligation; scalar buffs for AC, Speed, special speeds, HP maximum, and Temporary Hit Points. |
 | 29 | C29-SELF-TRANSFORMATION-MODE-SLICE - Add self-transformation mode focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; Alter Self mode choice/replacement, natural-weapon override, and Aquatic projections. |
 | 30 | C30-REACTION-CASTING-TIME-SLICE - Add reaction casting time focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; Counterspell/Hellish Rebuke triggers, Reaction spend, Spell Slot ledger, interruption, and continuation resume. |
 | 31 | C31-CHAINED-ATTACK-SEQUENCE-SLICE - Add chained attack sequence focused MBT | ready-for-implementation-after-light-research | none | Runtime-test-only obligation; Chromatic Orb-style damage-type choice, target history, per-step rolls, and leap limits. |
@@ -642,7 +642,7 @@ typecheck when TS changes, and `git diff --check`.
 
 ### Task 28 - C28-SCALAR-BUFF-ACTIVE-EFFECTS-SLICE - Add scalar buff active effects focused MBT
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Output: add a focused `*.mbt.qnt` plus `src/*.mbt.test.ts` witness and package
 script for `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS`.
