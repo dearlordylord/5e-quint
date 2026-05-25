@@ -72,11 +72,11 @@
           "status": "pass"
         },
         {
-          "blockingCount": 24,
+          "blockingCount": 23,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
               "denominator": 32,
-              "numerator": 8
+              "numerator": 9
             },
             "qntCoveredObligations": {
               "denominator": 44,
@@ -114,17 +114,6 @@
                 "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
                 "packages/battle-runtime/battle-runtime-monk-focus.qnt"
               ]
-            },
-            {
-              "blockedBy": [],
-              "obligationId": "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime-chained-spell-attack.qnt",
-                "packages/battle-runtime/battle-runtime-spell-attack.qnt",
-                "packages/battle-runtime/battle-runtime-spell-invocation.qnt"
-              ],
-              "readinessStatus": "not-assessed",
-              "runBlockOwners": []
             },
             {
               "blockedBy": [],
@@ -595,11 +584,11 @@
           "status": "pass"
         },
         {
-          "blockingCount": 24,
+          "blockingCount": 23,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
               "denominator": 32,
-              "numerator": 8
+              "numerator": 9
             },
             "qntCoveredObligations": {
               "denominator": 47,
@@ -637,17 +626,6 @@
                 "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
                 "packages/battle-runtime/battle-runtime-monk-focus.qnt"
               ]
-            },
-            {
-              "blockedBy": [],
-              "obligationId": "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime-chained-spell-attack.qnt",
-                "packages/battle-runtime/battle-runtime-spell-attack.qnt",
-                "packages/battle-runtime/battle-runtime-spell-invocation.qnt"
-              ],
-              "readinessStatus": "not-assessed",
-              "runBlockOwners": []
             },
             {
               "blockedBy": [],

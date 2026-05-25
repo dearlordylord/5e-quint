@@ -7275,11 +7275,35 @@
     },
     {
       "blockedBy": [],
-      "generatorSubset": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "filter",
+        "exists",
+        "map",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-chained-spell-attack.qnt",
+        "packages/battle-runtime/battle-runtime-spell-attack.qnt",
+        "packages/battle-runtime/battle-runtime-spell-invocation.qnt"
+      ],
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -7977,24 +8001,6 @@
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-concentration.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-chained-spell-attack.qnt",
-          "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack.qnt",
-          "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
           "role": "semantic-core"
         }
       ],

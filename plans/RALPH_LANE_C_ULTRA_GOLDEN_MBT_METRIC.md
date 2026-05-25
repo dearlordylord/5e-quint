@@ -137,7 +137,7 @@ remains.
     {
       "number": 21,
       "id": "C21-GENERATOR-READINESS-SPELL-ATTACK-SEQUENCES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Classify chained spell attack generator readiness"
     },
     {
@@ -529,7 +529,7 @@ longer `not-assessed`.
 
 ### Task 21 - C21-GENERATOR-READINESS-SPELL-ATTACK-SEQUENCES - Classify chained spell attack generator readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 `plans/unit-profile-coverage/ultra-golden-gate.json`,
