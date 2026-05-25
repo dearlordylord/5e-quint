@@ -72,11 +72,11 @@
           "status": "pass"
         },
         {
-          "blockingCount": 14,
+          "blockingCount": 12,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
               "denominator": 32,
-              "numerator": 18
+              "numerator": 20
             },
             "qntCoveredObligations": {
               "denominator": 44,
@@ -193,16 +193,6 @@
               "runBlockOwners": []
             },
             {
-              "blockedBy": [],
-              "obligationId": "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime-spell-attack.qnt",
-                "packages/battle-runtime/battle-runtime-spell-invocation.qnt"
-              ],
-              "readinessStatus": "not-assessed",
-              "runBlockOwners": []
-            },
-            {
               "blockedBy": [
                 "bridge-projection-coupled"
               ],
@@ -230,18 +220,6 @@
               "ownerPaths": [
                 "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
                 "packages/battle-runtime/battle-runtime-spell-attack.qnt"
-              ],
-              "readinessStatus": "not-assessed",
-              "runBlockOwners": []
-            },
-            {
-              "blockedBy": [],
-              "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime-light.qnt",
-                "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
-                "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
-                "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt"
               ],
               "readinessStatus": "not-assessed",
               "runBlockOwners": []
@@ -496,11 +474,11 @@
           "status": "pass"
         },
         {
-          "blockingCount": 14,
+          "blockingCount": 12,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
               "denominator": 32,
-              "numerator": 18
+              "numerator": 20
             },
             "qntCoveredObligations": {
               "denominator": 47,
@@ -617,16 +595,6 @@
               "runBlockOwners": []
             },
             {
-              "blockedBy": [],
-              "obligationId": "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime-spell-attack.qnt",
-                "packages/battle-runtime/battle-runtime-spell-invocation.qnt"
-              ],
-              "readinessStatus": "not-assessed",
-              "runBlockOwners": []
-            },
-            {
               "blockedBy": [
                 "bridge-projection-coupled"
               ],
@@ -654,18 +622,6 @@
               "ownerPaths": [
                 "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
                 "packages/battle-runtime/battle-runtime-spell-attack.qnt"
-              ],
-              "readinessStatus": "not-assessed",
-              "runBlockOwners": []
-            },
-            {
-              "blockedBy": [],
-              "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime-light.qnt",
-                "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
-                "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
-                "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt"
               ],
               "readinessStatus": "not-assessed",
               "runBlockOwners": []

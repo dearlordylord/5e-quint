@@ -203,7 +203,7 @@ remains.
     {
       "number": 32,
       "id": "C32-GENERATOR-READINESS-INDEPENDENT-ATTACK-SEQUENCE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Classify independent spell attack generator readiness"
     },
     {
@@ -722,7 +722,7 @@ longer `not-assessed`.
 
 ### Task 32 - C32-GENERATOR-READINESS-INDEPENDENT-ATTACK-SEQUENCE - Classify independent spell attack generator readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 `plans/unit-profile-coverage/ultra-golden-gate.json`,

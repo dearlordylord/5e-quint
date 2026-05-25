@@ -7534,11 +7534,33 @@
     },
     {
       "blockedBy": [],
-      "generatorSubset": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "filter",
+        "exists",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-spell-attack.qnt",
+        "packages/battle-runtime/battle-runtime-spell-invocation.qnt"
+      ],
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -8088,20 +8110,6 @@
       "ownerRoles": [
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-self-transformation.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack.qnt",
-          "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
           "role": "semantic-core"
         }
       ],
