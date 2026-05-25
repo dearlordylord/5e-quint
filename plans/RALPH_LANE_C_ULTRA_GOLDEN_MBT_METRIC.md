@@ -14,23 +14,108 @@ remains.
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    { "number": 1, "id": "C1-ULTRA-GOLDEN-DEFINITION-GATE", "status": "ready-for-research", "title": "Define the ultra-golden aggregate gate" },
-    { "number": 2, "id": "C2-LEVEL12-QNT-MBT-JOIN-REPORT", "status": "ready-for-research", "title": "Report level 1-2 support to QNT/MBT evidence join" },
-    { "number": 3, "id": "C3-MCP-LEVEL12-SCENARIO-GATE", "status": "ready-for-research", "title": "Gate level 1-2 MCP scenario evidence" },
-    { "number": 4, "id": "C4-SELECTED-IDENTITY-EVIDENCE-AUDIT", "status": "ready-for-research", "title": "Audit selected-identity evidence against supported Units" },
-    { "number": 5, "id": "C5-UNIT-PROFILE-RULES-KERNEL-GAP-REPORT", "status": "ready-for-research", "title": "Report supported profile rules-kernel gaps" },
-    { "number": 6, "id": "C6-MBT-WITNESS-KIND-NORMALIZATION", "status": "ready-for-research", "title": "Normalize MBT/runtime witness kinds in the metric" },
-    { "number": 7, "id": "C7-SPELL-PROCEDURE-MBT-EVIDENCE-GATE", "status": "ready-for-research", "title": "Gate spell procedure MBT evidence for supported profiles" },
-    { "number": 8, "id": "C8-FEATURE-PROCEDURE-MBT-EVIDENCE-GATE", "status": "ready-for-research", "title": "Gate feature procedure MBT evidence for supported profiles" },
-    { "number": 9, "id": "C9-CHARACTER-CREATION-MCP-EVIDENCE", "status": "ready-for-research", "title": "Add character-creation MCP evidence rows" },
-    { "number": 10, "id": "C10-CHARACTER-SHEET-MCP-EVIDENCE", "status": "ready-for-research", "title": "Add character-sheet MCP evidence rows" },
-    { "number": 11, "id": "C11-BATTLE-MCP-EVIDENCE", "status": "ready-for-research", "title": "Add battle MCP evidence rows" },
-    { "number": 12, "id": "C12-LEVEL12-ULTRA-GOLDEN-SUMMARY", "status": "ready-for-research", "title": "Publish level 1-2 ultra-golden summary" },
-    { "number": 13, "id": "C13-MBT-CONTEXT-BUDGET-CHECK", "status": "ready-for-research", "title": "Check MBT plan context budget and stale references" },
-    { "number": 14, "id": "C14-RUST-MIGRATION-QUEUE-DRY", "status": "ready-for-research", "title": "Dry the Rust migration queue entrypoints" },
-    { "number": 15, "id": "C15-ULTRA-GOLDEN-CHECKER-REGRESSION", "status": "ready-for-research", "title": "Add ultra-golden checker regression coverage" },
-    { "number": 16, "id": "C16-END-TO-END-ULTRA-GOLDEN-VERIFY", "status": "ready-for-research", "title": "Verify ultra-golden gate and focused MCP/MBT checks" },
-    { "number": 17, "id": "C17-RECURSIVE-NEXT-BATCH", "status": "ready-for-research", "title": "Mine next ultra-golden metric or MBT batch" }
+    {
+      "number": 1,
+      "id": "C1-ULTRA-GOLDEN-DEFINITION-GATE",
+      "status": "done",
+      "title": "Define the ultra-golden aggregate gate"
+    },
+    {
+      "number": 2,
+      "id": "C2-LEVEL12-QNT-MBT-JOIN-REPORT",
+      "status": "ready-for-research",
+      "title": "Report level 1-2 support to QNT/MBT evidence join"
+    },
+    {
+      "number": 3,
+      "id": "C3-MCP-LEVEL12-SCENARIO-GATE",
+      "status": "ready-for-research",
+      "title": "Gate level 1-2 MCP scenario evidence"
+    },
+    {
+      "number": 4,
+      "id": "C4-SELECTED-IDENTITY-EVIDENCE-AUDIT",
+      "status": "ready-for-research",
+      "title": "Audit selected-identity evidence against supported Units"
+    },
+    {
+      "number": 5,
+      "id": "C5-UNIT-PROFILE-RULES-KERNEL-GAP-REPORT",
+      "status": "ready-for-research",
+      "title": "Report supported profile rules-kernel gaps"
+    },
+    {
+      "number": 6,
+      "id": "C6-MBT-WITNESS-KIND-NORMALIZATION",
+      "status": "ready-for-research",
+      "title": "Normalize MBT/runtime witness kinds in the metric"
+    },
+    {
+      "number": 7,
+      "id": "C7-SPELL-PROCEDURE-MBT-EVIDENCE-GATE",
+      "status": "ready-for-research",
+      "title": "Gate spell procedure MBT evidence for supported profiles"
+    },
+    {
+      "number": 8,
+      "id": "C8-FEATURE-PROCEDURE-MBT-EVIDENCE-GATE",
+      "status": "ready-for-research",
+      "title": "Gate feature procedure MBT evidence for supported profiles"
+    },
+    {
+      "number": 9,
+      "id": "C9-CHARACTER-CREATION-MCP-EVIDENCE",
+      "status": "ready-for-research",
+      "title": "Add character-creation MCP evidence rows"
+    },
+    {
+      "number": 10,
+      "id": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
+      "status": "ready-for-research",
+      "title": "Add character-sheet MCP evidence rows"
+    },
+    {
+      "number": 11,
+      "id": "C11-BATTLE-MCP-EVIDENCE",
+      "status": "ready-for-research",
+      "title": "Add battle MCP evidence rows"
+    },
+    {
+      "number": 12,
+      "id": "C12-LEVEL12-ULTRA-GOLDEN-SUMMARY",
+      "status": "ready-for-research",
+      "title": "Publish level 1-2 ultra-golden summary"
+    },
+    {
+      "number": 13,
+      "id": "C13-MBT-CONTEXT-BUDGET-CHECK",
+      "status": "ready-for-research",
+      "title": "Check MBT plan context budget and stale references"
+    },
+    {
+      "number": 14,
+      "id": "C14-RUST-MIGRATION-QUEUE-DRY",
+      "status": "ready-for-research",
+      "title": "Dry the Rust migration queue entrypoints"
+    },
+    {
+      "number": 15,
+      "id": "C15-ULTRA-GOLDEN-CHECKER-REGRESSION",
+      "status": "ready-for-research",
+      "title": "Add ultra-golden checker regression coverage"
+    },
+    {
+      "number": 16,
+      "id": "C16-END-TO-END-ULTRA-GOLDEN-VERIFY",
+      "status": "ready-for-research",
+      "title": "Verify ultra-golden gate and focused MCP/MBT checks"
+    },
+    {
+      "number": 17,
+      "id": "C17-RECURSIVE-NEXT-BATCH",
+      "status": "ready-for-research",
+      "title": "Mine next ultra-golden metric or MBT batch"
+    }
   ]
 }
 -->
@@ -92,7 +177,7 @@ If an MBT run is needed, follow the repo MBT protocol in `AGENTS.md`.
 
 ### Task 1 - C1-ULTRA-GOLDEN-DEFINITION-GATE - Define the ultra-golden aggregate gate
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: existing level 1 and level 1-2 support reports plus rules-kernel
 coverage reports.
