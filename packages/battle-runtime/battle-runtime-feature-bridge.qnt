@@ -7,6 +7,7 @@ module battleRuntimeFeatureBridge {
   import reactionsContinuationsConcentration.* from "../shared-algebras/proofs/rule-core/reactions-continuations-concentration"
   import unitFeaturePoolCostCore.* from "../shared-algebras/proofs/rule-core/unit-feature-pool-cost-core"
   import unitFeatureProcedureProfiles.* from "../shared-algebras/proofs/rule-core/unit-feature-procedure-profiles"
+  import battleRuntimeFeatureTurnEndEffects.* from "./battle-runtime-feature-turn-end-effects"
 
   type BattleRuntimeRageResistanceProjection = {
     bludgeoning: bool,
@@ -46,17 +47,6 @@ module battleRuntimeFeatureBridge {
         StandardAttackCriticalThresholdProfile
     )
 
-  pure def battleRuntimeAttackCountState(
-    actionAvailable: bool,
-    extraAttackSlotsRemaining: int
-  ): AttackActionAttackCountState = {
-    actionAvailable: actionAvailable,
-    extraAttackSlotOpen: extraAttackSlotsRemaining > 0,
-    attacksResolved: 0,
-    movementSegmentsTaken: 0,
-    turnEnded: false,
-  }
-
   pure def battleRuntimeExtraAttackSlotsAfterAttackAction(
     actionAvailable: bool,
     extraAttackSupported: bool
@@ -73,13 +63,6 @@ module battleRuntimeFeatureBridge {
   ): int = {
     val result = resolveExtraAttackSlot(battleRuntimeAttackCountState(false, extraAttackSlotsRemaining))
     if (result.state.extraAttackSlotOpen) 1 else 0
-  }
-
-  pure def battleRuntimeExtraAttackSlotsAfterEndTurn(
-    extraAttackSlotsRemaining: int
-  ): int = {
-    val ended = endTurnDuringAttackActionAttackCount(battleRuntimeAttackCountState(false, extraAttackSlotsRemaining))
-    if (ended.extraAttackSlotOpen) 1 else 0
   }
 
   pure def battleRuntimeRagePreventsSpellcasting(active: bool): bool =

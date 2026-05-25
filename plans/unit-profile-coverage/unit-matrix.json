@@ -296,7 +296,7 @@
       "profileKind": "passive",
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -519,7 +519,7 @@
       "profileKind": "bonus-action",
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-movement.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -12952,7 +12952,7 @@
           "profileKind": "passive",
           "qntOwners": [
             "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
-            "packages/battle-runtime/battle-runtime.qnt"
+            "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -17312,7 +17312,7 @@
           "profileKind": "passive",
           "qntOwners": [
             "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
-            "packages/battle-runtime/battle-runtime.qnt"
+            "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -17461,7 +17461,7 @@
           "profileKind": "passive",
           "qntOwners": [
             "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
-            "packages/battle-runtime/battle-runtime.qnt"
+            "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -17949,7 +17949,7 @@
           "profileKind": "bonus-action",
           "qntOwners": [
             "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
-            "packages/battle-runtime/battle-runtime.qnt"
+            "packages/battle-runtime/battle-runtime-movement.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",

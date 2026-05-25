@@ -273,6 +273,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-direct-condition-removal.qnt` | semantic-core | `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` |
 | `packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt` | semantic-core | `BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-feather-fall.qnt` | semantic-core | `BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt` | semantic-core | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/battle-runtime/battle-runtime-ground-command-tests.qnt` | mbt-fixture | `BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD` |
 | `packages/battle-runtime/battle-runtime-ground-command.qnt` | semantic-core | `BATTLE.COMMAND.OPTION_AND_NEXT_TURN`, `BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE`, `BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE`, `BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE`, `BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-gust-of-wind.qnt` | semantic-core | `BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE` |
@@ -286,7 +287,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-mirror-image.qnt` | semantic-core | `BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION` |
 | `packages/battle-runtime/battle-runtime-monk-focus.qnt` | semantic-core | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt` | semantic-core | `BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE` |
-| `packages/battle-runtime/battle-runtime-movement.qnt` | semantic-core | `BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE`, `BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime-movement.qnt` | semantic-core | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE`, `BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-object-contact-damage.qnt` | semantic-core | `BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING`, `BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-ongoing-spell-dispel.qnt` | semantic-core | `BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING` |
 | `packages/battle-runtime/battle-runtime-protection-from-poison.qnt` | semantic-core | `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` |
@@ -311,7 +312,6 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-dragons-breath.qnt` | semantic-core | `BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION`, `BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE` |
 | `packages/battle-runtime/battle-runtime-druid-wild-shape.qnt` | semantic-core | `BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-find-familiar.qnt` | semantic-core | `BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE` |
-| `packages/battle-runtime/battle-runtime.qnt` | semantic-core | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/character-battle-runtime/character-battle-init-projection.mbt.qnt` | mbt-fixture | `CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS`, `CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION` |
 | `packages/character-battle-runtime/character-battle-settlement.mbt.qnt` | mbt-fixture | `CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS`, `CHARACTER.BATTLE.HANDOFF.SETTLEMENT` |
 | `packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt` | mbt-fixture | `SHEET.FEATURE_RESOURCES.TRANSITIONS` |

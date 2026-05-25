@@ -77,7 +77,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 11,
       "id": "B11-BATTLE-RUNTIME-TURN-END-EFFECT-CORE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Split turn-end active-effect processing facts"
     },
     {
@@ -298,7 +298,7 @@ Acceptance: checker green; focused tests green when behavior changes.
 
 ### Task 11 - B11-BATTLE-RUNTIME-TURN-END-EFFECT-CORE - Split turn-end active-effect processing facts
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: turn-end movement/effect obligations and broad owner markers.
 

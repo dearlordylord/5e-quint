@@ -174,7 +174,8 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
-        "packages/battle-runtime/battle-runtime.qnt",
+        "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
+        "packages/battle-runtime/battle-runtime-movement.qnt",
         "packages/battle-runtime/battle-runtime-monk-focus.qnt"
       ],
       "runtime": "battle",
@@ -5391,6 +5392,14 @@
       "role": "semantic-core"
     },
     {
+      "evidence": "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt is the focused QNT owner carrying Unit feature turn-end attack-slot cleanup semantics without geometry ownership.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
+      "role": "semantic-core"
+    },
+    {
       "evidence": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt is a bounded replay or run-test owner for covered parity evidence; treat it as fixture-bound unless later split.",
       "obligationIds": [
         "BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD"
@@ -5505,8 +5514,9 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-movement.qnt is the focused QNT owner carrying Expeditious Retreat Dash and Dissonant Whispers forced Reaction movement reducer semantics.",
+      "evidence": "packages/battle-runtime/battle-runtime-movement.qnt is the focused QNT owner carrying Expeditious Retreat Dash, Dissonant Whispers forced Reaction movement, and Unit feature Bonus Action Dash Temporary Hit Points reducer semantics.",
       "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE",
         "BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE"
       ],
@@ -5723,14 +5733,6 @@
         "BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-find-familiar.qnt",
-      "role": "semantic-core"
-    },
-    {
-      "evidence": "packages/battle-runtime/battle-runtime.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
-      "obligationIds": [
-        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
-      ],
-      "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
       "role": "semantic-core"
     },
     {
@@ -6369,8 +6371,9 @@
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
-        "packages/battle-runtime/battle-runtime-monk-focus.qnt",
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
+        "packages/battle-runtime/battle-runtime-movement.qnt",
+        "packages/battle-runtime/battle-runtime-monk-focus.qnt"
       ],
       "status": "fixture-bound"
     },
