@@ -2,6 +2,7 @@
 
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-levitated-creature
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE
 
 module battleRuntimeLevitateCreature {
   import battleRuntimeModel.* from "./battle-runtime-model"

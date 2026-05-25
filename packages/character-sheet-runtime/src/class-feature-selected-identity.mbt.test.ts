@@ -9,6 +9,7 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B6-CLASS-FEATURE-IDENTITY-BATCH-3 sorcerer_draconic_spells warlock_fiend_spells
 // UNIT-IDENTITY-MBT-REPLAY: B6-CLASS-FEATURE-IDENTITY-BATCH-3 sorcerer_draconic_spells doProjectSorcererDraconicSpells
 // UNIT-IDENTITY-MBT-REPLAY: B6-CLASS-FEATURE-IDENTITY-BATCH-3 warlock_fiend_spells doProjectWarlockFiendSpells
+// KERNEL-COVERAGE: parity-witness SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION
 import * as path from "node:path";
 
 import {

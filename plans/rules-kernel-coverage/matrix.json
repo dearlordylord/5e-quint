@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 93,
-    "covered": 87,
+    "total": 97,
+    "covered": 91,
     "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 69,
-      "character-creation": 12,
-      "character-sheet": 8,
+      "battle": 71,
+      "character-creation": 13,
+      "character-sheet": 9,
       "character-battle": 3
     },
     "byStatus": {
-      "covered": 87,
+      "covered": 91,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -626,6 +626,80 @@
         "UBIQUITOUS_LANGUAGE.md#Spellcasting"
       ],
       "title": "Battle Gust of Wind directional Line state, initial and end-turn Strength saves, failed-save push disposition, closer-to-caster movement cost, direction replacement, and cleanup"
+    },
+    {
+      "id": "BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-enlarge-reduce.test.ts"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-creature-size-change"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt",
+        "packages/battle-runtime/battle-runtime-timed-effects.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/creature-size-change-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/druid-wild-shape.ts",
+        "packages/battle-runtime/src/battle-reducer/hole-helpers.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Enlarge/Reduce",
+        ".references/srd-5.2.1/Playing-the-Game.md#Creature Size",
+        "UBIQUITOUS_LANGUAGE.md#Size",
+        "UBIQUITOUS_LANGUAGE.md#Advantage and Disadvantage",
+        "UBIQUITOUS_LANGUAGE.md#Spellcasting",
+        "UBIQUITOUS_LANGUAGE.md#Damage"
+      ],
+      "title": "Battle Enlarge/Reduce creature branch applies save-gated one-step Size projection, Strength D20 Test roll modes, attack-hit damage adjustment, Concentration cleanup, and duration cleanup"
+    },
+    {
+      "id": "BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-levitate.test.ts"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-levitated-creature"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-levitate-creature.qnt"
+      ],
+      "reason": "The reducer owns the creature-branch active effect, altitude scalar, action/resource spending, save outcome, caster control command, target movement altitude update, and concentration/duration cleanup. Caller/table facts still own target visibility, target range, fixed-object or surface reach, and map geometry.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/levitate-creature.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Levitate",
+        ".references/srd-5.2.1/Rules-Glossary.md#Climbing",
+        ".references/srd-5.2.1/Rules-Glossary.md#Concentration",
+        ".references/srd-5.2.1/Playing-the-Game.md#Movement and Position",
+        "UBIQUITOUS_LANGUAGE.md#Movement",
+        "UBIQUITOUS_LANGUAGE.md#Spellcasting"
+      ],
+      "title": "Battle Levitate creature branch applies save-gated suspension, caller-selected altitude, caster Magic Action control, witnessed target movement, and cleanup"
     },
     {
       "id": "BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING",
@@ -2442,6 +2516,36 @@
       "title": "Character Creation projects retained class-feature source facts such as shared-resource links, Martial Arts die source, Metamagic option facts, and spell-use limits without duplicating source state"
     },
     {
+      "id": "CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "deterministicReplayRationale": "Character Creation Wizard spellbook learning replay is a fixed selected-identity fixture for Evocation Savant acquisition-time choices. The runtime discovers eligible Wizard Evocation Spell Definitions from existing Wizard spellbook Spell Access facts and finalizes selected spells into the build's spellbook list; random draft-fill interleavings are not the risk at this projection boundary.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "character-creation.wizard-spellbook-learning-choice"
+      ],
+      "qntOwners": [
+        "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt"
+      ],
+      "runtime": "character-creation",
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/discovery.ts",
+        "packages/character-creation-runtime/src/finalization.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Classes/Wizard.md#Level 1: Spellcasting",
+        ".references/srd-5.2.1/Classes/Wizard.md#Level 3: Evocation Savant"
+      ],
+      "title": "Character Creation finalizes Wizard spellbook learning choices from class-feature grants into existing spellbook Spell Access without adding a separate sheet spellbook roster"
+    },
+    {
       "id": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
       "kind": "state-transition",
       "parityWitnesses": [
@@ -2836,6 +2940,42 @@
         ".references/srd-5.2.1/Rules-Glossary.md#Ritual"
       ],
       "title": "Character Sheet spellbook Ritual invocation projects from existing spellbook Spell Access and Ritual-tagged Spell Definitions"
+    },
+    {
+      "id": "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
+      "kind": "projection-scalar",
+      "parityWitnesses": [
+        {
+          "deterministicReplayRationale": "Character Sheet class-feature prepared Spell Access replay is a fixed selected-identity fixture for retained SRD class-feature grants: Life Domain Spells, Circle Spells selected by current Circle of the Land land choice, Oath of Devotion Spells, Paladin's Smite, Favored Enemy, Draconic Spells, and Fiend Spells. The runtime projects spell ids directly from retained Surface class-feature grants or selected-land source facts into sheet Spell Access without storing a separate per-class prepared-spell roster; random branch interleavings are not the risk at this projection boundary.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "character-sheet.class-feature-prepared-spell-access",
+        "character-sheet.druid-circle-land-spell-access"
+      ],
+      "qntOwners": [
+        "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt"
+      ],
+      "runtime": "character-sheet",
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/index.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Always-Prepared Spells",
+        ".references/srd-5.2.1/Classes/Druid.md#Level 3: Circle of the Land Spells",
+        ".references/srd-5.2.1/Classes/Cleric.md#Level 3: Life Domain Spells",
+        ".references/srd-5.2.1/Classes/Paladin.md#Level 2: Paladin's Smite",
+        ".references/srd-5.2.1/Classes/Paladin.md#Level 3: Oath of Devotion Spells",
+        ".references/srd-5.2.1/Classes/Ranger.md#Level 1: Favored Enemy",
+        ".references/srd-5.2.1/Classes/Sorcerer.md#Level 3: Draconic Spells",
+        ".references/srd-5.2.1/Classes/Warlock.md#Level 3: Fiend Spells"
+      ],
+      "title": "Character Sheet projects retained class-feature always-prepared Spell Access without duplicating class prepared-spell state"
     },
     {
       "id": "BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE",
@@ -4613,6 +4753,12 @@
     },
     {
       "obligationIds": [
+        "BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE"
+      ],
+      "profileId": "spell.invocation-levitated-creature"
+    },
+    {
+      "obligationIds": [
         "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE"
       ],
       "profileId": "spell.invocation-ray-of-enfeeblement-d20-lifecycle"
@@ -4844,6 +4990,18 @@
     },
     {
       "obligationIds": [
+        "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION"
+      ],
+      "profileId": "character-sheet.class-feature-prepared-spell-access"
+    },
+    {
+      "obligationIds": [
+        "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION"
+      ],
+      "profileId": "character-sheet.druid-circle-land-spell-access"
+    },
+    {
+      "obligationIds": [
         "SHEET.WEAPON_MASTERY.RESELECTION"
       ],
       "profileId": "character-sheet.weapon-mastery-reselection"
@@ -4970,6 +5128,12 @@
     },
     {
       "obligationIds": [
+        "CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION"
+      ],
+      "profileId": "character-creation.wizard-spellbook-learning-choice"
+    },
+    {
+      "obligationIds": [
         "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE"
       ],
       "profileId": "spell.invocation-web-restraint-hazard"
@@ -4997,6 +5161,12 @@
         "BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE"
       ],
       "profileId": "spell.invocation-gust-of-wind-line"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE"
+      ],
+      "profileId": "spell.invocation-creature-size-change"
     },
     {
       "obligationIds": [
@@ -5134,6 +5304,14 @@
         "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-light.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-levitate-creature.qnt is the covered obligation QNT owner carrying executable Levitate creature-branch altitude and lifecycle semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-levitate-creature.qnt",
       "role": "semantic-core"
     },
     {
@@ -5298,6 +5476,7 @@
       "evidence": "packages/battle-runtime/battle-runtime-timed-effects.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
         "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
+        "BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE",
         "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
         "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE"
       ],
@@ -5337,6 +5516,7 @@
         "BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE",
         "BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION",
         "BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE",
+        "BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE",
         "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
         "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
         "BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING",
@@ -5396,6 +5576,14 @@
       ],
       "ownerPath": "packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt",
       "role": "mbt-fixture"
+    },
+    {
+      "evidence": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt is a selected-identity replay owner for class-feature projections including Wizard Evocation Savant spellbook learning; it proves concrete selected catalog identity reaches creation finalization rather than supplying reusable generator input.",
+      "obligationIds": [
+        "CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION"
+      ],
+      "ownerPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
+      "role": "selected-identity-trace"
     },
     {
       "evidence": "packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt is a selected-identity replay owner; it proves concrete selected catalog identity reaches runtime behavior rather than supplying reusable generator input.",
@@ -5462,6 +5650,14 @@
         "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE"
       ],
       "ownerPath": "packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt",
+      "role": "selected-identity-trace"
+    },
+    {
+      "evidence": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt is a selected-identity replay owner for class-feature always-prepared Spell Access; it proves retained Surface class-feature identity reaches Character Sheet projection without supplying reusable generator input.",
+      "obligationIds": [
+        "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION"
+      ],
+      "ownerPath": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt",
       "role": "selected-identity-trace"
     },
     {
@@ -6244,6 +6440,22 @@
       "blockedBy": [],
       "generatorSubset": [],
       "obligationId": "BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [],
+      "status": "not-assessed"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [],
       "status": "not-assessed"
@@ -7465,6 +7677,30 @@
       "status": "not-assessed"
     },
     {
+      "obligationId": "BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-timed-effects.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
+      "obligationId": "BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE",
+      "ownerRoles": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-levitate-creature.qnt",
+          "role": "semantic-core"
+        }
+      ],
+      "status": "not-assessed"
+    },
+    {
       "obligationId": "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
       "ownerRoles": [
         {
@@ -7826,6 +8062,25 @@
             163
           ],
           "ownerPath": "packages/battle-runtime/battle-runtime-gust-of-wind.qnt"
+        }
+      ],
+      "readinessStatus": "not-assessed"
+    },
+    {
+      "blocker": "run-block-coupled",
+      "obligationId": "BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE",
+      "owners": [
+        {
+          "lines": [
+            249,
+            261,
+            271,
+            290,
+            302,
+            320,
+            329
+          ],
+          "ownerPath": "packages/battle-runtime/battle-runtime-levitate-creature.qnt"
         }
       ],
       "readinessStatus": "not-assessed"

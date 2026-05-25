@@ -1,7 +1,7 @@
 {
   "claimGate": {
     "authoredReadinessBlockerCount": 0,
-    "selectedIdentityBlockerCount": 2,
+    "selectedIdentityBlockerCount": 1,
     "status": "blocked",
     "strictTargetOpenCount": 0
   },
@@ -3269,30 +3269,30 @@
   "metrics": {
     "productReadiness": {
       "denominator": 607,
-      "numerator": 573,
-      "percent": "94.4%",
+      "numerator": 577,
+      "percent": "95.1%",
       "rowsByStatus": {
-        "accepted": 412,
+        "accepted": 416,
         "accepted-no-battle-effect": 161,
-        "battle-runtime-required": 5,
+        "battle-runtime-required": 1,
         "owner-evidence-required": 18,
         "partial-battle-runtime": 11
       }
     },
     "rulesKernelCoveredProfileJoin": {
       "denominator": 94,
-      "numerator": 93,
-      "percent": "98.9%"
+      "numerator": 94,
+      "percent": "100%"
     },
     "rulesKernelProfileJoin": {
       "denominator": 94,
-      "numerator": 93,
-      "percent": "98.9%"
+      "numerator": 94,
+      "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 121,
-      "numerator": 120,
-      "percent": "99.2%"
+      "numerator": 121,
+      "percent": "100%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 182,
@@ -6284,8 +6284,8 @@
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
         "denominator": 121,
-        "numerator": 120,
-        "percent": "99.2%"
+        "numerator": 121,
+        "percent": "100%"
       }
     },
     "units": [
@@ -7056,11 +7056,18 @@
         "unitId": "dragons_breath"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
+                "runtime": "character-sheet",
+                "status": "covered",
+                "title": "Character Sheet projects retained class-feature always-prepared Spell Access without duplicating class prepared-spell state"
+              }
+            ],
             "profileId": "character-sheet.druid-circle-land-spell-access",
             "profileKind": "character-sheet"
           }
@@ -9328,33 +9335,23 @@
         "sourceRecordPath": "packages/surface/content/mind_spike.json",
         "status": "closed-runtime-detached-table-adjudication",
         "unitId": "mind_spike"
-      },
-      {
-        "claimTag": "supported-profile",
-        "reason": "The Unit has no selected-identity-mbt evidence.",
-        "selectedIdentityStatus": "missing-witness",
-        "sourceRecordPath": "packages/surface/content/shining_smite.json",
-        "status": "supported-profile",
-        "unitId": "shining_smite"
       }
     ],
     "blockingRowsByStatus": {
-      "missing-witness": 1,
       "missing-witness-deferred-not-applicable": 1
     },
     "metrics": {
       "denominator": 152,
-      "numerator": 150,
-      "percent": "98.7%"
+      "numerator": 151,
+      "percent": "99.3%"
     },
     "readyRowsByStatus": {
-      "witness-present": 150
+      "witness-present": 151
     },
     "rowsByStatus": {
-      "missing-witness": 1,
       "missing-witness-deferred-not-applicable": 1,
       "not-required": 30,
-      "witness-present": 150
+      "witness-present": 151
     }
   },
   "sourceArtifacts": {

@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 407,
-      "numerator": 209,
-      "percent": "51.4%"
+      "numerator": 211,
+      "percent": "51.8%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 492,
-      "numerator": 254,
-      "percent": "51.6%"
+      "numerator": 256,
+      "percent": "52%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 255
+      "value": 257
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 142,
-      "numerator": 142,
+      "denominator": 144,
+      "numerator": 144,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 255,
-      "numerator": 255,
+      "denominator": 257,
+      "numerator": 257,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -83,18 +83,18 @@
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 132,
-      "numerator": 127,
-      "percent": "96.2%"
+      "numerator": 132,
+      "percent": "100%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 132,
-      "numerator": 127,
-      "percent": "96.2%"
+      "numerator": 132,
+      "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 144,
-      "numerator": 143,
-      "percent": "99.3%"
+      "numerator": 144,
+      "percent": "100%"
     },
     "runtimeMappingCoverage": {
       "denominator": 96,
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 142,
-      "numerator": 141,
-      "percent": "99.3%"
+      "denominator": 144,
+      "numerator": 144,
+      "percent": "100%"
     },
     "supportedProfileCoverage": {
-      "denominator": 210,
-      "numerator": 142,
-      "percent": "67.6%"
+      "denominator": 212,
+      "numerator": 144,
+      "percent": "67.9%"
     }
   },
   "metricSemantics": [
@@ -3900,13 +3900,13 @@
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 132,
-        "numerator": 127,
-        "percent": "96.2%"
+        "numerator": 132,
+        "percent": "100%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 132,
-        "numerator": 127,
-        "percent": "96.2%"
+        "numerator": 132,
+        "percent": "100%"
       }
     },
     "profileKinds": [
@@ -4975,8 +4975,15 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Enlarge/Reduce creature branch applies save-gated one-step Size projection, Strength D20 Test roll modes, attack-hit damage adjustment, Concentration cleanup, and duration cleanup"
+          }
+        ],
         "profileId": "spell.invocation-creature-size-change",
         "profileKind": "spell-invocation"
       },
@@ -5247,8 +5254,15 @@
         "profileKind": "character-creation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION",
+            "runtime": "character-creation",
+            "status": "covered",
+            "title": "Character Creation finalizes Wizard spellbook learning choices from class-feature grants into existing spellbook Spell Access without adding a separate sheet spellbook roster"
+          }
+        ],
         "profileId": "character-creation.wizard-spellbook-learning-choice",
         "profileKind": "character-creation"
       },
@@ -5583,8 +5597,15 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Levitate creature branch applies save-gated suspension, caller-selected altitude, caster Magic Action control, witnessed target movement, and cleanup"
+          }
+        ],
         "profileId": "spell.invocation-levitated-creature",
         "profileKind": "spell-invocation"
       },
@@ -5725,14 +5746,28 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
+            "runtime": "character-sheet",
+            "status": "covered",
+            "title": "Character Sheet projects retained class-feature always-prepared Spell Access without duplicating class prepared-spell state"
+          }
+        ],
         "profileId": "character-sheet.class-feature-prepared-spell-access",
         "profileKind": "character-sheet"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
+            "runtime": "character-sheet",
+            "status": "covered",
+            "title": "Character Sheet projects retained class-feature always-prepared Spell Access without duplicating class prepared-spell state"
+          }
+        ],
         "profileId": "character-sheet.druid-circle-land-spell-access",
         "profileKind": "character-sheet"
       },
@@ -5759,8 +5794,8 @@
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
           "denominator": 144,
-          "numerator": 143,
-          "percent": "99.3%"
+          "numerator": 144,
+          "percent": "100%"
         }
       },
       "units": [
@@ -6613,11 +6648,18 @@
           "unitId": "dragons_breath"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
+                  "runtime": "character-sheet",
+                  "status": "covered",
+                  "title": "Character Sheet projects retained class-feature always-prepared Spell Access without duplicating class prepared-spell state"
+                }
+              ],
               "profileId": "character-sheet.druid-circle-land-spell-access",
               "profileKind": "character-sheet"
             }
@@ -9243,8 +9285,7 @@
       ],
       "evidenceTag": "selected-identity-mbt"
     },
-    "rowCount": 2,
-    "rows": [
+    "deferredNonApplicableRows": [
       {
         "catalogAdmissionStatus": "installed",
         "collectionId": "srd-5.2.1",
@@ -9262,25 +9303,10 @@
           "tag": "profile-subset-supported"
         },
         "unitId": "mind_spike"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-mbt evidence.",
-          "status": "missing-witness"
-        },
-        "sourceRecordPath": "packages/surface/content/shining_smite.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-after-hit-damage-illumination"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "shining_smite"
       }
-    ]
+    ],
+    "rowCount": 0,
+    "rows": []
   },
   "taskClaims": [
     {
@@ -11910,7 +11936,9 @@
       "executableUnitDenominator": "installed Unit records in the group whose authored mechanics are executable",
       "installedUnitDenominator": "installed Unit records in the group; each Unit identity counts once",
       "profileFactDenominator": "sum of profileIds on supported-profile and profile-subset-supported Unit claims; one Unit can carry multiple profile facts",
-      "selectedIdentityReplayDenominator": "supported-profile and profile-subset-supported Unit identities in the group, excluding only whole-claim selected-identity not-applicable dispositions"
+      "selectedIdentityDeferredNonApplicableUnits": "profile-subset-supported Unit identities whose deferred mechanics are outside selected-identity replay, while the supported runtime portion still has no selected-identity replay witness",
+      "selectedIdentityReplayDenominator": "supported-profile and profile-subset-supported Unit identities in the group, excluding whole-claim selected-identity not-applicable dispositions; deferred-portion non-applicable rows remain visible in their own bucket",
+      "selectedIdentityReplayGapUnits": "Unit identities in the selected-identity replay denominator with no replay witness and no whole-claim or deferred-portion selected-identity non-applicable disposition"
     },
     "rows": [
       {
@@ -11920,6 +11948,7 @@
         "label": "Background Units",
         "profileFactDenominator": 0,
         "profileSubsetSupportedUnits": 0,
+        "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 0,
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 0,
@@ -11933,6 +11962,7 @@
         "label": "Feat Units",
         "profileFactDenominator": 5,
         "profileSubsetSupportedUnits": 0,
+        "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 5,
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 5,
@@ -11940,16 +11970,17 @@
         "unsupportedOrOtherUnits": 3
       },
       {
-        "executableUnitDenominator": 124,
-        "installedUnitDenominator": 124,
+        "executableUnitDenominator": 126,
+        "installedUnitDenominator": 126,
         "kind": "spell",
         "label": "Spell Units",
-        "profileFactDenominator": 127,
+        "profileFactDenominator": 131,
         "profileSubsetSupportedUnits": 20,
-        "selectedIdentityReplayDenominator": 106,
-        "selectedIdentityReplayGapUnits": 2,
-        "selectedIdentityReplayWitnessUnits": 104,
-        "supportedProfileUnits": 86,
+        "selectedIdentityDeferredNonApplicableUnits": 1,
+        "selectedIdentityReplayDenominator": 108,
+        "selectedIdentityReplayGapUnits": 0,
+        "selectedIdentityReplayWitnessUnits": 107,
+        "supportedProfileUnits": 88,
         "unsupportedOrOtherUnits": 18
       },
       {
@@ -11959,6 +11990,7 @@
         "label": "Class-feature Units",
         "profileFactDenominator": 85,
         "profileSubsetSupportedUnits": 16,
+        "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 61,
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 61,
@@ -20383,6 +20415,125 @@
         "status": "installed"
       },
       "claim": {
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "table/spatial witness owner",
+          "reason": "Promoted battle runtime owns the Dragon's Breath initial cast, target-attached granted-action state, Magic action discovery and spending, save-for-half damage, slot scaling, and cleanup. Automatic Cone geometry and affected-creature membership derivation remain caller/table spatial witnesses consumed by the runtime."
+        },
+        "profileIds": [
+          "spell.invocation-dragons-breath-initial",
+          "spell.invocation-dragons-breath-granted-action"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Bonus Action prepared spell cast with a level-2-or-higher Spell Slot",
+          "caster-selected damage type retained from the authored Acid, Cold, Fire, Lightning, or Poison choice hole at cast time",
+          "one willing touched creature target attachment through caller-supplied target facts",
+          "caster-owned Concentration for up to 1 minute",
+          "target-attached active effect stores chosen damage type, original slot level, and the caster Spell Save DC captured at cast time",
+          "target-granted Magic action discovery and execution for the attached creature",
+          "caller/table-owned 15-foot Cone placement and affected-creature area membership witnesses consumed by the breath action",
+          "Dexterity save-for-half damage using the retained caster Spell Save DC",
+          "slot-scaled breath damage using the retained original slot level and chosen damage type",
+          "target Magic action spending on accepted breath execution",
+          "active effect is removed when the caster's Concentration ends or its duration expires"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dragons-breath.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-dragons-breath-initial",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the authored Dragon's Breath ongoing-effect Surface shape, caller-supplied one willing touched creature target facts, a caster-selected damage type from the authored damage-type hole, and a selected level-2-or-higher Spell Slot. It owns Bonus Action and Spell Slot spending, caster-owned Concentration up to 1 minute, target-attached active effect replacement for the same caster and spell, chosen damage type retention, original slot level retention, caster Spell Save DC retention at cast time, and cleanup when the caster's Concentration ends. The target-granted Magic action, 15-foot Cone placement, affected-creature area membership, Dexterity save-for-half damage, and slot-scaled breath damage execution remain outside this profile and are owned by L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST"
+          ],
+          "title": "Spell invocation stores Dragon's Breath target-attached breath effect state",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/dragons-breath-initial-effect.mbt.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dragons-breath.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "spell.invocation-dragons-breath-granted-action",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/dragons-breath.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+            "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+            "packages/battle-runtime/src/battle-subjects.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the target-attached Dragon's Breath effect created by the initial cast, caller/table 15-foot Cone area membership facts, Dexterity Saving Throw outcomes, and a slot-scaled damage roll. It owns target-side Magic action discovery and spending, retained damage type and original slot-level damage dice, retained caster Spell Save DC for the Dexterity save, failed-save full damage, successful-save half damage, and shared damage lifecycle integration for Concentration and zero-Hit-Point follow-up holes. Automatic Cone geometry and affected-creature derivation remain table/caller facts at the fill boundary.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION"
+          ],
+          "title": "Spell invocation grants Dragon's Breath target Magic action with Cone save-for-half damage",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/dragons-breath-granted-action.mbt.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dragons-breath.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/dragons_breath.json",
+      "unitId": "dragons_breath"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "deferredMechanics": [
           {
             "followUpTaskId": "L12G-FOLLOWUP-ENHANCE-ABILITY-UPCAST-PER-TARGET-ABILITIES",
@@ -23662,6 +23813,144 @@
         "status": "installed"
       },
       "claim": {
+        "deferredMechanics": [],
+        "profileIds": [
+          "spell.invocation-ray-of-enfeeblement-d20-lifecycle",
+          "spell.invocation-ray-of-enfeeblement-damage-penalty"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action and level-2-or-higher Spell Slot spend",
+          "one creature target within 60 feet",
+          "Constitution save gate",
+          "success-side Disadvantage on the target's next attack roll until the start of the caster's next turn",
+          "failed-save Disadvantage on Strength-based D20 Tests: Strength attack rolls with explicit attack ability, Strength Ability Checks, and Strength Saving Throws",
+          "failed-save subtraction of 1d8 from positive damage rolls made by the affected target before target-side Resistance, damage reductions, Concentration saves, zero-Hit-Point disposition, and damage application",
+          "end-of-target-turn Constitution repeat save ending the active spell effects on success",
+          "caster Concentration cleanup for success-side and failed-save Ray effects"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-ray-of-enfeeblement.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-ray-of-enfeeblement-d20-lifecycle",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt",
+            "packages/battle-runtime/battle-runtime-model.qnt",
+            "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
+            "packages/battle-runtime/battle-runtime-spell-attack.qnt",
+            "packages/battle-runtime/battle-runtime-timed-effects.qnt",
+            "packages/battle-runtime/battle-runtime-concentration.qnt",
+            "packages/battle-runtime/battle-runtime-armor-class.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-profiles-save-gates.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
+            "packages/battle-runtime/src/battle-reducer/hole-helpers.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+          ],
+          "taskRefs": [
+            "L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE"
+          ],
+          "title": "Spell save gate applies Ray of Enfeeblement D20 Test lifecycle effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/ray-of-enfeeblement-lifecycle.mbt.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-ray-of-enfeeblement.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "spell.invocation-ray-of-enfeeblement-damage-penalty",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/active-effect/types.ts",
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-fill-set.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-offhand.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-runtime-protocol.ts",
+            "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
+            "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+            "packages/battle-runtime/src/battle-reducer/opportunity-attacks.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-profiles-save-gates.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-burst.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-sequence.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-release.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+          ],
+          "sourceBoundary": "The runtime consumes Ray of Enfeeblement's failed-save active effect as one source-side 1d8 damage-roll penalty owned by the affected target. It requests a typed rolled-dice hole keyed to each positive source damage-roll hole, subtracts the roll from by-type damage before target-side Resistance, spell damage reductions, Concentration saves, zero-Hit-Point disposition, and damage application, and removes the paired penalty with the Ray lifecycle effect through repeat-save success or Concentration cleanup without storing duplicate damage state.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY"
+          ],
+          "title": "Ray of Enfeeblement failed save subtracts 1d8 from source damage rolls",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/ray-of-enfeeblement-lifecycle.mbt.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-ray-of-enfeeblement.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-ice-knife.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/ray_of_enfeeblement.json",
+      "unitId": "ray_of_enfeeblement"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "profileIds": [
           "spell.invocation-damage-save-or-attack",
           "spell.readied-action-time-spell"
@@ -26157,6 +26446,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-SPELL-SHINING-SMITE"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/shining-smite-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "B25-SHINING-SMITE-IDENTITY-WITNESS"
         }
       ],
       "executableMechanics": true,
@@ -28833,130 +29127,6 @@
       "authoredSurfaceDuplicateIdCount": 1,
       "catalogAdmission": {
         "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "battleReadinessClosure": {
-          "kind": "table-spatial-derivation",
-          "owner": "table/spatial witness owner",
-          "reason": "Promoted battle runtime owns the Dragon's Breath initial cast, target-attached granted-action state, Magic action discovery and spending, save-for-half damage, slot scaling, and cleanup. Automatic Cone geometry and affected-creature membership derivation remain caller/table spatial witnesses consumed by the runtime."
-        },
-        "profileIds": [
-          "spell.invocation-dragons-breath-initial",
-          "spell.invocation-dragons-breath-granted-action"
-        ],
-        "rawRequirementIds": [
-          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
-        ],
-        "supportedMechanics": [
-          "Bonus Action prepared spell cast with a level-2-or-higher Spell Slot",
-          "caster-selected damage type retained from the authored Acid, Cold, Fire, Lightning, or Poison choice hole at cast time",
-          "one willing touched creature target attachment through caller-supplied target facts",
-          "caster-owned Concentration for up to 1 minute",
-          "target-attached active effect stores chosen damage type, original slot level, and the caster Spell Save DC captured at cast time",
-          "target-granted Magic action discovery and execution for the attached creature",
-          "caller/table-owned 15-foot Cone placement and affected-creature area membership witnesses consumed by the breath action",
-          "Dexterity save-for-half damage using the retained caster Spell Save DC",
-          "slot-scaled breath damage using the retained original slot level and chosen damage type",
-          "target Magic action spending on accepted breath execution",
-          "active effect is removed when the caster's Concentration ends or its duration expires"
-        ],
-        "tag": "supported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [
-        {
-          "ownerPath": "packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
-          "taskId": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dragons-breath.test.ts",
-          "tag": "deterministic-admission-projection",
-          "taskId": "L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST"
-        }
-      ],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [
-        {
-          "id": "spell.invocation-dragons-breath-initial",
-          "profileKind": "spell-invocation",
-          "qntOwners": [
-            "packages/battle-runtime/battle-runtime.qnt"
-          ],
-          "runtimeOwners": [
-            "packages/battle-runtime/src/battle-reducer.ts",
-            "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts",
-            "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
-            "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
-          ],
-          "sourceBoundary": "The runtime consumes the authored Dragon's Breath ongoing-effect Surface shape, caller-supplied one willing touched creature target facts, a caster-selected damage type from the authored damage-type hole, and a selected level-2-or-higher Spell Slot. It owns Bonus Action and Spell Slot spending, caster-owned Concentration up to 1 minute, target-attached active effect replacement for the same caster and spell, chosen damage type retention, original slot level retention, caster Spell Save DC retention at cast time, and cleanup when the caster's Concentration ends. The target-granted Magic action, 15-foot Cone placement, affected-creature area membership, Dexterity save-for-half damage, and slot-scaled breath damage execution remain outside this profile and are owned by L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION.",
-          "taskRefs": [
-            "L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST"
-          ],
-          "title": "Spell invocation stores Dragon's Breath target-attached breath effect state",
-          "verificationOwners": [
-            {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/dragons-breath-initial-effect.mbt.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dragons-breath.test.ts"
-            }
-          ]
-        },
-        {
-          "id": "spell.invocation-dragons-breath-granted-action",
-          "profileKind": "spell-invocation",
-          "qntOwners": [
-            "packages/battle-runtime/battle-runtime.qnt"
-          ],
-          "runtimeOwners": [
-            "packages/battle-runtime/src/battle-reducer.ts",
-            "packages/battle-runtime/src/battle-reducer/dragons-breath.ts",
-            "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
-            "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
-            "packages/battle-runtime/src/battle-subjects.ts"
-          ],
-          "sourceBoundary": "The runtime consumes the target-attached Dragon's Breath effect created by the initial cast, caller/table 15-foot Cone area membership facts, Dexterity Saving Throw outcomes, and a slot-scaled damage roll. It owns target-side Magic action discovery and spending, retained damage type and original slot-level damage dice, retained caster Spell Save DC for the Dexterity save, failed-save full damage, successful-save half damage, and shared damage lifecycle integration for Concentration and zero-Hit-Point follow-up holes. Automatic Cone geometry and affected-creature derivation remain table/caller facts at the fill boundary.",
-          "taskRefs": [
-            "L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION"
-          ],
-          "title": "Spell invocation grants Dragon's Breath target Magic action with Cone save-for-half damage",
-          "verificationOwners": [
-            {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/dragons-breath-granted-action.mbt.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-dragons-breath.test.ts"
-            }
-          ]
-        }
-      ],
-      "sourceRecordPath": "packages/surface/content/dragons_breath.json",
-      "unitId": "dragons_breath"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
           "category": "unsupported-widening-pressure",
           "planningLane": "QMBT18",
           "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
@@ -31328,149 +31498,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/ranger_tireless.json",
       "unitId": "ranger_tireless"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "deferredMechanics": [],
-        "profileIds": [
-          "spell.invocation-ray-of-enfeeblement-d20-lifecycle",
-          "spell.invocation-ray-of-enfeeblement-damage-penalty"
-        ],
-        "rawRequirementIds": [
-          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
-        ],
-        "supportedMechanics": [
-          "Magic Action and level-2-or-higher Spell Slot spend",
-          "one creature target within 60 feet",
-          "Constitution save gate",
-          "success-side Disadvantage on the target's next attack roll until the start of the caster's next turn",
-          "failed-save Disadvantage on Strength-based D20 Tests: Strength attack rolls with explicit attack ability, Strength Ability Checks, and Strength Saving Throws",
-          "failed-save subtraction of 1d8 from positive damage rolls made by the affected target before target-side Resistance, damage reductions, Concentration saves, zero-Hit-Point disposition, and damage application",
-          "end-of-target-turn Constitution repeat save ending the active spell effects on success",
-          "caster Concentration cleanup for success-side and failed-save Ray effects"
-        ],
-        "tag": "supported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [
-        {
-          "ownerPath": "packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
-          "taskId": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-ray-of-enfeeblement.test.ts",
-          "tag": "deterministic-admission-projection",
-          "taskId": "L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE"
-        }
-      ],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [
-        {
-          "id": "spell.invocation-ray-of-enfeeblement-d20-lifecycle",
-          "profileKind": "spell-invocation",
-          "qntOwners": [
-            "packages/battle-runtime/battle-runtime.qnt",
-            "packages/battle-runtime/battle-runtime-model.qnt",
-            "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
-            "packages/battle-runtime/battle-runtime-spell-attack.qnt",
-            "packages/battle-runtime/battle-runtime-timed-effects.qnt",
-            "packages/battle-runtime/battle-runtime-concentration.qnt",
-            "packages/battle-runtime/battle-runtime-armor-class.qnt"
-          ],
-          "runtimeOwners": [
-            "packages/battle-runtime/src/battle-reducer.ts",
-            "packages/battle-runtime/src/battle-reducer/spells-profiles-save-gates.ts",
-            "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
-            "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
-            "packages/battle-runtime/src/battle-reducer/hole-helpers.ts",
-            "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
-            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
-          ],
-          "taskRefs": [
-            "L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE"
-          ],
-          "title": "Spell save gate applies Ray of Enfeeblement D20 Test lifecycle effects",
-          "verificationOwners": [
-            {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/ray-of-enfeeblement-lifecycle.mbt.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-ray-of-enfeeblement.test.ts"
-            }
-          ]
-        },
-        {
-          "id": "spell.invocation-ray-of-enfeeblement-damage-penalty",
-          "profileKind": "spell-invocation",
-          "qntOwners": [
-            "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
-          ],
-          "runtimeOwners": [
-            "packages/battle-runtime/src/active-effect/types.ts",
-            "packages/battle-runtime/src/battle-reducer.ts",
-            "packages/battle-runtime/src/battle-reducer/attack-fill-set.ts",
-            "packages/battle-runtime/src/battle-reducer/attack-main.ts",
-            "packages/battle-runtime/src/battle-reducer/attack-offhand.ts",
-            "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
-            "packages/battle-runtime/src/battle-reducer/battle-runtime-protocol.ts",
-            "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
-            "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
-            "packages/battle-runtime/src/battle-reducer/opportunity-attacks.ts",
-            "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
-            "packages/battle-runtime/src/battle-reducer/spells-profiles-save-gates.ts",
-            "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-burst.ts",
-            "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-sequence.ts",
-            "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
-            "packages/battle-runtime/src/battle-reducer/spells-resolve-release.ts",
-            "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
-            "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
-            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
-          ],
-          "sourceBoundary": "The runtime consumes Ray of Enfeeblement's failed-save active effect as one source-side 1d8 damage-roll penalty owned by the affected target. It requests a typed rolled-dice hole keyed to each positive source damage-roll hole, subtracts the roll from by-type damage before target-side Resistance, spell damage reductions, Concentration saves, zero-Hit-Point disposition, and damage application, and removes the paired penalty with the Ray lifecycle effect through repeat-save success or Concentration cleanup without storing duplicate damage state.",
-          "taskRefs": [
-            "L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY"
-          ],
-          "title": "Ray of Enfeeblement failed save subtracts 1d8 from source damage rolls",
-          "verificationOwners": [
-            {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/ray-of-enfeeblement-lifecycle.mbt.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-ray-of-enfeeblement.test.ts"
-            },
-            {
-              "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/battle-runtime-ice-knife.test.ts"
-            }
-          ]
-        }
-      ],
-      "sourceRecordPath": "packages/surface/content/ray_of_enfeeblement.json",
-      "unitId": "ray_of_enfeeblement"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

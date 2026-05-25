@@ -54,6 +54,7 @@
 {"profileId":"spell.invocation-sleep-repeat-save-lifecycle","obligationIds":["BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE"]}
 {"profileId":"spell.invocation-make-stable","obligationIds":["BATTLE.SPELL.MAKE_STABLE_LIFECYCLE"]}
 {"profileId":"spell.invocation-roll-modifier","obligationIds":["BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS"]}
+{"profileId":"spell.invocation-levitated-creature","obligationIds":["BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE"]}
 {"profileId":"spell.invocation-ray-of-enfeeblement-d20-lifecycle","obligationIds":["BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE"]}
 {"profileId":"spell.invocation-ray-of-enfeeblement-damage-penalty","obligationIds":["BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY"]}
 {"profileId":"spell.creature-type-protection-and-charm","obligationIds":["BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION"]}
@@ -92,6 +93,8 @@
 {"profileId":"character-sheet.short-rest-spell-slot-recovery","obligationIds":["SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS"]}
 {"profileId":"character-sheet.pact-slot-recovery","obligationIds":["SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS"]}
 {"profileId":"character-sheet.spellbook-ritual-invocation","obligationIds":["SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION"]}
+{"profileId":"character-sheet.class-feature-prepared-spell-access","obligationIds":["SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION"]}
+{"profileId":"character-sheet.druid-circle-land-spell-access","obligationIds":["SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION"]}
 {"profileId":"character-sheet.weapon-mastery-reselection","obligationIds":["SHEET.WEAPON_MASTERY.RESELECTION"]}
 {"profileId":"character-sheet.healing-resource-action","obligationIds":["SHEET.FEATURE_RESOURCES.TRANSITIONS"]}
 {"profileId":"character-sheet.class-feature-use-count-resource","obligationIds":["SHEET.FEATURE_RESOURCES.TRANSITIONS"]}
@@ -113,11 +116,13 @@
 {"profileId":"character-creation.skill-expertise-choice","obligationIds":["CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION"]}
 {"profileId":"character-creation.class-feature-resource-projection","obligationIds":["CREATION.CLASS_FEATURE_RESOURCE.PROJECTION"]}
 {"profileId":"character-creation.class-feature-source-fact-projection","obligationIds":["CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION"]}
+{"profileId":"character-creation.wizard-spellbook-learning-choice","obligationIds":["CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION"]}
 {"profileId":"spell.invocation-web-restraint-hazard","obligationIds":["BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE"]}
 {"profileId":"character-sheet.ability-check-proficiency-bonus","obligationIds":["SHEET.ABILITY_CHECK.PROFICIENCY_BONUS"]}
 {"profileId":"unit-feature.druid-wild-shape-known-form","obligationIds":["BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE"]}
 {"profileId":"spell.invocation-object-contact-damage","obligationIds":["BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE"]}
 {"profileId":"spell.invocation-gust-of-wind-line","obligationIds":["BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE"]}
+{"profileId":"spell.invocation-creature-size-change","obligationIds":["BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE"]}
 {"profileId":"spell.invocation-ongoing-spell-ending","obligationIds":["BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING"]}
 {"profileId":"unit-feature.metamagic-cast-governor-quickened","obligationIds":["BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR"]}
 {"profileId":"character-sheet.spell-rest-benefit-application","obligationIds":["SHEET.SPELL_REST_BENEFIT.APPLICATION"]}

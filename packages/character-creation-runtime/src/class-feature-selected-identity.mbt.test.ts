@@ -1,4 +1,5 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B4-CLASS-FEATURE-IDENTITY-BATCH-1 bard_expertise cleric_channel_divinity druid_wild_shape druid_wild_companion
+// KERNEL-COVERAGE: parity-witness CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION
 // UNIT-IDENTITY-MBT-REPLAY: B4-CLASS-FEATURE-IDENTITY-BATCH-1 bard_expertise doSelectBardExpertise
 // UNIT-IDENTITY-MBT-REPLAY: B4-CLASS-FEATURE-IDENTITY-BATCH-1 cleric_channel_divinity doProjectClericChannelDivinity
 // UNIT-IDENTITY-MBT-REPLAY: B4-CLASS-FEATURE-IDENTITY-BATCH-1 druid_wild_shape doProjectDruidWildShape

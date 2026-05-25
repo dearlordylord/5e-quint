@@ -467,6 +467,157 @@ describe("SRD Unit catalog boundary", () => {
     }
   });
 
+  test("installs Dragon's Breath with authored SRD spell facts", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const dragonsBreath = result.catalog.requireUnit("dragons_breath");
+
+    expect(dragonsBreath).toMatchObject({
+      id: "dragons_breath",
+      kind: "spell",
+      provenance: {
+        kind: "srd-5.2.1",
+        section: "Spells/Descriptions-A-D#Dragon's Breath",
+      },
+    });
+    expect("evidence" in dragonsBreath).toBe(false);
+    if (dragonsBreath.kind !== "spell") return;
+    expect(dragonsBreath.mechanics).toMatchObject({
+      family: "ongoing_effect",
+      level: 2,
+      school: "transmutation",
+      castingTime: { kind: "bonus_action" },
+      range: { kind: "touch" },
+      duration: { kind: "concentration", upTo: { amount: 1, unit: "minute" } },
+      attachment: {
+        kind: "hole",
+        holeId: "dragons_breath_target",
+        value: {
+          kind: "target",
+          selection: {
+            disposition: "willing",
+            mode: "one",
+            targetKinds: ["creature"],
+          },
+        },
+      },
+      operations: [
+        {
+          trigger: {
+            kind: "on_attached_spends_action",
+            cost: { kind: "standard_action", action: "magic" },
+          },
+          effect: {
+            kind: "save_gate",
+            attachment: {
+              kind: "area",
+              origin: { kind: "on_attached_creature" },
+              shape: { kind: "cone", lengthFeet: 15 },
+            },
+            ability: "dex",
+            dc: { kind: "caster_spell_save_dc" },
+            onFail: {
+              kind: "damage",
+              damageType: {
+                kind: "hole",
+                holeId: "dragons_breath_damage_type",
+                value: {
+                  kind: "choice",
+                  options: ["acid", "cold", "fire", "lightning", "poison"],
+                },
+              },
+              amount: {
+                kind: "linear_per_level",
+                axis: "slot",
+                base: { dice: 3, dieSize: 6 },
+                perLevel: { dice: 1 },
+                startingAtLevel: 2,
+              },
+            },
+            onSuccess: { kind: "half_damage" },
+          },
+        },
+      ],
+    });
+  });
+
+  test("installs Ray of Enfeeblement with authored SRD spell facts", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const rayOfEnfeeblement = result.catalog.requireUnit("ray_of_enfeeblement");
+
+    expect(rayOfEnfeeblement).toMatchObject({
+      id: "ray_of_enfeeblement",
+      kind: "spell",
+      provenance: {
+        kind: "srd-5.2.1",
+        section: "Spells/Descriptions-Q-R#Ray of Enfeeblement",
+      },
+    });
+    expect("evidence" in rayOfEnfeeblement).toBe(false);
+    if (rayOfEnfeeblement.kind !== "spell") return;
+    expect(rayOfEnfeeblement.mechanics).toMatchObject({
+      family: "activation",
+      level: 2,
+      school: "necromancy",
+      castingTime: { kind: "action" },
+      range: { kind: "point", feet: 60 },
+      duration: { kind: "concentration", upTo: { amount: 1, unit: "minute" } },
+      phases: [
+        {
+          kind: "save_gate",
+          ability: "con",
+          dc: { kind: "caster_spell_save_dc" },
+          attachment: {
+            kind: "hole",
+            holeId: "ray_of_enfeeblement_target",
+            value: {
+              kind: "target",
+              selection: { mode: "one" },
+            },
+          },
+          onSuccess: {
+            kind: "modify_roll_advantage",
+            mode: "disadvantage",
+            on: ["attack_roll"],
+            count: 1,
+            expiresOn: { kind: "caster_turn_start" },
+          },
+          onFail: {
+            kind: "composite",
+            effects: [
+              {
+                kind: "modify_roll_advantage",
+                mode: "disadvantage",
+                on: ["attack_roll", "ability_check", "saving_throw"],
+                abilityFilter: ["str"],
+              },
+              {
+                kind: "modify_damage_numeric",
+                delta: {
+                  kind: "fixed_dice",
+                  sign: "-",
+                  dice: 1,
+                  dieSize: 8,
+                },
+              },
+            ],
+          },
+          repeatSaves: [
+            {
+              cadence: "end_of_target_turn",
+              onSuccess: "ends_on_target",
+            },
+          ],
+        },
+      ],
+    });
+  });
+
   test("decodes Alter Self as a self option mode with lossless natural weapon growth facts", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 

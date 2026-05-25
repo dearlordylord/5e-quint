@@ -256,6 +256,17 @@ function selectedIdentityEvidenceStatus(unit, selectedIdentityMbtEvidenceTag) {
   };
 }
 
+function isSelectedIdentityReplayRequiredGap(selectedIdentity) {
+  return selectedIdentity.status === selectedIdentityStatus.missingWitness;
+}
+
+function isSelectedIdentityDeferredNonApplicable(selectedIdentity) {
+  return (
+    selectedIdentity.status ===
+    selectedIdentityStatus.missingWitnessDeferredNotApplicable
+  );
+}
+
 function assertMetricDefinitionCoverage(matrixMetrics) {
   const metricKeys = new Set(Object.keys(matrixMetrics));
   const definitionKeys = new Set(
@@ -531,7 +542,7 @@ function buildSelectedIdentityReplayGapReport({
   selectedIdentityMbtEvidenceTag,
   units,
 }) {
-  const rows = units
+  const rowsWithStatus = units
     .filter((unit) => isSelectedIdentityReplayGapClaim(unit.claim))
     .map((unit) => ({
       unit,
@@ -559,13 +570,20 @@ function buildSelectedIdentityReplayGapReport({
         left.kind.localeCompare(right.kind) ||
         left.unitId.localeCompare(right.unitId),
     );
+  const replayRequiredRows = rowsWithStatus.filter(
+    (row) => isSelectedIdentityReplayRequiredGap(row.selectedIdentity),
+  );
+  const deferredNonApplicableRows = rowsWithStatus.filter(
+    (row) => isSelectedIdentityDeferredNonApplicable(row.selectedIdentity),
+  );
   return stable({
     criteria: {
       evidenceTag: selectedIdentityMbtEvidenceTag,
       claimTags: selectedIdentityReplayGapClaimTags,
     },
-    rowCount: rows.length,
-    rows,
+    deferredNonApplicableRows,
+    rowCount: replayRequiredRows.length,
+    rows: replayRequiredRows,
   });
 }
 
@@ -581,16 +599,31 @@ function buildUnitGroupDenominatorAudit({
     const profileClaimUnits = groupUnits.filter((unit) =>
       profileClaimTags.has(unit.claim?.tag),
     );
-    const selectedIdentityScopedUnits = profileClaimUnits.filter(
-      (unit) =>
-        selectedIdentityEvidenceStatus(unit, selectedIdentityMbtEvidenceTag)
-          .status !== selectedIdentityStatus.notApplicable,
-    );
+    const selectedIdentityScopedUnits = profileClaimUnits
+      .map((unit) => ({
+        unit,
+        selectedIdentity: selectedIdentityEvidenceStatus(
+          unit,
+          selectedIdentityMbtEvidenceTag,
+        ),
+      }))
+      .filter(
+        ({ selectedIdentity }) =>
+          selectedIdentity.status !== selectedIdentityStatus.notApplicable,
+      );
     const selectedIdentityWitnessUnits = selectedIdentityScopedUnits.filter(
-      (unit) =>
-        selectedIdentityEvidenceStatus(unit, selectedIdentityMbtEvidenceTag)
-          .status === selectedIdentityStatus.witnessPresent,
+      ({ selectedIdentity }) =>
+        selectedIdentity.status === selectedIdentityStatus.witnessPresent,
     );
+    const selectedIdentityReplayGapUnits = selectedIdentityScopedUnits.filter(
+      ({ selectedIdentity }) =>
+        isSelectedIdentityReplayRequiredGap(selectedIdentity),
+    );
+    const selectedIdentityDeferredNonApplicableUnits =
+      selectedIdentityScopedUnits.filter(
+        ({ selectedIdentity }) =>
+          isSelectedIdentityDeferredNonApplicable(selectedIdentity),
+      );
     return {
       kind,
       label,
@@ -611,10 +644,11 @@ function buildUnitGroupDenominatorAudit({
         0,
       ),
       selectedIdentityReplayDenominator: selectedIdentityScopedUnits.length,
+      selectedIdentityDeferredNonApplicableUnits:
+        selectedIdentityDeferredNonApplicableUnits.length,
       selectedIdentityReplayWitnessUnits:
         selectedIdentityWitnessUnits.length,
-      selectedIdentityReplayGapUnits:
-        selectedIdentityScopedUnits.length - selectedIdentityWitnessUnits.length,
+      selectedIdentityReplayGapUnits: selectedIdentityReplayGapUnits.length,
     };
   });
 
@@ -632,7 +666,11 @@ function buildUnitGroupDenominatorAudit({
       profileFactDenominator:
         "sum of profileIds on supported-profile and profile-subset-supported Unit claims; one Unit can carry multiple profile facts",
       selectedIdentityReplayDenominator:
-        "supported-profile and profile-subset-supported Unit identities in the group, excluding only whole-claim selected-identity not-applicable dispositions",
+        "supported-profile and profile-subset-supported Unit identities in the group, excluding whole-claim selected-identity not-applicable dispositions; deferred-portion non-applicable rows remain visible in their own bucket",
+      selectedIdentityDeferredNonApplicableUnits:
+        "profile-subset-supported Unit identities whose deferred mechanics are outside selected-identity replay, while the supported runtime portion still has no selected-identity replay witness",
+      selectedIdentityReplayGapUnits:
+        "Unit identities in the selected-identity replay denominator with no replay witness and no whole-claim or deferred-portion selected-identity non-applicable disposition",
     },
     rows,
   });
@@ -791,7 +829,7 @@ function renderMetricSemantics(definition) {
 }
 
 function renderUnitGroupDenominatorAuditRow(row) {
-  return `| ${row.label} | ${row.installedUnitDenominator} | ${row.executableUnitDenominator} | ${row.supportedProfileUnits} | ${row.profileSubsetSupportedUnits} | ${row.unsupportedOrOtherUnits} | ${row.profileFactDenominator} | ${row.selectedIdentityReplayWitnessUnits}/${row.selectedIdentityReplayDenominator} | ${row.selectedIdentityReplayGapUnits} |`;
+  return `| ${row.label} | ${row.installedUnitDenominator} | ${row.executableUnitDenominator} | ${row.supportedProfileUnits} | ${row.profileSubsetSupportedUnits} | ${row.unsupportedOrOtherUnits} | ${row.profileFactDenominator} | ${row.selectedIdentityReplayWitnessUnits}/${row.selectedIdentityReplayDenominator} | ${row.selectedIdentityReplayGapUnits} | ${row.selectedIdentityDeferredNonApplicableUnits} |`;
 }
 
 function groupAuthoredNotInCatalogByDisposition(units) {
@@ -1056,10 +1094,10 @@ function renderReport(
     "",
     "## Unit Group Denominator Audit",
     "",
-    "Background, feat, spell, and class-feature groups are counted from installed Unit identities and supported profile facts. The selected-identity replay column is scoped to Unit identities that need replay evidence; it excludes only whole-claim non-applicable dispositions.",
+    "Background, feat, spell, and class-feature groups are counted from installed Unit identities and supported profile facts. The selected-identity replay denominator is scoped to Unit identities that need replay evidence; whole-claim non-applicable dispositions are excluded, while deferred-portion non-applicable dispositions remain visible in a separate bucket.",
     "",
-    "| Group | Installed Unit denominator | Executable Unit denominator | Supported-profile Units | Profile-subset Units | Unsupported/other Units | Profile fact denominator | Selected-identity replay witnesses/denominator | Selected-identity replay gaps |",
-    "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+    "| Group | Installed Unit denominator | Executable Unit denominator | Supported-profile Units | Profile-subset Units | Unsupported/other Units | Profile fact denominator | Selected-identity replay witnesses/denominator | Selected-identity replay gaps | Deferred selected-identity non-applicable |",
+    "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     ...matrix.unitGroupDenominatorAudit.rows.map(
       renderUnitGroupDenominatorAuditRow,
     ),
@@ -1238,7 +1276,8 @@ function renderReport(
     "",
     `This generated view lists ${selectedIdentityReplayGapClaimTags
       .map((tag) => `\`${tag}\``)
-      .join(" and ")} Units that have no \`${selectedIdentityMbtEvidenceTag}\` evidence row. Whole-claim non-applicable dispositions are excluded; deferred-portion non-applicable dispositions remain visible with their selected identity status.`,
+      .join(" and ")} Units that have no \`${selectedIdentityMbtEvidenceTag}\` evidence row and no selected-identity non-applicable disposition at the whole-claim or deferred-mechanics boundary.`,
+    "Deferred-portion non-applicable rows are not replay gaps; they are listed in the next section so they remain visible without being counted as missing replay witnesses.",
     "",
     "| Unit | Claim | Selected identity | Catalog | Collection | Kind | Profiles | Source |",
     "| --- | --- | --- | --- | --- | --- | --- | --- |",
@@ -1252,6 +1291,25 @@ function renderReport(
             .join(", ");
           return `| \`${row.unitId}\` | ${row.support.tag} | ${row.selectedIdentity.status} | ${row.catalogAdmissionStatus} | ${row.collectionId} | ${row.kind} | ${profiles} | \`${row.sourceRecordPath}\` |`;
         })),
+    "",
+    "## Selected Identity Deferred Non-Applicable",
+    "",
+    "These profile-subset rows have no selected-identity replay witness, but the declared selected-identity non-applicable reason applies only to deferred mechanics outside promoted replay ownership.",
+    "",
+    "| Unit | Claim | Selected identity | Owner | Reason | Catalog | Collection | Kind | Profiles | Source |",
+    "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+    ...(matrix.selectedIdentityReplayGaps.deferredNonApplicableRows.length === 0
+      ? [
+          "| _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ |",
+        ]
+      : matrix.selectedIdentityReplayGaps.deferredNonApplicableRows.map(
+          (row) => {
+            const profiles = row.support.profileIds
+              .map((id) => `\`${id}\``)
+              .join(", ");
+            return `| \`${row.unitId}\` | ${row.support.tag} | ${row.selectedIdentity.status} | ${row.selectedIdentity.owner} | ${row.selectedIdentity.reason} | ${row.catalogAdmissionStatus} | ${row.collectionId} | ${row.kind} | ${profiles} | \`${row.sourceRecordPath}\` |`;
+          },
+        )),
     "",
     "## Unsupported And Widening Pressure",
     "",

@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION
 
 module characterSheetClassFeatureSelectedIdentityMbt {
   var qLastResult: str

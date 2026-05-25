@@ -62,6 +62,7 @@ import darkvisionInput from "../../content/darkvision.json";
 import dispelMagicInput from "../../content/dispel_magic.json";
 import divineFavorInput from "../../content/divine_favor.json";
 import divineSmiteInput from "../../content/divine_smite.json";
+import dragonsBreathInput from "../../content/dragons_breath.json";
 import druidCircleOfTheLandSpellsInput from "../../content/druid_circle_of_the_land_spells.json";
 import druidDruidicInput from "../../content/druid_druidic.json";
 import druidPrimalOrderInput from "../../content/druid_primal_order.json";
@@ -165,6 +166,7 @@ import prayerOfHealingInput from "../../content/prayer_of_healing.json";
 import protectionFromEvilAndGoodInput from "../../content/protection_from_evil_and_good.json";
 import protectionFromPoisonInput from "../../content/protection_from_poison.json";
 import produceFlameInput from "../../content/produce_flame.json";
+import rayOfEnfeeblementInput from "../../content/ray_of_enfeeblement.json";
 import rangerDeftExplorerInput from "../../content/ranger_deft_explorer.json";
 import rangerExtraAttackInput from "../../content/ranger_extra_attack.json";
 import rangerFavoredEnemyInput from "../../content/ranger_favored_enemy.json";
@@ -516,6 +518,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     dissonantWhispersInput,
     divineFavorInput,
     divineSmiteInput,
+    dragonsBreathInput,
     enhanceAbilityInput,
     enlargeReduceInput,
     ensnaringStrikeInput,
@@ -559,6 +562,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     protectionFromEvilAndGoodInput,
     protectionFromPoisonInput,
     produceFlameInput,
+    rayOfEnfeeblementInput,
     rayOfFrostInput,
     rayOfSicknessInput,
     resistanceInput,

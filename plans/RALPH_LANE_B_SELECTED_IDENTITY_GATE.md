@@ -178,55 +178,55 @@ identity evidence or an explicit non-applicable classification.
     {
       "number": 28,
       "id": "B25-SHINING-SMITE-IDENTITY-WITNESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Backfill Shining Smite selected identity witness"
     },
     {
       "number": 29,
       "id": "B26-DEFERRED-IDENTITY-GAP-SEMANTICS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Clarify deferred selected identity gap semantics"
     },
     {
       "number": 30,
       "id": "B27-CREATURE-SIZE-RULES-KERNEL-MAPPING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Map creature size change profile to rules-kernel obligations"
     },
     {
       "number": 31,
       "id": "B28-WIZARD-SPELLBOOK-LEARNING-RULES-KERNEL-MAPPING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Map Wizard spellbook learning profile to rules-kernel obligations"
     },
     {
       "number": 32,
       "id": "B29-LEVITATED-CREATURE-RULES-KERNEL-MAPPING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Map levitated creature profile to rules-kernel obligations"
     },
     {
       "number": 33,
       "id": "B30-CLASS-FEATURE-PREPARED-SPELL-ACCESS-RULES-KERNEL-MAPPING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Map class feature prepared spell access profile to rules-kernel obligations"
     },
     {
       "number": 34,
       "id": "B31-DRUID-CIRCLE-LAND-SPELL-ACCESS-RULES-KERNEL-MAPPING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Map Druid Circle Land spell access profile to rules-kernel obligations"
     },
     {
       "number": 35,
       "id": "B32-DRAGONS-BREATH-CATALOG-ADMISSION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Repair Dragon's Breath catalog admission"
     },
     {
       "number": 36,
       "id": "B33-RAY-OF-ENFEEBLEMENT-CATALOG-ADMISSION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Repair Ray of Enfeeblement catalog admission"
     }
   ]
@@ -289,15 +289,15 @@ Lane B must not:
 | 25 | B22-FIND-FAMILIAR-IDENTITY-WITNESS - Backfill Find Familiar selected identity witness | done | none | Added focused selected-identity MBT evidence for `find_familiar`; generated selected-identity gaps no longer list it. |
 | 26 | B23-FIREBALL-IDENTITY-WITNESS - Backfill Fireball selected identity witness | done | none | Gap row: `fireball`, profile-subset-supported `spell.invocation-damage-save-or-attack`, installed Surface record. |
 | 27 | B24-LIGHTNING-BOLT-IDENTITY-WITNESS - Backfill Lightning Bolt selected identity witness | done | none | Gap row: `lightning_bolt`, supported-profile `spell.invocation-damage-save-or-attack`, installed Surface record. |
-| 28 | B25-SHINING-SMITE-IDENTITY-WITNESS - Backfill Shining Smite selected identity witness | ready-for-research | none | Gap row: `shining_smite`, supported-profile `spell.invocation-after-hit-damage-illumination`, installed Surface record. |
-| 29 | B26-DEFERRED-IDENTITY-GAP-SEMANTICS - Clarify deferred selected identity gap semantics | ready-for-research | none | Gap rows: `mind_spike` and `thaumaturgy` have deferred-portion non-applicable dispositions but still appear as selected identity gaps; decide whether the generated view needs a separate deferred-visible bucket or whole-claim non-applicable classification. |
-| 30 | B27-CREATURE-SIZE-RULES-KERNEL-MAPPING - Map creature size change profile to rules-kernel obligations | ready-for-research | none | Metric-honesty gap: `spell.invocation-creature-size-change` is unmapped in `rulesKernelProfileJoin`. |
-| 31 | B28-WIZARD-SPELLBOOK-LEARNING-RULES-KERNEL-MAPPING - Map Wizard spellbook learning profile to rules-kernel obligations | ready-for-research | none | Metric-honesty gap: `character-creation.wizard-spellbook-learning-choice` is unmapped in `rulesKernelProfileJoin`. |
-| 32 | B29-LEVITATED-CREATURE-RULES-KERNEL-MAPPING - Map levitated creature profile to rules-kernel obligations | ready-for-research | none | Metric-honesty gap: `spell.invocation-levitated-creature` is unmapped in `rulesKernelProfileJoin`. |
-| 33 | B30-CLASS-FEATURE-PREPARED-SPELL-ACCESS-RULES-KERNEL-MAPPING - Map class feature prepared spell access profile to rules-kernel obligations | ready-for-research | none | Metric-honesty gap: `character-sheet.class-feature-prepared-spell-access` is unmapped in `rulesKernelProfileJoin`. |
-| 34 | B31-DRUID-CIRCLE-LAND-SPELL-ACCESS-RULES-KERNEL-MAPPING - Map Druid Circle Land spell access profile to rules-kernel obligations | ready-for-research | none | Metric-honesty gap: `character-sheet.druid-circle-land-spell-access` is unmapped and leaves `druid_circle_of_the_land_spells` uncovered in `rulesKernelSupportedUnitCoverage`. |
-| 35 | B32-DRAGONS-BREATH-CATALOG-ADMISSION - Repair Dragon's Breath catalog admission | ready-for-research | none | Metric-honesty gap: `dragons_breath` is supported-profile but remains `not-in-unit-catalog`; repair the catalog boundary without treating support as admission. |
-| 36 | B33-RAY-OF-ENFEEBLEMENT-CATALOG-ADMISSION - Repair Ray of Enfeeblement catalog admission | ready-for-research | none | Metric-honesty gap: `ray_of_enfeeblement` is supported-profile but remains `not-in-unit-catalog`; repair the catalog boundary without treating support as admission. |
+| 28 | B25-SHINING-SMITE-IDENTITY-WITNESS - Backfill Shining Smite selected identity witness | done | none | Added selected-identity MBT evidence for `shining_smite`; generated selected-identity gaps no longer list it. |
+| 29 | B26-DEFERRED-IDENTITY-GAP-SEMANTICS - Clarify deferred selected identity gap semantics | done | none | Generated selected-identity reports now keep deferred-portion non-applicable rows visible in a separate bucket while excluding them from ordinary replay gaps; `mind_spike` is listed there, and `thaumaturgy` already has selected-identity MBT evidence. |
+| 30 | B27-CREATURE-SIZE-RULES-KERNEL-MAPPING - Map creature size change profile to rules-kernel obligations | done | none | Mapped `spell.invocation-creature-size-change` to `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE`; generated rules-kernel profile join gaps no longer list it. |
+| 31 | B28-WIZARD-SPELLBOOK-LEARNING-RULES-KERNEL-MAPPING - Map Wizard spellbook learning profile to rules-kernel obligations | done | none | Mapped `character-creation.wizard-spellbook-learning-choice` to `CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION`; generated rules-kernel profile join gaps no longer list it. |
+| 32 | B29-LEVITATED-CREATURE-RULES-KERNEL-MAPPING - Map levitated creature profile to rules-kernel obligations | done | none | Mapped `spell.invocation-levitated-creature` to `BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE`; generated rules-kernel profile join gaps no longer list it. |
+| 33 | B30-CLASS-FEATURE-PREPARED-SPELL-ACCESS-RULES-KERNEL-MAPPING - Map class feature prepared spell access profile to rules-kernel obligations | done | none | Mapped `character-sheet.class-feature-prepared-spell-access` to `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION`; generated rules-kernel profile join gaps no longer list it. |
+| 34 | B31-DRUID-CIRCLE-LAND-SPELL-ACCESS-RULES-KERNEL-MAPPING - Map Druid Circle Land spell access profile to rules-kernel obligations | done | none | Mapped `character-sheet.druid-circle-land-spell-access` to `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION`; generated rules-kernel profile and supported Unit join gaps no longer list `druid_circle_of_the_land_spells`. |
+| 35 | B32-DRAGONS-BREATH-CATALOG-ADMISSION - Repair Dragon's Breath catalog admission | done | none | Metric-honesty gap: `dragons_breath` is supported-profile but remains `not-in-unit-catalog`; repair the catalog boundary without treating support as admission. |
+| 36 | B33-RAY-OF-ENFEEBLEMENT-CATALOG-ADMISSION - Repair Ray of Enfeeblement catalog admission | done | none | Added `ray_of_enfeeblement` to `srdUnitCollection`; generated Unit catalog/admission reports now count it as installed with existing runtime and selected-identity evidence. |
 
 ## Task Details
 
@@ -725,7 +725,7 @@ evidence tied to a focused or existing promoted runtime test.
 
 ### Task 28 - B25-SHINING-SMITE-IDENTITY-WITNESS - Backfill Shining Smite selected identity witness
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: prove selected `shining_smite` identity reaches the after-hit damage
 and illumination rider runtime entrypoint.
@@ -734,9 +734,15 @@ Acceptance: `shining_smite` has checker-readable `selected-identity-mbt`
 evidence; no new smite reducer behavior is added unless a separate promoted
 runtime task owns it.
 
+Result: selected-identity evidence now covers `shining_smite` through
+`packages/battle-runtime/src/shining-smite-selected-identity.mbt.test.ts`, where
+the selected spell identity reaches the after-hit damage rider and illumination
+emitter runtime entrypoint. The generated selected-identity gap report no longer
+lists `shining_smite`.
+
 ### Task 29 - B26-DEFERRED-IDENTITY-GAP-SEMANTICS - Clarify deferred selected identity gap semantics
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: decide and implement the report/checker treatment for
 `missing-witness-deferred-not-applicable` rows such as `mind_spike` and
@@ -746,9 +752,16 @@ or move qualifying whole-claim cases to the existing not-applicable exclusion.
 Acceptance: `UNIT_REPORT.md`, `unit-matrix.json`, and metric prose no longer
 make deferred non-applicable rows look like ordinary missing replay witnesses.
 
+Result: the checker keeps deferred selected-identity non-applicable rows visible
+in a dedicated generated bucket instead of counting them as ordinary replay
+gaps. The ordinary selected-identity replay gap table is empty, while
+`mind_spike` remains visible under deferred non-applicable; `thaumaturgy` is not
+listed there because it already has selected-identity MBT evidence for its
+supported Booming Voice subset.
+
 ### Task 30 - B27-CREATURE-SIZE-RULES-KERNEL-MAPPING - Map creature size change profile to rules-kernel obligations
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: map `spell.invocation-creature-size-change` to the correct
 rules-kernel obligation, or split the profile if the current name conflates
@@ -758,9 +771,14 @@ Acceptance: `rulesKernelProfileJoinCoverage` no longer lists
 `spell.invocation-creature-size-change` as unmapped, and any split preserves
 single-source profile membership for affected Units.
 
+Result: mapped `spell.invocation-creature-size-change` to
+`BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE` using the existing Enlarge/Reduce
+creature-branch QNT, runtime, and runtime-test owners. No profile split was
+needed; the profile remains a single source of membership for affected Units.
+
 ### Task 31 - B28-WIZARD-SPELLBOOK-LEARNING-RULES-KERNEL-MAPPING - Map Wizard spellbook learning profile to rules-kernel obligations
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: map `character-creation.wizard-spellbook-learning-choice` to a
 character-creation or character-sheet rules-kernel obligation after checking the
@@ -770,9 +788,15 @@ Acceptance: `rulesKernelProfileJoinCoverage` no longer lists the Wizard
 spellbook learning profile as unmapped, and selected spellbook facts are not
 duplicated across creation and sheet owners.
 
+Result: mapped `character-creation.wizard-spellbook-learning-choice` to
+`CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION` using the existing
+character-creation discovery/finalization owners and selected-identity replay.
+No character-sheet spellbook roster or duplicated selected spellbook fact owner
+was added.
+
 ### Task 32 - B29-LEVITATED-CREATURE-RULES-KERNEL-MAPPING - Map levitated creature profile to rules-kernel obligations
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: map `spell.invocation-levitated-creature` to the existing movement,
 condition, or table-caller rules-kernel obligation, or document the missing
@@ -782,9 +806,14 @@ Acceptance: `rulesKernelProfileJoinCoverage` no longer lists
 `spell.invocation-levitated-creature` as unmapped unless a new blocked owner
 task is added with concrete rationale.
 
+Result: mapped the profile to
+`BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE`, owned by the existing Levitate
+creature QNT/runtime/test evidence. Generated rules-kernel profile join gaps no
+longer list `spell.invocation-levitated-creature`.
+
 ### Task 33 - B30-CLASS-FEATURE-PREPARED-SPELL-ACCESS-RULES-KERNEL-MAPPING - Map class feature prepared spell access profile to rules-kernel obligations
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: map `character-sheet.class-feature-prepared-spell-access` to the
 character-sheet spell-access rules-kernel obligation after checking the
@@ -794,9 +823,14 @@ Acceptance: `rulesKernelProfileJoinCoverage` no longer lists
 `character-sheet.class-feature-prepared-spell-access` as unmapped, and the
 mapping does not duplicate per-class spell access state.
 
+Result: mapped to `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION`, owned
+by the existing class-feature selected-identity QNT/runtime/test evidence.
+Generated rules-kernel profile join gaps no longer list
+`character-sheet.class-feature-prepared-spell-access`.
+
 ### Task 34 - B31-DRUID-CIRCLE-LAND-SPELL-ACCESS-RULES-KERNEL-MAPPING - Map Druid Circle Land spell access profile to rules-kernel obligations
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: map `character-sheet.druid-circle-land-spell-access` to a
 rules-kernel obligation and confirm `druid_circle_of_the_land_spells` joins
@@ -806,9 +840,15 @@ Acceptance: both `rulesKernelProfileJoinCoverage` and
 `rulesKernelSupportedUnitCoverage` clear the Druid Circle Land spell-access gap
 without adding a parallel Druid-only spell-access state table.
 
+Result: mapped to `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION`, owned
+by the existing class-feature selected-identity QNT/runtime/test evidence.
+Generated rules-kernel profile and supported Unit join gaps no longer list
+`character-sheet.druid-circle-land-spell-access` or
+`druid_circle_of_the_land_spells`.
+
 ### Task 35 - B32-DRAGONS-BREATH-CATALOG-ADMISSION - Repair Dragon's Breath catalog admission
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: repair the Unit catalog/admission boundary for `dragons_breath`, which
 is currently supported-profile but `not-in-unit-catalog`.
@@ -819,10 +859,11 @@ evidence.
 
 ### Task 36 - B33-RAY-OF-ENFEEBLEMENT-CATALOG-ADMISSION - Repair Ray of Enfeeblement catalog admission
 
-Status: `ready-for-research`
+Status: `done`
 
-Output: repair the Unit catalog/admission boundary for `ray_of_enfeeblement`,
-which is currently supported-profile but `not-in-unit-catalog`.
+Output: added `ray_of_enfeeblement` to `srdUnitCollection` so the Unit
+catalog/admission boundary is explicit and no longer inferred from support
+metadata.
 
 Acceptance: `ray_of_enfeeblement` appears as installed in the Unit
 catalog/admission view, with catalog admission not inferred from runtime

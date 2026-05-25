@@ -8,7 +8,7 @@ This strict view tracks executable SRD character-level-1 through character-level
 
 Full-support claim: **blocked**.
 
-Blockers: strict=0, selected-identity=2, SRD-authored-readiness=0.
+Blockers: strict=0, selected-identity=1, SRD-authored-readiness=0.
 
 ## Metrics
 
@@ -16,12 +16,12 @@ Blockers: strict=0, selected-identity=2, SRD-authored-readiness=0.
 | --- | ---: |
 | Strict runtime/profile support | 121/182 (66.5%) |
 | Strict target closure | 182/182 (100%) |
-| Selected identity readiness | 150/152 (98.7%) |
-| Product readiness | 573/607 (94.4%) |
+| Selected identity readiness | 151/152 (99.3%) |
+| Product readiness | 577/607 (95.1%) |
 | SRD authored product readiness | 76/76 (100%) |
-| Rules-kernel profile join | 93/94 (98.9%) |
-| Rules-kernel covered profile join | 93/94 (98.9%) |
-| Supported Unit rules-kernel chain | 120/121 (99.2%) |
+| Rules-kernel profile join | 94/94 (100%) |
+| Rules-kernel covered profile join | 94/94 (100%) |
+| Supported Unit rules-kernel chain | 121/121 (100%) |
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
@@ -31,9 +31,9 @@ Product readiness is diagnostic lower-layer accounting. Rows in statuses other t
 
 | Status | Rows |
 | --- | ---: |
-| accepted | 412 |
+| accepted | 416 |
 | accepted-no-battle-effect | 161 |
-| battle-runtime-required | 5 |
+| battle-runtime-required | 1 |
 | owner-evidence-required | 18 |
 | partial-battle-runtime | 11 |
 
@@ -43,24 +43,22 @@ This is the selected-identity gate layer for the strict denominator. `witness-pr
 
 | Selected identity status | Rows |
 | --- | ---: |
-| missing-witness | 1 |
 | missing-witness-deferred-not-applicable | 1 |
 | not-required | 30 |
-| witness-present | 150 |
+| witness-present | 151 |
 
 ### Selected Identity Blockers
 
 | Unit | Strict status | Claim | Selected identity status | Reason |
 | --- | --- | --- | --- | --- |
 | `mind_spike` | closed-runtime-detached-table-adjudication | profile-subset-supported | missing-witness-deferred-not-applicable | The location knowledge, Hidden prevention, and observer-scoped Invisible benefit denial are table/perception knowledge facts outside promoted battle-runtime replay. |
-| `shining_smite` | supported-profile | supported-profile | missing-witness | The Unit has no selected-identity-mbt evidence. |
 
 ## Full-Support Claim Gate
 
 | Gate | Status | Result | Blocking issue |
 | --- | --- | ---: | --- |
 | Strict runtime/profile closure | pass | 182/182 (100%) | _none_ |
-| Selected identity readiness | blocked | 150/152 (98.7%) | 2 selected-identity blocker row(s) |
+| Selected identity readiness | blocked | 151/152 (99.3%) | 1 selected-identity blocker row(s) |
 | SRD authored product readiness | pass | 76/76 (100%) | _none_ |
 
 Every gate row must pass for a full level-support claim. A 100% result in one layer does not satisfy another layer, and failed gates are not combined into a weighted completion percentage.
@@ -127,7 +125,7 @@ This gate checks authored records and retained Unit references that must resolve
 
 | Unit | Status | Profiles Needing Attention |
 | --- | --- | --- |
-| `druid_circle_of_the_land_spells` | unmapped | `character-sheet.druid-circle-land-spell-access` (unmapped: no obligation mapping) |
+| _none_ | _none_ | _none_ |
 
 ## Non-Supported Frontier Detail
 
