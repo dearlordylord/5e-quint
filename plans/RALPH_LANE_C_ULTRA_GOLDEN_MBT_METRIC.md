@@ -179,7 +179,7 @@ remains.
     {
       "number": 28,
       "id": "C28-GENERATOR-READINESS-SAVE-GATED-SPELLS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Classify save-gated condition generator readiness"
     },
     {
@@ -652,7 +652,7 @@ longer `not-assessed`.
 
 ### Task 28 - C28-GENERATOR-READINESS-SAVE-GATED-SPELLS - Classify save-gated condition generator readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 `plans/unit-profile-coverage/ultra-golden-gate.json`,
