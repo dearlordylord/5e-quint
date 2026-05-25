@@ -89,7 +89,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 13,
       "id": "B13-BATTLE-RUNTIME-REACTION-OFFER-CORE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Split reaction offer and continuation facts"
     },
     {
@@ -318,7 +318,7 @@ Acceptance: checker green; no table-owned spatial projection added.
 
 ### Task 13 - B13-BATTLE-RUNTIME-REACTION-OFFER-CORE - Split reaction offer and continuation facts
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: reaction continuation obligations and existing focused witnesses.
 

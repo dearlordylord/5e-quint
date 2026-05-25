@@ -112,6 +112,7 @@
         "unit-feature.reaction-roll-or-damage-reduction"
       ],
       "qntOwners": [
+        "packages/battle-runtime/battle-runtime-reaction-window.qnt",
         "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
       ],
       "runtime": "battle",
@@ -5575,6 +5576,7 @@
     {
       "evidence": "packages/battle-runtime/battle-runtime-reaction-window.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
+        "BATTLE.REACTION.OFFER_DECLINE_RESUME",
         "BATTLE.SPELL.REACTION_CASTING_TIME"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
@@ -6318,7 +6320,8 @@
         "set",
         "map",
         "set-operators",
-        "membership"
+        "membership",
+        "list"
       ],
       "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
       "proofOnly": [
@@ -6326,6 +6329,7 @@
         "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration-examples.qnt"
       ],
       "semanticCore": [
+        "packages/battle-runtime/battle-runtime-reaction-window.qnt",
         "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
       ],
       "status": "generation-subset-clean"

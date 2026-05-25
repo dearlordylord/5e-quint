@@ -1234,8 +1234,8 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
 - `battle-runtime-marked-spells.qnt` - Hunter's Mark, Favored Enemy Hunter's
   Mark, Hex, and marked-rider transfer spell reducers.
 - `battle-runtime-reaction-window.qnt` - Reaction trigger matching, window
-  opening, reactor availability, Shield and Counterspell reaction helpers, and
-  Hellish Rebuke admission facts.
+  opening, offer/decline/resume sequencing, reactor availability, Shield and
+  Counterspell reaction helpers, and Hellish Rebuke admission facts.
 - `battle-runtime-combatant-side.qnt` - actor side, damage-source side, ally,
   and enemy relation helpers used by Concentration and Rage procedures.
 - `battle-runtime-concentration.qnt` - Concentration Saving Throw DCs,

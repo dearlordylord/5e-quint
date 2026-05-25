@@ -636,32 +636,7 @@ module battleRuntime {
     }
 
   pure def declineReaction(state: BattleState, reactor: Actor): BattleState = {
-    if (state.interruptStack.length() == 0)
-      state
-    else {
-      val top = state.interruptStack[state.interruptStack.length() - 1]
-      match top {
-        | PendingReaction(frame) => {
-            val updatedFrame = { ...frame, offeredReactors: frame.offeredReactors.union(Set(reactor)) }
-            val decision = battleRuntimeDeclineReactionDecision(
-              frame.eligibleReactors.contains(reactor),
-              frame.offeredReactors.contains(reactor),
-              reactionFrameComplete(updatedFrame),
-            )
-            match (decision) {
-              | BattleRuntimeDeclinedReaction(result) => {
-                  val rest = state.interruptStack.slice(0, state.interruptStack.length() - 1)
-                  if (result.frameComplete)
-                    { ...state, interruptStack: rest }
-                  else
-                    { ...state, interruptStack: rest.append(PendingReaction(updatedFrame)) }
-                }
-              | _ => state
-            }
-          }
-        | _ => state
-      }
-    }
+    stateAfterDecliningReactionOffer(state, reactor)
   }
 
   pure def declineReactionAndResume(state: BattleState, reactor: Actor): BattleState =
@@ -672,7 +647,7 @@ module battleRuntime {
       match top {
         | PendingReaction(frame) => {
             val afterDecision = declineReaction(state, reactor)
-            if (afterDecision.interruptStack.length() < state.interruptStack.length())
+            if (reactionDecisionClosedFrame(state, afterDecision))
               resumeReactionContinuation(afterDecision, frame.continuation)
             else
               afterDecision
@@ -739,7 +714,7 @@ module battleRuntime {
 	                    else
 	                      declineReaction(afterReactionProcedure, reactor)
 		                  if (
-		                    afterDecision.interruptStack.length() < state.interruptStack.length()
+		                    reactionDecisionClosedFrame(state, afterDecision)
 		                      and not(spellCastEnded)
 		                  ) {
 	                    val resumed = resumeReactionContinuation(afterDecision, frame.continuation)
@@ -753,13 +728,6 @@ module battleRuntime {
           }
         | _ => state
       }
-    }
-
-  pure def pendingReactionFrame(frame: InterruptFrame): PendingReactionFrameOption =
-    match frame {
-      | PendingReaction(pending) => HasPendingReactionFrame(pending)
-      | PendingFlySpeedGrantEndFallCleanup(_) => NoPendingReactionFrame
-      | PendingAttackDamageConcentration(_) => NoPendingReactionFrame
     }
 
   pure def openAttackDamageConcentration(state: BattleState, continuation: AttackDamageConcentrationContinuation, damage: int): BattleState =

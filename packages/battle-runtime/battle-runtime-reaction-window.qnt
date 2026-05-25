@@ -1,7 +1,8 @@
 // -*- mode: Bluespec; -*-
-// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.REACTION_CASTING_TIME
+// KERNEL-COVERAGE: qnt-owner BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.SPELL.REACTION_CASTING_TIME
 
 module battleRuntimeReactionWindow {
+  import battleRuntimeInterruptBridge.* from "./battle-runtime-interrupt-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
 
@@ -111,6 +112,57 @@ module battleRuntimeReactionWindow {
       | Fighter => { ...state, fighter: { ...state.fighter, reactionAvailable: false } }
       | Goblin => { ...state, goblin: { ...state.goblin, reactionAvailable: false } }
     }
+
+  pure def pendingReactionFrame(frame: InterruptFrame): PendingReactionFrameOption =
+    match frame {
+      | PendingReaction(pending) => HasPendingReactionFrame(pending)
+      | PendingFlySpeedGrantEndFallCleanup(_) => NoPendingReactionFrame
+      | PendingAttackDamageConcentration(_) => NoPendingReactionFrame
+    }
+
+  pure def reactionFrameCanOffer(frame: PendingReactionFrame, reactor: Actor): bool =
+    frame.eligibleReactors.contains(reactor) and
+      not(frame.offeredReactors.contains(reactor))
+
+  pure def reactionFrameAfterOffering(
+    frame: PendingReactionFrame,
+    reactor: Actor,
+  ): PendingReactionFrame =
+    if (reactionFrameCanOffer(frame, reactor))
+      { ...frame, offeredReactors: frame.offeredReactors.union(Set(reactor)) }
+    else
+      frame
+
+  pure def stateAfterDecliningReactionOffer(state: BattleState, reactor: Actor): BattleState =
+    if (state.interruptStack.length() == 0)
+      state
+    else {
+      val top = state.interruptStack[state.interruptStack.length() - 1]
+      match top {
+        | PendingReaction(frame) => {
+            val updatedFrame = reactionFrameAfterOffering(frame, reactor)
+            val decision = battleRuntimeDeclineReactionDecision(
+              frame.eligibleReactors.contains(reactor),
+              frame.offeredReactors.contains(reactor),
+              reactionFrameComplete(updatedFrame),
+            )
+            match (decision) {
+              | BattleRuntimeDeclinedReaction(result) => {
+                  val rest = state.interruptStack.slice(0, state.interruptStack.length() - 1)
+                  if (result.frameComplete)
+                    { ...state, interruptStack: rest }
+                  else
+                    { ...state, interruptStack: rest.append(PendingReaction(updatedFrame)) }
+                }
+              | _ => state
+            }
+          }
+        | _ => state
+      }
+    }
+
+  pure def reactionDecisionClosedFrame(before: BattleState, after: BattleState): bool =
+    after.interruptStack.length() < before.interruptStack.length()
 
   pure def openDissonantWhispersAfterDamageSequence(state: BattleState): BattleState =
     openReactionWindow(state, {
