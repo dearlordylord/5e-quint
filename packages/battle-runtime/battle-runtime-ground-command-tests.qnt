@@ -504,6 +504,15 @@ module battleRuntimeGroundCommandTests {
     }
   }
 
+  run test_web_area_sight_obscurement_uses_active_web_area = {
+    val resolved = resolveWeb(initialState, webAreaId, 2)
+    val removedArea = removeWebArea(resolved, webAreaId)
+    all {
+      assert(webRestraintHazardSightObscurement(resolved, webAreaId) == LightlyObscuredSight),
+      assert(webRestraintHazardSightObscurement(removedArea, webAreaId) == UnobscuredSight),
+    }
+  }
+
   run test_web_entry_save_restrains_once_per_turn_and_resets_next_turn = {
     val resolved = resolveWeb(initialState, webAreaId, 2)
     val entryFailed = resolveWebRestraintSave(resolved, Goblin, webAreaId, true, false)

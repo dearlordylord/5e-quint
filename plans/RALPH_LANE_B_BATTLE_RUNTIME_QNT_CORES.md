@@ -29,7 +29,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 3,
       "id": "B3-BATTLE-RUNTIME-GROUND-HAZARD-CORE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Split ground, obscurement, and restraint hazard core"
     },
     {
@@ -205,7 +205,7 @@ Acceptance: checker green; relevant focused tests green.
 
 ### Task 3 - B3-BATTLE-RUNTIME-GROUND-HAZARD-CORE - Split ground, obscurement, and restraint hazard core
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: Web, Grease, Fog Cloud, Darkness, and related hazard/obscurement rows.
 

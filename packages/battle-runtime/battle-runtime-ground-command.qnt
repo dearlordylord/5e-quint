@@ -1,6 +1,7 @@
 // -*- mode: Bluespec; -*-
 
 // KERNEL-COVERAGE: qnt-owner BATTLE.COMMAND.OPTION_AND_NEXT_TURN
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE
 module battleRuntimeGroundCommand {
   import battleRuntimeMovementBridge.* from "./battle-runtime-movement-bridge"
   import battleRuntimeCommandChoice.* from "./battle-runtime-command-choice"
@@ -738,6 +739,12 @@ module battleRuntimeGroundCommand {
 
   pure def webRestraintHazardActive(state: BattleState, areaId: int): bool =
     webAreaHazardActiveForTerrain(state, areaId)
+
+  pure def webRestraintHazardSightObscurement(state: BattleState, areaId: int): SightObscurement =
+    if (webRestraintHazardActive(state, areaId))
+      LightlyObscuredSight
+    else
+      UnobscuredSight
 
   pure def webRestraintHazardDurationTicks(state: BattleState, areaId: int): int =
     state.fighter.activeEffects

@@ -510,7 +510,7 @@
         "spell.invocation-web-restraint-hazard"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-ground-command.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -903,7 +903,7 @@
         "spell.invocation-grease-ground-hazard"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-ground-command.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -932,7 +932,7 @@
         "spell.invocation-fog-cloud-obscurement"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-ground-command.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -965,7 +965,7 @@
         "spell.invocation-magical-darkness-point-origin"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-ground-command.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -5358,7 +5358,11 @@
     {
       "evidence": "packages/battle-runtime/battle-runtime-ground-command.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
-        "BATTLE.COMMAND.OPTION_AND_NEXT_TURN"
+        "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
+        "BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE",
+        "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
+        "BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE",
+        "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-ground-command.qnt",
       "role": "semantic-core"
@@ -5617,14 +5621,10 @@
         "BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE",
         "BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE",
         "BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE",
-        "BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE",
         "BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE",
-        "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
         "BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE",
         "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
-        "BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE",
-        "BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE",
-        "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE"
+        "BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
       "role": "semantic-core"
@@ -6401,12 +6401,7 @@
       "status": "fixture-bound"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B3-BATTLE-RUNTIME-GROUND-HAZARD-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -6421,21 +6416,21 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
         "pattern-match",
         "set",
-        "list",
         "map",
         "filter",
+        "fold",
+        "exists",
         "set-operators",
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-ground-command.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [
@@ -6626,12 +6621,7 @@
       "status": "not-assessed"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B3-BATTLE-RUNTIME-GROUND-HAZARD-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -6646,29 +6636,24 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
         "pattern-match",
         "set",
-        "list",
         "map",
         "filter",
+        "fold",
+        "exists",
         "set-operators",
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-ground-command.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B3-BATTLE-RUNTIME-GROUND-HAZARD-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -6683,29 +6668,24 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
         "pattern-match",
         "set",
-        "list",
         "map",
         "filter",
+        "fold",
+        "exists",
         "set-operators",
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-ground-command.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B3-BATTLE-RUNTIME-GROUND-HAZARD-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -6720,21 +6700,21 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
         "pattern-match",
         "set",
-        "list",
         "map",
         "filter",
+        "fold",
+        "exists",
         "set-operators",
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-ground-command.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
