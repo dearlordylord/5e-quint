@@ -11,7 +11,7 @@ module battleRuntimeObjectContactDamageTests {
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeLight.* from "./battle-runtime-light"
   import battleRuntimeOngoingSpellDispel.* from "./battle-runtime-ongoing-spell-dispel"
-  import battleRuntimeGroundCommand.* from "./battle-runtime-ground-command"
+  import battleRuntimeAntimagicSuppression.* from "./battle-runtime-antimagic-suppression"
   import battleRuntimeObjectContactDamage.* from "./battle-runtime-object-contact-damage"
 
   run test_heat_metal_records_object_contact_effect_and_immediate_damage = {

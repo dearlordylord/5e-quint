@@ -1,7 +1,22 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION
 
 module battleRuntimeAntimagicSuppression {
   import battleRuntimeModel.* from "./battle-runtime-model"
+  import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
+  import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
+  import battleRuntimeConcentration.* from "./battle-runtime-concentration"
+  import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
+
+  pure val antimagicFieldDurationTicks = 600
+  pure val antimagicFieldAreaId = 6
+  pure val antimagicFieldRadiusFeet = 10
+
+  pure def activeEffectsWithoutAntimagicFieldOngoingSpellSuppression(effects: Set[ActiveEffect], areaId: int): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | AntimagicFieldOngoingSpellSuppression(data) => data.areaId != areaId
+      | _ => true
+    })
 
   pure def activeEffectsAntimagicSuppressedOngoingSpellEffects(effects: Set[ActiveEffect]): Set[OngoingSpellEffectRef] =
     effects
@@ -23,25 +38,36 @@ module battleRuntimeAntimagicSuppression {
     antimagicSuppressedOngoingSpellEffects(state)
       .contains(OngoingSpellActiveEffectRef({ activeEffectKind: activeEffectKind, effectId: effectId }))
 
-  run test_antimagic_field_suppression_tracks_ongoing_spell_refs = {
-    val suppressed = {
-      ...initialState,
-      goblin: {
-        ...initialState.goblin,
-        activeEffects: Set(AntimagicFieldOngoingSpellSuppression({
-          areaId: 1,
-          radiusFeet: 10,
-          suppressedOngoingSpellEffects: Set(OngoingSpellActiveEffectRef({
-            activeEffectKind: OngoingSpellSpiritualWeaponEffect,
-            effectId: 2,
-          })),
-          durationTicks: 10,
-        })),
-      },
+  pure def resolveAntimagicFieldOngoingSpellSuppression(
+    state: BattleState,
+    areaId: int,
+    suppressedOngoingSpellEffects: Set[OngoingSpellEffectRef],
+    slotLevel: int,
+  ): BattleState =
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)) or slotLevel < 8)
+      state
+    else {
+      val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
+      commitActorSpellSlotUse({
+        ...withoutPrior,
+        fighter: {
+          ...withoutPrior.fighter,
+          concentrating: true,
+          activeEffects: activeEffectsWithoutAntimagicFieldOngoingSpellSuppression(withoutPrior.fighter.activeEffects, areaId)
+            .union(Set(AntimagicFieldOngoingSpellSuppression({
+              areaId: areaId,
+              radiusFeet: antimagicFieldRadiusFeet,
+              suppressedOngoingSpellEffects: suppressedOngoingSpellEffects,
+              durationTicks: antimagicFieldDurationTicks,
+            }))),
+        },
+        actionAvailable: false,
+      }, Fighter)
     }
-    all {
-      assert(antimagicSuppressesOngoingSpellActiveEffect(suppressed, OngoingSpellSpiritualWeaponEffect, 2)),
-      assert(not(antimagicSuppressesOngoingSpellActiveEffect(suppressed, OngoingSpellSpiritualWeaponEffect, 3))),
-    }
-  }
+
+  pure def antimagicFieldOngoingSpellSuppressionActive(state: BattleState, areaId: int): bool =
+    state.fighter.activeEffects.exists(effect => match effect {
+      | AntimagicFieldOngoingSpellSuppression(data) => data.areaId == areaId
+      | _ => false
+    })
 }

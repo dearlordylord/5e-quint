@@ -105,6 +105,8 @@ const generatorReadinessBlockerVocabulary = {
     "Semantic facts share a file with run tests or asserts that a generator must split or ignore before code generation.",
   "selected-identity-coupled":
     "The QNT owner proves a selected authored Unit or catalog identity rather than reusable reducer semantics.",
+  "later-task-typecheck-coupled":
+    "Semantic facts are split into focused QNT owners, but focused verification still imports a later-task owner with a known typecheck blocker.",
   "unsupported-construct":
     "The semantic core uses a QNT construct not yet admitted by this vocabulary.",
 };

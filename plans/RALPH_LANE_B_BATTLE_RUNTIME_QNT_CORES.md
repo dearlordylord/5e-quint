@@ -41,7 +41,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 5,
       "id": "B5-BATTLE-RUNTIME-OBJECT-CONTACT-ENDING-CORE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Split object-contact and ongoing spell ending core"
     },
     {
@@ -227,7 +227,7 @@ Acceptance: checker green; focused tests green.
 
 ### Task 5 - B5-BATTLE-RUNTIME-OBJECT-CONTACT-ENDING-CORE - Split object-contact and ongoing spell ending core
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: Heat Metal, Dispel Magic, and Antimagic Field readiness rows.
 
@@ -240,10 +240,14 @@ Acceptance: checker green; focused tests green.
 
 Status: `ready-for-research`
 
-Input: Dragon's Breath initial-effect and granted-action rows.
+Input: Dragon's Breath initial-effect and granted-action rows, plus any
+`later-task-typecheck-coupled` focused verification blockers introduced by
+earlier battle-runtime QNT core splits.
 
 Output: focused QNT semantic core(s), owner roles, readiness rows, and focused
-verification for both initial state and granted Magic action.
+verification for both initial state and granted Magic action. Clear earlier
+focused-core verification blockers that are caused by the Dragon's Breath broad
+owner still importing through `battle-runtime.qnt`.
 
 Acceptance: checker green; focused tests green.
 

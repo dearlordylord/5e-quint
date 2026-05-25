@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING
 
 module battleRuntimeObjectContactDamage {
   import battleRuntimeModel.* from "./battle-runtime-model"
