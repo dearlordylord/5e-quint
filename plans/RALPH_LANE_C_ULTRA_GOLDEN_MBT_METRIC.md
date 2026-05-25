@@ -197,7 +197,7 @@ remains.
     {
       "number": 31,
       "id": "C31-GENERATOR-READINESS-WEAPON-HOSTED-RIDERS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Classify weapon-hosted spell rider generator readiness"
     },
     {
@@ -703,7 +703,7 @@ longer `not-assessed`.
 
 ### Task 31 - C31-GENERATOR-READINESS-WEAPON-HOSTED-RIDERS - Classify weapon-hosted spell rider generator readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 `plans/unit-profile-coverage/ultra-golden-gate.json`,
