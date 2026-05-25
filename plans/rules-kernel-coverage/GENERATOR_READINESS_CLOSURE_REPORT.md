@@ -9,6 +9,10 @@ The refreshed checker output is
 [`kernel-ir-boundaries.jsonl`](kernel-ir-boundaries.jsonl); this note is only a
 lane closeout summary.
 
+Current runnable queues are listed in
+[`../QNT_COVERAGE_PROGRAM.md#rust--generator-readiness-entrypoints`](../QNT_COVERAGE_PROGRAM.md#rust--generator-readiness-entrypoints).
+Historical QNT/QMBT plans are redirects, not task entrypoints.
+
 ## Closure Status
 
 Rules-kernel B coverage remains closed: the generated report has no open
@@ -16,9 +20,10 @@ transitional obligations. The C-lane readiness artifacts now identify the
 semantic-core QNT owners, fixture or proof roles, generator-subset vocabulary,
 blocker vocabulary, kernel IR boundary inventory, and one manual Rust dry run.
 
-Hit point damage, movement, and reaction windows are certified as
-`generation-subset-clean`. Spell procedure profiles remain `fixture-bound` on
-fixture-world coupling, so this lane still stops before real Rust generation.
+Some readiness rows are certified as `generation-subset-clean`, including the
+hit point damage dry run. Other rows remain `fixture-bound` or `not-assessed`
+and are tracked in `generator-readiness.jsonl` with active follow-up task ids.
+This lane still stops before real Rust generation.
 
 ## Generator-Ready Inputs
 
@@ -38,10 +43,10 @@ The next lane can start from checked inputs instead of redoing discovery:
 
 ## Remaining Fixture-Bound Or Proof-Only Work
 
-The remaining fixture-bound readiness row is blocked by fixture-world coupling.
-Its semantic functions are useful as future generator inputs, but a generator
-must split executable definitions from bounded fixture worlds and induction-only
-helpers.
+Fixture-bound readiness rows are useful as future generator inputs, but a
+generator must split executable definitions from bounded fixture worlds, bridge
+projection coupling, run-block coupling, and induction-only helpers according to
+the blockers recorded in `generator-readiness.jsonl`.
 
 The role inventory and readiness rows also show QNT files that are intentionally
 not generator inputs: MBT fixtures exercise bounded replay or trace protocol,
@@ -51,7 +56,8 @@ implementation semantics.
 
 ## Next Lane Needed
 
-Before real Rust generation, open a focused generator-subset lane that:
+Before real Rust generation, continue through the active A/B generator-readiness
+queues or open a focused generator-subset lane that:
 
 1. Selects one `generation-subset-clean` obligation, preferably the hit point
    damage dry run, as the initial vertical.

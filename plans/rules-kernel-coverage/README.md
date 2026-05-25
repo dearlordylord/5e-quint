@@ -93,6 +93,12 @@ obligation's QNT owner can act as a future implementation source. It does not
 change B-lane coverage, does not prove additional TS parity, and does not imply
 generated Rust exists.
 
+For runnable Rust migration or generator-readiness queue selection, start from
+`plans/QNT_COVERAGE_PROGRAM.md#rust--generator-readiness-entrypoints`. This
+README owns the row contract and vocabulary; it is not a historical task queue.
+Closed QNT/QMBT planning files redirect to that entrypoint because the durable
+facts now live in checked JSONL artifacts and the active A/B/C Ralph plans.
+
 `generator-readiness.jsonl` is obligation-centered. Each row must point to a
 real obligation id and must explicitly declare `semanticCore`, `proofOnly`,
 `generatorSubset`, and `blockedBy`; omitted arrays are invalid because empty and

@@ -95,7 +95,7 @@ remains.
     {
       "number": 14,
       "id": "C14-RUST-MIGRATION-QUEUE-DRY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Dry the Rust migration queue entrypoints"
     },
     {
@@ -298,7 +298,7 @@ Acceptance: no active task requires reading stale lane histories.
 
 ### Task 14 - C14-RUST-MIGRATION-QUEUE-DRY - Dry the Rust migration queue entrypoints
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `plans/QNT_COVERAGE_PROGRAM.md` and rules-kernel readiness artifacts.
 
@@ -306,6 +306,13 @@ Output: one compact source of truth for Rust migration/generator readiness
 entrypoints, with stale duplicated MBT plans deleted or redirected.
 
 Acceptance: Ralph task context stays bounded.
+
+Result:
+
+- Centralized Rust migration and generator-readiness entrypoints in
+  `plans/QNT_COVERAGE_PROGRAM.md`.
+- Redirected stale historical QNT/QMBT plans to checked artifacts and active
+  Ralph lane plans instead of leaving them as runnable queues.
 
 ### Task 15 - C15-ULTRA-GOLDEN-CHECKER-REGRESSION - Add ultra-golden checker regression coverage
 
