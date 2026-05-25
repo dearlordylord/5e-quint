@@ -83,7 +83,7 @@ remains.
     {
       "number": 12,
       "id": "C12-LEVEL12-ULTRA-GOLDEN-SUMMARY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Publish level 1-2 ultra-golden summary"
     },
     {
