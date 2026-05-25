@@ -629,6 +629,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
               "role": "semantic-core"
             }
@@ -1050,6 +1054,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
               "role": "semantic-core"
             }
@@ -1358,6 +1366,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
               "role": "semantic-core"
             }
@@ -1550,6 +1562,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
               "role": "semantic-core"
@@ -2009,6 +2025,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
               "role": "semantic-core"
             }
@@ -2453,6 +2473,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
               "role": "semantic-core"
@@ -2960,6 +2984,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
               "role": "semantic-core"
@@ -3804,6 +3832,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
               "role": "semantic-core"
             }
@@ -4256,6 +4288,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
               "role": "semantic-core"
             }
@@ -4564,6 +4600,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
               "role": "semantic-core"
             }
@@ -4871,6 +4911,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
               "role": "semantic-core"
@@ -5412,6 +5456,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
               "role": "semantic-core"
             }
@@ -5719,6 +5767,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
               "role": "semantic-core"
@@ -6066,6 +6118,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
               "role": "semantic-core"
@@ -6542,6 +6598,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
               "role": "semantic-core"
@@ -7453,6 +7513,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
               "role": "semantic-core"
@@ -8240,6 +8304,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
               "role": "semantic-core"
             }
@@ -8661,6 +8729,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
               "role": "semantic-core"
             }
@@ -8969,6 +9041,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
               "role": "semantic-core"
             }
@@ -9161,6 +9237,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
               "role": "semantic-core"
@@ -9620,6 +9700,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
               "role": "semantic-core"
             }
@@ -10064,6 +10148,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
               "role": "semantic-core"
@@ -10571,6 +10659,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
               "role": "semantic-core"
@@ -11415,6 +11507,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
               "role": "semantic-core"
             }
@@ -11867,6 +11963,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
               "role": "semantic-core"
             }
@@ -12174,6 +12274,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
               "role": "semantic-core"
@@ -12529,6 +12633,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
               "role": "semantic-core"
@@ -13070,6 +13178,10 @@
           ],
           "qntOwners": [
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
               "role": "semantic-core"
             }
@@ -13377,6 +13489,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
               "role": "semantic-core"
@@ -13724,6 +13840,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
               "role": "semantic-core"
@@ -14200,6 +14320,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
               "role": "semantic-core"
@@ -15111,6 +15235,10 @@
             }
           ],
           "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
               "role": "semantic-core"

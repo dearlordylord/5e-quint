@@ -112,6 +112,7 @@
         "unit-feature.reaction-roll-or-damage-reduction"
       ],
       "qntOwners": [
+        "packages/battle-runtime/battle-runtime-reaction-window.qnt",
         "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
       ],
       "runtime": "battle",
@@ -1908,7 +1909,7 @@
         "spell.invocation-warding-bond-linked-effect"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-warding-bond.qnt"
+        "packages/battle-runtime/battle-runtime-warding-bond-damage-sharing.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -5589,6 +5590,7 @@
     {
       "evidence": "packages/battle-runtime/battle-runtime-reaction-window.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
+        "BATTLE.REACTION.OFFER_DECLINE_RESUME",
         "BATTLE.SPELL.REACTION_CASTING_TIME"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
@@ -5731,14 +5733,6 @@
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-turn-order.qnt",
       "role": "proof-only"
-    },
-    {
-      "evidence": "packages/battle-runtime/battle-runtime-warding-bond.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
-      "obligationIds": [
-        "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING"
-      ],
-      "ownerPath": "packages/battle-runtime/battle-runtime-warding-bond.qnt",
-      "role": "semantic-core"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-weapon-attacks.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
@@ -6269,6 +6263,14 @@
       ],
       "ownerPath": "packages/battle-runtime/creature-attack.qnt",
       "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-warding-bond-damage-sharing.qnt is the focused semantic core for Warding Bond target Resistance, same-amount source damage, and source-zero/separation/recast cleanup.",
+      "obligationIds": [
+        "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-warding-bond-damage-sharing.qnt",
+      "role": "semantic-core"
     }
   ],
   "generatorReadiness": [
@@ -6351,7 +6353,8 @@
         "set",
         "map",
         "set-operators",
-        "membership"
+        "membership",
+        "list"
       ],
       "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
       "proofOnly": [
@@ -6359,7 +6362,8 @@
         "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration-examples.qnt"
       ],
       "semanticCore": [
-        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+        "packages/battle-runtime/battle-runtime-reaction-window.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -6612,27 +6616,97 @@
     },
     {
       "blockedBy": [],
-      "generatorSubset": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "map",
+        "filter",
+        "fold",
+        "exists",
+        "set-operators"
+      ],
       "obligationId": "BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-see-invisibility.qnt"
+      ],
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
-      "generatorSubset": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "filter",
+        "exists",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
+        "packages/battle-runtime/battle-runtime-spell-attack.qnt",
+        "packages/battle-runtime/battle-runtime-timed-effects.qnt",
+        "packages/battle-runtime/battle-runtime-concentration.qnt"
+      ],
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
-      "generatorSubset": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "filter",
+        "exists",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY",
-      "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+      ],
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -7716,11 +7790,25 @@
     },
     {
       "blockedBy": [],
-      "generatorSubset": [],
+      "generatorSubset": [
+        "import",
+        "record",
+        "record-update",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective"
+      ],
       "obligationId": "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-warding-bond-damage-sharing.qnt"
+      ],
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -7976,11 +8064,32 @@
     },
     {
       "blockedBy": [],
-      "generatorSubset": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "filter",
+        "exists"
+      ],
       "obligationId": "BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE",
-      "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "proofOnly": [
+        "packages/shared-algebras/proofs/death-saves-algebra-inductive.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-hit-points.qnt"
+      ],
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -8094,48 +8203,6 @@
   ],
   "generatorReadinessBacklog": [
     {
-      "obligationId": "BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-see-invisibility.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
-          "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack.qnt",
-          "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-timed-effects.qnt",
-          "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-concentration.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
       "obligationId": "BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE",
       "ownerRoles": [
         {
@@ -8194,26 +8261,6 @@
       "ownerRoles": [
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-mirror-image.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-warding-bond.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-hit-points.qnt",
           "role": "semantic-core"
         }
       ],
@@ -8324,22 +8371,6 @@
             126
           ],
           "ownerPath": "packages/battle-runtime/battle-runtime-protection-from-poison.qnt"
-        }
-      ],
-      "readinessStatus": "not-assessed"
-    },
-    {
-      "blocker": "run-block-coupled",
-      "obligationId": "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING",
-      "owners": [
-        {
-          "lines": [
-            187,
-            205,
-            217,
-            228
-          ],
-          "ownerPath": "packages/battle-runtime/battle-runtime-warding-bond.qnt"
         }
       ],
       "readinessStatus": "not-assessed"

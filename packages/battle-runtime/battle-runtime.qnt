@@ -630,32 +630,7 @@ module battleRuntime {
     }
 
   pure def declineReaction(state: BattleState, reactor: Actor): BattleState = {
-    if (state.interruptStack.length() == 0)
-      state
-    else {
-      val top = state.interruptStack[state.interruptStack.length() - 1]
-      match top {
-        | PendingReaction(frame) => {
-            val updatedFrame = { ...frame, offeredReactors: frame.offeredReactors.union(Set(reactor)) }
-            val decision = battleRuntimeDeclineReactionDecision(
-              frame.eligibleReactors.contains(reactor),
-              frame.offeredReactors.contains(reactor),
-              reactionFrameComplete(updatedFrame),
-            )
-            match (decision) {
-              | BattleRuntimeDeclinedReaction(result) => {
-                  val rest = state.interruptStack.slice(0, state.interruptStack.length() - 1)
-                  if (result.frameComplete)
-                    { ...state, interruptStack: rest }
-                  else
-                    { ...state, interruptStack: rest.append(PendingReaction(updatedFrame)) }
-                }
-              | _ => state
-            }
-          }
-        | _ => state
-      }
-    }
+    stateAfterDecliningReactionOffer(state, reactor)
   }
 
   pure def declineReactionAndResume(state: BattleState, reactor: Actor): BattleState =
@@ -666,7 +641,7 @@ module battleRuntime {
       match top {
         | PendingReaction(frame) => {
             val afterDecision = declineReaction(state, reactor)
-            if (afterDecision.interruptStack.length() < state.interruptStack.length())
+            if (reactionDecisionClosedFrame(state, afterDecision))
               resumeReactionContinuation(afterDecision, frame.continuation)
             else
               afterDecision
@@ -733,7 +708,7 @@ module battleRuntime {
 	                    else
 	                      declineReaction(afterReactionProcedure, reactor)
 		                  if (
-		                    afterDecision.interruptStack.length() < state.interruptStack.length()
+		                    reactionDecisionClosedFrame(state, afterDecision)
 		                      and not(spellCastEnded)
 		                  ) {
 	                    val resumed = resumeReactionContinuation(afterDecision, frame.continuation)
@@ -747,13 +722,6 @@ module battleRuntime {
           }
         | _ => state
       }
-    }
-
-  pure def pendingReactionFrame(frame: InterruptFrame): PendingReactionFrameOption =
-    match frame {
-      | PendingReaction(pending) => HasPendingReactionFrame(pending)
-      | PendingFlySpeedGrantEndFallCleanup(_) => NoPendingReactionFrame
-      | PendingAttackDamageConcentration(_) => NoPendingReactionFrame
     }
 
   pure def openAttackDamageConcentration(state: BattleState, continuation: AttackDamageConcentrationContinuation, damage: int): BattleState =
@@ -976,19 +944,37 @@ module battleRuntime {
     chosenAbility: Ability,
     chosenSkill: AbilityCheckSkill,
   ): BattleState =
+    rollModifierTargetedStateWithTargetAbilities(
+      state,
+      invocation,
+      targets,
+      chosenAbility,
+      chosenAbility,
+      chosenSkill,
+    )
+
+  pure def rollModifierTargetedStateWithTargetAbilities(
+    state: BattleState,
+    invocation: RollModifierSpell,
+    targets: Set[Actor],
+    fighterAbility: Ability,
+    goblinAbility: Ability,
+    chosenSkill: AbilityCheckSkill,
+  ): BattleState =
     {
       ...state,
-      fighter: if (targets.contains(Fighter)) { ...state.fighter, activeEffects: state.fighter.activeEffects.union(Set(rollModifierActiveEffect(invocation, chosenAbility, chosenSkill))) } else state.fighter,
-      goblin: if (targets.contains(Goblin)) { ...state.goblin, activeEffects: state.goblin.activeEffects.union(Set(rollModifierActiveEffect(invocation, chosenAbility, chosenSkill))) } else state.goblin,
+      fighter: if (targets.contains(Fighter)) { ...state.fighter, activeEffects: state.fighter.activeEffects.union(Set(rollModifierActiveEffect(invocation, fighterAbility, chosenSkill))) } else state.fighter,
+      goblin: if (targets.contains(Goblin)) { ...state.goblin, activeEffects: state.goblin.activeEffects.union(Set(rollModifierActiveEffect(invocation, goblinAbility, chosenSkill))) } else state.goblin,
     }
 
-  pure def resolveRollModifierSpell(
+  pure def resolveRollModifierSpellWithTargetAbilities(
     state: BattleState,
     invocation: RollModifierSpell,
     selectedTargets: Set[Actor],
     failedSaveTargets: Set[Actor],
     slotLevel: int,
-    chosenAbility: Ability,
+    fighterAbility: Ability,
+    goblinAbility: Ability,
     chosenSkill: AbilityCheckSkill,
   ): BattleState = {
     val affectedTargets =
@@ -1008,7 +994,14 @@ module battleRuntime {
         fighter: breakConcentration(state.fighter),
         goblin: { ...state.goblin, activeEffects: activeEffectsWithoutSpellEffectConcentration(state.goblin.activeEffects) },
       }
-      val effected = rollModifierTargetedState(concentrationBase, invocation, affectedTargets, chosenAbility, chosenSkill)
+      val effected = rollModifierTargetedStateWithTargetAbilities(
+        concentrationBase,
+        invocation,
+        affectedTargets,
+        fighterAbility,
+        goblinAbility,
+        chosenSkill,
+      )
       val resolved = {
         ...effected,
         fighter: { ...effected.fighter, concentrating: true },
@@ -1022,6 +1015,26 @@ module battleRuntime {
       state
     }
   }
+
+  pure def resolveRollModifierSpell(
+    state: BattleState,
+    invocation: RollModifierSpell,
+    selectedTargets: Set[Actor],
+    failedSaveTargets: Set[Actor],
+    slotLevel: int,
+    chosenAbility: Ability,
+    chosenSkill: AbilityCheckSkill,
+  ): BattleState =
+    resolveRollModifierSpellWithTargetAbilities(
+      state,
+      invocation,
+      selectedTargets,
+      failedSaveTargets,
+      slotLevel,
+      chosenAbility,
+      chosenAbility,
+      chosenSkill,
+    )
 
   pure def grantActionSurge(
     state: BattleState,

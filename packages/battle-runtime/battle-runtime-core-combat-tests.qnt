@@ -22,6 +22,7 @@ module battleRuntimeCoreCombatTests {
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
   import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
   import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
+  import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
   import battleRuntimeSpellAttack.* from "./battle-runtime-spell-attack"
   import battleRuntimeChainedSpellAttack.* from "./battle-runtime-chained-spell-attack"
   import battleRuntimeSaveGatedSpell.* from "./battle-runtime-save-gated-spell"

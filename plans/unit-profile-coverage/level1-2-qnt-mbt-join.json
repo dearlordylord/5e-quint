@@ -190,6 +190,10 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "role": "semantic-core"
         }
@@ -760,6 +764,10 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "role": "semantic-core"
         }
@@ -1026,6 +1034,10 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "role": "semantic-core"
         }
@@ -1191,6 +1203,10 @@
       "profileId": "spell.readied-action-time-spell",
       "profileKind": "spell-invocation",
       "qntOwners": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+          "role": "semantic-core"
+        },
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "role": "semantic-core"
@@ -1743,6 +1759,10 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "role": "semantic-core"
         }
@@ -2120,6 +2140,10 @@
       "profileId": "spell.invocation-feather-fall-mitigation",
       "profileKind": "spell-invocation",
       "qntOwners": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+          "role": "semantic-core"
+        },
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "role": "semantic-core"
@@ -2711,6 +2735,10 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "role": "semantic-core"
         }
@@ -3002,6 +3030,10 @@
       "profileId": "spell.reaction-hellish-rebuke",
       "profileKind": "reaction",
       "qntOwners": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+          "role": "semantic-core"
+        },
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "role": "semantic-core"
@@ -3483,6 +3515,10 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "role": "semantic-core"
         }
@@ -3857,6 +3893,10 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "role": "semantic-core"
         }
@@ -4122,6 +4162,10 @@
       "profileId": "spell.readied-action-time-spell",
       "profileKind": "spell-invocation",
       "qntOwners": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+          "role": "semantic-core"
+        },
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "role": "semantic-core"
@@ -4681,6 +4725,10 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "role": "semantic-core"
         }
@@ -5216,6 +5264,10 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "role": "semantic-core"
         }
@@ -5481,6 +5533,10 @@
       "profileId": "spell.readied-action-time-spell",
       "profileKind": "spell-invocation",
       "qntOwners": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+          "role": "semantic-core"
+        },
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "role": "semantic-core"
@@ -5925,6 +5981,10 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "role": "semantic-core"
         }
@@ -6118,6 +6178,10 @@
       "profileId": "spell.reaction-shield",
       "profileKind": "reaction",
       "qntOwners": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+          "role": "semantic-core"
+        },
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "role": "semantic-core"
@@ -6454,6 +6518,10 @@
       "profileId": "spell.readied-action-time-spell",
       "profileKind": "spell-invocation",
       "qntOwners": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+          "role": "semantic-core"
+        },
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "role": "semantic-core"
@@ -7284,6 +7352,10 @@
       "profileId": "spell.readied-action-time-spell",
       "profileKind": "spell-invocation",
       "qntOwners": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+          "role": "semantic-core"
+        },
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "role": "semantic-core"

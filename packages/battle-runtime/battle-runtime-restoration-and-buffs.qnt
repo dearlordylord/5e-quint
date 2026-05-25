@@ -162,14 +162,24 @@ module battleRuntimeRestorationAndBuffs {
   pure def stateWithFlySpeedGrantEndFallCleanupFrame(state: BattleState, target: Actor): BattleState =
     { ...state, interruptStack: state.interruptStack.append(flySpeedGrantEndFallCleanupFrame(target)) }
 
+  pure def interruptStackWithoutFrame(stack: List[InterruptFrame], frameToRemove: InterruptFrame): List[InterruptFrame] =
+    stack.foldl(List(), (remaining, frame) =>
+      if (frame == frameToRemove)
+        remaining
+      else
+        remaining.append(frame)
+    )
+
   pure def stateWithoutFlySpeedGrantEndFallCleanupFrame(state: BattleState, target: Actor): BattleState =
     {
       ...state,
-      interruptStack: state.interruptStack.filter(frame => frame != flySpeedGrantEndFallCleanupFrame(target)),
+      interruptStack: interruptStackWithoutFrame(state.interruptStack, flySpeedGrantEndFallCleanupFrame(target)),
     }
 
   pure def stateHasFlySpeedGrantEndFallCleanupFrame(state: BattleState, target: Actor): bool =
-    state.interruptStack.contains(flySpeedGrantEndFallCleanupFrame(target))
+    state.interruptStack.foldl(false, (found, frame) =>
+      found or frame == flySpeedGrantEndFallCleanupFrame(target)
+    )
 
   pure def breakFlySpeedGrantForEndFall(state: BattleState, source: Actor, target: Actor): BattleState =
     stateWithFlySpeedGrantEndFallCleanupFrame(
