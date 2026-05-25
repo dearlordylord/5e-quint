@@ -1,16 +1,10 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield
-// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.HIT_POINT_RESTORATION
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-damage-save-or-attack spell.reaction-shield
 
 module spellProcedureProfiles {
-  import hitPointDamage.* from "./hit-point-damage"
-  import zeroHitPointLifecycle.* from "./zero-hit-point-lifecycle"
-  import hitPointRecovery.* from "./hit-point-recovery"
   import damageComponentAdjustments.* from "./damage-component-adjustments"
   import attackDamageComposition.* from "./attack-damage-composition"
-  import spellDefinitionProfiles.* from "./spell-definition-profiles"
-  import spellInvocationActionSlotCore.* from "./spell-invocation-action-slot-core"
   import spellDamageProjectionCore.* from "./spell-damage-projection-core"
   import spellAttackDamageProjectionCore.* from "./spell-attack-damage-projection-core"
   import spellSaveDamageProjectionCore.* from "./spell-save-damage-projection-core"
@@ -25,10 +19,6 @@ module spellProcedureProfiles {
   //   Mind Spike.
   // - Spells/Descriptions-Q-R.md: Ray of Frost.
 
-  type SpellAreaProfile =
-    | NoSpellAreaProfile
-    | MassCureWoundsPointOriginSphereArea
-
   type RayOfFrostEffectFacts = {
     attackRoll: AttackRollProcedureFacts,
     baseDamageDice: int,
@@ -39,13 +29,6 @@ module spellProcedureProfiles {
   type SaveDamageSpellEffectFacts = {
     savingThrowFailed: bool,
     damageRoll: int,
-  }
-
-  type DirectHitPointRestorationEffectFacts = {
-    profile: SpellDefinitionProfile,
-    slotLevel: int,
-    healingDiceRoll: int,
-    spellcastingAbilityModifier: int,
   }
 
   type SpellEffect =
@@ -65,11 +48,6 @@ module spellProcedureProfiles {
 
   pure def legalSpellEffect(effect: SpellEffect): bool =
     effect.in(legalSpellEffects)
-
-  pure def spellProfileArea(profile: SpellDefinitionProfile): SpellAreaProfile =
-    if (profile == MassCureWoundsSpellProfile) MassCureWoundsPointOriginSphereArea else NoSpellAreaProfile
-
-  val massCureWoundsPointOriginSphereRadiusFeet = 30
 
   pure def rayOfFrostMaximumBaseDamageDice: int = 4
 
@@ -109,51 +87,5 @@ module spellProcedureProfiles {
       effect: NoSpellEffect,
     }
   }
-
-  pure def directHitPointRestorationDiceCount(
-    profile: SpellDefinitionProfile,
-    slotLevel: int
-  ): int =
-    if (profile == CureWoundsSpellProfile) 2 + (2 * (slotLevel - 1))
-    else if (profile == MassHealingWordSpellProfile) 2 + (slotLevel - 3)
-    else if (profile == MassCureWoundsSpellProfile) 5 + (slotLevel - 5)
-    else 2 + (2 * (slotLevel - 1))
-
-  pure def directHitPointRestorationDieSize(profile: SpellDefinitionProfile): int =
-    if (profile == CureWoundsSpellProfile or profile == MassCureWoundsSpellProfile) 8 else 4
-
-  pure def legalDirectHitPointRestorationEffectFacts(facts: DirectHitPointRestorationEffectFacts): bool = {
-    val diceCount = directHitPointRestorationDiceCount(facts.profile, facts.slotLevel)
-    val dieSize = directHitPointRestorationDieSize(facts.profile)
-    all {
-      facts.profile.in(Set(HealingWordSpellProfile, CureWoundsSpellProfile, MassHealingWordSpellProfile, MassCureWoundsSpellProfile)),
-      facts.slotLevel >= spellProfileMinimumSlotLevel(facts.profile),
-      facts.slotLevel <= 9,
-      facts.healingDiceRoll >= diceCount,
-      facts.healingDiceRoll <= diceCount * dieSize,
-      facts.spellcastingAbilityModifier >= -5,
-      facts.spellcastingAbilityModifier <= 10,
-    }
-  }
-
-  pure def resolveDirectHitPointRestorationEffect(
-    vitals: CreatureVitals,
-    lifecycle: DeathSavingThrowLifecycle,
-    recovery: PositiveHitPointUnconsciousRecovery,
-    facts: DirectHitPointRestorationEffectFacts
-  ): HitPointRecoveryResult =
-    if (not(legalDirectHitPointRestorationEffectFacts(facts))) {
-      vitals: vitals,
-      deathSavingThrows: lifecycle,
-      positiveHitPointUnconsciousRecovery: recovery,
-      hitPointsRegained: 0,
-    } else {
-      applyHitPointHealing(
-        vitals,
-        lifecycle,
-        recovery,
-        facts.healingDiceRoll + facts.spellcastingAbilityModifier
-      )
-    }
 
 }

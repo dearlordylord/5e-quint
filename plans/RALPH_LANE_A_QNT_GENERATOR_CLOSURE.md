@@ -224,7 +224,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 36,
       "id": "A36-HIT-POINT-RESTORATION-SEMANTIC-CORE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Split hit point restoration semantic core"
     },
     {
@@ -408,7 +408,7 @@ Lane A must not:
 | 33 | A33-HIT-POINT-RECOVERY-READINESS - Assess hit point recovery generator readiness | done | A24,A26 | Sheet HP/rest owner needs subset/blocker classification. |
 | 34 | A34-UNIT-FEATURE-PROCEDURE-SURVEY - Survey unit feature procedure readiness split | done | A24,A26 | Classified unit feature procedure readiness as fixture-bound and split blockers into A37-A46 follow-ups. |
 | 35 | A35-BATTLE-RUNTIME-MEGA-OWNER-SURVEY - Survey battle-runtime mega-owner readiness split | done | A24,A25 | Classified broad `battle-runtime.qnt` ownership into slice cleanup, generator-readiness split tasks, and boundary classification. |
-| 36 | A36-HIT-POINT-RESTORATION-SEMANTIC-CORE - Split hit point restoration semantic core | ready-for-research | A28 | Extract reusable direct Hit Point restoration facts from the spell procedure fixture world. |
+| 36 | A36-HIT-POINT-RESTORATION-SEMANTIC-CORE - Split hit point restoration semantic core | done | A28 | Direct Hit Point restoration facts now live in a focused generator-clean semantic core. |
 | 37 | A37-UNIT-FEATURE-POOL-COST-CORE - Split unit feature pool and turn-cost core | ready-for-research | A34 | Extract feature use pools, Bonus Action costs, and resource-spend facts from unit feature procedure profiles. |
 | 38 | A38-UNIT-FEATURE-ACTION-COUNT-CORE - Split unit feature action grant and attack-count core | ready-for-research | A34 | Extract Action Surge and Extra Attack action-count facts without run blocks. |
 | 39 | A39-UNIT-FEATURE-RAGE-RECKLESS-CORE - Split Rage, Reckless Attack, and Frenzy core | ready-for-research | A34 | Extract Rage lifecycle, Reckless Attack, and Frenzy facts without profile fixture coupling. |
@@ -895,7 +895,7 @@ focused owners replace or classify the broad runtime marker.
 
 ### Task 36 - A36-HIT-POINT-RESTORATION-SEMANTIC-CORE - Split hit point restoration semantic core
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `BATTLE.SPELL.HIT_POINT_RESTORATION`,
 `packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt`, and
@@ -909,6 +909,11 @@ and report artifacts, and keep proof/example files classified as proof-only.
 Acceptance: `pnpm rules-kernel-coverage:check` passes, the hit point
 restoration readiness row no longer names `fixture-world-coupled`, and any
 remaining blocker is concrete and task-owned.
+
+Result: `BATTLE.SPELL.HIT_POINT_RESTORATION` is
+`generation-subset-clean`. Direct Hit Point restoration facts now live in
+`packages/shared-algebras/proofs/rule-core/spell-hit-point-restoration-core.qnt`;
+proof/example files remain proof-only.
 
 ### Task 37 - A37-UNIT-FEATURE-POOL-COST-CORE - Split unit feature pool and turn-cost core
 
@@ -1324,11 +1329,10 @@ coverage artifacts rather than buried in plan prose.
     `spell-attack-burst-save-damage-core.qnt` over slot requirement, Piercing
     attack damage, Cold burst damage, slot-scaled burst dice, and
     successful-save burst policy; A23 is complete.
-- Direct hit point restoration definitions in
-  `spell-procedure-profiles.qnt` are owned by
-  `BATTLE.SPELL.HIT_POINT_RESTORATION`, remain `fixture-world-coupled`, and are
-  tracked by A36 rather than the closed
-  `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` generator-input blocker family.
+- Direct hit point restoration definitions now live in
+  `spell-hit-point-restoration-core.qnt`, and
+  `BATTLE.SPELL.HIT_POINT_RESTORATION` is `generation-subset-clean` without the
+  former `fixture-world-coupled` blocker.
 - With A2-A13 and A20-A23 split into semantic cores, A14 has refreshed
   `qnt-owner-roles.jsonl`, A15 has audited the generator-subset tokens against
   the new cores, and A16 is the first task allowed to change

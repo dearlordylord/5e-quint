@@ -24,6 +24,7 @@ module spellProcedureProfilesExamples {
   import spellIndependentAttackSequenceCore.* from "./spell-independent-attack-sequence-core"
   import spellTurnHookCore.* from "./spell-turn-hook-core"
   import spellObjectHitPointDamageCore.* from "./spell-object-hit-point-damage-core"
+  import spellHitPointRestorationCore.* from "./spell-hit-point-restoration-core"
   import spellSleepRepeatSaveLifecycleCore.* from "./spell-sleep-repeat-save-lifecycle-core"
   import spellDefensiveEffectCore.* from "./spell-defensive-effect-core"
   import spellReadiedSpellResponseCore.* from "./spell-readied-spell-response-core"
@@ -629,7 +630,7 @@ module spellProcedureProfilesExamples {
       { successes: 1, failures: 1, stable: false, hpRegained: false },
       NoPositiveHitPointUnconsciousRecovery,
       {
-        profile: CureWoundsSpellProfile,
+        profile: CureWoundsHitPointRestorationProfile,
         slotLevel: 1,
         healingDiceRoll: 5,
         spellcastingAbilityModifier: 3,
@@ -668,7 +669,7 @@ module spellProcedureProfilesExamples {
       resetDeathSavingThrowLifecycle,
       NoPositiveHitPointUnconsciousRecovery,
       {
-        profile: MassCureWoundsSpellProfile,
+        profile: MassCureWoundsHitPointRestorationProfile,
         slotLevel: 5,
         healingDiceRoll: 25,
         spellcastingAbilityModifier: 3,
@@ -678,8 +679,8 @@ module spellProcedureProfilesExamples {
       assert(invocation.admitted),
       assert(invocation.state.turn.actionQuota == ActionSpent),
       assert(invocation.state.slotLedger.slotsRemaining == 0),
-      assert(spellProfileArea(MassCureWoundsSpellProfile) == MassCureWoundsPointOriginSphereArea),
-      assert(spellProfileArea(CureWoundsSpellProfile) == NoSpellAreaProfile),
+      assert(hitPointRestorationAreaProfile(MassCureWoundsHitPointRestorationProfile) == MassCureWoundsPointOriginSphereArea),
+      assert(hitPointRestorationAreaProfile(CureWoundsHitPointRestorationProfile) == NoHitPointRestorationAreaProfile),
       assert(massCureWoundsPointOriginSphereRadiusFeet == 30),
       assert(healing.hitPointsRegained == 16),
       assert(healing.vitals.hitPoints == 20),

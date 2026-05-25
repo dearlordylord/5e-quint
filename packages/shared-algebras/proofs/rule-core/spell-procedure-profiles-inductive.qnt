@@ -16,6 +16,7 @@ module spellProcedureProfilesInductive {
   import spellInvocationActionSlotCore.* from "./spell-invocation-action-slot-core"
   import spellInvocationTargetCardinalityCore.* from "./spell-invocation-target-cardinality-core"
   import spellDirectDamageProjectionCore.* from "./spell-direct-damage-projection-core"
+  import spellHitPointRestorationCore.* from "./spell-hit-point-restoration-core"
   import spellDefensiveEffectCore.* from "./spell-defensive-effect-core"
   import spellReadiedSpellResponseCore.* from "./spell-readied-spell-response-core"
   import spellSlotExpenditure.* from "./spell-slot-expenditure"
@@ -251,7 +252,7 @@ module spellProcedureProfilesInductive {
       { successes: 1, failures: 1, stable: false, hpRegained: false },
       NoPositiveHitPointUnconsciousRecovery,
       {
-        profile: HealingWordSpellProfile,
+        profile: HealingWordHitPointRestorationProfile,
         slotLevel: 1,
         healingDiceRoll: 5,
         spellcastingAbilityModifier: 2,

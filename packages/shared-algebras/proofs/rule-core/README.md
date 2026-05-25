@@ -400,6 +400,12 @@ needs-targets/needs-attack-roll/needs-damage-roll/complete step states.
 Damage Threshold blocking, full-damage application when the threshold is met,
 Hit Point clamping at 0, and destruction at 0 Hit Points.
 
+`spell-hit-point-restoration-core.qnt` projects direct spell Hit Point
+restoration facts: a restoration-specific profile union, healing dice by
+restoration profile and Spell Slot level, healing die size, spellcasting
+ability modifier bounds, Mass Cure Wounds area facts, and application through
+the shared Hit Point recovery core.
+
 `spell-sleep-repeat-save-lifecycle-core.qnt` models Sleep's save lifecycle:
 automatic save success for targets that do not sleep or have Exhaustion
 Immunity, initial failed-save pending state, repeat-save cleanup or Unconscious
@@ -465,6 +471,12 @@ Scope:
   blocking, whole-instance damage once the threshold is met, Hit Point
   clamping at 0, and destruction at 0 Hit Points without importing authored
   Spell Definition records;
+- direct Hit Point restoration facts for Healing Word, Cure Wounds, Mass
+  Healing Word, and Mass Cure Wounds live in
+  `spell-hit-point-restoration-core.qnt`; they use a restoration-specific
+  profile union that cannot represent non-restoration spell profiles, then
+  project healing dice, die size, Mass Cure Wounds area facts, legal healing
+  rolls, and QCORE3 Hit Point recovery application;
 - Sleep repeat-save lifecycle facts live in
   `spell-sleep-repeat-save-lifecycle-core.qnt`; they project automatic save
   success for targets that do not sleep or have Exhaustion Immunity, initial

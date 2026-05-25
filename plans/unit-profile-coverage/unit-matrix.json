@@ -2166,7 +2166,7 @@
       "id": "spell.hit-point-restoration",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/spell-hit-point-restoration-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts"
@@ -19840,7 +19840,7 @@
           "id": "spell.hit-point-restoration",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-hit-point-restoration-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
@@ -25647,7 +25647,7 @@
           "id": "spell.hit-point-restoration",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-hit-point-restoration-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
@@ -25709,7 +25709,7 @@
           "id": "spell.hit-point-restoration",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-hit-point-restoration-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
@@ -25771,7 +25771,7 @@
           "id": "spell.hit-point-restoration",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-hit-point-restoration-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"

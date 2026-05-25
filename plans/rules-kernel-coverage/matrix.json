@@ -247,7 +247,7 @@
         "spell.hit-point-restoration"
       ],
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/spell-hit-point-restoration-core.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -5666,11 +5666,11 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt remains the BATTLE.SPELL.HIT_POINT_RESTORATION semantic owner; spell procedure-profile semantics now use the split semantic-core files.",
+      "evidence": "packages/shared-algebras/proofs/rule-core/spell-hit-point-restoration-core.qnt is the covered obligation QNT owner carrying direct spell Hit Point restoration, Mass Cure Wounds area, and zero-Hit-Point recovery semantics without the spell procedure fixture world.",
       "obligationIds": [
         "BATTLE.SPELL.HIT_POINT_RESTORATION"
       ],
-      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-hit-point-restoration-core.qnt",
       "role": "semantic-core"
     },
     {
@@ -5978,18 +5978,12 @@
       "status": "fixture-bound"
     },
     {
-      "blockedBy": [
-        "fixture-world-coupled"
-      ],
-      "followUpTaskIds": [
-        "A36-HIT-POINT-RESTORATION-SEMANTIC-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
         "record",
         "pure-def",
-        "constant-def",
         "constant-val",
         "int",
         "bool",
@@ -5999,8 +5993,7 @@
         "comparison",
         "boolean-connective",
         "all-block",
-        "set",
-        "membership"
+        "pattern-match"
       ],
       "obligationId": "BATTLE.SPELL.HIT_POINT_RESTORATION",
       "proofOnly": [
@@ -6008,9 +6001,9 @@
         "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-examples.qnt"
       ],
       "semanticCore": [
-        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/spell-hit-point-restoration-core.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [
