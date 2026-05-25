@@ -8,9 +8,9 @@ pnpm workspace. Never use npm.
 
 This is a greenfield project with no users, no published API, no downstream dependencies. **We own the entire stack — Quint spec, runtime core, TS features, MBT bridge, React UI.** Any layer can change to serve any other layer.
 
-Do not treat internal boundaries as walls. When a lower layer needs a change to support a higher layer, change it — don't work around it with adapters, registries, or parallel data structures. The cost of changing `creature.qnt` and updating the MBT bridge is always less than the cost of maintaining a workaround that keeps layers "separate." Design for the system, not for the boundary.
+Do not treat internal boundaries as walls. When a lower layer needs a change to support a higher layer, change it — don't work around it with adapters, registries, or parallel data structures. The cost of changing a rule-core slice or `battle-runtime.qnt` and updating the affected MBT bridge is always less than the cost of maintaining a workaround that keeps layers "separate." Design for the system, not for the boundary.
 
-Concretely: adding a field to `ActiveEffect`, renaming a type in the spec, restructuring `DndContext` — all fine. Update the bridge, run MBT, move on.
+Concretely: adding a field to `BattleState`, renaming a type in a rule-core slice, restructuring a bridge module — all fine. Update the bridge, run the affected focused MBT, move on.
 
 ## No redundant state (CRITICAL)
 
@@ -181,16 +181,17 @@ Things that cause non-obvious errors, not discoverable by reading code.
 - **Test syntax:** Multiple assertions use `all { assert(x), assert(y) }` — `and { }` causes parse errors in `run` blocks.
 - **Verbose test output:** `quint test --match "pattern"` for per-test output (default only shows module name).
 - **Rust evaluator GLIBC mismatch:** If MBT tests fail with `EPIPE`, run `./scripts/build-quint-evaluator.sh` (re-run after `pnpm install`).
+- **Fresh worktree battle MBT module resolution:** In a worktree without a primed `.quint-cache`, `battle-runtime.mbt.test.ts` can fail with quint `QNT404` name-resolution errors (e.g. `damageAfterAdjustments`) even though those names exist in the corpus. Suspected missing cache-priming step in worktree setup; reproduce in the main checkout first before treating it as a code regression.
 - **Apalache / Java:** JDK 17 is installed at `~/.local/java/jdk-17.0.18+8-jre/`. The Bash tool doesn't source `.zshrc`, so prefix Apalache commands with: `export PATH="$HOME/.local/java/jdk-17.0.18+8-jre/bin:$PATH" &&`
 - **Nondet must be bare `oneOf()`:** `nondet x = if (cond) A.oneOf() else B.oneOf()` is a parse error (QNT204). The outermost expression must be `oneOf()` or `apalache::generate` — no wrapping `if`, `val`, or function calls. If you need conditional narrowing, accept the wider set and let the guard filter.
 - **Apalache record sets:** Apalache needs `var.in(Set)` for record-typed vars before field access. Quint's only way to express record sets is nested `map().flatten()` which enumerates the Cartesian product. This works for small records (~7K elements for FighterState) but is infeasible for large records (CreatureState, TurnState). Don't attempt to build VALID\_\*\_STATES for records with 10+ fields or wide integer ranges.
-- **Frame condition verification recipe:** After bulk-adding new class state vars to frame conditions, some actions get missed due to line-ending variations. To catch stragglers: `grep -n "barbarianLevel' = barbarianLevel" creature.qnt | grep -v "newClassState'"` — finds every frame condition that has the _previous_ class but is missing the _new_ class. Fix all hits before typechecking.
-- **Rust backend `mbt::actionTaken` bug:** Bare actions inside `match` arms report the composite name (e.g., `"battleStep"`) instead of the leaf name. Only `any { }` branches get leaf-level tracking. Workaround: wrap every single-action `match` arm in `any { action, }`. See comment in `battle.qnt` above `battleStep`. Upstream Quint bug — not yet filed.
+- **Frame condition verification recipe (archive restoration only):** After bulk-adding new class state vars to frame conditions in root `creature.qnt`, some actions get missed due to line-ending variations. To catch stragglers: `grep -n "barbarianLevel' = barbarianLevel" creature.qnt | grep -v "newClassState'"` — finds every frame condition that has the _previous_ class but is missing the _new_ class. Only relevant when touching archived root QNT under an explicit restoration task; not used by active package-local specs.
+- **Rust backend `mbt::actionTaken` bug:** Bare actions inside `match` arms report the composite name (e.g., `"battleStep"`) instead of the leaf name. Only `any { }` branches get leaf-level tracking. Workaround: wrap every single-action `match` arm in `any { action, }`. Upstream Quint bug — not yet filed.
 - **ITF variant format:** Parameterized Quint variants (e.g., `RCounterspell(false)`) arrive in ITF as `{tag: "RCounterspell", value: false}`, NOT `{"RCounterspell": false}`. Use `v.value` to access the parameter — `Object.values(v)[0]` returns the tag string. See `ITFVariantWithValue` in `mbt-shared.ts`.
 
 ## SRD feature parity (CRITICAL)
 
-The Quint specs are a **direct formalization of the SRD** — nothing more, nothing less. `packages/battle-runtime/battle-runtime.qnt` is the canonical promoted spec for Unit/StatBlock-backed `@dnd/battle-runtime` behavior. Root `battle.qnt` remains legacy/Core broad proof and restore source material, not the active authority for promoted battle-runtime work. `creature.qnt` remains a helper library used by root `battle.qnt` and related legacy/Core tests. Every modeled rule must trace to a specific SRD passage. Do not invent mechanics, add interpretive extensions, or go beyond what the SRD text says. The only sanctioned deviations from RAW (Rules As Written) are documented in `ASSUMPTIONS.md`, curated by the project owner.
+The Quint specs are a **direct formalization of the SRD** — nothing more, nothing less. The QNT corpus is a forest of small slices (see `docs/adr/0001-forest-of-qnt-slices.md`): reusable rule-core slices in `packages/shared-algebras/proofs/rule-core/`, package-local QNT (e.g. `packages/battle-runtime/battle-runtime.qnt`) with bridge modules into rule-core, and focused `*.mbt.qnt` / `*.mbt.test.ts` parity drivers per obligation or profile. Root `battle.qnt`, `creature.qnt`, `dndTest.qnt`, and other root `.qnt` files are archived restore source material — not the active authority for any runtime, and not a gate for any behavior. Every modeled rule must trace to a specific SRD passage. Do not invent mechanics, add interpretive extensions, or go beyond what the SRD text says. The only sanctioned deviations from RAW (Rules As Written) are documented in `ASSUMPTIONS.md`, curated by the project owner.
 
 - **Model what the SRD says.** If the SRD doesn't define it, don't model it.
 - **No homebrew, no "reasonable extensions."** If a rule is ambiguous or the formalization requires a choice the SRD doesn't prescribe, document it in `ASSUMPTIONS.md` — don't silently pick an interpretation.
@@ -200,12 +201,13 @@ The Quint specs are a **direct formalization of the SRD** — nothing more, noth
 
 ## Quint parity (CRITICAL)
 
-Promoted Unit/StatBlock-backed battle behavior MUST maintain parity with
-`packages/battle-runtime/battle-runtime.qnt` and the promoted
-`@dnd/battle-runtime` tests. `battle-machine.ts`, `machine.ts`, root
-`battle.qnt`, and `creature.mbt.test.ts` remain a legacy/Core proof-source
-lane; use them for restore/reference work only, not as a competing active
-authority or gate for promoted battle behavior.
+Unit/StatBlock-backed battle behavior MUST maintain parity with
+`packages/battle-runtime/battle-runtime.qnt`, the rule-core slices it bridges
+into (`packages/shared-algebras/proofs/rule-core/`), and the `@dnd/battle-runtime`
+parity tests (`packages/battle-runtime/src/*.mbt.test.ts`). Reusable
+mechanics live in rule-core; package-local QNT is the integration shell.
+Root `battle.qnt` / `creature.qnt` / `dndTest.qnt` are archived restore
+material and not a parity gate.
 
 - **Never** add logic to the runtime commit layer that diverges from the relevant Quint model without updating the spec first.
 - **Never** "fix" runtime behavior that the relevant authoritative Quint model handles differently — update the spec or accept it as spec-level intentional.
@@ -255,23 +257,15 @@ authority or gate for promoted battle behavior.
 
   Place these arrays in the types section (top of file, before interfaces) so the derived type is available for interface fields. Never hand-write a union type that duplicates a `const` array.
 
-- **Exhaustive matching with `effect/Match`:** All `switch` statements on discriminated unions or literal unions must use `effect/Match` with `Match.exhaustive`. Never use `default` branches — they silently swallow new variants and hide bugs. For tagged unions (discriminant field `tag`), use the shared `byTag` helper from `battle-machine-helpers.ts`. For string literal unions, use `Match.when`:
+- **Exhaustive matching with `effect/Match`:** All `switch` statements on discriminated unions or literal unions must use `effect/Match` with `Match.exhaustive`. Never use `default` branches — they silently swallow new variants and hide bugs. For tagged unions (discriminant field `tag`), introduce a file-local `const byTag = Match.discriminator("tag")` (see `packages/battle-runtime/src/battle-reducer/direct-condition-lifecycle.ts` for an example). For string literal unions, use `Match.when`:
   ```typescript
   import { Match } from "effect"
-  import { byTag } from "#/battle-machine-helpers.ts"
+  const byTag = Match.discriminator("tag")
   // Tagged union:
   Match.value(postCast).pipe(byTag("PCESave", (v) => ...), byTag("PCEDone", () => ...), Match.exhaustive)
   // String literal union:
   Match.value(cond).pipe(Match.when("blinded", () => ...), Match.when("prone", () => ...), Match.exhaustive)
   ```
-
-## Non-core features
-
-`app/src/features/` — pure functions for class features, feats, spells, species traits. See `features/README.md`.
-
-## ESLint file size limits
-
-`app/src/machine.ts` has a 420-line eslint `max-lines` limit. When adding actions, extract logic into `machine-helpers.ts` (or `machine-combat.ts`) to stay under the cap.
 
 ## Plan verification requirements
 
@@ -286,13 +280,13 @@ After significant changes, run the normal reviewer loop repeatedly until it conv
 
 ## Invariant scenario tests
 
-Root `dndTest.qnt` is legacy/Core restore-source material. Use package-local
-runtime tests and package-local Quint specs for promoted verification.
+Root `dndTest.qnt` is archived restore source material. Use package-local
+runtime tests and package-local Quint specs for active verification.
 
 ## Fuzzing
 
-Root fuzz scripts target the legacy/Core proof lane. They are not active
-promoted verification gates.
+Root fuzz scripts target the archived root QNT proof lane. They are not
+active verification gates.
 
 - `./scripts/fuzz-monitor.sh` — health checker: kills zombie evaluators, analyzes failure patterns, reports timing stats. Designed for cron.
 
