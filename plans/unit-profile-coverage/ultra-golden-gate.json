@@ -72,11 +72,11 @@
           "status": "pass"
         },
         {
-          "blockingCount": 23,
+          "blockingCount": 22,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
               "denominator": 32,
-              "numerator": 9
+              "numerator": 10
             },
             "qntCoveredObligations": {
               "denominator": 44,
@@ -114,17 +114,6 @@
                 "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
                 "packages/battle-runtime/battle-runtime-monk-focus.qnt"
               ]
-            },
-            {
-              "blockedBy": [],
-              "obligationId": "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime-concentration.qnt",
-                "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt",
-                "packages/battle-runtime/battle-runtime-timed-effects.qnt"
-              ],
-              "readinessStatus": "not-assessed",
-              "runBlockOwners": []
             },
             {
               "blockedBy": [],
@@ -584,11 +573,11 @@
           "status": "pass"
         },
         {
-          "blockingCount": 23,
+          "blockingCount": 22,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
               "denominator": 32,
-              "numerator": 9
+              "numerator": 10
             },
             "qntCoveredObligations": {
               "denominator": 47,
@@ -626,17 +615,6 @@
                 "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
                 "packages/battle-runtime/battle-runtime-monk-focus.qnt"
               ]
-            },
-            {
-              "blockedBy": [],
-              "obligationId": "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime-concentration.qnt",
-                "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt",
-                "packages/battle-runtime/battle-runtime-timed-effects.qnt"
-              ],
-              "readinessStatus": "not-assessed",
-              "runBlockOwners": []
             },
             {
               "blockedBy": [],

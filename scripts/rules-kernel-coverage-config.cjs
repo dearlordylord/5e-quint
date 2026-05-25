@@ -71,6 +71,7 @@ const generatorSubsetVocabulary = {
   exists: "Collection `.exists(...)` existential checks.",
   filter: "Collection `.filter(...)`.",
   fold: "Collection `.fold(...)`.",
+  forall: "Collection `.forall(...)` universal checks.",
   "if-expression": "Conditional expressions.",
   import: "Cross-module imports.",
   implies: "Implication expressions.",
