@@ -6624,12 +6624,14 @@
         "set",
         "filter",
         "exists",
-        "set-operators"
+        "set-operators",
+        "membership"
       ],
       "obligationId": "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+        "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
+        "packages/battle-runtime/battle-runtime-spell-attack.qnt"
       ],
       "status": "semantic-core-candidate"
     },
