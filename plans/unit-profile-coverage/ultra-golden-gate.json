@@ -72,11 +72,11 @@
           "status": "pass"
         },
         {
-          "blockingCount": 20,
+          "blockingCount": 19,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
               "denominator": 32,
-              "numerator": 12
+              "numerator": 13
             },
             "qntCoveredObligations": {
               "denominator": 44,
@@ -211,17 +211,6 @@
                 "packages/battle-runtime/battle-runtime.qnt"
               ],
               "readinessStatus": "fixture-bound",
-              "runBlockOwners": []
-            },
-            {
-              "blockedBy": [],
-              "obligationId": "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime-concentration.qnt",
-                "packages/battle-runtime/battle-runtime-marked-riders.qnt",
-                "packages/battle-runtime/battle-runtime-marked-spells.qnt"
-              ],
-              "readinessStatus": "not-assessed",
               "runBlockOwners": []
             },
             {
@@ -555,11 +544,11 @@
           "status": "pass"
         },
         {
-          "blockingCount": 20,
+          "blockingCount": 19,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
               "denominator": 32,
-              "numerator": 12
+              "numerator": 13
             },
             "qntCoveredObligations": {
               "denominator": 47,
@@ -694,17 +683,6 @@
                 "packages/battle-runtime/battle-runtime.qnt"
               ],
               "readinessStatus": "fixture-bound",
-              "runBlockOwners": []
-            },
-            {
-              "blockedBy": [],
-              "obligationId": "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime-concentration.qnt",
-                "packages/battle-runtime/battle-runtime-marked-riders.qnt",
-                "packages/battle-runtime/battle-runtime-marked-spells.qnt"
-              ],
-              "readinessStatus": "not-assessed",
               "runBlockOwners": []
             },
             {
