@@ -298,12 +298,12 @@ budget near the `any` action.
 
 ## QCORE9: Unit Feature Procedure Profiles
 
-`unit-feature-action-count-core.qnt`, `unit-feature-pool-cost-core.qnt`, and
-`unit-feature-procedure-profiles.qnt` model projection-shaped feature procedure
-facts for character-derived battle features without importing Unit ids, Surface
-records, or authored catalog enumeration. Focused `*-core.qnt` files carry
-generator-facing semantic facts; matching `*-examples.qnt` files keep run
-examples proof-only.
+`unit-feature-action-count-core.qnt`, `unit-feature-pool-cost-core.qnt`,
+`unit-feature-rage-reckless-core.qnt`, and `unit-feature-procedure-profiles.qnt`
+model projection-shaped feature procedure facts for character-derived battle
+features without importing Unit ids, Surface records, or authored catalog
+enumeration. Focused `*-core.qnt` files carry generator-facing semantic facts;
+matching `*-examples.qnt` files keep run examples proof-only.
 
 Scope:
 
@@ -321,10 +321,14 @@ Scope:
 - Rage spends a Bonus Action/use, creates an Active Ongoing Feature Occurrence,
   breaks/prevents Concentration, grants Bludgeoning/Piercing/Slashing
   Resistance facts, adds Strength weapon/Unarmed Strike damage, and models
-  heavy-armor/incapacitated/unconscious early-end facts;
+  heavy-armor/incapacitated/unconscious early-end facts in the focused Rage and
+  Reckless Attack core;
 - Reckless Attack is a first-attack-roll Strength attack fact that creates a
   start-of-turn occurrence granting Strength attack-roll Advantage for the
   Barbarian and reciprocal incoming attack-roll Advantage against them;
+- Frenzy uses the focused Rage and Reckless Attack core's active Rage state,
+  Reckless-while-Raging fact, and first eligible hit state to admit its
+  Rage-Damage-bonus d6 rider once on the Barbarian's turn;
 - Sneak Attack is an optional once-per-turn Attack Damage Rider for attack-roll
   hits with Finesse or Ranged weapons, with Advantage/Disadvantage cancellation
   applied before the Advantage branch and the ally-within-5-feet branch modeled

@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.martial-arts-attack-projection unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.martial-arts-attack-projection unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
 // KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS BATTLE.DAMAGE.ATTACK_BRANCHES BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP
 
 module unitFeatureProcedureProfiles {
@@ -16,7 +16,7 @@ module unitFeatureProcedureProfiles {
   // RAW anchors:
   // - Classes/Fighter.md: Champion Improved Critical.
   // - Classes/Rogue.md: Cunning Action, Sneak Attack, Evasion, Uncanny Dodge.
-  // - Classes/Barbarian.md: Rage, Reckless Attack, Danger Sense.
+  // - Classes/Barbarian.md: Danger Sense.
   // - Classes/Bard.md: Bardic Inspiration and College of Lore Cutting Words.
   // - Classes/Sorcerer.md: Innate Sorcery activation.
   // - Classes/Monk.md: Martial Arts attack projection, Unarmored Movement,
@@ -27,44 +27,6 @@ module unitFeatureProcedureProfiles {
   //   Damage Rolls, Dropping to 0 Hit Points, Instant Death, Saving Throws and
   //   Damage, Resistance and Vulnerability.
 
-  type RageResistanceDamageType =
-    | RageBludgeoningDamage
-    | RagePiercingDamage
-    | RageSlashingDamage
-    | RageOtherDamage
-
-  type RageOccurrence =
-    | NoRageOccurrence
-    | RageUntilEndOfNextTurn
-    | PersistentRageTenMinuteDuration
-
-  type RageState = {
-    turn: TurnProcedureState,
-    pool: FeatureUsePool,
-    occurrence: RageOccurrence,
-    concentration: ActorConcentrationState,
-  }
-
-  type RageActivationFacts = {
-    wearingHeavyArmor: bool,
-    incapacitated: bool,
-    persistentRage: bool,
-  }
-
-  type RageExtensionFacts = {
-    madeAttackRollAgainstEnemy: bool,
-    forcedEnemySavingThrow: bool,
-    spendsBonusAction: bool,
-    incapacitated: bool,
-    unconscious: bool,
-    wearingHeavyArmor: bool,
-  }
-
-  type RageAttackForm =
-    | RageWeaponAttack
-    | RageUnarmedStrikeAttack
-    | RageSpellAttack
-
   type ChampionImprovedCriticalAttackForm =
     | ChampionWeaponAttack
     | ChampionUnarmedStrikeAttack
@@ -74,30 +36,6 @@ module unitFeatureProcedureProfiles {
     | ChampionImprovedCriticalThresholdProfile({
       attackForm: ChampionImprovedCriticalAttackForm,
     })
-
-  type RageAttackFacts = {
-    usesStrength: bool,
-    dealsDamage: bool,
-    attackForm: RageAttackForm,
-  }
-
-  type RecklessAttackOccurrence =
-    | NoRecklessAttackOccurrence
-    | RecklessAttackUntilStartOfTurn
-
-  type RecklessAttackState = {
-    occurrence: RecklessAttackOccurrence,
-    attackRollMadeThisTurn: bool,
-  }
-
-  type RecklessAttackFacts = {
-    choosesRecklessAttack: bool,
-    strengthAttackRoll: bool,
-  }
-
-  type RecklessAttackAdvantageFacts = {
-    strengthAttackRoll: bool,
-  }
 
   type WeaponProcedureKind =
     | FinesseWeapon
@@ -117,24 +55,6 @@ module unitFeatureProcedureProfiles {
   }
 
   type SneakAttackResult = {
-    admitted: bool,
-    usedThisTurn: bool,
-    damageDice: int,
-    damageType: RuleDamageType,
-  }
-
-  type FrenzyFacts = {
-    rageActive: bool,
-    recklessAttackUsedWhileRagingThisTurn: bool,
-    hitWithAttackRoll: bool,
-    strengthBasedAttack: bool,
-    attackForm: RageAttackForm,
-    usedThisTurn: bool,
-    barbarianLevel: int,
-    attackDamageType: RuleDamageType,
-  }
-
-  type FrenzyResult = {
     admitted: bool,
     usedThisTurn: bool,
     damageDice: int,
@@ -697,130 +617,6 @@ module unitFeatureProcedureProfiles {
         }
     }
 
-  pure def legalRageActivationFacts(facts: RageActivationFacts): bool = all {
-    facts.wearingHeavyArmor.in(Set(true, false)),
-    facts.incapacitated.in(Set(true, false)),
-    facts.persistentRage.in(Set(true, false)),
-  }
-
-  pure def legalRageState(state: RageState): bool = all {
-    legalTurnProcedureState(state.turn),
-    legalFeatureUsePool(state.pool),
-    state.occurrence.in(Set(
-      NoRageOccurrence,
-      RageUntilEndOfNextTurn,
-      PersistentRageTenMinuteDuration
-    )),
-    state.concentration.interruptedActor.in(Set(NoConcentration, Concentrating)),
-    state.concentration.reactor.in(Set(NoConcentration, Concentrating)),
-  }
-
-  pure def startRage(state: RageState, facts: RageActivationFacts): RageState = {
-    val admitted = all {
-      legalRageActivationFacts(facts),
-      canSpendBonusAction(state.turn),
-      state.pool.usesRemaining > 0,
-      state.occurrence == NoRageOccurrence,
-      not(facts.wearingHeavyArmor),
-      not(facts.incapacitated),
-    }
-    if (not(admitted)) state
-    else {
-      turn: spendActionCost(state.turn, BonusActionCost),
-      pool: spendFeatureUsePool(state.pool),
-      occurrence:
-        if (facts.persistentRage) PersistentRageTenMinuteDuration
-        else RageUntilEndOfNextTurn,
-      concentration: endConcentration(state.concentration, InterruptedActor),
-    }
-  }
-
-  pure def ragePreventsConcentrationOrSpellcasting(state: RageState): bool =
-    state.occurrence != NoRageOccurrence
-
-  pure def rageGrantsResistance(damageType: RageResistanceDamageType): bool =
-    damageType == RageBludgeoningDamage
-      or damageType == RagePiercingDamage
-      or damageType == RageSlashingDamage
-
-  pure def rageDamageBonus(barbarianLevel: int): int =
-    if (barbarianLevel >= 16) 4
-    else if (barbarianLevel >= 9) 3
-    else 2
-
-  pure def rageDamageAdmitted(state: RageState, facts: RageAttackFacts): bool = all {
-    state.occurrence != NoRageOccurrence,
-    facts.usesStrength,
-    facts.dealsDamage,
-    facts.attackForm == RageWeaponAttack or facts.attackForm == RageUnarmedStrikeAttack,
-  }
-
-  pure def applyRageDamageBonus(
-    state: RageState,
-    facts: RageAttackFacts,
-    barbarianLevel: int,
-    damageRoll: int
-  ): int =
-    if (rageDamageAdmitted(state, facts)) damageRoll + rageDamageBonus(barbarianLevel)
-    else damageRoll
-
-  pure def endRageIfBlocked(state: RageState, facts: RageExtensionFacts): RageState =
-    if (state.occurrence == NoRageOccurrence) state
-    else if (facts.wearingHeavyArmor) state.with("occurrence", NoRageOccurrence)
-    else if (state.occurrence == PersistentRageTenMinuteDuration and facts.unconscious) {
-      state.with("occurrence", NoRageOccurrence)
-    } else if (state.occurrence == RageUntilEndOfNextTurn and facts.incapacitated) {
-      state.with("occurrence", NoRageOccurrence)
-    } else state
-
-  pure def extendRage(state: RageState, facts: RageExtensionFacts): RageState = {
-    val unblocked = endRageIfBlocked(state, facts)
-    val extensionTrigger = facts.madeAttackRollAgainstEnemy
-      or facts.forcedEnemySavingThrow
-      or facts.spendsBonusAction
-    val canPayBonusExtension =
-      not(facts.spendsBonusAction) or canSpendBonusAction(unblocked.turn)
-    if (unblocked.occurrence != RageUntilEndOfNextTurn or not(extensionTrigger) or not(canPayBonusExtension)) {
-      unblocked
-    } else {
-      turn:
-        if (facts.spendsBonusAction) spendActionCost(unblocked.turn, BonusActionCost)
-        else unblocked.turn,
-      pool: unblocked.pool,
-      occurrence: RageUntilEndOfNextTurn,
-      concentration: unblocked.concentration,
-    }
-  }
-
-  pure def activateRecklessAttackOnFirstAttackRoll(
-    state: RecklessAttackState,
-    facts: RecklessAttackFacts
-  ): RecklessAttackState =
-    if (state.attackRollMadeThisTurn) state
-    else {
-      occurrence:
-        if (facts.choosesRecklessAttack and facts.strengthAttackRoll)
-        RecklessAttackUntilStartOfTurn
-        else state.occurrence,
-      attackRollMadeThisTurn: true,
-    }
-
-  pure def startTurnRecklessAttack(state: RecklessAttackState): RecklessAttackState = {
-    occurrence: NoRecklessAttackOccurrence,
-    attackRollMadeThisTurn: false,
-  }
-
-  pure def recklessAttackGrantsAdvantage(
-    state: RecklessAttackState,
-    facts: RecklessAttackAdvantageFacts
-  ): bool = all {
-    state.occurrence == RecklessAttackUntilStartOfTurn,
-    facts.strengthAttackRoll,
-  }
-
-  pure def recklessAttackGrantsIncomingAttackAdvantage(state: RecklessAttackState): bool =
-    state.occurrence == RecklessAttackUntilStartOfTurn
-
   pure def sneakAttackDiceForRogueLevel(rogueLevel: int): int =
     if (rogueLevel >= 19) 10
     else if (rogueLevel >= 17) 9
@@ -857,28 +653,6 @@ module unitFeatureProcedureProfiles {
       usedThisTurn: facts.usedThisTurn or admitted,
       damageDice: if (admitted) sneakAttackDiceForRogueLevel(facts.rogueLevel) else 0,
       damageType: facts.weaponDamageType,
-    }
-  }
-
-  pure def frenzyAttackFormEligible(form: RageAttackForm): bool =
-    form == RageWeaponAttack or form == RageUnarmedStrikeAttack
-
-  pure def resolveFrenzy(facts: FrenzyFacts): FrenzyResult = {
-    val dice = rageDamageBonus(facts.barbarianLevel)
-    val admitted = all {
-      facts.rageActive,
-      facts.recklessAttackUsedWhileRagingThisTurn,
-      facts.hitWithAttackRoll,
-      facts.strengthBasedAttack,
-      frenzyAttackFormEligible(facts.attackForm),
-      not(facts.usedThisTurn),
-      dice > 0,
-    }
-    {
-      admitted: admitted,
-      usedThisTurn: facts.usedThisTurn or admitted,
-      damageDice: if (admitted) dice else 0,
-      damageType: facts.attackDamageType,
     }
   }
 
@@ -1070,98 +844,6 @@ module unitFeatureProcedureProfiles {
     }
   }
 
-  run test_rage_spends_bonus_action_breaks_concentration_and_grants_riders = {
-    val state = {
-      turn: initialTurnProcedureState,
-      pool: { usesRemaining: 2, maximumUses: 2 },
-      occurrence: NoRageOccurrence,
-      concentration: {
-        interruptedActor: Concentrating,
-        reactor: NoConcentration,
-      },
-    }
-    val raging = startRage(state, {
-      wearingHeavyArmor: false,
-      incapacitated: false,
-      persistentRage: false,
-    })
-    val damage = applyRageDamageBonus(raging, {
-      usesStrength: true,
-      dealsDamage: true,
-      attackForm: RageWeaponAttack,
-    }, 9, 5)
-    all {
-      assert(raging.occurrence == RageUntilEndOfNextTurn),
-      assert(not(raging.turn.bonusActionAvailable)),
-      assert(raging.pool.usesRemaining == 1),
-      assert(raging.concentration.interruptedActor == NoConcentration),
-      assert(ragePreventsConcentrationOrSpellcasting(raging)),
-      assert(rageGrantsResistance(RageBludgeoningDamage)),
-      assert(rageGrantsResistance(RagePiercingDamage)),
-      assert(rageGrantsResistance(RageSlashingDamage)),
-      assert(not(rageGrantsResistance(RageOtherDamage))),
-      assert(damage == 8),
-      assert(legalRageState(raging)),
-    }
-  }
-
-  run test_rage_heavy_armor_and_incapacitated_block_or_end = {
-    val state = {
-      turn: initialTurnProcedureState,
-      pool: { usesRemaining: 2, maximumUses: 2 },
-      occurrence: NoRageOccurrence,
-      concentration: {
-        interruptedActor: NoConcentration,
-        reactor: NoConcentration,
-      },
-    }
-    val blocked = startRage(state, {
-      wearingHeavyArmor: true,
-      incapacitated: false,
-      persistentRage: false,
-    })
-    val raging = startRage(state, {
-      wearingHeavyArmor: false,
-      incapacitated: false,
-      persistentRage: false,
-    })
-    val ended = endRageIfBlocked(raging, {
-      madeAttackRollAgainstEnemy: false,
-      forcedEnemySavingThrow: false,
-      spendsBonusAction: false,
-      incapacitated: true,
-      unconscious: false,
-      wearingHeavyArmor: false,
-    })
-    all {
-      assert(blocked == state),
-      assert(ended.occurrence == NoRageOccurrence),
-    }
-  }
-
-  run test_reckless_attack_only_activates_on_first_strength_attack_roll = {
-    val initial = {
-      occurrence: NoRecklessAttackOccurrence,
-      attackRollMadeThisTurn: false,
-    }
-    val reckless = activateRecklessAttackOnFirstAttackRoll(initial, {
-      choosesRecklessAttack: true,
-      strengthAttackRoll: true,
-    })
-    val later = activateRecklessAttackOnFirstAttackRoll(startTurnRecklessAttack(reckless)
-      .with("attackRollMadeThisTurn", true), {
-      choosesRecklessAttack: true,
-      strengthAttackRoll: true,
-    })
-    all {
-      assert(recklessAttackGrantsAdvantage(reckless, { strengthAttackRoll: true })),
-      assert(not(recklessAttackGrantsAdvantage(reckless, { strengthAttackRoll: false }))),
-      assert(recklessAttackGrantsIncomingAttackAdvantage(reckless)),
-      assert(startTurnRecklessAttack(reckless).occurrence == NoRecklessAttackOccurrence),
-      assert(later.occurrence == NoRecklessAttackOccurrence),
-    }
-  }
-
   run test_sneak_attack_uses_attack_roll_weapon_and_once_per_turn_facts = {
     val result = resolveSneakAttack({
       hitWithAttackRoll: true,
@@ -1235,48 +917,6 @@ module unitFeatureProcedureProfiles {
       assert(not(canceledAdvantage.admitted)),
     }
   }
-
-  run test_frenzy_uses_rage_reckless_strength_first_hit_facts = {
-    val result = resolveFrenzy({
-      rageActive: true,
-      recklessAttackUsedWhileRagingThisTurn: true,
-      hitWithAttackRoll: true,
-      strengthBasedAttack: true,
-      attackForm: RageUnarmedStrikeAttack,
-      usedThisTurn: false,
-      barbarianLevel: 3,
-      attackDamageType: BludgeoningDamage,
-    })
-    val repeated = resolveFrenzy({
-      rageActive: true,
-      recklessAttackUsedWhileRagingThisTurn: true,
-      hitWithAttackRoll: true,
-      strengthBasedAttack: true,
-      attackForm: RageWeaponAttack,
-      usedThisTurn: result.usedThisTurn,
-      barbarianLevel: 3,
-      attackDamageType: SlashingDamage,
-    })
-    val blocked = resolveFrenzy({
-      rageActive: true,
-      recklessAttackUsedWhileRagingThisTurn: false,
-      hitWithAttackRoll: true,
-      strengthBasedAttack: true,
-      attackForm: RageWeaponAttack,
-      usedThisTurn: false,
-      barbarianLevel: 3,
-      attackDamageType: SlashingDamage,
-    })
-    all {
-      assert(result.admitted),
-      assert(result.usedThisTurn),
-      assert(result.damageDice == rageDamageBonus(3)),
-      assert(result.damageType == BludgeoningDamage),
-      assert(not(repeated.admitted)),
-      assert(not(blocked.admitted)),
-    }
-  }
-
 
   run test_evasion_replaces_dexterity_save_damage_only_when_not_incapacitated = {
     val success = saveDamageAfterEvasionReplacement({

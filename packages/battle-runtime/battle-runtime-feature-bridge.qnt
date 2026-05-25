@@ -7,6 +7,7 @@ module battleRuntimeFeatureBridge {
   import reactionsContinuationsConcentration.* from "../shared-algebras/proofs/rule-core/reactions-continuations-concentration"
   import unitFeaturePoolCostCore.* from "../shared-algebras/proofs/rule-core/unit-feature-pool-cost-core"
   import unitFeatureActionCountCore.* from "../shared-algebras/proofs/rule-core/unit-feature-action-count-core"
+  import unitFeatureRageRecklessCore.* from "../shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core"
   import unitFeatureProcedureProfiles.* from "../shared-algebras/proofs/rule-core/unit-feature-procedure-profiles"
 
   type BattleRuntimeRageResistanceProjection = {
@@ -140,17 +141,20 @@ module battleRuntimeFeatureBridge {
     attackForm: RageAttackForm,
     usedThisTurn: bool,
     barbarianLevel: int
-  ): int =
-    resolveFrenzy({
-      rageActive: rageActive,
-      recklessAttackUsedWhileRagingThisTurn: recklessAttackUsedWhileRagingThisTurn,
+  ): int = {
+    val state = initialFrenzyState(
+      battleRuntimeRageState(rageActive),
+      battleRuntimeRecklessAttackState(recklessAttackUsedWhileRagingThisTurn, true),
+      recklessAttackUsedWhileRagingThisTurn
+    ).with("firstEligibleHitResolvedThisTurn", usedThisTurn)
+    resolveFrenzy(state, {
       hitWithAttackRoll: hitWithAttackRoll,
       strengthBasedAttack: strengthBasedAttack,
       attackForm: attackForm,
-      usedThisTurn: usedThisTurn,
       barbarianLevel: barbarianLevel,
       attackDamageType: BludgeoningDamage,
     }).damageDice
+  }
 
   pure def battleRuntimePassiveSavingThrowRollMode(
     ability: SavingThrowAbilityFact,

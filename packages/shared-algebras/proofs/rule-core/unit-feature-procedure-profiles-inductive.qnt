@@ -12,6 +12,7 @@ module unitFeatureProcedureProfilesInductive {
   import reactionsContinuationsConcentration.* from "./reactions-continuations-concentration"
   import unitFeaturePoolCostCore.* from "./unit-feature-pool-cost-core"
   import unitFeatureActionCountCore.* from "./unit-feature-action-count-core"
+  import unitFeatureRageRecklessCore.* from "./unit-feature-rage-reckless-core"
   import unitFeatureProcedureProfiles.* from "./unit-feature-procedure-profiles"
 
   var qActionQuota: ActionQuota
@@ -80,6 +81,15 @@ module unitFeatureProcedureProfilesInductive {
     occurrence: qRecklessOccurrence,
     attackRollMadeThisTurn: qAttackRollMadeThisTurn,
   }
+
+  pure def qFrenzyState: FrenzyState =
+    initialFrenzyState(
+      qRageState,
+      qRecklessAttackState,
+      qFrenzyUsedThisTurn
+        or (qRageOccurrence != NoRageOccurrence
+          and qRecklessOccurrence == RecklessAttackUntilStartOfTurn)
+    ).with("firstEligibleHitResolvedThisTurn", qFrenzyUsedThisTurn)
 
   action init = all {
     recordTurn(initialTurnProcedureState),
@@ -310,18 +320,22 @@ module unitFeatureProcedureProfilesInductive {
     nondet recklessWhileRaging = Set(true, false).oneOf()
     nondet strengthAttack = Set(true, false).oneOf()
     nondet attackForm = Set(RageWeaponAttack, RageUnarmedStrikeAttack).oneOf()
-    val result = resolveFrenzy({
-      rageActive: rageActive,
-      recklessAttackUsedWhileRagingThisTurn: recklessWhileRaging,
+    val state = initialFrenzyState(
+      qRageState.with("occurrence", if (rageActive) RageUntilEndOfNextTurn else NoRageOccurrence),
+      qRecklessAttackState
+        .with("occurrence", if (recklessWhileRaging) RecklessAttackUntilStartOfTurn else NoRecklessAttackOccurrence)
+        .with("attackRollMadeThisTurn", recklessWhileRaging),
+      recklessWhileRaging
+    ).with("firstEligibleHitResolvedThisTurn", qFrenzyUsedThisTurn)
+    val result = resolveFrenzy(state, {
       hitWithAttackRoll: true,
       strengthBasedAttack: strengthAttack,
       attackForm: attackForm,
-      usedThisTurn: qFrenzyUsedThisTurn,
       barbarianLevel: 3,
       attackDamageType: SlashingDamage,
     })
     all {
-      qFrenzyUsedThisTurn' = result.usedThisTurn,
+      qFrenzyUsedThisTurn' = result.state.firstEligibleHitResolvedThisTurn,
       qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
       qWeaponDamageDiceRollChoiceUsedThisTurn' = qWeaponDamageDiceRollChoiceUsedThisTurn,
       qAttackRollMissToHitReplacementUsedSinceTurnStart' = qAttackRollMissToHitReplacementUsedSinceTurnStart,
@@ -796,5 +810,6 @@ module unitFeatureProcedureProfilesInductive {
     legalFeatureUsePool(qFeaturePool),
     legalActionSurgeState(qActionSurgeState),
     legalRageState(qRageState),
+    legalFrenzyState(qFrenzyState),
   }
 }

@@ -9,6 +9,7 @@ module ruleCoreFeaturesMbt {
   import reactionsContinuationsConcentration.* from "../shared-algebras/proofs/rule-core/reactions-continuations-concentration"
   import unitFeaturePoolCostCore.* from "../shared-algebras/proofs/rule-core/unit-feature-pool-cost-core"
   import unitFeatureActionCountCore.* from "../shared-algebras/proofs/rule-core/unit-feature-action-count-core"
+  import unitFeatureRageRecklessCore.* from "../shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core"
   import unitFeatureProcedureProfiles.* from "../shared-algebras/proofs/rule-core/unit-feature-procedure-profiles"
   import zeroHitPointLifecycle.* from "../shared-algebras/proofs/rule-core/zero-hit-point-lifecycle"
 
@@ -452,16 +453,20 @@ module ruleCoreFeaturesMbt {
   }
 
   action doFrenzy = {
-    val result = resolveFrenzy({
-      rageActive: true,
-      recklessAttackUsedWhileRagingThisTurn: true,
-      hitWithAttackRoll: true,
-      strengthBasedAttack: true,
-      attackForm: RageWeaponAttack,
-      usedThisTurn: false,
-      barbarianLevel: 3,
-      attackDamageType: SlashingDamage,
-    })
+    val result = resolveFrenzy(
+      initialFrenzyState(
+        qRageState.with("occurrence", RageUntilEndOfNextTurn),
+        qRecklessState.with("occurrence", RecklessAttackUntilStartOfTurn),
+        true
+      ),
+      {
+        hitWithAttackRoll: true,
+        strengthBasedAttack: true,
+        attackForm: RageWeaponAttack,
+        barbarianLevel: 3,
+        attackDamageType: SlashingDamage,
+      }
+    )
     all {
       qHoles == Set(),
       recordProjection(

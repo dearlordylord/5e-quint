@@ -242,7 +242,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 39,
       "id": "A39-UNIT-FEATURE-RAGE-RECKLESS-CORE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Split Rage, Reckless Attack, and Frenzy core"
     },
     {
@@ -411,7 +411,7 @@ Lane A must not:
 | 36 | A36-HIT-POINT-RESTORATION-SEMANTIC-CORE - Split hit point restoration semantic core | done | A28 | Direct Hit Point restoration facts now live in a focused generator-clean semantic core. |
 | 37 | A37-UNIT-FEATURE-POOL-COST-CORE - Split unit feature pool and turn-cost core | done | A34 | Feature Pool, Bonus Action turn-cost, and immediate resource-spend facts now live in a focused generator-facing core. |
 | 38 | A38-UNIT-FEATURE-ACTION-COUNT-CORE - Split unit feature action grant and attack-count core | done | A34 | Action Surge and Extra Attack action-count facts now live in a focused generator-facing core. |
-| 39 | A39-UNIT-FEATURE-RAGE-RECKLESS-CORE - Split Rage, Reckless Attack, and Frenzy core | ready-for-research | A34 | Extract Rage lifecycle, Reckless Attack, and Frenzy facts without profile fixture coupling. |
+| 39 | A39-UNIT-FEATURE-RAGE-RECKLESS-CORE - Split Rage, Reckless Attack, and Frenzy core | done | A34 | Rage, Reckless Attack, and Frenzy facts now live in a focused generator-facing core. |
 | 40 | A40-UNIT-FEATURE-ATTACK-RIDER-CORE - Split unit feature attack roll and damage rider core | ready-for-research | A34 | Extract Sneak Attack, Improved Critical, Savage Attacker, Archery, and miss-to-hit replacement facts. |
 | 41 | A41-UNIT-FEATURE-SAVE-DAMAGE-CORE - Split unit feature Saving Throw and save-damage core | ready-for-research | A34 | Extract Evasion, Danger Sense, and save-damage replacement facts. |
 | 42 | A42-UNIT-FEATURE-REACTION-REDUCTION-CORE - Split unit feature reaction reduction and redirect core | ready-for-research | A34 | Extract Cutting Words, Uncanny Dodge, and Deflect Attacks reaction facts. |
@@ -967,7 +967,7 @@ feature procedure split.
 
 ### Task 39 - A39-UNIT-FEATURE-RAGE-RECKLESS-CORE - Split Rage, Reckless Attack, and Frenzy core
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`,
 `BATTLE.DAMAGE.ATTACK_BRANCHES`, `unit-feature-procedure-profiles.qnt`, and the

@@ -174,6 +174,7 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
         "packages/battle-runtime/battle-runtime.qnt",
         "packages/battle-runtime/battle-runtime-monk-focus.qnt"
@@ -2030,6 +2031,7 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
       ],
       "runtime": "battle",
@@ -6016,6 +6018,15 @@
       "role": "semantic-core"
     },
     {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt is the covered obligation QNT owner carrying Rage activation, extension, resistance, damage, Concentration prevention, Reckless Attack windows, and Frenzy first-hit semantics without importing authored Unit catalog rows.",
+      "obligationIds": [
+        "BATTLE.DAMAGE.ATTACK_BRANCHES",
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
+      "role": "semantic-core"
+    },
+    {
       "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
         "BATTLE.DAMAGE.ATTACK_BRANCHES",
@@ -6204,7 +6215,6 @@
         "run-block-coupled"
       ],
       "followUpTaskIds": [
-        "A39-UNIT-FEATURE-RAGE-RECKLESS-CORE",
         "A40-UNIT-FEATURE-ATTACK-RIDER-CORE",
         "A41-UNIT-FEATURE-SAVE-DAMAGE-CORE",
         "A42-UNIT-FEATURE-REACTION-REDUCTION-CORE",
@@ -6238,11 +6248,13 @@
       "proofOnly": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
         "packages/battle-runtime/battle-runtime-monk-focus.qnt",
         "packages/battle-runtime/battle-runtime.qnt"
@@ -7380,7 +7392,6 @@
         "run-block-coupled"
       ],
       "followUpTaskIds": [
-        "A39-UNIT-FEATURE-RAGE-RECKLESS-CORE",
         "A40-UNIT-FEATURE-ATTACK-RIDER-CORE",
         "A42-UNIT-FEATURE-REACTION-REDUCTION-CORE",
         "A44-UNIT-FEATURE-MARTIAL-ARTS-CORE"
@@ -7409,11 +7420,13 @@
         "packages/shared-algebras/proofs/rule-core/attack-damage-composition-inductive.qnt",
         "packages/shared-algebras/proofs/rule-core/attack-damage-composition-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
       ],
       "status": "fixture-bound"
@@ -8069,33 +8082,29 @@
       "owners": [
         {
           "lines": [
-            1040,
-            1073,
-            1108,
+            814,
+            847,
+            879,
+            921,
+            947,
+            964,
+            981,
+            1003,
+            1024,
+            1067,
+            1082,
+            1118,
             1142,
-            1165,
-            1197,
+            1171,
+            1194,
             1239,
-            1281,
+            1258,
+            1276,
             1307,
-            1324,
-            1341,
-            1363,
-            1384,
-            1427,
-            1442,
-            1478,
-            1502,
-            1531,
-            1554,
-            1599,
-            1618,
-            1636,
-            1667,
-            1688,
-            1704,
-            1743,
-            1794
+            1328,
+            1344,
+            1383,
+            1434
           ],
           "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
         },
@@ -8213,33 +8222,29 @@
       "owners": [
         {
           "lines": [
-            1040,
-            1073,
-            1108,
+            814,
+            847,
+            879,
+            921,
+            947,
+            964,
+            981,
+            1003,
+            1024,
+            1067,
+            1082,
+            1118,
             1142,
-            1165,
-            1197,
+            1171,
+            1194,
             1239,
-            1281,
+            1258,
+            1276,
             1307,
-            1324,
-            1341,
-            1363,
-            1384,
-            1427,
-            1442,
-            1478,
-            1502,
-            1531,
-            1554,
-            1599,
-            1618,
-            1636,
-            1667,
-            1688,
-            1704,
-            1743,
-            1794
+            1328,
+            1344,
+            1383,
+            1434
           ],
           "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
         }
@@ -8252,33 +8257,29 @@
       "owners": [
         {
           "lines": [
-            1040,
-            1073,
-            1108,
+            814,
+            847,
+            879,
+            921,
+            947,
+            964,
+            981,
+            1003,
+            1024,
+            1067,
+            1082,
+            1118,
             1142,
-            1165,
-            1197,
+            1171,
+            1194,
             1239,
-            1281,
+            1258,
+            1276,
             1307,
-            1324,
-            1341,
-            1363,
-            1384,
-            1427,
-            1442,
-            1478,
-            1502,
-            1531,
-            1554,
-            1599,
-            1618,
-            1636,
-            1667,
-            1688,
-            1704,
-            1743,
-            1794
+            1328,
+            1344,
+            1383,
+            1434
           ],
           "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
         }
@@ -8291,33 +8292,29 @@
       "owners": [
         {
           "lines": [
-            1040,
-            1073,
-            1108,
+            814,
+            847,
+            879,
+            921,
+            947,
+            964,
+            981,
+            1003,
+            1024,
+            1067,
+            1082,
+            1118,
             1142,
-            1165,
-            1197,
+            1171,
+            1194,
             1239,
-            1281,
+            1258,
+            1276,
             1307,
-            1324,
-            1341,
-            1363,
-            1384,
-            1427,
-            1442,
-            1478,
-            1502,
-            1531,
-            1554,
-            1599,
-            1618,
-            1636,
-            1667,
-            1688,
-            1704,
-            1743,
-            1794
+            1328,
+            1344,
+            1383,
+            1434
           ],
           "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
         }
