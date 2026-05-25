@@ -31,6 +31,9 @@ const {
 } = require("./unit-profile-coverage-validation.cjs");
 const { validateSrdUnitInventory } = require("./srd-unit-inventory.cjs");
 const { validateMcpScenarioEvidence } = require("./ultra-golden-gate.cjs");
+const {
+  buildSpellProcedureMbtEvidenceGate,
+} = require("./spell-procedure-mbt-evidence-gate.cjs");
 
 function writeFixtureJson(root, relativePath, value) {
   const absolutePath = path.join(root, relativePath);
@@ -601,6 +604,72 @@ function runSelfTest(root) {
     ) {
       fail(
         `Self-test failed: expected rules-kernel profile gap follow-up ownership, got ${JSON.stringify(fixtureProfileGap)}`,
+      );
+    }
+    const spellProcedureEvidenceGate = buildSpellProcedureMbtEvidenceGate({
+      level1FullSupport: {
+        scope: { title: "Fixture level 1" },
+        rulesKernelSupportedUnitJoin,
+      },
+      level12FullSupport: {
+        scope: { title: "Fixture level 1-2" },
+        rulesKernelSupportedUnitJoin: {
+          units: [
+            {
+              unitId: "fixture_spell",
+              profiles: [
+                {
+                  profileId: "fixture.spell",
+                  profileKind: "spell-invocation",
+                  joinStatus: "covered",
+                  obligations: [
+                    {
+                      obligationId: "BATTLE.FIXTURE.SPELL",
+                      runtime: "battle",
+                      status: "covered",
+                      title: "Fixture spell obligation",
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      },
+      rulesKernelMatrix: {
+        obligations: [
+          {
+            id: "BATTLE.FIXTURE.SPELL",
+            status: "covered",
+            runtime: "battle",
+            title: "Fixture spell obligation",
+            qntOwners: ["fixture/spell.qnt"],
+            parityWitnesses: [
+              {
+                kind: "runtime-test",
+                ownerPath: "fixture/spell.test.ts",
+              },
+            ],
+          },
+        ],
+        qntOwnerRoles: [
+          {
+            ownerPath: "fixture/spell.qnt",
+            role: "semantic-core",
+          },
+        ],
+      },
+    });
+    const fixtureSpellScope = spellProcedureEvidenceGate.scopes.find(
+      (scope) => scope.scopeId === "level-1-2",
+    );
+    const fixtureSpellGap = fixtureSpellScope?.openGapRows[0]?.gaps[0];
+    if (
+      spellProcedureEvidenceGate.status !== "blocked" ||
+      fixtureSpellGap?.kind !== "missing-qnt-mbt-witness"
+    ) {
+      fail(
+        `Self-test failed: expected spell procedure gate to expose runtime-test-only QNT/MBT gap, got ${JSON.stringify(spellProcedureEvidenceGate)}`,
       );
     }
     const malformedUnitEvidenceIssues = validateCoverageInputs({

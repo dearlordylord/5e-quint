@@ -53,7 +53,7 @@ remains.
     {
       "number": 7,
       "id": "C7-SPELL-PROCEDURE-MBT-EVIDENCE-GATE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Gate spell procedure MBT evidence for supported profiles"
     },
     {
@@ -236,7 +236,7 @@ Acceptance: invalid witness kind fails the checker.
 
 ### Task 7 - C7-SPELL-PROCEDURE-MBT-EVIDENCE-GATE - Gate spell procedure MBT evidence for supported profiles
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: spell procedure supported profiles have explicit QNT/MBT evidence rows
 or gap rows.

@@ -41,6 +41,10 @@ const {
   buildLevel12QntMbtJoin,
   renderLevel12QntMbtJoin,
 } = require("./level12-qnt-mbt-join-report.cjs");
+const {
+  buildSpellProcedureMbtEvidenceGate,
+  renderSpellProcedureMbtEvidenceGate,
+} = require("./spell-procedure-mbt-evidence-gate.cjs");
 const { scanClaimFiles } = require("./unit-profile-coverage-claim-scan.cjs");
 const { runSelfTest } = require("./unit-profile-coverage-self-test.cjs");
 const {
@@ -153,6 +157,11 @@ function main() {
     level12FullSupport,
     rulesKernelMatrix: rulesKernelCoverage.matrix,
   });
+  const spellProcedureMbtEvidenceGate = buildSpellProcedureMbtEvidenceGate({
+    level1FullSupport,
+    level12FullSupport,
+    rulesKernelMatrix: rulesKernelCoverage.matrix,
+  });
   writeOrCompare(
     { root, write },
     paths.matrix,
@@ -206,6 +215,16 @@ function main() {
     { root, write },
     paths.level12QntMbtJoinReport,
     renderLevel12QntMbtJoin(level12QntMbtJoin),
+  );
+  writeOrCompare(
+    { root, write },
+    paths.spellProcedureMbtEvidenceGate,
+    `${JSON.stringify(spellProcedureMbtEvidenceGate, null, 2)}\n`,
+  );
+  writeOrCompare(
+    { root, write },
+    paths.spellProcedureMbtEvidenceGateReport,
+    renderSpellProcedureMbtEvidenceGate(spellProcedureMbtEvidenceGate),
   );
   writeOrCompare(
     { root, write },
