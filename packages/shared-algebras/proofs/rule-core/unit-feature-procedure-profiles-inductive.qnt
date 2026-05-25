@@ -11,6 +11,7 @@ module unitFeatureProcedureProfilesInductive {
   import actionTurnProcedures.* from "./action-turn-procedures"
   import reactionsContinuationsConcentration.* from "./reactions-continuations-concentration"
   import unitFeaturePoolCostCore.* from "./unit-feature-pool-cost-core"
+  import unitFeatureActionCountCore.* from "./unit-feature-action-count-core"
   import unitFeatureProcedureProfiles.* from "./unit-feature-procedure-profiles"
 
   var qActionQuota: ActionQuota

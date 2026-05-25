@@ -269,7 +269,7 @@
       "id": "unit-feature.action-surge-resource",
       "profileKind": "resource",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -295,7 +295,7 @@
       "id": "unit-feature.attack-action-attack-count-scaling",
       "profileKind": "passive",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
         "packages/battle-runtime/battle-runtime.qnt"
       ],
       "runtimeOwners": [
@@ -12890,7 +12890,7 @@
           "id": "unit-feature.action-surge-resource",
           "profileKind": "resource",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -12951,7 +12951,7 @@
           "id": "unit-feature.attack-action-attack-count-scaling",
           "profileKind": "passive",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
             "packages/battle-runtime/battle-runtime.qnt"
           ],
           "runtimeOwners": [
@@ -17311,7 +17311,7 @@
           "id": "unit-feature.attack-action-attack-count-scaling",
           "profileKind": "passive",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
             "packages/battle-runtime/battle-runtime.qnt"
           ],
           "runtimeOwners": [
@@ -17460,7 +17460,7 @@
           "id": "unit-feature.attack-action-attack-count-scaling",
           "profileKind": "passive",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
             "packages/battle-runtime/battle-runtime.qnt"
           ],
           "runtimeOwners": [

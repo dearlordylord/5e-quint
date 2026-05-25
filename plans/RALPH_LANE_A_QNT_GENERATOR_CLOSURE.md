@@ -236,7 +236,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 38,
       "id": "A38-UNIT-FEATURE-ACTION-COUNT-CORE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Split unit feature action grant and attack-count core"
     },
     {
@@ -410,7 +410,7 @@ Lane A must not:
 | 35 | A35-BATTLE-RUNTIME-MEGA-OWNER-SURVEY - Survey battle-runtime mega-owner readiness split | done | A24,A25 | Classified broad `battle-runtime.qnt` ownership into slice cleanup, generator-readiness split tasks, and boundary classification. |
 | 36 | A36-HIT-POINT-RESTORATION-SEMANTIC-CORE - Split hit point restoration semantic core | done | A28 | Direct Hit Point restoration facts now live in a focused generator-clean semantic core. |
 | 37 | A37-UNIT-FEATURE-POOL-COST-CORE - Split unit feature pool and turn-cost core | done | A34 | Feature Pool, Bonus Action turn-cost, and immediate resource-spend facts now live in a focused generator-facing core. |
-| 38 | A38-UNIT-FEATURE-ACTION-COUNT-CORE - Split unit feature action grant and attack-count core | ready-for-research | A34 | Extract Action Surge and Extra Attack action-count facts without run blocks. |
+| 38 | A38-UNIT-FEATURE-ACTION-COUNT-CORE - Split unit feature action grant and attack-count core | done | A34 | Action Surge and Extra Attack action-count facts now live in a focused generator-facing core. |
 | 39 | A39-UNIT-FEATURE-RAGE-RECKLESS-CORE - Split Rage, Reckless Attack, and Frenzy core | ready-for-research | A34 | Extract Rage lifecycle, Reckless Attack, and Frenzy facts without profile fixture coupling. |
 | 40 | A40-UNIT-FEATURE-ATTACK-RIDER-CORE - Split unit feature attack roll and damage rider core | ready-for-research | A34 | Extract Sneak Attack, Improved Critical, Savage Attacker, Archery, and miss-to-hit replacement facts. |
 | 41 | A41-UNIT-FEATURE-SAVE-DAMAGE-CORE - Split unit feature Saving Throw and save-damage core | ready-for-research | A34 | Extract Evasion, Danger Sense, and save-damage replacement facts. |
@@ -938,12 +938,12 @@ facts now live in
 `packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt`.
 Examples live in
 `packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core-examples.qnt`,
-and A38-A46 remain the visible follow-up surface for the rest of the unit
+and A39-A46 remain the visible follow-up surface for the rest of the unit
 feature procedure split.
 
 ### Task 38 - A38-UNIT-FEATURE-ACTION-COUNT-CORE - Split unit feature action grant and attack-count core
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`,
 `BATTLE.DAMAGE.ATTACK_BRANCHES`, `unit-feature-procedure-profiles.qnt`, and the
@@ -956,6 +956,14 @@ attack slots as an explicit turn-procedure fact, not a catalog/profile label.
 Acceptance: the new core is run-block-free, readiness rows no longer rely on
 the monolithic unit feature owner for these facts, and examples remain
 proof-only.
+
+Result: Action Surge's non-Magic additional action facts and Extra Attack's
+Attack action attack-count scaling now live in
+`packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt`.
+Examples live in
+`packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core-examples.qnt`,
+and A39-A46 remain the visible follow-up surface for the rest of the unit
+feature procedure split.
 
 ### Task 39 - A39-UNIT-FEATURE-RAGE-RECKLESS-CORE - Split Rage, Reckless Attack, and Frenzy core
 

@@ -298,14 +298,19 @@ budget near the `any` action.
 
 ## QCORE9: Unit Feature Procedure Profiles
 
-`unit-feature-procedure-profiles.qnt` models projection-shaped feature procedure
+`unit-feature-action-count-core.qnt`, `unit-feature-pool-cost-core.qnt`, and
+`unit-feature-procedure-profiles.qnt` model projection-shaped feature procedure
 facts for character-derived battle features without importing Unit ids, Surface
-records, or authored catalog enumeration.
+records, or authored catalog enumeration. Focused `*-core.qnt` files carry
+generator-facing semantic facts; matching `*-examples.qnt` files keep run
+examples proof-only.
 
 Scope:
 
 - Action Surge spends a feature Pool, enforces once-per-turn use, and grants one
   additional non-Magic action fact;
+- Extra Attack scales the attacks inside one Attack action and keeps movement
+  between those attack slots as an explicit turn-procedure fact;
 - Second Wind spends a Bonus Action and feature Pool use, then applies HP
   recovery through QCORE3;
 - Cunning Action admits Dash, Disengage, and Hide through QCORE6's Bonus Action
