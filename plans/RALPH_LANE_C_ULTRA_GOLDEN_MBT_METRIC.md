@@ -77,7 +77,7 @@ remains.
     {
       "number": 11,
       "id": "C11-BATTLE-MCP-EVIDENCE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add battle MCP evidence rows"
     },
     {
@@ -270,7 +270,7 @@ Acceptance: focused MCP test green.
 
 ### Task 11 - C11-BATTLE-MCP-EVIDENCE - Add battle MCP evidence rows
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: battle MCP evidence rows for level 1-2 SRD flows.
 

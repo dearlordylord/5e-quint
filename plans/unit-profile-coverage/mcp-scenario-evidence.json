@@ -94,6 +94,69 @@
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
       "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
       "summary": "The protocol acceptance scenario ends battle and inspects list_characters plus the session snapshot to prove durable Character Sheet Hit Points and Spell Slot expenditure remain visible to MCP callers."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "battle",
+      "scenarioId": "select-monsters",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C11-BATTLE-MCP-EVIDENCE",
+      "summary": "The protocol acceptance scenario selects SRD Stat Blocks for battle setup through select_stat_block after discovering valid Stat Block ids from list_stat_blocks."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "battle",
+      "scenarioId": "start-battle-with-initiative",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C11-BATTLE-MCP-EVIDENCE",
+      "summary": "The protocol acceptance scenario starts SRD battles from finalized Character Sheets and Stat Blocks, verifies the Initiative-derived turn order, and reads the current actor from the battle snapshot."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "battle",
+      "scenarioId": "take-turns-and-resolve-attacks",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C11-BATTLE-MCP-EVIDENCE",
+      "summary": "The protocol acceptance scenario discovers battle acts, fills targetChoice, attackRoll, and rolledDice battle holes for weapon attacks, verifies Hit Point changes, and advances turns in Initiative order."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "battle",
+      "scenarioId": "use-action-surge",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C11-BATTLE-MCP-EVIDENCE",
+      "summary": "The protocol acceptance scenario resolves the level-2 Fighter Action Surge feature through resolve_battle_act and then rediscovers battle acts before taking another attack."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "battle",
+      "scenarioId": "cast-cantrips-and-slotted-spells",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C11-BATTLE-MCP-EVIDENCE",
+      "summary": "The protocol acceptance scenario discovers action-time spell subjects for the level-2 Wizard, resolves Ray of Frost and Magic Missile through runtime-owned battle holes, and verifies Spell Slot expenditure."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "battle",
+      "scenarioId": "finish-battle-and-inspect-character-state",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C11-BATTLE-MCP-EVIDENCE",
+      "summary": "The protocol acceptance scenario ends active battles through end_battle after combat resolution and verifies the battle handoff updates available Character Sheet state."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "battle",
+      "scenarioId": "recover-from-invalid-or-stale-actions",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C11-BATTLE-MCP-EVIDENCE",
+      "summary": "The protocol acceptance scenario verifies battle workflow recovery by rejecting end_turn and end_battle while battle holes are pending, requiring callers to continue with the current subject or rediscover state."
     }
   ]
 }
