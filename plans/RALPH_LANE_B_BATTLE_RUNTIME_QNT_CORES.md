@@ -14,23 +14,108 @@ or prove from checker-owned artifacts that no such work remains.
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    { "number": 1, "id": "B1-BATTLE-RUNTIME-SLICE-OWNER-CLOSURE", "status": "ready-for-research", "title": "Close already-sliced battle-runtime owner markers" },
-    { "number": 2, "id": "B2-BATTLE-RUNTIME-LIGHT-EMITTER-CORE", "status": "ready-for-research", "title": "Split light emitter and held object lifecycle core" },
-    { "number": 3, "id": "B3-BATTLE-RUNTIME-GROUND-HAZARD-CORE", "status": "ready-for-research", "title": "Split ground, obscurement, and restraint hazard core" },
-    { "number": 4, "id": "B4-BATTLE-RUNTIME-MOVEMENT-REACTION-CORE", "status": "ready-for-research", "title": "Split movement and reaction spell lifecycle core" },
-    { "number": 5, "id": "B5-BATTLE-RUNTIME-OBJECT-CONTACT-ENDING-CORE", "status": "ready-for-research", "title": "Split object-contact and ongoing spell ending core" },
-    { "number": 6, "id": "B6-BATTLE-RUNTIME-DRAGONS-BREATH-CORE", "status": "ready-for-research", "title": "Split Dragon's Breath effect and granted action core" },
-    { "number": 7, "id": "B7-BATTLE-RUNTIME-COMPANION-FORM-CORE", "status": "ready-for-research", "title": "Split companion and form lifecycle core" },
-    { "number": 8, "id": "B8-BATTLE-RUNTIME-BLUR-DEFENSE-CORE", "status": "ready-for-research", "title": "Split Blur attack-roll defense lifecycle core" },
-    { "number": 9, "id": "B9-BATTLE-RUNTIME-ABILITY-HOLE-CLOSURE", "status": "ready-for-research", "title": "Classify ability-check and Search hole readiness" },
-    { "number": 10, "id": "B10-BATTLE-RUNTIME-CONCENTRATION-CLEANUP-CORE", "status": "ready-for-research", "title": "Split concentration cleanup and duration-expiry facts" },
-    { "number": 11, "id": "B11-BATTLE-RUNTIME-TURN-END-EFFECT-CORE", "status": "ready-for-research", "title": "Split turn-end active-effect processing facts" },
-    { "number": 12, "id": "B12-BATTLE-RUNTIME-AREA-EFFECT-ENTRY-CORE", "status": "ready-for-research", "title": "Split area-entry and start-turn trigger facts" },
-    { "number": 13, "id": "B13-BATTLE-RUNTIME-REACTION-OFFER-CORE", "status": "ready-for-research", "title": "Split reaction offer and continuation facts" },
-    { "number": 14, "id": "B14-BATTLE-RUNTIME-DAMAGE-APPLICATION-CORE", "status": "ready-for-research", "title": "Split damage application and concentration-save facts" },
-    { "number": 15, "id": "B15-BATTLE-RUNTIME-SPELL-ACTIVE-EFFECT-INDEX", "status": "ready-for-research", "title": "Index remaining broad battle-runtime semantic-core owners" },
-    { "number": 16, "id": "B16-BATTLE-RUNTIME-END-TO-END-VERIFY", "status": "ready-for-research", "title": "Verify battle-runtime QNT core closure" },
-    { "number": 17, "id": "B17-RECURSIVE-NEXT-BATCH", "status": "ready-for-research", "title": "Mine next battle-runtime QNT core batch" }
+    {
+      "number": 1,
+      "id": "B1-BATTLE-RUNTIME-SLICE-OWNER-CLOSURE",
+      "status": "done",
+      "title": "Close already-sliced battle-runtime owner markers"
+    },
+    {
+      "number": 2,
+      "id": "B2-BATTLE-RUNTIME-LIGHT-EMITTER-CORE",
+      "status": "ready-for-research",
+      "title": "Split light emitter and held object lifecycle core"
+    },
+    {
+      "number": 3,
+      "id": "B3-BATTLE-RUNTIME-GROUND-HAZARD-CORE",
+      "status": "ready-for-research",
+      "title": "Split ground, obscurement, and restraint hazard core"
+    },
+    {
+      "number": 4,
+      "id": "B4-BATTLE-RUNTIME-MOVEMENT-REACTION-CORE",
+      "status": "ready-for-research",
+      "title": "Split movement and reaction spell lifecycle core"
+    },
+    {
+      "number": 5,
+      "id": "B5-BATTLE-RUNTIME-OBJECT-CONTACT-ENDING-CORE",
+      "status": "ready-for-research",
+      "title": "Split object-contact and ongoing spell ending core"
+    },
+    {
+      "number": 6,
+      "id": "B6-BATTLE-RUNTIME-DRAGONS-BREATH-CORE",
+      "status": "ready-for-research",
+      "title": "Split Dragon's Breath effect and granted action core"
+    },
+    {
+      "number": 7,
+      "id": "B7-BATTLE-RUNTIME-COMPANION-FORM-CORE",
+      "status": "ready-for-research",
+      "title": "Split companion and form lifecycle core"
+    },
+    {
+      "number": 8,
+      "id": "B8-BATTLE-RUNTIME-BLUR-DEFENSE-CORE",
+      "status": "ready-for-research",
+      "title": "Split Blur attack-roll defense lifecycle core"
+    },
+    {
+      "number": 9,
+      "id": "B9-BATTLE-RUNTIME-ABILITY-HOLE-CLOSURE",
+      "status": "ready-for-research",
+      "title": "Classify ability-check and Search hole readiness"
+    },
+    {
+      "number": 10,
+      "id": "B10-BATTLE-RUNTIME-CONCENTRATION-CLEANUP-CORE",
+      "status": "ready-for-research",
+      "title": "Split concentration cleanup and duration-expiry facts"
+    },
+    {
+      "number": 11,
+      "id": "B11-BATTLE-RUNTIME-TURN-END-EFFECT-CORE",
+      "status": "ready-for-research",
+      "title": "Split turn-end active-effect processing facts"
+    },
+    {
+      "number": 12,
+      "id": "B12-BATTLE-RUNTIME-AREA-EFFECT-ENTRY-CORE",
+      "status": "ready-for-research",
+      "title": "Split area-entry and start-turn trigger facts"
+    },
+    {
+      "number": 13,
+      "id": "B13-BATTLE-RUNTIME-REACTION-OFFER-CORE",
+      "status": "ready-for-research",
+      "title": "Split reaction offer and continuation facts"
+    },
+    {
+      "number": 14,
+      "id": "B14-BATTLE-RUNTIME-DAMAGE-APPLICATION-CORE",
+      "status": "ready-for-research",
+      "title": "Split damage application and concentration-save facts"
+    },
+    {
+      "number": 15,
+      "id": "B15-BATTLE-RUNTIME-SPELL-ACTIVE-EFFECT-INDEX",
+      "status": "ready-for-research",
+      "title": "Index remaining broad battle-runtime semantic-core owners"
+    },
+    {
+      "number": 16,
+      "id": "B16-BATTLE-RUNTIME-END-TO-END-VERIFY",
+      "status": "ready-for-research",
+      "title": "Verify battle-runtime QNT core closure"
+    },
+    {
+      "number": 17,
+      "id": "B17-RECURSIVE-NEXT-BATCH",
+      "status": "ready-for-research",
+      "title": "Mine next battle-runtime QNT core batch"
+    }
   ]
 }
 -->
@@ -95,7 +180,7 @@ matrix artifact. Do not run battle MBT for exploratory questions.
 
 ### Task 1 - B1-BATTLE-RUNTIME-SLICE-OWNER-CLOSURE - Close already-sliced battle-runtime owner markers
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: generator-readiness rows for Direct Condition, Flaming Sphere, and
 Moonbeam that still point at broad `battle-runtime.qnt` despite existing focused
