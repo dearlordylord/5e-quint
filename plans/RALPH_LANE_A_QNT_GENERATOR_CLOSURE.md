@@ -260,7 +260,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 42,
       "id": "A42-UNIT-FEATURE-REACTION-REDUCTION-CORE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Split unit feature reaction reduction and redirect core"
     },
     {
@@ -414,7 +414,7 @@ Lane A must not:
 | 39 | A39-UNIT-FEATURE-RAGE-RECKLESS-CORE - Split Rage, Reckless Attack, and Frenzy core | done | A34 | Rage, Reckless Attack, and Frenzy facts now live in a focused generator-facing core. |
 | 40 | A40-UNIT-FEATURE-ATTACK-RIDER-CORE - Split unit feature attack roll and damage rider core | done | A34 | Attack-roll and damage-rider facts now live in a focused generator-facing core. |
 | 41 | A41-UNIT-FEATURE-SAVE-DAMAGE-CORE - Split unit feature Saving Throw and save-damage core | done | A34 | Evasion, Danger Sense, and save-damage replacement facts now live in a focused generator-facing core. |
-| 42 | A42-UNIT-FEATURE-REACTION-REDUCTION-CORE - Split unit feature reaction reduction and redirect core | ready-for-research | A34 | Extract Cutting Words, Uncanny Dodge, and Deflect Attacks reaction facts. |
+| 42 | A42-UNIT-FEATURE-REACTION-REDUCTION-CORE - Split unit feature reaction reduction and redirect core | done | A34 | Reaction reduction and redirect facts now live in a focused generator-facing core. |
 | 43 | A43-UNIT-FEATURE-PASSIVE-MOVEMENT-DEFENSE-CORE - Split passive movement and defense feature core | ready-for-research | A34 | Extract passive Armor Class, Speed, and speed-kind grant facts. |
 | 44 | A44-UNIT-FEATURE-MARTIAL-ARTS-CORE - Split Martial Arts projection core | ready-for-research | A34 | Extract Martial Arts eligibility, die scaling, ability modifier, DC, and Bonus Unarmed Strike facts. |
 | 45 | A45-UNIT-FEATURE-ZERO-HP-CORE - Split zero-Hit-Point feature replacement core | ready-for-research | A34 | Extract Relentless Endurance and zero-Hit-Point replacement facts. |
@@ -1020,7 +1020,7 @@ damage replacement.
 
 ### Task 42 - A42-UNIT-FEATURE-REACTION-REDUCTION-CORE - Split unit feature reaction reduction and redirect core
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`,
 `BATTLE.REACTION.OFFER_DECLINE_RESUME`, `unit-feature-procedure-profiles.qnt`,

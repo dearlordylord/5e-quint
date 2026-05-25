@@ -15,6 +15,7 @@ module unitFeatureProcedureProfilesInductive {
   import unitFeatureRageRecklessCore.* from "./unit-feature-rage-reckless-core"
   import unitFeatureAttackRiderCore.* from "./unit-feature-attack-rider-core"
   import unitFeatureSaveDamageCore.* from "./unit-feature-save-damage-core"
+  import unitFeatureReactionReductionCore.* from "./unit-feature-reaction-reduction-core"
   import unitFeatureProcedureProfiles.* from "./unit-feature-procedure-profiles"
 
   var qActionQuota: ActionQuota

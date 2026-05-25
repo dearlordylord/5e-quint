@@ -409,7 +409,7 @@
       "id": "unit-feature.attack-damage-reduction-zero-damage-redirect",
       "profileKind": "reaction",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
         "packages/battle-runtime/battle-runtime.qnt"
       ],
       "runtimeOwners": [
@@ -988,7 +988,7 @@
       "id": "unit-feature.reaction-roll-or-damage-reduction",
       "profileKind": "reaction",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
         "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
         "packages/battle-runtime/battle-runtime.qnt"
       ],
@@ -13694,7 +13694,7 @@
           "id": "unit-feature.reaction-roll-or-damage-reduction",
           "profileKind": "reaction",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
             "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
             "packages/battle-runtime/battle-runtime.qnt"
           ],
@@ -14953,7 +14953,7 @@
           "id": "unit-feature.attack-damage-reduction-zero-damage-redirect",
           "profileKind": "reaction",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
             "packages/battle-runtime/battle-runtime.qnt"
           ],
           "runtimeOwners": [
@@ -15379,7 +15379,7 @@
           "id": "unit-feature.reaction-roll-or-damage-reduction",
           "profileKind": "reaction",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
             "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
             "packages/battle-runtime/battle-runtime.qnt"
           ],

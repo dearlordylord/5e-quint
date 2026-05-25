@@ -177,6 +177,7 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
         "packages/battle-runtime/battle-runtime.qnt",
         "packages/battle-runtime/battle-runtime-monk-focus.qnt"
@@ -2035,6 +2036,7 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
       ],
       "runtime": "battle",
@@ -6048,6 +6050,15 @@
       "role": "semantic-core"
     },
     {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt is the covered obligation QNT owner carrying reaction-spend feature payload, roll reduction, damage reduction, zero-damage redirect, target eligibility, Focus Point spend, and failed-save redirect damage facts without importing authored Unit catalog rows or reaction-window protocol state.",
+      "obligationIds": [
+        "BATTLE.DAMAGE.ATTACK_BRANCHES",
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
+      "role": "semantic-core"
+    },
+    {
       "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
         "BATTLE.DAMAGE.ATTACK_BRANCHES",
@@ -6235,7 +6246,6 @@
         "run-block-coupled"
       ],
       "followUpTaskIds": [
-        "A42-UNIT-FEATURE-REACTION-REDUCTION-CORE",
         "A43-UNIT-FEATURE-PASSIVE-MOVEMENT-DEFENSE-CORE",
         "A44-UNIT-FEATURE-MARTIAL-ARTS-CORE",
         "A45-UNIT-FEATURE-ZERO-HP-CORE",
@@ -6269,6 +6279,7 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
       ],
       "semanticCore": [
@@ -6277,6 +6288,7 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
         "packages/battle-runtime/battle-runtime-monk-focus.qnt",
         "packages/battle-runtime/battle-runtime.qnt"
@@ -7414,7 +7426,6 @@
         "run-block-coupled"
       ],
       "followUpTaskIds": [
-        "A42-UNIT-FEATURE-REACTION-REDUCTION-CORE",
         "A44-UNIT-FEATURE-MARTIAL-ARTS-CORE"
       ],
       "generatorSubset": [
@@ -7443,6 +7454,7 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
       ],
       "semanticCore": [
@@ -7450,6 +7462,7 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
       ],
       "status": "fixture-bound"
@@ -8101,22 +8114,15 @@
       "owners": [
         {
           "lines": [
-            543,
-            560,
-            582,
-            603,
-            646,
-            661,
-            697,
-            721,
-            750,
-            769,
-            787,
-            818,
-            839,
-            855,
-            894,
-            945
+            334,
+            363,
+            382,
+            400,
+            431,
+            452,
+            468,
+            507,
+            558
           ],
           "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
         },
@@ -8234,22 +8240,15 @@
       "owners": [
         {
           "lines": [
-            543,
-            560,
-            582,
-            603,
-            646,
-            661,
-            697,
-            721,
-            750,
-            769,
-            787,
-            818,
-            839,
-            855,
-            894,
-            945
+            334,
+            363,
+            382,
+            400,
+            431,
+            452,
+            468,
+            507,
+            558
           ],
           "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
         }
@@ -8262,22 +8261,15 @@
       "owners": [
         {
           "lines": [
-            543,
-            560,
-            582,
-            603,
-            646,
-            661,
-            697,
-            721,
-            750,
-            769,
-            787,
-            818,
-            839,
-            855,
-            894,
-            945
+            334,
+            363,
+            382,
+            400,
+            431,
+            452,
+            468,
+            507,
+            558
           ],
           "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
         }
