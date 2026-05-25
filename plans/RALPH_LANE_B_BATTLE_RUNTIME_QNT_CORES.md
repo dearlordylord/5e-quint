@@ -131,7 +131,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 20,
       "id": "B20-RAY-ENFEEBLEMENT-ATTACK-MODE-READINESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Classify Ray of Enfeeblement attack-roll mode readiness"
     },
     {
@@ -498,7 +498,7 @@ task changes semantic-core/proof-only classification.
 
 ### Task 20 - B20-RAY-ENFEEBLEMENT-ATTACK-MODE-READINESS - Classify Ray of Enfeeblement attack-roll mode readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE` rows, focused on
 `packages/battle-runtime/battle-runtime-spell-attack.qnt` and attack-roll mode
