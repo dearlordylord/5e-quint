@@ -13,7 +13,7 @@ This summary is layer-by-layer. It deliberately does not publish a blended ultra
 | Layer | Status | Evidence | Blocking issue |
 | --- | --- | --- | --- |
 | Support completeness | pass | strict target closure 115/115 (100%); selected identity 104/104 (100%); SRD authored product readiness 76/76 (100%) | _none_ |
-| QNT/generator readiness | blocked | QNT-covered obligations 47/47; generator-ready semantic-core obligations 11/32 | 21 blocker(s) |
+| QNT/generator readiness | blocked | QNT-covered obligations 47/47; generator-ready semantic-core obligations 12/32 | 20 blocker(s) |
 | MBT/parity evidence | pass | parity-witnessed obligations 47/47; witness kinds deterministic-qnt-replay: 9, focused-mbt: 37, runtime-test: 14 | _none_ |
 | MCP scenario evidence | pass | scenario flows 4/4; check pnpm --filter @dnd/mcp test:mcp-scenario-evidence | _none_ |
 
@@ -54,12 +54,12 @@ Generator readiness is the incomplete layer.
 | Generator readiness status | Blocking rows |
 | --- | ---: |
 | fixture-bound | 11 |
-| not-assessed | 10 |
+| not-assessed | 9 |
 
 | Generator blocker | Blocking rows |
 | --- | ---: |
 | bridge-projection-coupled | 9 |
-| no blocker token (readiness not assessed) | 10 |
+| no blocker token (readiness not assessed) | 9 |
 | run-block-coupled | 2 |
 
 ## MCP Scenario Evidence

@@ -72,11 +72,11 @@
           "status": "pass"
         },
         {
-          "blockingCount": 21,
+          "blockingCount": 20,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
               "denominator": 32,
-              "numerator": 11
+              "numerator": 12
             },
             "qntCoveredObligations": {
               "denominator": 44,
@@ -211,15 +211,6 @@
                 "packages/battle-runtime/battle-runtime.qnt"
               ],
               "readinessStatus": "fixture-bound",
-              "runBlockOwners": []
-            },
-            {
-              "blockedBy": [],
-              "obligationId": "BATTLE.SPELL.MAKE_STABLE_LIFECYCLE",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime-hit-points.qnt"
-              ],
-              "readinessStatus": "not-assessed",
               "runBlockOwners": []
             },
             {
@@ -564,11 +555,11 @@
           "status": "pass"
         },
         {
-          "blockingCount": 21,
+          "blockingCount": 20,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
               "denominator": 32,
-              "numerator": 11
+              "numerator": 12
             },
             "qntCoveredObligations": {
               "denominator": 47,
@@ -703,15 +694,6 @@
                 "packages/battle-runtime/battle-runtime.qnt"
               ],
               "readinessStatus": "fixture-bound",
-              "runBlockOwners": []
-            },
-            {
-              "blockedBy": [],
-              "obligationId": "BATTLE.SPELL.MAKE_STABLE_LIFECYCLE",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime-hit-points.qnt"
-              ],
-              "readinessStatus": "not-assessed",
               "runBlockOwners": []
             },
             {

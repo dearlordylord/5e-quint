@@ -155,7 +155,7 @@ remains.
     {
       "number": 24,
       "id": "C24-GENERATOR-READINESS-MAKE-STABLE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Classify Make Stable generator readiness"
     },
     {
@@ -584,7 +584,7 @@ longer `not-assessed`.
 
 ### Task 24 - C24-GENERATOR-READINESS-MAKE-STABLE - Classify Make Stable generator readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 `plans/unit-profile-coverage/ultra-golden-gate.json`,
