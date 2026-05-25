@@ -226,7 +226,7 @@ identity evidence or an explicit non-applicable classification.
     {
       "number": 36,
       "id": "B33-RAY-OF-ENFEEBLEMENT-CATALOG-ADMISSION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Repair Ray of Enfeeblement catalog admission"
     }
   ]
@@ -297,7 +297,7 @@ Lane B must not:
 | 33 | B30-CLASS-FEATURE-PREPARED-SPELL-ACCESS-RULES-KERNEL-MAPPING - Map class feature prepared spell access profile to rules-kernel obligations | done | none | Mapped `character-sheet.class-feature-prepared-spell-access` to `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION`; generated rules-kernel profile join gaps no longer list it. |
 | 34 | B31-DRUID-CIRCLE-LAND-SPELL-ACCESS-RULES-KERNEL-MAPPING - Map Druid Circle Land spell access profile to rules-kernel obligations | done | none | Mapped `character-sheet.druid-circle-land-spell-access` to `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION`; generated rules-kernel profile and supported Unit join gaps no longer list `druid_circle_of_the_land_spells`. |
 | 35 | B32-DRAGONS-BREATH-CATALOG-ADMISSION - Repair Dragon's Breath catalog admission | done | none | Metric-honesty gap: `dragons_breath` is supported-profile but remains `not-in-unit-catalog`; repair the catalog boundary without treating support as admission. |
-| 36 | B33-RAY-OF-ENFEEBLEMENT-CATALOG-ADMISSION - Repair Ray of Enfeeblement catalog admission | ready-for-research | none | Metric-honesty gap: `ray_of_enfeeblement` is supported-profile but remains `not-in-unit-catalog`; repair the catalog boundary without treating support as admission. |
+| 36 | B33-RAY-OF-ENFEEBLEMENT-CATALOG-ADMISSION - Repair Ray of Enfeeblement catalog admission | done | none | Added `ray_of_enfeeblement` to `srdUnitCollection`; generated Unit catalog/admission reports now count it as installed with existing runtime and selected-identity evidence. |
 
 ## Task Details
 
@@ -859,10 +859,11 @@ evidence.
 
 ### Task 36 - B33-RAY-OF-ENFEEBLEMENT-CATALOG-ADMISSION - Repair Ray of Enfeeblement catalog admission
 
-Status: `ready-for-research`
+Status: `done`
 
-Output: repair the Unit catalog/admission boundary for `ray_of_enfeeblement`,
-which is currently supported-profile but `not-in-unit-catalog`.
+Output: added `ray_of_enfeeblement` to `srdUnitCollection` so the Unit
+catalog/admission boundary is explicit and no longer inferred from support
+metadata.
 
 Acceptance: `ray_of_enfeeblement` appears as installed in the Unit
 catalog/admission view, with catalog admission not inferred from runtime

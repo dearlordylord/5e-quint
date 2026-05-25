@@ -225,14 +225,14 @@
     },
     "levelOneThreeBattleReadiness": {
       "denominator": 607,
-      "numerator": 575,
-      "percent": "94.7%",
+      "numerator": 577,
+      "percent": "95.1%",
       "rowsByStatus": {
-        "accepted": 414,
+        "accepted": 416,
         "accepted-no-battle-effect": 161,
         "owner-evidence-required": 18,
         "partial-battle-runtime": 11,
-        "battle-runtime-required": 3
+        "battle-runtime-required": 1
       }
     },
     "levelThreeClassBattleReadiness": {
@@ -282,19 +282,19 @@
       "spell access/list pressure": 5
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 450,
+      "catalog-installed-owner-evidence-present": 452,
       "non-runtime": 36,
       "level-3-follow-up-required": 15,
       "catalog-installed-owner-evidence-required": 2,
-      "catalog-only/dead-for-now": 135,
+      "catalog-only/dead-for-now": 133,
       "missing-authored-record": 58,
       "catalog-authored-review-required": 33,
       "catalog-authored-executable-follow-up": 5,
       "catalog-installed-needs-owner-evidence": 1
     },
     "spellPressureRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 246,
-      "catalog-only/dead-for-now": 120,
+      "catalog-installed-owner-evidence-present": 248,
+      "catalog-only/dead-for-now": 118,
       "catalog-authored-executable-follow-up": 1
     },
     "levelThreeSpellPressureRowsByDisposition": {
@@ -28477,14 +28477,25 @@
         "sourceRecordPath": "packages/surface/content/ray_of_enfeeblement.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "ray_of_enfeeblement"
       },
       "unitProfileDisposition": "supported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit ray_of_enfeeblement is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE at packages/battle-runtime/src/unit-profile-admission-ray-of-enfeeblement.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_spider_climb",
@@ -32904,14 +32915,25 @@
         "sourceRecordPath": "packages/surface/content/ray_of_enfeeblement.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "ray_of_enfeeblement"
       },
       "unitProfileDisposition": "supported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit ray_of_enfeeblement is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE at packages/battle-runtime/src/unit-profile-admission-ray-of-enfeeblement.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_rope_trick",

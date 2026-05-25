@@ -45,13 +45,13 @@ This is the default `%` for character-level-1 plus character-level-2 readiness q
 
 This is the default `%` for character-level-1 through character-level-3 readiness questions. It includes character-level-3 class/subclass rows and spell-level-2 pressure. It deliberately excludes spell-level-3 pressure.
 
-- Accepted: 575/607 (94.7%)
+- Accepted: 577/607 (95.1%)
 
 #### Character Levels 1-3 Battle Readiness by Status
 
-- accepted: 414
+- accepted: 416
 - accepted-no-battle-effect: 161
-- battle-runtime-required: 3
+- battle-runtime-required: 1
 - owner-evidence-required: 18
 - partial-battle-runtime: 11
 
@@ -125,8 +125,8 @@ This metric is a separate seed for spell-level-3 pressure only. It belongs to th
 ### Spell Unit Pressure by Disposition (Cantrips and Spell Levels 1-2)
 
 - catalog-authored-executable-follow-up: 1
-- catalog-installed-owner-evidence-present: 246
-- catalog-only/dead-for-now: 120
+- catalog-installed-owner-evidence-present: 248
+- catalog-only/dead-for-now: 118
 
 ### Spell-Level-3 Unit Pressure by Disposition
 

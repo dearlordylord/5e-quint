@@ -17,7 +17,7 @@ Blockers: strict=0, selected-identity=1, SRD-authored-readiness=0.
 | Strict runtime/profile support | 121/182 (66.5%) |
 | Strict target closure | 182/182 (100%) |
 | Selected identity readiness | 151/152 (99.3%) |
-| Product readiness | 575/607 (94.7%) |
+| Product readiness | 577/607 (95.1%) |
 | SRD authored product readiness | 76/76 (100%) |
 | Rules-kernel profile join | 94/94 (100%) |
 | Rules-kernel covered profile join | 94/94 (100%) |
@@ -31,9 +31,9 @@ Product readiness is diagnostic lower-layer accounting. Rows in statuses other t
 
 | Status | Rows |
 | --- | ---: |
-| accepted | 414 |
+| accepted | 416 |
 | accepted-no-battle-effect | 161 |
-| battle-runtime-required | 3 |
+| battle-runtime-required | 1 |
 | owner-evidence-required | 18 |
 | partial-battle-runtime | 11 |
 

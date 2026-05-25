@@ -3269,12 +3269,12 @@
   "metrics": {
     "productReadiness": {
       "denominator": 607,
-      "numerator": 575,
-      "percent": "94.7%",
+      "numerator": 577,
+      "percent": "95.1%",
       "rowsByStatus": {
-        "accepted": 414,
+        "accepted": 416,
         "accepted-no-battle-effect": 161,
-        "battle-runtime-required": 3,
+        "battle-runtime-required": 1,
         "owner-evidence-required": 18,
         "partial-battle-runtime": 11
       }
