@@ -161,7 +161,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 25,
       "id": "B25-DIRECT-CONDITION-REMOVAL-READINESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Classify direct condition removal readiness"
     },
     {
@@ -571,7 +571,7 @@ classification changes use executable behavior.
 
 ### Task 25 - B25-DIRECT-CONDITION-REMOVAL-READINESS - Classify direct condition removal readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` rows, focused on
 `packages/battle-runtime/battle-runtime-direct-condition-removal.qnt` and direct

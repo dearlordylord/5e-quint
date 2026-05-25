@@ -423,7 +423,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `list`, `filter`, `exists`, `forall`, `map`, `set-operators`, `membership` |  |  |
 | `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION` | generation-subset-clean | `import`, `variant`, `pure-def`, `bool`, `if-expression`, `let-binding`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `membership` |  |  |
 | `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `list`, `filter`, `exists`, `forall`, `map`, `fold`, `set-operators`, `membership` |  |  |
-| `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` | not-assessed |  |  |  |
+| `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` | semantic-core-candidate | `import`, `variant`, `record`, `record-update`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `filter`, `exists` |  | `B26-PROTECTION-FROM-POISON-READINESS` |
 | `BATTLE.SPELL.SELF_TRANSFORMATION_MODE` | not-assessed |  |  |  |
 | `BATTLE.SPELL.REACTION_CASTING_TIME` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `list`, `filter`, `exists`, `set-operators`, `membership` |  |  |
 | `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `filter`, `exists`, `map`, `fold`, `set-operators`, `membership` |  |  |
@@ -455,7 +455,6 @@ Rows here are derived from covered obligations with semantic-core QNT owners who
 
 | Obligation | Status | Semantic-core owners | Owner roles |
 | --- | --- | --- | --- |
-| `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` | not-assessed | `packages/battle-runtime/battle-runtime-direct-condition-removal.qnt`, `packages/battle-runtime/battle-runtime-protection-from-poison.qnt` | `packages/battle-runtime/battle-runtime-direct-condition-removal.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-protection-from-poison.qnt`: semantic-core |
 | `BATTLE.SPELL.SELF_TRANSFORMATION_MODE` | not-assessed | `packages/battle-runtime/battle-runtime-self-transformation.qnt` | `packages/battle-runtime/battle-runtime-self-transformation.qnt`: semantic-core |
 | `BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION` | not-assessed | `packages/battle-runtime/battle-runtime-mirror-image.qnt` | `packages/battle-runtime/battle-runtime-mirror-image.qnt`: semantic-core |
 | `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY` | not-assessed | `packages/character-creation-runtime/character-creation-runtime-slice.qnt` | `packages/character-creation-runtime/character-creation-runtime-slice.qnt`: semantic-core |
@@ -468,7 +467,7 @@ Rows here are derived from semantic-core QNT owners that still contain Quint `ru
 
 | Obligation | Readiness status | Blocker | Follow-up | Semantic-core run blocks |
 | --- | --- | --- | --- | --- |
-| `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` | not-assessed | `run-block-coupled` | _none_ | `packages/battle-runtime/battle-runtime-direct-condition-removal.qnt`: lines `137`, `163`, `183`, `196`, `220`<br>`packages/battle-runtime/battle-runtime-protection-from-poison.qnt`: lines `101`, `116`, `126` |
+| `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` | semantic-core-candidate | `run-block-coupled` | `B26-PROTECTION-FROM-POISON-READINESS` | `packages/battle-runtime/battle-runtime-protection-from-poison.qnt`: lines `101`, `116`, `126` |
 | `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY` | not-assessed | `run-block-coupled` | _none_ | `packages/character-creation-runtime/character-creation-runtime-slice.qnt`: lines `578`, `582`, `595`, `603`, `619`, `633`, `653`, `669`, `682`, `695`, `719`, `741` |
 | `CREATION.CHOICE_DISCOVERY_CARDINALITY` | not-assessed | `run-block-coupled` | _none_ | `packages/character-creation-runtime/character-creation-runtime-slice.qnt`: lines `578`, `582`, `595`, `603`, `619`, `633`, `653`, `669`, `682`, `695`, `719`, `741` |
 
