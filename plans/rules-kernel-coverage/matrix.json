@@ -1475,6 +1475,12 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-alter-self.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/self-transformation-mode-lifecycle.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-self-transformation-mode-lifecycle.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [
