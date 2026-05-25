@@ -212,7 +212,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 34,
       "id": "A34-UNIT-FEATURE-PROCEDURE-SURVEY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Survey unit feature procedure readiness split"
     },
     {
@@ -226,6 +226,66 @@ or prove from checker-owned artifacts that no such work remains.
       "id": "A36-HIT-POINT-RESTORATION-SEMANTIC-CORE",
       "status": "ready-for-research",
       "title": "Split hit point restoration semantic core"
+    },
+    {
+      "number": 37,
+      "id": "A37-UNIT-FEATURE-POOL-COST-CORE",
+      "status": "ready-for-research",
+      "title": "Split unit feature pool and turn-cost core"
+    },
+    {
+      "number": 38,
+      "id": "A38-UNIT-FEATURE-ACTION-COUNT-CORE",
+      "status": "ready-for-research",
+      "title": "Split unit feature action grant and attack-count core"
+    },
+    {
+      "number": 39,
+      "id": "A39-UNIT-FEATURE-RAGE-RECKLESS-CORE",
+      "status": "ready-for-research",
+      "title": "Split Rage, Reckless Attack, and Frenzy core"
+    },
+    {
+      "number": 40,
+      "id": "A40-UNIT-FEATURE-ATTACK-RIDER-CORE",
+      "status": "ready-for-research",
+      "title": "Split unit feature attack roll and damage rider core"
+    },
+    {
+      "number": 41,
+      "id": "A41-UNIT-FEATURE-SAVE-DAMAGE-CORE",
+      "status": "ready-for-research",
+      "title": "Split unit feature Saving Throw and save-damage core"
+    },
+    {
+      "number": 42,
+      "id": "A42-UNIT-FEATURE-REACTION-REDUCTION-CORE",
+      "status": "ready-for-research",
+      "title": "Split unit feature reaction reduction and redirect core"
+    },
+    {
+      "number": 43,
+      "id": "A43-UNIT-FEATURE-PASSIVE-MOVEMENT-DEFENSE-CORE",
+      "status": "ready-for-research",
+      "title": "Split passive movement and defense feature core"
+    },
+    {
+      "number": 44,
+      "id": "A44-UNIT-FEATURE-MARTIAL-ARTS-CORE",
+      "status": "ready-for-research",
+      "title": "Split Martial Arts projection core"
+    },
+    {
+      "number": 45,
+      "id": "A45-UNIT-FEATURE-ZERO-HP-CORE",
+      "status": "ready-for-research",
+      "title": "Split zero-Hit-Point feature replacement core"
+    },
+    {
+      "number": 46,
+      "id": "A46-MONK-FOCUS-BATTLE-CORE",
+      "status": "ready-for-research",
+      "title": "Split Monk Focus battle option core"
     }
   ]
 }
@@ -292,9 +352,19 @@ Lane A must not:
 | 31 | A31-SHOVE-OUTCOME-READINESS - Assess shove outcome generator readiness | done | A24,A26 | Classified as generation-subset-clean; examples moved to proof-only owner. |
 | 32 | A32-STAT-BLOCK-CONTROLS-READINESS - Assess stat block controls generator readiness | done | A24,A26 | Shared algebra owner needs subset/blocker classification. |
 | 33 | A33-HIT-POINT-RECOVERY-READINESS - Assess hit point recovery generator readiness | done | A24,A26 | Sheet HP/rest owner needs subset/blocker classification. |
-| 34 | A34-UNIT-FEATURE-PROCEDURE-SURVEY - Survey unit feature procedure readiness split | ready-for-research | A24,A26 | Large shared algebra owner must be split into runnable follow-ups before readiness closure. |
+| 34 | A34-UNIT-FEATURE-PROCEDURE-SURVEY - Survey unit feature procedure readiness split | done | A24,A26 | Classified unit feature procedure readiness as fixture-bound and split blockers into A37-A46 follow-ups. |
 | 35 | A35-BATTLE-RUNTIME-MEGA-OWNER-SURVEY - Survey battle-runtime mega-owner readiness split | ready-for-research | A24,A25 | `battle-runtime.qnt` owns many covered obligations; classify split candidates without reducer changes. |
 | 36 | A36-HIT-POINT-RESTORATION-SEMANTIC-CORE - Split hit point restoration semantic core | ready-for-research | A28 | Extract reusable direct Hit Point restoration facts from the spell procedure fixture world. |
+| 37 | A37-UNIT-FEATURE-POOL-COST-CORE - Split unit feature pool and turn-cost core | ready-for-research | A34 | Extract feature use pools, Bonus Action costs, and resource-spend facts from unit feature procedure profiles. |
+| 38 | A38-UNIT-FEATURE-ACTION-COUNT-CORE - Split unit feature action grant and attack-count core | ready-for-research | A34 | Extract Action Surge and Extra Attack action-count facts without run blocks. |
+| 39 | A39-UNIT-FEATURE-RAGE-RECKLESS-CORE - Split Rage, Reckless Attack, and Frenzy core | ready-for-research | A34 | Extract Rage lifecycle, Reckless Attack, and Frenzy facts without profile fixture coupling. |
+| 40 | A40-UNIT-FEATURE-ATTACK-RIDER-CORE - Split unit feature attack roll and damage rider core | ready-for-research | A34 | Extract Sneak Attack, Improved Critical, Savage Attacker, Archery, and miss-to-hit replacement facts. |
+| 41 | A41-UNIT-FEATURE-SAVE-DAMAGE-CORE - Split unit feature Saving Throw and save-damage core | ready-for-research | A34 | Extract Evasion, Danger Sense, and save-damage replacement facts. |
+| 42 | A42-UNIT-FEATURE-REACTION-REDUCTION-CORE - Split unit feature reaction reduction and redirect core | ready-for-research | A34 | Extract Cutting Words, Uncanny Dodge, and Deflect Attacks reaction facts. |
+| 43 | A43-UNIT-FEATURE-PASSIVE-MOVEMENT-DEFENSE-CORE - Split passive movement and defense feature core | ready-for-research | A34 | Extract passive Armor Class, attack-roll, Speed, and speed-kind grant facts. |
+| 44 | A44-UNIT-FEATURE-MARTIAL-ARTS-CORE - Split Martial Arts projection core | ready-for-research | A34 | Extract Martial Arts eligibility, die scaling, ability modifier, DC, and Bonus Unarmed Strike facts. |
+| 45 | A45-UNIT-FEATURE-ZERO-HP-CORE - Split zero-Hit-Point feature replacement core | ready-for-research | A34 | Extract Relentless Endurance and zero-Hit-Point replacement facts. |
+| 46 | A46-MONK-FOCUS-BATTLE-CORE - Split Monk Focus battle option core | ready-for-research | A34 | Extract Flurry of Blows, Patient Defense, Step of the Wind, and Focus Point facts from the battle-runtime Monk owner. |
 
 ## Task Details
 
@@ -712,7 +782,7 @@ core, proof-only, and MBT fixture ownership.
 
 ### Task 34 - A34-UNIT-FEATURE-PROCEDURE-SURVEY - Survey unit feature procedure readiness split
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`,
 `packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt`,
@@ -724,6 +794,11 @@ Do not implement feature behavior or selected-identity policy in this task.
 
 Acceptance: checker passes, every discovered blocker has a proposed owner task,
 and no readiness row is marked clean from catalog/profile metadata alone.
+
+Result: `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` is `fixture-bound` on
+`run-block-coupled` semantic owners, with A37-A46 preserving the executable
+feature split by SRD procedure invariant. Related damage readiness rows now
+point to the relevant split tasks instead of the monolithic survey.
 
 ### Task 35 - A35-BATTLE-RUNTIME-MEGA-OWNER-SURVEY - Survey battle-runtime mega-owner readiness split
 
@@ -756,6 +831,175 @@ and report artifacts, and keep proof/example files classified as proof-only.
 Acceptance: `pnpm rules-kernel-coverage:check` passes, the hit point
 restoration readiness row no longer names `fixture-world-coupled`, and any
 remaining blocker is concrete and task-owned.
+
+### Task 37 - A37-UNIT-FEATURE-POOL-COST-CORE - Split unit feature pool and turn-cost core
+
+Status: `ready-for-research`
+
+Input: `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`,
+`packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt`,
+and the SRD Second Wind, Tactical Mind, Cunning Action, Innate Sorcery, and
+Adrenaline Rush passages.
+
+Output: extract a generator-facing semantic core for feature use pools, Bonus
+Action turn costs, and immediate resource-spend results. Keep examples in a
+proof-only owner and do not infer selected feature identity from catalog rows.
+
+Acceptance: the new core has no `run` blocks, owner roles and readiness rows
+point to the split core, and the original unit feature owner no longer supplies
+these pool/cost facts as generator input.
+
+### Task 38 - A38-UNIT-FEATURE-ACTION-COUNT-CORE - Split unit feature action grant and attack-count core
+
+Status: `ready-for-research`
+
+Input: `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`,
+`BATTLE.DAMAGE.ATTACK_BRANCHES`, `unit-feature-procedure-profiles.qnt`, and the
+SRD Action Surge and Extra Attack passages.
+
+Output: extract Action Surge's non-Magic additional action facts and Attack
+action attack-count scaling into a focused semantic core. Keep movement between
+attack slots as an explicit turn-procedure fact, not a catalog/profile label.
+
+Acceptance: the new core is run-block-free, readiness rows no longer rely on
+the monolithic unit feature owner for these facts, and examples remain
+proof-only.
+
+### Task 39 - A39-UNIT-FEATURE-RAGE-RECKLESS-CORE - Split Rage, Reckless Attack, and Frenzy core
+
+Status: `ready-for-research`
+
+Input: `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`,
+`BATTLE.DAMAGE.ATTACK_BRANCHES`, `unit-feature-procedure-profiles.qnt`, and the
+SRD Rage, Reckless Attack, and Frenzy passages.
+
+Output: extract Rage activation/extension, Rage damage/resistance,
+Concentration/spellcasting prevention, Reckless Attack advantage windows, and
+Frenzy damage facts into one semantic core whose state shape makes the active
+Rage and first-hit conditions explicit.
+
+Acceptance: the extracted core has no run blocks, keeps Rage/Reckless/Frenzy
+state local to the rule invariant, and updates readiness ownership without
+changing runtime behavior.
+
+### Task 40 - A40-UNIT-FEATURE-ATTACK-RIDER-CORE - Split unit feature attack roll and damage rider core
+
+Status: `ready-for-research`
+
+Input: `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`,
+`BATTLE.DAMAGE.ATTACK_BRANCHES`, `unit-feature-procedure-profiles.qnt`, and the
+SRD Sneak Attack, Improved Critical, Savage Attacker, Archery, and Boon of
+Combat Prowess passages.
+
+Output: extract attack-roll and attack-damage feature facts for weapon
+eligibility, advantage/disadvantage admission, once-per-turn use, critical
+thresholds, chosen weapon damage dice, passive ranged attack-roll bonuses, and
+miss-to-hit replacement.
+
+Acceptance: the new semantic core is independent of authored feature identity,
+contains no examples or run blocks, and makes the attack host facts explicit
+enough for generator input.
+
+### Task 41 - A41-UNIT-FEATURE-SAVE-DAMAGE-CORE - Split unit feature Saving Throw and save-damage core
+
+Status: `ready-for-research`
+
+Input: `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`,
+`BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES`,
+`unit-feature-procedure-profiles.qnt`, and the SRD Evasion and Danger Sense
+passages.
+
+Output: extract Dexterity Saving Throw roll-mode facts and save-damage
+replacement facts, including normal half-damage success, success-to-zero, and
+failure-to-half replacement.
+
+Acceptance: the split core carries the save-damage semantics without run
+blocks, updates the spell-save/attack damage readiness row away from the
+monolithic unit feature owner, and preserves RAW terms for Saving Throw and
+damage replacement.
+
+### Task 42 - A42-UNIT-FEATURE-REACTION-REDUCTION-CORE - Split unit feature reaction reduction and redirect core
+
+Status: `ready-for-research`
+
+Input: `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`,
+`BATTLE.REACTION.OFFER_DECLINE_RESUME`, `unit-feature-procedure-profiles.qnt`,
+and the SRD Cutting Words, Uncanny Dodge, Deflect Attacks, and Reaction
+passages.
+
+Output: extract reaction-spend, roll reduction, damage reduction,
+zero-damage redirect, target eligibility, Focus Point spend, and failed-save
+redirect damage facts into a core that imports shared reaction and damage
+helpers only where those facts are executable dependencies.
+
+Acceptance: reaction examples are proof-only, the semantic core has no run
+blocks, and readiness rows distinguish reaction-window mechanics from feature
+payload facts.
+
+### Task 43 - A43-UNIT-FEATURE-PASSIVE-MOVEMENT-DEFENSE-CORE - Split passive movement and defense feature core
+
+Status: `ready-for-research`
+
+Input: `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`,
+`unit-feature-procedure-profiles.qnt`, and the SRD Defense, Fast Movement,
+Unarmored Movement, Roving, Archery, and Speed passages.
+
+Output: extract passive Armor Class, passive attack-roll bonus, Speed bonus,
+Dash projection, and speed-kind grant facts into a generator-facing semantic
+core. Keep equipment gates as explicit fields rather than derived catalog
+labels.
+
+Acceptance: the core contains no run blocks, no duplicated derived Speed or
+Armor Class state, and readiness ownership separates passive continuous facts
+from active feature procedures.
+
+### Task 44 - A44-UNIT-FEATURE-MARTIAL-ARTS-CORE - Split Martial Arts projection core
+
+Status: `ready-for-research`
+
+Input: `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`,
+`unit-feature-procedure-profiles.qnt`, and the SRD Martial Arts passage.
+
+Output: extract Martial Arts eligibility, Monk weapon form, Martial Arts die
+scaling, Dexterity substitution, Grapple/Shove DC projection, and Bonus
+Unarmed Strike turn-cost facts into a focused semantic core.
+
+Acceptance: the core is independent of selected class-feature identity,
+examples are proof-only, and the readiness row no longer depends on the
+monolithic unit feature owner for Martial Arts generator input.
+
+### Task 45 - A45-UNIT-FEATURE-ZERO-HP-CORE - Split zero-Hit-Point feature replacement core
+
+Status: `ready-for-research`
+
+Input: `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`,
+`BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP`,
+`unit-feature-procedure-profiles.qnt`, and the SRD Relentless Endurance,
+Dropping to 0 Hit Points, Instant Death, and Knock Out passages.
+
+Output: extract zero-Hit-Point replacement admission and result facts for
+feature replacement without duplicating the shared zero-Hit-Point lifecycle or
+attack damage disposition cores.
+
+Acceptance: the new core references shared lifecycle facts instead of copying
+them, has no run blocks, and gives the disposition readiness row a concrete
+non-fixture semantic owner.
+
+### Task 46 - A46-MONK-FOCUS-BATTLE-CORE - Split Monk Focus battle option core
+
+Status: `ready-for-research`
+
+Input: `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`,
+`packages/battle-runtime/battle-runtime-monk-focus.qnt`, and the SRD Monk's
+Focus passage.
+
+Output: extract Focus Point count, Flurry of Blows, Patient Defense, and Step
+of the Wind battle option facts into a run-block-free semantic core. Keep the
+current battle-state fixture examples in a proof-only owner.
+
+Acceptance: `battle-runtime-monk-focus.qnt` no longer blocks generator
+readiness through run tests, the split core preserves battle-state parity, and
+no selected Monk feature identity policy is added.
 
 ## Verification
 
@@ -861,3 +1105,21 @@ remaining blocker is concrete and task-owned.
   `battle-runtime.qnt` owner. A24-A36 turn that discovery into checker and
   readiness tasks instead of treating the clean readiness rows as proof of
   generator-readiness exhaustion.
+- Task 34 survey: `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` is
+  `fixture-bound`, not generator-clean. The blocker is executable evidence
+  sharing semantic-core owners with `run` blocks in
+  `unit-feature-procedure-profiles.qnt` and
+  `battle-runtime-monk-focus.qnt`; `battle-runtime.qnt` also remains a broad
+  semantic owner for A35 rather than an atomic feature core. The split must be
+  by SRD procedure invariant, not by catalog/profile row: A37 owns feature
+  pool and turn-cost facts; A38 owns Action Surge and Attack action count
+  facts; A39 owns Rage, Reckless Attack, and Frenzy facts; A40 owns attack
+  roll and damage rider facts; A41 owns Evasion/Danger Sense save-damage
+  facts; A42 owns reaction reduction and redirect facts; A43 owns passive
+  movement and defense facts; A44 owns Martial Arts projection facts; A45 owns
+  zero-Hit-Point feature replacement facts; and A46 owns Monk Focus battle
+  option facts. `BATTLE.DAMAGE.ATTACK_BRANCHES`,
+  `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES`, and
+  `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` also cite the unit feature owner, so
+  those rows must stay fixture-bound or not-assessed until the relevant split
+  owner replaces the monolithic file.

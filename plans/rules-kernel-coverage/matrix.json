@@ -5930,12 +5930,53 @@
       "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [],
-      "generatorSubset": [],
+      "blockedBy": [
+        "run-block-coupled"
+      ],
+      "followUpTaskIds": [
+        "A35-BATTLE-RUNTIME-MEGA-OWNER-SURVEY",
+        "A37-UNIT-FEATURE-POOL-COST-CORE",
+        "A38-UNIT-FEATURE-ACTION-COUNT-CORE",
+        "A39-UNIT-FEATURE-RAGE-RECKLESS-CORE",
+        "A40-UNIT-FEATURE-ATTACK-RIDER-CORE",
+        "A41-UNIT-FEATURE-SAVE-DAMAGE-CORE",
+        "A42-UNIT-FEATURE-REACTION-REDUCTION-CORE",
+        "A43-UNIT-FEATURE-PASSIVE-MOVEMENT-DEFENSE-CORE",
+        "A44-UNIT-FEATURE-MARTIAL-ARTS-CORE",
+        "A45-UNIT-FEATURE-ZERO-HP-CORE",
+        "A46-MONK-FOCUS-BATTLE-CORE"
+      ],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "map",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
-      "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+        "packages/battle-runtime/battle-runtime-monk-focus.qnt",
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "status": "fixture-bound"
     },
     {
       "blockedBy": [
@@ -6392,7 +6433,11 @@
         "run-block-coupled"
       ],
       "followUpTaskIds": [
-        "A34-UNIT-FEATURE-PROCEDURE-SURVEY"
+        "A38-UNIT-FEATURE-ACTION-COUNT-CORE",
+        "A39-UNIT-FEATURE-RAGE-RECKLESS-CORE",
+        "A40-UNIT-FEATURE-ATTACK-RIDER-CORE",
+        "A42-UNIT-FEATURE-REACTION-REDUCTION-CORE",
+        "A44-UNIT-FEATURE-MARTIAL-ARTS-CORE"
       ],
       "generatorSubset": [
         "import",
@@ -6426,12 +6471,40 @@
       "status": "fixture-bound"
     },
     {
-      "blockedBy": [],
-      "generatorSubset": [],
+      "blockedBy": [
+        "run-block-coupled"
+      ],
+      "followUpTaskIds": [
+        "A41-UNIT-FEATURE-SAVE-DAMAGE-CORE"
+      ],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "membership"
+      ],
       "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
-      "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+      ],
+      "status": "fixture-bound"
     },
     {
       "blockedBy": [],
@@ -6474,7 +6547,7 @@
         "run-block-coupled"
       ],
       "followUpTaskIds": [
-        "A34-UNIT-FEATURE-PROCEDURE-SURVEY"
+        "A45-UNIT-FEATURE-ZERO-HP-CORE"
       ],
       "generatorSubset": [
         "import",
@@ -6584,24 +6657,6 @@
     }
   ],
   "generatorReadinessBacklog": [
-    {
-      "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
-          "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
-          "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
     {
       "obligationId": "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
       "ownerRoles": [
@@ -7183,20 +7238,6 @@
       "status": "not-assessed"
     },
     {
-      "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
-          "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
       "obligationId": "BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE",
       "ownerRoles": [
         {
@@ -7321,7 +7362,7 @@
           "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt"
         }
       ],
-      "readinessStatus": "not-assessed"
+      "readinessStatus": "fixture-bound"
     },
     {
       "blocker": "run-block-coupled",
@@ -7501,7 +7542,7 @@
           "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
         }
       ],
-      "readinessStatus": "not-assessed"
+      "readinessStatus": "fixture-bound"
     },
     {
       "blocker": "run-block-coupled",
