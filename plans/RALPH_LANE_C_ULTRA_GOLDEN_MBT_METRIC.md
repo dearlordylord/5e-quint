@@ -119,7 +119,7 @@ remains.
     {
       "number": 18,
       "id": "C18-GENERATOR-READINESS-COMMAND-OPTION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Classify Command option generator readiness"
     },
     {
@@ -475,7 +475,7 @@ Result:
 
 ### Task 18 - C18-GENERATOR-READINESS-COMMAND-OPTION - Classify Command option generator readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 `plans/unit-profile-coverage/ultra-golden-gate.json`,
