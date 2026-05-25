@@ -40,11 +40,11 @@ The metric distinguishes reducer parity witnesses from MCP scenario evidence by 
 | level-1 | support-completeness | pass | _none_ |
 | level-1 | qnt-generator-readiness | blocked | 27 blocker(s) |
 | level-1 | mbt-parity-evidence | pass | _none_ |
-| level-1 | mcp-scenario-evidence | blocked | 3 blocker(s) |
+| level-1 | mcp-scenario-evidence | blocked | 2 blocker(s) |
 | level-1-2 | support-completeness | pass | _none_ |
 | level-1-2 | qnt-generator-readiness | blocked | 27 blocker(s) |
 | level-1-2 | mbt-parity-evidence | pass | _none_ |
-| level-1-2 | mcp-scenario-evidence | blocked | 3 blocker(s) |
+| level-1-2 | mcp-scenario-evidence | blocked | 2 blocker(s) |
 
 ## MCP Scenario Evidence
 
@@ -53,11 +53,11 @@ MCP scenario evidence is an explicit required layer. Its manifest records requir
 | Scope | Flow | Status | Witness kind | Scenario evidence | Follow-up task |
 | --- | --- | --- | --- | --- | --- |
 | level-1 | mcp-workflow-discovery | pass | `mcp-scenario` | `discover-mcp-surface` | _none_ |
-| level-1 | character-creation | blocked | _missing_ | _missing_ | `C9-CHARACTER-CREATION-MCP-EVIDENCE` |
+| level-1 | character-creation | pass | `mcp-scenario`, `mcp-scenario`, `mcp-scenario` | `create-baseline-character`, `create-warrior-second-level`, `create-wizard-with-spells` | _none_ |
 | level-1 | character-sheet | blocked | _missing_ | _missing_ | `C10-CHARACTER-SHEET-MCP-EVIDENCE` |
 | level-1 | battle | blocked | _missing_ | _missing_ | `C11-BATTLE-MCP-EVIDENCE` |
 | level-1-2 | mcp-workflow-discovery | pass | `mcp-scenario` | `discover-mcp-surface` | _none_ |
-| level-1-2 | character-creation | blocked | _missing_ | _missing_ | `C9-CHARACTER-CREATION-MCP-EVIDENCE` |
+| level-1-2 | character-creation | pass | `mcp-scenario`, `mcp-scenario`, `mcp-scenario` | `create-baseline-character`, `create-warrior-second-level`, `create-wizard-with-spells` | _none_ |
 | level-1-2 | character-sheet | blocked | _missing_ | _missing_ | `C10-CHARACTER-SHEET-MCP-EVIDENCE` |
 | level-1-2 | battle | blocked | _missing_ | _missing_ | `C11-BATTLE-MCP-EVIDENCE` |
 
@@ -68,7 +68,7 @@ Selected-identity replay is Unit identity wiring evidence. This audit keeps it s
 | Scope | Selected-identity evidence rows | Joined through QNT/MBT or MCP | Missing join rows |
 | --- | ---: | ---: | ---: |
 | level-1 | 81 | 44/81 | 37 |
-| level-1-2 | 94 | 49/94 | 45 |
+| level-1-2 | 94 | 53/94 | 41 |
 
 | Scope | Unit | Kind | Evidence task | Evidence owner | QNT/MBT join | QNT/MBT witness owners for Unit | MCP join | Required MCP flows | Missing MCP flows | Profiles |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -112,16 +112,12 @@ Selected-identity replay is Unit identity wiring evidence. This audit keeps it s
 | level-1-2 | `barbarian_danger_sense` | class_feature | `B4-CLASS-FEATURE-IDENTITY-BATCH-1` | `packages/battle-runtime/src/danger-sense-selected-identity.mbt.test.ts` | unit-profile-joined-with-different-owner | `packages/battle-runtime/src/battle-runtime.mbt.test.ts`, `packages/battle-runtime/src/rule-core-features.mbt.test.ts` | missing-flow-evidence | `battle` | `battle` | `unit-feature.passive-saving-throw-roll-mode` |
 | level-1-2 | `bard_bardic_inspiration` | class_feature | `L1D2-BARDIC-INSPIRATION-SCALING` | `packages/battle-runtime/src/bardic-inspiration-selected-identity.mbt.test.ts` | unit-profile-joined-with-different-owner | `packages/battle-runtime/src/battle-runtime.mbt.test.ts`, `packages/battle-runtime/src/rule-core-features.mbt.test.ts` | missing-flow-evidence | `battle` | `battle` | `unit-feature.bardic-inspiration-grant`, `unit-feature.bardic-inspiration-failed-d20-test` |
 | level-1-2 | `bard_jack_of_all_trades` | class_feature | `B4-CLASS-FEATURE-IDENTITY-BATCH-1` | `packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts` | unit-profile-joined-with-different-owner | `packages/character-sheet-runtime/src/ability-check-proficiency-bonus.mbt.test.ts` | missing-flow-evidence | `character-sheet` | `character-sheet` | `character-sheet.ability-check-proficiency-bonus` |
-| level-1-2 | `cleric_channel_divinity` | class_feature | `B4-CLASS-FEATURE-IDENTITY-BATCH-1` | `packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts` | unit-profile-joined-with-different-owner | `packages/character-creation-runtime/src/class-feature-projections.mbt.test.ts` | missing-flow-evidence | `character-creation` | `character-creation` | `character-creation.class-feature-resource-projection` |
 | level-1-2 | `monk_martial_arts` | class_feature | `L1D2-MONK-MARTIAL-ARTS-SCALING` | `packages/battle-runtime/src/monk-martial-arts-selected-identity.mbt.test.ts` | unit-profile-joined-with-different-owner | `packages/battle-runtime/src/battle-runtime.mbt.test.ts`, `packages/battle-runtime/src/rule-core-features.mbt.test.ts` | missing-flow-evidence | `battle` | `battle` | `unit-feature.martial-arts-attack-projection` |
 | level-1-2 | `monk_unarmored_movement` | class_feature | `B5-CLASS-FEATURE-IDENTITY-BATCH-2` | `packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts` | unit-profile-joined-with-different-owner | `packages/battle-runtime/src/battle-runtime.mbt.test.ts`, `packages/battle-runtime/src/rule-core-features.mbt.test.ts` | missing-flow-evidence | `battle` | `battle` | `unit-feature.passive-speed-bonus` |
-| level-1-2 | `monk_uncanny_metabolism` | class_feature | `B5-CLASS-FEATURE-IDENTITY-BATCH-2` | `packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts` | unit-profile-joined-with-different-owner | `packages/character-battle-runtime/src/character-sheet-feature-resources.mbt.test.ts`, `packages/character-creation-runtime/src/class-feature-projections.mbt.test.ts` | missing-flow-evidence | `character-creation`, `character-sheet` | `character-creation`, `character-sheet` | `character-creation.class-feature-source-fact-projection`, `character-sheet.class-feature-long-rest-use-state`, `character-sheet.monk-uncanny-metabolism-initiative-recovery` |
 | level-1-2 | `paladin_lay_on_hands` | class_feature | `healing-stabilization` | `packages/character-sheet-runtime/src/healing-resource-selected-identity.mbt.test.ts` | unit-profile-joined-with-different-owner | `packages/character-battle-runtime/src/character-sheet-feature-resources.mbt.test.ts` | missing-flow-evidence | `character-sheet` | `character-sheet` | `character-sheet.healing-resource-action` |
 | level-1-2 | `paladin_paladins_smite` | class_feature | `B5-CLASS-FEATURE-IDENTITY-BATCH-2` | `packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts` | unit-profile-joined-with-different-owner | `packages/battle-runtime/src/unit-profile-admission-ensnaring-and-searing-smite.test.ts`, `packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts`, `packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts` | missing-flow-evidence | `battle` | `battle` | `spell.invocation-after-hit-damage` |
-| level-1-2 | `ranger_deft_explorer` | class_feature | `B5-CLASS-FEATURE-IDENTITY-BATCH-2` | `packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts` | unit-profile-joined-with-different-owner | `packages/character-creation-runtime/src/rogue-expertise-selected-identity.mbt.test.ts` | missing-flow-evidence | `character-creation` | `character-creation` | `character-creation.skill-expertise-choice` |
 | level-1-2 | `sorcerer_innate_sorcery` | class_feature | `L1D2-SORCERER-INNATE-SORCERY` | `packages/battle-runtime/src/feature-selected-identity.mbt.test.ts` | unit-profile-joined-with-different-owner | `packages/battle-runtime/src/battle-runtime.mbt.test.ts`, `packages/battle-runtime/src/rule-core-features.mbt.test.ts` | missing-flow-evidence | `battle` | `battle` | `unit-feature.innate-sorcery-activation` |
 | level-1-2 | `wizard_arcane_recovery` | class_feature | `short-rest-spell-slot-recovery` | `packages/character-sheet-runtime/src/arcane-recovery-selected-identity.mbt.test.ts` | unit-profile-joined-with-different-owner | `packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts` | missing-flow-evidence | `character-sheet` | `character-sheet` | `character-sheet.short-rest-spell-slot-recovery` |
-| level-1-2 | `wizard_scholar` | class_feature | `B6-CLASS-FEATURE-IDENTITY-BATCH-3` | `packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts` | unit-profile-joined-with-different-owner | `packages/character-creation-runtime/src/rogue-expertise-selected-identity.mbt.test.ts` | missing-flow-evidence | `character-creation` | `character-creation` | `character-creation.skill-expertise-choice` |
 | level-1-2 | `bane` | spell | `roll-modifier-buff` | `packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts` | unit-profile-joined-with-different-owner | `packages/battle-runtime/src/thaumaturgy-booming-voice.test.ts`, `packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts` | missing-flow-evidence | `battle` | `battle` | `spell.invocation-roll-modifier` |
 | level-1-2 | `bless` | spell | `roll-modifier-buff` | `packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts` | unit-profile-joined-with-different-owner | `packages/battle-runtime/src/thaumaturgy-booming-voice.test.ts`, `packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts` | missing-flow-evidence | `battle` | `battle` | `spell.invocation-roll-modifier` |
 | level-1-2 | `burning_hands` | spell | `level1-damage-spell-selected-identity` | `packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts` | unit-profile-joined-with-different-owner | `packages/battle-runtime/src/rule-core-features.mbt.test.ts`, `packages/battle-runtime/src/rule-core-reactions.mbt.test.ts`, `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` | missing-flow-evidence | `battle` | `battle` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |

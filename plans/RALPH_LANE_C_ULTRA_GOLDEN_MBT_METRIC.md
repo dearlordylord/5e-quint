@@ -65,7 +65,7 @@ remains.
     {
       "number": 9,
       "id": "C9-CHARACTER-CREATION-MCP-EVIDENCE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add character-creation MCP evidence rows"
     },
     {
@@ -254,7 +254,7 @@ Acceptance: coordinates with Lane A output without duplicating its work.
 
 ### Task 9 - C9-CHARACTER-CREATION-MCP-EVIDENCE - Add character-creation MCP evidence rows
 
-Status: `ready-for-research`
+Status: `done`
 
 Output: character creation evidence rows for level 1-2 SRD flows.
 

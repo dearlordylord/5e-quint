@@ -40,6 +40,33 @@
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
       "taskId": "C3-MCP-LEVEL12-SCENARIO-GATE",
       "summary": "The protocol acceptance scenario verifies the tool list, schema exposure, workflow guide result paths, catalog discovery, and stat block discovery that let a caller orient before entering a specific workflow."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "character-creation",
+      "scenarioId": "create-baseline-character",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C9-CHARACTER-CREATION-MCP-EVIDENCE",
+      "summary": "The protocol acceptance scenario creates and finalizes the supported level-1 Orc Soldier Fighter through create, discover, fill, and finalize tools while using returned hole ids, option ids, and draft revisions."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "character-creation",
+      "scenarioId": "create-warrior-second-level",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C9-CHARACTER-CREATION-MCP-EVIDENCE",
+      "summary": "The protocol acceptance scenario creates and finalizes a supported level-2 Fighter after the caller resolves the non-SRD synonym outside MCP and then follows returned progression, class choice, equipment, and loadout holes."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "character-creation",
+      "scenarioId": "create-wizard-with-spells",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C9-CHARACTER-CREATION-MCP-EVIDENCE",
+      "summary": "The protocol acceptance scenario creates and finalizes a supported level-2 Elf Soldier Wizard through returned cantrip, spellbook, prepared spell, equipment, loadout, and class-feature proficiency holes."
     }
   ]
 }

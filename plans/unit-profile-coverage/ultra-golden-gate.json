@@ -398,7 +398,7 @@
           "status": "pass"
         },
         {
-          "blockingCount": 3,
+          "blockingCount": 2,
           "evidence": {
             "check": {
               "command": "pnpm --filter @dnd/mcp test:mcp-scenario-evidence",
@@ -407,7 +407,7 @@
             },
             "scenarioEvidenceFlows": {
               "denominator": 4,
-              "numerator": 1
+              "numerator": 2
             },
             "source": "plans/unit-profile-coverage/mcp-scenario-evidence.json",
             "witnessKind": "mcp-scenario"
@@ -419,15 +419,31 @@
               "scenarioId": "discover-mcp-surface",
               "taskId": "C3-MCP-LEVEL12-SCENARIO-GATE",
               "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-creation",
+              "kind": "mcp-scenario",
+              "scenarioId": "create-baseline-character",
+              "taskId": "C9-CHARACTER-CREATION-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-creation",
+              "kind": "mcp-scenario",
+              "scenarioId": "create-warrior-second-level",
+              "taskId": "C9-CHARACTER-CREATION-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-creation",
+              "kind": "mcp-scenario",
+              "scenarioId": "create-wizard-with-spells",
+              "taskId": "C9-CHARACTER-CREATION-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
             }
           ],
           "id": "mcp-scenario-evidence",
           "missingEvidenceRows": [
-            {
-              "description": "The MCP surface admits an SRD character creation workflow through create, discover, fill, and finalize tools without relying on support-profile status as scenario evidence.",
-              "flowId": "character-creation",
-              "followUpTaskId": "C9-CHARACTER-CREATION-MCP-EVIDENCE"
-            },
             {
               "description": "The MCP surface exposes durable character sheet state and battle handoff results through list and session snapshot tools.",
               "flowId": "character-sheet",
@@ -876,7 +892,7 @@
           "status": "pass"
         },
         {
-          "blockingCount": 3,
+          "blockingCount": 2,
           "evidence": {
             "check": {
               "command": "pnpm --filter @dnd/mcp test:mcp-scenario-evidence",
@@ -885,7 +901,7 @@
             },
             "scenarioEvidenceFlows": {
               "denominator": 4,
-              "numerator": 1
+              "numerator": 2
             },
             "source": "plans/unit-profile-coverage/mcp-scenario-evidence.json",
             "witnessKind": "mcp-scenario"
@@ -897,15 +913,31 @@
               "scenarioId": "discover-mcp-surface",
               "taskId": "C3-MCP-LEVEL12-SCENARIO-GATE",
               "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-creation",
+              "kind": "mcp-scenario",
+              "scenarioId": "create-baseline-character",
+              "taskId": "C9-CHARACTER-CREATION-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-creation",
+              "kind": "mcp-scenario",
+              "scenarioId": "create-warrior-second-level",
+              "taskId": "C9-CHARACTER-CREATION-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-creation",
+              "kind": "mcp-scenario",
+              "scenarioId": "create-wizard-with-spells",
+              "taskId": "C9-CHARACTER-CREATION-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
             }
           ],
           "id": "mcp-scenario-evidence",
           "missingEvidenceRows": [
-            {
-              "description": "The MCP surface admits an SRD character creation workflow through create, discover, fill, and finalize tools without relying on support-profile status as scenario evidence.",
-              "flowId": "character-creation",
-              "followUpTaskId": "C9-CHARACTER-CREATION-MCP-EVIDENCE"
-            },
             {
               "description": "The MCP surface exposes durable character sheet state and battle handoff results through list and session snapshot tools.",
               "flowId": "character-sheet",
@@ -2285,14 +2317,14 @@
           },
           "joinedEvidenceRows": {
             "denominator": 94,
-            "numerator": 49
+            "numerator": 53
           },
           "missingJoinRows": {
             "denominator": 94,
-            "numerator": 45
+            "numerator": 41
           }
         },
-        "rowCount": 45,
+        "rowCount": 41,
         "rows": [
           {
             "collectionId": "srd-5.2.1",
@@ -2396,38 +2428,6 @@
           {
             "collectionId": "srd-5.2.1",
             "evidence": {
-              "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
-              "tag": "selected-identity-mbt",
-              "taskId": "B4-CLASS-FEATURE-IDENTITY-BATCH-1"
-            },
-            "kind": "class_feature",
-            "mcpScenarioJoin": {
-              "coveredFlowIds": [],
-              "missingFlowIds": [
-                "character-creation"
-              ],
-              "requiredFlowIds": [
-                "character-creation"
-              ],
-              "status": "missing-flow-evidence"
-            },
-            "profileIds": [
-              "character-creation.class-feature-resource-projection"
-            ],
-            "qntMbtJoin": {
-              "joinedRows": [],
-              "status": "unit-profile-joined-with-different-owner",
-              "unitProfileJoinRowCount": 1,
-              "unitProfileWitnessOwners": [
-                "packages/character-creation-runtime/src/class-feature-projections.mbt.test.ts"
-              ]
-            },
-            "sourceRecordPath": "packages/surface/content/cleric_channel_divinity.json",
-            "unitId": "cleric_channel_divinity"
-          },
-          {
-            "collectionId": "srd-5.2.1",
-            "evidence": {
               "ownerPath": "packages/battle-runtime/src/monk-martial-arts-selected-identity.mbt.test.ts",
               "tag": "selected-identity-mbt",
               "taskId": "L1D2-MONK-MARTIAL-ARTS-SCALING"
@@ -2490,43 +2490,6 @@
             },
             "sourceRecordPath": "packages/surface/content/monk_unarmored_movement.json",
             "unitId": "monk_unarmored_movement"
-          },
-          {
-            "collectionId": "srd-5.2.1",
-            "evidence": {
-              "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
-              "tag": "selected-identity-mbt",
-              "taskId": "B5-CLASS-FEATURE-IDENTITY-BATCH-2"
-            },
-            "kind": "class_feature",
-            "mcpScenarioJoin": {
-              "coveredFlowIds": [],
-              "missingFlowIds": [
-                "character-creation",
-                "character-sheet"
-              ],
-              "requiredFlowIds": [
-                "character-creation",
-                "character-sheet"
-              ],
-              "status": "missing-flow-evidence"
-            },
-            "profileIds": [
-              "character-creation.class-feature-source-fact-projection",
-              "character-sheet.class-feature-long-rest-use-state",
-              "character-sheet.monk-uncanny-metabolism-initiative-recovery"
-            ],
-            "qntMbtJoin": {
-              "joinedRows": [],
-              "status": "unit-profile-joined-with-different-owner",
-              "unitProfileJoinRowCount": 3,
-              "unitProfileWitnessOwners": [
-                "packages/character-battle-runtime/src/character-sheet-feature-resources.mbt.test.ts",
-                "packages/character-creation-runtime/src/class-feature-projections.mbt.test.ts"
-              ]
-            },
-            "sourceRecordPath": "packages/surface/content/monk_uncanny_metabolism.json",
-            "unitId": "monk_uncanny_metabolism"
           },
           {
             "collectionId": "srd-5.2.1",
@@ -2597,38 +2560,6 @@
           {
             "collectionId": "srd-5.2.1",
             "evidence": {
-              "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
-              "tag": "selected-identity-mbt",
-              "taskId": "B5-CLASS-FEATURE-IDENTITY-BATCH-2"
-            },
-            "kind": "class_feature",
-            "mcpScenarioJoin": {
-              "coveredFlowIds": [],
-              "missingFlowIds": [
-                "character-creation"
-              ],
-              "requiredFlowIds": [
-                "character-creation"
-              ],
-              "status": "missing-flow-evidence"
-            },
-            "profileIds": [
-              "character-creation.skill-expertise-choice"
-            ],
-            "qntMbtJoin": {
-              "joinedRows": [],
-              "status": "unit-profile-joined-with-different-owner",
-              "unitProfileJoinRowCount": 1,
-              "unitProfileWitnessOwners": [
-                "packages/character-creation-runtime/src/rogue-expertise-selected-identity.mbt.test.ts"
-              ]
-            },
-            "sourceRecordPath": "packages/surface/content/ranger_deft_explorer.json",
-            "unitId": "ranger_deft_explorer"
-          },
-          {
-            "collectionId": "srd-5.2.1",
-            "evidence": {
               "ownerPath": "packages/battle-runtime/src/feature-selected-identity.mbt.test.ts",
               "tag": "selected-identity-mbt",
               "taskId": "L1D2-SORCERER-INNATE-SORCERY"
@@ -2690,38 +2621,6 @@
             },
             "sourceRecordPath": "packages/surface/content/wizard_arcane_recovery.json",
             "unitId": "wizard_arcane_recovery"
-          },
-          {
-            "collectionId": "srd-5.2.1",
-            "evidence": {
-              "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
-              "tag": "selected-identity-mbt",
-              "taskId": "B6-CLASS-FEATURE-IDENTITY-BATCH-3"
-            },
-            "kind": "class_feature",
-            "mcpScenarioJoin": {
-              "coveredFlowIds": [],
-              "missingFlowIds": [
-                "character-creation"
-              ],
-              "requiredFlowIds": [
-                "character-creation"
-              ],
-              "status": "missing-flow-evidence"
-            },
-            "profileIds": [
-              "character-creation.skill-expertise-choice"
-            ],
-            "qntMbtJoin": {
-              "joinedRows": [],
-              "status": "unit-profile-joined-with-different-owner",
-              "unitProfileJoinRowCount": 1,
-              "unitProfileWitnessOwners": [
-                "packages/character-creation-runtime/src/rogue-expertise-selected-identity.mbt.test.ts"
-              ]
-            },
-            "sourceRecordPath": "packages/surface/content/wizard_scholar.json",
-            "unitId": "wizard_scholar"
           },
           {
             "collectionId": "srd-5.2.1",
