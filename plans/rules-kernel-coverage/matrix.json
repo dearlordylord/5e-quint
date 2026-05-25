@@ -6606,11 +6606,32 @@
     },
     {
       "blockedBy": [],
-      "generatorSubset": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "filter",
+        "exists",
+        "set-operators"
+      ],
       "obligationId": "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+      ],
+      "status": "semantic-core-candidate"
     },
     {
       "blockedBy": [],
@@ -8154,28 +8175,6 @@
     }
   ],
   "generatorReadinessBacklog": [
-    {
-      "obligationId": "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
-          "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack.qnt",
-          "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-timed-effects.qnt",
-          "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-concentration.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
     {
       "obligationId": "BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE",
       "ownerRoles": [

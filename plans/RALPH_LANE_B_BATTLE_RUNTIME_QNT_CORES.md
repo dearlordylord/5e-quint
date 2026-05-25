@@ -125,7 +125,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 19,
       "id": "B19-RAY-ENFEEBLEMENT-SAVE-GATE-READINESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Classify Ray of Enfeeblement save-gated effect readiness"
     },
     {
@@ -484,7 +484,7 @@ classification changes rely on its executable evidence.
 
 ### Task 19 - B19-RAY-ENFEEBLEMENT-SAVE-GATE-READINESS - Classify Ray of Enfeeblement save-gated effect readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE` rows, focused on
 `packages/battle-runtime/battle-runtime-save-gated-spell.qnt` and the
