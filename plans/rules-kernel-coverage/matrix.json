@@ -1513,6 +1513,12 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/reaction-casting-time.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [

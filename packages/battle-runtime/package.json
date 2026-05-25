@@ -29,6 +29,7 @@
     "test:mbt:moonbeam-movable-zone": "vitest run src/moonbeam-movable-zone.mbt.test.ts",
     "test:mbt:quickened-spell-governor": "vitest run src/quickened-spell-governor.mbt.test.ts",
     "test:mbt:ray-of-enfeeblement-lifecycle": "vitest run src/ray-of-enfeeblement-lifecycle.mbt.test.ts",
+    "test:mbt:reaction-casting-time": "vitest run src/reaction-casting-time.mbt.test.ts",
     "test:mbt:sanctuary-selected-identity": "vitest run src/sanctuary-selected-identity.mbt.test.ts",
     "test:mbt:see-invisibility-observer-sight": "vitest run src/see-invisibility-observer-sight.mbt.test.ts",
     "test:mbt:self-teleport-lifecycle": "vitest run src/self-teleport-lifecycle.mbt.test.ts",

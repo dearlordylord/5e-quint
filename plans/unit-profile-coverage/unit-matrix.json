@@ -1804,6 +1804,10 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/reaction-casting-time.mbt.test.ts"
         }
       ]
     },
@@ -1831,6 +1835,10 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/counterspell-reaction-spell.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/reaction-casting-time.mbt.test.ts"
         }
       ]
     },
@@ -19806,6 +19814,10 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/counterspell-reaction-spell.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/reaction-casting-time.mbt.test.ts"
             }
           ]
         }
@@ -27078,6 +27090,10 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/reaction-casting-time.mbt.test.ts"
             }
           ]
         },
