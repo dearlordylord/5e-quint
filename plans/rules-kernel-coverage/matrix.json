@@ -6956,14 +6956,37 @@
     },
     {
       "blockedBy": [],
-      "followUpTaskIds": [
-        "A67-RECURSIVE-NEXT-BATCH"
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-val",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "map",
+        "fold",
+        "forall",
+        "exists",
+        "membership",
+        "size"
       ],
-      "generatorSubset": [],
       "obligationId": "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
-      "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+      ],
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -8253,16 +8276,6 @@
   ],
   "generatorReadinessBacklog": [
     {
-      "obligationId": "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
       "obligationId": "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
       "ownerRoles": [
         {
@@ -8328,29 +8341,6 @@
     }
   ],
   "semanticCoreRunBlockFindings": [
-    {
-      "blocker": "run-block-coupled",
-      "followUpTaskIds": [
-        "A67-RECURSIVE-NEXT-BATCH"
-      ],
-      "obligationId": "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
-      "owners": [
-        {
-          "lines": [
-            337,
-            363,
-            378,
-            393,
-            416,
-            488,
-            509,
-            545
-          ],
-          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic.qnt"
-        }
-      ],
-      "readinessStatus": "not-assessed"
-    },
     {
       "blocker": "run-block-coupled",
       "followUpTaskIds": [],

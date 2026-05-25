@@ -155,7 +155,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 24,
       "id": "B24-QUICKENED-SPELL-READINESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Classify Quickened Spell governor readiness"
     },
     {
@@ -556,7 +556,7 @@ classification changes.
 
 ### Task 24 - B24-QUICKENED-SPELL-READINESS - Classify Quickened Spell governor readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` rows; QNT owner
 `packages/battle-runtime/battle-runtime-metamagic.qnt`; witnesses
