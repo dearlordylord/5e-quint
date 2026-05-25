@@ -1,7 +1,7 @@
 // -*- mode: Bluespec; -*-
 
 // KERNEL-COVERAGE: qnt-owner BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
-// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-mirror-image-hit-interception
@@ -114,6 +114,7 @@ module battleRuntime {
   import battleRuntimeSanctuary.* from "./battle-runtime-sanctuary"
   import battleRuntimeFeatherFall.* from "./battle-runtime-feather-fall"
   import battleRuntimeJumpMovement.* from "./battle-runtime-jump-movement"
+  import battleRuntimeSelfTeleport.* from "./battle-runtime-self-teleport"
   import battleRuntimeWeaponHitSpellRiders.* from "./battle-runtime-weapon-hit-spell-riders"
   import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
@@ -902,35 +903,6 @@ module battleRuntime {
       )
     }
 
-  pure def resolveJumpMovementReplacementSpell(state: BattleState, targets: Set[Actor], willingTargets: Set[Actor], slotLevel: int): BattleState =
-    if (
-      currentActor(state) == Fighter and
-      state.bonusActionAvailable and
-      canExpendSpellSlotThisTurn(state) and
-      not(state.fighter.unconscious) and
-      not(state.fighter.incapacitated) and
-      not(fighterHasRage(state)) and
-      targets.size() >= 1 and
-      targets.forall(target => willingTargets.contains(target)) and
-      targets.size() <= jumpMovementReplacementMaxTargets(slotLevel)
-    ) {
-      val effect = jumpMovementReplacementActiveEffect
-      commitActorSpellSlotUse({
-        ...state,
-        fighter: if (targets.contains(Fighter))
-          { ...state.fighter, activeEffects: state.fighter.activeEffects.union(Set(effect)) }
-        else
-          state.fighter,
-        goblin: if (targets.contains(Goblin))
-          { ...state.goblin, activeEffects: state.goblin.activeEffects.union(Set(effect)) }
-        else
-          state.goblin,
-        bonusActionAvailable: false,
-      }, Fighter)
-    } else {
-      state
-    }
-
   pure def dragonsBreathDurationTicks(): int = 10
 
   pure def dragonsBreathDamageTypeChoiceIsLegal(damageType: DamageType): bool =
@@ -988,61 +960,6 @@ module battleRuntime {
           withoutPrior.goblin,
         bonusActionAvailable: false,
       }, Fighter)
-    } else {
-      state
-    }
-
-  pure def mistyStepMaxTeleportFeet(): int = 30
-
-  pure def mistyStepDestinationIsLegal(distanceFeet: int, unoccupiedVisibleDestination: bool): bool =
-    unoccupiedVisibleDestination and distanceFeet > 0 and distanceFeet <= mistyStepMaxTeleportFeet
-
-  pure def mistyStepTeleportSpendsMovement(): bool = false
-
-  pure def mistyStepTeleportProvokesOpportunityAttacks(): bool = false
-
-  pure def mistyStepTeleportTransportsWornAndCarriedEquipment(): bool = true
-
-  pure def resolveMistyStepSpell(state: BattleState, distanceFeet: int, unoccupiedVisibleDestination: bool): BattleState =
-    if (
-      currentActor(state) == Fighter and
-      state.bonusActionAvailable and
-      canExpendSpellSlotThisTurn(state) and
-      not(state.fighter.unconscious) and
-      not(state.fighter.incapacitated) and
-      not(fighterHasRage(state)) and
-      mistyStepDestinationIsLegal(distanceFeet, unoccupiedVisibleDestination)
-    ) {
-      val afterCasterEarlyEnd = battleStateAfterSanctuaryEarlyEndForActor(state, Fighter)
-      commitActorSpellSlotUse({ ...afterCasterEarlyEnd, bonusActionAvailable: false }, Fighter)
-    } else {
-      state
-    }
-
-  pure def jumpMovementReplacementFighter(
-    state: BattleState,
-    movementCost: int,
-    jumpDistance: int,
-    landing: JumpMovementLandingFact
-  ): BattleState =
-    if (
-      currentActor(state) == Fighter and
-      movementCost == 10 and
-      jumpDistance > 0 and
-      jumpDistance <= jumpMovementReplacementMaxDistanceFeet(state) and
-      jumpMovementReplacementLandingIsLegal(landing) and
-      activeEffectsContainAvailableJumpMovementReplacement(state.fighter.activeEffects) and
-      fighterCanMoveWithSpeedKind(state, WalkSpeedKind, movementCost)
-    ) {
-      val moved = applyFighterMovementWithSpeedKind(state, WalkSpeedKind, movementCost)
-      {
-        ...moved,
-        fighter: {
-          ...moved.fighter,
-          activeEffects: activeEffectsAfterJumpMovementReplacementUse(moved.fighter.activeEffects),
-          prone: moved.fighter.prone or jumpMovementReplacementLandingAppliesProne(landing),
-        },
-      }
     } else {
       state
     }

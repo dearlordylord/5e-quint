@@ -35,7 +35,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 4,
       "id": "B4-BATTLE-RUNTIME-MOVEMENT-REACTION-CORE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Split movement and reaction spell lifecycle core"
     },
     {
@@ -216,7 +216,7 @@ Acceptance: checker green; focused QNT/parity tests green.
 
 ### Task 4 - B4-BATTLE-RUNTIME-MOVEMENT-REACTION-CORE - Split movement and reaction spell lifecycle core
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: Expeditious Retreat, Feather Fall, Jump, forced Reaction movement, and
 self-teleport readiness rows.

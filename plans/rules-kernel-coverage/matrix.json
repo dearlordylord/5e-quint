@@ -1146,7 +1146,7 @@
         "spell.invocation-expeditious-retreat-dash"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-movement.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1173,7 +1173,7 @@
         "spell.invocation-feather-fall-mitigation"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-feather-fall.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1202,7 +1202,7 @@
         "spell.invocation-jump-movement-replacement"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-jump-movement.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1231,7 +1231,7 @@
         "spell.invocation-forced-reaction-movement"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-movement.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1262,7 +1262,7 @@
         "spell.invocation-self-teleport"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-self-teleport.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -5348,6 +5348,14 @@
       "role": "semantic-core"
     },
     {
+      "evidence": "packages/battle-runtime/battle-runtime-feather-fall.qnt is the focused QNT owner carrying Feather Fall Reaction mitigation, descent-rate projection, and landing cleanup semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-feather-fall.qnt",
+      "role": "semantic-core"
+    },
+    {
       "evidence": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt is a bounded replay or run-test owner for covered parity evidence; treat it as fixture-bound unless later split.",
       "obligationIds": [
         "BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD"
@@ -5382,6 +5390,14 @@
         "BATTLE.SPELL.MAKE_STABLE_LIFECYCLE"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-hit-points.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-jump-movement.qnt is the focused QNT owner carrying Jump target admission, per-turn movement replacement, landing witness, and cleanup semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-jump-movement.qnt",
       "role": "semantic-core"
     },
     {
@@ -5453,6 +5469,15 @@
       "role": "semantic-core"
     },
     {
+      "evidence": "packages/battle-runtime/battle-runtime-movement.qnt is the focused QNT owner carrying Expeditious Retreat Dash and Dissonant Whispers forced Reaction movement reducer semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE",
+        "BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-movement.qnt",
+      "role": "semantic-core"
+    },
+    {
       "evidence": "packages/battle-runtime/battle-runtime-protection-from-poison.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
         "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION"
@@ -5512,6 +5537,14 @@
         "BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-see-invisibility.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-self-teleport.qnt is the focused QNT owner carrying self-teleport destination witness, resource spend, and no-Movement/no-Opportunity-Attack projection semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-self-teleport.qnt",
       "role": "semantic-core"
     },
     {
@@ -5618,13 +5651,8 @@
         "BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING",
         "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
         "BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE",
-        "BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE",
-        "BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE",
         "BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE",
-        "BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE",
-        "BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE",
-        "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
-        "BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE"
+        "BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime.qnt",
       "role": "semantic-core"
@@ -6870,12 +6898,7 @@
       "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B4-BATTLE-RUNTIME-MOVEMENT-REACTION-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -6896,23 +6919,19 @@
         "list",
         "map",
         "filter",
+        "exists",
         "set-operators",
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-movement.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B4-BATTLE-RUNTIME-MOVEMENT-REACTION-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -6927,29 +6946,23 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
         "pattern-match",
         "set",
-        "list",
         "map",
         "filter",
+        "exists",
         "set-operators",
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-feather-fall.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B4-BATTLE-RUNTIME-MOVEMENT-REACTION-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -6964,29 +6977,21 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "all-block",
         "pattern-match",
         "set",
-        "list",
         "map",
-        "filter",
         "set-operators",
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-jump-movement.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B4-BATTLE-RUNTIME-MOVEMENT-REACTION-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
         "variant",
@@ -7007,26 +7012,21 @@
         "list",
         "map",
         "filter",
+        "exists",
         "set-operators",
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-movement.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [
-        "bridge-projection-coupled"
-      ],
-      "followUpTaskIds": [
-        "B4-BATTLE-RUNTIME-MOVEMENT-REACTION-CORE"
-      ],
+      "blockedBy": [],
       "generatorSubset": [
         "import",
-        "variant",
         "record",
         "record-update",
         "pure-def",
@@ -7035,24 +7035,15 @@
         "bool",
         "if-expression",
         "let-binding",
-        "arithmetic",
         "comparison",
-        "boolean-connective",
-        "all-block",
-        "pattern-match",
-        "set",
-        "list",
-        "map",
-        "filter",
-        "set-operators",
-        "membership"
+        "boolean-connective"
       ],
       "obligationId": "BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime.qnt"
+        "packages/battle-runtime/battle-runtime-self-teleport.qnt"
       ],
-      "status": "fixture-bound"
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [

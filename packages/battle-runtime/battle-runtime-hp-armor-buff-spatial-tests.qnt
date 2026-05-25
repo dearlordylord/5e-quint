@@ -34,6 +34,7 @@ module battleRuntimeHpArmorBuffSpatialTests {
   import battleRuntimeSanctuary.* from "./battle-runtime-sanctuary"
   import battleRuntimeFeatherFall.* from "./battle-runtime-feather-fall"
   import battleRuntimeJumpMovement.* from "./battle-runtime-jump-movement"
+  import battleRuntimeSelfTeleport.* from "./battle-runtime-self-teleport"
   import battleRuntimeWeaponHitSpellRiders.* from "./battle-runtime-weapon-hit-spell-riders"
   import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
