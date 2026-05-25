@@ -7357,11 +7357,32 @@
     },
     {
       "blockedBy": [],
-      "generatorSubset": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "filter",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-command-choice.qnt",
+        "packages/battle-runtime/battle-runtime-ground-command.qnt"
+      ],
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [
@@ -7989,20 +8010,6 @@
       "ownerRoles": [
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-sanctuary.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-ground-command.qnt",
-          "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-command-choice.qnt",
           "role": "semantic-core"
         }
       ],

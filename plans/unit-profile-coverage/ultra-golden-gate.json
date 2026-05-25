@@ -72,11 +72,11 @@
           "status": "pass"
         },
         {
-          "blockingCount": 27,
+          "blockingCount": 26,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
               "denominator": 32,
-              "numerator": 5
+              "numerator": 6
             },
             "qntCoveredObligations": {
               "denominator": 44,
@@ -84,16 +84,6 @@
             }
           },
           "generatorBlockingRows": [
-            {
-              "blockedBy": [],
-              "obligationId": "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime-command-choice.qnt",
-                "packages/battle-runtime/battle-runtime-ground-command.qnt"
-              ],
-              "readinessStatus": "not-assessed",
-              "runBlockOwners": []
-            },
             {
               "blockedBy": [
                 "run-block-coupled"
@@ -625,11 +615,11 @@
           "status": "pass"
         },
         {
-          "blockingCount": 27,
+          "blockingCount": 26,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
               "denominator": 32,
-              "numerator": 5
+              "numerator": 6
             },
             "qntCoveredObligations": {
               "denominator": 47,
@@ -637,16 +627,6 @@
             }
           },
           "generatorBlockingRows": [
-            {
-              "blockedBy": [],
-              "obligationId": "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime-command-choice.qnt",
-                "packages/battle-runtime/battle-runtime-ground-command.qnt"
-              ],
-              "readinessStatus": "not-assessed",
-              "runBlockOwners": []
-            },
             {
               "blockedBy": [
                 "run-block-coupled"
