@@ -72,6 +72,9 @@ Checked source-of-truth artifacts:
   runtime state.
 - `plans/rules-kernel-coverage/HIT_POINT_DAMAGE_RUST_DRY_RUN.md` is the current
   manual Rust dry-run vertical.
+- `plans/unit-profile-coverage/ULTRA_GOLDEN_GATE.md` and
+  `plans/unit-profile-coverage/LEVEL1_2_ULTRA_GOLDEN_SUMMARY.md` are the durable
+  outputs of the closed ultra-golden metric lane.
 
 Active runnable queues:
 
@@ -79,17 +82,13 @@ Active runnable queues:
   unit-feature semantic-core cleanup and its readiness rows.
 - `plans/RALPH_LANE_B_BATTLE_RUNTIME_QNT_CORES.md` owns broad
   battle-runtime QNT semantic-core splits and their readiness rows.
-- `plans/RALPH_LANE_C_ULTRA_GOLDEN_MBT_METRIC.md` owns aggregate
-  ultra-golden metric, MBT/MCP evidence accounting, and context-budget cleanup.
 
 Historical redirects:
 
-- `plans/QNT_SEMANTIC_CORE_EXTRACTION_RALPH.md`
-- `plans/QNT_SLICE_EXPANSION_RALPH.md`
 - `plans/QMBT7_SPECIFIC_UNIT_PARITY_MBT_PLAN.md`
 
-Those files are not task queues. Their durable findings have been folded into
-the checked artifacts above or into the active A/B/C lane plans.
+That file is not a task queue. Its durable findings have been folded into the
+checked artifacts above or into the active A/B lane plans.
 
 ## Working Discipline
 

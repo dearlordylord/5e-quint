@@ -2,7 +2,8 @@
 
 This historical tracer plan is closed. Do not use it as a task entrypoint.
 
-Start from `plans/RALPH_LANE_C_ULTRA_GOLDEN_MBT_METRIC.md` for current
+Start from `plans/unit-profile-coverage/ULTRA_GOLDEN_GATE.md` and
+`plans/unit-profile-coverage/LEVEL1_2_QNT_MBT_JOIN.md` for current
 ultra-golden MBT/evidence accounting. For generator-readiness work, start from
 `plans/QNT_COVERAGE_PROGRAM.md#rust--generator-readiness-entrypoints`.
 

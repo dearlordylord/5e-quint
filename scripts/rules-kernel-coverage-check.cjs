@@ -443,7 +443,6 @@ function readKnownRalphTaskIds(rootPath) {
   const planNames = [
     "RALPH_LANE_A_QNT_GENERATOR_CLOSURE.md",
     "RALPH_LANE_B_BATTLE_RUNTIME_QNT_CORES.md",
-    "RALPH_LANE_C_ULTRA_GOLDEN_MBT_METRIC.md",
   ];
   let foundAnyPlan = false;
   for (const planName of planNames) {
