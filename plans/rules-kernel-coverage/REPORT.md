@@ -395,7 +395,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.SPELL.MAKE_STABLE_LIFECYCLE` | not-assessed |  |  |  |
 | `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS` | not-assessed |  |  |  |
 | `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` | not-assessed |  |  |  |
-| `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION` | not-assessed |  |  |  |
+| `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION` | generation-subset-clean | `import`, `variant`, `pure-def`, `bool`, `if-expression`, `let-binding`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `membership` |  |  |
 | `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `list`, `filter`, `exists`, `forall`, `map`, `fold`, `set-operators`, `membership` |  |  |
 | `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` | not-assessed |  |  |  |
 | `BATTLE.SPELL.SELF_TRANSFORMATION_MODE` | not-assessed |  |  |  |
@@ -442,7 +442,6 @@ Rows here are derived from covered obligations with semantic-core QNT owners who
 | `BATTLE.SPELL.MAKE_STABLE_LIFECYCLE` | not-assessed | `packages/battle-runtime/battle-runtime-hit-points.qnt` | `packages/battle-runtime/battle-runtime-hit-points.qnt`: semantic-core |
 | `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS` | not-assessed | `packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt`, `packages/battle-runtime/battle-runtime-thaumaturgy.qnt` | `packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-thaumaturgy.qnt`: semantic-core |
 | `BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS` | not-assessed | `packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt` | `packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt`: semantic-core |
-| `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION` | not-assessed | `packages/battle-runtime/battle-runtime-creature-type-protection.qnt` | `packages/battle-runtime/battle-runtime-creature-type-protection.qnt`: semantic-core |
 | `BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION` | not-assessed | `packages/battle-runtime/battle-runtime-direct-condition-removal.qnt`, `packages/battle-runtime/battle-runtime-protection-from-poison.qnt` | `packages/battle-runtime/battle-runtime-direct-condition-removal.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-protection-from-poison.qnt`: semantic-core |
 | `BATTLE.SPELL.SELF_TRANSFORMATION_MODE` | not-assessed | `packages/battle-runtime/battle-runtime-self-transformation.qnt` | `packages/battle-runtime/battle-runtime-self-transformation.qnt`: semantic-core |
 | `BATTLE.SPELL.REACTION_CASTING_TIME` | not-assessed | `packages/battle-runtime/battle-runtime-reaction-window.qnt`, `packages/battle-runtime/battle-runtime-spell-invocation.qnt` | `packages/battle-runtime/battle-runtime-reaction-window.qnt`: semantic-core<br>`packages/battle-runtime/battle-runtime-spell-invocation.qnt`: semantic-core |

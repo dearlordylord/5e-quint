@@ -149,7 +149,7 @@ remains.
     {
       "number": 23,
       "id": "C23-GENERATOR-READINESS-CREATURE-TYPE-PROTECTION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Classify creature-type protection generator readiness"
     },
     {
@@ -567,7 +567,7 @@ longer `not-assessed`.
 
 ### Task 23 - C23-GENERATOR-READINESS-CREATURE-TYPE-PROTECTION - Classify creature-type protection generator readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 `plans/unit-profile-coverage/ultra-golden-gate.json`,

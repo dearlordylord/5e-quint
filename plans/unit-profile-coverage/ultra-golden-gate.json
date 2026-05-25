@@ -72,11 +72,11 @@
           "status": "pass"
         },
         {
-          "blockingCount": 22,
+          "blockingCount": 21,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
               "denominator": 32,
-              "numerator": 10
+              "numerator": 11
             },
             "qntCoveredObligations": {
               "denominator": 44,
@@ -114,15 +114,6 @@
                 "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
                 "packages/battle-runtime/battle-runtime-monk-focus.qnt"
               ]
-            },
-            {
-              "blockedBy": [],
-              "obligationId": "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime-creature-type-protection.qnt"
-              ],
-              "readinessStatus": "not-assessed",
-              "runBlockOwners": []
             },
             {
               "blockedBy": [
@@ -573,11 +564,11 @@
           "status": "pass"
         },
         {
-          "blockingCount": 22,
+          "blockingCount": 21,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
               "denominator": 32,
-              "numerator": 10
+              "numerator": 11
             },
             "qntCoveredObligations": {
               "denominator": 47,
@@ -615,15 +606,6 @@
                 "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
                 "packages/battle-runtime/battle-runtime-monk-focus.qnt"
               ]
-            },
-            {
-              "blockedBy": [],
-              "obligationId": "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime-creature-type-protection.qnt"
-              ],
-              "readinessStatus": "not-assessed",
-              "runBlockOwners": []
             },
             {
               "blockedBy": [
