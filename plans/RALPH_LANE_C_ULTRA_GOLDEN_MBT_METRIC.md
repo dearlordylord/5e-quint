@@ -143,7 +143,7 @@ remains.
     {
       "number": 22,
       "id": "C22-GENERATOR-READINESS-CONDITION-IMMUNITY-THP",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Classify condition-immunity temporary-hit-point generator readiness"
     },
     {
@@ -548,7 +548,7 @@ longer `not-assessed`.
 
 ### Task 22 - C22-GENERATOR-READINESS-CONDITION-IMMUNITY-THP - Classify condition-immunity temporary-hit-point generator readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 `plans/unit-profile-coverage/ultra-golden-gate.json`,
