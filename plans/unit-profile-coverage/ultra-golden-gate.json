@@ -72,11 +72,11 @@
           "status": "pass"
         },
         {
-          "blockingCount": 18,
+          "blockingCount": 17,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
               "denominator": 32,
-              "numerator": 14
+              "numerator": 15
             },
             "qntCoveredObligations": {
               "denominator": 44,
@@ -222,16 +222,6 @@
                 "packages/battle-runtime/battle-runtime.qnt"
               ],
               "readinessStatus": "fixture-bound",
-              "runBlockOwners": []
-            },
-            {
-              "blockedBy": [],
-              "obligationId": "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt",
-                "packages/battle-runtime/battle-runtime-thaumaturgy.qnt"
-              ],
-              "readinessStatus": "not-assessed",
               "runBlockOwners": []
             },
             {
@@ -534,11 +524,11 @@
           "status": "pass"
         },
         {
-          "blockingCount": 18,
+          "blockingCount": 17,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
               "denominator": 32,
-              "numerator": 14
+              "numerator": 15
             },
             "qntCoveredObligations": {
               "denominator": 47,
@@ -684,16 +674,6 @@
                 "packages/battle-runtime/battle-runtime.qnt"
               ],
               "readinessStatus": "fixture-bound",
-              "runBlockOwners": []
-            },
-            {
-              "blockedBy": [],
-              "obligationId": "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
-              "ownerPaths": [
-                "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt",
-                "packages/battle-runtime/battle-runtime-thaumaturgy.qnt"
-              ],
-              "readinessStatus": "not-assessed",
               "runBlockOwners": []
             },
             {

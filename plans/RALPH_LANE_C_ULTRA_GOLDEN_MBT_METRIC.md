@@ -173,7 +173,7 @@ remains.
     {
       "number": 27,
       "id": "C27-GENERATOR-READINESS-ROLL-MODIFIERS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Classify roll modifier active-effect generator readiness"
     },
     {
@@ -635,7 +635,7 @@ longer `not-assessed`.
 
 ### Task 27 - C27-GENERATOR-READINESS-ROLL-MODIFIERS - Classify roll modifier active-effect generator readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 `plans/unit-profile-coverage/ultra-golden-gate.json`,
