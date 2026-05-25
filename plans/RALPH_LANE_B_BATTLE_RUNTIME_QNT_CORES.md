@@ -137,7 +137,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 21,
       "id": "B21-RAY-ENFEEBLEMENT-CLEANUP-READINESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Classify Ray of Enfeeblement cleanup readiness"
     },
     {
@@ -512,7 +512,7 @@ classification changes depend on this owner.
 
 ### Task 21 - B21-RAY-ENFEEBLEMENT-CLEANUP-READINESS - Classify Ray of Enfeeblement cleanup readiness
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE` rows, focused on
 `packages/battle-runtime/battle-runtime-timed-effects.qnt`,

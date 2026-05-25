@@ -6631,9 +6631,11 @@
       "proofOnly": [],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
-        "packages/battle-runtime/battle-runtime-spell-attack.qnt"
+        "packages/battle-runtime/battle-runtime-spell-attack.qnt",
+        "packages/battle-runtime/battle-runtime-timed-effects.qnt",
+        "packages/battle-runtime/battle-runtime-concentration.qnt"
       ],
-      "status": "semantic-core-candidate"
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
