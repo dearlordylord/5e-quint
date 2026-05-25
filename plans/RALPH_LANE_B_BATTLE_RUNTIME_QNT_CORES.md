@@ -83,7 +83,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 12,
       "id": "B12-BATTLE-RUNTIME-AREA-EFFECT-ENTRY-CORE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Split area-entry and start-turn trigger facts"
     },
     {
@@ -308,7 +308,7 @@ Acceptance: checker green; no geometry ownership expansion.
 
 ### Task 12 - B12-BATTLE-RUNTIME-AREA-EFFECT-ENTRY-CORE - Split area-entry and start-turn trigger facts
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: area-entry/start-turn trigger rows across hazards and emanations.
 

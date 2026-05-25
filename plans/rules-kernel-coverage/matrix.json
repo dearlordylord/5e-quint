@@ -511,7 +511,8 @@
         "spell.invocation-web-restraint-hazard"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt"
+        "packages/battle-runtime/battle-runtime-ground-command.qnt",
+        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -907,7 +908,8 @@
         "spell.invocation-grease-ground-hazard"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt"
+        "packages/battle-runtime/battle-runtime-ground-command.qnt",
+        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1031,7 +1033,8 @@
         "spell.invocation-flaming-sphere-hazard-ram"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt"
+        "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt",
+        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1328,7 +1331,8 @@
         "spell.invocation-moonbeam-movable-zone"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt"
+        "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt",
+        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -5299,6 +5303,17 @@
       "role": "semantic-core"
     },
     {
+      "evidence": "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt is the focused QNT owner carrying reusable reducer-owned area and emanation trigger cadence semantics while keeping area membership and geometry as table-supplied witness facts.",
+      "obligationIds": [
+        "BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE",
+        "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
+        "BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE",
+        "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
+      "role": "semantic-core"
+    },
+    {
       "evidence": "packages/battle-runtime/battle-runtime-antimagic-suppression.qnt is the focused QNT owner carrying Antimagic Field ongoing-spell suppression state and suppressed-reference projection semantics.",
       "obligationIds": [
         "BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION"
@@ -6527,7 +6542,8 @@
       "obligationId": "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt"
+        "packages/battle-runtime/battle-runtime-ground-command.qnt",
+        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -6746,7 +6762,8 @@
       "obligationId": "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt"
+        "packages/battle-runtime/battle-runtime-ground-command.qnt",
+        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -6867,7 +6884,8 @@
       "obligationId": "BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt"
+        "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt",
+        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -7159,7 +7177,8 @@
       "obligationId": "BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt"
+        "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt",
+        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt"
       ],
       "status": "generation-subset-clean"
     },
