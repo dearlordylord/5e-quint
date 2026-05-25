@@ -173,19 +173,19 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 27,
       "id": "B27-SELF-TRANSFORMATION-READINESS",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Classify self-transformation mode readiness"
     },
     {
       "number": 28,
       "id": "B28-MIRROR-IMAGE-READINESS",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Classify Mirror Image hit-interception readiness"
     },
     {
       "number": 29,
       "id": "B29-MINIMAL-ATTACK-READINESS",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Classify minimal creature attack readiness"
     }
   ]
@@ -599,7 +599,7 @@ witnesses green when classification changes use executable behavior.
 
 ### Task 27 - B27-SELF-TRANSFORMATION-READINESS - Classify self-transformation mode readiness
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Input: `BATTLE.SPELL.SELF_TRANSFORMATION_MODE` rows; QNT owner
 `packages/battle-runtime/battle-runtime-self-transformation.qnt`; witnesses
@@ -614,7 +614,7 @@ classification changes use executable behavior.
 
 ### Task 28 - B28-MIRROR-IMAGE-READINESS - Classify Mirror Image hit-interception readiness
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Input: `BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION` rows; QNT owner
 `packages/battle-runtime/battle-runtime-mirror-image.qnt`; witness
@@ -628,7 +628,7 @@ classification changes use executable behavior.
 
 ### Task 29 - B29-MINIMAL-ATTACK-READINESS - Classify minimal creature attack readiness
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Input: `BATTLE.ATTACK.MINIMAL_RESOLUTION` rows; QNT owner
 `packages/battle-runtime/creature-attack.qnt`; witness
