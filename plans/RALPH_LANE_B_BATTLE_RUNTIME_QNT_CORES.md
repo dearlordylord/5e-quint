@@ -95,7 +95,7 @@ or prove from checker-owned artifacts that no such work remains.
     {
       "number": 14,
       "id": "B14-BATTLE-RUNTIME-DAMAGE-APPLICATION-CORE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Split damage application and concentration-save facts"
     },
     {
@@ -329,7 +329,7 @@ Acceptance: checker green; focused reaction tests green.
 
 ### Task 14 - B14-BATTLE-RUNTIME-DAMAGE-APPLICATION-CORE - Split damage application and concentration-save facts
 
-Status: `ready-for-research`
+Status: `done`
 
 Input: damage application obligations, concentration save trigger facts, and
 current QNT owners.

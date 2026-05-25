@@ -1904,7 +1904,7 @@
         "spell.invocation-warding-bond-linked-effect"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-warding-bond.qnt"
+        "packages/battle-runtime/battle-runtime-warding-bond-damage-sharing.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -5348,7 +5348,7 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-concentration.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "evidence": "packages/battle-runtime/battle-runtime-concentration.qnt carries focused Concentration cleanup, failed damage-save cleanup, and active-effect removal semantics reused by damage application sites.",
       "obligationIds": [
         "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
         "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
@@ -5453,7 +5453,7 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-hit-points.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "evidence": "packages/battle-runtime/battle-runtime-hit-points.qnt carries battle Hit Point damage application, zero-Hit-Point lifecycle, Death Saving Throw transition, and damage-triggered Concentration break semantics by composing shared HP/death-save algebras with battle active effects.",
       "obligationIds": [
         "BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE",
         "BATTLE.SPELL.MAKE_STABLE_LIFECYCLE"
@@ -5618,7 +5618,7 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-save-gated-spell.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "evidence": "packages/battle-runtime/battle-runtime-save-gated-spell.qnt carries focused save-gated spell lifecycle semantics, including Ray of Enfeeblement source damage-roll penalty arithmetic before target-side damage handling.",
       "obligationIds": [
         "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE",
         "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY",
@@ -5712,11 +5712,11 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-warding-bond.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "evidence": "packages/battle-runtime/battle-runtime-warding-bond-damage-sharing.qnt is the focused semantic core for Warding Bond target Resistance, same-amount source damage, and source-zero/separation/recast cleanup.",
       "obligationIds": [
         "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING"
       ],
-      "ownerPath": "packages/battle-runtime/battle-runtime-warding-bond.qnt",
+      "ownerPath": "packages/battle-runtime/battle-runtime-warding-bond-damage-sharing.qnt",
       "role": "semantic-core"
     },
     {
@@ -6593,11 +6593,35 @@
     },
     {
       "blockedBy": [],
-      "generatorSubset": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "filter",
+        "exists",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY",
-      "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+      ],
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -7683,11 +7707,25 @@
     },
     {
       "blockedBy": [],
-      "generatorSubset": [],
+      "generatorSubset": [
+        "import",
+        "record",
+        "record-update",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective"
+      ],
       "obligationId": "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING",
       "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-warding-bond-damage-sharing.qnt"
+      ],
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -7957,11 +7995,32 @@
     },
     {
       "blockedBy": [],
-      "generatorSubset": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "filter",
+        "exists"
+      ],
       "obligationId": "BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE",
-      "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "proofOnly": [
+        "packages/shared-algebras/proofs/death-saves-algebra-inductive.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-hit-points.qnt"
+      ],
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -8107,16 +8166,6 @@
       "status": "not-assessed"
     },
     {
-      "obligationId": "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
       "obligationId": "BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE",
       "ownerRoles": [
         {
@@ -8175,26 +8224,6 @@
       "ownerRoles": [
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-mirror-image.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-warding-bond.qnt",
-          "role": "semantic-core"
-        }
-      ],
-      "status": "not-assessed"
-    },
-    {
-      "obligationId": "BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE",
-      "ownerRoles": [
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-hit-points.qnt",
           "role": "semantic-core"
         }
       ],
@@ -8332,22 +8361,6 @@
             126
           ],
           "ownerPath": "packages/battle-runtime/battle-runtime-protection-from-poison.qnt"
-        }
-      ],
-      "readinessStatus": "not-assessed"
-    },
-    {
-      "blocker": "run-block-coupled",
-      "obligationId": "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING",
-      "owners": [
-        {
-          "lines": [
-            187,
-            205,
-            217,
-            228
-          ],
-          "ownerPath": "packages/battle-runtime/battle-runtime-warding-bond.qnt"
         }
       ],
       "readinessStatus": "not-assessed"

@@ -1,6 +1,4 @@
 // -*- mode: Bluespec; -*-
-// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
-
 module battleRuntimeWardingBond {
   import battleRuntimeModel.* from "./battle-runtime-model"
 
