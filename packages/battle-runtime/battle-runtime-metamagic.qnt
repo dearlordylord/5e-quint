@@ -5,6 +5,9 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.metamagic-cast-governor-quickened
 
 module battleRuntimeMetamagic {
+  import unitFeatureMetamagicOptionFactCore.* from "../shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core"
+  import unitFeatureMetamagicSpellModificationAdmissionCore.* from "../shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core"
+  import unitFeatureQuickenedActionSpellProcedureSupportCore.* from "../shared-algebras/proofs/rule-core/unit-feature-quickened-action-spell-procedure-support-core"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
   import battleRuntimeRestorationAndBuffs.* from "./battle-runtime-restoration-and-buffs"
@@ -13,104 +16,16 @@ module battleRuntimeMetamagic {
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
   import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
 
-  type BattleRuntimeMetamagicEffectKind =
-    | QuickenedActionCastingTimeToBonusActionWithSpellTurnLimit
-    | DamageDiceRerollStackingException
-    | SavingThrowProtection
-    | SavingThrowDisadvantage
-
-  type BattleRuntimeMetamagicStackingMode =
-    | OnePerSpell
-    | CanCombineWithDifferentMetamagic
-
-  type BattleRuntimeMetamagicOptionFact = {
-    effectKind: BattleRuntimeMetamagicEffectKind,
-    stackingMode: BattleRuntimeMetamagicStackingMode,
-    sorceryPointCost: int,
-  }
-
   type BattleRuntimeQuickenedMetamagicResult = {
     state: BattleState,
     sorceryPointsRemaining: int,
   }
-
-  type BattleRuntimeQuickenedActionSpellProcedure =
-    | QuickenedDirectRestorationProcedure
-    | QuickenedScalarBuffProcedure
-    | QuickenedDamageProcedure
-    | QuickenedControlProcedure
-    | QuickenedOngoingEffectProcedure
-    | QuickenedOtherActionProcedure
 
   type BattleRuntimeSaveMetamagicProcedure =
     | SaveGatedDamageProcedure({ success: SaveGatedDamageSuccess })
     | SaveGatedNonDamageProcedure
     | SleepTargetAdmissionProcedure
     | NonSaveMetamagicProcedure
-
-  pure val quickenedSpellMetamagicFact: BattleRuntimeMetamagicOptionFact = {
-    effectKind: QuickenedActionCastingTimeToBonusActionWithSpellTurnLimit,
-    stackingMode: OnePerSpell,
-    sorceryPointCost: 2,
-  }
-
-  pure val empoweredSpellMetamagicFact: BattleRuntimeMetamagicOptionFact = {
-    effectKind: DamageDiceRerollStackingException,
-    stackingMode: CanCombineWithDifferentMetamagic,
-    sorceryPointCost: 1,
-  }
-
-  pure val carefulSpellMetamagicFact: BattleRuntimeMetamagicOptionFact = {
-    effectKind: SavingThrowProtection,
-    stackingMode: OnePerSpell,
-    sorceryPointCost: 1,
-  }
-
-  pure val heightenedSpellMetamagicFact: BattleRuntimeMetamagicOptionFact = {
-    effectKind: SavingThrowDisadvantage,
-    stackingMode: OnePerSpell,
-    sorceryPointCost: 2,
-  }
-
-  pure def selectedMetamagicOptionsKnown(
-    knownOptions: Set[BattleRuntimeMetamagicOptionFact],
-    selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
-  ): bool =
-    selectedOptions.forall(option => knownOptions.contains(option))
-
-  pure def selectedMetamagicSorceryPointCost(
-    selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
-  ): int =
-    selectedOptions
-      .map(option => option.sorceryPointCost)
-      .fold(0, (total, cost) => total + cost)
-
-  pure def selectedMetamagicOptionsCanStack(
-    selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
-  ): bool =
-    selectedOptions.size() <= 1 or (
-      selectedOptions.size() == 2 and
-      selectedOptions.exists(option => option.stackingMode == CanCombineWithDifferentMetamagic)
-    )
-
-  pure def selectedMetamagicOptionsSupportedByQuickenedActionSpell(
-    procedure: BattleRuntimeQuickenedActionSpellProcedure,
-    selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
-  ): bool =
-    selectedOptions == Set(quickenedSpellMetamagicFact) and
-    quickenedActionSpellProcedureSupportsBonusActionRewrite(procedure)
-
-  pure def quickenedActionSpellProcedureSupportsBonusActionRewrite(
-    procedure: BattleRuntimeQuickenedActionSpellProcedure,
-  ): bool =
-    match procedure {
-      | QuickenedDirectRestorationProcedure => true
-      | QuickenedScalarBuffProcedure => true
-      | QuickenedDamageProcedure => false
-      | QuickenedControlProcedure => false
-      | QuickenedOngoingEffectProcedure => false
-      | QuickenedOtherActionProcedure => false
-    }
 
   pure def selectedMetamagicOptionsSupportedBySaveSpell(
     procedure: BattleRuntimeSaveMetamagicProcedure,
@@ -137,11 +52,12 @@ module battleRuntimeMetamagic {
     selectedOptions: Set[BattleRuntimeMetamagicOptionFact],
     sorceryPointsRemaining: int,
   ): bool =
-    selectedOptions.size() > 0 and
-    selectedMetamagicOptionsKnown(knownOptions, selectedOptions) and
-    selectedMetamagicOptionsCanStack(selectedOptions) and
-    selectedMetamagicOptionsSupportedBySaveSpell(procedure, selectedOptions) and
-    sorceryPointsRemaining >= selectedMetamagicSorceryPointCost(selectedOptions)
+    selectedMetamagicSpellModificationAdmission(
+      knownOptions,
+      selectedOptions,
+      sorceryPointsRemaining,
+    ) and
+    selectedMetamagicOptionsSupportedBySaveSpell(procedure, selectedOptions)
 
   pure def carefulSpellMaxProtectedTargets(charismaModifier: int): int =
     if (charismaModifier < 1) 1 else charismaModifier
@@ -218,10 +134,12 @@ module battleRuntimeMetamagic {
     sorceryPointsRemaining: int,
   ): bool =
     selectedOptions.contains(quickenedSpellMetamagicFact) and
-    selectedMetamagicOptionsKnown(knownOptions, selectedOptions) and
-    selectedMetamagicOptionsCanStack(selectedOptions) and
+    selectedMetamagicSpellModificationAdmission(
+      knownOptions,
+      selectedOptions,
+      sorceryPointsRemaining,
+    ) and
     selectedMetamagicOptionsSupportedByQuickenedActionSpell(QuickenedDirectRestorationProcedure, selectedOptions) and
-    sorceryPointsRemaining >= selectedMetamagicSorceryPointCost(selectedOptions) and
     directHitPointRestorationActionCost(invocation) == SpellMagicAction and
     state.bonusActionAvailable and
     not(battleActorHasCastLevelOnePlusSpellThisTurn(state, currentActor(state)))
@@ -234,10 +152,12 @@ module battleRuntimeMetamagic {
     sorceryPointsRemaining: int,
   ): bool =
     selectedOptions.contains(quickenedSpellMetamagicFact) and
-    selectedMetamagicOptionsKnown(knownOptions, selectedOptions) and
-    selectedMetamagicOptionsCanStack(selectedOptions) and
+    selectedMetamagicSpellModificationAdmission(
+      knownOptions,
+      selectedOptions,
+      sorceryPointsRemaining,
+    ) and
     selectedMetamagicOptionsSupportedByQuickenedActionSpell(QuickenedScalarBuffProcedure, selectedOptions) and
-    sorceryPointsRemaining >= selectedMetamagicSorceryPointCost(selectedOptions) and
     scalarBuffActionCost(invocation) == SpellMagicAction and
     state.bonusActionAvailable and
     not(battleActorHasCastLevelOnePlusSpellThisTurn(state, currentActor(state)))
